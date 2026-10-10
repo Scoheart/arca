@@ -24,7 +24,7 @@
 .mux-launch-path-input { display: flex; gap: 8px; }
 .mux-launch-path-input > input { flex: 1; }
 .mux-launch-hint { font-weight: 400; font-size: 11px; }
-.mux-launch-error { color: var(--color-red); font-size: 12px; overflow-wrap: anywhere; }
+.mux-launch-error { color: var(--text-danger); font-size: 12px; overflow-wrap: anywhere; }
 .mux-launch-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
 .mux-launch-field-modes { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .mux-launch-field-modes .mux-seg-item { display: inline-flex; align-items: center; gap: 5px; }
@@ -64,7 +64,7 @@
 .mux-dialog-agent-config .mux-dialog-shell-status { margin-top: 0; padding: 0; background: transparent; }
 .mux-agent-config-tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--border-hairline); }
 .mux-agent-config-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 11px 2px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-secondary); font: 500 13px var(--font-sans); cursor: pointer; }
-.mux-agent-config-tabs button[aria-selected="true"] { color: var(--color-blue); border-bottom-color: var(--color-blue); }
+.mux-agent-config-tabs button[aria-selected="true"] { color: var(--text-accent); border-bottom-color: var(--color-blue); }
 .mux-agent-config-tabs button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -2px; border-radius: 4px; }
 .mux-agent-config-tabs i { width: 5px; height: 5px; border-radius: 50%; background: var(--color-blue); }
 .mux-dialog-agent-config .mux-dialog-shell-body { min-height: min(360px, calc(100dvh - 220px)); padding-top: 20px; padding-bottom: 20px; }

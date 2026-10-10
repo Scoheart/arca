@@ -50,9 +50,9 @@ type Tone = "neutral" | "success" | "warning" | "info";
 
 const TONE: Record<Tone, { bg: string; fg: string }> = {
   neutral: { bg: "var(--surface-quiet)", fg: "var(--text-secondary)" },
-  success: { bg: "var(--surface-success)", fg: "#237A48" },
-  warning: { bg: "var(--surface-attention)", fg: "#986006" },
-  info: { bg: "var(--surface-selected)", fg: "var(--color-blue)" },
+  success: { bg: "var(--surface-success)", fg: "var(--text-success)" },
+  warning: { bg: "var(--surface-attention)", fg: "var(--text-warning)" },
+  info: { bg: "var(--surface-selected)", fg: "var(--text-accent)" },
 };
 
 export function Badge({
@@ -68,6 +68,7 @@ export function Badge({
   return (
     <span
       className="mux-badge"
+      data-tone={tone}
       style={{ background: c.bg, color: c.fg }}
     >
       {icon}
@@ -508,7 +509,7 @@ export function ModalHeader({
     <div className="flex items-start gap-4 px-6 py-5">
       <div
         className="w-11 h-11 rounded-mac flex-shrink-0 flex items-center justify-center text-2xl font-semibold leading-none"
-        style={{ background: "var(--surface-selected)", color: "var(--color-blue)" }}
+        style={{ background: "var(--surface-selected)", color: "var(--text-accent)" }}
       >
         {glyph}
       </div>
