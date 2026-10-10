@@ -348,7 +348,7 @@ export function WorkspaceSidebar({
     <aside className="mux-workspace-sidebar">
       <div className="mux-workspace-sidebar-head">
         <strong>{title}</strong>
-        <span>{count} 项</span>
+        <span>{`${count} 项`}</span>
       </div>
       {actions && <div className="mux-workspace-sidebar-actions">{actions}</div>}
       <div className="mux-workspace-sidebar-scroll">{children}</div>
@@ -634,7 +634,7 @@ export function AgentStack({ ids: allIds, max = 4 }: { ids: string[]; max?: numb
           </span>
         ))}
       </span>
-      <span>{ids.length} 个 Agent</span>
+      <span>{`${ids.length} 个 Agent`}</span>
     </span>
   );
 }
