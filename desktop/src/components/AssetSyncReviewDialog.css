@@ -3,7 +3,7 @@
 .mux-sync-assets { display: grid; gap: 8px; }
 .mux-sync-assets > li { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px; border-radius: 10px; background: var(--surface-section); }
 .mux-sync-assets strong { min-width: 0; font-size: 14px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
-.mux-sync-asset-icon { display: grid; place-items: center; flex: 0 0 32px; height: 32px; color: var(--color-blue); }
+.mux-sync-asset-icon { display: grid; place-items: center; flex: 0 0 32px; height: 32px; color: var(--text-accent); }
 .mux-sync-asset-icon > svg { width: 24px; height: 24px; }
 .mux-sync-destinations { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
 .mux-sync-destinations > span { flex-shrink: 0; font-size: 11px; color: var(--text-secondary); }

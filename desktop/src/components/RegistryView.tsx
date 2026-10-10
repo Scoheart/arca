@@ -104,7 +104,7 @@ function OriginTag({
   if (origin?.kind === "remote") {
     return (
       <span className="inline-flex items-center gap-1 min-w-0" title={`订阅：${origin.source ? sourceName(origin.source) : ""}`}>
-        <CloudIcon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--color-blue)" }} />
+        <CloudIcon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--text-accent)" }} />
         <span className="text-[11px] truncate" style={{ color: "var(--text-secondary)" }}>
           {origin.source ? sourceName(origin.source) : "订阅"}
         </span>

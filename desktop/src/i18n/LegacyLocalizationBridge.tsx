@@ -47,8 +47,8 @@ function localizeTree(root: Node, locale: SupportedLocale) {
 
 export function LegacyLocalizationBridge({ locale }: { locale: SupportedLocale }) {
   useEffect(() => {
-    const root = document.getElementById("root");
-    if (!root) return;
+    // Dialogs, popovers and toasts are portaled to <body>, outside #root.
+    const root = document.body;
     localizeTree(root, locale);
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {

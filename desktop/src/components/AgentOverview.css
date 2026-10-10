@@ -51,16 +51,16 @@
 .mux-config-indicator svg { width: 13px; height: 13px; }
 .mux-config-chevron { flex: 0 0 12px; width: 12px; height: 12px; color: var(--text-tertiary); transition: transform .2s ease; }
 .mux-config-disclosure[open] .mux-config-chevron { transform: rotate(180deg); }
-.mux-config-disclosure[data-state="error"] .mux-config-indicator { color: var(--color-red); font-weight: 700; }
+.mux-config-disclosure[data-state="error"] .mux-config-indicator { color: var(--text-danger); font-weight: 700; }
 .mux-config-disclosure[data-state="unavailable"] .mux-config-symbol { opacity: .55; }
 .mux-config-body { padding: 2px 12px 12px; border-top: 1px solid var(--border-hairline); }
-.mux-config-description { display: flex; min-height: 32px; align-items: center; justify-content: space-between; gap: 8px; color: var(--text-tertiary); font-size: 10px; }
+.mux-config-description { display: flex; min-height: 32px; align-items: center; justify-content: space-between; gap: 8px; color: var(--text-tertiary); font-size: var(--font-size-caption); }
 .mux-config-docs { display: inline-flex; flex: 0 0 28px; width: 28px; height: 28px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer; }
 .mux-config-docs:hover { background: var(--surface-section); color: var(--text-primary); }
 .mux-config-docs:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
 .mux-config-body .mux-agent-file-paths { margin-top: 0; gap: 4px; }
 .mux-config-body .mux-agent-file-path { padding: 7px; border-radius: 7px; background: var(--surface-workspace); }
-.mux-config-body .mux-agent-file-path code { overflow-wrap: anywhere; white-space: normal; font-size: 10px; }
+.mux-config-body .mux-agent-file-path code { overflow-wrap: anywhere; white-space: normal; font-size: var(--font-size-caption); }
 .mux-config-body .mux-agent-file-path:hover { background: var(--surface-section); }
 .mux-config-loading { animation: mux-config-spin 1s linear infinite; }
 @keyframes mux-config-spin { to { transform: rotate(360deg); } }
@@ -83,7 +83,9 @@
 }
 .mux-agent-workbench .mux-agent-overview-header {
   min-height: 130px; padding: 0 0 28px; align-items: start;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  /* The identity sizes to its content so the action column gets the rest and
+     launch, docs and capture tools stay on one row at 1200px. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, max-content) minmax(0, 1fr);
 }
 .mux-agent-workbench .mux-agent-header-identity { flex-direction: column; gap: 9px; }
 .mux-agent-workbench .mux-agent-header-copy > div { flex-direction: column; gap: 4px; }
@@ -105,15 +107,15 @@
 .mux-agent-workbench .mux-agent-resource-panel-head { min-height: 43px; margin: 0 0 16px; padding: 0; gap: 12px; align-items: center; flex-direction: row; flex-wrap: wrap; background: transparent; border-radius: 0; }
 .mux-agent-workbench .mux-agent-resource-tabs { flex: 0 0 auto; gap: 4px; padding: 4px; background: var(--surface-section); border-radius: 14px; overflow: visible; }
 .mux-agent-workbench .mux-agent-resource-tabs button { position: relative; height: 34px; padding: 0 12px; gap: 8px; font-size: 12px; font-weight: 500; background: transparent; color: var(--text-secondary); border-radius: 10px; flex: none; }
-.mux-agent-workbench .mux-agent-resource-tabs button > span:last-child { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--surface-control); color: var(--text-secondary); font-size: 9px; }
-.mux-agent-workbench .mux-agent-resource-tabs button[data-active="true"] { color: var(--color-blue); background: var(--surface-raised); box-shadow: var(--shadow-card); }
+.mux-agent-workbench .mux-agent-resource-tabs button > span:last-child { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--surface-control); color: var(--text-secondary); font-size: var(--font-size-label); }
+.mux-agent-workbench .mux-agent-resource-tabs button[data-active="true"] { color: var(--text-accent); background: var(--surface-raised); box-shadow: var(--shadow-card); }
 .mux-agent-resource-tab-icon { display: inline-flex; flex-shrink: 0; }
 .mux-agent-toolbar-actions { display: flex; align-items: center; gap: 7px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 .mux-agent-toolbar-target, .mux-agent-toolbar-target > .mux-agent-section-actions { display: contents; }
 .mux-agent-toolbar-actions > .mux-agent-config-toggle { order: 3; }
 .mux-agent-toolbar-actions .mux-agent-bulk-toggle { order: 1; padding: 0 2px; gap: 6px; background: transparent; }
 .mux-agent-toolbar-actions .btn-danger { order: 2; width: 27px; height: 30px; padding: 0; color: var(--text-tertiary); }
-.mux-agent-toolbar-actions .btn-danger:hover { color: var(--color-red); }
+.mux-agent-toolbar-actions .btn-danger:hover { color: var(--text-danger); }
 .mux-agent-toolbar-actions .btn-primary { order: 4; }
 .mux-agent-workbench .mux-agent-toolbar-actions .btn-primary,
 .mux-agent-workbench .mux-agent-toolbar-actions .btn-secondary { min-height: 30px; height: 30px; padding: 0 9px; border-radius: 7px; gap: 5px; font-size: 11px; }
@@ -153,19 +155,19 @@
 .mux-consumption-card-summary .mux-consumption-meta { flex: 0 1 auto; min-width: 0; overflow: hidden; }
 .mux-consumption-secondary { display: flex; min-width: 0; align-items: center; gap: 5px; margin-top: 4px; }
 .mux-consumption-secondary .mux-consumption-status { flex: 0 0 7px; height: 12px; }
-.mux-consumption-secondary small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-tertiary); font-size: 9px; }
+.mux-consumption-secondary small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-tertiary); font-size: var(--font-size-label); }
 .mux-agent-workbench .mux-consumption-list > li[data-domain="mcp"] { min-height: 65px; grid-template-columns: 30px minmax(0, 1fr) auto 24px; grid-template-rows: auto; row-gap: 0; padding: 10px 12px; }
 .mux-agent-workbench li[data-domain="mcp"] .mux-consumption-card-footer { display: flex; grid-column: 3; grid-row: 1; gap: 0; }
 .mux-agent-workbench li[data-domain="mcp"] .mux-consumption-controls { flex: 0 0 auto; }
 .mux-agent-workbench li[data-domain="mcp"] .mux-consumption-card-menu { grid-column: 4; }
 .mux-agent-workbench li[data-domain="mcp"]:not(:has(.mux-consumption-card-menu)) .mux-consumption-card-footer { grid-column: 3 / -1; justify-self: end; }
-.mux-agent-workbench .mux-consumption-meta .mux-transport-mark { font-weight: 400; font-size: 8px; }
+.mux-agent-workbench .mux-consumption-meta .mux-transport-mark { font-weight: 400; font-size: var(--font-size-label); }
 .mux-consumption-card-menu { position: relative; grid-column: 3; grid-row: 1; justify-self: end; }
 .mux-consumption-card-menu-items { position: absolute; right: 0; top: calc(100% + 5px); z-index: 8; min-width: 145px; padding: 4px; background: var(--surface-popover); border: 1px solid var(--border-hairline); border-radius: 9px; box-shadow: var(--shadow-sheet); }
 .mux-consumption-card-menu-items > button { display: flex; align-items: center; width: 100%; min-height: 32px; padding: 6px 9px; gap: 7px; border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); text-align: left; font-size: 11px; cursor: pointer; }
 .mux-consumption-card-menu-items > button:hover { background: var(--surface-section); }
 .mux-consumption-card-menu-items > button:disabled { opacity: .45; cursor: default; }
-.mux-consumption-card-menu-items .mux-consumption-remove { opacity: 1; color: var(--color-red); }
+.mux-consumption-card-menu-items .mux-consumption-remove { opacity: 1; color: var(--text-danger); }
 .mux-consumption-card-menu-items > button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -1px; }
 .mux-agent-workbench .mux-consumption-empty { min-height: 180px; background: transparent; }
 @media (max-width: 1020px) {
