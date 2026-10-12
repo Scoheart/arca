@@ -1,6 +1,7 @@
 .mux-agent-overview-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 18px;
   gap: 12px;
   min-height: 56px;
 }
@@ -83,14 +84,14 @@
 }
 .mux-agent-workbench .mux-agent-overview-header {
   min-height: 130px; padding: 0 0 28px; align-items: start;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 18px;
 }
-.mux-agent-workbench .mux-agent-header-identity { flex-direction: column; gap: 9px; }
+.mux-agent-workbench .mux-agent-header-identity { grid-column: 1; grid-row: 1; flex-direction: column; gap: 9px; }
 .mux-agent-workbench .mux-agent-header-copy > div { flex-direction: column; gap: 4px; }
 .mux-agent-workbench .mux-agent-header h2 { max-width: 100%; font-size: 16px; font-weight: 650; line-height: 1.4; }
-.mux-agent-workbench .mux-agent-overview-actions { grid-column: 3; grid-row: 1; margin: 0; gap: 6px; }
-.mux-agent-workbench .mux-agent-tool { width: auto; height: 30px; padding: 0 9px; gap: 6px; border-radius: 7px; font-size: 11px; }
-.mux-agent-workbench .mux-agent-overview-actions > .mux-capture-button { height: 30px; min-height: 30px; padding: 0 9px; border-radius: 7px; font-size: 11px; }
+.mux-agent-workbench .mux-agent-overview-actions { grid-column: 1; grid-row: 2; width: 100%; margin: 0; gap: 8px; }
+.mux-agent-workbench .mux-agent-tool { display: inline-flex; flex-direction: row; align-items: center; justify-content: center; white-space: nowrap; width: auto; height: 30px; padding: 0 9px; gap: 6px; border-radius: 7px; font-size: 11px; }
 .mux-agent-workbench .mux-agent-credential-strategy .mux-form-select-trigger { height: 30px; min-height: 30px; padding: 0 9px; border-radius: 7px; }
 .mux-agent-workbench .mux-launch-action[data-labeled="true"] { height: 30px; border-radius: 7px; box-shadow: none; }
 .mux-agent-workbench .mux-launch-action[data-ready="true"] { background: var(--color-blue); border-color: transparent; }

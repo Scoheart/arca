@@ -343,7 +343,7 @@ export function AgentView({
       <div className="mux-agent-page">
         <div className="mux-agent-shell">
           <section className="mux-agent-context" aria-label={`${agent.name} 参考信息`}>
-            <AgentHeader agent={agent} tone="reference" actions={<><button className="mux-capture-button" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button><button className="mux-capture-button" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button><AgentLaunchAction key={agent.id} agentId={agent.id} /></>} />
+            <AgentHeader agent={agent} tone="reference" actions={<><button className="mux-agent-tool" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button><button className="mux-agent-tool" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button><AgentLaunchAction key={agent.id} agentId={agent.id} /></>} />
             <div className="mux-agent-reference">
               <strong>{agent.note ?? "未提供可写的用户级全局配置。"}</strong>
             </div>
@@ -642,8 +642,8 @@ export function AgentView({
       <div className="mux-agent-shell">
         <section className="mux-agent-workbench" aria-label={`${agent.name} 工作区`}>
           <AgentHeader agent={agent} actions={<>
-            <button className="mux-capture-button" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button>
-            <button className="mux-capture-button" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button>
+            <button className="mux-agent-tool" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button>
+            <button className="mux-agent-tool" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button>
             {canEditConfiguration && (
               <button type="button" className="mux-agent-tool" title="编辑配置" aria-label="编辑配置" onClick={() => { setEditLaunchFirst(false); setEditingAgent(true); }}>
                 <EditIcon className="w-3.5 h-3.5" /><span>编辑</span>

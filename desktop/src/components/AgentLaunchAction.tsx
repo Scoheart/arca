@@ -85,7 +85,7 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
       <EditIcon className="w-4 h-4" />启动设置…</button>}
   </>;
   return <>
-    {!contextMenu && info?.available && info.supported && <span className="mux-launch-version" role="status"
+    {!contextMenu && version && info?.available && info.supported && <span className="mux-launch-version" role="status"
       aria-label={t("agentRuntime.status", { name: runtimeName, status: runtimeStatus,
         version: version ? t("agentRuntime.version", { version }) : t("agentRuntime.unknownVersion") })}
       title={`${runtimeName}${version ? ` · v${version}` : ` · ${runtimeStatus}`}${installedPath ? `\n${installedPath}` : ""}`}>
