@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.14.2](https://github.com/Scoheart/mux/compare/v1.14.1...v1.14.2) (2026-10-12)
+
+### Changes
+
+* fix(skills): correct reading view error fixture type ([540d510](https://github.com/Scoheart/mux/commit/540d510bf061eca2eed491eea6d5be3fd4633039))
+
 ## [1.14.1](https://github.com/Scoheart/mux/compare/v1.14.0...v1.14.1) (2026-10-12)
 
 ### Changes
