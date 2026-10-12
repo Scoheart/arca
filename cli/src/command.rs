@@ -87,7 +87,7 @@ pub enum Command {
         #[command(subcommand)]
         command: crate::diagnostics::TraceCommand,
     },
-    /// Inspect saved, redacted capture records without starting capture.
+    /// Discover processes, record scoped traffic, or inspect saved redacted records.
     Capture {
         #[command(subcommand)]
         command: crate::diagnostics::CaptureCommand,

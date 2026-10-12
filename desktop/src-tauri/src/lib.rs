@@ -47,6 +47,8 @@ pub fn run() {
             // macOS may keep the process alive after the last window closes.
             // Always restore the configured main window on a fresh launch.
             if let Some(window) = app.get_webview_window("main") {
+                #[cfg(debug_assertions)]
+                window.set_title("MUX · 本地开发预览")?;
                 #[cfg(target_os = "macos")]
                 if let Err(error) = trackpad_gestures::install(window.clone()) {
                     eprintln!("MUX trackpad phase bridge unavailable: {error}");
@@ -148,6 +150,7 @@ pub fn run() {
             traces::trace_import,
             traces::trace_export,
             capture::capture_environment,
+            capture::capture_launch_agent,
             capture::capture_sessions,
             capture::capture_snapshot,
             capture::capture_delta,

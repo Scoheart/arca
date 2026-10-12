@@ -7,6 +7,10 @@ async fn worker<T: Send + 'static>(f: impl FnOnce() -> Result<T, String> + Send 
 #[tauri::command]
 pub async fn capture_environment() -> Result<core::CaptureEnvironment, String> { worker(|| Ok(core::environment())).await }
 #[tauri::command]
+pub async fn capture_launch_agent(agent_id: String, directory: Option<String>) -> Result<(), String> {
+    worker(move || core::launch_agent(&agent_id, directory.as_deref())).await
+}
+#[tauri::command]
 pub async fn capture_sessions() -> Result<Vec<core::CaptureSession>, String> { worker(core::sessions).await }
 #[tauri::command]
 pub async fn capture_snapshot(session_id: String) -> Result<core::CaptureSnapshot, String> { worker(move || core::snapshot(&session_id)).await }

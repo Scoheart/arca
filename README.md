@@ -192,7 +192,7 @@ mux discover [mcp|model|skill]
 mux status --agent <id> [--agent <id>] [--capability mcp|model|skill]
 mux operation {apply,review} --file request.json
 mux trace {list,show}
-mux capture {list,show}
+mux capture {environment,run,state,list,show}
 mux workspace
 mux upgrade
 ```
@@ -371,11 +371,17 @@ Agent labels use the actual application name, or the official CLI/plugin product
 顶部「网络 → Agent 抓包」打开独立工作台；Agent 详情页的「抓包」按钮会预选当前 Agent。
 先启动 Agent，选择实际运行的应用或独立 CLI 进程，再指定直连、MUX 已配置的代理或任意无认证 HTTP 上游地址。抓包出口独立于 MUX 自身联网设置，指定代理后失败不回退直连。
 
-依赖本机官方 mitmproxy（`mitmdump`）。在系统设置「通用 → 登录项与扩展」启用 Mitmproxy Redirector 网络扩展，客户端还需信任 `~/.mitmproxy/mitmproxy-ca-cert.pem`。MUX 只检查状态，不自动安装证书或批准系统权限，也不自动重启 Agent。共享 Node / Python 进程不自动绑定；界面展示实际进程范围，用户须核对后开始。
+依赖本机官方 mitmproxy（`mitmdump`）。在系统设置「通用 → 登录项与扩展」启用 Mitmproxy Redirector 网络扩展，客户端还需信任 `~/.mitmproxy/mitmproxy-ca-cert.pem`。MUX 只检查系统信任，不自动安装证书或批准系统权限。「追加 CA 启动」给新进程传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。设置会区分进程证书、Node / 浏览器混合网络栈和系统信任：Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端的启动和抓包均拒绝执行，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
 
-Request / Response 可查看 Headers、文本 Body 与 SSE，并复制或导出单条 / 整会话 JSON。记录保存于 `~/.mux/captures/`（或 `MUX_HOME/captures/`），目录 0700、文件 0600。常见认证头和令牌字段脱敏后才落盘；这不是任意正文的完整隐私审计。二进制正文不保存，单条正文最多 2 MiB，会话最多 5000 条 / 100 MiB。导出也是脱敏后的记录，不是原始网络包。
+按实际 launcher 和可执行文件识别 Cursor、Grok Build、Qoder IDE/Desktop、Codex CLI/Desktop、Pi、Qoder CLI、OpenCode CLI/Desktop、QwenWork、QwenWorkCN 与 QoderWork。桌面应用可选择整个应用或独立顶层 PID 实例；CLI 实例也使用 PID 与启动时间绑定，跟踪其后代。Node/Bun 按脚本路径、已核验的包入口或 Pi 的进程标题识别，不会捕获所有 Node 进程。适配记录和「可启动」不代表该产品已经完成真实请求验证；未安装的客户端没有可选择的进程。
 
-第一版仅保证已验证的 HTTP / HTTPS 路径；不支持认证上游或 SOCKS。代理出口下 DNS 通过同一代理访问 Cloudflare DoH；解析失败不回退直连 DNS。无法通过 HTTP 上游的连接会失败。证书固定、UDP / QUIC、未触发功能、进程更新间隙均不能算作全量覆盖；更新范围会等待已有请求完成，等待期间新进程尚未纳入。停止会话或退出 MUX 会结束 MUX 启动的抓包器，不停止已有代理服务。
+OpenCode Desktop 的本地模型服务继承公开 CA 集合，辅助进程随应用纳入记录；1.19.0 官方 GUI 的本机 HTTPS / gzip SSE 链路已验证。QoderWork 0.9.18 的 Node 网络探针已验证，GUI 模型请求仍待账号条件具备后检查。两者按混合网络栈处理，浏览器请求仍受系统信任条件限制。完整的逐客户端证据和未验证项见 [抓包验收记录](analysis/16-agent-capture-workbench.md)。
+
+工作台提供 Structure 主机/路径树、Sequence 时序表和可调整的面板。Overview / Request / Response / Timing 显示状态、协议、Headers、Query、文本 Body、首字节耗时与流量大小。请求发出即记录，SSE 的完整事件会在结束前增量更新，选中详情自动刷新；支持分片 UTF-8、gzip、deflate 和多行 data。WebSocket 请求保持流式状态，Request / Response 分别展示客户端 / 服务端消息、序号和时间，完整文本分片重组后脱敏；最多保存 512 条 / 2 MiB 文本，二进制消息只记录长度与省略标记，原始传输不修改。复制与 JSON 导出只包含已脱敏内容。记录保存于 `~/.mux/captures/`（或 `MUX_HOME/captures/`），目录 0700、文件 0600。常见认证头和令牌字段脱敏后才落盘；这不是任意正文的完整隐私审计。二进制、Multipart、无法安全解析的 JSON 和不支持的压缩正文不保存；正文最多 2 MiB，会话最多 5000 条 / 100 MiB。
+
+只保证已实际验证的 HTTP / HTTPS 路径；不支持认证上游或 SOCKS。代理出口下 DNS 通过同一代理访问 Cloudflare DoH；解析失败不回退直连 DNS。无法通过 HTTP 上游的连接会失败。每两秒刷新进程范围，长 SSE 不再阻塞新进程纳入；短生命周期子进程和切换间隙仍不能算作全量覆盖。停止会话、目标退出或 MUX 退出会结束它启动的抓包器，并收尾未完成记录，不停止已有代理服务。
 
 
-网络扩展可能按系统顺序先接管连接。若已有 ProxyBridge 等目标应用代理规则，请在抓包期间只暂停目标规则并重建目标连接，完成后恢复原规则；MUX 不自动修改其他工具的规则。本机回环通信保留原出口，回环 HTTPS 不解密，避免破坏桌面 Agent 内部页面或 IPC；Agent 自身配置了本机代理 / 网关时，它的最终公网请求可能由其他进程发出，须单独核对拦截范围，不能按全量覆盖处理。
+网络扩展可能按系统顺序先接管连接。若已有 ProxyBridge 等目标应用代理规则，请在抓包期间只暂停目标规则并重建目标连接，完成后恢复原规则；MUX 不自动修改其他工具的规则。普通回环 HTTPS 不解密，避免破坏内部页面和 IPC；中央 Provider 明确配置的回环 HTTPS 模型端点会纳入解密范围，仍需客户端信任与引擎实际覆盖。Agent 自己配置的代理/网关（包括继承的 HTTP_PROXY 等环境变量）可能让最终请求由其他进程发出，必须核对来源进程，不能据此宣称全量覆盖。
+
+CLI 使用同一 core：`mux --json capture environment` 查询适配与实际进程；`mux --json capture run --agent pi --target "<target-id>" --seconds 60` 在前台限时记录；`capture state <session-id>` 查询已核验的实时状态；`capture list` / `capture show <session-id> --flow <flow-id>` 查看保存的脱敏记录。Desktop 可以查看同一中央目录中 CLI 发起的实时会话并请求停止。多实例共享抓包锁，所有者与引擎都以 PID 和启动时间核验；前台抓包依赖命令进程存活，不创建后台守护服务。引擎保留锁直到退出，异常退出或容量限制导致的未完成请求在观察视图中显示为已中断。

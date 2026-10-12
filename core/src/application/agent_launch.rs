@@ -8,7 +8,7 @@ pub use crate::domain::agents::{LaunchPreferences, LaunchTarget};
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 enum CatalogTarget {
-    App { candidates: Vec<String>, host_name: Option<String> },
+    App { candidates: Vec<String>, host_name: Option<String>, #[serde(default)] bundle_ids: Vec<String> },
     Cli { candidates: Vec<String>, #[serde(default)] args: Vec<String> },
 }
 
@@ -47,7 +47,7 @@ pub(crate) fn official_runtime_detected(
     // Opening VS Code/JetBrains does not prove that an extension is installed.
     if matches!(category, "plugin" | "ide-extension") { return None; }
     match LAUNCH_CATALOG.get(agent_id) {
-        Some(CatalogTarget::App { candidates, host_name: None }) => Some(application(candidates).is_some()),
+        Some(CatalogTarget::App { candidates, host_name: None, bundle_ids }) => Some(application_matching(candidates, bundle_ids).is_some()),
         Some(CatalogTarget::Cli { candidates, .. }) => Some(candidates.iter().any(|name| find_command(name).is_some())),
         Some(CatalogTarget::App { host_name: Some(_), .. }) => None,
         None if skill_probes.is_empty() => None,
@@ -76,12 +76,18 @@ fn executable(path: &Path) -> bool {
     #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; metadata.permissions().mode() & 0o111 != 0 }
     #[cfg(not(unix))] { true }
 }
-fn application(names: &[String]) -> Option<PathBuf> {
+fn application_matching(names: &[String], bundle_ids: &[String]) -> Option<PathBuf> {
     let mut roots = vec![crate::paths::system_probe_path("/Applications")];
     if let Ok(home) = home() { roots.push(home.join("Applications")); }
     roots.push(crate::paths::system_probe_path("/System/Applications"));
     names.iter().flat_map(|name| roots.iter().map(move |root| root.join(format!("{name}.app"))))
-        .find(|path| app_exists(path))
+        .find(|path| app_exists(path) && (bundle_ids.is_empty() || {
+            let plist = path.join("Contents/Info.plist");
+            fs::metadata(&plist).is_ok_and(|metadata| metadata.len() <= 1024 * 1024)
+                && plist::Value::from_file(plist).ok().and_then(|value| value.as_dictionary().and_then(|fields|
+                    fields.get("CFBundleIdentifier").and_then(plist::Value::as_string)).map(str::to_owned))
+                    .is_some_and(|id| bundle_ids.contains(&id))
+        }))
 }
 
 fn find_command(name: &str) -> Option<PathBuf> {
@@ -181,7 +187,12 @@ fn resolve(target: &LaunchTarget) -> Option<LaunchTarget> {
 }
 
 pub fn info(agent_id: &str) -> Result<LaunchInfo, String> {
-    super::gate::read(|| {
+    super::gate::read(|| info_unlocked(agent_id))
+}
+
+/// Capture discovery reuses this resolver without nesting workspace gates.
+/// This never writes preferences or launches a process.
+pub(crate) fn info_unlocked(agent_id: &str) -> Result<LaunchInfo, String> {
         let settings = load_settings_strict().map_err(|e| e.to_string())?;
         let definitions = crate::agents::load_agents_from_settings(&settings);
         let definition = definitions.get(agent_id).ok_or("未找到该 Agent")?;
@@ -197,9 +208,9 @@ pub fn info(agent_id: &str) -> Result<LaunchInfo, String> {
             resolve(target)
         } else {
             match LAUNCH_CATALOG.get(agent_id) {
-                Some(CatalogTarget::App { candidates, host_name: host }) if required != Some("cli") => {
+                Some(CatalogTarget::App { candidates, host_name: host, bundle_ids }) if required != Some("cli") => {
                     host_name = host.clone();
-                    application(candidates).map(|path| LaunchTarget::App { path: path.to_string_lossy().into_owned(), args: Vec::new(), new_instance: false, env: BTreeMap::new() })
+                    application_matching(candidates, bundle_ids).map(|path| LaunchTarget::App { path: path.to_string_lossy().into_owned(), args: Vec::new(), new_instance: false, env: BTreeMap::new() })
                 }
                 Some(CatalogTarget::Cli { candidates, args }) if required != Some("app") => {
                     candidates.iter().find_map(|name| find_command(name)).map(|command| LaunchTarget::Cli { command: command.to_string_lossy().into_owned(), args: args.clone(), env: BTreeMap::new() })
@@ -218,7 +229,6 @@ pub fn info(agent_id: &str) -> Result<LaunchInfo, String> {
             directory_exists: directory.as_ref().is_some_and(|p| expand(p).is_dir()),
             directory, default_directory: prefs.default_directory, configured_target, resolved_target,
         })
-    })
 }
 
 fn version_token(text: &str) -> Option<String> {
@@ -352,7 +362,7 @@ pub fn configure_with_directory(agent_id: &str, target: Option<LaunchTarget>, de
 
 fn quote_shell(value: &str) -> String { format!("'{}'", value.replace('\'', "'\\''")) }
 
-fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Result<(), String> {
+pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Result<(), String> {
     #[cfg(any(test, debug_assertions))]
     if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
         return Err("test_launch_blocked: isolated fixtures cannot start host applications".into());

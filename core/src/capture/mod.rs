@@ -10,11 +10,34 @@ use std::time::{Duration, Instant};
 use uuid::Uuid;
 
 mod index;
+mod targets;
+pub use targets::{AgentCaptureSupport, CaptureCaScope};
 
 const ADDON: &str = include_str!("addon.py");
 const MAX_RECORD_BYTES: u64 = 20 * 1024 * 1024;
 static ACTIVE: LazyLock<Mutex<Option<Worker>>> = LazyLock::new(|| Mutex::new(None));
-struct Worker { session_id: String, child: Child }
+struct Worker { session_id: String, child: Child, _lease: fs::File }
+#[derive(Serialize, Deserialize)]
+struct RuntimeIdentity { owner_pid: u32, owner_start: String, engine_pid: u32, engine_start: String }
+
+fn process_start(pid: u32) -> Option<String> {
+    output("/bin/ps", &["-p", &pid.to_string(), "-o", "lstart="])
+        .map(|value| value.split_whitespace().collect::<Vec<_>>().join(" "))
+        .filter(|value| !value.is_empty())
+}
+fn runtime_alive(directory: &Path) -> bool {
+    read_json::<RuntimeIdentity>(&directory.join("runtime.json")).is_ok_and(|identity|
+        process_start(identity.owner_pid).as_deref() == Some(identity.owner_start.as_str())
+            && process_start(identity.engine_pid).as_deref() == Some(identity.engine_start.as_str()))
+}
+fn close_abandoned(flows: &mut [FlowSummary], status: &CaptureState) {
+    if matches!(status.state.as_str(), "running" | "starting") { return; }
+    for flow in flows {
+        if matches!(flow.phase.as_deref(), Some("pending" | "receiving" | "streaming")) {
+            flow.phase = Some("cancelled".into());
+        }
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CaptureTarget { pub id: String, pub name: String, pub pids: Vec<u32>, pub agent_ids: Vec<String> }
@@ -22,6 +45,7 @@ pub struct CaptureTarget { pub id: String, pub name: String, pub pids: Vec<u32>,
 pub struct CaptureEnvironment {
     pub supported: bool, pub engine: Option<String>, pub extension_enabled: bool,
     pub certificate_present: bool, pub certificate_trusted: bool, pub other_extensions: Vec<String>, pub targets: Vec<CaptureTarget>,
+    pub agents: Vec<AgentCaptureSupport>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct StartCapture { pub agent_id: String, pub target_id: String, pub egress: String, pub proxy_url: Option<String> }
@@ -29,6 +53,7 @@ pub struct StartCapture { pub agent_id: String, pub target_id: String, pub egres
 pub struct CaptureSession {
     pub id: String, pub agent_id: String, pub agent_name: String, pub target_id: String,
     pub target_name: String, pub pids: Vec<u32>, pub proxy_url: Option<String>, pub started_at: String,
+    #[serde(default)] pub loopback_tls: Vec<(String, u16)>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CaptureState { pub state: String, pub message: String, pub pids: Vec<u32>, pub flow_count: usize }
@@ -43,6 +68,13 @@ pub struct CaptureDelta {
 pub struct FlowSummary {
     pub id: String, pub method: String, pub url: String, pub status: Option<u16>,
     pub started_at: f64, pub duration_ms: Option<u64>, pub error: Option<String>,
+    #[serde(default)] pub phase: Option<String>,
+    #[serde(default)] pub updated_at: Option<f64>,
+    #[serde(default)] pub request_bytes: Option<u64>,
+    #[serde(default)] pub response_bytes: Option<u64>,
+    #[serde(default)] pub time_to_first_byte_ms: Option<u64>,
+    #[serde(default)] pub content_type: Option<String>,
+    #[serde(default)] pub stream_type: Option<String>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CapturedMessage { pub headers: Vec<(String, String)>, pub body: String, pub bytes: usize, pub truncated: bool, pub encoding: String }
@@ -105,13 +137,38 @@ fn tool() -> Option<PathBuf> {
 fn output(program: &str, args: &[&str]) -> Option<String> {
     Command::new(program).args(args).stderr(Stdio::null()).output().ok().filter(|o| o.status.success()).map(|o| String::from_utf8_lossy(&o.stdout).into_owned())
 }
-struct Process { pid: u32, parent: u32, command: String }
+struct Process { pid: u32, parent: u32, command: String, arguments: String, started_at: String }
+#[cfg(target_os = "macos")]
+fn executable(pid: u32, fallback: &str) -> String {
+    #[link(name = "proc")]
+    extern "C" { fn proc_pidpath(pid: i32, buffer: *mut std::ffi::c_void, size: u32) -> i32; }
+    let mut bytes = [0u8; 4096];
+    let size = unsafe { proc_pidpath(pid as i32, bytes.as_mut_ptr().cast(), bytes.len() as u32) };
+    if size <= 0 { return fallback.to_owned(); }
+    let end = bytes.iter().position(|byte| *byte == 0).unwrap_or(bytes.len());
+    String::from_utf8_lossy(&bytes[..end]).into_owned()
+}
+#[cfg(not(target_os = "macos"))]
+fn executable(_pid: u32, fallback: &str) -> String { fallback.to_owned() }
 fn processes() -> Vec<Process> {
-    output("/bin/ps", &["-axo", "pid=,ppid=,comm="]).unwrap_or_default().lines().filter_map(|line| {
+    // Arguments are used only to bind script runtimes to their exact launcher.
+    // They may contain credentials and must never enter capture records/UI.
+    let arguments = output("/bin/ps", &["-axo", "pid=,args="]).unwrap_or_default().lines().filter_map(|line| {
         let line = line.trim(); let split = line.find(char::is_whitespace)?;
-        let pid = line[..split].parse().ok()?;
-        let rest = line[split..].trim_start(); let split = rest.find(char::is_whitespace)?;
-        Some(Process { pid, parent: rest[..split].parse().ok()?, command: rest[split..].trim_start().to_owned() })
+        Some((line[..split].parse::<u32>().ok()?, line[split..].trim().to_owned()))
+    }).collect::<BTreeMap<_, _>>();
+    output("/bin/ps", &["-axo", "pid=,ppid=,lstart=,comm="]).unwrap_or_default().lines().filter_map(|line| {
+        let mut rest = line.trim();
+        let mut fields = Vec::new();
+        for _ in 0..7 {
+            let split = rest.find(char::is_whitespace)?;
+            fields.push(&rest[..split]); rest = rest[split..].trim_start();
+        }
+        let pid = fields[0].parse().ok()?;
+        let command = executable(pid, rest);
+        let command = fs::canonicalize(&command).unwrap_or_else(|_| PathBuf::from(command)).to_string_lossy().into_owned();
+        Some(Process { pid, parent: fields[1].parse().ok()?, started_at: fields[2..7].join(" "),
+            command, arguments: arguments.get(&pid).cloned().unwrap_or_default() })
     }).collect()
 }
 fn expand_pids(rows: &[Process], initial: &[u32]) -> Vec<u32> {
@@ -146,10 +203,21 @@ fn targets() -> Vec<CaptureTarget> {
                 crate::domain::types::AgentInstallProbe::Command { name } => target.name == *name,
                 _ => false,
             }));
-            if name_match || probe_match { target.agent_ids.push(id.clone()); }
+            if (name_match || probe_match) && !targets::PROFILES.contains_key(id) { target.agent_ids.push(id.clone()); }
         }
     }
-    groups.into_values().collect()
+    let mut discovered = targets::bind_launchers(&rows);
+    for target in groups.into_values() {
+        if !target.agent_ids.is_empty() && !discovered.iter().any(|bound| bound.id == target.id) {
+            discovered.push(target);
+        }
+    }
+    discovered
+}
+
+fn certificate_trusted(ca: &Path) -> bool {
+    ca.is_file() && Command::new("/usr/bin/security").args(["verify-cert", "-c"]).arg(ca)
+        .stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok_and(|status| status.success())
 }
 
 pub fn environment() -> CaptureEnvironment {
@@ -158,8 +226,65 @@ pub fn environment() -> CaptureEnvironment {
     let extension_enabled = extensions.lines().any(|l| l.contains("org.mitmproxy.macos-redirector.network-extension") && l.contains("activated enabled"));
     let other_extensions = [("com.interceptsuite.ProxyBridge.extension", "ProxyBridge"), ("com.progress-telerik.fiddler.fiddler-extension", "Fiddler Everywhere")].into_iter().filter(|(id, _)| extensions.lines().any(|line| line.contains(id) && line.contains("activated enabled"))).map(|(_, name)| name.to_owned()).collect();
     let ca = dirs::home_dir().unwrap_or_default().join(".mitmproxy/mitmproxy-ca-cert.pem");
-    let certificate_trusted = ca.is_file() && Command::new("/usr/bin/security").args(["verify-cert", "-c"]).arg(&ca).stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok_and(|s| s.success());
-    CaptureEnvironment { supported, engine: tool().map(|p| p.to_string_lossy().into_owned()), extension_enabled, certificate_present: ca.is_file(), certificate_trusted, other_extensions, targets: if supported { targets() } else { vec![] } }
+    let certificate_trusted = certificate_trusted(&ca);
+    let targets = if supported { targets() } else { vec![] };
+    let agents = targets::support(&targets);
+    CaptureEnvironment { supported, engine: tool().map(|p| p.to_string_lossy().into_owned()), extension_enabled, certificate_present: ca.is_file(), certificate_trusted, other_extensions, targets, agents }
+}
+
+/// Launch a fresh Agent with additional public CA roots, without saving proxy,
+/// credential or launcher preferences and without disabling TLS validation.
+pub fn launch_agent(agent_id: &str, directory: Option<&str>) -> Result<(), String> {
+    let profile = targets::PROFILES.get(agent_id).ok_or("该 Agent 尚未核验抓包启动方式。")?;
+    let info = crate::application::agent_launch::info(agent_id)?;
+    let mut target = info.resolved_target.ok_or("请先安装该 Agent 或配置启动方式。")?;
+    let ca = dirs::home_dir().ok_or("无法找到用户目录。")?.join(".mitmproxy/mitmproxy-ca-cert.pem");
+    if profile.ca_scope == CaptureCaScope::System && !certificate_trusted(&ca) {
+        return Err("capture_system_ca_required: 此桌面客户端需要系统信任抓包 CA，追加进程环境变量不能保证 HTTPS 解密。".into());
+    }
+    let read_certificates = |path: &Path| -> Result<String, String> {
+        reject_symlink(path)?;
+        let metadata = fs::metadata(path).map_err(|_| "无法读取 CA 证书文件。")?;
+        if !metadata.is_file() || metadata.len() > 2 * 1024 * 1024 { return Err("CA 证书文件无效或过大。".into()); }
+        let input = fs::read_to_string(path).map_err(|_| "CA 证书必须是 PEM 文本。")?;
+        let certificates = regex::Regex::new(r"(?s)-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----").unwrap()
+            .find_iter(&input).map(|value| value.as_str()).collect::<Vec<_>>().join("\n");
+        if certificates.is_empty() { return Err("文件中没有可用的公开 CA 证书。".into()); }
+        Ok(certificates)
+    };
+    let extra = read_certificates(&ca)?;
+    private_dir(&root())?;
+    let trust = root().join("trust"); private_dir(&trust)?;
+    let bundle = trust.join(format!("{}.pem", Uuid::new_v4()));
+    let mut pem = String::new();
+    if Path::new("/etc/ssl/cert.pem").is_file() { pem.push_str(&read_certificates(Path::new("/etc/ssl/cert.pem"))?); }
+    let environment = match &mut target {
+        crate::domain::agents::LaunchTarget::App { env, .. } | crate::domain::agents::LaunchTarget::Cli { env, .. } => env,
+        _ => return Err("抓包启动只支持已核验的本机应用和 CLI。".into()),
+    };
+    for name in &profile.ca_environment {
+        if let Some(previous) = environment.get(name).cloned().or_else(|| std::env::var(name).ok()) {
+            if !previous.is_empty() && Path::new(&previous) != ca {
+                pem.push('\n'); pem.push_str(&read_certificates(Path::new(&previous))?);
+            }
+        }
+    }
+    pem.push('\n'); pem.push_str(&extra); pem.push('\n');
+    private_write(&bundle, pem.as_bytes())?;
+    for name in &profile.ca_environment { environment.insert(name.clone(), bundle.to_string_lossy().into_owned()); }
+    let chromium = profile.chromium && targets::chromium(&target);
+    if let crate::domain::agents::LaunchTarget::App { new_instance, args, .. } = &mut target {
+        *new_instance = true;
+        if chromium && !args.iter().any(|arg| arg == "--disable-quic") { args.push("--disable-quic".into()); }
+    }
+    let directory = if matches!(target, crate::domain::agents::LaunchTarget::Cli { .. }) {
+        let value = directory.map(str::to_owned).or(info.directory)
+            .map(|value| crate::resources::mcp::scanner::expand_tilde(&value))
+            .or_else(dirs::home_dir).ok_or("请填写工作目录。")?;
+        if !value.is_absolute() || !value.is_dir() { return Err("工作目录不存在。".into()); }
+        Some(value)
+    } else { None };
+    crate::application::agent_launch::dispatch(&target, directory.as_deref())
 }
 
 fn proxy(request: &StartCapture) -> Result<Option<String>, String> {
@@ -180,21 +305,72 @@ pub fn start(request: StartCapture) -> Result<CaptureSnapshot, String> {
     let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
     if let Some(worker) = active.as_mut() { if worker.child.try_wait().map_err(|_| "无法查询抓包进程。".to_owned())?.is_none() { return Err("请先停止当前抓包会话。".into()); } }
     active.take();
+    private_dir(&root())?;
+    let mut options = OpenOptions::new(); options.read(true).write(true).create(true);
+    #[cfg(unix)] { use std::os::unix::fs::OpenOptionsExt; options.mode(0o600).custom_flags((rustix::fs::OFlags::NOFOLLOW | rustix::fs::OFlags::NONBLOCK).bits() as i32); }
+    let lease = options.open(root().join(".engine.lock")).map_err(|_| "无法安全打开抓包锁。")?;
+    if !lease.metadata().is_ok_and(|metadata| metadata.is_file()) { return Err("抓包锁必须是普通文件。".into()); }
+    fs2::FileExt::try_lock_exclusive(&lease).map_err(|error| if error.kind() == std::io::ErrorKind::WouldBlock {
+        "capture_busy: 另一个 MUX 实例正在抓包，请先停止该会话。".to_owned()
+    } else { "capture_lock_failed: 无法锁定抓包引擎。".to_owned() })?;
     let env = environment();
     if !env.supported { return Err("第一版按应用抓包仅支持 macOS。".into()); }
     if !env.extension_enabled { return Err("请在系统设置的登录项与扩展中启用 Mitmproxy Redirector 网络扩展。".into()); }
     let engine = env.engine.ok_or("未找到 mitmdump，请先安装官方 mitmproxy。")?;
     let target = env.targets.into_iter().find(|t| t.id == request.target_id).ok_or("目标进程已退出，请刷新应用列表。")?;
+    if !target.agent_ids.contains(&request.agent_id) { return Err("目标进程不属于所选 Agent，请刷新并重新选择。".into()); }
+    if !env.certificate_trusted && env.agents.iter().any(|agent| agent.agent_id == request.agent_id && agent.ca_scope == CaptureCaScope::System) {
+        return Err("capture_system_ca_required: 请先让系统信任抓包 CA，再记录此桌面客户端；否则会中断其 HTTPS 请求。".into());
+    }
     let agents = crate::agents::load_agents();
     let agent = agents.get(&request.agent_id).ok_or("请选择有效的 Agent。")?;
-    let session = CaptureSession { id: Uuid::new_v4().to_string(), agent_id: request.agent_id.clone(), agent_name: agent.name.clone().unwrap_or(request.agent_id.clone()), target_id: target.id, target_name: target.name, pids: target.pids, proxy_url: proxy(&request)?, started_at: chrono::Utc::now().to_rfc3339() };
+    // Only user-configured model endpoints may opt loopback TLS into MITM.
+    // Agent-local HTTPS IPC retains its original certificate and routing.
+    let settings = crate::settings::load_settings_strict().map_err(|_| "无法读取模型端点，未开始抓包。")?;
+    let loopback_tls = settings.model_providers.iter().flat_map(|providers| providers.values()).filter_map(|provider| {
+        let address = url::Url::parse(&provider.base_url).ok()?;
+        let host = address.host_str()?.trim_matches(['[', ']']);
+        let local = host.eq_ignore_ascii_case("localhost") || host.parse::<std::net::IpAddr>().is_ok_and(|ip| ip.is_loopback());
+        (address.scheme() == "https" && local).then(|| (host.to_owned(), address.port_or_known_default().unwrap_or(443)))
+    }).collect();
+    let session = CaptureSession { id: Uuid::new_v4().to_string(), agent_id: request.agent_id.clone(), agent_name: agent.name.clone().unwrap_or(request.agent_id.clone()), target_id: target.id, target_name: target.name, pids: target.pids, proxy_url: proxy(&request)?, started_at: chrono::Utc::now().to_rfc3339(), loopback_tls };
     private_dir(&root())?;
     let directory = session_dir(&session.id)?;
     private_dir(&directory)?; private_dir(&directory.join("flows"))?; private_dir(&directory.join("summaries"))?;
     private_write(&directory.join("session.json"), &serde_json::to_vec(&session).map_err(|_| "无法保存会话。".to_owned())?)?;
     private_write(&directory.join("addon.py"), ADDON.as_bytes())?;
-    let child = Command::new(engine).args(["-q", "--mode", &format!("local:{}", session.pids.iter().map(u32::to_string).collect::<Vec<_>>().join(",")), "--set", "connection_strategy=lazy", "--set", "upstream_cert=false", "--set", "rawtcp=false", "-s"]).arg(directory.join("addon.py")).env("MUX_CAPTURE_DIR", &directory).env("MUX_CAPTURE_OWNER", std::process::id().to_string()).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).spawn().map_err(|_| "无法启动抓包引擎。".to_owned())?;
-    *active = Some(Worker { session_id: session.id.clone(), child });
+    let owner = std::process::id().to_string();
+    let owner_start = process_start(std::process::id()).ok_or("无法核验抓包所有者进程。")?;
+    let mut command = Command::new(engine);
+    command.args(["-q", "--mode", &format!("local:{}", session.pids.iter().map(u32::to_string).collect::<Vec<_>>().join(",")), "--set", "connection_strategy=lazy", "--set", "upstream_cert=false", "--set", "rawtcp=false", "-s"]).arg(directory.join("addon.py")).env("MUX_CAPTURE_DIR", &directory).env("MUX_CAPTURE_OWNER", owner).env("MUX_CAPTURE_OWNER_START", &owner_start).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+    #[cfg(unix)] {
+        use std::os::{fd::{AsRawFd, BorrowedFd}, unix::process::CommandExt};
+        let descriptor = lease.as_raw_fd();
+        // The engine retains the same lock if MUX crashes. Only its inherited
+        // descriptor changes; the parent's FD stays close-on-exec.
+        unsafe { command.pre_exec(move || rustix::io::fcntl_setfd(BorrowedFd::borrow_raw(descriptor), rustix::io::FdFlags::empty()).map_err(Into::into)); }
+    }
+    let mut child = command.spawn().map_err(|_| "无法启动抓包引擎。".to_owned())?;
+    let ready = (|| -> Result<(), String> {
+        let identity = RuntimeIdentity { owner_pid: std::process::id(), owner_start, engine_pid: child.id(),
+            engine_start: process_start(child.id()).ok_or("无法核验抓包引擎进程。")? };
+        private_write(&directory.join("runtime.json"), &serde_json::to_vec(&identity).map_err(|_| "无法编码抓包进程标识。")?)?;
+        // A spawned PID is not evidence that the redirector and addon are ready.
+        let until = Instant::now() + Duration::from_secs(12);
+        loop {
+            if child.try_wait().map_err(|_| "无法查询抓包引擎。")?.is_some() {
+                return Err("抓包引擎在就绪前退出，请检查 mitmproxy 版本与网络扩展。".into());
+            }
+            if read_json::<CaptureState>(&directory.join("status.json")).is_ok_and(|status| status.state == "running") { return Ok(()); }
+            if Instant::now() >= until { return Err("抓包引擎未在 12 秒内就绪；本次抓包已停止。".into()); }
+            std::thread::sleep(Duration::from_millis(100));
+        }
+    })();
+    if let Err(error) = ready {
+        let _ = child.kill(); let _ = child.wait();
+        return Err(error);
+    }
+    *active = Some(Worker { session_id: session.id.clone(), child, _lease: lease });
     drop(active);
     snapshot(&session.id)
 }
@@ -218,12 +394,14 @@ fn session_status(id: &str) -> Result<(PathBuf, CaptureSession, CaptureState), S
         state: "starting".into(), message: "正在启动抓包引擎…".into(), pids: session.pids.clone(), flow_count: 0,
     });
     let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
-    // Desktop liveness is local to this MUX instance. A stale persisted
-    // running state after a crash must not leave its Capture UI stuck active.
-    // Cross-process CLI readers use sessions/summaries/detail instead.
+    if let Some(worker) = active.as_mut() {
+        if worker.child.try_wait().map_err(|_| "无法查询抓包进程。")?.is_some() { active.take(); }
+    }
+    // A CLI-owned live session is also visible to Desktop. Verify both PID
+    // and birth time; a persisted running flag alone is never authoritative.
     let live = if let Some(worker) = active.as_mut().filter(|worker| worker.session_id == id) {
         worker.child.try_wait().map_err(|_| "无法查询抓包进程。".to_owned())?.is_none()
-    } else { false };
+    } else { matches!(status.state.as_str(), "running" | "starting") && runtime_alive(&directory) };
     if !live && matches!(status.state.as_str(), "running" | "starting") {
         if status.state == "starting" {
             status.state = "failed".into(); status.message = "抓包引擎启动失败，请检查 mitmproxy 版本与网络扩展。".into();
@@ -242,17 +420,22 @@ pub fn summaries(id: &str) -> Result<Vec<FlowSummary>, String> {
     Ok(index::query(&directory, None)?.upserts)
 }
 
-/// Desktop view: worker liveness is relative to the current MUX instance.
+/// Live view shared by Desktop and CLI, verified against process identities.
 pub fn snapshot(id: &str) -> Result<CaptureSnapshot, String> {
     let (directory, session, mut status) = session_status(id)?;
-    let flows = index::query(&directory, None)?.upserts;
+    let mut flows = index::query(&directory, None)?.upserts;
+    close_abandoned(&mut flows, &status);
     status.flow_count = flows.len();
     Ok(CaptureSnapshot { session, status, flows })
 }
 
 pub fn delta(id: &str, revision: Option<&str>) -> Result<CaptureDelta, String> {
     let (directory, session, mut status) = session_status(id)?;
-    let changes = index::query(&directory, revision)?;
+    // A crash or quota can prevent a final per-flow write. Return all rows
+    // when the session ends so every client observes their interrupted state.
+    let revision = if matches!(status.state.as_str(), "running" | "starting") { revision } else { None };
+    let mut changes = index::query(&directory, revision)?;
+    close_abandoned(&mut changes.upserts, &status);
     status.flow_count = changes.count;
     Ok(CaptureDelta { session, status, revision: changes.revision, reset: changes.reset,
         upserts: changes.upserts, removed: changes.removed })
@@ -260,7 +443,13 @@ pub fn delta(id: &str, revision: Option<&str>) -> Result<CaptureDelta, String> {
 pub fn detail(session_id: &str, flow_id: &str) -> Result<CapturedFlow, String> {
     Uuid::parse_str(flow_id).map_err(|_| "请求 ID 无效。".to_owned())?;
     let path = session_dir(session_id)?.join("flows"); reject_symlink(&path)?;
-    read_json(&path.join(format!("{flow_id}.json")))
+    let mut flow: CapturedFlow = read_json(&path.join(format!("{flow_id}.json")))?;
+    let (_, _, status) = session_status(session_id)?;
+    if !matches!(status.state.as_str(), "running" | "starting") && matches!(flow.summary.phase.as_deref(), Some("pending" | "receiving" | "streaming")) {
+        flow.summary.phase = Some("cancelled".into());
+        if let Some(response) = &mut flow.response { response.truncated = true; }
+    }
+    Ok(flow)
 }
 pub fn stop(id: &str) -> Result<CaptureSnapshot, String> {
     let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
@@ -272,6 +461,16 @@ pub fn stop(id: &str) -> Result<CaptureSnapshot, String> {
             std::thread::sleep(Duration::from_millis(100));
         }
         active.take();
+    } else {
+        let directory = session_dir(id)?;
+        if runtime_alive(&directory) {
+            let path = directory.join("stop"); if !path.exists() { private_write(&path, b"stop")?; }
+            let until = Instant::now() + Duration::from_secs(6);
+            while runtime_alive(&directory) {
+                if Instant::now() >= until { return Err("capture_stop_pending: 已请求停止，请稍后刷新；没有强制终止其他 MUX 进程。".into()); }
+                std::thread::sleep(Duration::from_millis(200));
+            }
+        }
     }
     drop(active);
     snapshot(id)

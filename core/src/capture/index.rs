@@ -228,14 +228,16 @@ mod tests {
         fs::create_dir_all(directory.join("summaries")).unwrap();
         fs::write(directory.join("session.json"), serde_json::to_vec(&super::super::CaptureSession {
             id, agent_id: "codex".into(), agent_name: "Codex".into(), target_id: "fixture".into(),
-            target_name: "Fixture".into(), pids: vec![], proxy_url: None, started_at: "2026-10-05T00:00:00Z".into(),
+            target_name: "Fixture".into(), pids: vec![], proxy_url: None, started_at: "2026-10-05T00:00:00Z".into(), loopback_tls: vec![],
         }).unwrap()).unwrap();
         directory
     }
 
     fn flow(directory: &Path, id: &str, status: u16) {
         let data = FlowSummary { id: id.into(), method: "GET".into(), url: "https://example.invalid/test".into(),
-            status: Some(status), started_at: 1.0, duration_ms: Some(3), error: None };
+            status: Some(status), started_at: 1.0, duration_ms: Some(3), error: None,
+            phase: Some("complete".into()), updated_at: None, request_bytes: None,
+            response_bytes: None, time_to_first_byte_ms: None, content_type: None, stream_type: None };
         fs::write(directory.join("summaries").join(format!("{id}.json")), serde_json::to_vec(&data).unwrap()).unwrap();
     }
 
