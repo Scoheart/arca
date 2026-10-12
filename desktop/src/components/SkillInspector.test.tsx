@@ -29,7 +29,7 @@ describe("SkillInspector reading view", () => {
     const props = { item, detail: skillDetailFixture(), onClose: vi.fn() };
     const { rerender } = render(<SkillInspector {...props} loading error={null} />);
     expect(screen.getByRole("status")).toHaveTextContent("正在读取正文");
-    rerender(<SkillInspector {...props} loading={false} error={{ code: "detail_unavailable", message: "unavailable", retry_at: null }} />);
+    rerender(<SkillInspector {...props} loading={false} error={{ code: "detail_unavailable", message: "unavailable" }} />);
     expect(screen.getByRole("alert")).toHaveTextContent("unavailable");
     expect(screen.getByRole("region", { name: "Skill 正文" }).querySelector("pre")).toBeNull();
   });
