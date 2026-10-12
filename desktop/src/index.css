@@ -2847,3 +2847,10 @@ body {
 .mux-consumption-search { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
 .mux-consumption-search .mux-search { flex: 1; min-width: 0; max-width: 420px; }
 .mux-consumption-search > span { flex-shrink: 0; color: var(--text-secondary); font-size: 12px; }
+
+/* Skill details are a single reading surface, with metadata above the body. */
+.mux-skill-reading { min-width: 0; }
+.mux-skill-reading-description { margin: 0 0 16px; color: var(--text-secondary); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.mux-skill-reading-body { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-hairline); }
+.mux-skill-reading-body > pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-primary); font: 13px/1.8 var(--font-mono); tab-size: 2; }
+.mux-skill-reading-body > p { color: var(--text-secondary); font-size: 12px; }
