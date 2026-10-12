@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.14.4](https://github.com/Scoheart/mux/compare/v1.14.3...v1.14.4) (2026-10-12)
+
+### Changes
+
+* fix(agents): align overview actions in a dedicated toolbar ([a07940f](https://github.com/Scoheart/mux/commit/a07940fc184ba31bbca5e0495a980a3686651e50))
+
 ## [1.14.3](https://github.com/Scoheart/mux/compare/v1.14.2...v1.14.3) (2026-10-12)
 
 ### Changes
