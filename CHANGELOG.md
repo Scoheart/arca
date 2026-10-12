@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.14.1](https://github.com/Scoheart/mux/compare/v1.14.0...v1.14.1) (2026-10-12)
+
+### Changes
+
+* fix(skills): simplify detail dialog to metadata and body ([7ce4fee](https://github.com/Scoheart/mux/commit/7ce4feec39ed160e5e3c131a89a92935efd83f82))
+
 ## [1.14.0](https://github.com/Scoheart/mux/compare/v1.13.0...v1.14.0) (2026-10-12)
 
 ### Changes
