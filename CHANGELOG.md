@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.14.3](https://github.com/Scoheart/mux/compare/v1.14.2...v1.14.3) (2026-10-12)
+
+### Changes
+
+* fix(skills): open collection GitHub links in browser ([4c0e190](https://github.com/Scoheart/mux/commit/4c0e190d0aa4067f6a83960c862a6c0176d2c672))
+
 ## [1.14.2](https://github.com/Scoheart/mux/compare/v1.14.1...v1.14.2) (2026-10-12)
 
 ### Changes

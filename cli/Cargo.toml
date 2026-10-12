@@ -1,6 +1,6 @@
 [package]
 name = "mux-cli"
-version = "1.14.2"
+version = "1.14.3"
 edition = "2021"
 description = "CLI and TUI for the MUX central Agent resource manager"
 
