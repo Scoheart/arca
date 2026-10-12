@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/Scoheart/mux/compare/v1.13.0...v1.14.0) (2026-10-12)
+
+### Changes
+
+* feat(tui): centralize the visual design system and polish every screen (#204) ([84a91e1](https://github.com/Scoheart/mux/commit/84a91e15cfdcba0ca3638d95f7eab6afdd46dadc))
+* feat(capture): stream agent traffic in a Charles-style workbench ([b8d3145](https://github.com/Scoheart/mux/commit/b8d3145372c9cdda041f9e00b20284cf3c7e0796))
+
 ## [1.13.0](https://github.com/Scoheart/mux/compare/v1.12.2...v1.13.0) (2026-10-10)
 
 ### Changes

@@ -1,6 +1,6 @@
 [package]
 name = "mux-core"
-version = "1.13.0"
+version = "1.14.0"
 edition = "2021"
 description = "Shared MCP, Model, Skill, Agent, and transaction core for MUX frontends"
 
