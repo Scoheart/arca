@@ -1,4 +1,5 @@
 import { ResourceIcon } from "./resourcePresentation";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   type ReactNode,
   useCallback,
@@ -590,7 +591,15 @@ export function SkillsView({
             {sourceLocation && <dl className="mux-resource-overview-facts">
               <div>
                 <dt>{selectedSource?.category === "github" ? "GitHub" : t("skillLibrary.sources")}</dt>
-                <dd><code title={sourceLocation}>{sourceLocation}</code></dd>
+                <dd>{selectedSource?.category === "github" ? (
+                  <a href={sourceLocation} className="mux-inline-link" title="在浏览器中打开 GitHub"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      void openUrl(sourceLocation).catch(() => toast.show({ kind: "error", msg: "无法打开 GitHub，请稍后重试。" }));
+                    }}>
+                    <code>{sourceLocation}</code>
+                  </a>
+                ) : <code title={sourceLocation}>{sourceLocation}</code>}</dd>
               </div>
             </dl>}
           </ResourceOverview>
