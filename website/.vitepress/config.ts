@@ -24,7 +24,7 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    socialLinks: [{ icon: "github", link: "https://github.com/Scoheart/mux" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/Scoheart/arca" }],
     search: { provider: "local" },
     externalLinkIcon: true,
   },
@@ -40,7 +40,7 @@ export default defineConfig({
           { text: "指南", link: "/guide/what-is-arca", activeMatch: "/guide/" },
           { text: "支持的 Agent", link: "/guide/agents" },
           { text: "演示", link: "/guide/demo" },
-          { text: `v${reference.version}`, link: "https://github.com/Scoheart/mux/releases/latest" },
+          { text: `v${reference.version}`, link: "https://github.com/Scoheart/arca/releases/latest" },
         ],
         sidebar: {
           "/guide/": [
@@ -71,7 +71,7 @@ export default defineConfig({
           ],
         },
         editLink: {
-          pattern: "https://github.com/Scoheart/mux/edit/main/website/:path",
+          pattern: "https://github.com/Scoheart/arca/edit/main/website/:path",
           text: "在 GitHub 上编辑此页",
         },
         docFooter: { prev: "上一页", next: "下一页" },
@@ -101,7 +101,7 @@ export default defineConfig({
           { text: "Guide", link: "/en/guide/what-is-arca", activeMatch: "/en/guide/" },
           { text: "Agents", link: "/en/guide/agents" },
           { text: "Demo", link: "/en/guide/demo" },
-          { text: `v${reference.version}`, link: "https://github.com/Scoheart/mux/releases/latest" },
+          { text: `v${reference.version}`, link: "https://github.com/Scoheart/arca/releases/latest" },
         ],
         sidebar: {
           "/en/guide/": [
@@ -132,7 +132,7 @@ export default defineConfig({
           ],
         },
         editLink: {
-          pattern: "https://github.com/Scoheart/mux/edit/main/website/:path",
+          pattern: "https://github.com/Scoheart/arca/edit/main/website/:path",
           text: "Edit this page on GitHub",
         },
         footer: {

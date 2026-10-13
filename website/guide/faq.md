@@ -44,4 +44,4 @@ Trace 读取本地会话或显式导入文件。预览不会上传或执行内�
 
 正式预编译 Desktop 与 CLI 目前发布 macOS Apple Silicon。其他环境可研究源码构建，但不能把可编译等同于已经完成平台验收。
 
-[GitHub Issues](https://github.com/Scoheart/mux/issues) · [演示](/guide/demo)
+[GitHub Issues](https://github.com/Scoheart/arca/issues) · [演示](/guide/demo)

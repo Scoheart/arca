@@ -2,7 +2,7 @@ import type { UpdaterState } from "../hooks/useUpdater";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { DownloadIcon, FolderIcon, RefreshIcon, XIcon } from "./icons";
 
-const LATEST_RELEASE_URL = "https://github.com/Scoheart/mux/releases/latest";
+const LATEST_RELEASE_URL = "https://github.com/Scoheart/arca/releases/latest";
 
 /**
  * Non-blocking update card, floated below the header at the top-right —

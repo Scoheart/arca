@@ -36,7 +36,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/scoheart/mux/releases/latest/download/latest.json"
+        "https://github.com/Scoheart/arca/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY5MDEzRENBRDAyRTM5RjUKUldUMU9TN1F5ajBCK1VXdElRYzcxb0ZrR3ZkVWN6VTNBUCt0T2NubEoxdW1UaWt1aFR3WFBraHUK"
     }

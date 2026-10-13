@@ -13,7 +13,7 @@ use super::model::{
     EDITOR_FIELDS,
 };
 /// The GitHub raw URL of the curated collection, offered as a remote subscribe.
-const OFFICIAL_URL: &str = "https://raw.githubusercontent.com/Scoheart/mux/main/data/registry.json";
+const OFFICIAL_URL: &str = "https://raw.githubusercontent.com/Scoheart/arca/main/data/registry.json";
 
 pub fn update(model: &mut Model, msg: Msg) -> Vec<Effect> {
     match msg {

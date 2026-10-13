@@ -34,4 +34,4 @@ Skill assignment uses verified user-level directories and targets available on t
 
 Products without a stable user-level configuration contract remain read-only or guided. Pi's native MCP contract applies to 0.99.0+; earlier versions need their appropriate extension. Claude desktop's local MCP file accepts stdio; remote connections use its native Connectors.
 
-See the repository's [Agent Catalog methodology](https://github.com/Scoheart/mux/blob/main/docs/agent-catalog.md).
+See the repository's [Agent Catalog methodology](https://github.com/Scoheart/arca/blob/main/docs/agent-catalog.md).

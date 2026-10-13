@@ -7,7 +7,7 @@ import { LinkIcon, SparklesIcon } from "./icons";
 
 /** Official curated collection preset for the shared subscription flow. */
 const OFFICIAL_SOURCE = {
-  url: "https://raw.githubusercontent.com/Scoheart/mux/main/data/registry.json",
+  url: "https://raw.githubusercontent.com/Scoheart/arca/main/data/registry.json",
   name: "Arca 精选",
 };
 

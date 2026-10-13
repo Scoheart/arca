@@ -46,3 +46,7 @@
 ## 原生 Model 所有权对照验证
 
 从 d5c1db8 原源码单独编译旧 mux CLI（没有移动当前 HEAD 或创建 worktree），在隔离 HOME 内由旧 Core 创建两种协议的 Provider/Models，再实际分配给 Codex、Qoder CLI、OpenCode、Pi。Arca 在同一目录启动迁移后，这四种 Agent 的 managed、external、capability_errors、target_incidents 记录逐字段相同，managed 仍为 synced；原生文件 SHA-256 全部不变。OpenCode fixture 原先已有一个 external row，该 row 原样保留，不伪称清除了既有外部观测。只忽略查询时点与 workspace revision，不把重建原生配置当作兼容通过。旧 writer/observer/migration 的 native prefix 与内部 credential metadata key 必须作为同一个版本化契约维护。
+
+## 仓库改名完成后的收尾
+
+2026-10-13，所有者完成原仓库改名。GitHub API 已确认 canonical full_name 为 Scoheart/arca；旧 Scoheart/mux API 地址返回同一仓库。先 fast-forward 同步 v2.0.2（含 FLock API Platform Provider），再将 Git origin、CLI / Desktop updater、TUI / Desktop 精选来源、双语安装与文档链接、后续 Changelog 生成链接切到 Scoheart/arca。父仓恢复清单和云环境 clone 指令同步新地址。旧 CLI 桥接资产和已发布历史记录保留；域名仍按现有部署配置处理。本次只修改仓库运输地址，属于兼容的 patch 修复。
