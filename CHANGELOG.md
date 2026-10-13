@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.7](https://github.com/Scoheart/arca/compare/v2.0.6...v2.0.7) (2026-10-13)
+
+### Changes
+
+* feat(models): add BeatAPI gateway provider (#212) ([2e478c1](https://github.com/Scoheart/arca/commit/2e478c1cd0cbd27fb0dcb5b6dcbab19fae0d695f))
+
 ## [2.0.6](https://github.com/Scoheart/arca/compare/v2.0.5...v2.0.6) (2026-10-13)
 
 ### Changes
