@@ -1,5 +1,11 @@
 # Provider Catalog sources
 
+## CodeCraft API — 2026-10-13
+
+`codecraft` is a gateway Provider for CodeCraft API, an OpenAI-compatible gateway with a permanent free tier (1M tokens/month, no credit card; see [pricing](https://codecraftapi.com/pricing)). The [docs](https://codecraftapi.com/docs) give the base URL `https://codecraftapi.com/v1` and document `POST /chat/completions`, so Arca uses that Base URL with the Chat Completions protocol. No Responses or Anthropic Messages endpoint is documented, so none is exposed.
+
+The [authentication guide](https://codecraftapi.com/docs/authentication) requires `Authorization: Bearer cc_...`; requests without a valid key return HTTP 401 in the OpenAI error envelope. Model discovery uses the documented `GET /v1/models` ([models reference](https://codecraftapi.com/docs/models)) with the OpenAI catalog decoder and the required credential policy; the key needs the default `models:read` scope. The public catalog is at <https://codecraftapi.com/models>. Accounts are created at <https://codecraftapi.com/register>, which is the template portal; keys are managed in the dashboard after sign-in.
+
 ## Sarashina — 2026-10-13
 
 `sarashina` is an official Provider for SB Intuitions' (a SoftBank subsidiary) Sarashina API, which opened as a free beta on 2026-10-13 ([press release](https://prtimes.jp/main/html/rd/p/000000002.000141057.html)). The [Chat Completions reference](https://docs.sarashina.ai/api-reference/chat-completions) documents `POST https://api.sarashina.ai/v1/chat/completions` with `Authorization: Bearer ${SARASHINA_API_KEY}`, giving the Arca Base URL `https://api.sarashina.ai/v1` with the Chat Completions protocol. No Responses or Anthropic Messages endpoint is documented, so none is exposed. Accounts (Google sign-in) and API keys are managed at <https://sarashina.ai/>, which is the template portal; the [introduction](https://docs.sarashina.ai/introduction) is the docs link.
@@ -143,6 +149,7 @@ protocol requirements.
 | `apinex` | `https://api.apinex.bond/v1` | `https://api.apinex.bond` | [Chat API](https://apinex.bond/developers/models/chat), [Messages API](https://apinex.bond/developers/models/messages) |
 | `tokenharbor` | `https://tokenharbor.ai/v1` | `https://tokenharbor.ai` | [Chat and Messages](https://tokenharbor.ai/docs/api/curl), [Codex integration](https://tokenharbor.ai/docs/integrations/codex) |
 | `flock` | `https://api.flock.io/v1` (Chat Completions only) | — | [API endpoint](https://docs.flock.io/flock-products/api-platform/api-endpoint), [Getting started](https://docs.flock.io/flock-products/api-platform/getting-started) |
+| `codecraft` | `https://codecraftapi.com/v1` (Chat Completions only) | — | [Docs](https://codecraftapi.com/docs), [Authentication](https://codecraftapi.com/docs/authentication), [Models](https://codecraftapi.com/docs/models) |
 | `munito` | `https://api.munito.ai/inference/v1` | `https://api.munito.ai/inference` | [API reference](https://docs.munito.ai/api), [Claude Code](https://docs.munito.ai/claude-code) |
 | `ppq` | `https://api.ppq.ai/v1` | `https://api.ppq.ai` | [llms.txt](https://ppq.ai/llms.txt) |
 | `trustedrouter` | `https://api.trustedrouter.com/v1` | `https://api.trustedrouter.com` | [API docs](https://trustedrouter.com/docs), [Agent setup](https://trustedrouter.com/docs/agent-setup) |
