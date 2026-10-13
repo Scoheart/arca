@@ -770,7 +770,7 @@ dependencies = [
 
 [[package]]
 name = "desktop"
-version = "1.14.4"
+version = "1.14.5"
 dependencies = [
  "block2",
  "chrono",
@@ -2313,7 +2313,7 @@ dependencies = [
 
 [[package]]
 name = "mux-core"
-version = "1.14.4"
+version = "1.14.5"
 dependencies = [
  "chrono",
  "core-foundation",

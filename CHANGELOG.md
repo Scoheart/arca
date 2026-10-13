@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.14.5](https://github.com/Scoheart/mux/compare/v1.14.4...v1.14.5) (2026-10-13)
+
+### Changes
+
+* perf(memory): bound trace rendering and capture allocations ([2203ee1](https://github.com/Scoheart/mux/commit/2203ee11e2e2bda56317e1107a79dd178ed80e68))
+
 ## [1.14.4](https://github.com/Scoheart/mux/compare/v1.14.3...v1.14.4) (2026-10-12)
 
 ### Changes
