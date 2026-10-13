@@ -1,5 +1,15 @@
 # Provider Catalog sources
 
+## Sarashina — 2026-10-13
+
+`sarashina` is an official Provider for SB Intuitions' (a SoftBank subsidiary) Sarashina API, which opened as a free beta on 2026-10-13 ([press release](https://prtimes.jp/main/html/rd/p/000000002.000141057.html)). The [Chat Completions reference](https://docs.sarashina.ai/api-reference/chat-completions) documents `POST https://api.sarashina.ai/v1/chat/completions` with `Authorization: Bearer ${SARASHINA_API_KEY}`, giving the Arca Base URL `https://api.sarashina.ai/v1` with the Chat Completions protocol. No Responses or Anthropic Messages endpoint is documented, so none is exposed. Accounts (Google sign-in) and API keys are managed at <https://sarashina.ai/>, which is the template portal; the [introduction](https://docs.sarashina.ai/introduction) is the docs link.
+
+The [model list](https://docs.sarashina.ai/models) documents the chat models `sarashina3-mini` and `sarashina3-nano` (128k context) and the moderation model `sarashina3-guard`. Embeddings, rerank, and translation endpoints are out of scope. [Rate limits](https://docs.sarashina.ai/rate-limits) apply per account.
+
+Compatibility caveats from the reference: OpenAI fields the API does not support, such as `logprobs` and `stream_options`, are rejected with HTTP 400 (`Invalid JSON or disallowed fields`); `max_completion_tokens` is capped at 8000; and the object form of `tool_choice` is unsupported. Arca only writes the Agent configuration and has no per-provider request-field filter, so Agents that send these fields by default may fail against this endpoint.
+
+No model discovery adapter is registered: the docs do not document `GET /v1/models`, and an unauthenticated request returned HTTP 403.
+
 ## FLock API Platform — 2026-10-13
 
 `flock` is a gateway Provider for FLock.io's unified, OpenAI-compatible model API. The [API endpoint guide](https://docs.flock.io/flock-products/api-platform/api-endpoint) documents `POST https://api.flock.io/v1/chat/completions`, giving the MUX Base URL `https://api.flock.io/v1` with the Chat Completions protocol. No Responses or Anthropic Messages endpoint is documented, so none is exposed.

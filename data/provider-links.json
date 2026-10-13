@@ -419,6 +419,13 @@
       "kind": "api-key"
     }
   },
+  "sarashina": {
+    "docs_url": "https://docs.sarashina.ai/introduction",
+    "portal": {
+      "url": "https://sarashina.ai/",
+      "kind": "console"
+    }
+  },
   "cohere": {
     "docs_url": "https://docs.cohere.com/docs/models",
     "portal": {

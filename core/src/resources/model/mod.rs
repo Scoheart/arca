@@ -1013,6 +1013,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "sarashina",
+        name: "Sarashina",
+        default_base_url: Some("https://api.sarashina.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "cohere",
         name: "Cohere",
         default_base_url: Some("https://api.cohere.ai/compatibility/v1"),
@@ -1477,6 +1484,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "generativelanguage.googleapis.com" => "google",
         "api.x.ai" => "xai",
         "api.mistral.ai" => "mistral",
+        "api.sarashina.ai" => "sarashina",
         "api.cohere.ai" => "cohere",
         "api.deepseek.com" => "deepseek",
         "api.groq.com" => "groq",
@@ -6775,6 +6783,9 @@ mod tests {
             ("https://api.flock.io/v1", "flock"),
             ("https://api.flock.io/v1/chat/completions", "flock"),
             ("https://api.flock.io.evil.test/v1", "custom"),
+            ("https://api.sarashina.ai/v1", "sarashina"),
+            ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
+            ("https://api.sarashina.ai.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -6857,7 +6868,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 105);
+        assert_eq!(list_providers().len(), 106);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
