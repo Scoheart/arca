@@ -14,7 +14,7 @@ hero:
       link: '#product-demo'
     - theme: alt
       text: Download Desktop
-      link: https://github.com/Scoheart/arca/releases/latest
+      link: https://github.com/Scoheart/mux/releases/latest
 ---
 
 <ArcaHomeSections lang="en" />

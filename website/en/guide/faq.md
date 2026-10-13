@@ -44,4 +44,4 @@ Check for a Stable update in Desktop settings. A standalone CLI uses `arca upgra
 
 Official prebuilt Desktop and CLI artifacts currently target macOS Apple Silicon. Source compilation on another platform is not the same as completed platform validation.
 
-[GitHub Issues](https://github.com/Scoheart/arca/issues) · [Demo](/en/guide/demo)
+[GitHub Issues](https://github.com/Scoheart/mux/issues) · [Demo](/en/guide/demo)

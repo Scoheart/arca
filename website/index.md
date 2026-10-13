@@ -14,7 +14,7 @@ hero:
       link: '#product-demo'
     - theme: alt
       text: 下载桌面 App
-      link: https://github.com/Scoheart/arca/releases/latest
+      link: https://github.com/Scoheart/mux/releases/latest
 ---
 
 <ArcaHomeSections lang="zh" />

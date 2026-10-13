@@ -4,7 +4,7 @@ Arca 有桌面 App 和 CLI / TUI 两个入口，共享 `~/.arca/`。桌面 App �
 
 ## 桌面 App（macOS）
 
-1. 打开[最新正式版 Release](https://github.com/Scoheart/arca/releases/latest)，选择标注为 **Desktop installer · Apple Silicon** 的资源（文件名形如 `Arca-Desktop-Installer-*-macOS-Apple-Silicon.dmg`）。
+1. 打开[最新正式版 Release](https://github.com/Scoheart/mux/releases/latest)，选择标注为 **Desktop installer · Apple Silicon** 的资源（文件名形如 `Arca-Desktop-Installer-*-macOS-Apple-Silicon.dmg`）。
 2. 打开 dmg，把 **Arca.app** 拖进 `/Applications`。
 3. 首次打开。
 
@@ -60,7 +60,7 @@ arca --version
 ### 方式三：从源码安装（需要 Rust）
 
 ```bash
-git clone https://github.com/Scoheart/arca
+git clone https://github.com/Scoheart/mux
 cd arca
 cargo install --path cli       # 装到 ~/.cargo/bin/arca
 ```

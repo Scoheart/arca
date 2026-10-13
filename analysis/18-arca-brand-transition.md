@@ -38,3 +38,7 @@
 - 旧 Provider 的 mux-store 元数据已用实际 CLI 验证可读，并在 API 输出为 arca-store。
 - 旧 Keychain 状态需在 Mac 做安装验收；本机只核对 service 标识没有变动，未导出、打印或复制真实密钥。
 - GitHub 仓库改名和 Release 的最终结果以交付时实际 API/下载核验为准；文档网站的源代码构建不等于现有 Vercel 站点已部署，更不等于新域名已配置。
+
+## GitHub 管理权限边界
+
+实测 repo metadata 返回 admin=true，但当前 GitHub integration 对 PATCH 仓库改名返回 HTTP 403 Resource not accessible by integration。不能把 admin 展示字段当作 API administration 权限。产品/代码/发布包仍按 Arca 交付；为避免把 updater、CLI upgrade、精选来源、issue/edit/release 链接指向不存在的仓库，对外运输 URL 暂留 Scoheart/mux。仓库所有者可在 Settings 将其改为 arca，旧地址由 GitHub redirect 继续工作。不要创建一个同名的新空仓库替代原仓库，也不要复制/覆盖已有 Stable tags。

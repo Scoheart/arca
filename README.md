@@ -89,7 +89,8 @@ external settings. Legacy `mux-store` metadata is accepted, while new API
 responses use `arca-store`.
 
 Existing desktop updaters keep the same signature trust key and follow the
-GitHub repository redirect. A legacy CLI upgrade archive remains solely for
+GitHub repository transport address. The repository still uses its former name
+until the owner changes it in GitHub settings. A legacy CLI upgrade archive remains solely for
 older standalone clients; the executable it contains is Arca. The installer is
 named Arca.app; an in-place update of an old MUX.app may retain that old folder
 name, so use the Arca installer to replace the application name in Applications.

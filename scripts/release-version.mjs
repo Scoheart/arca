@@ -485,7 +485,7 @@ function changelogCommits(root, previousVersion, sourceSha) {
     }
     const sha = line.slice(0, separator);
     const title = line.slice(separator + 1).replaceAll("[", "\\[");
-    return `* ${title} ([${sha.slice(0, 7)}](https://github.com/Scoheart/arca/commit/${sha}))`;
+    return `* ${title} ([${sha.slice(0, 7)}](https://github.com/Scoheart/mux/commit/${sha}))`;
   });
 }
 
@@ -537,7 +537,7 @@ export async function prepareDirectRelease(root, sourceSha, releaseType) {
   const commits = changelogCommits(root, previousVersion, sourceSha);
   const entry = [
     "",
-    `## [${version}](https://github.com/Scoheart/arca/compare/v${previousVersion}...v${version}) (${date})`,
+    `## [${version}](https://github.com/Scoheart/mux/compare/v${previousVersion}...v${version}) (${date})`,
     "",
     "### Changes",
     "",

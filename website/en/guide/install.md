@@ -4,7 +4,7 @@ Arca has two entry points — the desktop app and the CLI / TUI — sharing `~/.
 
 ## Desktop app (macOS)
 
-1. Open the [latest stable Release](https://github.com/Scoheart/arca/releases/latest) and pick the asset labeled **Desktop installer · Apple Silicon** (its filename looks like `Arca-Desktop-Installer-*-macOS-Apple-Silicon.dmg`).
+1. Open the [latest stable Release](https://github.com/Scoheart/mux/releases/latest) and pick the asset labeled **Desktop installer · Apple Silicon** (its filename looks like `Arca-Desktop-Installer-*-macOS-Apple-Silicon.dmg`).
 2. Open the dmg and drag **Arca.app** into `/Applications`.
 3. Launch it for the first time.
 
@@ -51,7 +51,7 @@ A standalone CLI can run `arca upgrade` to follow the latest stable release; the
 ### Option 3: install from source (requires Rust)
 
 ```bash
-git clone https://github.com/Scoheart/arca
+git clone https://github.com/Scoheart/mux
 cd arca
 cargo install --path cli       # installs to ~/.cargo/bin/arca
 ```

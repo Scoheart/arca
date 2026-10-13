@@ -9,7 +9,8 @@ use std::time::Duration;
 
 use crate::paths::arca_dir;
 
-const REPO: &str = "scoheart/arca";
+// Repository transport alias: follows GitHub redirects once the owner renames it.
+const REPO: &str = "scoheart/mux";
 /// 被动检查的间隔：每天最多打一次 GitHub API。
 const PASSIVE_CHECK_INTERVAL_SECS: i64 = 24 * 60 * 60;
 

@@ -32,7 +32,7 @@ elif [[ "$1" == issue && "$2" == list ]]; then
 elif [[ "$1" == issue && "$2" == create ]]; then
   echo OPEN >"$FAKE_STATE/issue-state"
   printf '%s\n' "$*" >"$FAKE_STATE/create-args"
-  echo "https://github.com/Scoheart/arca/issues/17"
+  echo "https://github.com/Scoheart/mux/issues/17"
 elif [[ "$1" == issue && "$2" == edit ]]; then
   printf '%s\n' "$*" >"$FAKE_STATE/edit-args"
 elif [[ "$1" == issue && "$2" == reopen ]]; then

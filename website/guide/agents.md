@@ -34,4 +34,4 @@ Skills 仅分配到明确核验的用户级目录。只有当前机器实际可�
 
 没有稳定用户级配置文件契约的产品保持只读或提供原生设置指导。Pi 的原生 MCP 契约适用于 0.99.0+；更早版本需其对应扩展。Claude 桌面端的本地 MCP 文件只接收 stdio，远程连接由客户端的 Connectors 管理。
 
-核验方法与来源见仓库 [Agent Catalog](https://github.com/Scoheart/arca/blob/main/docs/agent-catalog.md)。
+核验方法与来源见仓库 [Agent Catalog](https://github.com/Scoheart/mux/blob/main/docs/agent-catalog.md)。
