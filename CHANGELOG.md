@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.8](https://github.com/Scoheart/arca/compare/v2.0.7...v2.0.8) (2026-10-13)
+
+### Changes
+
+* feat(models): add Liquid AI official provider ([7c22797](https://github.com/Scoheart/arca/commit/7c22797793da0c68dfdc9d2ec6711dec193c4f4c))
+
 ## [2.0.7](https://github.com/Scoheart/arca/compare/v2.0.6...v2.0.7) (2026-10-13)
 
 ### Changes
