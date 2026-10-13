@@ -1,5 +1,13 @@
 # Provider Catalog sources
 
+## FLock API Platform — 2026-10-13
+
+`flock` is a gateway Provider for FLock.io's unified, OpenAI-compatible model API. The [API endpoint guide](https://docs.flock.io/flock-products/api-platform/api-endpoint) documents `POST https://api.flock.io/v1/chat/completions`, giving the MUX Base URL `https://api.flock.io/v1` with the Chat Completions protocol. No Responses or Anthropic Messages endpoint is documented, so none is exposed.
+
+The official example authenticates with `x-litellm-api-key: sk-...` because the platform is LiteLLM-backed. MUX sends the standard `Authorization: Bearer` header; an invalid Bearer token sent to `https://api.flock.io/v1/models` and `/v1/chat/completions` returned LiteLLM's `token_not_found_in_db` error naming the received key, confirming the proxy reads Bearer credentials.
+
+Model discovery uses the authenticated `GET /v1/models` with the OpenAI catalog decoder and the required credential policy; an unauthenticated request returned HTTP 401 (`No api key passed in`). The public marketing catalog at <https://platform.flock.io/api/models> uses a different schema and is listed at <https://platform.flock.io/models>; it is not used for discovery. Accounts and keys are created through the [getting started guide](https://docs.flock.io/flock-products/api-platform/getting-started) and the [platform console](https://platform.flock.io/), which is the template portal.
+
 ## GMI Cloud — 2026-10-09
 
 `gmi-cloud` is a separate gateway Provider with Chat Completions at `https://api.gmi-serving.com/v1/chat/completions`, Responses at `https://api.gmi-serving.com/v1/responses`, and Anthropic Messages at `https://api.gmi-serving.com/v1/messages`. Combining the documented protocol bases gives the normalized Arca Base URL `https://api.gmi-serving.com` and paths `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`.
@@ -94,6 +102,7 @@ protocol requirements.
 | `infron` | `https://llm.onerouter.pro/v1` | `https://llm.onerouter.pro` | [API reference](https://infron.ai/models/deepseek/deepseek-v4-flash:free/api-reference) |
 | `apinex` | `https://api.apinex.bond/v1` | `https://api.apinex.bond` | [Chat API](https://apinex.bond/developers/models/chat), [Messages API](https://apinex.bond/developers/models/messages) |
 | `tokenharbor` | `https://tokenharbor.ai/v1` | `https://tokenharbor.ai` | [Chat and Messages](https://tokenharbor.ai/docs/api/curl), [Codex integration](https://tokenharbor.ai/docs/integrations/codex) |
+| `flock` | `https://api.flock.io/v1` (Chat Completions only) | — | [API endpoint](https://docs.flock.io/flock-products/api-platform/api-endpoint), [Getting started](https://docs.flock.io/flock-products/api-platform/getting-started) |
 
 APInex is currently exposed with Chat Completions and Anthropic Messages only;
 its public documentation does not establish a separate Responses endpoint.
