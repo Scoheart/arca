@@ -178,6 +178,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "infron"
         | "apinex"
         | "tokenharbor"
+        | "flock"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -801,6 +802,7 @@ mod tests {
         "infron",
         "apinex",
         "tokenharbor",
+        "flock",
         "mistral",
         "deepseek",
         "groq",

@@ -244,6 +244,13 @@
       "kind": "api-key"
     }
   },
+  "flock": {
+    "docs_url": "https://docs.flock.io/flock-products/api-platform/api-endpoint",
+    "portal": {
+      "url": "https://platform.flock.io/",
+      "kind": "console"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
