@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.1](https://github.com/Scoheart/mux/compare/v2.0.0...v2.0.1) (2026-10-13)
+
+### Changes
+
+* fix(brand): preserve native model identity across adapters ([b8e5b06](https://github.com/Scoheart/mux/commit/b8e5b0652b504576b68094d4af3573bdc5de84c8))
+
 ## [2.0.0](https://github.com/Scoheart/mux/compare/v1.14.5...v2.0.0) (2026-10-13)
 
 ### Changes
