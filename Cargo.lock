@@ -1274,7 +1274,7 @@ dependencies = [
 
 [[package]]
 name = "arca-cli"
-version = "2.0.5"
+version = "2.0.6"
 dependencies = [
  "clap",
  "crossterm",
@@ -1286,7 +1286,7 @@ dependencies = [
 
 [[package]]
 name = "arca-core"
-version = "2.0.5"
+version = "2.0.6"
 dependencies = [
  "chrono",
  "core-foundation",

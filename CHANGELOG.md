@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.6](https://github.com/Scoheart/arca/compare/v2.0.5...v2.0.6) (2026-10-13)
+
+### Changes
+
+* feat(models): add CodeCraft API gateway provider (#211) ([1a83013](https://github.com/Scoheart/arca/commit/1a8301313ddf8c8d33d42057570582a44d0a37dd))
+
 ## [2.0.5](https://github.com/Scoheart/arca/compare/v2.0.4...v2.0.5) (2026-10-13)
 
 ### Changes
