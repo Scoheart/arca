@@ -251,6 +251,13 @@
       "kind": "console"
     }
   },
+  "codecraft": {
+    "docs_url": "https://codecraftapi.com/docs",
+    "portal": {
+      "url": "https://codecraftapi.com/register",
+      "kind": "console"
+    }
+  },
   "clean-apis": {
     "docs_url": "https://cleanapis.com/docs/getting-started",
     "portal": {
