@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.5](https://github.com/Scoheart/arca/compare/v2.0.4...v2.0.5) (2026-10-13)
+
+### Changes
+
+* feat(models): add 12 verified providers from the free-offer list (#210) ([4fbef29](https://github.com/Scoheart/arca/commit/4fbef29851b1c80b1a38a6112ed9bb1b2b6b3cfd))
+
 ## [2.0.4](https://github.com/Scoheart/arca/compare/v2.0.3...v2.0.4) (2026-10-13)
 
 ### Changes
