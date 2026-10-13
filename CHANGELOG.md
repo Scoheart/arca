@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.4](https://github.com/Scoheart/arca/compare/v2.0.3...v2.0.4) (2026-10-13)
+
+### Changes
+
+* feat(models): add Sarashina official provider (#209) ([9733c01](https://github.com/Scoheart/arca/commit/9733c0183e1e4fea3dca2ea4582cf62489780d98))
+
 ## [2.0.3](https://github.com/Scoheart/arca/compare/v2.0.2...v2.0.3) (2026-10-13)
 
 ### Changes
