@@ -10,6 +10,36 @@ Compatibility caveats from the reference: OpenAI fields the API does not support
 
 No model discovery adapter is registered: the docs do not document `GET /v1/models`, and an unauthenticated request returned HTTP 403.
 
+## Free-offer Provider expansion — 2026-10-13
+
+Adds 12 templates found in a curated list of free model/API offers (118 templates including Custom, after Sarashina). Every Base URL below is copied from the vendor's own documentation; each documented path was also probed without credentials and returned an authentication or request-validation error rather than 404. Only protocols that are documented are exposed. Model IDs are left to each account's catalog or manual entry.
+
+| Arca Provider ID | Base URL / protocols | Model discovery | Official sources |
+|---|---|---|---|
+| `clean-apis` | `https://cleanapis.com/v1` (Chat Completions only) | `GET /v1/models`, credential required | [Getting started](https://cleanapis.com/docs/getting-started), [Coding agents](https://cleanapis.com/docs/coding-agents) |
+| `dolphin` | `https://lighthouse.dphn.ai/run/text-v/v1` (Chat Completions only) | `GET /models`, credential required | [Coupon credits quick-start](https://dphn.ai/docs/coupon-credits) |
+| `iteracompute` | `https://api.iteracompute.com/v1` (Chat Completions default, Responses) | public `GET /v1/models` | [API documentation](https://iteracompute.com/docs.html) |
+| `llmtr` | `https://llmtr.com/v1` (Chat Completions only) | public `GET /v1/models` | [Docs](https://llmtr.com/docs/), [Chat Completions](https://llmtr.com/docs/gateway/chat-completions/), [llms.txt](https://llmtr.com/llms.txt) |
+| `munito` | `https://api.munito.ai/inference/v1` (Responses default, Chat Completions); Anthropic `https://api.munito.ai/inference` | public `GET /models` | [Docs](https://docs.munito.ai/), [API reference](https://docs.munito.ai/api), [Claude Code](https://docs.munito.ai/claude-code), [Regions](https://docs.munito.ai/regions) |
+| `nous-portal` | `https://inference-api.nousresearch.com/v1` (Chat Completions only) | public `GET /v1/models` | [API docs](https://portal.nousresearch.com/api-docs), [OpenAPI](https://portal.nousresearch.com/api/openapi), [Hermes Agent integration](https://hermes-agent.nousresearch.com/docs/integrations/nous-portal) |
+| `ppq` | `https://api.ppq.ai/v1` (Responses default, Chat Completions); Anthropic `https://api.ppq.ai` | public `GET /v1/models` | [API docs](https://ppq.ai/api-docs), [llms.txt](https://ppq.ai/llms.txt) |
+| `river` | `https://api.river.ai/v1` (Responses default, Chat Completions) | `GET /v1/models`, credential required | [Inference quickstart](https://docs.river.ai/guides/inference/), [API controls](https://docs.river.ai/guides/inference-controls/) |
+| `trustedrouter` | `https://api.trustedrouter.com/v1` (Responses default, Chat Completions); Anthropic `https://api.trustedrouter.com` | public `GET /v1/models` | [API docs](https://trustedrouter.com/docs), [Agent setup](https://trustedrouter.com/docs/agent-setup) |
+| `ant-ling` | `https://api.ant-ling.com/v1` (Chat Completions); Anthropic `https://api.ant-ling.com/anthropic` | manual (no documented Models API) | [OpenAI compatible](https://developer.ant-ling.com/en/docs/api-reference/openai/), [Anthropic compatible](https://developer.ant-ling.com/en/docs/api-reference/anthropic/), [Claude Code](https://developer.ant-ling.com/en/docs/integrations/claude-code/) |
+| `antdigital-dtmaas` | `https://maas-api.antdigital.com/v1` (Chat Completions default, Responses) | manual (no documented Models API) | [Platform introduction](https://maas.antdigital.com/dt-maas-docs/intro), [Quick access](https://maas.antdigital.com/dt-maas-docs/quick-access), [Codex guide](https://maas.antdigital.com/dt-maas-docs/agent-guides/codex), [API Key](https://maas.antdigital.com/dt-maas-docs/console/api-key) |
+| `unisound` | `https://maas-api.unisound.com/v1` (Chat Completions default, Responses); Anthropic `https://maas-api.unisound.com/anthropic` | `GET /v1/models`, credential required | [Quickstart](https://maas.unisound.com/docs/guide/quickstart), [OpenAI compatible](https://maas.unisound.com/docs/api/text/openai-compatible), [Anthropic compatible](https://maas.unisound.com/docs/api/text/anthropic-compatible), [Models API](https://maas.unisound.com/docs/api/models/openai-compatible), [Codex](https://maas.unisound.com/docs/toolAI/codex) |
+
+Decisions:
+
+- Default protocol is Responses only when the vendor documents it for the whole catalog. IteraCompute states its free Qwen model is not established on Responses, so Chat Completions stays the default there. DTMaaS and Unisound document Responses through their Codex guides but lead with Chat Completions.
+- Clean APIs' coding-agent guide sets `ANTHROPIC_BASE_URL=https://cleanapis.com/v1`, but `/v1/messages` and `/v1/v1/messages` both return 404, so no Anthropic endpoint is exposed. Its marketing (flat-rate access to frontier proprietary models) suggests a reseller; users remain responsible for the vendor's terms.
+- Munito's EU (`api.eu.munito.ai`) and US (`api.us.munito.ai`) hosts infer to the same template; users switch region by editing the Base URL.
+- DTMaaS pay-as-you-go keys and Token Plan for Agent keys share the same endpoint and differ only by key type, so one template covers both. Unisound Token Plan keys likewise share its endpoint.
+- Ant Ling answers `GET /v1/models` with an auth error, but the route is undocumented; DTMaaS returns the same auth error for any path. Both are excluded from discovery, and DTMaaS requires the exact model Code shown in its console.
+- Portals: key pages are used where the official docs or offer name them (Clean APIs, IteraCompute, LLMTR, Munito, PayPerQ, River, TrustedRouter `/console` → `/console/api-keys`); otherwise the account console is used (Dolphin wallet app, Nous Portal, Ant Ling API Console, DTMaaS, Unisound).
+
+Not added from the same list: Batchrate (batch-only; direct `POST /v1/chat/completions` returns `unknown_route` per its docs), HAL-X THX-01, Nace Console (Drex) and SubQ Snap (decision APIs on `/v1/systemone`; SubQ's chat model is early access only), ScaleDown (fixed summarize/extract/classify task models, no streaming), Empero (key-less community endpoint, offline for maintenance, no documented Base URL), Perch AI (agent apps, no public API), plus agents/IDEs, media tools, local aggregators and directories.
+
 ## FLock API Platform — 2026-10-13
 
 `flock` is a gateway Provider for FLock.io's unified, OpenAI-compatible model API. The [API endpoint guide](https://docs.flock.io/flock-products/api-platform/api-endpoint) documents `POST https://api.flock.io/v1/chat/completions`, giving the MUX Base URL `https://api.flock.io/v1` with the Chat Completions protocol. No Responses or Anthropic Messages endpoint is documented, so none is exposed.
@@ -113,6 +143,9 @@ protocol requirements.
 | `apinex` | `https://api.apinex.bond/v1` | `https://api.apinex.bond` | [Chat API](https://apinex.bond/developers/models/chat), [Messages API](https://apinex.bond/developers/models/messages) |
 | `tokenharbor` | `https://tokenharbor.ai/v1` | `https://tokenharbor.ai` | [Chat and Messages](https://tokenharbor.ai/docs/api/curl), [Codex integration](https://tokenharbor.ai/docs/integrations/codex) |
 | `flock` | `https://api.flock.io/v1` (Chat Completions only) | — | [API endpoint](https://docs.flock.io/flock-products/api-platform/api-endpoint), [Getting started](https://docs.flock.io/flock-products/api-platform/getting-started) |
+| `munito` | `https://api.munito.ai/inference/v1` | `https://api.munito.ai/inference` | [API reference](https://docs.munito.ai/api), [Claude Code](https://docs.munito.ai/claude-code) |
+| `ppq` | `https://api.ppq.ai/v1` | `https://api.ppq.ai` | [llms.txt](https://ppq.ai/llms.txt) |
+| `trustedrouter` | `https://api.trustedrouter.com/v1` | `https://api.trustedrouter.com` | [API docs](https://trustedrouter.com/docs), [Agent setup](https://trustedrouter.com/docs/agent-setup) |
 
 APInex is currently exposed with Chat Completions and Anthropic Messages only;
 its public documentation does not establish a separate Responses endpoint.

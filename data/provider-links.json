@@ -251,6 +251,90 @@
       "kind": "console"
     }
   },
+  "clean-apis": {
+    "docs_url": "https://cleanapis.com/docs/getting-started",
+    "portal": {
+      "url": "https://cleanapis.com/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "dolphin": {
+    "docs_url": "https://dphn.ai/docs/coupon-credits",
+    "portal": {
+      "url": "https://app.dphn.ai/",
+      "kind": "console"
+    }
+  },
+  "iteracompute": {
+    "docs_url": "https://iteracompute.com/docs.html",
+    "portal": {
+      "url": "https://platform.iteracompute.com/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "llmtr": {
+    "docs_url": "https://llmtr.com/docs/",
+    "portal": {
+      "url": "https://llmtr.com/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "munito": {
+    "docs_url": "https://docs.munito.ai/api",
+    "portal": {
+      "url": "https://console.munito.ai/keys",
+      "kind": "api-key"
+    }
+  },
+  "nous-portal": {
+    "docs_url": "https://portal.nousresearch.com/api-docs",
+    "portal": {
+      "url": "https://portal.nousresearch.com/",
+      "kind": "console"
+    }
+  },
+  "ppq": {
+    "docs_url": "https://ppq.ai/llms.txt",
+    "portal": {
+      "url": "https://ppq.ai/api-docs",
+      "kind": "api-key"
+    }
+  },
+  "river": {
+    "docs_url": "https://docs.river.ai/guides/inference/",
+    "portal": {
+      "url": "https://console.river.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "trustedrouter": {
+    "docs_url": "https://trustedrouter.com/docs",
+    "portal": {
+      "url": "https://trustedrouter.com/console/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "ant-ling": {
+    "docs_url": "https://developer.ant-ling.com/en/docs/api-reference/openai/",
+    "portal": {
+      "url": "https://chat.ant-ling.com/open",
+      "kind": "console"
+    }
+  },
+  "antdigital-dtmaas": {
+    "docs_url": "https://maas.antdigital.com/dt-maas-docs/quick-access",
+    "portal": {
+      "url": "https://maas.antdigital.com/",
+      "kind": "console"
+    }
+  },
+  "unisound": {
+    "docs_url": "https://maas.unisound.com/docs/guide/quickstart",
+    "portal": {
+      "url": "https://maas.unisound.com/",
+      "kind": "console"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
