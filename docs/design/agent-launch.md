@@ -1,6 +1,6 @@
 # Agent launcher
 
-The Agent picker and pinned-icon primary click continue to navigate MUX configuration. A compact split action in Agent details launches the runtime; pinned icons expose the same action in a context menu.
+The Agent picker and pinned-icon primary click continue to navigate Arca configuration. A compact split action in Agent details launches the runtime; pinned icons expose the same action in a context menu.
 
 Agent details use one unframed workspace directly on the page, without an outer
 background block, border or rounded shell. The icon sits above the centered name; credential,
@@ -14,7 +14,7 @@ use short rows with name/transport beside the icon and fixed-width controls on
 the right. Skills and Models separate the description from the footer; footer
 controls occupy a nonshrinking grid column, so long text and shared-state badges
 cannot push switches outside the card. External items retain their read-only and
-convergence contracts. Model selection caveats remain visible. Preserve MUX's
+convergence contracts. Model selection caveats remain visible. Preserve Arca's
 existing palette: blue actions and selection, green enabled switches, and the
 original semantic warning colors. The primary launch action is labeled briefly; missing runtimes offer
 installation, and icon-only actions retain tooltips and accessible names.
@@ -45,7 +45,7 @@ Core owns the built-in launch catalog, executable/application discovery, validat
 
 Use exact process arguments for app/URL dispatch. CLI shell and AppleScript strings are encoded separately; commands, paths and arguments are treated as data. Runtime discovery only resolves paths; the limited version probe is the sole automatic CLI invocation. Never install packages during discovery. Terminal actions happen only on a user click.
 
-The macOS bundle declares the Apple Events automation entitlement and a Terminal usage description. On first CLI launch, macOS may ask the user to allow MUX to control the selected terminal. A successful dispatch confirms that the launch request was sent, not that the Agent has authenticated or initialized successfully.
+The macOS bundle declares the Apple Events automation entitlement and a Terminal usage description. On first CLI launch, macOS may ask the user to allow Arca to control the selected terminal. A successful dispatch confirms that the launch request was sent, not that the Agent has authenticated or initialized successfully.
 
 This iteration targets the shipped macOS desktop. Unsupported hosts report that explicitly. CLI entry points without verified metadata remain configurable rather than guessed. Existing installation probes supply declared command candidates; explicit data overrides distinguish IDE/desktop products and extension hosts.
 

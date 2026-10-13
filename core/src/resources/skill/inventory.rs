@@ -25,7 +25,7 @@ const MAX_INVENTORY_SETTINGS_RECORDS: u64 = 10_000;
 const MAX_INVENTORY_ENTRIES: u64 = 10_000;
 const MAX_INVENTORY_RETURNED_ITEMS: u64 = 10_000;
 const MAX_INVENTORY_MANAGED_BYTES: u64 = 512 * 1024 * 1024;
-const TEST_PROBE_ROOT_ENV: &str = "MUX_TEST_PROBE_ROOT";
+const TEST_PROBE_ROOT_ENV: &str = "ARCA_TEST_PROBE_ROOT";
 
 #[derive(Debug, Clone)]
 struct CatalogSkillAgent {
@@ -1401,7 +1401,7 @@ fn detail_content_root(
                 )?;
                 if !states.contains(&InventoryState::Assigned) {
                     return Err(invalid_source(
-                        "the Skill target link is not managed by MUX",
+                        "the Skill target link is not managed by Arca",
                     ));
                 }
                 return central
@@ -1520,7 +1520,7 @@ fn decode_skill_md(bytes: Vec<u8>, truncated: bool) -> Result<(String, bool), Sk
 
 fn strict_settings() -> Result<Settings, SkillError> {
     load_settings_strict().map_err(|_| SkillError::Io {
-        message: "MUX settings could not be read safely".into(),
+        message: "Arca settings could not be read safely".into(),
         path: None,
     })
 }
@@ -2097,33 +2097,33 @@ fn remap_system_root(production: &Path, user_home: &Path) -> PathBuf {
 
 fn guarded_test_probe_root(user_home: &Path) -> Option<PathBuf> {
     let root = PathBuf::from(std::env::var_os(TEST_PROBE_ROOT_ENV)?);
-    let mux_home = std::env::var_os("MUX_HOME").map(PathBuf::from)?;
-    if !root.is_absolute() || !user_home.is_absolute() || !mux_home.is_absolute() {
+    let arca_home = crate::brand::env_os("ARCA_HOME").map(PathBuf::from)?;
+    if !root.is_absolute() || !user_home.is_absolute() || !arca_home.is_absolute() {
         return None;
     }
-    if root != user_home || mux_home != root.join(".mux") {
+    if root != user_home || arca_home != root.join(".arca") {
         return None;
     }
-    if [&root, user_home, &mux_home].into_iter().any(|path| {
+    if [&root, user_home, &arca_home].into_iter().any(|path| {
         fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink())
     }) {
         return None;
     }
     if lexical_absolute(&root).ok().as_ref() != Some(&root)
         || lexical_absolute(user_home).ok().as_deref() != Some(user_home)
-        || lexical_absolute(&mux_home).ok().as_ref() != Some(&mux_home)
+        || lexical_absolute(&arca_home).ok().as_ref() != Some(&arca_home)
     {
         return None;
     }
     let physical_root = canonicalize_deepest(&root).ok()?;
     let physical_home = canonicalize_deepest(user_home).ok()?;
-    let physical_mux = canonicalize_deepest(&mux_home).ok()?;
-    let expected_mux = canonicalize_deepest(&root.join(".mux")).ok()?;
+    let physical_arca = canonicalize_deepest(&arca_home).ok()?;
+    let expected_arca = canonicalize_deepest(&root.join(".arca")).ok()?;
     (physical_root == root
         && physical_home == user_home
-        && physical_mux == mux_home
+        && physical_arca == arca_home
         && physical_root == physical_home
-        && physical_mux == expected_mux)
+        && physical_arca == expected_arca)
         .then_some(root)
 }
 
@@ -2185,33 +2185,33 @@ mod tests {
         );
 
         std::env::set_var(TEST_PROBE_ROOT_ENV, &th.home);
-        std::env::set_var("MUX_HOME", th.home.join("other-mux"));
+        std::env::set_var("ARCA_HOME", th.home.join("other-arca"));
         assert_eq!(remap_system_root(&production, &th.home), production);
 
-        std::env::set_var("MUX_HOME", th.home.join(".mux"));
+        std::env::set_var("ARCA_HOME", th.home.join(".arca"));
         let other_home = th.home.join("other-home");
         fs::create_dir(&other_home).unwrap();
         assert!(guarded_test_probe_root(&other_home).is_none());
 
-        std::env::set_var("MUX_HOME", "relative-mux");
+        std::env::set_var("ARCA_HOME", "relative-arca");
         assert_eq!(remap_system_root(&production, &th.home), production);
 
-        let real_mux = th.home.join("real-mux");
-        fs::create_dir(&real_mux).unwrap();
-        std::os::unix::fs::symlink(&real_mux, th.home.join(".mux")).unwrap();
+        let real_arca = th.home.join("real-arca");
+        fs::create_dir(&real_arca).unwrap();
+        std::os::unix::fs::symlink(&real_arca, th.home.join(".arca")).unwrap();
         std::env::set_var(TEST_PROBE_ROOT_ENV, &th.home);
-        std::env::set_var("MUX_HOME", th.home.join(".mux"));
+        std::env::set_var("ARCA_HOME", th.home.join(".arca"));
         assert!(guarded_test_probe_root(&th.home).is_none());
 
         let lexical_alias = th.home.join("nested/..");
         std::env::set_var(TEST_PROBE_ROOT_ENV, &lexical_alias);
-        std::env::set_var("MUX_HOME", lexical_alias.join(".mux"));
+        std::env::set_var("ARCA_HOME", lexical_alias.join(".arca"));
         assert!(guarded_test_probe_root(&lexical_alias).is_none());
 
         let symlink_alias = th.home.join("home-alias");
         std::os::unix::fs::symlink(&th.home, &symlink_alias).unwrap();
         std::env::set_var(TEST_PROBE_ROOT_ENV, &symlink_alias);
-        std::env::set_var("MUX_HOME", symlink_alias.join(".mux"));
+        std::env::set_var("ARCA_HOME", symlink_alias.join(".arca"));
         assert!(guarded_test_probe_root(&symlink_alias).is_none());
 
         let real_parent = th.home.join("real-parent");
@@ -2221,11 +2221,11 @@ mod tests {
         std::os::unix::fs::symlink(&real_parent, &parent_alias).unwrap();
         let parent_aliased_home = parent_alias.join("nested-home");
         std::env::set_var(TEST_PROBE_ROOT_ENV, &parent_aliased_home);
-        std::env::set_var("MUX_HOME", parent_aliased_home.join(".mux"));
+        std::env::set_var("ARCA_HOME", parent_aliased_home.join(".arca"));
         assert!(guarded_test_probe_root(&parent_aliased_home).is_none());
 
         std::env::set_var(TEST_PROBE_ROOT_ENV, "relative-home");
-        std::env::set_var("MUX_HOME", "relative-home/.mux");
+        std::env::set_var("ARCA_HOME", "relative-home/.arca");
         assert!(guarded_test_probe_root(Path::new("relative-home")).is_none());
     }
 
@@ -2483,7 +2483,7 @@ mod tests {
     }
 }
 
-/// Runtime detection excludes configuration directories that MUX itself can create.
+/// Runtime detection excludes configuration directories that Arca itself can create.
 /// An installed executable under a product `bin` directory still counts, because
 /// writing that product's config does not create the binary.
 pub(crate) fn detect_agent_runtime(probes: &[AgentInstallProbe]) -> Option<bool> {

@@ -94,13 +94,14 @@ jobs:
             desktop/package-lock.json \
             desktop/src-tauri/Cargo.toml \
             desktop/src-tauri/Cargo.lock \
-            desktop/src-tauri/tauri.conf.json
+            desktop/src-tauri/tauri.conf.json \
+            website/.vitepress/reference.json
           if git diff --cached --quiet; then
             echo "Direct stable preparation produced no changes." >&2
             exit 1
           fi
-          git -c user.name="mux-release[bot]" \
-            -c user.email="mux-release[bot]@users.noreply.github.com" \
+          git -c user.name="arca-release[bot]" \
+            -c user.email="arca-release[bot]@users.noreply.github.com" \
             commit -m "chore(main): release $version"
           git push origin HEAD:main
           echo "version=$version" >>"$GITHUB_OUTPUT"

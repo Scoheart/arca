@@ -249,7 +249,7 @@ fn app_version(path: &str) -> Option<String> {
 fn cli_version(path: &str) -> Option<String> {
     let program = Path::new(path);
     if !program.is_absolute() || !executable(program) { return None; }
-    let output_path = std::env::temp_dir().join(format!("mux-agent-version-{}", uuid::Uuid::new_v4()));
+    let output_path = std::env::temp_dir().join(format!("arca-agent-version-{}", uuid::Uuid::new_v4()));
     let mut output_file = fs::OpenOptions::new();
     output_file.write(true).create_new(true);
     #[cfg(unix)] {
@@ -364,7 +364,7 @@ fn quote_shell(value: &str) -> String { format!("'{}'", value.replace('\'', "'\\
 
 pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Result<(), String> {
     #[cfg(any(test, debug_assertions))]
-    if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
+    if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
         return Err("test_launch_blocked: isolated fixtures cannot start host applications".into());
     }
     if !cfg!(target_os = "macos") { return Err("当前平台暂不支持启动 Agent".into()); }

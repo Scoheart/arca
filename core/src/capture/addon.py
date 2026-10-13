@@ -1,4 +1,4 @@
-"""MUX capture adapter. No raw flow dump or credentials are persisted."""
+"""Arca capture adapter. No raw flow dump or credentials are persisted."""
 import asyncio
 import codecs
 import ctypes
@@ -18,7 +18,7 @@ from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode, quote
 from mitmproxy import ctx
 from mitmproxy.proxy import mode_servers
 
-ROOT = Path(os.environ['MUX_CAPTURE_DIR'])
+ROOT = Path(os.environ['ARCA_CAPTURE_DIR'])
 CONFIG = json.loads((ROOT / 'session.json').read_text())
 LIMIT = 2 * 1024 * 1024
 MAX_FLOWS = 5000
@@ -304,12 +304,12 @@ def loopback(address):
 
 
 def owner_alive():
-    owner = os.environ.get('MUX_CAPTURE_OWNER')
+    owner = os.environ.get('ARCA_CAPTURE_OWNER')
     if not owner:
         return False
     try:
         result = subprocess.run(['/bin/ps', '-p', owner, '-o', 'lstart='], capture_output=True, text=True, timeout=5)
-        return result.returncode == 0 and ' '.join(result.stdout.split()) == os.environ.get('MUX_CAPTURE_OWNER_START')
+        return result.returncode == 0 and ' '.join(result.stdout.split()) == os.environ.get('ARCA_CAPTURE_OWNER_START')
     except (OSError, subprocess.TimeoutExpired):
         return False
 
@@ -456,10 +456,10 @@ class Capture:
     async def watch(self):
         while True:
             await asyncio.sleep(2)
-            owner = os.environ.get('MUX_CAPTURE_OWNER')
+            owner = os.environ.get('ARCA_CAPTURE_OWNER')
             if owner:
                 if not await asyncio.to_thread(owner_alive):
-                    self.status('stopped', 'MUX 已退出，抓包已停止。')
+                    self.status('stopped', 'Arca 已退出，抓包已停止。')
                     ctx.master.shutdown()
                     return
             if (ROOT / 'stop').exists():

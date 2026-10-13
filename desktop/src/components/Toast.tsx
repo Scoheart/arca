@@ -55,18 +55,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ show }}>
       {children}
       {active && createPortal(
-        <div className="mux-toast-viewport" data-toast-viewport
+        <div className="arca-toast-viewport" data-toast-viewport
           onPointerEnter={() => setPaused(true)}
           onPointerLeave={(event) => { if (!event.currentTarget.contains(document.activeElement)) setPaused(false); }}
           onFocusCapture={() => setPaused(true)}
           onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}>
-          <div key={active.id} className="mux-toast" data-leaving={leaving || undefined}
+          <div key={active.id} className="arca-toast" data-leaving={leaving || undefined}
             role={active.kind === "error" ? "alert" : "status"} aria-atomic="true">
-            <div className="mux-toast-icon" data-kind={active.kind}>
+            <div className="arca-toast-icon" data-kind={active.kind}>
               {active.kind === "success" ? <CheckIcon className="w-3 h-3 text-white" /> : <XIcon className="w-3 h-3 text-white" />}
             </div>
-            <span className="mux-toast-message">{active.msg}</span>
-            <button type="button" className="mux-icon-btn mux-toast-close"
+            <span className="arca-toast-message">{active.msg}</span>
+            <button type="button" className="arca-icon-btn arca-toast-close"
               aria-label={t(active.kind === "error" ? "notifications.closeError" : "notifications.closeSuccess")}
               title={t("notifications.close")} onClick={dismiss}><XIcon className="w-3.5 h-3.5" /></button>
           </div>

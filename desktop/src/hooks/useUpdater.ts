@@ -7,7 +7,7 @@ import { updateEnvironment } from "../lib/api";
 
 // Remember the version the user clicked "稍后" on, so the startup check stops
 // nagging about it. A manual check (点版本号) always ignores this.
-const DISMISS_KEY = "mux-update-dismissed";
+const DISMISS_KEY = "arca-update-dismissed";
 
 export type UpdatePhase =
   | { kind: "idle" }

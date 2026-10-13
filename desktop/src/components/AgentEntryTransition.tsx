@@ -127,11 +127,11 @@ export function AgentEntryTransition({ agent, origin, overlay, onDone }: {
     };
   }, [agent.id, origin, overlay]);
 
-  return createPortal(<div className="mux-agent-entry-layer" aria-hidden="true">
-    <div ref={frameRef} className="mux-agent-entry-card" style={{ width: origin.width, height: origin.height }}>
-      <div ref={surfaceRef} className="mux-agent-entry-surface" />
-      <span ref={glyphRef} className="mux-agent-entry-glyph"><AgentGlyph id={agent.id} name={agent.name} size={30} /></span>
-      <strong ref={nameRef} className="mux-agent-entry-name">{agent.name}</strong>
+  return createPortal(<div className="arca-agent-entry-layer" aria-hidden="true">
+    <div ref={frameRef} className="arca-agent-entry-card" style={{ width: origin.width, height: origin.height }}>
+      <div ref={surfaceRef} className="arca-agent-entry-surface" />
+      <span ref={glyphRef} className="arca-agent-entry-glyph"><AgentGlyph id={agent.id} name={agent.name} size={30} /></span>
+      <strong ref={nameRef} className="arca-agent-entry-name">{agent.name}</strong>
     </div>
   </div>, document.body);
 }

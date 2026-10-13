@@ -1,4 +1,4 @@
-# MUX 读取与交互性能优化
+# Arca 读取与交互性能优化
 
 本次处理启动、切页、搜索和长列表滚动。保留当前布局、配色和配置写入规则。
 
@@ -22,7 +22,7 @@
 
 ## 测量
 
-2026-09-22，Apple M4 Pro。Rust 使用同一机器、相同 dev 构建配置；预热一次后记录 15 次，中位数如下。Node 计算记录 21 次。数据均为合成 fixture，Rust 使用 `TestHome` 隔离 HOME、MUX_HOME、安装探测与 PATH，无真实用户配置或 Keychain 访问。
+2026-09-22，Apple M4 Pro。Rust 使用同一机器、相同 dev 构建配置；预热一次后记录 15 次，中位数如下。Node 计算记录 21 次。数据均为合成 fixture，Rust 使用 `TestHome` 隔离 HOME、ARCA_HOME、安装探测与 PATH，无真实用户配置或 Keychain 访问。
 
 | 场景 | 优化前 | 优化后 | 变化 |
 | --- | ---: | ---: | ---: |
@@ -40,7 +40,7 @@
 ## 验证与复现
 
 ```sh
-cargo run --offline -p mux-core --example perf_reads
+cargo run --offline -p arca-core --example perf_reads
 node --experimental-vm-modules scripts/benchmark-desktop-reads.mjs \
   --baseline 824f94c18fa4ce735c763d60c7e86015cf0f3168
 cd desktop && npm run build

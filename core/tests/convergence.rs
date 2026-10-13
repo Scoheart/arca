@@ -2,19 +2,19 @@
 
 mod support;
 
-use mux_core::application::operations::{
+use arca_core::application::operations::{
     CommitOperationRequest, OperationCommitResult, OperationPlan, PlanOperationRequest,
 };
-use mux_core::application::MuxCore;
-use mux_core::domain::assets::{
+use arca_core::application::ArcaCore;
+use arca_core::domain::assets::{
     AgentConsumptionSelection, AssetCapability, AssetCommitRequest, AssetRef, ConsumptionInventory,
     ConsumptionStatus, ConvergenceAction, PlanConvergeConsumptionRequest,
     PlanSetAgentConsumptionRequest,
 };
-use mux_core::resources::mcp::registry::{read_registry, write_manual_entry};
-use mux_core::resources::model::save_profile;
-use mux_core::testenv::TestHome;
-use mux_core::types::{ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::resources::mcp::registry::{read_registry, write_manual_entry};
+use arca_core::resources::model::save_profile;
+use arca_core::testenv::TestHome;
+use arca_core::types::{ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig};
 use std::fs;
 use std::os::unix::fs::symlink;
 use support::skills::{assert_managed_link, SkillsFixture};
@@ -61,7 +61,7 @@ fn commit(plan: OperationPlan) -> ConsumptionInventory {
     let OperationPlan::Asset { plan } = plan else {
         panic!("expected an Asset convergence plan")
     };
-    let result = MuxCore::commit(CommitOperationRequest::Asset {
+    let result = ArcaCore::commit(CommitOperationRequest::Asset {
         request: AssetCommitRequest {
             operation_id: plan.operation_id,
             candidate_hash: plan.candidate_hash,
@@ -79,8 +79,8 @@ fn converge(
     agent_id: &str,
     asset: AssetRef,
     action: ConvergenceAction,
-) -> Result<OperationPlan, mux_core::domain::error::CoreError> {
-    MuxCore::plan(PlanOperationRequest::ConvergeConsumption(
+) -> Result<OperationPlan, arca_core::domain::error::CoreError> {
+    ArcaCore::plan(PlanOperationRequest::ConvergeConsumption(
         PlanConvergeConsumptionRequest {
             agent_id: agent_id.into(),
             asset,
@@ -95,7 +95,7 @@ fn mcp_adopt_restore_and_detach_are_exact_and_preserve_reviewed_agent_bytes() {
     let home = TestHome::new("unified-mcp-convergence");
     write_manual_entry(&mcp("desired-server")).unwrap();
     commit(
-        MuxCore::plan(PlanOperationRequest::SetAgentConsumption(
+        ArcaCore::plan(PlanOperationRequest::SetAgentConsumption(
             PlanSetAgentConsumptionRequest {
                 agent_id: "claude-code".into(),
                 selection: AgentConsumptionSelection::Mcp {
@@ -111,7 +111,7 @@ fn mcp_adopt_restore_and_detach_are_exact_and_preserve_reviewed_agent_bytes() {
         .unwrap()
         .replace("desired-server", "agent-adopted-server");
     fs::write(&target, &adopted_bytes).unwrap();
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let row = observed
         .consumptions
         .iter()
@@ -164,7 +164,7 @@ fn mcp_adopt_restore_and_detach_are_exact_and_preserve_reviewed_agent_bytes() {
 
     let restore_drift = adopted_bytes.replace("agent-adopted-server", "restore-drift");
     fs::write(&target, &restore_drift).unwrap();
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let inventory = commit(
         converge(
             &observed,
@@ -188,7 +188,7 @@ fn mcp_adopt_restore_and_detach_are_exact_and_preserve_reviewed_agent_bytes() {
         .unwrap()
         .replace("agent-adopted-server", "detached-agent-server");
     fs::write(&target, &detached_bytes).unwrap();
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let inventory = commit(
         converge(
             &observed,
@@ -223,7 +223,7 @@ fn convergence_rejects_a_stale_observation_revision() {
     let home = TestHome::new("stale-convergence-observation");
     write_manual_entry(&mcp("desired-server")).unwrap();
     commit(
-        MuxCore::plan(PlanOperationRequest::SetAgentConsumption(
+        ArcaCore::plan(PlanOperationRequest::SetAgentConsumption(
             PlanSetAgentConsumptionRequest {
                 agent_id: "claude-code".into(),
                 selection: AgentConsumptionSelection::Mcp {
@@ -238,7 +238,7 @@ fn convergence_rejects_a_stale_observation_revision() {
         .unwrap()
         .replace("desired-server", "first-drift");
     fs::write(&target, drifted).unwrap();
-    let stale = mux_core::application::assets::list_inventory().unwrap();
+    let stale = arca_core::application::assets::list_inventory().unwrap();
     let changed_again = fs::read_to_string(&target)
         .unwrap()
         .replace("first-drift", "second-drift");
@@ -277,7 +277,7 @@ fn external_model_adoption_is_bound_to_one_exact_candidate() {
     )
     .unwrap();
     let reviewed_bytes = fs::read(&target).unwrap();
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let external_models = observed
         .external
         .iter()
@@ -329,7 +329,7 @@ fn model_and_skill_restore_use_the_same_convergence_contract() {
     let home = TestHome::new("model-skill-convergence");
     save_profile(model(), None).unwrap();
     commit(
-        MuxCore::plan(PlanOperationRequest::SetAgentConsumption(
+        ArcaCore::plan(PlanOperationRequest::SetAgentConsumption(
             PlanSetAgentConsumptionRequest {
                 agent_id: "codex".into(),
                 selection: AgentConsumptionSelection::Model {
@@ -344,7 +344,7 @@ fn model_and_skill_restore_use_the_same_convergence_contract() {
         .unwrap()
         .replace("desired-model", "external-model");
     fs::write(&model_target, model_drift).unwrap();
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let model_inventory = commit(
         converge(
             &observed,
@@ -370,7 +370,7 @@ fn model_and_skill_restore_use_the_same_convergence_contract() {
 
     drop(home);
     let fixture = SkillsFixture::missing_managed_link("review-changes", "agents-user");
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let skill_plan = converge(
         &observed,
         "codex",
@@ -399,7 +399,7 @@ fn malformed_model_input_does_not_block_an_unrelated_mcp_mutation() {
     .unwrap();
     write_manual_entry(&mcp("isolated-server")).unwrap();
 
-    let inventory = mux_core::application::assets::list_inventory().unwrap();
+    let inventory = arca_core::application::assets::list_inventory().unwrap();
     assert!(inventory.external.iter().any(|row| {
         row.agent_id == "codex"
             && matches!(
@@ -408,7 +408,7 @@ fn malformed_model_input_does_not_block_an_unrelated_mcp_mutation() {
             )
     }));
     let inventory = commit(
-        MuxCore::plan(PlanOperationRequest::SetAgentConsumption(
+        ArcaCore::plan(PlanOperationRequest::SetAgentConsumption(
             PlanSetAgentConsumptionRequest {
                 agent_id: "claude-code".into(),
                 selection: AgentConsumptionSelection::Mcp {
@@ -436,7 +436,7 @@ fn skill_adoption_accepts_observed_content_with_a_fresh_audit_and_preserves_link
     let link_before = fs::read_link(&target).unwrap();
     let content = "---\nname: review-changes\ndescription: Updated local fixture\n---\n\nReview a documented `sudo example` command; do not execute it.\n";
     fs::write(central.join("SKILL.md"), content).unwrap();
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let asset = AssetRef::Skill { name: "review-changes".into() };
     let row = observed.consumptions.iter().find(|row|
         row.agent_id == "claude-code" && row.asset == asset).unwrap();
@@ -446,11 +446,11 @@ fn skill_adoption_accepts_observed_content_with_a_fresh_audit_and_preserves_link
         ConvergenceAction::AdoptObserved).unwrap());
     assert!(inventory.consumptions.iter().any(|row|
         row.agent_id == "claude-code" && row.asset == asset && row.status == ConsumptionStatus::Synced));
-    let settings = mux_core::settings::load_settings();
+    let settings = arca_core::settings::load_settings();
     let record = &settings.managed_skills.as_ref().unwrap()["review-changes"];
     assert_eq!(record.description, "Updated local fixture");
-    assert_eq!(record.content_hash, mux_core::skills::hash_tree(&central).unwrap());
-    assert_eq!(record.risk.level, mux_core::skills::RiskLevel::High);
+    assert_eq!(record.content_hash, arca_core::skills::hash_tree(&central).unwrap());
+    assert_eq!(record.risk.level, arca_core::skills::RiskLevel::High);
     assert_eq!(fs::read_to_string(central.join("SKILL.md")).unwrap(), content);
     assert_eq!(fs::read_link(&target).unwrap(), link_before);
 }
@@ -461,16 +461,16 @@ fn skill_adoption_rejects_a_second_edit_after_review() {
     let central = fixture.central("review-changes");
     let content = "---\nname: review-changes\ndescription: First local edit\n---\n\nSynthetic content.\n";
     fs::write(central.join("SKILL.md"), content).unwrap();
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let OperationPlan::Asset { plan } = converge(&observed, "claude-code",
         AssetRef::Skill { name: "review-changes".into() }, ConvergenceAction::AdoptObserved).unwrap()
         else { panic!("expected an Asset adoption plan") };
-    let baseline = mux_core::settings::load_settings().managed_skills.unwrap()["review-changes"].clone();
+    let baseline = arca_core::settings::load_settings().managed_skills.unwrap()["review-changes"].clone();
     fs::write(central.join("SKILL.md"), content.replace("First", "Second")).unwrap();
-    assert!(MuxCore::commit(CommitOperationRequest::Asset { request: AssetCommitRequest {
+    assert!(ArcaCore::commit(CommitOperationRequest::Asset { request: AssetCommitRequest {
         operation_id: plan.operation_id, candidate_hash: plan.candidate_hash,
     }}).is_err());
-    assert_eq!(mux_core::settings::load_settings().managed_skills.unwrap()["review-changes"], baseline);
+    assert_eq!(arca_core::settings::load_settings().managed_skills.unwrap()["review-changes"], baseline);
     assert_managed_link(fixture.target("claude-code-user", "review-changes"), central);
 }
 
@@ -480,7 +480,7 @@ fn an_independent_skill_copy_is_not_offered_central_baseline_adoption_or_destruc
     let target = fixture.target("claude-code-user", "review-changes");
     fs::remove_file(&target).unwrap();
     support::skills::write_skill(&target, "review-changes", "Independent local copy");
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let row = observed.consumptions.iter().find(|row| row.agent_id == "claude-code"
         && row.asset == (AssetRef::Skill { name: "review-changes".into() })).unwrap();
     assert_eq!(row.status, ConsumptionStatus::ExternalChanged);
@@ -491,16 +491,16 @@ fn an_independent_skill_copy_is_not_offered_central_baseline_adoption_or_destruc
 #[test]
 fn a_disabled_skill_relation_does_not_offer_restore_over_an_independent_directory() {
     let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-code-user"]);
-    mux_core::settings::mutate_settings(|settings| {
+    arca_core::settings::mutate_settings(|settings| {
         settings.skill_consumptions.get_or_insert_default().entry("review-changes".into())
-            .or_default().insert("claude-code-user".into(), mux_core::domain::assets::SkillConsumptionRecord {
+            .or_default().insert("claude-code-user".into(), arca_core::domain::assets::SkillConsumptionRecord {
                 name: "review-changes".into(), target_id: "claude-code-user".into(), enabled: false,
             });
     }).unwrap();
     let target = fixture.target("claude-code-user", "review-changes");
     fs::remove_file(&target).unwrap();
     support::skills::write_skill(&target, "review-changes", "Foreign copy on disabled relation");
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let row = observed.consumptions.iter().find(|row| row.agent_id == "claude-code"
         && row.asset == (AssetRef::Skill { name: "review-changes".into() })).unwrap();
     assert_eq!(row.enabled, Some(false));
@@ -511,17 +511,17 @@ fn a_disabled_skill_relation_does_not_offer_restore_over_an_independent_director
 #[test]
 fn toggling_one_of_multiple_skill_targets_binds_the_selected_copy() {
     let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-code-user", "opencode-user"]);
-    let observed = mux_core::application::assets::list_inventory().unwrap();
+    let observed = arca_core::application::assets::list_inventory().unwrap();
     let selected_target = observed.consumptions.iter().find(|row| row.agent_id == "opencode"
         && row.asset == (AssetRef::Skill { name: "review-changes".into() })
         && row.target.as_ref().is_some_and(|target| target.global_dir == "~/.config/opencode/skills"))
         .unwrap().target.as_ref().unwrap().target_id.clone();
-    assert!(MuxCore::plan(PlanOperationRequest::SetSkillEnabled(
-        mux_core::domain::assets::PlanSetSkillEnabledRequest {
+    assert!(ArcaCore::plan(PlanOperationRequest::SetSkillEnabled(
+        arca_core::domain::assets::PlanSetSkillEnabledRequest {
             agent_id: "opencode".into(), name: "review-changes".into(), enabled: false, target_id: None,
         })).is_err());
-    let plan = MuxCore::plan(PlanOperationRequest::SetSkillEnabled(
-        mux_core::domain::assets::PlanSetSkillEnabledRequest {
+    let plan = ArcaCore::plan(PlanOperationRequest::SetSkillEnabled(
+        arca_core::domain::assets::PlanSetSkillEnabledRequest {
             agent_id: "opencode".into(), name: "review-changes".into(), enabled: false,
             target_id: Some(selected_target.clone()),
         })).unwrap();
@@ -539,11 +539,11 @@ fn unavailable_skill_inventory_does_not_hide_or_block_mcp() {
     write_manual_entry(&mcp("isolated-server")).unwrap();
     let outside = home.home.join("external-skills-root");
     fs::create_dir_all(&outside).unwrap();
-    fs::create_dir_all(home.home.join(".mux/assets/skills")).unwrap();
-    symlink(&outside, home.home.join(".mux/assets/skills/items")).unwrap();
+    fs::create_dir_all(home.home.join(".arca/assets/skills")).unwrap();
+    symlink(&outside, home.home.join(".arca/assets/skills/items")).unwrap();
 
     let inventory = commit(
-        MuxCore::plan(PlanOperationRequest::SetAgentConsumption(
+        ArcaCore::plan(PlanOperationRequest::SetAgentConsumption(
             PlanSetAgentConsumptionRequest {
                 agent_id: "claude-code".into(),
                 selection: AgentConsumptionSelection::Mcp {

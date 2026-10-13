@@ -1,12 +1,12 @@
 use std::collections::BTreeSet;
 use std::io::{self, IsTerminal, Write};
 
-use mux_core::application::assets::{AssetCommitRequest, AssetOperationPlan, DomainPlan};
-use mux_core::application::operations::{
+use arca_core::application::assets::{AssetCommitRequest, AssetOperationPlan, DomainPlan};
+use arca_core::application::operations::{
     CancelOperationRequest, CommitOperationRequest, OperationCommitResult, OperationPlan,
 };
-use mux_core::application::skills::SkillCommitRequest;
-use mux_core::application::MuxCore;
+use arca_core::application::skills::SkillCommitRequest;
+use arca_core::application::ArcaCore;
 use serde_json::{json, Value};
 
 use crate::output::{CliError, CommandOutput, Palette};
@@ -111,7 +111,7 @@ pub fn execute_operation(
     let result = match commit(plan, options.accept_risk) {
         Ok(result) => result,
         Err(mut error) => {
-            if let Err(cleanup_error) = MuxCore::cancel(cancel_request) {
+            if let Err(cleanup_error) = ArcaCore::cancel(cancel_request) {
                 error.details.insert(
                     "cleanup_error".into(),
                     json!({"code": cleanup_error.code, "message": cleanup_error.message}),
@@ -205,7 +205,7 @@ fn blocked_error(plan: &OperationPlan) -> Option<CliError> {
 }
 
 pub(crate) fn cancel(plan: &OperationPlan) -> Result<(), CliError> {
-    MuxCore::cancel(cancel_request(plan)).map_err(CliError::from_core)
+    ArcaCore::cancel(cancel_request(plan)).map_err(CliError::from_core)
 }
 
 fn cancel_request(plan: &OperationPlan) -> CancelOperationRequest {
@@ -245,7 +245,7 @@ fn risk_confirmation_error(plan: &OperationPlan, accept_risk: bool) -> Option<Cl
 
 fn commit(plan: OperationPlan, accept_risk: bool) -> Result<OperationCommitResult, CliError> {
     match plan {
-        OperationPlan::Asset { plan } => MuxCore::commit(CommitOperationRequest::Asset {
+        OperationPlan::Asset { plan } => ArcaCore::commit(CommitOperationRequest::Asset {
             request: AssetCommitRequest {
                 operation_id: plan.operation_id,
                 candidate_hash: plan.candidate_hash,
@@ -254,7 +254,7 @@ fn commit(plan: OperationPlan, accept_risk: bool) -> Result<OperationCommitResul
         OperationPlan::Skill { plan } => {
             let findings_confirmation = (plan.requires_risk_override && accept_risk)
                 .then(|| plan.findings_hash.clone());
-            MuxCore::commit(CommitOperationRequest::Skill {
+            ArcaCore::commit(CommitOperationRequest::Skill {
                 kind: plan.kind.clone(),
                 request: SkillCommitRequest {
                     operation_id: plan.operation_id,
@@ -277,7 +277,7 @@ pub(crate) fn commit_output(result: OperationCommitResult, operation_id: &str) -
             inventory, converged: false,
         } => Err(CliError::new(
             "pending_convergence",
-            "MUX saved the desired configuration, but the Agent target has not converged",
+            "Arca saved the desired configuration, but the Agent target has not converged",
         )
         .with_detail("changed", true)
         .with_detail("operation_id", operation_id)
@@ -358,7 +358,7 @@ fn render_plan(plan: &OperationPlan, palette: Palette) -> String {
                 .filter(|change| {
                     !matches!(
                         change.asset,
-                        mux_core::application::assets::AssetRef::Model { .. }
+                        arca_core::application::assets::AssetRef::Model { .. }
                     )
                 })
                 .count();
@@ -407,7 +407,7 @@ fn render_plan(plan: &OperationPlan, palette: Palette) -> String {
             for change in &plan.consumption_state_changes {
                 if matches!(
                     change.asset,
-                    mux_core::application::assets::AssetRef::Model { .. }
+                    arca_core::application::assets::AssetRef::Model { .. }
                 ) {
                     continue;
                 }
@@ -497,23 +497,23 @@ fn render_plan(plan: &OperationPlan, palette: Palette) -> String {
     }
 }
 
-fn asset_label(asset: &mux_core::application::assets::AssetRef) -> String {
+fn asset_label(asset: &arca_core::application::assets::AssetRef) -> String {
     match asset {
-        mux_core::application::assets::AssetRef::Mcp { key } => format!("mcp:{key}"),
-        mux_core::application::assets::AssetRef::Model { profile_id } => {
+        arca_core::application::assets::AssetRef::Mcp { key } => format!("mcp:{key}"),
+        arca_core::application::assets::AssetRef::Model { profile_id } => {
             format!("model:{profile_id}")
         }
-        mux_core::application::assets::AssetRef::ModelProvider { provider_id } => {
+        arca_core::application::assets::AssetRef::ModelProvider { provider_id } => {
             format!("model-provider:{provider_id}")
         }
-        mux_core::application::assets::AssetRef::Skill { name } => format!("skill:{name}"),
+        arca_core::application::assets::AssetRef::Skill { name } => format!("skill:{name}"),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mux_core::application::assets::{
+    use arca_core::application::assets::{
         AssetOperationKind, AssetRef, ConsumptionStateChange, ConsumptionTarget, ModelStateChange,
         ModelStateSnapshot,
     };
@@ -668,9 +668,9 @@ mod tests {
 
     #[test]
     fn generic_confirmation_does_not_authorize_skill_risk() {
-        let mut plan = mux_core::application::skills::OperationPlan {
+        let mut plan = arca_core::application::skills::OperationPlan {
             operation_id: "skill-operation".into(),
-            kind: mux_core::application::skills::SkillOperationKind::Install,
+            kind: arca_core::application::skills::SkillOperationKind::Install,
             skills: Vec::new(), targets: Vec::new(), settings_hash: "settings".into(),
             candidate_hash: "candidate".into(), findings_hash: "reviewed-findings".into(),
             requires_risk_override: true, warnings: Vec::new(),
@@ -685,7 +685,7 @@ mod tests {
 
     #[test]
     fn pending_commit_reports_durable_change_and_only_its_own_redacted_incidents() {
-        use mux_core::application::assets::{AssetCapability, ConsumptionInventory, TargetIncident};
+        use arca_core::application::assets::{AssetCapability, ConsumptionInventory, TargetIncident};
         let incident = TargetIncident {
             id: "failed-target".into(), operation_id: "committed".into(),
             capability: AssetCapability::Model, target_id: "codex-model".into(),

@@ -9,7 +9,7 @@ use ratatui::Frame;
 use super::theme::{self, glyph, Tone};
 use super::widgets::{self, fit, width};
 use crate::tui::model::Model;
-use mux_core::application::mcp::sources::SourceView;
+use arca_core::application::mcp::sources::SourceView;
 
 const NAME_MIN: usize = 10;
 const NAME_MAX: usize = 32;
@@ -33,7 +33,7 @@ pub fn render(model: &Model, f: &mut Frame, area: Rect) {
             f,
             inner,
             "还没有来源。",
-            &["订阅远程配置、导入本地配置，或添加 Mux 精选。"],
+            &["订阅远程配置、导入本地配置，或添加 Arca 精选。"],
         );
         return;
     }
@@ -72,7 +72,7 @@ fn source_lines(
         Span::styled(format!("{} 停用", glyph::OFF), theme::muted())
     };
     let (kind, tone) = if s.managed {
-        ("MUX 维护", Tone::Warning)
+        ("Arca 维护", Tone::Warning)
     } else if s.kind == "remote" {
         ("订阅", Tone::Accent)
     } else {
@@ -90,7 +90,7 @@ fn source_lines(
         Span::raw(theme::GAP),
         Span::styled(fit(&s.name, name_w), name_style),
         Span::raw(theme::GAP),
-        Span::styled(fit(kind, width("MUX 维护")), theme::fg(tone)),
+        Span::styled(fit(kind, width("Arca 维护")), theme::fg(tone)),
         Span::raw(theme::GAP),
         Span::styled(format!("{:>count_w$}", s.server_count), theme::strong()),
         Span::styled(" server", theme::muted()),

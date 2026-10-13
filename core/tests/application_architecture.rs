@@ -1,17 +1,17 @@
 #![cfg(unix)]
 
-use mux_core::application::operations::{
+use arca_core::application::operations::{
     CancelOperationRequest, CommitOperationRequest, OperationCommitResult, OperationPlan,
     PlanOperationRequest,
 };
-use mux_core::application::MuxCore;
-use mux_core::domain::agents::{AgentConfigurationPatch, ModelConfigurationPatch};
-use mux_core::domain::assets::{
+use arca_core::application::ArcaCore;
+use arca_core::domain::agents::{AgentConfigurationPatch, ModelConfigurationPatch};
+use arca_core::domain::assets::{
     AssetCommitRequest, CentralAssetDraft, PlanUpdateAgentCapabilitiesRequest,
     PlanUpdateCentralAssetRequest,
 };
-use mux_core::testenv::TestHome;
-use mux_core::types::{RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::testenv::TestHome;
+use arca_core::types::{RegistryConfig, RegistryEntry, StdioConfig};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -38,7 +38,7 @@ fn mcp_entry(name: &str) -> RegistryEntry {
 #[test]
 fn unified_facade_creates_an_asset_and_returns_a_revisioned_snapshot() {
     let _home = TestHome::new("application-facade");
-    let plan = MuxCore::plan(PlanOperationRequest::UpdateCentralAsset(
+    let plan = ArcaCore::plan(PlanOperationRequest::UpdateCentralAsset(
         PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::Mcp {
                 existing_key: None,
@@ -51,7 +51,7 @@ fn unified_facade_creates_an_asset_and_returns_a_revisioned_snapshot() {
         panic!("MCP lifecycle must use the asset coordinator");
     };
     let plan = *plan;
-    let result = MuxCore::commit(CommitOperationRequest::Asset {
+    let result = ArcaCore::commit(CommitOperationRequest::Asset {
         request: AssetCommitRequest {
             operation_id: plan.operation_id,
             candidate_hash: plan.candidate_hash,
@@ -60,7 +60,7 @@ fn unified_facade_creates_an_asset_and_returns_a_revisioned_snapshot() {
     .unwrap();
     assert!(matches!(result, OperationCommitResult::Asset { .. }));
 
-    let snapshot = MuxCore::snapshot().unwrap();
+    let snapshot = ArcaCore::snapshot().unwrap();
     assert_eq!(snapshot.revision.len(), 64);
     assert!(snapshot
         .assets
@@ -80,21 +80,21 @@ fn unified_facade_creates_an_asset_and_returns_a_revisioned_snapshot() {
 #[test]
 fn workspace_snapshot_is_read_only() {
     let home = TestHome::new("workspace-read-only");
-    let snapshot = MuxCore::snapshot().unwrap();
+    let snapshot = ArcaCore::snapshot().unwrap();
     assert_eq!(snapshot.revision.len(), 64);
-    assert!(!home.home.join(".mux/settings.json").exists());
-    assert!(!home.home.join(".mux/assets/skills/items").exists());
-    assert!(std::fs::symlink_metadata(home.home.join(".mux/skills")).is_err());
+    assert!(!home.home.join(".arca/settings.json").exists());
+    assert!(!home.home.join(".arca/assets/skills/items").exists());
+    assert!(std::fs::symlink_metadata(home.home.join(".arca/skills")).is_err());
 }
 
 #[test]
 fn capability_patch_does_not_require_unrelated_mcp_or_skill_fields() {
     let _home = TestHome::new("capability-patch");
-    let before = mux_core::application::agents::get_configuration_patch("grok-build").unwrap();
+    let before = arca_core::application::agents::get_configuration_patch("grok-build").unwrap();
     let model = before.model.expect("Grok Build has a Model writer");
     let mut paths = model.paths.clone();
     paths[0] = "~/.grok-build/config-refactored.json".into();
-    let plan = MuxCore::plan(PlanOperationRequest::UpdateAgentCapabilities(
+    let plan = ArcaCore::plan(PlanOperationRequest::UpdateAgentCapabilities(
         PlanUpdateAgentCapabilitiesRequest {
             agent_id: "grok-build".into(),
             patch: AgentConfigurationPatch {
@@ -109,14 +109,14 @@ fn capability_patch_does_not_require_unrelated_mcp_or_skill_fields() {
     let OperationPlan::Asset { plan } = plan else {
         panic!("Agent capability configuration must use the asset coordinator");
     };
-    MuxCore::commit(CommitOperationRequest::Asset {
+    ArcaCore::commit(CommitOperationRequest::Asset {
         request: AssetCommitRequest {
             operation_id: plan.operation_id.clone(),
             candidate_hash: plan.candidate_hash.clone(),
         },
     })
     .unwrap();
-    let after = mux_core::application::agents::get_configuration_patch("grok-build").unwrap();
+    let after = arca_core::application::agents::get_configuration_patch("grok-build").unwrap();
     assert_eq!(after.model.unwrap().paths, paths);
     assert_eq!(after.mcp, before.mcp);
     assert_eq!(after.skill, before.skill);
@@ -126,10 +126,10 @@ fn capability_patch_does_not_require_unrelated_mcp_or_skill_fields() {
 fn workspace_revision_is_stable_for_multiple_mcp_assets() {
     let _home = TestHome::new("workspace-stable-revision");
     for name in ["zeta", "alpha"] {
-        mux_core::resources::mcp::registry::write_manual_entry(&mcp_entry(name)).unwrap();
+        arca_core::resources::mcp::registry::write_manual_entry(&mcp_entry(name)).unwrap();
     }
-    let first = MuxCore::snapshot().unwrap();
-    let second = MuxCore::snapshot().unwrap();
+    let first = ArcaCore::snapshot().unwrap();
+    let second = ArcaCore::snapshot().unwrap();
     assert_eq!(first.revision, second.revision);
     assert_eq!(
         first
@@ -150,15 +150,15 @@ fn workspace_revision_canonicalizes_unordered_mcp_maps() {
         ("ALPHA".into(), "one".into()),
         ("BETA".into(), "two".into()),
     ]));
-    mux_core::resources::mcp::registry::write_manual_entry(&entry).unwrap();
-    let first = MuxCore::snapshot().unwrap();
+    arca_core::resources::mcp::registry::write_manual_entry(&entry).unwrap();
+    let first = ArcaCore::snapshot().unwrap();
 
     entry.config.stdio.as_mut().unwrap().env = Some(HashMap::from([
         ("BETA".into(), "two".into()),
         ("ALPHA".into(), "one".into()),
     ]));
-    mux_core::resources::mcp::registry::write_manual_entry(&entry).unwrap();
-    let second = MuxCore::snapshot().unwrap();
+    arca_core::resources::mcp::registry::write_manual_entry(&entry).unwrap();
+    let second = ArcaCore::snapshot().unwrap();
 
     assert_eq!(first.revision, second.revision);
 }
@@ -166,7 +166,7 @@ fn workspace_revision_canonicalizes_unordered_mcp_maps() {
 #[test]
 fn cancelling_an_asset_plan_is_idempotent() {
     let _home = TestHome::new("application-cancel");
-    let plan = MuxCore::plan(PlanOperationRequest::UpdateCentralAsset(
+    let plan = ArcaCore::plan(PlanOperationRequest::UpdateCentralAsset(
         PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::Mcp {
                 existing_key: None,
@@ -181,8 +181,8 @@ fn cancelling_an_asset_plan_is_idempotent() {
     let request = CancelOperationRequest::Asset {
         operation_id: plan.operation_id.clone(),
     };
-    MuxCore::cancel(request.clone()).unwrap();
-    MuxCore::cancel(request).unwrap();
+    ArcaCore::cancel(request.clone()).unwrap();
+    ArcaCore::cancel(request).unwrap();
 }
 
 #[test]
@@ -242,15 +242,15 @@ fn rust_frontends_depend_on_the_application_boundary() {
         .parent()
         .expect("core has repository parent");
     let forbidden = [
-        "mux_core::consumption",
-        "mux_core::ops",
-        "mux_core::registry",
-        "mux_core::models",
-        "mux_core::skills",
-        "mux_core::sources",
-        "mux_core::agents",
-        "mux_core::settings",
-        "mux_core::resources",
+        "arca_core::consumption",
+        "arca_core::ops",
+        "arca_core::registry",
+        "arca_core::models",
+        "arca_core::skills",
+        "arca_core::sources",
+        "arca_core::agents",
+        "arca_core::settings",
+        "arca_core::resources",
         "application::mcp::catalog::write_",
         "application::agents::save_agents",
         "application::agents::update_configuration",
@@ -262,12 +262,12 @@ fn rust_frontends_depend_on_the_application_boundary() {
         "ops::upsert_entry(",
         "ops::forget_entry(",
         "ops::resync_entry(",
-        "mux_core::scanner",
-        "mux_core::network",
-        "mux_core::pinned_agents",
-        "mux_core::types",
-        "mux_core::effective",
-        "mux_core::r#override",
+        "arca_core::scanner",
+        "arca_core::network",
+        "arca_core::pinned_agents",
+        "arca_core::types",
+        "arca_core::effective",
+        "arca_core::r#override",
     ];
     for root in [repo.join("cli/src"), repo.join("desktop/src-tauri/src")] {
         for path in rust_files(&root) {

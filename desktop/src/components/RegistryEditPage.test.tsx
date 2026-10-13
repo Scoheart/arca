@@ -35,7 +35,7 @@ it("creates a manual override with custom env for a subscribed MCP", async () =>
     name: "source-backed-mcp",
     description: "Imported MCP",
     tags: ["official", "catalog"],
-    origin: { kind: "remote", source: "mux-curated" },
+    origin: { kind: "remote", source: "arca-curated" },
     config: { stdio: { command: "npx", args: ["-y", "source-backed-mcp"] } },
   };
   const planUpdate = vi.fn().mockResolvedValue({ operation_id: "mcp-plan" });

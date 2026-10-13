@@ -1,4 +1,4 @@
-# MUX 统一资产状态仓储与语义前置条件设计
+# Arca 统一资产状态仓储与语义前置条件设计
 
 ## 状态
 
@@ -8,7 +8,7 @@
 
 ## 决策
 
-MUX 统一资产的**状态访问和生命周期契约**，不把三类异构 payload
+Arca 统一资产的**状态访问和生命周期契约**，不把三类异构 payload
 复制进新的磁盘 manifest：
 
 ```text
@@ -26,7 +26,7 @@ AssetStateStore
 - MCP：有序 source 定义与 `sources/{remote,local}` 缓存；
 - Model：`settings.json` 中的 Provider/Profile，凭据仅在 Keychain；
 - Skill：`settings.json` 中的 metadata/relationship 与
-  `~/.mux/skills/<name>` 中的一份正文。
+  `~/.arca/skills/<name>` 中的一份正文。
 
 因此不创建 `assets.json`，不移动 Skill 目录，也不改变 Keychain service。
 

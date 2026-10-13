@@ -168,11 +168,11 @@ function ProviderSidebarGroup({
       {hiddenCount > 0 && (
         <button
           type="button"
-          className="mux-sidebar-more"
+          className="arca-sidebar-more"
           aria-expanded={expanded}
           onClick={() => setExpanded((value) => !value)}
         >
-          <ChevronDownIcon className="mux-sidebar-more-icon" />
+          <ChevronDownIcon className="arca-sidebar-more-icon" />
           {expanded
             ? t("models.showLessProviders")
             : t("models.showMoreProviders", { count: hiddenCount })}
@@ -527,7 +527,7 @@ export function ModelsView({
   };
 
   return (
-    <div className="mux-models-workspace">
+    <div className="arca-models-workspace">
       <ResourceWorkspace
         overview={selectedProvider ? (
           <ProviderOverview
@@ -671,7 +671,7 @@ export function ModelsView({
         ) : selectedProvider ? (
           <>
             <section aria-label={t("models.addedModels")}>
-              <div className="mux-model-section-heading">
+              <div className="arca-model-section-heading">
                 <h2>{t("models.addedModels")} <span>{filteredProfiles.length}</span></h2>
               </div>
               <ModelList profiles={filteredProfiles} providerInstances={providerInstances} providers={providers}
@@ -684,7 +684,7 @@ export function ModelsView({
               <ProviderModelCatalog key={selectedProvider.id} provider={selectedProvider} revision={modelRevision}
                 profiles={profiles} query={deferredQuery} protocols={selectedProviderProtocols}
                 disabled={creationDisabled} addingId={addingCatalogId} onAdd={addCatalogModel} />
-            ) : <p className="mux-model-catalog-notice">{t("models.discoveryUnsupported")}</p>}
+            ) : <p className="arca-model-catalog-notice">{t("models.discoveryUnsupported")}</p>}
           </>
         ) : filteredProfiles.length === 0 ? (
           <ResourceState
@@ -826,22 +826,22 @@ function ProviderOverview({
         </button>
       </>}
     >
-      <dl className="mux-resource-overview-facts">
+      <dl className="arca-resource-overview-facts">
         <div>
           <dt>Base URL</dt>
           <dd><code title={provider.base_url}>{provider.base_url}</code></dd>
         </div>
         <div>
           <dt>{t("models.protocolsShort")}</dt>
-          <dd className="mux-resource-overview-tags">
+          <dd className="arca-resource-overview-tags">
             {PROTOCOLS.filter(({ id }) => provider.protocols[id]).map(({ id, label }) => (
               <span key={id} title={provider.protocols[id]?.endpoint_path}>{label}</span>
             ))}
           </dd>
         </div>
       </dl>
-      <div className="mux-resource-overview-links">
-        <span className="mux-resource-overview-credential" data-saved={provider.credential_saved || undefined}>
+      <div className="arca-resource-overview-links">
+        <span className="arca-resource-overview-credential" data-saved={provider.credential_saved || undefined}>
           <KeyIcon className="w-3.5 h-3.5" />
           {provider.credential_saved ? t("models.keychainSaved") : `Keychain · ${t("models.keychainNotSaved")}`}
         </span>
@@ -891,7 +891,7 @@ const ModelList = memo(function ModelList({
     }
   };
   return (
-    <div className="mux-asset-list mux-model-list" role="list" aria-label={t("models.asset")}>
+    <div className="arca-asset-list arca-model-list" role="list" aria-label={t("models.asset")}>
       {leading}
       {profiles.map((profile) => {
         const provider = instanceIndex.get(profile.provider_id ?? "");
@@ -902,23 +902,23 @@ const ModelList = memo(function ModelList({
         const copyLabel = `${t("models.copyCurl")} · ${displayName}`;
         const deleteLabel = `${t("common.delete")} · ${displayName}`;
         return (
-          <div role="listitem" key={profile.id} className="mux-model-card">
+          <div role="listitem" key={profile.id} className="arca-model-card">
             <button
               type="button"
-              className="mux-asset-list-row mux-model-list-row"
+              className="arca-asset-list-row arca-model-list-row"
               data-selected={profile.id === selectedProfileId ? "true" : undefined}
               aria-label={t("models.openDetails", { name: profile.name })}
               onClick={() => onOpen(profile.id)}
             >
-              <span className="mux-asset-list-identity mux-model-list-identity">
+              <span className="arca-asset-list-identity arca-model-list-identity">
                 <ProviderGlyph id={profile.provider || "custom"} name={providerName} size={34} />
-                <span className="mux-asset-list-copy">
+                <span className="arca-asset-list-copy">
                   <strong title={displayName}>{displayName}</strong>
-                  <span className="mux-model-list-subline">
+                  <span className="arca-model-list-subline">
                     <code title={profile.model}>{profile.model}</code>
                     {contextWindow && (
                       <span
-                        className="mux-model-list-context"
+                        className="arca-model-list-context"
                         aria-label={`${t("models.context")} ${formatTokens(contextWindow)}`}
                         title={`${t("models.contextWindow")}: ${contextWindow.toLocaleString()} tokens`}
                       >
@@ -930,15 +930,15 @@ const ModelList = memo(function ModelList({
                 </span>
               </span>
             </button>
-            <div className="mux-model-card-actions">
-              <button type="button" className="mux-model-card-action"
+            <div className="arca-model-card-actions">
+              <button type="button" className="arca-model-card-action"
                 aria-label={copyLabel} title={copyLabel}
                 aria-busy={copyingId === profile.id}
                 disabled={copyingId !== null}
                 onClick={() => void copyCurl(profile)}>
                 <TerminalIcon className="w-4 h-4" />
               </button>
-              <button type="button" className="mux-model-card-action mux-model-card-delete"
+              <button type="button" className="arca-model-card-action arca-model-card-delete"
                 aria-label={deleteLabel} title={deleteLabel}
                 disabled={!onDelete || copyingId === profile.id}
                 onClick={() => void onDelete?.(profile)}>
@@ -1037,8 +1037,8 @@ function ModelInspector({
           )}
         </InspectorMetrics>
       )}
-      {metadata?.description && <p className="mux-model-inspector-description">{metadata.description}</p>}
-      <section className="mux-model-inspector-fields" aria-label={t("models.detailsFields")}>
+      {metadata?.description && <p className="arca-model-inspector-description">{metadata.description}</p>}
+      <section className="arca-model-inspector-fields" aria-label={t("models.detailsFields")}>
         <InspectorField icon={<LayersIcon />} label={t("models.provider")}>{providerName}</InspectorField>
         <InspectorField icon={<NetworkIcon />} label={t("models.protocol")}>{protocolLabel(profile.protocol)}</InspectorField>
         {showReasoning && (
@@ -1106,13 +1106,13 @@ function ProviderCatalogDialog({
 
   return (
     <DialogShell
-      className="mux-dialog-provider-catalog"
+      className="arca-dialog-provider-catalog"
       kind="picker"
       size="lg"
       title={t("models.providerCatalogTitle")}
       onClose={onClose}
       footerStart={selected ? (
-        <span className="mux-provider-catalog-selection">
+        <span className="arca-provider-catalog-selection">
           <span aria-hidden="true">✓</span>
           <strong>{selected.name}</strong>
           <ProviderPortalButton portal={selected.portal} />
@@ -1132,34 +1132,34 @@ function ProviderCatalogDialog({
         </>
       )}
     >
-      <div className="mux-provider-catalog">
-        <label className="mux-provider-catalog-search">
+      <div className="arca-provider-catalog">
+        <label className="arca-provider-catalog-search">
           <SearchIcon className="w-4 h-4" />
           <input
             autoFocus
             type="search"
-            className="mux-model-field"
+            className="arca-model-field"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("models.searchProviders")}
             aria-label={t("models.searchProviders")}
           />
         </label>
-        <div className="mux-provider-catalog-grid" role="radiogroup" aria-label={t("models.providerCatalogTitle")}>
+        <div className="arca-provider-catalog-grid" role="radiogroup" aria-label={t("models.providerCatalogTitle")}>
           {visibleProviders.map((provider) => (
             <button
               type="button"
               role="radio"
               aria-checked={provider.id === selectedId}
               data-selected={provider.id === selectedId ? "true" : undefined}
-              className="mux-provider-catalog-item"
+              className="arca-provider-catalog-item"
               key={provider.id}
               onClick={() => setSelectedId(provider.id)}
             >
-              <span className="mux-provider-catalog-icon">
+              <span className="arca-provider-catalog-icon">
                 <ProviderGlyph id={provider.id} name={provider.name} size={26} />
               </span>
-              <span className="mux-provider-catalog-copy">
+              <span className="arca-provider-catalog-copy">
                 <strong>{provider.name}</strong>
                 <code>
                   {provider.base_url
@@ -1171,12 +1171,12 @@ function ProviderCatalogDialog({
                     : t("models.providerEndpointRequired")}
                 </code>
               </span>
-              <span className="mux-provider-catalog-check" aria-hidden="true">✓</span>
+              <span className="arca-provider-catalog-check" aria-hidden="true">✓</span>
             </button>
           ))}
         </div>
         {visibleProviders.length === 0 && (
-          <div className="mux-provider-catalog-empty">{t("models.noProviderMatches")}</div>
+          <div className="arca-provider-catalog-empty">{t("models.noProviderMatches")}</div>
         )}
       </div>
     </DialogShell>
@@ -1259,14 +1259,14 @@ function ModelProfileDialog({
     }
   };
   const providerIdentity = initial ? (
-    <div className="mux-model-editor-provider-select">
+    <div className="arca-model-editor-provider-select">
       <FormSelect ariaLabel={t("models.provider")} value={draft.provider_id ?? ""}
         placeholder={t("models.providerPlaceholder")}
         options={providerInstances.map((provider) => ({ value: provider.id, label: provider.name }))}
         onChange={selectProvider} disabled={busy} />
     </div>
-  ) : <span className="mux-model-editor-provider-name" title={providerInstance?.name}>{providerInstance?.name ?? t("models.providerRequired")}</span>;
-  const providerAvatar = <span className="mux-model-editor-avatar">
+  ) : <span className="arca-model-editor-provider-name" title={providerInstance?.name}>{providerInstance?.name ?? t("models.providerRequired")}</span>;
+  const providerAvatar = <span className="arca-model-editor-avatar">
     <ProviderGlyph id={providerInstance?.provider ?? initial?.provider ?? "custom"}
       name={providerInstance?.name ?? initial?.name ?? "Provider"} size={30} />
   </span>;
@@ -1278,33 +1278,33 @@ function ModelProfileDialog({
     </button>
   </>;
   const form = (
-    <div className="mux-model-form mux-model-editor-form">
-      <label className="mux-model-editor-id">
+    <div className="arca-model-form arca-model-editor-form">
+      <label className="arca-model-editor-id">
         <span>{t("models.modelId")}</span>
-        <input autoFocus data-modal-initial-focus className="mux-model-field"
+        <input autoFocus data-modal-initial-focus className="arca-model-field"
           aria-label={t("models.modelId")} value={draft.model} spellCheck={false}
           autoComplete="off" autoCorrect="off" autoCapitalize="none"
           placeholder={t("models.modelIdPlaceholder")}
           onChange={(event) => setDraft({ ...draft, model: event.currentTarget.value })} />
       </label>
-      <div className="mux-model-form-grid">
+      <div className="arca-model-form-grid">
         <label>
           <span>{t("models.optionalName")}</span>
-          <input className="mux-model-field" value={draft.name}
+          <input className="arca-model-field" value={draft.name}
             onChange={(event) => setDraft({ ...draft, name: event.currentTarget.value })}
             placeholder={t("models.generatedNameShort")} />
         </label>
-        <div className="mux-model-form-field">
+        <div className="arca-model-form-field">
           <span>{t("models.protocol")}</span>
           <FormSelect ariaLabel={t("models.protocol")} value={draft.protocol}
             options={availableProtocols.map(({ id, label }) => ({ value: id, label }))}
             onChange={(protocol) => setDraft({ ...draft, protocol: protocol as ModelProtocol })} />
         </div>
       </div>
-      <div className="mux-model-form-grid mux-model-editor-limits">
+      <div className="arca-model-form-grid arca-model-editor-limits">
         <label>
           <span>{t("models.contextWindow")} <small>tokens</small></span>
-          <input type="number" min={1} step={1} className="mux-model-field"
+          <input type="number" min={1} step={1} className="arca-model-field"
             value={draft.context_window ?? ""} aria-invalid={!contextValid || undefined}
             placeholder={t("models.modelDefault")}
             onChange={(event) => setDraft({ ...draft,
@@ -1313,7 +1313,7 @@ function ModelProfileDialog({
         </label>
         <label>
           <span>{t("models.maxOutput")} <small>tokens</small></span>
-          <input type="number" min={1} step={1} className="mux-model-field"
+          <input type="number" min={1} step={1} className="arca-model-field"
             value={draft.max_output_tokens ?? ""} aria-invalid={!outputValid || undefined}
             placeholder={t("models.modelDefault")}
             onChange={(event) => setDraft({ ...draft,
@@ -1321,9 +1321,9 @@ function ModelProfileDialog({
           {!outputValid && <small data-error>{t("models.positiveIntegerRequired")}</small>}
         </label>
       </div>
-      <div className="mux-model-form-field">
+      <div className="arca-model-form-field">
         <span>{t("models.reasoningMode")}</span>
-        <div className="mux-model-reasoning-options" role="radiogroup" aria-label={t("models.reasoningMode")}>
+        <div className="arca-model-reasoning-options" role="radiogroup" aria-label={t("models.reasoningMode")}>
           {[
             { value: "auto", label: t("models.reasoningAuto") },
             { value: "on", label: t("models.reasoningOn") },
@@ -1335,10 +1335,10 @@ function ModelProfileDialog({
           </label>)}
         </div>
       </div>
-      <div className="mux-model-editor-endpoint">
+      <div className="arca-model-editor-endpoint">
         <div>
           <span>{t("models.fullRequestUrl")}</span>
-          <button type="button" className="mux-model-card-action" disabled={!requestUrl}
+          <button type="button" className="arca-model-card-action" disabled={!requestUrl}
             title={t("models.copyValue", { label: t("models.fullRequestUrl") })}
             aria-label={t("models.copyValue", { label: t("models.fullRequestUrl") })}
             onClick={() => void copyRequestUrl()}><CopyIcon className="w-3.5 h-3.5" /></button>
@@ -1353,7 +1353,7 @@ function ModelProfileDialog({
       {form}
     </ResourceInspector>;
   }
-  return <DialogShell className="mux-dialog-model-editor" kind="editor" size="md"
+  return <DialogShell className="arca-dialog-model-editor" kind="editor" size="md"
     leading={providerAvatar} title={initial ? t("models.editTitle") : t("models.createTitle")}
     subtitle={providerIdentity} busy={busy} onClose={onClose} footerEnd={footer}>
     {form}
@@ -1388,7 +1388,7 @@ function ModelProviderDialog({
     : templateConnection.protocols;
   const initialSource = initial?.api_key_source
     ?? (initial?.env_key ? { kind: "env", name: initial.env_key } satisfies ApiKeySource : undefined)
-    ?? (initial?.credential_saved ? { kind: "mux-store" } satisfies ApiKeySource : undefined);
+    ?? (initial?.credential_saved ? { kind: "arca-store" } satisfies ApiKeySource : undefined);
   const initialAuthRequirement: ModelProviderConfig["auth_requirement"] = initial?.auth_requirement
     ?? (["ollama", "lm-studio", "vllm"].includes(initialProviderType) ? "none" : initialProviderType === "custom" ? "optional" : "required");
   const [draft, setDraft] = useState<ModelProviderConfig>({
@@ -1469,7 +1469,7 @@ function ModelProviderDialog({
   const preservedCredential = Boolean(initial?.credential_saved && !credentialDirty);
   // A pending/failed read must never look like an editable empty credential.
   const showSavedCredentialMask = Boolean(initial?.credential_saved && (credentialLoading || credentialReadError));
-  const preservesLegacySource = Boolean(initialSource && initialSource.kind !== "mux-store");
+  const preservesLegacySource = Boolean(initialSource && initialSource.kind !== "arca-store");
   const authWithoutCredential: ModelProviderConfig["auth_requirement"] =
     ["ollama", "lm-studio", "vllm"].includes(initialProviderType)
       ? "none"
@@ -1508,7 +1508,7 @@ function ModelProviderDialog({
       ) as ModelProviderConfig["protocols"];
       const hasNewCredential = credentialDirty && enteredCredential;
       const apiKeySource = hasNewCredential
-        ? { kind: "mux-store" as const }
+        ? { kind: "arca-store" as const }
         : clearCredential
           ? undefined
           : initialSource;
@@ -1545,7 +1545,7 @@ function ModelProviderDialog({
 
   return (
     <DialogShell
-      className="mux-dialog-provider-editor"
+      className="arca-dialog-provider-editor"
       kind="editor"
       size="wide"
       borderRadius="10px"
@@ -1565,13 +1565,13 @@ function ModelProviderDialog({
         </>
       )}
     >
-      <div className="mux-model-form mux-provider-form">
-        <div className="mux-provider-basic-grid">
+      <div className="arca-model-form arca-provider-form">
+        <div className="arca-provider-basic-grid">
           <label>
             <span>{t("models.providerNameShort")}</span>
             <input
               autoFocus
-              className="mux-model-field"
+              className="arca-model-field"
               value={draft.name}
               onChange={(event) => setDraft({ ...draft, name: event.target.value })}
             />
@@ -1580,7 +1580,7 @@ function ModelProviderDialog({
             <span>{t("models.baseUrl")}</span>
             <input
               aria-label={t("models.baseUrl")}
-              className="mux-model-field"
+              className="arca-model-field"
               value={draft.base_url}
               onChange={(event) => setDraft({ ...draft, base_url: event.currentTarget.value })}
               placeholder={template?.setup?.base_url_placeholder ?? "https://gateway.example.com/api/v2"}
@@ -1593,14 +1593,14 @@ function ModelProviderDialog({
         </div>
 
         {initialAuthRequirement !== "none" && (
-        <section className="mux-provider-form-section mux-provider-credential" aria-label={t("models.apiKey")}>
-          <div className="mux-provider-section-head">
+        <section className="arca-provider-form-section arca-provider-credential" aria-label={t("models.apiKey")}>
+          <div className="arca-provider-section-head">
             <strong>{t("models.apiKey")}</strong>
             <small>{t("models.credentialHelp")}</small>
           </div>
 
-          <div className="mux-model-form-field mux-provider-credential-field">
-            <div className="mux-provider-credential-input" data-mode="mux-store">
+          <div className="arca-model-form-field arca-provider-credential-field">
+            <div className="arca-provider-credential-input" data-mode="arca-store">
                 <input
                   type={!credentialVisible ? "password" : "text"}
                   autoComplete="new-password"
@@ -1619,7 +1619,7 @@ function ModelProviderDialog({
                 />
                   <button
                     type="button"
-                    className="mux-provider-icon-button"
+                    className="arca-provider-icon-button"
                     aria-label={credentialVisible ? t("models.hideApiKey") : t("models.showApiKey")}
                     title={credentialVisible ? t("models.hideApiKey") : t("models.showApiKey")}
                     disabled={busy || credentialLoading || Boolean(credentialReadError)}
@@ -1644,17 +1644,17 @@ function ModelProviderDialog({
         </section>
         )}
 
-        <section className="mux-provider-form-section mux-provider-portal" aria-label={t("models.providerPortalUrl")}>
-          <div className="mux-provider-section-head">
+        <section className="arca-provider-form-section arca-provider-portal" aria-label={t("models.providerPortalUrl")}>
+          <div className="arca-provider-section-head">
             <strong>{t("models.providerPortalUrl")}</strong>
             <small>{defaultPortal
               ? portalCustomized ? t("models.providerPortalCustom") : t("models.providerPortalDefault")
               : t("models.providerPortalOptional")}</small>
           </div>
-          <div className="mux-provider-portal-row">
+          <div className="arca-provider-portal-row">
             <textarea
               aria-label={t("models.providerPortalUrl")}
-              className="mux-model-field mux-provider-portal-url"
+              className="arca-model-field arca-provider-portal-url"
               rows={2}
               value={portalUrlFocused ? portalUrl : readablePortalUrl(portalUrl)}
               title={portalUrl}
@@ -1673,12 +1673,12 @@ function ModelProviderDialog({
             <ProviderPortalButton portal={portal} />
           </div>
           {((portalUrl.trim() && !normalizedPortalUrl) || (portalCustomized && defaultPortal)) && (
-          <div className="mux-provider-portal-note">
+          <div className="arca-provider-portal-note">
             {portalUrl.trim() && !normalizedPortalUrl && (
-              <small className="mux-provider-portal-error">{t("models.invalidProviderPortalUrl")}</small>
+              <small className="arca-provider-portal-error">{t("models.invalidProviderPortalUrl")}</small>
             )}
             {portalCustomized && defaultPortal && (
-              <button type="button" className="mux-provider-portal-reset" onClick={() => setPortalUrl(defaultPortal.url)}>
+              <button type="button" className="arca-provider-portal-reset" onClick={() => setPortalUrl(defaultPortal.url)}>
                 {t("models.providerPortalReset")}
               </button>
             )}
@@ -1686,12 +1686,12 @@ function ModelProviderDialog({
           )}
         </section>
 
-        <section className="mux-provider-form-section">
-          <label className="mux-provider-model-catalog-field">
+        <section className="arca-provider-form-section">
+          <label className="arca-provider-model-catalog-field">
             <span>{t("models.modelCatalogUrl")}</span>
             <input
               aria-label={t("models.modelCatalogUrl")}
-              className="mux-model-field"
+              className="arca-model-field"
               value={draft.model_catalog_url ?? ""}
               onChange={(event) => setDraft({
                 ...draft,
@@ -1705,16 +1705,16 @@ function ModelProviderDialog({
             )}
           </label>
         </section>
-        <section className="mux-provider-form-section mux-provider-protocols" aria-label={t("models.supportedProtocols")}>
-          <div className="mux-provider-section-head">
+        <section className="arca-provider-form-section arca-provider-protocols" aria-label={t("models.supportedProtocols")}>
+          <div className="arca-provider-section-head">
             <strong>{t("models.protocolsShort")}</strong>
             {enabledProtocols.length === 0 && (
-              <small className="mux-provider-protocol-error" role="status">
+              <small className="arca-provider-protocol-error" role="status">
                 {t("models.protocolRequired")}
               </small>
             )}
           </div>
-          <div className="mux-provider-protocol-list">
+          <div className="arca-provider-protocol-list">
             {PROTOCOLS.map((protocol) => {
               const enabled = Boolean(draft.protocols[protocol.id]);
               const path = protocolPaths[protocol.id];
@@ -1722,29 +1722,29 @@ function ModelProviderDialog({
               const selected = selectedProtocol === protocol.id;
               return (
                 <article
-                  className="mux-provider-protocol"
+                  className="arca-provider-protocol"
                   data-enabled={enabled ? "true" : undefined}
                   data-selected={selected ? "true" : undefined}
                   key={protocol.id}
                 >
                   <button
                     type="button"
-                    className="mux-provider-protocol-trigger"
+                    className="arca-provider-protocol-trigger"
                     aria-pressed={selected}
                     onClick={() => setSelectedProtocol(protocol.id)}
                   >
-                    <span className="mux-provider-protocol-signal">
-                      <span className="mux-model-protocol-dot" data-protocol={protocol.id} />
+                    <span className="arca-provider-protocol-signal">
+                      <span className="arca-model-protocol-dot" data-protocol={protocol.id} />
                     </span>
-                    <span className="mux-provider-protocol-copy">
+                    <span className="arca-provider-protocol-copy">
                       <strong>{protocol.label}</strong>
-                      <code className="mux-provider-protocol-path" title={pathSummary}>{pathSummary}</code>
+                      <code className="arca-provider-protocol-path" title={pathSummary}>{pathSummary}</code>
                     </span>
                   </button>
-                  <label className="mux-provider-protocol-toggle">
+                  <label className="arca-provider-protocol-toggle">
                     <input
                       aria-label={protocol.label}
-                      className="mux-provider-protocol-switch-input"
+                      className="arca-provider-protocol-switch-input"
                       type="checkbox"
                       role="switch"
                       checked={enabled}
@@ -1759,24 +1759,24 @@ function ModelProviderDialog({
                         });
                       }}
                     />
-                    <span className="mux-provider-protocol-switch" aria-hidden="true" />
+                    <span className="arca-provider-protocol-switch" aria-hidden="true" />
                   </label>
                 </article>
               );
             })}
           </div>
           <div
-            className="mux-provider-protocol-editor"
+            className="arca-provider-protocol-editor"
             data-enabled={selectedProtocolEnabled ? "true" : undefined}
           >
             <div
-              className="mux-provider-route-builder"
+              className="arca-provider-route-builder"
               data-enabled={selectedProtocolEnabled ? "true" : undefined}
               data-invalid={selectedProtocolPath && !normalizeEndpointPath(selectedProtocolPath) ? "true" : undefined}
             >
               <input
                 aria-label={`${selectedProtocolInfo.label} ${t("models.endpointPath")}`}
-                className="mux-provider-route-path"
+                className="arca-provider-route-path"
                 value={selectedProtocolPath}
                 onChange={(event) => {
                   const endpointPath = event.currentTarget.value;
@@ -1796,7 +1796,7 @@ function ModelProviderDialog({
               />
               <output
                 aria-label={t("models.fullRequestUrl")}
-                className="mux-provider-route-preview"
+                className="arca-provider-route-preview"
                 data-empty={!selectedProtocolPreview ? "true" : undefined}
                 title={selectedProtocolPreview || undefined}
               >
@@ -1804,7 +1804,7 @@ function ModelProviderDialog({
               </output>
             </div>
             {selectedProtocolEnabled && selectedProtocolPath && !normalizeEndpointPath(selectedProtocolPath) && (
-              <small className="mux-provider-route-error">{t("models.invalidEndpointPath")}</small>
+              <small className="arca-provider-route-error">{t("models.invalidEndpointPath")}</small>
             )}
           </div>
         </section>

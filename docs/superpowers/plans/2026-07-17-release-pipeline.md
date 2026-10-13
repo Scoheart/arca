@@ -1,8 +1,8 @@
-# MUX GitHub Delivery and Automated Release Implementation Plan
+# Arca GitHub Delivery and Automated Release Implementation Plan
 
 > **For implementers:** Execute tasks in order. Complete each task's verification and commit before starting the next task. GitHub Secrets, repository settings, Ruleset activation, tag creation, Release publication, and installed-app replacement require separate authorization at the step that performs them.
 
-**Goal:** Protect `main`, keep one installable Pre-release for every ordinary main merge, maintain one rolling Release PR, and turn an approved Release PR into an atomic stable MUX release without manual version synchronization or tag creation.
+**Goal:** Protect `main`, keep one installable Pre-release for every ordinary main merge, maintain one rolling Release PR, and turn an approved Release PR into an atomic stable Arca release without manual version synchronization or tag creation.
 
 **Architecture:** Introduce one repository version source and a checked version invariant; keep CI, Release Please, and desktop packaging as separate workflows with narrow permissions. Release Please owns version proposals, Changelog, the stable tag, and a Draft Release. The desktop workflow owns signed assets and is the only component allowed to publish that Draft. GitHub Rulesets make `verify` and an up-to-date PR mandatory before `main` changes.
 
@@ -18,7 +18,7 @@
 - Keep the existing updater endpoint and CLI compatibility filename.
 - Preserve existing failure-Issue and Copilot repair behavior.
 - Never expose `RELEASE_PLEASE_TOKEN`, `COPILOT_PAT`, or Tauri signing material in logs, fixtures, documentation, commits, or artifacts.
-- Do not enable an Active Ruleset, publish a stable Release, enable Immutable Releases, push, or replace `/Applications/MUX.app` without explicit authorization.
+- Do not enable an Active Ruleset, publish a stable Release, enable Immutable Releases, push, or replace `/Applications/Arca.app` without explicit authorization.
 - Do not cancel older ordinary main builds: the approved product contract requires a package attempt for each ordinary main merge.
 
 ---
@@ -130,7 +130,7 @@ Set `version.txt` to `1.2.18`, align the existing sources, run `refresh-locks`, 
 ```bash
 node --test scripts/release-version.test.mjs
 node scripts/release-version.mjs check
-cargo test --locked -p mux-core -p mux-cli
+cargo test --locked -p arca-core -p arca-cli
 cd desktop && npm ci --no-audit --no-fund && npm test && npm run build
 ```
 
@@ -207,7 +207,7 @@ Use a separate `monitor` job with `if: always()` and `needs: [verify]`. Preserve
 ```bash
 node --test scripts/workflow-contract.test.mjs
 node scripts/release-version.mjs check
-cargo test --locked -p mux-core -p mux-cli
+cargo test --locked -p arca-core -p arca-cli
 cd desktop && npm ci --no-audit --no-fund && npm test && npm run build
 cd ../website && npm ci --no-audit --no-fund && npm run build
 ```
@@ -232,7 +232,7 @@ git commit -m "ci(quality): parallelize required verification" \
 - Modify: `scripts/workflow-contract.test.mjs`
 
 **Interfaces:**
-- One root package (`.`), component `mux`, `release-type: simple`.
+- One root package (`.`), component `arca`, `release-type: simple`.
 - Release PR title: `chore(main): release ${version}`.
 - Release PR branch is updated in place; `separate-pull-requests` is false.
 - Stable GitHub Release is created as Draft and its tag is created immediately.
@@ -581,8 +581,8 @@ git commit -m "docs(release): codify repository governance" \
 Before mutation, re-read live state. Apply the committed payloads with `gh api`, then verify:
 
 ```bash
-gh api repos/Scoheart/mux --jq '{allow_squash_merge,allow_merge_commit,allow_rebase_merge,delete_branch_on_merge,squash_merge_commit_title,squash_merge_commit_message}'
-gh api repos/Scoheart/mux/rulesets
+gh api repos/Scoheart/arca --jq '{allow_squash_merge,allow_merge_commit,allow_rebase_merge,delete_branch_on_merge,squash_merge_commit_title,squash_merge_commit_message}'
+gh api repos/Scoheart/arca/rulesets
 ```
 
 Expected: Rulesets are visible but not yet blocking; squash-only and branch deletion settings match the plan.
@@ -643,7 +643,7 @@ git commit -m "docs(release): document automated delivery" \
 
 - [ ] **Step 4: With authorization, configure the dedicated token**
 
-Create a fine-grained token restricted to `Scoheart/mux` with only Contents, Pull requests, and Issues read/write. Store it as `RELEASE_PLEASE_TOKEN`; never print or read it back. Confirm only the Secret name exists.
+Create a fine-grained token restricted to `Scoheart/arca` with only Contents, Pull requests, and Issues read/write. Store it as `RELEASE_PLEASE_TOKEN`; never print or read it back. Confirm only the Secret name exists.
 
 - [ ] **Step 5: With authorization, push and open the implementation PR**
 
@@ -678,8 +678,8 @@ Merge the reviewed Release PR. Verify in order:
 3. Stable build and exact-SHA `verify` succeed;
 4. required DMG, CLI, updater, signature, and `latest.json` assets exist and labels are correct;
 5. Draft becomes the newest non-prerelease only after assets are complete;
-6. CLI `mux upgrade` resolves the compatibility filename;
-7. `/Applications/MUX.app` installs and reports the released version;
+6. CLI `arca upgrade` resolves the compatibility filename;
+7. `/Applications/Arca.app` installs and reports the released version;
 8. the updater reads the new signed `latest.json` successfully.
 
 - [ ] **Step 9: Enable Immutable Releases after the successful proof**
@@ -708,7 +708,7 @@ Acceptance targets:
 ## Completion Checklist
 
 - [x] All seven code/document tasks are committed independently.
-- [x] MUX working tree is clean.
+- [x] Arca working tree is clean.
 - [ ] Parent workspace state is captured and checked.
 - [ ] Implementation branch is pushed and reviewed through a PR.
 - [ ] `RELEASE_PLEASE_TOKEN` exists with the documented minimum permissions.

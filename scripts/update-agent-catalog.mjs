@@ -8,7 +8,7 @@ const ACP_REPOSITORY = "agentclientprotocol/registry";
 // Glama entries it records when the catalog was collected; it is not evidence
 // that an MCP / Models / Skills configuration contract was verified.
 const CATALOG_COLLECTED_AT =
-  process.env.MUX_CATALOG_DATE ||
+  process.env.ARCA_CATALOG_DATE ||
   new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
     year: "numeric",
@@ -16,7 +16,7 @@ const CATALOG_COLLECTED_AT =
     day: "2-digit",
   }).format(new Date());
 
-// Collapse directory aliases onto MUX's stable ids. Distinct product surfaces
+// Collapse directory aliases onto Arca's stable ids. Distinct product surfaces
 // (for example Amazon Q IDE versus its CLI) intentionally remain separate.
 const ALIASES = {
   "chat-gpt": "chatgpt",
@@ -29,7 +29,7 @@ const ALIASES = {
 };
 
 // ACP package ids describe launch surfaces. Collapse wrappers and CLI package
-// names onto MUX's product identities without treating ACP support as proof of
+// names onto Arca's product identities without treating ACP support as proof of
 // an MCP / Models / Skills file contract.
 const ACP_ALIASES = {
   "amp-acp": "amp",
@@ -103,7 +103,7 @@ function entry(name, docs, category = "client", evidence = "catalog") {
     builtin: true,
     name,
     docs,
-    note: "未确认稳定的用户级全局配置文件；MUX 仅展示，不写入。",
+    note: "未确认稳定的用户级全局配置文件；Arca 仅展示，不写入。",
     category,
     evidence,
     verified_at: CATALOG_COLLECTED_AT,
@@ -117,7 +117,7 @@ function acpEntry(manifest, manifestUrl) {
   const docs = manifest.repository || manifest.website || manifestUrl;
   return {
     ...entry(manifest.name, docs, "coding-agent", "acp-registry"),
-    note: "ACP Registry 已确认该启动身份与分发方式，但尚未确认稳定的用户级 MCP、Models 或 Skills 写入契约；MUX 仅展示，不写入。",
+    note: "ACP Registry 已确认该启动身份与分发方式，但尚未确认稳定的用户级 MCP、Models 或 Skills 写入契约；Arca 仅展示，不写入。",
   };
 }
 
@@ -125,7 +125,7 @@ async function fetchJson(url) {
   const response = await fetch(url, {
     headers: {
       accept: "application/vnd.github+json",
-      "user-agent": "mux-agent-catalog/1",
+      "user-agent": "arca-agent-catalog/1",
       "x-github-api-version": "2022-11-28",
     },
   });
@@ -182,7 +182,7 @@ async function fetchAcpManifests() {
   });
 }
 
-const response = await fetch(SOURCE, { headers: { "user-agent": "mux-agent-catalog/1" } });
+const response = await fetch(SOURCE, { headers: { "user-agent": "arca-agent-catalog/1" } });
 if (!response.ok) throw new Error(`Glama request failed: ${response.status}`);
 const html = await response.text();
 const pattern = /href="\/mcp\/clients\/([^\"]+)"[^>]*>([^<]+)/g;

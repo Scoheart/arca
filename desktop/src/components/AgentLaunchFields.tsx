@@ -87,33 +87,33 @@ export function AgentLaunchFields({ info, draft, disabled, onChange, onBusyChang
     finally { onBusyChange(false); }
   };
   const appLabel = info.category === "plugin" ? t("agentConfiguration.hostApp") : info.category === "ide" ? "IDE" : t("agentConfiguration.app");
-  return <fieldset className="mux-launch-settings mux-launch-fields" disabled={disabled}>
-    <div className="mux-launch-field-modes">
-      {(info.configured_target || agentLaunchDraftChanged(info, draft)) && <button type="button" className="mux-launch-reset"
+  return <fieldset className="arca-launch-settings arca-launch-fields" disabled={disabled}>
+    <div className="arca-launch-field-modes">
+      {(info.configured_target || agentLaunchDraftChanged(info, draft)) && <button type="button" className="arca-launch-reset"
         onClick={() => onChange({ ...createAgentLaunchDraft(info), resetDefault: true, directory: "" })}>{t("agentConfiguration.restoreDefault")}</button>}
     </div>
-    {draft.resetDefault ? <p className="mux-launch-hint">{t("agentConfiguration.defaultAfterSave")}</p> : <>
-      <label>{draft.kind === "app" ? appLabel : t("agentConfiguration.executable")}<div className="mux-launch-path-input">
-          <input className="mux-dialog-input" value={draft.kind === "app" ? draft.app : draft.command} placeholder={draft.kind === "app" ? t("agentConfiguration.appPlaceholder") : t("agentConfiguration.commandPlaceholder")}
+    {draft.resetDefault ? <p className="arca-launch-hint">{t("agentConfiguration.defaultAfterSave")}</p> : <>
+      <label>{draft.kind === "app" ? appLabel : t("agentConfiguration.executable")}<div className="arca-launch-path-input">
+          <input className="arca-dialog-input" value={draft.kind === "app" ? draft.app : draft.command} placeholder={draft.kind === "app" ? t("agentConfiguration.appPlaceholder") : t("agentConfiguration.commandPlaceholder")}
             onChange={(event) => change(draft.kind === "app" ? { app: event.target.value } : { command: event.target.value })} />
           <button type="button" className="btn-secondary" title={t("agentConfiguration.selectFile")} aria-label={t("agentConfiguration.selectFile")} onClick={() => void browse()}><FolderIcon className="w-4 h-4" /></button>
         </div></label>
-      {draft.kind === "cli" && <label>{t("agentConfiguration.defaultDirectory")}<div className="mux-launch-path-input">
-        <input className="mux-dialog-input" value={draft.directory} placeholder={t("agentConfiguration.lastDirectory")} onChange={(event) => change({ directory: event.target.value })} />
+      {draft.kind === "cli" && <label>{t("agentConfiguration.defaultDirectory")}<div className="arca-launch-path-input">
+        <input className="arca-dialog-input" value={draft.directory} placeholder={t("agentConfiguration.lastDirectory")} onChange={(event) => change({ directory: event.target.value })} />
         <button type="button" className="btn-secondary" aria-label={t("agentConfiguration.selectDefaultDirectory")} title={t("agentConfiguration.selectFolder")} onClick={() => void browseDirectory()}><FolderIcon className="w-4 h-4" /></button>
       </div></label>}
-      <label><span className="mux-launch-label-line">{t("agentConfiguration.arguments")}<span className="mux-launch-hint">{t("agentConfiguration.onePerLine")}</span></span>
-        <textarea className="mux-dialog-input mux-launch-arguments" rows={2} value={draft.kind === "app" ? draft.appArgs : draft.args}
+      <label><span className="arca-launch-label-line">{t("agentConfiguration.arguments")}<span className="arca-launch-hint">{t("agentConfiguration.onePerLine")}</span></span>
+        <textarea className="arca-dialog-input arca-launch-arguments" rows={2} value={draft.kind === "app" ? draft.appArgs : draft.args}
           onChange={(event) => change(draft.kind === "app" ? { appArgs: event.target.value } : { args: event.target.value })} />
       </label>
-      <label><span className="mux-launch-label-line">{t("agentConfiguration.environment")}<span className="mux-launch-hint">{t("agentConfiguration.environmentHint")}</span></span>
-        <textarea className="mux-dialog-input mux-launch-arguments mux-launch-environment-block" rows={6} spellCheck={false} aria-label={t("agentConfiguration.environment")}
+      <label><span className="arca-launch-label-line">{t("agentConfiguration.environment")}<span className="arca-launch-hint">{t("agentConfiguration.environmentHint")}</span></span>
+        <textarea className="arca-dialog-input arca-launch-arguments arca-launch-environment-block" rows={6} spellCheck={false} aria-label={t("agentConfiguration.environment")}
           placeholder={"HTTP_PROXY=http://127.0.0.1:6789\nNO_PROXY=localhost,127.0.0.1"} value={draft.environment}
           onChange={(event) => change({ environment: event.target.value })} />
-        {validation?.errorCode && <p className="mux-launch-error" role="alert">{t(`agentConfiguration.environmentErrors.${validation.errorCode}`, { line: validation.line })}</p>}
+        {validation?.errorCode && <p className="arca-launch-error" role="alert">{t(`agentConfiguration.environmentErrors.${validation.errorCode}`, { line: validation.line })}</p>}
       </label>
-      {draft.kind === "app" && <div className="mux-launch-instance-option">
-        <div><span>{t("agentConfiguration.newInstance")}</span><p className="mux-launch-hint">{t("agentConfiguration.newInstanceHint")}</p></div>
+      {draft.kind === "app" && <div className="arca-launch-instance-option">
+        <div><span>{t("agentConfiguration.newInstance")}</span><p className="arca-launch-hint">{t("agentConfiguration.newInstanceHint")}</p></div>
         <Switch ariaLabel={t("agentConfiguration.newInstance")} checked={draft.newInstance} disabled={disabled} onChange={(value) => change({ newInstance: value })} />
       </div>}
     </>}

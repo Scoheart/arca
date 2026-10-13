@@ -36,7 +36,7 @@ pub enum PreparedCredentialRoute {
     NativeEnvReference,
     NativeFileReference,
     NativeHelper,
-    MuxKeychainHelper,
+    ArcaKeychainHelper,
     OpenCodeAuthStore,
     ClaudeDesktopProfile,
     Plaintext,
@@ -46,7 +46,7 @@ pub enum PreparedCredentialRoute {
 pub struct AgentCredentialCapabilities {
     #[serde(default)]
     pub native_sources: Vec<String>,
-    pub mux_keychain_helper: bool,
+    pub arca_keychain_helper: bool,
     pub agent_store: bool,
     pub plaintext: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -56,7 +56,7 @@ pub struct AgentCredentialCapabilities {
 pub fn agent_capabilities(agent_id: &str) -> AgentCredentialCapabilities {
     let mut capabilities = AgentCredentialCapabilities {
         native_sources: Vec::new(),
-        mux_keychain_helper: false,
+        arca_keychain_helper: false,
         agent_store: false,
         plaintext: false,
         note: None,
@@ -64,11 +64,11 @@ pub fn agent_capabilities(agent_id: &str) -> AgentCredentialCapabilities {
     match agent_id {
         "claude-code" | "codex" => {
             capabilities.native_sources.push("helper".into());
-            capabilities.mux_keychain_helper = true;
+            capabilities.arca_keychain_helper = true;
         }
         "pi" => {
             capabilities.native_sources.push("helper".into());
-            capabilities.mux_keychain_helper = true;
+            capabilities.arca_keychain_helper = true;
             capabilities.plaintext = true;
         }
         "claude-desktop" => capabilities.agent_store = true,
@@ -113,7 +113,7 @@ pub fn available_deliveries(agent_id: &str) -> Vec<ApiKeyDelivery> {
     if capabilities.native_sources.iter().any(|kind| kind == "env") {
         deliveries.push(ApiKeyDelivery::Env);
     }
-    if capabilities.mux_keychain_helper
+    if capabilities.arca_keychain_helper
         || capabilities
             .native_sources
             .iter()
@@ -170,8 +170,8 @@ pub fn select_delivery(
             Ok(PreparedCredentialRoute::NativeEnvReference)
         }
         ApiKeyDelivery::Env => Err(unsupported_delivery(agent_id, "env")),
-        ApiKeyDelivery::Command if capabilities.mux_keychain_helper => {
-            Ok(PreparedCredentialRoute::MuxKeychainHelper)
+        ApiKeyDelivery::Command if capabilities.arca_keychain_helper => {
+            Ok(PreparedCredentialRoute::ArcaKeychainHelper)
         }
         ApiKeyDelivery::Command
             if capabilities
@@ -184,7 +184,7 @@ pub fn select_delivery(
         ApiKeyDelivery::Command => Err(unsupported_delivery(agent_id, "command")),
         ApiKeyDelivery::Auto => {
             let source_kind = match source {
-                ApiKeySource::MuxStore => "mux-store",
+                ApiKeySource::ArcaStore => "arca-store",
                 ApiKeySource::Env { .. } => "env",
                 ApiKeySource::File { .. } => "file",
                 ApiKeySource::Helper { .. } => "helper",
@@ -201,8 +201,8 @@ pub fn select_delivery(
                     _ => unreachable!(),
                 });
             }
-            if matches!(source, ApiKeySource::MuxStore) && capabilities.mux_keychain_helper {
-                return Ok(PreparedCredentialRoute::MuxKeychainHelper);
+            if matches!(source, ApiKeySource::ArcaStore) && capabilities.arca_keychain_helper {
+                return Ok(PreparedCredentialRoute::ArcaKeychainHelper);
             }
             if capabilities.agent_store {
                 return match agent_id {
@@ -265,16 +265,16 @@ fn resolved_bytes(
 
 pub fn resolve_source(
     source: &ApiKeySource,
-    mux_store_value: Option<Vec<u8>>,
+    arca_store_value: Option<Vec<u8>>,
 ) -> Result<ResolvedCredential, String> {
     validate_source(source)?;
     match source {
-        ApiKeySource::MuxStore => resolved_bytes(
-            mux_store_value.ok_or_else(|| {
-                "credential_missing: MUX secure storage has no API Key for this Provider"
+        ApiKeySource::ArcaStore => resolved_bytes(
+            arca_store_value.ok_or_else(|| {
+                "credential_missing: Arca secure storage has no API Key for this Provider"
                     .to_string()
             })?,
-            "mux-store",
+            "arca-store",
             "system-keychain".into(),
         ),
         ApiKeySource::Env { name } => resolved_bytes(
@@ -301,11 +301,11 @@ pub fn validate_for_ui(source: &ApiKeySource) -> Result<CredentialValidationView
                 message: "Environment variable name is valid; its value is resolved by the Agent environment.".into(),
             })
         }
-        ApiKeySource::MuxStore => {
+        ApiKeySource::ArcaStore => {
             return Ok(CredentialValidationView {
-                source_kind: "mux-store".into(),
+                source_kind: "arca-store".into(),
                 source_identity: "system-keychain".into(),
-                message: "MUX secure storage is available; the key is checked when the Provider is saved.".into(),
+                message: "Arca secure storage is available; the key is checked when the Provider is saved.".into(),
             })
         }
     };
@@ -318,7 +318,7 @@ pub fn validate_for_ui(source: &ApiKeySource) -> Result<CredentialValidationView
 
 pub fn validate_source(source: &ApiKeySource) -> Result<(), String> {
     match source {
-        ApiKeySource::MuxStore => Ok(()),
+        ApiKeySource::ArcaStore => Ok(()),
         ApiKeySource::Env { name } => validate_env_name(name),
         ApiKeySource::File { path } => {
             if !Path::new(path).is_absolute() {
@@ -529,7 +529,7 @@ mod tests {
 
     fn isolated_dir(name: &str) -> PathBuf {
         let path =
-            std::env::temp_dir().join(format!("mux-credential-{name}-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("arca-credential-{name}-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&path).unwrap();
         path
     }
@@ -643,15 +643,15 @@ mod tests {
             PreparedCredentialRoute::NativeEnvReference
         );
         assert_eq!(
-            select_delivery("pi", &ApiKeySource::MuxStore, &ApiKeyDelivery::Auto).unwrap(),
-            PreparedCredentialRoute::MuxKeychainHelper
+            select_delivery("pi", &ApiKeySource::ArcaStore, &ApiKeyDelivery::Auto).unwrap(),
+            PreparedCredentialRoute::ArcaKeychainHelper
         );
         assert_eq!(
-            select_delivery("opencode", &ApiKeySource::MuxStore, &ApiKeyDelivery::Auto).unwrap(),
+            select_delivery("opencode", &ApiKeySource::ArcaStore, &ApiKeyDelivery::Auto).unwrap(),
             PreparedCredentialRoute::OpenCodeAuthStore
         );
         assert!(
-            select_delivery("goose", &ApiKeySource::MuxStore, &ApiKeyDelivery::Auto)
+            select_delivery("goose", &ApiKeySource::ArcaStore, &ApiKeyDelivery::Auto)
                 .unwrap_err()
                 .starts_with("credential_delivery_unsupported:")
         );
@@ -675,24 +675,24 @@ mod tests {
         assert_eq!(
             select_delivery(
                 "opencode",
-                &ApiKeySource::MuxStore,
+                &ApiKeySource::ArcaStore,
                 &ApiKeyDelivery::Plaintext
             )
             .unwrap(),
             PreparedCredentialRoute::Plaintext
         );
         assert!(
-            select_delivery("goose", &ApiKeySource::MuxStore, &ApiKeyDelivery::Plaintext)
+            select_delivery("goose", &ApiKeySource::ArcaStore, &ApiKeyDelivery::Plaintext)
                 .unwrap_err()
                 .starts_with("credential_delivery_unsupported:")
         );
         assert_eq!(
-            select_delivery("opencode", &ApiKeySource::MuxStore, &ApiKeyDelivery::Env).unwrap(),
+            select_delivery("opencode", &ApiKeySource::ArcaStore, &ApiKeyDelivery::Env).unwrap(),
             PreparedCredentialRoute::NativeEnvReference
         );
         assert_eq!(
-            select_delivery("pi", &ApiKeySource::MuxStore, &ApiKeyDelivery::Command).unwrap(),
-            PreparedCredentialRoute::MuxKeychainHelper
+            select_delivery("pi", &ApiKeySource::ArcaStore, &ApiKeyDelivery::Command).unwrap(),
+            PreparedCredentialRoute::ArcaKeychainHelper
         );
     }
 

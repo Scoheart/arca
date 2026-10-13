@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace MUX's visually divergent dialogs with one compact, flat, icon-led system while preserving necessary information and all existing behavior.
+**Goal:** Replace Arca's visually divergent dialogs with one compact, flat, icon-led system while preserving necessary information and all existing behavior.
 
 **Architecture:** Keep `Modal` as the accessibility and stacking authority, make `DialogShell` the visual authority for editor/picker/review dialogs, and align `ResourceInspector` with the same header/body/footer geometry. Add reusable inspector metric and icon-aware field primitives, then migrate Model, MCP, Skill, Provider, Agent, picker, and confirmation surfaces without changing Core or persistence behavior.
 
-**Tech Stack:** React 19, TypeScript, Tauri, existing MUX SVG icon components, CSS design tokens, Vitest, Testing Library.
+**Tech Stack:** React 19, TypeScript, Tauri, existing Arca SVG icon components, CSS design tokens, Vitest, Testing Library.
 
 **Delivery constraint:** Work from live remote `main` in an isolated worktree. Do not create a local commit or run `git push`; extend `codex/unified-dialog-system` with GitHub Git Data API commits, create one PR, squash merge it, and verify the generated Stable release. The repository fast-delivery rule means tests and builds are not run locally unless the user explicitly changes that instruction; targeted tests are still updated as executable contracts and the signed Stable build is the compile gate.
 
@@ -59,7 +59,7 @@ it.each([
   );
 
   const shell = screen.getByRole("dialog", { name: `${label}资源` }).firstElementChild!;
-  expect(shell.querySelector(".mux-dialog-shell-glyph")).toBeInTheDocument();
+  expect(shell.querySelector(".arca-dialog-shell-glyph")).toBeInTheDocument();
   expect(shell).toHaveAttribute("data-dialog-kind", kind);
 });
 ```
@@ -78,7 +78,7 @@ const DEFAULT_LEADING: Record<DialogShellKind, ReactNode> = {
 };
 
 const effectiveLeading = leading ?? (
-  <span className="mux-dialog-shell-glyph" aria-hidden="true">
+  <span className="arca-dialog-shell-glyph" aria-hidden="true">
     {DEFAULT_LEADING[kind]}
   </span>
 );
@@ -92,33 +92,33 @@ In `index.css`, define shared geometry once:
 
 ```css
 :root {
-  --mux-dialog-header-height: 56px;
-  --mux-dialog-footer-height: 52px;
-  --mux-dialog-inline: 18px;
-  --mux-dialog-block: 16px;
+  --arca-dialog-header-height: 56px;
+  --arca-dialog-footer-height: 52px;
+  --arca-dialog-inline: 18px;
+  --arca-dialog-block: 16px;
 }
 
-.mux-dialog-shell {
+.arca-dialog-shell {
   display: flex; width: 100%; max-height: inherit; min-height: 0;
   flex-direction: column; overflow: hidden; padding: 0;
 }
-.mux-dialog-shell-header {
-  display: flex; min-height: var(--mux-dialog-header-height); flex: 0 0 auto;
-  align-items: center; gap: 11px; padding: 10px var(--mux-dialog-inline);
+.arca-dialog-shell-header {
+  display: flex; min-height: var(--arca-dialog-header-height); flex: 0 0 auto;
+  align-items: center; gap: 11px; padding: 10px var(--arca-dialog-inline);
   border-bottom: 1px solid var(--border-hairline); background: var(--surface-overlay);
 }
-.mux-dialog-shell-glyph {
+.arca-dialog-shell-glyph {
   display: inline-flex; width: 32px; height: 32px; flex: 0 0 32px;
   align-items: center; justify-content: center; border-radius: 9px;
   background: color-mix(in srgb, var(--color-blue) 10%, transparent); color: var(--color-blue);
 }
-.mux-dialog-shell-body {
-  flex: 1 1 auto; min-width: 0; min-height: 0; padding: var(--mux-dialog-block) var(--mux-dialog-inline);
+.arca-dialog-shell-body {
+  flex: 1 1 auto; min-width: 0; min-height: 0; padding: var(--arca-dialog-block) var(--arca-dialog-inline);
   overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
 }
-.mux-dialog-shell-footer {
-  display: flex; min-height: var(--mux-dialog-footer-height); flex: 0 0 auto;
-  align-items: center; gap: 8px; margin: 0; padding: 9px var(--mux-dialog-inline);
+.arca-dialog-shell-footer {
+  display: flex; min-height: var(--arca-dialog-footer-height); flex: 0 0 auto;
+  align-items: center; gap: 8px; margin: 0; padding: 9px var(--arca-dialog-inline);
   border-top: 1px solid var(--border-hairline); background: var(--surface-overlay);
 }
 ```
@@ -172,7 +172,7 @@ In `ResourceWorkspace.tsx`, add:
 
 ```tsx
 export function InspectorMetrics({ children }: { children: ReactNode }) {
-  return <div className="mux-inspector-metrics" aria-label="资源指标">{children}</div>;
+  return <div className="arca-inspector-metrics" aria-label="资源指标">{children}</div>;
 }
 
 export function InspectorMetric({ icon, label, value }: {
@@ -181,8 +181,8 @@ export function InspectorMetric({ icon, label, value }: {
   value: ReactNode;
 }) {
   return (
-    <div className="mux-inspector-metric" title={label}>
-      <span className="mux-inspector-metric-icon" aria-hidden="true">{icon}</span>
+    <div className="arca-inspector-metric" title={label}>
+      <span className="arca-inspector-metric-icon" aria-hidden="true">{icon}</span>
       <span><strong>{value}</strong><small>{label}</small></span>
     </div>
   );
@@ -196,28 +196,28 @@ Extend `InspectorSection` with `icon?: ReactNode`. Extend `InspectorField` with 
 Replace the current 680 px surface and filled nested containers:
 
 ```css
-.mux-workspace-inspector-surface {
+.arca-workspace-inspector-surface {
   display: flex; width: 100%; max-height: inherit; min-width: 0; min-height: 0;
   overflow: hidden; border-radius: inherit;
 }
-.mux-resource-inspector {
+.arca-resource-inspector {
   display: flex; width: 100%; max-height: inherit; min-height: 0;
   flex-direction: column; overflow: hidden; background: var(--surface-overlay);
 }
-.mux-resource-inspector-head {
-  min-height: var(--mux-dialog-header-height); padding: 10px var(--mux-dialog-inline);
+.arca-resource-inspector-head {
+  min-height: var(--arca-dialog-header-height); padding: 10px var(--arca-dialog-inline);
   border-bottom: 1px solid var(--border-hairline);
 }
-.mux-resource-inspector-body {
+.arca-resource-inspector-body {
   flex: 0 1 auto; min-height: 0; max-height: calc(100vh - 140px);
-  padding: var(--mux-dialog-block) var(--mux-dialog-inline); overflow-y: auto;
+  padding: var(--arca-dialog-block) var(--arca-dialog-inline); overflow-y: auto;
 }
-.mux-resource-inspector-footer {
-  min-height: var(--mux-dialog-footer-height); margin: 0; padding: 9px var(--mux-dialog-inline);
+.arca-resource-inspector-footer {
+  min-height: var(--arca-dialog-footer-height); margin: 0; padding: 9px var(--arca-dialog-inline);
   border-top: 1px solid var(--border-hairline); background: transparent;
 }
-.mux-inspector-section,
-.mux-model-inspector-fields {
+.arca-inspector-section,
+.arca-model-inspector-fields {
   padding: 0; border: 0; border-radius: 0; background: transparent;
 }
 ```
@@ -283,12 +283,12 @@ Pass icon-only buttons through `InspectorField.action` with `aria-label`, `title
 - [ ] **Step 4: Add responsive flat-grid CSS**
 
 ```css
-.mux-model-inspector-fields {
+.arca-model-inspector-fields {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px;
 }
-.mux-model-inspector-fields .mux-inspector-field[data-wide="true"] { grid-column: 1 / -1; }
+.arca-model-inspector-fields .arca-inspector-field[data-wide="true"] { grid-column: 1 / -1; }
 @media (max-width: 620px) {
-  .mux-model-inspector-fields { grid-template-columns: minmax(0, 1fr); }
+  .arca-model-inspector-fields { grid-template-columns: minmax(0, 1fr); }
 }
 ```
 
@@ -350,33 +350,33 @@ Run `git diff --check` for the three files. Expected: no whitespace errors.
 Set explicit `className` values at DialogShell call sites:
 
 ```tsx
-<DialogShell className="mux-dialog-provider-catalog" kind="picker" size="lg" ... />
-<DialogShell className="mux-dialog-provider-editor" kind="editor" size="wide" ... />
-<DialogShell className="mux-dialog-agent-editor" kind="editor" size="lg" ... />
-<DialogShell className="mux-dialog-skill-flow" kind="editor" size="md" ... />
-<DialogShell className="mux-dialog-skill-review" kind="review" size="lg" ... />
+<DialogShell className="arca-dialog-provider-catalog" kind="picker" size="lg" ... />
+<DialogShell className="arca-dialog-provider-editor" kind="editor" size="wide" ... />
+<DialogShell className="arca-dialog-agent-editor" kind="editor" size="lg" ... />
+<DialogShell className="arca-dialog-skill-flow" kind="editor" size="md" ... />
+<DialogShell className="arca-dialog-skill-review" kind="review" size="lg" ... />
 ```
 
-Update `ModelsView.test.tsx` to require explicit class names and reject `:has(.mux-provider-catalog)` and `:has(.mux-provider-form)` selectors.
+Update `ModelsView.test.tsx` to require explicit class names and reject `:has(.arca-provider-catalog)` and `:has(.arca-provider-form)` selectors.
 
 - [ ] **Step 2: Flatten Provider and Agent forms**
 
 Keep the current fields and controls, but change form section styling to transparent groups with one top divider:
 
 ```css
-.mux-provider-form-section {
+.arca-provider-form-section {
   display: grid; min-width: 0; gap: 12px; margin-top: 16px; padding-top: 16px;
   border-top: 1px solid var(--border-hairline); background: transparent;
 }
-.mux-agent-create,
-.mux-agent-capability-detail { background: transparent; border-radius: 0; }
+.arca-agent-create,
+.arca-agent-capability-detail { background: transparent; border-radius: 0; }
 ```
 
 Do not remove credential controls, protocol paths, request previews, validation, or Agent capability state.
 
 - [ ] **Step 3: Flatten Skill workflow wrappers**
 
-Keep the step state machine and nested risk modal. Remove duplicate `.mux-skill-dialog-body`, `.mux-skill-review-body`, and feature footer chrome where the shared shell already supplies it. Style source choices and candidate rows as flat rows rather than cards; preserve selected and risk states.
+Keep the step state machine and nested risk modal. Remove duplicate `.arca-skill-dialog-body`, `.arca-skill-review-body`, and feature footer chrome where the shared shell already supplies it. Style source choices and candidate rows as flat rows rather than cards; preserve selected and risk states.
 
 - [ ] **Step 4: Delete the old shell `:has(...)` rules**
 
@@ -404,7 +404,7 @@ Preserve the semantic icon, title, impact sentence, error status, and two action
 
 - [ ] **Step 2: Normalize picker rows**
 
-Keep search, selected state, count, metadata, and empty states. Use transparent rows with hairline separators by default and one quiet selected fill. Ensure `.mux-picker-list` remains the only picker scroll axis.
+Keep search, selected state, count, metadata, and empty states. Use transparent rows with hairline separators by default and one quiet selected fill. Ensure `.arca-picker-list` remains the only picker scroll axis.
 
 - [ ] **Step 3: Add CSS regression tests**
 
@@ -417,14 +417,14 @@ import { expect, it } from "vitest";
 const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
 
 it("keeps dialog geometry shared and inspectors content-driven", () => {
-  expect(css).toMatch(/--mux-dialog-header-height:\s*56px/);
-  expect(css).toMatch(/\.mux-workspace-inspector-surface\s*\{[^}]*max-height:\s*inherit/);
-  expect(css).not.toMatch(/\.mux-workspace-inspector-surface\s*\{[^}]*height:\s*min\(680px/);
+  expect(css).toMatch(/--arca-dialog-header-height:\s*56px/);
+  expect(css).toMatch(/\.arca-workspace-inspector-surface\s*\{[^}]*max-height:\s*inherit/);
+  expect(css).not.toMatch(/\.arca-workspace-inspector-surface\s*\{[^}]*height:\s*min\(680px/);
 });
 
 it("does not style dialog shells by descendant feature detection", () => {
-  expect(css).not.toMatch(/\.mux-dialog-shell:has\(\.mux-provider-(catalog|form)\)/);
-  expect(css).not.toMatch(/\.mux-dialog-shell:has\(\.mux-agent-create\)/);
+  expect(css).not.toMatch(/\.arca-dialog-shell:has\(\.arca-provider-(catalog|form)\)/);
+  expect(css).not.toMatch(/\.arca-dialog-shell:has\(\.arca-agent-create\)/);
 });
 ```
 
@@ -457,7 +457,7 @@ Expected: only dialog-system files, this plan, and the approved design spec. Con
 
 - [ ] **Step 2: Confirm the fast-mode validation decision**
 
-Do not run local `npm test`, `npm run build`, Cargo tests, formatters, changed-surface validator, or preflight under the current MUX `AGENTS.md`. Record them as intentionally skipped. The feature adds focused tests but relies on the signed Direct Stable build as the compile gate.
+Do not run local `npm test`, `npm run build`, Cargo tests, formatters, changed-surface validator, or preflight under the current Arca `AGENTS.md`. Record them as intentionally skipped. The feature adds focused tests but relies on the signed Direct Stable build as the compile gate.
 
 - [ ] **Step 3: Create the remote feature commit**
 
@@ -482,18 +482,18 @@ Watch the exact `Direct stable release` run for the merge SHA. Confirm the relea
 Create an exact release-tag worktree and run the single-pass verifier without installation:
 
 ```bash
-tag=$(gh release list --repo Scoheart/mux --limit 1 --json tagName --jq '.[0].tagName')
-release_source=$(mktemp -d /tmp/mux-dialog-release.XXXXXX)
+tag=$(gh release list --repo Scoheart/arca --limit 1 --json tagName --jq '.[0].tagName')
+release_source=$(mktemp -d /tmp/arca-dialog-release.XXXXXX)
 git worktree add --detach "$release_source" "$tag"
-bash /Users/scoheart/Code/ai/.agents/skills/mux-release/scripts/verify-release.sh \
-  --repo Scoheart/mux \
+bash /Users/scoheart/Code/ai/.agents/skills/arca-release/scripts/verify-release.sh \
+  --repo Scoheart/arca \
   --source-root "$release_source" \
   --wait \
   "$tag"
 ```
 
-Expected: four assets, matching digests, signed App and updater, valid arm64 CLI, valid DMG, and published non-prerelease Release. Do not use `--install` because the user previously chose to update MUX themselves.
+Expected: four assets, matching digests, signed App and updater, valid arm64 CLI, valid DMG, and published non-prerelease Release. Do not use `--install` because the user previously chose to update Arca themselves.
 
 - [ ] **Step 6: Report visual acceptance boundary**
 
-Report the release, PR, feature/release SHAs, build conclusion, verification result, skipped local checks, and preserved original checkout. State explicitly that `/Applications/MUX.app` was not replaced and final installed-UI review remains for the user's update.
+Report the release, PR, feature/release SHAs, build conclusion, verification result, skipped local checks, and preserved original checkout. State explicitly that `/Applications/Arca.app` was not replaced and final installed-UI review remains for the user's update.

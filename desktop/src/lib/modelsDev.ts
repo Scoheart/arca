@@ -3,7 +3,7 @@ import type { ModelProfileView } from "./types";
 export const MODELS_DEV_API_URL = "https://models.dev/api.json";
 export const MODELS_DEV_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-const CACHE_KEY = "mux.models-dev.metadata.v1";
+const CACHE_KEY = "arca.models-dev.metadata.v1";
 const REQUEST_TIMEOUT_MS = 8_000;
 const CATALOG_MEMORY_TTL_MS = 5 * 60 * 1000;
 const catalogRequests = new WeakMap<typeof fetch, { expiresAt: number; request: Promise<{ catalog: unknown; fetchedAt: number }> }>();

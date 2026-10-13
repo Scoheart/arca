@@ -1,10 +1,10 @@
 //! Disable/enable is a destructive-looking workflow, so exercise its durability
 //! contract end to end against a real global Agent file.
 
-use mux_core::disabled::{load_disabled, remember, DisabledEntry};
-use mux_core::ops;
-use mux_core::testenv::TestHome;
-use mux_core::types::{McpConfig, StdioConfig};
+use arca_core::disabled::{load_disabled, remember, DisabledEntry};
+use arca_core::ops;
+use arca_core::testenv::TestHome;
+use arca_core::types::{McpConfig, StdioConfig};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -88,8 +88,8 @@ fn workbuddy_native_toggle_refuses_ambiguous_flags_and_stale_snapshots() {
     }
     let original = r#"{"mcpServers":{"docs":{"url":"https://example.test/mcp","disabled":true}}}"#;
     std::fs::write(&path, original).unwrap();
-    let definition = &mux_core::agents::builtin_agents()["workbuddy"];
-    let adapter = mux_core::adapter::get_agent_adapter_for(definition, "workbuddy");
+    let definition = &arca_core::agents::builtin_agents()["workbuddy"];
+    let adapter = arca_core::adapter::get_agent_adapter_for(definition, "workbuddy");
     let snapshot = adapter.snapshot(&path, "docs").unwrap().unwrap();
     let changed = original.replace("example.test", "changed.test");
     std::fs::write(&path, &changed).unwrap();
@@ -153,7 +153,7 @@ fn disable_never_removes_entry_when_snapshot_cannot_be_saved() {
     let th = TestHome::new("disable-save-failure");
     let agent_path = th.home.join(".claude.json");
     std::fs::write(&agent_path, claude_config()).unwrap();
-    let settings_path = th.home.join(".mux/settings.json");
+    let settings_path = th.home.join(".arca/settings.json");
     std::fs::create_dir_all(&settings_path).unwrap();
 
     let result = ops::disable("srv", "stdio", "global", &["claude-code".into()], None);
@@ -174,7 +174,7 @@ fn unavailable_or_unknown_agents_fail_without_losing_snapshots() {
         env: None,
         cwd: None,
     });
-    mux_core::registry::write_manual_entry(&mux_core::types::RegistryEntry {
+    arca_core::registry::write_manual_entry(&arca_core::types::RegistryEntry {
         name: "srv".into(),
         description: String::new(),
         tags: Vec::new(),

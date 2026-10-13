@@ -1,7 +1,7 @@
-use mux_core::adapter::{get_agent_adapter, get_agent_adapter_for};
-use mux_core::agents::builtin_agents;
-use mux_core::codec::{from_name, normalize_with_codec};
-use mux_core::types::{AgentDefinition, HttpConfig, McpConfig, StdioConfig};
+use arca_core::adapter::{get_agent_adapter, get_agent_adapter_for};
+use arca_core::agents::builtin_agents;
+use arca_core::codec::{from_name, normalize_with_codec};
+use arca_core::types::{AgentDefinition, HttpConfig, McpConfig, StdioConfig};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -17,7 +17,7 @@ fn temp_file(name: &str, extension: &str) -> PathBuf {
     );
     std::fs::canonicalize(std::env::temp_dir())
         .unwrap_or_else(|_| std::env::temp_dir())
-        .join(format!("mux-agent-format-{name}-{token}.{extension}"))
+        .join(format!("arca-agent-format-{name}-{token}.{extension}"))
 }
 
 fn fixture(name: &str) -> &'static str {
@@ -55,7 +55,7 @@ fn fixture(name: &str) -> &'static str {
 
 #[test]
 fn newly_audited_surfaces_preserve_non_connection_state_and_reject_unsafe_inputs() {
-    let home = mux_core::testenv::TestHome::new("agent-gap-formats");
+    let home = arca_core::testenv::TestHome::new("agent-gap-formats");
     let agents = builtin_agents();
     for id in ["cline-cli", "kiro-cli", "junie-cli", "goose-desktop", "kilo-vscode", "kilo-desktop",
         "codex-ide", "mimo-code", "jcode", "jan-cli", "jan-desktop", "anythingllm", "ibm-bob"] {
@@ -116,7 +116,7 @@ fn newly_audited_surfaces_preserve_non_connection_state_and_reject_unsafe_inputs
 
 #[test]
 fn new_native_switch_and_shared_format_guards_fail_closed() {
-    let home = mux_core::testenv::TestHome::new("agent-gap-policy");
+    let home = arca_core::testenv::TestHome::new("agent-gap-policy");
     let agents = builtin_agents();
     let jan_path = home.home.join("jan.json");
     std::fs::write(&jan_path, fixture("jan-cli")).unwrap();
@@ -163,7 +163,7 @@ fn new_native_switch_and_shared_format_guards_fail_closed() {
 
 #[test]
 fn workbuddy_editions_keep_independent_paths_launchers_and_native_pause_state() {
-    let home = mux_core::testenv::TestHome::new("workbuddy-editions");
+    let home = arca_core::testenv::TestHome::new("workbuddy-editions");
     let agents = builtin_agents();
     let launchers: Value = serde_json::from_str(include_str!("../../data/agent-launchers.json")).unwrap();
     let mut paths = Vec::new();
@@ -201,7 +201,7 @@ fn workbuddy_editions_keep_independent_paths_launchers_and_native_pause_state() 
 
 #[test]
 fn workbuddy_roundtrip_preserves_policy_and_paused_state_and_rejects_invalid_entries() {
-    let home = mux_core::testenv::TestHome::new("workbuddy-formats");
+    let home = arca_core::testenv::TestHome::new("workbuddy-formats");
     let path = home.home.join("mcp.json");
     std::fs::write(&path, fixture("workbuddy")).unwrap();
     let agents = builtin_agents();
@@ -259,7 +259,7 @@ fn workbuddy_roundtrip_preserves_policy_and_paused_state_and_rejects_invalid_ent
 
 #[test]
 fn pi_native_mcp_preserves_policy_and_respects_enabled_state() {
-    let home = mux_core::testenv::TestHome::new("pi-native-mcp");
+    let home = arca_core::testenv::TestHome::new("pi-native-mcp");
     let path = home.home.join(".pi/agent/mcp.json");
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
     std::fs::write(&path, r#"{
@@ -304,7 +304,7 @@ fn pi_native_mcp_preserves_policy_and_respects_enabled_state() {
 
 #[test]
 fn kimi_desktop_and_cli_share_lossless_mcp_and_skill_contracts() {
-    let home = mux_core::testenv::TestHome::new("kimi-desktop-formats");
+    let home = arca_core::testenv::TestHome::new("kimi-desktop-formats");
     let agents = builtin_agents();
     let desktop = &agents["kimi-code-desktop"];
     let cli = &agents["kimi-code"];
@@ -351,7 +351,7 @@ fn kimi_desktop_and_cli_share_lossless_mcp_and_skill_contracts() {
 
 #[test]
 fn zcode_native_mcp_keeps_policy_and_refuses_disabled_entries() {
-    let home = mux_core::testenv::TestHome::new("zcode-native-mcp");
+    let home = arca_core::testenv::TestHome::new("zcode-native-mcp");
     let path = home.home.join("config.json");
     std::fs::write(&path, fixture("zcode")).unwrap();
     let agents = builtin_agents();
@@ -370,7 +370,7 @@ fn zcode_native_mcp_keeps_policy_and_refuses_disabled_entries() {
 
 #[test]
 fn zcode_does_not_hide_shared_fallback_when_creating_native_config() {
-    let home = mux_core::testenv::TestHome::new("zcode-fallback");
+    let home = arca_core::testenv::TestHome::new("zcode-fallback");
     std::fs::create_dir_all(home.home.join(".agents")).unwrap();
     std::fs::write(home.home.join(".agents/mcp.json"), r#"{"mcpServers":{"shared":{"command":"example"}}}"#).unwrap();
     let path = home.home.join(".zcode/cli/config.json");
@@ -384,7 +384,7 @@ fn zcode_does_not_hide_shared_fallback_when_creating_native_config() {
 
 #[test]
 fn new_cli_writers_roundtrip_official_shapes_and_keep_unowned_policy() {
-    let home = mux_core::testenv::TestHome::new("new-cli-formats");
+    let home = arca_core::testenv::TestHome::new("new-cli-formats");
     let agents = builtin_agents();
     for (id, extension, marker) in [
         ("antigravity-cli", "json", "\"disabledTools\": [\"publish\"]"),
@@ -546,7 +546,7 @@ fn step_code_preserves_settings_and_refuses_disabled_or_sse_entries() {
     assert_eq!(skills.aliases[0].global_dir, "~/.agents/skills");
     assert!(skills.probes.iter().all(|probe| !matches!(
         probe,
-        mux_core::types::AgentInstallProbe::Command { name } if name == "step"
+        arca_core::types::AgentInstallProbe::Command { name } if name == "step"
     )));
     let launchers: Value =
         serde_json::from_str(include_str!("../../data/agent-launchers.json")).unwrap();
@@ -794,13 +794,13 @@ fn every_writable_builtin_roundtrips_through_its_wire_format() {
             .any(|transport| transport == "http");
         let strict_stdio = matches!(
             codec,
-            mux_core::codec::Codec::AgentKube | mux_core::codec::Codec::ChatMcp | mux_core::codec::Codec::MiMo | mux_core::codec::Codec::Jcode
+            arca_core::codec::Codec::AgentKube | arca_core::codec::Codec::ChatMcp | arca_core::codec::Codec::MiMo | arca_core::codec::Codec::Jcode
         );
         let local = McpConfig::Stdio(StdioConfig {
             command: "npx".into(),
             args: Some(vec!["-y".into(), "matrix-server".into()]),
             env: Some(HashMap::from([(
-                if codec == mux_core::codec::Codec::ChatMcp {
+                if codec == arca_core::codec::Codec::ChatMcp {
                     "MATRIX_MODE"
                 } else {
                     "TOKEN"
@@ -808,10 +808,10 @@ fn every_writable_builtin_roundtrips_through_its_wire_format() {
                 .into(),
                 "fixture".into(),
             )])),
-            cwd: (!strict_stdio).then(|| "/tmp/mux-matrix".into()),
+            cwd: (!strict_stdio).then(|| "/tmp/arca-matrix".into()),
         });
         let remote = McpConfig::Http(HttpConfig {
-            kind: if codec == mux_core::codec::Codec::AgentKube {
+            kind: if codec == arca_core::codec::Codec::AgentKube {
                 "sse".into()
             } else {
                 "streamable-http".into()
@@ -819,7 +819,7 @@ fn every_writable_builtin_roundtrips_through_its_wire_format() {
             url: "https://example.com/mcp".into(),
             headers: (!matches!(
                 codec,
-                mux_core::codec::Codec::AgentKube | mux_core::codec::Codec::ChatMcp
+                arca_core::codec::Codec::AgentKube | arca_core::codec::Codec::ChatMcp
             ))
             .then(|| HashMap::from([("X-New".into(), "value".into())])),
         });
@@ -922,7 +922,7 @@ fn qoder_desktop_round_trip_preserves_shared_cli_settings() {
 
 #[test]
 fn qwenwork_editions_keep_separate_paths_and_round_trip_custom_mcp() {
-    let home = mux_core::testenv::TestHome::new("qwenwork-formats");
+    let home = arca_core::testenv::TestHome::new("qwenwork-formats");
     let agents = builtin_agents();
     for (id, directory, app) in [
         ("qwenwork", ".qwenwork", "QwenWork"),
@@ -1105,9 +1105,9 @@ fn builtin_global_paths_match_current_product_docs() {
 
 #[test]
 fn verified_and_catalog_definitions_have_auditable_boundaries() {
-    let verified: std::collections::BTreeMap<String, mux_core::types::AgentDefinition> =
+    let verified: std::collections::BTreeMap<String, arca_core::types::AgentDefinition> =
         serde_json::from_str(include_str!("../../data/agents.json")).unwrap();
-    let catalog: std::collections::BTreeMap<String, mux_core::types::AgentDefinition> =
+    let catalog: std::collections::BTreeMap<String, arca_core::types::AgentDefinition> =
         serde_json::from_str(include_str!("../../data/agent-catalog.json")).unwrap();
     let verified_ids: std::collections::BTreeSet<_> = verified.keys().cloned().collect();
     let catalog_ids: std::collections::BTreeSet<_> = catalog.keys().cloned().collect();
@@ -1879,7 +1879,7 @@ fn chatmcp_credential_bearing_files_are_external_managed_and_read_only() {
 
 #[test]
 fn opencode_desktop_shares_cli_wire_format_without_owning_other_settings() {
-    let home = mux_core::testenv::TestHome::new("opencode-desktop-formats");
+    let home = arca_core::testenv::TestHome::new("opencode-desktop-formats");
     let agents = builtin_agents();
     let desktop = &agents["opencode-desktop"];
     let cli = &agents["opencode"];

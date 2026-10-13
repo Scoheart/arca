@@ -1,6 +1,6 @@
-# MUX 用户级 Skills 管理 — 设计文档
+# Arca 用户级 Skills 管理 — 设计文档
 
-> **历史文档：** 本文记录 2026-07-16 的 Desktop 首版范围，其中关于 CLI/TUI 的限制仅描述当时实现。当前产品已由统一 CLI 提供 `mux skill list/show/status/assign/unassign/enable/disable/reapply`；无参数 TUI 仍聚焦 MCP。
+> **历史文档：** 本文记录 2026-07-16 的 Desktop 首版范围，其中关于 CLI/TUI 的限制仅描述当时实现。当前产品已由统一 CLI 提供 `arca skill list/show/status/assign/unassign/enable/disable/reapply`；无参数 TUI 仍聚焦 MCP。
 
 - 日期：2026-07-16
 - 状态：历史首版设计已完成；CLI 部分已被后续统一命令体系取代
@@ -8,12 +8,12 @@
 
 ## 1. 背景
 
-MUX 已统一管理编码 Agent 的 MCP servers 和模型端点，但用户级 Agent Skills
+Arca 已统一管理编码 Agent 的 MCP servers 和模型端点，但用户级 Agent Skills
 仍散落在各工具自己的目录中。安装、更新、风险检查和跨 Agent 分配主要依赖手工
-复制、符号链接或外部 CLI，缺少与 MUX 现有安全写入模型一致的可视化管理入口。
+复制、符号链接或外部 CLI，缺少与 Arca 现有安全写入模型一致的可视化管理入口。
 
 Agent Skills 已形成以 `SKILL.md` 为核心的开放格式。现有 `vercel-labs/skills`
-证明了“中央副本 + Agent 目录链接”的跨 Agent 模型可行，但 MUX Desktop 不能
+证明了“中央副本 + Agent 目录链接”的跨 Agent 模型可行，但 Arca Desktop 不能
 要求用户预装 Node.js 或 `npx`，也不能把关键写入和错误恢复委托给不稳定的命令行
 输出。因此本功能采用原生 Rust core 实现。
 
@@ -46,13 +46,13 @@ Agent Skills 已形成以 `SKILL.md` 为核心的开放格式。现有 `vercel-l
 
 ### 3.1 目标
 
-1. 统一展示 MUX 托管和各 Agent 目录中发现的用户级 Skills。
+1. 统一展示 Arca 托管和各 Agent 目录中发现的用户级 Skills。
 2. 从公开 GitHub 仓库或本地目录安装一个或多个 Skills。
 3. 将中央副本安全分配给一个或多个已核验 Agent。
 4. 支持检查更新、查看文件差异、确认更新、停用和删除。
 5. 在落盘前完成格式校验、路径安全检查和本地静态风险分析。
 6. 对安装、导入、更新和删除提供可恢复的事务语义。
-7. 保持 MUX 现有 Rust-core 权威、薄前端、隔离测试和配置保留约束。
+7. 保持 Arca 现有 Rust-core 权威、薄前端、隔离测试和配置保留约束。
 
 ### 3.2 非目标
 
@@ -66,13 +66,13 @@ Agent Skills 已形成以 `SKILL.md` 为核心的开放格式。现有 `vercel-l
 
 ## 4. 架构
 
-行为先进入 `mux-core`，Desktop 和未来 CLI 仅发送意图并展示计划或结果。
+行为先进入 `arca-core`，Desktop 和未来 CLI 仅发送意图并展示计划或结果。
 
 ```text
 GitHub / 本地目录 / Agent 外部副本
                  │
                  ▼
-        mux-core::skills
+        arca-core::skills
         ├── resolver      来源与版本解析
         ├── inventory     中央库、分配和外部副本扫描
         ├── manifest      SKILL.md 解析与规范校验
@@ -83,7 +83,7 @@ GitHub / 本地目录 / Agent 外部副本
                  │
        ┌─────────┼──────────────┐
        ▼         ▼              ▼
-~/.mux/      ~/.mux/        Agent Skills 目录
+~/.arca/      ~/.arca/        Agent Skills 目录
 skills/      settings.json  （只保存链接）
 ```
 
@@ -158,7 +158,7 @@ Gemini CLI、OpenCode 和 GitHub Copilot CLI 读取；写入该目标前必须�
 
 ### 6.1 托管记录
 
-`Settings` 增加 MUX 自有字段：
+`Settings` 增加 Arca 自有字段：
 
 ```rust
 pub struct ManagedSkillRecord {
@@ -206,21 +206,21 @@ pub enum SkillSource {
 ### 6.2 文件布局
 
 ```text
-~/.mux/skills/<skill-name>/               # MUX 中央正文，每个 Skill 一份
-~/.mux/staging/skills/<operation-id>/     # 下载、解析与确认候选
-~/.mux/backups/skills/<timestamp>/<name>/ # 更新、导入或删除前的备份
-~/.mux/journals/skills/<operation-id>.json # 未完成事务及恢复进度
-~/.mux/settings.json                      # 来源、版本、哈希、风险与分配
+~/.arca/skills/<skill-name>/               # Arca 中央正文，每个 Skill 一份
+~/.arca/staging/skills/<operation-id>/     # 下载、解析与确认候选
+~/.arca/backups/skills/<timestamp>/<name>/ # 更新、导入或删除前的备份
+~/.arca/journals/skills/<operation-id>.json # 未完成事务及恢复进度
+~/.arca/settings.json                      # 来源、版本、哈希、风险与分配
 ```
 
-中央目录由 MUX 独占管理，不是任何 Agent 的发现目录。这样所有 Agent（包括原生
+中央目录由 Arca 独占管理，不是任何 Agent 的发现目录。这样所有 Agent（包括原生
 读取 `~/.agents/skills` 的工具）都必须通过目标目录中的链接启用，安装时的 Agent
-选择不会被中央副本绕过。MUX 只对 `managed_skills` 中的记录承担生命周期管理；
-发现于中央目录、却没有 MUX 元数据的内容标记为“外部”，不能默认认领。
+选择不会被中央副本绕过。Arca 只对 `managed_skills` 中的记录承担生命周期管理；
+发现于中央目录、却没有 Arca 元数据的内容标记为“外部”，不能默认认领。
 
-MUX 自有的 Skills、staging、backup 和 journal 目录使用用户专属 `0700` 权限；
+Arca 自有的 Skills、staging、backup 和 journal 目录使用用户专属 `0700` 权限；
 staging 元数据、plan、journal 和 lock 文件使用 `0600`。Skill 树内部保留已校验的
-可执行位，MUX 不修改 Agent 自有发现目录或外部副本的权限。
+可执行位，Arca 不修改 Agent 自有发现目录或外部副本的权限。
 
 ### 6.3 身份与冲突
 
@@ -247,7 +247,7 @@ Skill 名称遵循 Agent Skills 规范，是用户级唯一标识。同名不同
 settings 中存在分配就声称链接已生效。
 
 Inventory 除已安装 Agent 的首选目录/aliases 外，还必须扫描 `skill_assignments`
-仍引用的 catalog target。这样 Agent 被卸载或探针消失后，MUX 仍能展示并安全移除
+仍引用的 catalog target。这样 Agent 被卸载或探针消失后，Arca 仍能展示并安全移除
 自己留下的链接；该 target 不再可新增分配，但不能从生命周期操作中消失。
 
 ## 8. 来源解析
@@ -261,7 +261,7 @@ Inventory 除已安装 Agent 的首选目录/aliases 外，还必须扫描 `skil
 - 指向仓库 tree 子目录的 GitHub URL
 
 Resolver 使用 GitHub HTTPS API 解析 ref 到不可变 commit SHA，再下载该 commit
-对应的 archive。MUX 不调用本机 Git。请求和重定向最终主机只允许
+对应的 archive。Arca 不调用本机 Git。请求和重定向最终主机只允许
 `github.com`、`api.github.com` 和 `codeload.github.com`，且必须使用 HTTPS。
 
 安全解压后扫描包含合法 `SKILL.md` 的目录。一个仓库可返回多个候选，用户选择
@@ -270,7 +270,7 @@ Resolver 使用 GitHub HTTPS API 解析 ref 到不可变 commit SHA，再下载�
 
 ### 8.2 本地目录
 
-只允许通过 Tauri 原生文件选择器选择。MUX 复制快照，不建立指向原目录的活链接。
+只允许通过 Tauri 原生文件选择器选择。Arca 复制快照，不建立指向原目录的活链接。
 来源路径使用 `~` 规范化后存入 settings；若所选目录包含多个 Skills，每条记录同时
 保存从所选目录到该 Skill 的相对 `subpath`。后台检查只重新计算对应 subpath 的目录
 哈希并提示变化，更新仍需重新预览和确认。
@@ -342,9 +342,9 @@ Risk Audit 是确定性的静态规则引擎，不运行 Skill 内容，也不�
 所有 `commit_*` 必须提交 operation id 和候选哈希。高风险覆盖还必须提交由当前
 findings 摘要计算的确认摘要；任一值与 plan 不一致即拒绝执行并要求重新审阅。
 
-恢复和所有 `commit_*` 由 `~/.mux/skills.lock` 的跨进程 advisory file lock 串行化；
+恢复和所有 `commit_*` 由 `~/.arca/skills.lock` 的跨进程 advisory file lock 串行化；
 锁所有权由操作系统在进程退出或崩溃后释放，不能使用会因崩溃永久遗留的目录锁。
-Agent 自有 settings 的既有目录锁协议保持不变，MUX 不回收外部应用持有的锁。
+Agent 自有 settings 的既有目录锁协议保持不变，Arca 不回收外部应用持有的锁。
 
 Commit 流程：
 
@@ -369,7 +369,7 @@ App 启动时必须先恢复未完成 journal，再向 UI 暴露 inventory。
 
 ### 12.2 导入既有副本
 
-外部副本始终先只读展示。用户选择一个外部副本作为导入来源后，MUX 复制并校验
+外部副本始终先只读展示。用户选择一个外部副本作为导入来源后，Arca 复制并校验
 候选，展示与其他同名副本的差异。确认后先建立中央副本，再备份原 Agent 目录，
 最后用中央链接替换。导入成功前不移动原文件。
 
@@ -380,7 +380,7 @@ App 启动时必须先恢复未完成 journal，再向 UI 暴露 inventory。
 ### 12.3 Agent 分配
 
 - 启用：目标为空时创建指向中央副本的链接。
-- 停用：只移除与 MUX 记录和中央目标都匹配的链接。
+- 停用：只移除与 Arca 记录和中央目标都匹配的链接。
 - 共享目标：确认页列出所有实际受影响 Agent；不能伪装成仅影响当前开关。
 - 多 Agent 启用：planner 去掉会造成同名 Skill 重复发现的冗余目标链接。
 - 真实目录、未知链接或并发变化：拒绝覆盖，转入冲突处理。
@@ -517,7 +517,7 @@ Command 返回结构化错误码和可展示消息，不要求前端解析字符
 - plan 后并发修改 settings、中央目录或 Agent 目标时拒绝 commit。
 - 各 commit 阶段模拟崩溃后的 journal 恢复。
 - settings 未知字段保留和旧 settings 默认读取。
-- 全部文件测试使用隔离 `MUX_HOME`/TestHome；GitHub 测试使用本地 mock HTTP，
+- 全部文件测试使用隔离 `ARCA_HOME`/TestHome；GitHub 测试使用本地 mock HTTP，
   不依赖实时网络。
 
 ### 16.3 Desktop 测试
@@ -541,7 +541,7 @@ bash desktop/scripts/prepare-sidecar.sh
 (cd desktop/src-tauri && cargo test)
 ```
 
-UI 验收只在通过标准安装流程放入 `/Applications/MUX.app` 的真实应用中进行，不使用
+UI 验收只在通过标准安装流程放入 `/Applications/Arca.app` 的真实应用中进行，不使用
 浏览器 mock、Preview bundle 或 target app 冒充。验收覆盖 `1200×820`、`900×600`、
 Escape 层级、横向 overflow、控制台错误和实际截图。
 
@@ -587,11 +587,11 @@ git diff --check
 ```
 
 Desktop 完整组件集为 174/174 通过。生产 `.app` 与 DMG 均报告版本 `1.2.15`、
-Bundle ID `com.scoheart.mux`，主程序与 sidecar 为 arm64，签名校验通过；DMG 内
+Bundle ID `com.scoheart.arca`，主程序与 sidecar 为 arm64，签名校验通过；DMG 内
 可执行文件哈希与构建产物一致，并通过同盘 stage/rollback 流程安装到
-`/Applications/MUX.app`。
+`/Applications/Arca.app`。
 
 真实 UI 截图与两种 viewport 的最终人工反向验收尚未标记完成：验收主机当时处于
 macOS 锁屏状态，WindowServer 只返回白色 WebView 或桌面背景。必须在解锁后使用
-真实 `/Applications/MUX.app` 补验，不能用浏览器 mock、Preview bundle 或源码截图
+真实 `/Applications/Arca.app` 补验，不能用浏览器 mock、Preview bundle 或源码截图
 代替。

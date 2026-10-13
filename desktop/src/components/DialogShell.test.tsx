@@ -17,7 +17,7 @@ describe("DialogShell", () => {
     );
 
     const shell = screen.getByRole("dialog", { name: `${label}资源` }).firstElementChild!;
-    expect(shell.querySelector(".mux-dialog-shell-glyph")).toBeInTheDocument();
+    expect(shell.querySelector(".arca-dialog-shell-glyph")).toBeInTheDocument();
     expect(shell).toHaveAttribute("data-dialog-kind", kind);
   });
 

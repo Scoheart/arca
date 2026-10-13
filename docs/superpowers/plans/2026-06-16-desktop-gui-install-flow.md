@@ -1,10 +1,10 @@
-# MUX 桌面 GUI · Plan 2：仓库主视图 + 安装闭环 实现计划
+# Arca 桌面 GUI · Plan 2：仓库主视图 + 安装闭环 实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在 Plan 1 的 Rust core 之上，做出可用的核心闭环：浏览 MCP 仓库 → 打开安装弹窗（选 scope × 多 agent + 逐 agent 覆写）→ 预览将写入的内容 → 应用到各 agent 真实配置文件（自动备份），并能看到「某服务器已装在哪些地方」。
 
-**Architecture:** Rust 后端新增 agents/overrides/effective 模块与一组 Tauri command（list_agents / scan_installed / preview_install / apply_install / uninstall）；React 前端做仓库网格 + 安装弹窗 + 预览/应用。安装状态以「扫描真实配置文件」为准（不引入独立 state.json），覆写持久化到 `~/.mux/overrides.json`。
+**Architecture:** Rust 后端新增 agents/overrides/effective 模块与一组 Tauri command（list_agents / scan_installed / preview_install / apply_install / uninstall）；React 前端做仓库网格 + 安装弹窗 + 预览/应用。安装状态以「扫描真实配置文件」为准（不引入独立 state.json），覆写持久化到 `~/.arca/overrides.json`。
 
 **Tech Stack:** Rust（serde / serde_json / toml / dirs）、Tauri v2 command + `tauri-plugin-dialog`（选项目目录）、React + TypeScript + Vite。
 
@@ -15,8 +15,8 @@
 ## 文件结构
 
 **Rust（`desktop/src-tauri/src/`）**
-- Create `core/paths.rs`：解析 `~/.mux` 目录、backups、overrides.json 路径。
-- Create `core/agents.rs`：从 root `agents.json`（include_str!）加载 18 个 agent；若 `~/.mux/agents.json` 存在则优先。
+- Create `core/paths.rs`：解析 `~/.arca` 目录、backups、overrides.json 路径。
+- Create `core/agents.rs`：从 root `agents.json`（include_str!）加载 18 个 agent；若 `~/.arca/agents.json` 存在则优先。
 - Create `core/overrides.rs`：`OverrideRecord` + load/save `overrides.json`。
 - Create `core/effective.rs`：`effective_config(entry, transport_pref, patch)` 把 registry 条目 + 覆写算成最终 `McpConfig`。
 - Modify `core/mod.rs`：声明新模块。
@@ -35,7 +35,7 @@
 
 ---
 
-## Task 1：Rust `paths.rs` — 解析 ~/.mux 目录
+## Task 1：Rust `paths.rs` — 解析 ~/.arca 目录
 
 **Files:** Create `desktop/src-tauri/src/core/paths.rs`; Modify `core/mod.rs`; Modify `Cargo.toml`
 
@@ -49,34 +49,34 @@
 ```rust
 use std::path::PathBuf;
 
-/// `~/.mux` —— 与 CLI 共用的数据目录
-pub fn mux_dir() -> PathBuf {
+/// `~/.arca` —— 与 CLI 共用的数据目录
+pub fn arca_dir() -> PathBuf {
     let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-    home.join(".mux")
+    home.join(".arca")
 }
 
 pub fn backups_dir() -> PathBuf {
-    mux_dir().join("backups")
+    arca_dir().join("backups")
 }
 
 pub fn overrides_file() -> PathBuf {
-    mux_dir().join("overrides.json")
+    arca_dir().join("overrides.json")
 }
 
 pub fn user_agents_file() -> PathBuf {
-    mux_dir().join("agents.json")
+    arca_dir().join("agents.json")
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn mux_dir_ends_with_dot_mux() {
-        assert!(mux_dir().ends_with(".mux"));
+    fn arca_dir_ends_with_dot_arca() {
+        assert!(arca_dir().ends_with(".arca"));
     }
     #[test]
-    fn backups_under_mux_dir() {
-        assert!(backups_dir().starts_with(mux_dir()));
+    fn backups_under_arca_dir() {
+        assert!(backups_dir().starts_with(arca_dir()));
     }
 }
 ```
@@ -92,7 +92,7 @@ Expected: 2 tests ok.
 
 ```bash
 git add desktop/src-tauri/src/core/paths.rs desktop/src-tauri/src/core/mod.rs desktop/src-tauri/Cargo.toml desktop/src-tauri/Cargo.lock
-git commit -m "feat(desktop): add paths module for ~/.mux resolution"
+git commit -m "feat(desktop): add paths module for ~/.arca resolution"
 ```
 
 ---
@@ -101,7 +101,7 @@ git commit -m "feat(desktop): add paths module for ~/.mux resolution"
 
 **Files:** Create `desktop/src-tauri/src/core/agents.rs`; Modify `core/mod.rs`
 
-行为：内置 18 个 agent 来自 root `agents.json`（编译期内嵌）；若 `~/.mux/agents.json` 运行期存在则用它（与 CLI 共用），否则用内置。
+行为：内置 18 个 agent 来自 root `agents.json`（编译期内嵌）；若 `~/.arca/agents.json` 运行期存在则用它（与 CLI 共用），否则用内置。
 
 - [ ] **Step 1: 写实现 + 测试**
 
@@ -119,7 +119,7 @@ pub fn builtin_agents() -> BTreeMap<String, AgentDefinition> {
     serde_json::from_str(BUILTIN_AGENTS_JSON).expect("agents.json must be valid")
 }
 
-/// 优先读 ~/.mux/agents.json（与 CLI 共用），否则用内置
+/// 优先读 ~/.arca/agents.json（与 CLI 共用），否则用内置
 pub fn load_agents() -> BTreeMap<String, AgentDefinition> {
     if let Ok(content) = fs::read_to_string(user_agents_file()) {
         if let Ok(map) = serde_json::from_str::<BTreeMap<String, AgentDefinition>>(&content) {
@@ -229,7 +229,7 @@ pub fn save_overrides_to(path: &Path, records: &[OverrideRecord]) -> Result<(), 
 mod tests {
     use super::*;
     fn tmp(name: &str) -> std::path::PathBuf {
-        std::env::temp_dir().join(format!("mux-ovr-{}-{}.json", name, std::process::id()))
+        std::env::temp_dir().join(format!("arca-ovr-{}-{}.json", name, std::process::id()))
     }
     #[test]
     fn save_then_load_roundtrips() {
@@ -441,7 +441,7 @@ use crate::core::effective::effective_config;
 use crate::core::r#override::OverridePatch;
 use crate::core::paths::backups_dir;
 use crate::core::registry::read_registry;
-use crate::core::paths::mux_dir;
+use crate::core::paths::arca_dir;
 use std::collections::{BTreeMap, HashMap};
 
 #[derive(serde::Deserialize)]
@@ -476,7 +476,7 @@ pub struct PlannedWrite {
 }
 
 fn resolve_entry(server_name: &str) -> Result<crate::core::types::RegistryEntry, String> {
-    let reg = read_registry(&mux_dir().join("registry"));
+    let reg = read_registry(&arca_dir().join("registry"));
     reg.into_iter().find(|e| e.name == server_name)
         .ok_or_else(|| format!("server not found: {}", server_name))
 }
@@ -688,7 +688,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="layout">
       <aside className="sidebar">
-        <div className="brand">MUX</div>
+        <div className="brand">Arca</div>
         <nav>
           <div className="nav-item active">📦 仓库</div>
         </nav>
@@ -974,7 +974,7 @@ git commit -m "feat(desktop): install dialog with scope/agents/override, preview
 
 `desktop/README.md`：
 ```md
-# MUX Desktop
+# Arca Desktop
 
 Tauri + React 桌面端 MCP 配置管理。
 
@@ -982,18 +982,18 @@ Tauri + React 桌面端 MCP 配置管理。
 ```bash
 cd desktop
 npm install
-npm run tauri dev   # 打开 MUX 窗口
+npm run tauri dev   # 打开 Arca 窗口
 ```
 
 ## 功能（Plan 2）
 - 浏览/搜索内置 MCP 仓库（40+）
 - 安装到 全局 / 项目，多 agent 一次应用
 - 逐 agent 覆写 env
-- 预览将写入的内容；写前自动备份到 ~/.mux/backups/
+- 预览将写入的内容；写前自动备份到 ~/.arca/backups/
 
 ## 数据
 - 服务器/agent 定义：仓库根 `data/registry.json` / `data/agents.json`（与 CLI 共用）
-- 覆写：`~/.mux/overrides.json`
+- 覆写：`~/.arca/overrides.json`
 ```
 
 - [ ] **Step 2: 手动冒烟（需在有显示器的机器执行，记录结果）**
@@ -1002,7 +1002,7 @@ npm run tauri dev   # 打开 MUX 窗口
 1. 窗口打开，显示仓库网格 + 40+ 卡片。
 2. 搜索 "git" 能过滤。
 3. 点一张卡 → 弹窗；选「全局」+ 勾 claude-code → 「预览改动」显示 `~/.claude.json` 与配置 JSON。
-4. 「应用」后提示 ✅；用 `cat ~/.claude.json` 确认 mcpServers 多了该服务器；`ls ~/.mux/backups/` 有备份。
+4. 「应用」后提示 ✅；用 `cat ~/.claude.json` 确认 mcpServers 多了该服务器；`ls ~/.arca/backups/` 有备份。
 5. 关闭重开，卡片显示「已装 1 处」。
 
 把结果记录在 commit message 或 PR 描述中。

@@ -18,7 +18,7 @@
 2. Add a ReviewDialog assertion for the danger shell class, decorative glyph, and solid danger action.
 3. Retain existing confirm, cancel, and busy-state assertions.
 
-Per MUX fast mode, write the regression coverage but do not execute local tests unless the user explicitly requests it.
+Per Arca fast mode, write the regression coverage but do not execute local tests unless the user explicitly requests it.
 
 ### Task 2: Add reusable danger-review presentation hooks
 
@@ -50,7 +50,7 @@ Per MUX fast mode, write the regression coverage but do not execute local tests 
 - Add: `docs/superpowers/plans/2026-08-31-compact-danger-review-dialog.md`
 
 1. Run `git diff --check` and inspect every changed path.
-2. Skip local tests, builds, formatters, validator, and preflight per MUX fast mode.
+2. Skip local tests, builds, formatters, validator, and preflight per Arca fast mode.
 3. Create a remote-only feature commit and PR, verify exact blobs and file list, then squash merge.
 4. Follow the exact Direct Stable run and verify the four published assets.
-5. Do not install or launch MUX because the user previously requested to update it themselves.
+5. Do not install or launch Arca because the user previously requested to update it themselves.

@@ -109,7 +109,7 @@ chmod +x "$TMP/bin/gh"
 
 export PATH="$TMP/bin:$PATH"
 export FAKE_STATE="$TMP/state"
-export GITHUB_REPOSITORY="Scoheart/mux"
+export GITHUB_REPOSITORY="Scoheart/arca"
 mkdir -p "$FAKE_STATE"
 
 expect_failure() {
@@ -120,9 +120,9 @@ expect_failure() {
 }
 
 TAG=v1.2.18
-FAKE_ASSET_1="MUX-Desktop-Installer-$TAG-macOS-Apple-Silicon.dmg"
-FAKE_ASSET_2="mux_${TAG}_aarch64-apple-darwin.tar.gz"
-FAKE_ASSET_3="MUX-Desktop-AutoUpdate-$TAG-macOS-Apple-Silicon.app.tar.gz"
+FAKE_ASSET_1="Arca-Desktop-Installer-$TAG-macOS-Apple-Silicon.dmg"
+FAKE_ASSET_2="arca_${TAG}_aarch64-apple-darwin.tar.gz"
+FAKE_ASSET_3="Arca-Desktop-AutoUpdate-$TAG-macOS-Apple-Silicon.app.tar.gz"
 FAKE_ASSET_4=latest.json
 export FAKE_ASSET_1 FAKE_ASSET_2 FAKE_ASSET_3 FAKE_ASSET_4
 

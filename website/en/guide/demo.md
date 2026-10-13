@@ -1,6 +1,6 @@
-# MUX 1.10.0 walkthrough
+# Historical walkthrough (before the rename)
 
-<MuxDemo lang="en" />
+<ArcaDemo lang="en" />
 
 ## In the video
 

@@ -163,7 +163,7 @@ pub struct ConsumptionView {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
     /// Enabled state read from the Agent target. Keeping this separate from
-    /// `enabled` prevents an external toggle from being flattened into MUX's
+    /// `enabled` prevents an external toggle from being flattened into Arca's
     /// desired state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub observed_enabled: Option<bool>,
@@ -264,7 +264,7 @@ pub struct ModelCredentialPolicy {
     pub delivery: ApiKeyDelivery,
 }
 
-/// One MUX-owned Model Profile installed for an Agent. Installation and the
+/// One Arca-owned Model Profile installed for an Agent. Installation and the
 /// Agent's active/default model are intentionally separate: an Agent may keep
 /// several enabled profiles while only one is current. Frontends expose the
 /// current pointer as the primary on/off control; `enabled` remains lifecycle
@@ -615,7 +615,7 @@ pub struct PlanSetMcpEnabledRequest {
     pub enabled: bool,
 }
 
-/// Enable or disable every MCP relationship currently managed by MUX for one
+/// Enable or disable every MCP relationship currently managed by Arca for one
 /// Agent. External, unadopted entries are intentionally outside this request.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]

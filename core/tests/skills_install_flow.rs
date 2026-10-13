@@ -2,8 +2,8 @@
 
 mod support;
 
-use mux_core::settings::{load_settings, mutate_settings};
-use mux_core::skills::{
+use arca_core::settings::{load_settings, mutate_settings};
+use arca_core::skills::{
     commit_install, hash_tree, plan_install, resolve_source, PlanInstallRequest, SkillError,
     SkillSource, SkillSourceInput, SkillsPaths,
 };
@@ -268,14 +268,14 @@ fn central_replacement_preserves_enabled_and_disabled_consumers() {
     mutate_settings(|settings| {
         for (target, enabled) in [("claude-user", true), ("cursor-user", false)] {
             settings.skill_consumptions.get_or_insert_default().entry(name.into()).or_default().insert(
-                target.into(), mux_core::domain::assets::SkillConsumptionRecord {
+                target.into(), arca_core::domain::assets::SkillConsumptionRecord {
                     name: name.into(), target_id: target.into(), enabled,
                 });
         }
     }).unwrap();
     let before = load_settings();
     let resolution = fixture.resolve_local(&[name]);
-    let plan = mux_core::skills::plan_asset_install(mux_core::skills::PlanSkillAssetInstallRequest {
+    let plan = arca_core::skills::plan_asset_install(arca_core::skills::PlanSkillAssetInstallRequest {
         resolution_id: resolution.operation_id, skill_names: vec![name.into()], replace_conflicts: true,
     }).unwrap();
     assert!(plan.targets.is_empty());

@@ -45,7 +45,7 @@ Tools are paired by their native call ID, never by adjacency. For stream formats
 - Unix reads anchor every path component with no-follow directory/file descriptors; symbolic-link records, non-regular files and path substitution are rejected.
 - Agent files are opened read-only. No trace data is uploaded, no commands from logs are executed, and no configuration or Keychain entries are read or modified.
 - Imported file references, discovered identities and password-redaction context remain in memory only, scoped to the current user directory.
-- The detail cache holds at most six records in memory. No persistent trace cache or duplicate transcript is created under `~/.mux`.
+- The detail cache holds at most six records in memory. No persistent trace cache or duplicate transcript is created under `~/.arca`.
 - Export creates a new selected file with mode 0600 on Unix. Existing files, including transcripts, are never silently overwritten.
 
-Regression fixtures in `core/tests/traces.rs` cover native adapters, exact ID pairing, password masking, source revisions, immutable source files, private export permissions and rejected symlinks. Frontend preview filters have independent tests in `desktop/src/lib/traces.test.ts`. Tests follow MUX's isolated HOME contract and only run when explicitly requested.
+Regression fixtures in `core/tests/traces.rs` cover native adapters, exact ID pairing, password masking, source revisions, immutable source files, private export permissions and rejected symlinks. Frontend preview filters have independent tests in `desktop/src/lib/traces.test.ts`. Tests follow Arca's isolated HOME contract and only run when explicitly requested.

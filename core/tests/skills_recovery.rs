@@ -2,7 +2,7 @@
 
 mod support;
 
-use mux_core::skills::{
+use arca_core::skills::{
     crash_transaction_before_phase_for_test, execute_transaction,
     execute_transaction_with_failpoint, hash_tree, recover_pending_with_paths, CrashPoint,
     DirectoryMutation, Failpoint, JournalPhase, LinkState, SkillError, SkillSource,
@@ -16,7 +16,7 @@ use support::skills::{TransactionFixture, TRANSACTION_OPERATION_ID};
 #[test]
 fn runtime_failure_restores_content_links_and_skill_settings() {
     let fixture = TransactionFixture::managed("rollback");
-    mux_core::settings::mutate_settings(|settings| {
+    arca_core::settings::mutate_settings(|settings| {
         settings
             .extra
             .insert("future".into(), json!({"kept": true}));
@@ -67,7 +67,7 @@ fn runtime_failure_restores_a_reviewed_real_directory_link() {
 fn runtime_failure_restores_a_relative_managed_link_byte_for_byte() {
     let fixture = TransactionFixture::managed("relative-managed");
     let link = fixture.spec.link_mutations[0].path.clone();
-    let raw_target = std::path::PathBuf::from("../../.mux/assets/skills/items/relative-managed");
+    let raw_target = std::path::PathBuf::from("../../.arca/assets/skills/items/relative-managed");
     fs::remove_file(&link).unwrap();
     symlink(&raw_target, &link).unwrap();
     assert_eq!(
@@ -92,7 +92,7 @@ fn runtime_failure_restores_a_relative_managed_link_byte_for_byte() {
 fn relative_managed_link_can_be_safely_disabled() {
     let fixture = TransactionFixture::managed("relative-disable");
     let link = fixture.spec.link_mutations[0].path.clone();
-    let raw_target = std::path::PathBuf::from("../../.mux/assets/skills/items/relative-disable");
+    let raw_target = std::path::PathBuf::from("../../.arca/assets/skills/items/relative-disable");
     fs::remove_file(&link).unwrap();
     symlink(&raw_target, &link).unwrap();
     let mut spec = fixture.update_spec();
@@ -108,7 +108,7 @@ fn relative_managed_link_can_be_safely_disabled() {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound
     ));
     assert!(fixture.paths.central_skill("relative-disable").exists());
-    assert!(mux_core::settings::load_settings()
+    assert!(arca_core::settings::load_settings()
         .skill_assignments
         .is_none());
 }
@@ -117,7 +117,7 @@ fn relative_managed_link_can_be_safely_disabled() {
 fn changing_only_managed_link_raw_bytes_after_review_is_stale() {
     let fixture = TransactionFixture::managed("relative-stale");
     let link = fixture.spec.link_mutations[0].path.clone();
-    let reviewed_raw = std::path::PathBuf::from("../../.mux/assets/skills/items/relative-stale");
+    let reviewed_raw = std::path::PathBuf::from("../../.arca/assets/skills/items/relative-stale");
     fs::remove_file(&link).unwrap();
     symlink(&reviewed_raw, &link).unwrap();
     let mut spec = fixture.update_spec();
@@ -201,7 +201,7 @@ fn recovery_removes_a_partial_same_parent_copy_left_by_a_crash() {
     let temporary = fixture
         .paths
         .skills_dir()
-        .join(format!(".mux-transaction-{TRANSACTION_OPERATION_ID}-0.tmp"));
+        .join(format!(".arca-transaction-{TRANSACTION_OPERATION_ID}-0.tmp"));
     fs::create_dir(&temporary).unwrap();
     fs::write(temporary.join("partial"), b"incomplete copy").unwrap();
 
@@ -281,7 +281,7 @@ fn stale_directory_link_and_skill_settings_preconditions_do_not_mutate() {
 
     fs::remove_file(link).unwrap();
     symlink(fixture.paths.central_skill("stale"), link).unwrap();
-    mux_core::settings::mutate_settings(|settings| {
+    arca_core::settings::mutate_settings(|settings| {
         settings.skill_update_checked_at = Some("concurrent".into());
     })
     .unwrap();
@@ -335,7 +335,7 @@ fn links_then_content_removal_recovers_after_the_content_move() {
 #[test]
 fn unrelated_settings_fields_survive_commit_and_rollback() {
     let fixture = TransactionFixture::managed("settings-extra");
-    mux_core::settings::mutate_settings(|settings| {
+    arca_core::settings::mutate_settings(|settings| {
         settings
             .extra
             .insert("future".into(), json!({"kept": true}));
@@ -345,7 +345,7 @@ fn unrelated_settings_fields_survive_commit_and_rollback() {
     execute_transaction(fixture.update_spec()).unwrap();
 
     assert_eq!(
-        mux_core::settings::load_settings().extra.get("future"),
+        arca_core::settings::load_settings().extra.get("future"),
         Some(&json!({"kept": true}))
     );
 }

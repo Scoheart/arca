@@ -3,7 +3,7 @@ import { readLocalSetting, writeLocalSetting } from "./localSettings";
  *  (wired via the `@custom-variant dark` in index.css); we toggle that class. */
 export type Theme = "light" | "dark";
 
-const KEY = "mux-theme";
+const KEY = "arca-theme";
 
 /** Saved choice, else follow the OS preference. */
 export function getInitialTheme(): Theme {

@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let MUX safely create, select, observe, and clear one direct Claude Desktop third-party inference Profile, automatically disabling model-name verification only for non-Claude routes.
+**Goal:** Let Arca safely create, select, observe, and clear one direct Claude Desktop third-party inference Profile, automatically disabling model-name verification only for non-Claude routes.
 
-**Architecture:** Add a macOS-only Claude Desktop adapter under the authoritative Rust Model resource. The adapter owns a deterministic `MUX` config-library entry, reads the selected Provider credential from Keychain only during commit, writes the secret-bearing Profile as `0600`, and preserves/restores every external Claude Profile. This is direct Claude configuration; it does not add a local gateway, LaunchAgent, or background proxy. Existing Agent capability, consumption planning, inventory, React review, and remote PR/release paths remain the orchestration surfaces.
+**Architecture:** Add a macOS-only Claude Desktop adapter under the authoritative Rust Model resource. The adapter owns a deterministic `Arca` config-library entry, reads the selected Provider credential from Keychain only during commit, writes the secret-bearing Profile as `0600`, and preserves/restores every external Claude Profile. This is direct Claude configuration; it does not add a local gateway, LaunchAgent, or background proxy. Existing Agent capability, consumption planning, inventory, React review, and remote PR/release paths remain the orchestration surfaces.
 
-**Tech Stack:** Rust (`mux-core`, JSONC/serde, safe-write CAS, macOS Keychain), React 19 + TypeScript/Vitest, GitHub Git Data API, MUX Direct Stable.
+**Tech Stack:** Rust (`arca-core`, JSONC/serde, safe-write CAS, macOS Keychain), React 19 + TypeScript/Vitest, GitHub Git Data API, Arca Direct Stable.
 
 ---
 
@@ -77,7 +77,7 @@ The test helper constructs a real `ModelProfile` with `protocol: ModelProtocol::
 Run:
 
 ```bash
-cargo test --locked -p mux-core claude_desktop
+cargo test --locked -p arca-core claude_desktop
 ```
 
 Expected: compilation fails because `claude_desktop` and `projected_profile` do not exist.
@@ -89,7 +89,7 @@ Create these constants and functions:
 ```rust
 pub(crate) const AGENT_ID: &str = "claude-desktop";
 pub(crate) const PROFILE_ID: &str = "6d757800-0000-4000-8000-000000000001";
-pub(crate) const PROFILE_NAME: &str = "MUX";
+pub(crate) const PROFILE_NAME: &str = "Arca";
 
 pub(crate) fn route_is_claude(route: &str) -> bool {
     route.rsplit('/').next().is_some_and(|segment| {
@@ -144,7 +144,7 @@ debug-printable value tree.
 
 - [ ] **Step 4: Run the focused test and verify GREEN**
 
-Run `cargo test --locked -p mux-core claude_desktop`.
+Run `cargo test --locked -p arca-core claude_desktop`.
 
 Expected: the three projection tests pass with no network or real Keychain access.
 
@@ -195,11 +195,11 @@ assert!(json(&cleared.meta())["entries"].as_array().unwrap().iter()
 assert!(cleared.profile().content.is_none());
 ```
 
-Add separate failure tests for malformed JSON, a UUID collision whose entry name is not `MUX`, a missing remembered Profile with no `Default`, and a changed target observed through CAS.
+Add separate failure tests for malformed JSON, a UUID collision whose entry name is not `Arca`, a missing remembered Profile with no `Default`, and a changed target observed through CAS.
 
 - [ ] **Step 2: Run the focused test and verify RED**
 
-Run `cargo test --locked -p mux-core claude_desktop`.
+Run `cargo test --locked -p arca-core claude_desktop`.
 
 Expected: failures identify missing `prepare_apply`, `prepare_clear`, and runtime-state types.
 
@@ -247,11 +247,11 @@ pub(crate) fn prepare_clear(
 ) -> Result<PreparedClaudeDesktop, String>;
 ```
 
-Use `jsonc_parser`/serde JSON values to preserve unknown semantic fields. `prepare_apply` sets `deploymentMode` only, adds/reuses the exact MUX entry, selects it, and builds the private MUX profile. `prepare_clear` restores the remembered entry or the entry named `Default`, removes only the MUX entry, and returns `content: None` for the MUX-owned Profile file. A non-MUX UUID collision returns `claude_desktop_profile_collision`.
+Use `jsonc_parser`/serde JSON values to preserve unknown semantic fields. `prepare_apply` sets `deploymentMode` only, adds/reuses the exact Arca entry, selects it, and builds the private Arca profile. `prepare_clear` restores the remembered entry or the entry named `Default`, removes only the Arca entry, and returns `content: None` for the Arca-owned Profile file. A non-Arca UUID collision returns `claude_desktop_profile_collision`.
 
 - [ ] **Step 5: Run the focused test and verify GREEN**
 
-Run `cargo test --locked -p mux-core claude_desktop`.
+Run `cargo test --locked -p arca-core claude_desktop`.
 
 Expected: preparation, preservation, restore fallback, collision, malformed JSON, and CAS tests pass.
 
@@ -287,7 +287,7 @@ Also assert that missing/non-UTF-8 credentials return stable error codes and nev
 
 - [ ] **Step 2: Run the focused test and verify RED**
 
-Run `cargo test --locked -p mux-core claude_desktop`.
+Run `cargo test --locked -p arca-core claude_desktop`.
 
 Expected: the capability is unsupported or the dispatch branch is missing.
 
@@ -315,7 +315,7 @@ pub(crate) fn observe_active(
 ) -> ObservedActiveModel;
 ```
 
-Commit the two ordinary Claude JSON files and `_meta.json` with `write_if_unchanged` so existing regular files preserve inode. Commit the configured fourth target—the MUX Profile—with `write_private_if_unchanged` so it is atomically published as `0600`; do not restrict this to the default literal path. Do not call `backup_config` for the secret-bearing MUX Profile. Roll back changed files in reverse order with the same normal/private writer distinction. The outer transaction extension in `transaction.rs` persists a nonsecret private-target ledger before Keychain pre-state, stores the private pre-state under an operation/path-bound Keychain subject, and cleans it on persist failure, cancel, success, rollback, startup/no-manifest recovery, and resolved incidents. Filesystem rollback manifests, mutation intents, and write evidence carry only path/mode/identity/version/hash/reference metadata; private Profile bytes never enter them.
+Commit the two ordinary Claude JSON files and `_meta.json` with `write_if_unchanged` so existing regular files preserve inode. Commit the configured fourth target—the Arca Profile—with `write_private_if_unchanged` so it is atomically published as `0600`; do not restrict this to the default literal path. Do not call `backup_config` for the secret-bearing Arca Profile. Roll back changed files in reverse order with the same normal/private writer distinction. The outer transaction extension in `transaction.rs` persists a nonsecret private-target ledger before Keychain pre-state, stores the private pre-state under an operation/path-bound Keychain subject, and cleans it on persist failure, cancel, success, rollback, startup/no-manifest recovery, and resolved incidents. Filesystem rollback manifests, mutation intents, and write evidence carry only path/mode/identity/version/hash/reference metadata; private Profile bytes never enter them.
 
 Extend `safe_write.rs` so private carriers are `Zeroizing` and redacted in debug output, while durable `TransactionPathState` and write evidence remain hash-only. Hash/mode/identity CAS guards must refuse rollback after an external edit and retain evidence for recovery when ownership or cleanup cannot be proven.
 
@@ -334,7 +334,7 @@ ModelAgentView {
     id: "claude-desktop".into(),
     name: "Claude Desktop".into(),
     mode: "managed".into(),
-    storage_authority: ModelStorageAuthority::MuxMapping,
+    storage_authority: ModelStorageAuthority::ArcaMapping,
     installed: agent_installed(&[], &[], &["/Applications/Claude.app"]),
     config_path: claude_desktop_path,
     config_paths: claude_desktop_paths,
@@ -349,11 +349,11 @@ ModelAgentView {
 }
 ```
 
-Add `claude-desktop` to `ensure_supported`, `observe_profile`, `observe_profile_consumption`, `observe_external_model`, `observe_active_model_for_settings`, `apply_profile_consumption_with_credential_presence`, and `clear_profile_consumption`. Leave clear-all on `MuxMapping`, so the shared transaction removes only the one managed relationship and calls adapter clear.
+Add `claude-desktop` to `ensure_supported`, `observe_profile`, `observe_profile_consumption`, `observe_external_model`, `observe_active_model_for_settings`, `apply_profile_consumption_with_credential_presence`, and `clear_profile_consumption`. Leave clear-all on `ArcaMapping`, so the shared transaction removes only the one managed relationship and calls adapter clear.
 
 - [ ] **Step 5: Run the focused test and verify GREEN**
 
-Run `cargo test --locked -p mux-core claude_desktop`.
+Run `cargo test --locked -p arca-core claude_desktop`.
 
 Expected: all Claude Desktop adapter and dispatch tests pass, including permission and secret-redaction assertions.
 
@@ -382,11 +382,11 @@ assert_eq!(plan.target_files, vec![
 assert!(!serde_json::to_string(&plan).unwrap().contains("credential-for-test"));
 ```
 
-Add an application projection assertion that `list_agent_capabilities()` exposes `claude-desktop` with `mux-mapping`, `keychain-export`, one supported protocol, and `supports_multiple == false`.
+Add an application projection assertion that `list_agent_capabilities()` exposes `claude-desktop` with `arca-mapping`, `keychain-export`, one supported protocol, and `supports_multiple == false`.
 
 - [ ] **Step 2: Run the focused Rust test and verify RED**
 
-Run `cargo test --locked -p mux-core claude_desktop`.
+Run `cargo test --locked -p arca-core claude_desktop`.
 
 Expected: warning and capability assertions fail before planner registration.
 
@@ -466,24 +466,24 @@ Expected: only the intended Claude Desktop adapter, warning, docs, spec, and pla
 
 - [ ] **Step 3: Run one decisive final validation only if authorized**
 
-The focused red/green tests above are the implementation evidence. Under MUX fast mode, do not repeat them and do not run full local suites. If final local validation is explicitly authorized, run exactly once:
+The focused red/green tests above are the implementation evidence. Under Arca fast mode, do not repeat them and do not run full local suites. If final local validation is explicitly authorized, run exactly once:
 
 ```bash
-bash /Users/scoheart/Code/ai/.agents/skills/mux-release/scripts/validate-change.sh \
-  --repo /Users/scoheart/.config/superpowers/worktrees/mux/claude-desktop-direct-models \
+bash /Users/scoheart/Code/ai/.agents/skills/arca-release/scripts/validate-change.sh \
+  --repo /Users/scoheart/.config/superpowers/worktrees/arca/claude-desktop-direct-models \
   --base origin/main
 ```
 
 - [ ] **Step 4: Create one remote feature commit and update PR #146**
 
-MUX normally delivers through its direct-main policy. This change uses the PR #146 path because the user explicitly requested remote-only commit, PR, and merge delivery; keep the local checkout untouched while performing those remote operations.
+Arca normally delivers through its direct-main policy. This change uses the PR #146 path because the user explicitly requested remote-only commit, PR, and merge delivery; keep the local checkout untouched while performing those remote operations.
 
 Build an exact TSV manifest and use `gh-remote-commit.sh` against `codex/claude-desktop-direct-models`. Commit message:
 
 ```text
 feat(models): support Claude Desktop direct models
 
-Create a reversible MUX-owned inference Profile and opt non-Claude model routes out of Claude Desktop verification while keeping external Profiles intact.
+Create a reversible Arca-owned inference Profile and opt non-Claude model routes out of Claude Desktop verification while keeping external Profiles intact.
 ```
 
 Verify every remote blob SHA matches `git hash-object`, compare `main...branch`, and mark PR #146 ready only after the exact file list and mergeability are confirmed.
@@ -493,8 +493,8 @@ Verify every remote blob SHA matches `git hash-object`, compare `main...branch`,
 Squash merge PR #146 and delete its remote branch. Do not pull the result into the user's diverged local checkout. Locate the exact Direct Stable run for the merge SHA and wait until its immutable tag is recorded. Resolve the release tag from the post-merge `main` commit before invoking the verifier:
 
 ```bash
-release_sha="$(gh api repos/Scoheart/mux/git/ref/heads/main --jq '.object.sha')"
-stable_tag="$(gh api 'repos/Scoheart/mux/releases?per_page=20' --paginate \
+release_sha="$(gh api repos/Scoheart/arca/git/ref/heads/main --jq '.object.sha')"
+stable_tag="$(gh api 'repos/Scoheart/arca/releases?per_page=20' --paginate \
   | jq -r --arg sha "$release_sha" '.[] | select(.target_commitish == $sha) | .tag_name' \
   | head -n 1)"
 test -n "$stable_tag" && test "$stable_tag" != "null"
@@ -503,11 +503,11 @@ test -n "$stable_tag" && test "$stable_tag" != "null"
 Then run the single-pass release verifier:
 
 ```bash
-bash /Users/scoheart/Code/ai/.agents/skills/mux-release/scripts/verify-release.sh \
-  --repo Scoheart/mux \
-  --source-root /Users/scoheart/.config/superpowers/worktrees/mux/claude-desktop-direct-models \
+bash /Users/scoheart/Code/ai/.agents/skills/arca-release/scripts/verify-release.sh \
+  --repo Scoheart/arca \
+  --source-root /Users/scoheart/.config/superpowers/worktrees/arca/claude-desktop-direct-models \
   --wait \
   "$stable_tag"
 ```
 
-Do not add `--install` because the user previously said they will update MUX themselves. Report the PR, merge SHA, release SHA/tag, Direct Stable/Desktop conclusions, four verified assets, skipped broad validation, and unchanged original checkout.
+Do not add `--install` because the user previously said they will update Arca themselves. Report the PR, merge SHA, release SHA/tag, Direct Stable/Desktop conclusions, four verified assets, skipped broad validation, and unchanged original checkout.

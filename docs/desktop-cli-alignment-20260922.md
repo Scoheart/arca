@@ -1,6 +1,6 @@
 # Desktop / CLI 对齐与弹窗简化
 
-目标：两端管理相同的中央资产与 Agent 配置，复用 core 的校验、计划、提交和错误语义。弹窗只默认展示完成当前任务必需的信息；保持 MUX 原有配色与简洁布局。
+目标：两端管理相同的中央资产与 Agent 配置，复用 core 的校验、计划、提交和错误语义。弹窗只默认展示完成当前任务必需的信息；保持 Arca 原有配色与简洁布局。
 
 ## 能力审查
 
@@ -35,24 +35,24 @@
 ## CLI 用法
 
 ```sh
-mux agent launch show opencode
-mux agent launch configure opencode --file launch.json --default-directory ~/Code --yes
-mux agent run opencode --directory ~/Code --yes
-mux agent run opencode --dry-run --json
-mux agent launch reset opencode --yes
-mux settings show --json
-mux settings terminal ghostty --yes
-mux settings locale zh-CN --yes
-mux settings pins codex opencode --yes
-mux settings pins --clear --yes
-mux mcp disable-all --agent opencode --yes
-mux mcp enable-all --agent opencode --yes
-mux mcp icon set 'filesystem::stdio' files --yes
-mux mcp icon import 'filesystem::stdio' --file ./icon.png --yes
-mux mcp icon reset 'filesystem::stdio' --yes
-mux model provider docs openai
-mux model curl PROFILE_ID
-mux model curl PROFILE_ID --include-api-key
+arca agent launch show opencode
+arca agent launch configure opencode --file launch.json --default-directory ~/Code --yes
+arca agent run opencode --directory ~/Code --yes
+arca agent run opencode --dry-run --json
+arca agent launch reset opencode --yes
+arca settings show --json
+arca settings terminal ghostty --yes
+arca settings locale zh-CN --yes
+arca settings pins codex opencode --yes
+arca settings pins --clear --yes
+arca mcp disable-all --agent opencode --yes
+arca mcp enable-all --agent opencode --yes
+arca mcp icon set 'filesystem::stdio' files --yes
+arca mcp icon import 'filesystem::stdio' --file ./icon.png --yes
+arca mcp icon reset 'filesystem::stdio' --yes
+arca model provider docs openai
+arca model curl PROFILE_ID
+arca model curl PROFILE_ID --include-api-key
 ```
 
 `launch.json` 是与 Desktop 相同的 `LaunchTarget`，例如：
@@ -67,7 +67,7 @@ mux model curl PROFILE_ID --include-api-key
 }
 ```
 
-`--default-directory ''` 清除固定目录；省略参数保留当前目录设置。配置参数和环境变量通过 JSON 文件或 `--file -` 输入，普通查询仅输出参数数量和环境变量名称。CLI cURL 默认引用 `$MUX_API_KEY`，`--include-api-key` 是明确的凭据导出；Desktop 的复制按钮直接复制含实际凭据的命令。无需认证的模型不强加 Authorization。两端均不自动执行该请求。
+`--default-directory ''` 清除固定目录；省略参数保留当前目录设置。配置参数和环境变量通过 JSON 文件或 `--file -` 输入，普通查询仅输出参数数量和环境变量名称。CLI cURL 默认引用 `$ARCA_API_KEY`，`--include-api-key` 是明确的凭据导出；Desktop 的复制按钮直接复制含实际凭据的命令。无需认证的模型不强加 Authorization。两端均不自动执行该请求。
 
 GUI 外观、拖拽、文件选择和剪贴板属于宿主表现，不要求 CLI 模拟窗口。业务状态、写入规则及共享启动偏好均走同一 core。CLI 改动共享设置后，Desktop 通过文件观察刷新显示。
 
@@ -88,8 +88,8 @@ GUI 外观、拖拽、文件选择和剪贴板属于宿主表现，不要求 CLI
 复现命令：
 
 ```sh
-cargo build -p mux-cli
-cargo run -p mux-core --example verify_desktop_cli -- /absolute/path/to/target/debug/mux
+cargo build -p arca-cli
+cargo run -p arca-core --example verify_desktop_cli -- /absolute/path/to/target/debug/arca
 cd desktop
 npm exec -- vitest run src/components/DesktopAlignment.test.tsx src/components/DialogShell.test.tsx
 ```

@@ -17,9 +17,9 @@ pub fn run() {
     // boundary. Desktop failures publish a read-only backend and still return a
     // diagnostic report. CLI read queries use the same degraded report while
     // every mutation remains constrained by the published backend status.
-    let bootstrap = mux_core::application::MuxCore::bootstrap();
+    let bootstrap = arca_core::application::ArcaCore::bootstrap();
     for warning in &bootstrap.warnings {
-        eprintln!("MUX startup warning: {warning:?}");
+        eprintln!("Arca startup warning: {warning:?}");
     }
 
     tauri::Builder::default()
@@ -31,16 +31,16 @@ pub fn run() {
         // Needed to relaunch the app after an update is installed.
         .plugin(tauri_plugin_process::init())
         .setup(move |app| {
-            // Catch native selections changed while MUX was closed.
-            if let Err(error) = mux_core::application::models::reconcile_native_selection() {
-                eprintln!("MUX native model selection reconciliation: {error}");
+            // Catch native selections changed while Arca was closed.
+            if let Err(error) = arca_core::application::models::reconcile_native_selection() {
+                eprintln!("Arca native model selection reconciliation: {error}");
             }
             if let Err(error) = observation_watcher::start(app.handle().clone()) {
-                eprintln!("MUX observation watcher warning: {error}");
+                eprintln!("Arca observation watcher warning: {error}");
             }
             if bootstrap.skill_updates_allowed {
                 std::thread::spawn(|| {
-                    let _ = mux_core::application::skills::check_updates_if_due();
+                    let _ = arca_core::application::skills::check_updates_if_due();
                 });
             }
 
@@ -48,10 +48,10 @@ pub fn run() {
             // Always restore the configured main window on a fresh launch.
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(debug_assertions)]
-                window.set_title("MUX · 本地开发预览")?;
+                window.set_title("Arca · 本地开发预览")?;
                 #[cfg(target_os = "macos")]
                 if let Err(error) = trackpad_gestures::install(window.clone()) {
-                    eprintln!("MUX trackpad phase bridge unavailable: {error}");
+                    eprintln!("Arca trackpad phase bridge unavailable: {error}");
                 }
                 window.show()?;
                 window.set_focus()?;
@@ -171,7 +171,7 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app, event| {
-            if matches!(&event, tauri::RunEvent::Exit) { mux_core::capture::shutdown(); }
+            if matches!(&event, tauri::RunEvent::Exit) { arca_core::capture::shutdown(); }
             #[cfg(target_os = "macos")]
             if matches!(&event, tauri::RunEvent::Exit) { trackpad_gestures::stop(); }
             if let tauri::RunEvent::Reopen {

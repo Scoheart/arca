@@ -1,12 +1,12 @@
-# MUX TUI — Architecture Design
+# Arca TUI — Architecture Design
 
 Status: **historical design, implemented and superseded**. This document records
-the original TUI design and is not a CLI reference. Use `mux --help`, the
+the original TUI design and is not a CLI reference. Use `arca --help`, the
 README, or `website/*/guide/cli.md` for the current command contract.
 
-The TUI remains the no-argument `mux` experience, wrapped around the same
-`mux-core`; non-interactive resource operations now live under `mux mcp`,
-`mux model`, and `mux skill`.
+The TUI remains the no-argument `arca` experience, wrapped around the same
+`arca-core`; non-interactive resource operations now live under `arca mcp`,
+`arca model`, and `arca skill`.
 
 ---
 
@@ -17,7 +17,7 @@ The TUI remains the no-argument `mux` experience, wrapped around the same
 - Full parity with the desktop app's operations, on the current catalog model
   (sources → aggregated registry; `name::transport` identity; provenance;
   enable/disable snapshots; per-agent installs).
-- Zero business logic in the TUI. Every mutation goes through `mux-core`, so the
+- Zero business logic in the TUI. Every mutation goes through `arca-core`, so the
   TUI and desktop can never diverge — the same rule that motivated the whole
   Rust migration.
 - Keyboard-first, fast, legible at 80×24, graceful up to full-screen.
@@ -36,21 +36,21 @@ The TUI remains the no-argument `mux` experience, wrapped around the same
 
 ---
 
-## 2. Phase 0 — complete `mux-core` first (prerequisite)
+## 2. Phase 0 — complete `arca-core` first (prerequisite)
 
 The TUI cannot call Tauri commands. Today a large amount of orchestration lives
-**only** in `desktop/src-tauri/src/commands.rs`, not in `mux-core`. Building the
-TUI against `mux-core` as-is would force re-implementing that logic in the CLI —
+**only** in `desktop/src-tauri/src/commands.rs`, not in `arca-core`. Building the
+TUI against `arca-core` as-is would force re-implementing that logic in the CLI —
 recreating the exact dual-implementation divergence we just eliminated.
 
-So the first milestone is to **lift the remaining orchestration into `mux-core`**,
+So the first milestone is to **lift the remaining orchestration into `arca-core`**,
 exactly as `ops.rs` already did for install/uninstall/import. Desktop commands
 then become one-line delegators (as `apply_install`/`uninstall` already are), and
 the TUI calls the same functions.
 
 What moves, and where it lands:
 
-| Desktop-only logic in `commands.rs` | New home in `mux-core` |
+| Desktop-only logic in `commands.rs` | New home in `arca-core` |
 |---|---|
 | `upsert_registry_entry` + `propagate_edit_to_installs` | `ops::upsert_entry(entry) -> Result<()>` (captures prev, writes manual source, propagates to clean installs) |
 | `list_custom_registry_keys` | already thin over `registry::user_override_keys()` — expose directly |
@@ -75,7 +75,7 @@ TUI screen work begin.
 
 ## 3. Where the TUI lives
 
-Inside the existing `cli` crate as a module tree — one `mux` binary, no new crate:
+Inside the existing `cli` crate as a module tree — one `arca` binary, no new crate:
 
 ```
 cli/
@@ -107,7 +107,7 @@ New dependencies (minimal, no async runtime):
 - `fuzzy-matcher` (SkimMatcherV2) — replaces fuse.js for search. Optional; a
   plain case-insensitive substring filter is an acceptable v1 fallback.
 
-No `tokio`. `mux-core` is synchronous (`ureq` blocking); the effect runner uses
+No `tokio`. `arca-core` is synchronous (`ureq` blocking); the effect runner uses
 plain `std::thread` + `mpsc`.
 
 ---
@@ -188,7 +188,7 @@ enum Effect {
 }
 ```
 
-Each effect maps 1:1 to a `mux-core` call. The runner owns a small worker thread
+Each effect maps 1:1 to a `arca-core` call. The runner owns a small worker thread
 (one is enough; a bounded pool if we later parallelize multi-source refresh) that
 pulls effects off a queue, calls core, and sends a result `Msg` — e.g.
 `Effect::Subscribe` → `Msg::SourceMutated(Result<(), String>)`. On success the
@@ -416,7 +416,7 @@ bindings, so the UI is self-documenting; `?` opens the full cheatsheet.
   glyphs, and layout above are all v1; only the *animated* chrome (BreathingBorder,
   shimmer-gradient logo, traveling-shimmer modal border from the old TUI) is out.
   When revisited it lands in `chrome.rs`, driven by `Model.tick`, behind a
-  `--plain`/`MUX_PLAIN` escape hatch with a static fallback for small/headless
+  `--plain`/`ARCA_PLAIN` escape hatch with a static fallback for small/headless
   terminals — so it stays purely additive and never blocks functionality.
 
 ---
@@ -446,17 +446,17 @@ bindings, so the UI is self-documenting; `?` opens the full cheatsheet.
   assert the rendered `Buffer` for representative models (empty state, populated
   list, modal open). Catches layout regressions.
 - **Effect boundary**: effects are an enum, so tests assert *which* effect is
-  requested; the runner's actual core calls are already covered by `mux-core`'s
+  requested; the runner's actual core calls are already covered by `arca-core`'s
   own tests. A thin fake runner can feed canned result `Msg`s to test the
   post-mutation reload cycle.
-- **No new integration tests against real `~/.mux`** — the Phase-0 core functions
+- **No new integration tests against real `~/.arca`** — the Phase-0 core functions
   carry the behavioral tests (same `$HOME`-isolation gotcha applies).
 
 ---
 
 ## 13. Implementation phases
 
-0. **Core completion** (§2) — lift orchestration into `mux-core`; desktop
+0. **Core completion** (§2) — lift orchestration into `arca-core`; desktop
    delegates; all existing tests stay green. *No UI yet.*
 1. **Loop skeleton** — terminal setup/teardown, panic hook, event loop, Model,
    Msg, empty `update`/`view`, quit. Renders a static frame.
@@ -475,9 +475,9 @@ Post-v1 (deferred, decided out of v1): animated chrome (breathing border,
 logo/modal shimmer), `--plain` toggle, and any small-terminal animation
 fallbacks. The help cheatsheet and static theming ship within phases 2–6.
 
-Each phase is independently shippable; `mux` prints help until phase 2 wires the
+Each phase is independently shippable; `arca` prints help until phase 2 wires the
 no-arg launch (so we can merge incrementally without exposing a half-built TUI —
-gate it behind `MUX_TUI=1` until phase 3, then make it the default).
+gate it behind `ARCA_TUI=1` until phase 3, then make it the default).
 
 ---
 

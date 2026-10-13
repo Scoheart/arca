@@ -1,12 +1,12 @@
-# MUX User-Level Skills Management Implementation Plan
+# Arca User-Level Skills Management Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Historical plan:** The CLI/TUI exclusions below describe only the 2026-07-16 Desktop implementation slice. The current product provides `mux skill list/show/status/assign/unassign/enable/disable/reapply`; its no-argument TUI remains MCP-focused.
+> **Historical plan:** The CLI/TUI exclusions below describe only the 2026-07-16 Desktop implementation slice. The current product provides `arca skill list/show/status/assign/unassign/enable/disable/reapply`; its no-argument TUI remains MCP-focused.
 
-**Goal:** Add a self-contained macOS Desktop workspace that safely installs, audits, updates, assigns, imports, repairs, and removes user-level Agent Skills from one MUX-managed copy.
+**Goal:** Add a self-contained macOS Desktop workspace that safely installs, audits, updates, assigns, imports, repairs, and removes user-level Agent Skills from one Arca-managed copy.
 
-**Architecture:** `mux-core` owns every source, validation, audit, inventory, plan/commit, transaction, and recovery rule. Tauri commands only move typed requests onto worker threads, while React renders inventory and explicit confirmation flows. MUX stores one copy under `~/.mux/skills` and creates guarded symlinks in verified Agent user directories.
+**Architecture:** `arca-core` owns every source, validation, audit, inventory, plan/commit, transaction, and recovery rule. Tauri commands only move typed requests onto worker threads, while React renders inventory and explicit confirmation flows. Arca stores one copy under `~/.arca/skills` and creates guarded symlinks in verified Agent user directories.
 
 **Tech Stack:** Rust 2021, serde/serde_yaml, ureq, flate2/tar, sha2, regex, similar, Tauri 2, React 19, TypeScript 5.8, Vitest, jsdom, React Testing Library, VitePress.
 
@@ -14,8 +14,8 @@
 
 - Manage user-level Skills only; never scan or write project-level `.agents/skills`, `.claude/skills`, `.cursor/skills`, or equivalent directories.
 - Runtime behavior must not require system Node.js, `npx`, Git, GitHub CLI, or another Skills CLI.
-- Store managed content only at `~/.mux/skills/<name>`; Agent discovery directories contain symlinks, never duplicate managed copies.
-- Create MUX-owned Skills, staging, backup, and journal directories with user-only `0700` permissions and private JSON/lock files with `0600`; preserve executable bits inside validated Skill trees.
+- Store managed content only at `~/.arca/skills/<name>`; Agent discovery directories contain symlinks, never duplicate managed copies.
+- Create Arca-owned Skills, staging, backup, and journal directories with user-only `0700` permissions and private JSON/lock files with `0600`; preserve executable bits inside validated Skill trees.
 - Accept only public GitHub sources and user-picked local folders. GitHub requests must use HTTPS and remain on `github.com`, `api.github.com`, or `codeload.github.com` after redirects.
 - The generic source resolver stays in Rust; Desktop exposes GitHub text input separately and accepts local paths only from the native folder-picker command.
 - Enforce 128 MiB HTTP download, 512 MiB archive expansion, 256 MiB selected Skill, 32 MiB single-file, and 10,000-entry archive limits.
@@ -28,7 +28,7 @@
 - Preview `SKILL.md` and diffs as plain text. Never execute embedded HTML, scripts, commands, or remote resources.
 - For this historical 2026-07-16 implementation slice, do not add Skills commands to CLI/TUI; this is not a current product limitation.
 - Desktop must remain fully usable at `1200×820` and `900×600`, with no horizontal overflow and Escape closing only the topmost dialog/inspector.
-- Tests always use isolated `TestHome`/`MUX_HOME`, mock HTTP, and disposable Agent directories. They must never touch real `~/.mux`, Agent paths, Keychain, or the live network.
+- Tests always use isolated `TestHome`/`ARCA_HOME`, mock HTTP, and disposable Agent directories. They must never touch real `~/.arca`, Agent paths, Keychain, or the live network.
 - Do not bump versions, tag, publish, or create a release as part of this feature.
 
 ## File Map
@@ -37,7 +37,7 @@
 |---|---|
 | `core/src/skills.rs` | Public Skills facade and module exports |
 | `core/src/skills/types.rs` | Serializable domain, request, plan, inventory, and error types |
-| `core/src/skills/paths.rs` | `~` expansion and all MUX/Agent Skill paths |
+| `core/src/skills/paths.rs` | `~` expansion and all Arca/Agent Skill paths |
 | `core/src/skills/manifest.rs` | `SKILL.md` frontmatter parsing and Agent Skills validation |
 | `core/src/skills/files.rs` | Safe tree walk/copy/extract, limits, hashes, and file diffs |
 | `core/src/skills/audit.rs` | Deterministic local risk rules and findings digest |
@@ -129,8 +129,8 @@ fn skill_sections_and_unknown_fields_survive_settings_roundtrip() {
 Run:
 
 ```bash
-cargo test -p mux-core agents::tests::verified_skill_capabilities_are_data_driven
-cargo test -p mux-core settings::tests::skill_sections_and_unknown_fields_survive_settings_roundtrip
+cargo test -p arca-core agents::tests::verified_skill_capabilities_are_data_driven
+cargo test -p arca-core settings::tests::skill_sections_and_unknown_fields_survive_settings_roundtrip
 ```
 
 Expected: compilation fails because `skills` and the three settings sections do not exist.
@@ -185,7 +185,7 @@ pub skill_update_checked_at: Option<String>,
 
 Import `BTreeSet`, copy `skills` in `copy_internal_metadata`, and let builtin replacement refresh the capability from audited data. Custom Agent editing must never create or override this field.
 
-Extend builtin catalog validation so every Skills `global_dir`/alias starts with `~/`, ends in `/skills`, contains no empty/`.`/`..` component, and is not under `~/.mux`. Reject duplicate target-id/path contradictions before the catalog is returned. These restrictions apply to writable Skills targets only; install probes may still name absolute application paths.
+Extend builtin catalog validation so every Skills `global_dir`/alias starts with `~/`, ends in `/skills`, contains no empty/`.`/`..` component, and is not under `~/.arca`. Reject duplicate target-id/path contradictions before the catalog is returned. These restrictions apply to writable Skills targets only; install probes may still name absolute application paths.
 
 Add `pub(crate) fn load_settings_strict() -> std::io::Result<Settings>` beside `load_settings`: missing files return defaults, but malformed JSON returns the same `InvalidData` error used by `mutate_settings`. Existing tolerant readers keep their current behavior. Every Skills inventory/plan/commit/update path uses the strict reader and maps failure to a path-free `SkillError::Io`, ensuring a corrupt settings file is never treated as an empty Skills database.
 
@@ -260,8 +260,8 @@ Run:
 
 ```bash
 cargo fmt --check
-cargo test -p mux-core agents::tests
-cargo test -p mux-core settings::tests
+cargo test -p arca-core agents::tests
+cargo test -p arca-core settings::tests
 cargo test --workspace
 ```
 
@@ -302,7 +302,7 @@ Create `safe/SKILL.md` and `safe/references/guide.md`:
 ```markdown
 ---
 name: safe
-description: Safe fixture for MUX tests
+description: Safe fixture for Arca tests
 ---
 
 Read `references/guide.md` when the user asks for the fixture guide.
@@ -337,7 +337,7 @@ fn parses_a_valid_skill_and_requires_directory_name() {
     let root = fixture("safe");
     let parsed = validate_candidate(&root).unwrap();
     assert_eq!(parsed.manifest.name, "safe");
-    assert_eq!(parsed.manifest.description, "Safe fixture for MUX tests");
+    assert_eq!(parsed.manifest.description, "Safe fixture for Arca tests");
     assert_eq!(parsed.content_kind, SkillContentKind::Reference);
 
     let th = TestHome::new("skill-name-mismatch");
@@ -396,7 +396,7 @@ fn normalized_tree_hash_is_stable_and_content_sensitive() {
 
 #[cfg(unix)]
 #[test]
-fn mux_owned_skill_roots_are_user_only() {
+fn arca_owned_skill_roots_are_user_only() {
     use std::os::unix::fs::PermissionsExt;
     let _th = TestHome::new("skill-root-permissions");
     let paths = SkillsPaths::from_env().unwrap();
@@ -416,8 +416,8 @@ fn mux_owned_skill_roots_are_user_only() {
 Run:
 
 ```bash
-cargo test -p mux-core skills::manifest
-cargo test -p mux-core skills::files
+cargo test -p arca-core skills::manifest
+cargo test -p arca-core skills::files
 ```
 
 Expected: compilation fails because `crate::skills` and its public functions do not exist.
@@ -446,18 +446,18 @@ pub use types::*;
 
 Add each later module to this facade in the task that creates its file; the crate must compile after every task commit.
 
-Keep every Skills path in one value. `from_env()` delegates MUX-root resolution to the existing `crate::paths::mux_dir()`, resolves the user home once, creates the four private roots, and rejects a relative MUX root:
+Keep every Skills path in one value. `from_env()` delegates Arca-root resolution to the existing `crate::paths::arca_dir()`, resolves the user home once, creates the four private roots, and rejects a relative Arca root:
 
 ```rust
 #[derive(Debug, Clone)]
 pub struct SkillsPaths {
-    mux_dir: PathBuf,
+    arca_dir: PathBuf,
     user_home: PathBuf,
 }
 
 impl SkillsPaths {
     pub fn from_env() -> Result<Self, SkillError>;
-    pub fn mux_dir(&self) -> &Path;
+    pub fn arca_dir(&self) -> &Path;
     pub fn user_home(&self) -> &Path;
     pub fn skills_dir(&self) -> PathBuf;
     pub fn staging_skills_dir(&self) -> PathBuf;
@@ -624,7 +624,7 @@ pub fn validate_candidate(root: &Path) -> Result<ValidatedSkill, SkillError>;
 
 The walk must use `symlink_metadata`, reject non-UTF-8 or absolute relative paths, reject devices/FIFO/socket/hard links, allow only symlinks whose canonical target stays under `root`, sort slash-normalized paths, and hash `kind + executable flag + path length + path + content/link-target length + bytes`. Preserve executable mode on regular files and recreate safe relative symlinks without following them during copy.
 
-`SkillsPaths::from_env()` creates only MUX-owned roots and enforces `0700` on Skills/staging/backup/journal directories. Private staging metadata, plan JSON, journals, and the advisory lock are created with `0600`; never chmod Agent-owned discovery directories or imported external copies.
+`SkillsPaths::from_env()` creates only Arca-owned roots and enforces `0700` on Skills/staging/backup/journal directories. Private staging metadata, plan JSON, journals, and the advisory lock are created with `0600`; never chmod Agent-owned discovery directories or imported external copies.
 
 Generate unified text only when both file versions are valid UTF-8 and each is at most `MAX_DIFF_INPUT_BYTES`. Truncate at a UTF-8 boundary to `MAX_DIFF_OUTPUT_BYTES` per file and `MAX_PLAN_DIFF_BYTES` across one plan, set `diff_truncated = true`, and always retain before/after hashes so binary or truncated changes remain reviewable without sending multi-megabyte payloads to React.
 
@@ -728,8 +728,8 @@ Run:
 
 ```bash
 cargo fmt --check
-cargo test -p mux-core skills::manifest
-cargo test -p mux-core skills::files
+cargo test -p arca-core skills::manifest
+cargo test -p arca-core skills::files
 cargo test --workspace
 ```
 
@@ -818,7 +818,7 @@ fn caps_evidence_without_losing_total_or_high_severity() {
 
 - [ ] **Step 2: Run the audit tests and verify they fail**
 
-Run: `cargo test -p mux-core skills::audit`
+Run: `cargo test -p arca-core skills::audit`
 
 Expected: compilation fails because `audit_skill` and risk rules are absent.
 
@@ -866,8 +866,8 @@ Add medium findings for executable files, `.sh`/`.bash`/`.zsh`/`.py`/`.js`/`.ts`
 Run:
 
 ```bash
-cargo test -p mux-core skills::audit
-cargo test -p mux-core skills::manifest
+cargo test -p arca-core skills::audit
+cargo test -p arca-core skills::manifest
 ```
 
 Expected: safe fixture is Low or Medium only when its file types warrant it; risky fixture is High with stable evidence and no source text in serialized output.
@@ -923,7 +923,7 @@ pub fn has_state(
 }
 ```
 
-`managed_record` returns a `ManagedSkillRecord` with the supplied name/hash, `description = "Managed fixture"`, `content_kind = Instructions`, local source `{ path: "~/fixtures", subpath: name }`, fixed timestamps `2026-07-16T00:00:00Z`, Low/no findings, and a default update state. All integration tests begin with `mod support;` and import these helpers; the support module may call only `TestHome`, filesystem APIs, and public `mux_core` APIs.
+`managed_record` returns a `ManagedSkillRecord` with the supplied name/hash, `description = "Managed fixture"`, `content_kind = Instructions`, local source `{ path: "~/fixtures", subpath: name }`, fixed timestamps `2026-07-16T00:00:00Z`, Low/no findings, and a default update state. All integration tests begin with `mod support;` and import these helpers; the support module may call only `TestHome`, filesystem APIs, and public `arca_core` APIs.
 
 ```rust
 #[test]
@@ -948,7 +948,7 @@ fn only_installed_verified_agents_are_assignable_and_aliases_expand_impact() {
 #[test]
 fn inventory_distinguishes_external_broken_conflicting_and_modified() {
     let th = TestHome::new("inventory-states");
-    let central = th.home.join(".mux/skills/managed");
+    let central = th.home.join(".arca/skills/managed");
     write_skill(&central, "managed", "Managed fixture");
     let original_hash = hash_tree(&central).unwrap();
     mutate_settings(|settings| {
@@ -979,7 +979,7 @@ fn inventory_distinguishes_external_broken_conflicting_and_modified() {
 #[test]
 fn assigned_target_remains_visible_after_its_agent_probe_disappears() {
     let th = TestHome::new("inventory-orphaned-target");
-    let central = th.home.join(".mux/skills/safe");
+    let central = th.home.join(".arca/skills/safe");
     write_skill(&central, "safe", "Managed fixture");
     let hash = hash_tree(&central).unwrap();
     mutate_settings(|settings| {
@@ -1005,7 +1005,7 @@ fn assigned_target_remains_visible_after_its_agent_probe_disappears() {
 
 - [ ] **Step 2: Run the inventory tests and confirm the API is missing**
 
-Run: `cargo test -p mux-core --test skills_inventory`
+Run: `cargo test -p arca-core --test skills_inventory`
 
 Expected: compilation fails because inventory views and target normalization do not exist.
 
@@ -1113,7 +1113,7 @@ pub struct SkillDetail {
 }
 ```
 
-Only mark `Assigned` when `symlink_metadata` says the target entry is a symlink and its resolved path equals `~/.mux/skills/<name>`. Never follow an unknown target while scanning. Include alias-only targets for external discovery when an installed Agent declares that alias, and include every catalog target still referenced by `skill_assignments` even if its Agent probe is now absent. Such orphaned targets remain removable/repairable but have `assignable = false`, preventing stale managed links from disappearing from lifecycle operations.
+Only mark `Assigned` when `symlink_metadata` says the target entry is a symlink and its resolved path equals `~/.arca/skills/<name>`. Never follow an unknown target while scanning. Include alias-only targets for external discovery when an installed Agent declares that alias, and include every catalog target still referenced by `skill_assignments` even if its Agent probe is now absent. Such orphaned targets remain removable/repairable but have `assignable = false`, preventing stale managed links from disappearing from lifecycle operations.
 
 Use opaque-but-parseable identities `central:<skill-name>` and `target:<target-id>:<skill-name>`; validate both ids against the manifest grammar/catalog and never accept a path in this parameter. Keep list responses bounded: `list_inventory` returns summaries only. `get_skill_detail(identity: &str) -> Result<SkillDetail, SkillError>` parses that identity, re-resolves the selected known location, rechecks that it remains under the central or verified target root, returns the file tree, and reads at most 1 MiB of `SKILL.md` at a UTF-8 boundary with `skill_md_truncated = true` when more content exists.
 
@@ -1122,8 +1122,8 @@ Use opaque-but-parseable identities `central:<skill-name>` and `target:<target-i
 Run:
 
 ```bash
-cargo test -p mux-core --test skills_inventory
-cargo test -p mux-core agents::tests
+cargo test -p arca-core --test skills_inventory
+cargo test -p arca-core agents::tests
 cargo test --workspace
 ```
 
@@ -1172,7 +1172,7 @@ fn local_folder_is_copied_not_linked_and_can_contain_multiple_skills() {
     fs::write(source.join("alpha/SKILL.md"), "changed after resolve").unwrap();
     assert_ne!(
         fs::read_to_string(th.home.join(format!(
-            ".mux/staging/skills/{}/candidates/alpha/SKILL.md",
+            ".arca/staging/skills/{}/candidates/alpha/SKILL.md",
             result.operation_id,
         ))).unwrap(),
         "changed after resolve"
@@ -1234,7 +1234,7 @@ fn rejects_private_auth_redirects_and_oversized_archives() {
 
 - [ ] **Step 2: Run the resolver test and verify failure**
 
-Run: `cargo test -p mux-core --test skills_source`
+Run: `cargo test -p arca-core --test skills_source`
 
 Expected: compilation fails because source input, endpoint, and resolution types do not exist.
 
@@ -1336,9 +1336,9 @@ For repository-only input, read `default_branch` from `/repos/{owner}/{repo}`. R
 
 Disable automatic redirects. Set 10-second connect and 30-second per-read timeouts. Follow at most five redirects manually, resolve relative `Location`, require HTTPS, and reject every final/intermediate host outside the three-host allowlist. The only exception is `GithubEndpoints::for_test`, which accepts HTTP only for a loopback host established by the test constructor; this path is never used by a Tauri command. Stream response bytes through a counting reader capped at `MAX_DOWNLOAD_BYTES`; do not trust `Content-Length` alone.
 
-Send `User-Agent: MUX/<crate-version>`, `Accept: application/vnd.github+json`, and `X-GitHub-Api-Version: 2022-11-28`; never attach credentials. Treat authentication-required/private responses as unsupported public-source errors.
+Send `User-Agent: Arca/<crate-version>`, `Accept: application/vnd.github+json`, and `X-GitHub-Api-Version: 2022-11-28`; never attach credentials. Treat authentication-required/private responses as unsupported public-source errors.
 
-Extract `tar.gz` entries manually. Before writing each entry, validate component paths, entry count, declared/actual sizes, and file type. Reject hard links and special files. Materialize into `~/.mux/staging/skills/<operation-id>/archive`, validate internal symlinks after extraction, then scan only the requested subpath (or repository root) for directories containing `SKILL.md`. Copy each candidate into `candidates/<name>` and validate/hash the copy.
+Extract `tar.gz` entries manually. Before writing each entry, validate component paths, entry count, declared/actual sizes, and file type. Reject hard links and special files. Materialize into `~/.arca/staging/skills/<operation-id>/archive`, validate internal symlinks after extraction, then scan only the requested subpath (or repository root) for directories containing `SKILL.md`. Copy each candidate into `candidates/<name>` and validate/hash the copy.
 
 - [ ] **Step 7: Implement local snapshot resolution**
 
@@ -1350,7 +1350,7 @@ Run:
 
 ```bash
 cargo fmt --check
-cargo test -p mux-core --test skills_source
+cargo test -p arca-core --test skills_source
 cargo test --workspace
 ```
 
@@ -1449,13 +1449,13 @@ fn startup_recovery_is_idempotent_at_every_durable_phase() {
 
 - [ ] **Step 2: Run recovery tests and confirm failure**
 
-Run: `cargo test -p mux-core --test skills_recovery`
+Run: `cargo test -p arca-core --test skills_recovery`
 
 Expected: compilation fails because transaction specifications, journal phases, and recovery do not exist.
 
 - [ ] **Step 3: Add a crash-released cross-process Skills lock**
 
-Keep the existing Agent settings directory-lock protocol unchanged: it coordinates with another application and MUX must not reinterpret or reclaim it. Add `fs2 = "0.4"` to `core/Cargo.toml` and use an advisory file lock for MUX-owned Skills operations so the OS releases ownership after a crash even though the lock file remains:
+Keep the existing Agent settings directory-lock protocol unchanged: it coordinates with another application and Arca must not reinterpret or reclaim it. Add `fs2 = "0.4"` to `core/Cargo.toml` and use an advisory file lock for Arca-owned Skills operations so the OS releases ownership after a crash even though the lock file remains:
 
 ```rust
 use fs2::FileExt;
@@ -1467,8 +1467,8 @@ impl Drop for SkillsOperationLock {
 }
 
 pub(crate) fn acquire_skills_lock(paths: &SkillsPaths) -> Result<SkillsOperationLock, SkillError> {
-    fs::create_dir_all(paths.mux_dir())
-        .map_err(|error| io_error(paths.mux_dir(), error))?;
+    fs::create_dir_all(paths.arca_dir())
+        .map_err(|error| io_error(paths.arca_dir(), error))?;
     let file = OpenOptions::new()
         .read(true)
         .write(true)
@@ -1485,7 +1485,7 @@ pub(crate) fn acquire_skills_lock(paths: &SkillsPaths) -> Result<SkillsOperation
             Err(error) if error.kind() == ErrorKind::WouldBlock => {
                 return Err(SkillError::Conflict {
                     message: "another Skills operation is still running".into(),
-                    path: "~/.mux/skills.lock".into(),
+                    path: "~/.arca/skills.lock".into(),
                 });
             }
             Err(error) => return Err(io_error(paths.skills_lock(), error)),
@@ -1607,7 +1607,7 @@ Use `ContentThenLinks` for install/import/update and central repair, and `LinksT
 
 - [ ] **Step 6: Implement idempotent startup recovery**
 
-`recover_pending` sorts journals by operation id and restores pre-operation state. Before touching disk, validate the operation id and prove every journaled staging/central/backup path is under its exact MUX root and every link path is under a currently verified catalog target; a malformed or out-of-bound journal returns `RecoveryRequired` without mutating that path. Recovery must inspect deterministic candidate/destination/backup/link paths instead of trusting only the last phase because a crash may occur between a mutation and phase fsync. Successful recovery deletes its journal and abandoned staging; failed recovery leaves the journal, returns `RecoveryRequired`, and blocks all new plans/commits. While holding the Skills lock, also remove staging directories older than 24 hours only when their private metadata has a valid matching operation id/creation time and no journal; inspect with `symlink_metadata`, never follow a staging symlink, and leave newer or malformed directories untouched for manual review.
+`recover_pending` sorts journals by operation id and restores pre-operation state. Before touching disk, validate the operation id and prove every journaled staging/central/backup path is under its exact Arca root and every link path is under a currently verified catalog target; a malformed or out-of-bound journal returns `RecoveryRequired` without mutating that path. Recovery must inspect deterministic candidate/destination/backup/link paths instead of trusting only the last phase because a crash may occur between a mutation and phase fsync. Successful recovery deletes its journal and abandoned staging; failed recovery leaves the journal, returns `RecoveryRequired`, and blocks all new plans/commits. While holding the Skills lock, also remove staging directories older than 24 hours only when their private metadata has a valid matching operation id/creation time and no journal; inspect with `symlink_metadata`, never follow a staging symlink, and leave newer or malformed directories untouched for manual review.
 
 Add `mod transaction; pub use transaction::{has_pending_recovery, recover_pending};` to `skills.rs`.
 
@@ -1616,9 +1616,9 @@ Add `mod transaction; pub use transaction::{has_pending_recovery, recover_pendin
 Run:
 
 ```bash
-cargo test -p mux-core safe_write::tests
-cargo test -p mux-core skills::transaction
-cargo test -p mux-core --test skills_recovery
+cargo test -p arca-core safe_write::tests
+cargo test -p arca-core skills::transaction
+cargo test -p arca-core --test skills_recovery
 cargo test --workspace
 ```
 
@@ -1746,8 +1746,8 @@ fn assignment_never_overwrites_a_real_directory_or_unknown_link() {
 Run:
 
 ```bash
-cargo test -p mux-core --test skills_install_flow
-cargo test -p mux-core --test skills_import_flow
+cargo test -p arca-core --test skills_install_flow
+cargo test -p arca-core --test skills_import_flow
 ```
 
 Expected: compilation fails because plan/commit request and result types are absent.
@@ -1911,9 +1911,9 @@ Cancellation removes only the named private staging directory and cannot follow 
 Run:
 
 ```bash
-cargo test -p mux-core --test skills_install_flow
-cargo test -p mux-core --test skills_import_flow
-cargo test -p mux-core --test skills_inventory
+cargo test -p arca-core --test skills_install_flow
+cargo test -p arca-core --test skills_import_flow
+cargo test -p arca-core --test skills_inventory
 cargo test --workspace
 ```
 
@@ -2054,8 +2054,8 @@ fn repair_restores_a_missing_central_copy_from_its_recorded_source() {
 Run:
 
 ```bash
-cargo test -p mux-core --test skills_update_flow
-cargo test -p mux-core --test skills_remove_repair
+cargo test -p arca-core --test skills_update_flow
+cargo test -p arca-core --test skills_remove_repair
 ```
 
 Expected: compilation fails because update/check/remove/repair APIs are absent.
@@ -2138,8 +2138,8 @@ Run:
 
 ```bash
 cargo fmt --check
-cargo test -p mux-core skills
-cargo test -p mux-core --tests
+cargo test -p arca-core skills
+cargo test -p arca-core --tests
 cargo test --workspace
 ```
 
@@ -2162,7 +2162,7 @@ git commit -m "feat(skills): update remove and repair skills" -m "Keep backgroun
 - Create: `desktop/src-tauri/tests/skills_commands.rs`
 
 **Interfaces:**
-- Consumes: all public `mux_core::skills` facade functions
+- Consumes: all public `arca_core::skills` facade functions
 - Produces: structured async Tauri commands named in the design spec
 - Produces: native local-folder picker that returns a staged resolution or `null`
 
@@ -2181,7 +2181,7 @@ fn skill_errors_serialize_as_code_and_message() {
 
 #[test]
 fn inventory_command_uses_test_home_and_returns_only_verified_installed_agents() {
-    let th = mux_core::testenv::TestHome::new("tauri-skills-command");
+    let th = arca_core::testenv::TestHome::new("tauri-skills-command");
     std::fs::create_dir_all(th.home.join(".codex")).unwrap();
     let result = tauri::async_runtime::block_on(commands::list_skills_inventory()).unwrap();
     assert_eq!(result.agents.iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), vec!["codex"]);
@@ -2220,8 +2220,8 @@ pub struct SkillCommandError {
     pub findings_hash: Option<String>,
 }
 
-impl From<mux_core::skills::SkillError> for SkillCommandError {
-    fn from(error: mux_core::skills::SkillError) -> Self {
+impl From<arca_core::skills::SkillError> for SkillCommandError {
+    fn from(error: arca_core::skills::SkillError) -> Self {
         let parts = error.into_command_parts();
         Self {
             code: parts.code.into(),
@@ -2275,7 +2275,7 @@ impl SkillError {
 async fn skill_blocking<T, F>(operation: F) -> Result<T, SkillCommandError>
 where
     T: Send + 'static,
-    F: FnOnce() -> Result<T, mux_core::skills::SkillError> + Send + 'static,
+    F: FnOnce() -> Result<T, arca_core::skills::SkillError> + Send + 'static,
 {
     tauri::async_runtime::spawn_blocking(operation)
         .await
@@ -2303,12 +2303,12 @@ fn dialog_path_error<T: std::fmt::Display>(_error: T) -> SkillCommandError {
 
 #[tauri::command]
 pub async fn list_skills_inventory() -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(mux_core::skills::list_inventory).await
+    skill_blocking(arca_core::skills::list_inventory).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_install(request: SkillCommitRequest) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::commit_install(request)).await
+    skill_blocking(move || arca_core::skills::commit_install(request)).await
 }
 ```
 
@@ -2317,17 +2317,17 @@ Add the remaining adapters explicitly; every body is one call through `skill_blo
 ```rust
 #[tauri::command]
 pub async fn list_skill_agents() -> Result<Vec<SkillAgentView>, SkillCommandError> {
-    skill_blocking(mux_core::skills::list_skill_agents).await
+    skill_blocking(arca_core::skills::list_skill_agents).await
 }
 
 #[tauri::command]
 pub async fn get_skill_detail(identity: String) -> Result<SkillDetail, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::get_skill_detail(&identity)).await
+    skill_blocking(move || arca_core::skills::get_skill_detail(&identity)).await
 }
 
 #[tauri::command]
 pub async fn resolve_skill_source(value: String) -> Result<SkillSourceResolution, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::resolve_source(
+    skill_blocking(move || arca_core::skills::resolve_source(
         SkillSourceInput::Github { value },
         GithubEndpoints::production(),
     )).await
@@ -2335,67 +2335,67 @@ pub async fn resolve_skill_source(value: String) -> Result<SkillSourceResolution
 
 #[tauri::command]
 pub async fn plan_skill_install(request: PlanInstallRequest) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::plan_install(request)).await
+    skill_blocking(move || arca_core::skills::plan_install(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_import(request: PlanImportRequest) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::plan_import(request)).await
+    skill_blocking(move || arca_core::skills::plan_import(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_import(request: SkillCommitRequest) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::commit_import(request)).await
+    skill_blocking(move || arca_core::skills::commit_import(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_update(request: PlanUpdateRequest) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::plan_update(request)).await
+    skill_blocking(move || arca_core::skills::plan_update(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_update(request: SkillCommitRequest) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::commit_update(request)).await
+    skill_blocking(move || arca_core::skills::commit_update(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_remove(request: PlanRemoveRequest) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::plan_remove(request)).await
+    skill_blocking(move || arca_core::skills::plan_remove(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_remove(request: SkillCommitRequest) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::commit_remove(request)).await
+    skill_blocking(move || arca_core::skills::commit_remove(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_assignment(request: PlanAssignmentRequest) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::plan_assignment(request)).await
+    skill_blocking(move || arca_core::skills::plan_assignment(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_assignment(request: SkillCommitRequest) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::commit_assignment(request)).await
+    skill_blocking(move || arca_core::skills::commit_assignment(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_repair(request: PlanRepairRequest) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::plan_repair(request)).await
+    skill_blocking(move || arca_core::skills::plan_repair(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_repair(request: SkillCommitRequest) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::commit_repair(request)).await
+    skill_blocking(move || arca_core::skills::commit_repair(request)).await
 }
 
 #[tauri::command]
 pub async fn check_skill_updates(manual: bool) -> Result<UpdateCheckOutcome, SkillCommandError> {
-    skill_blocking(move || mux_core::skills::check_updates(manual)).await
+    skill_blocking(move || arca_core::skills::check_updates(manual)).await
 }
 
 #[tauri::command]
 pub async fn cancel_skill_operation(operation_id: String) -> Result<(), SkillCommandError> {
-    skill_blocking(move || mux_core::skills::cancel_operation(&operation_id)).await
+    skill_blocking(move || arca_core::skills::cancel_operation(&operation_id)).await
 }
 ```
 
@@ -2420,7 +2420,7 @@ pub async fn resolve_local_skill_source_dialog(
         retry_at: None,
         findings_hash: None,
     })?.to_owned();
-    skill_blocking(move || mux_core::skills::resolve_source(
+    skill_blocking(move || arca_core::skills::resolve_source(
         SkillSourceInput::Local { path: value },
         GithubEndpoints::production(),
     )).await.map(Some)
@@ -2434,10 +2434,10 @@ The picker runs off the main thread for the same reason as the existing source p
 Set the main window's `visible` field to `false` in `tauri.conf.json`. In `.setup`, run recovery before the existing `window.show()` call, then start a detached background due check only when recovery succeeded:
 
 ```rust
-let recovery_ok = mux_core::skills::recover_pending().is_ok();
+let recovery_ok = arca_core::skills::recover_pending().is_ok();
 if recovery_ok {
     std::thread::spawn(|| {
-        let _ = mux_core::skills::check_updates_if_due();
+        let _ = arca_core::skills::check_updates_if_due();
     });
 }
 ```
@@ -2562,7 +2562,7 @@ describe("filterSkills", () => {
       source: {
         kind: "imported" as const,
         original_path: "~/.cursor/skills/legacy",
-        backup_path: "~/.mux/backups/skills/fixture/legacy",
+        backup_path: "~/.arca/backups/skills/fixture/legacy",
       },
     };
     expect(filterSkills([imported], {
@@ -3400,7 +3400,7 @@ Status tabs are All / Updates / Needs attention / External. Sidebar sections are
 The inspector shows source, revision, hash, timestamps, file tree, risk evidence, and Agent impact. Render content only as:
 
 ```tsx
-<pre className="mux-skill-preview" aria-label="SKILL.md 纯文本预览">
+<pre className="arca-skill-preview" aria-label="SKILL.md 纯文本预览">
   {detail.skill_md}
 </pre>
 ```
@@ -3411,7 +3411,7 @@ When `risk.findings_truncated` is true, show `已显示 <retained> / <finding_co
 
 - [ ] **Step 6: Add responsive, opaque workspace styles**
 
-Use existing CSS variables and resource card/inspector hierarchy. Add only `mux-skill-*` selectors. At `max-width: 980px`, reduce segmented labels/gaps and use the existing inspector overlay strategy; at `max-width: 920px`, keep the Skills main action and top-level tab visible. All code/pre elements use `min-width: 0`, `overflow-wrap: anywhere`, and bounded scroll containers.
+Use existing CSS variables and resource card/inspector hierarchy. Add only `arca-skill-*` selectors. At `max-width: 980px`, reduce segmented labels/gaps and use the existing inspector overlay strategy; at `max-width: 920px`, keep the Skills main action and top-level tab visible. All code/pre elements use `min-width: 0`, `overflow-wrap: anywhere`, and bounded scroll containers.
 
 - [ ] **Step 7: Run component tests, icon check, and build**
 
@@ -3734,8 +3734,8 @@ Expected: test fails because the component and deep-link callback do not exist.
 Place it between Model and MCP on writable Agent pages:
 
 ```tsx
-<section className="mux-agent-section" aria-labelledby="agent-skills-title">
-  <div className="mux-agent-section-head">
+<section className="arca-agent-section" aria-labelledby="agent-skills-title">
+  <div className="arca-agent-section-head">
     <div>
       <h3 id="agent-skills-title">Skills</h3>
       <p>{assigned.length} 个已启用；来源、风险和更新在 Skills 工作区管理。</p>
@@ -3831,10 +3831,10 @@ For this historical implementation slice, update `AGENTS.md` so the Rust-core au
 Update README Features/Data layout/How it works with:
 
 ```text
-~/.mux/skills/                  managed Skill contents
-~/.mux/staging/skills/          reviewed candidates
-~/.mux/backups/skills/          reversible replacements/removals
-~/.mux/journals/skills/         crash recovery journals
+~/.arca/skills/                  managed Skill contents
+~/.arca/staging/skills/          reviewed candidates
+~/.arca/backups/skills/          reversible replacements/removals
+~/.arca/journals/skills/         crash recovery journals
 ```
 
 - [ ] **Step 3: Add bilingual user documentation**
@@ -3872,20 +3872,20 @@ Expected: every command exits 0. If a command fails, fix the implementation and 
 
 - [ ] **Step 5: Build and install the real app through the DMG**
 
-Before any UI automation, read `../../skills/tool/mux-ui-review/SKILL.md` completely and follow it. Build the production bundle:
+Before any UI automation, read `../../skills/tool/arca-ui-review/SKILL.md` completely and follow it. Build the production bundle:
 
 ```bash
 rm -rf desktop/src-tauri/target/release/bundle
 (cd desktop && npm run tauri build -- --bundles app,dmg)
 ```
 
-If local updater signing credentials are unavailable, disable updater artifacts only for this acceptance build with `--config '{"bundle":{"createUpdaterArtifacts":false}}'`; never print, synthesize, or commit a signing key. Require exactly one fresh app and DMG after clearing the ignored bundle directory. Verify the DMG, mount it read-only, and validate its `MUX.app` identifier, version, arm64 main/sidecar executables, bundled CLI version, signature, and hashes before installation.
+If local updater signing credentials are unavailable, disable updater artifacts only for this acceptance build with `--config '{"bundle":{"createUpdaterArtifacts":false}}'`; never print, synthesize, or commit a signing key. Require exactly one fresh app and DMG after clearing the ignored bundle directory. Verify the DMG, mount it read-only, and validate its `Arca.app` identifier, version, arm64 main/sidecar executables, bundled CLI version, signature, and hashes before installation.
 
-Copy the verified app into a same-filesystem staging path under `/Applications`, revalidate it, then replace `/Applications/MUX.app` with a rollback rename available until acceptance completes. The actual `CFBundleExecutable` is `desktop`, while `Contents/MacOS/mux` is the bundled CLI sidecar. Because the feature build intentionally retains version `1.2.14`, prove installation by matching the DMG/installed executable hashes and by the visible Skills page, not by version text alone. Never launch a target bundle, preview app, browser mock, or renamed application for acceptance.
+Copy the verified app into a same-filesystem staging path under `/Applications`, revalidate it, then replace `/Applications/Arca.app` with a rollback rename available until acceptance completes. The actual `CFBundleExecutable` is `desktop`, while `Contents/MacOS/arca` is the bundled CLI sidecar. Because the feature build intentionally retains version `1.2.14`, prove installation by matching the DMG/installed executable hashes and by the visible Skills page, not by version text alone. Never launch a target bundle, preview app, browser mock, or renamed application for acceptance.
 
 - [ ] **Step 6: Exercise the real UI at both required viewports**
 
-Create canonical `/private/tmp/mux-skills-review/home` fixture directories (no symlink) and seed only public fixture Agent probes plus inert local Skills beneath it. Stop only an existing process whose exact executable is `/Applications/MUX.app/Contents/MacOS/desktop`, then launch that executable with `HOME` set to the fixture home, `MUX_HOME=$HOME/.mux`, `MUX_TEST_PROBE_ROOT=$HOME`, and a restricted fixture-only `PATH`. This prevents Agent probing from reaching real `/Applications`, Homebrew, the developer PATH, or private inventory. Abort without screenshots if any unseeded real Agent appears.
+Create canonical `/private/tmp/arca-skills-review/home` fixture directories (no symlink) and seed only public fixture Agent probes plus inert local Skills beneath it. Stop only an existing process whose exact executable is `/Applications/Arca.app/Contents/MacOS/desktop`, then launch that executable with `HOME` set to the fixture home, `ARCA_HOME=$HOME/.arca`, `ARCA_TEST_PROBE_ROOT=$HOME`, and a restricted fixture-only `PATH`. This prevents Agent probing from reaching real `/Applications`, Homebrew, the developer PATH, or private inventory. Abort without screenshots if any unseeded real Agent appears.
 
 Use `https://github.com/obra/superpowers/tree/main/skills/brainstorming` for the public GitHub source flow and the repository's safe/risky fixtures copied into the disposable home for local-picker flows. First cancel the native folder picker and verify it returns unchanged state/no staging operation; then select a fixture folder. Do not reuse the developer's real home or installed Skills.
 
@@ -3902,7 +3902,7 @@ Keyboard: Escape closes risk dialog, then review dialog, then Inspector
 Console: no uncaught error, failed promise, or React warning
 ```
 
-Store review artifacts first under `/private/tmp/mux-skills-review/`. Copy one approved, privacy-safe `1200×820` Skills overview to `website/public/img/skills-overview.png`; it must not show usernames, private paths, private repositories, credentials, or local-only Skill names.
+Store review artifacts first under `/private/tmp/arca-skills-review/`. Copy one approved, privacy-safe `1200×820` Skills overview to `website/public/img/skills-overview.png`; it must not show usernames, private paths, private repositories, credentials, or local-only Skill names.
 
 Every lifecycle state must have a deterministic fixture construction recorded before it is claimed. In particular, do not rely on GitHub `main` changing to produce `update_available`; seed a known old public revision/managed record or report that acceptance item as unverified. Playwright/browser previews may verify the website only and can never substitute for the installed Tauri app or produce its acceptance screenshot.
 
@@ -3926,14 +3926,14 @@ git status --short --branch
 git log --oneline --decorate -15
 ```
 
-Expected: the MUX worktree is clean and the feature commits are local. Do not push, tag, or release unless the user gives a separate explicit instruction.
+Expected: the Arca worktree is clean and the feature commits are local. Do not push, tag, or release unless the user gives a separate explicit instruction.
 
 - [ ] **Step 10: Refresh the parent workspace snapshot**
 
-From the MUX repository, run:
+From the Arca repository, run:
 
 ```bash
 (cd ../.. && python3 scripts/workspace-state.py capture)
 ```
 
-Expected: the parent repository's `workspace/state.json` records the final MUX commit and clean nested worktree. Preserve every pre-existing parent change; do not include the parent snapshot in a MUX commit.
+Expected: the parent repository's `workspace/state.json` records the final Arca commit and clean nested worktree. Preserve every pre-existing parent change; do not include the parent snapshot in a Arca commit.

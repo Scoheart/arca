@@ -1,6 +1,6 @@
 # Model Card Context Implementation Plan
 
-> **For Codex:** Implement against the live remote `main` in the isolated worktree. Follow MUX fast mode: retain focused test coverage but do not run local tests/builds unless the user explicitly requests them.
+> **For Codex:** Implement against the live remote `main` in the isolated worktree. Follow Arca fast mode: retain focused test coverage but do not run local tests/builds unless the user explicitly requests them.
 
 **Goal:** Make context-window size visible and explicit on Model cards, and preserve Provider-discovered context metadata when users select a model.
 
@@ -41,7 +41,7 @@
 
 ### Task 4: Deliver through remote PR and Stable
 
-1. Inspect the exact diff and run `git diff --check`; skip local tests/builds per MUX fast mode.
+1. Inspect the exact diff and run `git diff --check`; skip local tests/builds per Arca fast mode.
 2. Create a remote-only feature commit from the current GitHub `main`, verify every remote blob, open a PR, and squash merge it.
 3. Observe Direct Stable and run the single release verifier against the immutable tag without installing or launching the app.
 

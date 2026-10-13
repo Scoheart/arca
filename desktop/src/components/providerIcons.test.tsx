@@ -24,7 +24,7 @@ it("bundles one traceable local asset for every named Provider template", async 
 it("uses a monogram for Custom Providers and retains it behind failed images", () => {
   const custom = render(<ProviderGlyph id="custom" name="Custom Provider" />);
   expect(custom.container.querySelector("img")).not.toBeInTheDocument();
-  expect(custom.container.querySelector(".mux-provider-glyph-fallback")).toHaveTextContent("C");
+  expect(custom.container.querySelector(".arca-provider-glyph-fallback")).toHaveTextContent("C");
   custom.unmount();
 
   const branded = render(<ProviderGlyph id="openrouter" name="OpenRouter" />);
@@ -32,7 +32,7 @@ it("uses a monogram for Custom Providers and retains it behind failed images", (
   expect(image).toBeInTheDocument();
   fireEvent.error(image!);
   expect(image).toHaveStyle({ display: "none" });
-  expect(branded.container.querySelector(".mux-provider-glyph-fallback")).toHaveTextContent("O");
+  expect(branded.container.querySelector(".arca-provider-glyph-fallback")).toHaveTextContent("O");
 });
 
 it("reuses vendor artwork for plan-specific Provider templates", () => {

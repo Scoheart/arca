@@ -1,7 +1,7 @@
 //! MCP source adapters. Source ownership and catalog impact are enforced by Core.
 
 use clap::Subcommand;
-use mux_core::application::mcp::sources::{self, SourceView};
+use arca_core::application::mcp::sources::{self, SourceView};
 use serde_json::{json, Value};
 
 use crate::command::{parse_identity, Cli};
@@ -11,7 +11,7 @@ use crate::review::execute_direct_mutation;
 
 #[derive(Debug, Subcommand)]
 pub enum SourceCommand {
-    /// List sources, sync status and whether MUX maintains them automatically.
+    /// List sources, sync status and whether Arca maintains them automatically.
     List,
     /// Subscribe to a remote MCP catalog.
     Subscribe {
@@ -27,7 +27,7 @@ pub enum SourceCommand {
         #[arg(long)]
         name: Option<String>,
     },
-    /// Add MUX's built-in curated catalog.
+    /// Add Arca's built-in curated catalog.
     AddBuiltin,
     /// Refresh one subscribed or local source.
     Refresh {
@@ -44,7 +44,7 @@ pub enum SourceCommand {
         #[arg(value_parser = parse_identity)]
         id: String,
     },
-    /// Remove a user-managed source. MUX's automatic sources are protected.
+    /// Remove a user-managed source. Arca's automatic sources are protected.
     Remove {
         #[arg(value_parser = parse_identity)]
         id: String,

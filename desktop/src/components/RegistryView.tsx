@@ -319,22 +319,22 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
     && consumptionState.plan.domain_plan.domain === "mcp";
 
   return (
-    <div className="mux-registry-workspace">
+    <div className="arca-registry-workspace">
       <ResourceWorkspace
       overview={
         <ResourceOverview
           eyebrow={activeSource ? `来源 · ${sourceScoped.length} MCPs` : `${catalog.length} MCPs · ${sources.length} 个来源`}
           title={activeSource?.name ?? "全部 MCPs"}
           description={activeSource
-            ? activeSource.kind === "remote" ? "订阅来源" : activeSource.managed ? "MUX 管理的来源" : "本地配置来源"
+            ? activeSource.kind === "remote" ? "订阅来源" : activeSource.managed ? "Arca 管理的来源" : "本地配置来源"
             : "集中管理可复用的 MCP 连接、来源与配置"}
           icon={activeSource?.kind === "remote"
             ? <CloudIcon className="w-6 h-6" />
             : <ResourceIcon domain="mcp" className="w-6 h-6" />}
         >
           {activeSource && <>
-            <dl className="mux-resource-overview-facts">
-              {(activeSource.url || activeSource.path) && <div className="mux-resource-overview-location">
+            <dl className="arca-resource-overview-facts">
+              {(activeSource.url || activeSource.path) && <div className="arca-resource-overview-location">
                 <dt>{activeSource.url ? "来源地址" : "配置路径"}</dt>
                 <dd><code title={sourceLocation ?? undefined}>{sourceLocation}</code></dd>
               </div>}
@@ -479,7 +479,7 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
         />
       ) : (
         <div
-          className="mux-asset-list mux-mcp-list"
+          className="arca-asset-list arca-mcp-list"
           role="list"
           aria-label={t("centralAssets.mcpList")}
         >
@@ -530,23 +530,23 @@ function RegistryCard({
   return (
     <button
       type="button"
-      className="mux-asset-list-row mux-mcp-list-row"
+      className="arca-asset-list-row arca-mcp-list-row"
       data-selected={selected ? "true" : undefined}
       data-attention={item.in_effect ? undefined : "shadowed"}
       aria-label={`${t("centralAssets.openMcpDetails", { name: entry.name })} · ${transport} · ${source}`}
       aria-pressed={selected}
       onClick={onOpen}
     >
-      <span className="mux-asset-list-identity">
+      <span className="arca-asset-list-identity">
         <McpAvatar assetKey={keyOf(entry)} entry={entry} preference={iconPreference} />
-        <span className="mux-asset-list-copy">
+        <span className="arca-asset-list-copy">
           <strong title={entry.name}>{entry.name}</strong>
           <code title={ep.text}>{ep.text}</code>
         </span>
       </span>
-      <span className="mux-asset-list-transport">{transport}</span>
-      <span className="mux-asset-list-source" title={source}>{source}</span>
-      <span className="mux-asset-list-status">
+      <span className="arca-asset-list-transport">{transport}</span>
+      <span className="arca-asset-list-source" title={source}>{source}</span>
+      <span className="arca-asset-list-status">
         <Badge tone={item.in_effect ? "success" : "info"}>
           {item.in_effect
             ? t("centralAssets.effective")
@@ -618,7 +618,7 @@ function RegistryDetail({
       }
     >
       {overriddenBy && (
-        <div className="mux-detail-warning">
+        <div className="arca-detail-warning">
           <LayersIcon className="w-4 h-4 flex-shrink-0" />
           <div className="min-w-0">
             <div className="text-xs font-semibold">已被覆盖</div>
@@ -629,13 +629,13 @@ function RegistryDetail({
         </div>
       )}
 
-      {entry.description && <p className="mux-inspector-description">{entry.description}</p>}
+      {entry.description && <p className="arca-inspector-description">{entry.description}</p>}
 
       <InspectorSection title="连接" icon={<LinkIcon className="w-4 h-4" />}>
         <InspectorField icon={<NetworkIcon className="w-4 h-4" />} label="地址" mono>{endpoint.text}</InspectorField>
         {entry.repo && (
           <InspectorField icon={<LinkIcon className="w-4 h-4" />} label="主页">
-            <button onClick={() => openUrl(entry.repo!)} className="mux-inline-link" title="在浏览器中打开">
+            <button onClick={() => openUrl(entry.repo!)} className="arca-inline-link" title="在浏览器中打开">
               <LinkIcon className="w-3.5 h-3.5" />
               {entry.repo}
             </button>
@@ -652,7 +652,7 @@ function RegistryDetail({
       )}
 
       <InspectorSection title="配置" icon={<TerminalIcon className="w-4 h-4" />}>
-        <pre className="mux-config-preview">
+        <pre className="arca-config-preview">
           {JSON.stringify(redactSensitiveConfig(entry.config), null, 2)}
         </pre>
       </InspectorSection>

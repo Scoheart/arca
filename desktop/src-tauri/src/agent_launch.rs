@@ -1,4 +1,4 @@
-use mux_core::application::agent_launch::{self, LaunchInfo, LaunchReceipt, LaunchTarget};
+use arca_core::application::agent_launch::{self, LaunchInfo, LaunchReceipt, LaunchTarget};
 
 #[tauri::command]
 pub async fn get_agent_launch_info(agent_id: String) -> Result<LaunchInfo, String> {
@@ -21,11 +21,11 @@ pub async fn launch_agent(agent_id: String, directory: Option<String>) -> Result
 }
 
 #[tauri::command]
-pub async fn get_terminal_settings() -> Result<mux_core::application::terminals::TerminalSettings, String> {
-    tauri::async_runtime::spawn_blocking(mux_core::application::terminals::settings).await.map_err(|e| e.to_string())?
+pub async fn get_terminal_settings() -> Result<arca_core::application::terminals::TerminalSettings, String> {
+    tauri::async_runtime::spawn_blocking(arca_core::application::terminals::settings).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-pub async fn set_terminal_preference(terminal_id: String) -> Result<mux_core::application::terminals::TerminalSettings, String> {
-    tauri::async_runtime::spawn_blocking(move || mux_core::application::terminals::configure(&terminal_id)).await.map_err(|e| e.to_string())?
+pub async fn set_terminal_preference(terminal_id: String) -> Result<arca_core::application::terminals::TerminalSettings, String> {
+    tauri::async_runtime::spawn_blocking(move || arca_core::application::terminals::configure(&terminal_id)).await.map_err(|e| e.to_string())?
 }

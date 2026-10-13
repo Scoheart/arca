@@ -356,7 +356,7 @@ fn stage_recorded_skill_inner(
                 .ok_or_else(|| invalid_source_error("the imported Skill backup path is invalid"))?;
             let backup_root = paths.backups_skills_dir();
             if backup == backup_root || !backup.starts_with(&backup_root) {
-                return invalid_source("the imported Skill backup is outside MUX backups");
+                return invalid_source("the imported Skill backup is outside Arca backups");
             }
             let metadata = fs::symlink_metadata(&backup).map_err(|_| {
                 invalid_source_error("the imported Skill backup path is unavailable")
@@ -365,12 +365,12 @@ fn stage_recorded_skill_inner(
                 return invalid_source("the imported Skill backup is not a real directory");
             }
             let canonical_root = fs::canonicalize(&backup_root)
-                .map_err(|_| invalid_source_error("the MUX Skill backup root is unavailable"))?;
+                .map_err(|_| invalid_source_error("the Arca Skill backup root is unavailable"))?;
             let candidate = fs::canonicalize(&backup).map_err(|_| {
                 invalid_source_error("the imported Skill backup path is unavailable")
             })?;
             if candidate == canonical_root || !candidate.starts_with(&canonical_root) {
-                return invalid_source("the imported Skill backup escapes MUX backups");
+                return invalid_source("the imported Skill backup escapes Arca backups");
             }
             (
                 stage_single_candidate(&AnchoredRoot::open(&candidate)?, operation, expected_name)?,
@@ -581,7 +581,7 @@ fn validate_persisted_source(
             let backup = &normalized[1];
             let backup_root = paths.backups_skills_dir();
             if backup == &backup_root || !backup.starts_with(&backup_root) {
-                return invalid_source("the imported Skill backup is outside MUX backups");
+                return invalid_source("the imported Skill backup is outside Arca backups");
             }
             Ok(())
         }
@@ -1289,7 +1289,7 @@ fn fetch_response_with_etag(
         validate_request_url(&url, endpoints)?;
         let request = agent
             .get(url.as_str())
-            .header("User-Agent", concat!("MUX/", env!("CARGO_PKG_VERSION")))
+            .header("User-Agent", concat!("Arca/", env!("CARGO_PKG_VERSION")))
             .header("Accept", "application/vnd.github+json")
             .header("X-GitHub-Api-Version", "2022-11-28");
         let request = match previous_etag.as_deref() {
@@ -3196,7 +3196,7 @@ mod tests {
         assert_eq!(resolution.candidates.len(), 1);
         assert_eq!(resolution.candidates[0].name, "review");
         let candidates = th.home.join(format!(
-            ".mux/staging/skills/{}/candidates",
+            ".arca/staging/skills/{}/candidates",
             resolution.operation_id
         ));
         assert!(candidates.join("review/SKILL.md").exists());

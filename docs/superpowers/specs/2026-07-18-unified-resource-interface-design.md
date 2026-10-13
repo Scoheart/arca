@@ -1,4 +1,4 @@
-# MUX Unified Resource Interface Design
+# Arca Unified Resource Interface Design
 
 ## Status
 
@@ -13,7 +13,7 @@ permanent split pane.
 
 ## Context and evidence
 
-The source and the installed `/Applications/MUX.app` version 1.2.18 were
+The source and the installed `/Applications/Arca.app` version 1.2.18 were
 reviewed before this design. The current product already has useful shared
 primitives, but the visible system is only partly unified:
 
@@ -63,7 +63,7 @@ hierarchy and action placement when they change domains.
   in rendered UI, logs, fixtures, or screenshots.
 - Do not replace the existing safe-write, backup, plan/commit, conflict, or
   recovery behavior.
-- Do not turn MUX into a permanent two-pane desktop inspector; the design must
+- Do not turn Arca into a permanent two-pane desktop inspector; the design must
   remain usable at `900x600`.
 - Do not redesign the website, CLI, or TUI in this implementation program.
 
@@ -95,7 +95,7 @@ Use `MCPs -> Models -> Skills` everywhere:
 
 ### Opaque, restrained surfaces
 
-Use the existing opaque macOS-like neutral palette. The MUX gold/coral/magenta
+Use the existing opaque macOS-like neutral palette. The Arca gold/coral/magenta
 gradient remains exclusive to the wordmark. System blue is the interactive
 accent. Green, amber, red, and purple communicate semantic state only; protocol,
 transport, and domain identity do not receive persistent decorative color rails.
@@ -391,12 +391,12 @@ handoff:
 - `cargo fmt --check` and `cargo test --workspace` when shared contracts change;
 - existing Skill plan/commit/recovery integration tests unchanged and passing.
 
-All test environments isolate `HOME` and `MUX_HOME` and must not read real user
+All test environments isolate `HOME` and `ARCA_HOME` and must not read real user
 configuration, Skills, or Keychain.
 
 ### Installed-app review
 
-Final UI acceptance uses only `/Applications/MUX.app` under the MUX UI review
+Final UI acceptance uses only `/Applications/Arca.app` under the Arca UI review
 playbook. Replacing the installed application requires separate explicit user
 authorization.
 

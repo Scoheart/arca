@@ -16,7 +16,7 @@
 
 ## Built-in catalog audit — 2026-09-20
 
-The full built-in directory merges 204 entries from `data/agent-catalog.json` with 68 audited entries from `data/agents.json`, with audited entries taking precedence, matching `core::agents::builtin_agents`. This produces 223 unique Agents. Of these, 68 have bundled images and 155 have no verified bundled image and are hidden from navigation, search and pagination. The initial 68-entry audit incorrectly omitted the broader catalog; it was not a complete directory audit. Hidden does not mean the product has no logo, only that MUX has no verified asset yet.
+The full built-in directory merges 204 entries from `data/agent-catalog.json` with 68 audited entries from `data/agents.json`, with audited entries taking precedence, matching `core::agents::builtin_agents`. This produces 223 unique Agents. Of these, 68 have bundled images and 155 have no verified bundled image and are hidden from navigation, search and pagination. The initial 68-entry audit incorrectly omitted the broader catalog; it was not a complete directory audit. Hidden does not mean the product has no logo, only that Arca has no verified asset yet.
 
 Within the 68 audited definitions, 60 previously had an image and 8 used monograms. All 8 missing marks below are now bundled. No substitute artwork or generated initials were used for these additions.
 

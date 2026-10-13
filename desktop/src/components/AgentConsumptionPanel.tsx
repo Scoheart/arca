@@ -79,10 +79,10 @@ function ConvergenceActions({
 
   if (!primary) return null;
   return (
-    <span className="mux-convergence-controls" ref={rootRef}>
+    <span className="arca-convergence-controls" ref={rootRef}>
       <button
         type="button"
-        className="mux-convergence-action"
+        className="arca-convergence-action"
         data-primary="true"
         data-action={primary}
         aria-label={`${label(primary)}：${name}`}
@@ -93,10 +93,10 @@ function ConvergenceActions({
         <ConvergenceActionIcon action={primary} />
       </button>
       {secondary.length > 0 && (
-        <span className="mux-convergence-more">
+        <span className="arca-convergence-more">
           <button
             type="button"
-            className="mux-convergence-action"
+            className="arca-convergence-action"
             aria-label={`${t("observations.actions.more")}：${name}`}
             title={t("observations.actions.more")}
             aria-haspopup="menu"
@@ -107,7 +107,7 @@ function ConvergenceActions({
             <MoreHorizontalIcon className="w-4 h-4" />
           </button>
           {open && (
-            <span className="mux-convergence-menu" role="menu">
+            <span className="arca-convergence-menu" role="menu">
               {secondary.map((action) => (
                 <button
                   key={action}
@@ -149,7 +149,7 @@ function ConsumptionCardMenu({ name, onOpen, onRemove, removeDisabled, removeLab
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, [open]);
-  return <div ref={root} className="mux-consumption-card-menu" data-open={open || undefined} onKeyDown={(event) => {
+  return <div ref={root} className="arca-consumption-card-menu" data-open={open || undefined} onKeyDown={(event) => {
     if (!open) return;
     if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus(); }
     if (event.key === "Tab") setOpen(false);
@@ -161,12 +161,12 @@ function ConsumptionCardMenu({ name, onOpen, onRemove, removeDisabled, removeLab
       items[next]?.focus();
     }
   }}>
-    <button ref={trigger} type="button" className="mux-consumption-open" aria-label={`${name} 操作`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+    <button ref={trigger} type="button" className="arca-consumption-open" aria-label={`${name} 操作`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
       <MoreHorizontalIcon className="w-4 h-4" />
     </button>
-    {open && <div role="menu" className="mux-consumption-card-menu-items" aria-label={`${name} 操作`}>
+    {open && <div role="menu" className="arca-consumption-card-menu-items" aria-label={`${name} 操作`}>
       {onOpen && <button type="button" role="menuitem" aria-label={`查看 ${name} 详情`} onClick={() => { setOpen(false); onOpen(); }}><LinkIcon className="w-3.5 h-3.5" />查看详情</button>}
-      {onRemove && <button type="button" role="menuitem" disabled={removeDisabled} aria-label={removeLabel} className="mux-consumption-remove" onClick={() => { setOpen(false); onRemove(); }}><TrashIcon className="w-3.5 h-3.5" />移除</button>}
+      {onRemove && <button type="button" role="menuitem" disabled={removeDisabled} aria-label={removeLabel} className="arca-consumption-remove" onClick={() => { setOpen(false); onRemove(); }}><TrashIcon className="w-3.5 h-3.5" />移除</button>}
     </div>}
   </div>;
 }
@@ -180,7 +180,7 @@ export function AgentConsumptionPanel({
   external,
   externalMode = "summary",
   externalTitle = "外部配置",
-  externalDescription = "尚未由 MUX 管理",
+  externalDescription = "尚未由 Arca 管理",
   present,
   onManage,
   manageIcon = <PlusIcon className="w-3.5 h-3.5" />,
@@ -260,15 +260,15 @@ export function AgentConsumptionPanel({
   });
 
   return (
-    <section className="mux-agent-section mux-agent-resource-content mux-consumption-panel" aria-label={title}>
-      <div className="mux-agent-section-head">
+    <section className="arca-agent-section arca-agent-resource-content arca-consumption-panel" aria-label={title}>
+      <div className="arca-agent-section-head">
         <div>
           <h3>{title}</h3>
           {description && <p>{description}</p>}
         </div>
-        <AgentResourceActions><div className="mux-agent-section-actions">
+        <AgentResourceActions><div className="arca-agent-section-actions">
           {bulkToggleLabel && bulkEnabled !== undefined && onBulkEnabledChange && (
-            <div className="mux-agent-bulk-toggle">
+            <div className="arca-agent-bulk-toggle">
               <span>{bulkToggleLabel}</span>
               <Switch
                 checked={bulkEnabled}
@@ -290,7 +290,7 @@ export function AgentConsumptionPanel({
               onClick={onBulkRemove}
             >
               <TrashIcon className="w-3.5 h-3.5" />
-              <span className="mux-consumption-bulk-label">{bulkRemoveLabel}</span>
+              <span className="arca-consumption-bulk-label">{bulkRemoveLabel}</span>
             </button>
           )}
           <button
@@ -301,18 +301,18 @@ export function AgentConsumptionPanel({
             onClick={onManage}
           >
             {manageIcon}
-            <span className="mux-consumption-manage-label">{manageLabel}</span><span className="mux-consumption-manage-short" aria-hidden="true">添加</span>
+            <span className="arca-consumption-manage-label">{manageLabel}</span><span className="arca-consumption-manage-short" aria-hidden="true">添加</span>
           </button>
         </div></AgentResourceActions>
       </div>
 
-      {items.length > 0 && <div className="mux-consumption-search">
+      {items.length > 0 && <div className="arca-consumption-search">
         <SearchBar value={query} onChange={setQuery} placeholder={`搜索当前 ${title}`} />
         <span role="status" aria-live="polite">{query ? `${filtered.length} / ${items.length} 项` : `${items.length} 项`}</span>
       </div>}
-      {domain === "model" && description && <p className="mux-consumption-model-note">{description}</p>}
+      {domain === "model" && description && <p className="arca-consumption-model-note">{description}</p>}
       {externalMode === "summary" && domainExternal.length > 0 && (
-        <div className="mux-consumption-external" role="status">
+        <div className="arca-consumption-external" role="status">
           <div>
             <strong>{externalTitle} {domainExternal.length}</strong>
             <span>{externalDescription}</span>
@@ -332,14 +332,14 @@ export function AgentConsumptionPanel({
       )}
 
       {items.length === 0 ? (
-        <div className="mux-consumption-empty">
+        <div className="arca-consumption-empty">
           <ResourceIcon domain={domain === "model-provider" ? "model" : domain} className="w-7 h-7" />
           <strong>{emptyTitle}</strong>
           {emptyDescription && <span>{emptyDescription}</span>}
           {emptyAction}
         </div>
-      ) : filtered.length === 0 ? <p role="status" className="mux-consumption-empty">没有匹配的 {title}</p> : (
-        <ul className="mux-consumption-list" data-columns={columns}>
+      ) : filtered.length === 0 ? <p role="status" className="arca-consumption-empty">没有匹配的 {title}</p> : (
+        <ul className="arca-consumption-list" data-columns={columns}>
           {filtered.map(({ item, external: isExternal }) => {
             const presentation = present(item.asset);
             const presentationDescription = presentation.description?.trim();
@@ -361,14 +361,14 @@ export function AgentConsumptionPanel({
                 data-status={item.status}
                 data-enabled={isExternal || enabled === false ? "false" : undefined}
               >
-                <span className="mux-consumption-icon">{presentation.icon}</span>
-                <span className="mux-consumption-copy">
-                  <span className="mux-consumption-title">
+                <span className="arca-consumption-icon">{presentation.icon}</span>
+                <span className="arca-consumption-copy">
+                  <span className="arca-consumption-title">
                     <strong title={presentation.name}>{presentation.name}</strong>
                   </span>
-                  {domain === "mcp" && <span className="mux-consumption-secondary">
+                  {domain === "mcp" && <span className="arca-consumption-secondary">
                     <ConsumptionStatus status={item.status} reason={item.reason} compact />
-                    {presentation.meta && <span className="mux-consumption-meta">{presentation.meta}</span>}
+                    {presentation.meta && <span className="arca-consumption-meta">{presentation.meta}</span>}
                     {presentationDescription && <small title={presentationDescription}>{presentationDescription}</small>}
                   </span>}
                 </span>
@@ -379,17 +379,17 @@ export function AgentConsumptionPanel({
                   removeDisabled={removeDisabled}
                   removeLabel={removeLabel?.(presentation.name) ?? `从 Agent 移除 ${presentation.name}`}
                 />}
-                {domain !== "mcp" && presentationDescription && <p className="mux-consumption-card-description" title={presentationDescription}>{presentationDescription}</p>}
-                <div className="mux-consumption-card-footer">
-                  {domain !== "mcp" && <div className="mux-consumption-card-summary">
+                {domain !== "mcp" && presentationDescription && <p className="arca-consumption-card-description" title={presentationDescription}>{presentationDescription}</p>}
+                <div className="arca-consumption-card-footer">
+                  {domain !== "mcp" && <div className="arca-consumption-card-summary">
                     <ConsumptionStatus status={item.status} reason={item.reason} compact />
-                    {presentation.meta && <span className="mux-consumption-meta">{presentation.meta}</span>}
+                    {presentation.meta && <span className="arca-consumption-meta">{presentation.meta}</span>}
                   </div>}
                 {(item.status !== "synced" && !(isExternal && item.status === "external-added")
                   || item.available_actions.length > 0
                   || !isExternal && (renderAction || onEnabledChange && enabled !== null || onOpenAsset || onRemove)) && (
-                  <span className="mux-consumption-controls">
-                    <span className="mux-consumption-actions">
+                  <span className="arca-consumption-controls">
+                    <span className="arca-consumption-actions">
                       {onConverge && item.available_actions.length > 0 && (
                         <ConvergenceActions
                           name={`${presentation.name}${item.asset.domain === "mcp" ? ` · ${item.asset.key.split("::").at(-1)}` : item.target?.target_id ? ` · ${item.target.target_id}` : ""}`}

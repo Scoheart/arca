@@ -25,7 +25,7 @@
 
 ## 验收
 
-- Model ID 容器在 `.mux-model-form-grid` 内通过 `grid-column: 1 / -1` 跨越全部列。
+- Model ID 容器在 `.arca-model-form-grid` 内通过 `grid-column: 1 / -1` 跨越全部列。
 - 模型候选列表宽度与 Model ID 行一致，能展示更多完整的 Name 和 ID。
 - 名称与 Provider 仍在同一行，协议保持紧凑，不额外增加一整列空白。
 - `900×600` 和常规桌面窗口不产生横向溢出。

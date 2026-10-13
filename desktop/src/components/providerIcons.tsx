@@ -157,7 +157,7 @@ export function ProviderGlyph({
     <span
       aria-hidden="true"
       data-provider-icon={logo ? iconId : "fallback"}
-      className="mux-provider-glyph"
+      className="arca-provider-glyph"
       style={{
         width: size,
         height: size,
@@ -165,7 +165,7 @@ export function ProviderGlyph({
         background: logo ? "#fff" : fallbackColor(id),
       }}
     >
-      <span className="mux-provider-glyph-fallback" style={{ fontSize: Math.round(size * 0.46) }}>
+      <span className="arca-provider-glyph-fallback" style={{ fontSize: Math.round(size * 0.46) }}>
         {label}
       </span>
       {logo && (

@@ -1,6 +1,6 @@
 # Agent Catalog Methodology
 
-MUX deliberately separates client discovery from writable configuration support. A product appearing in an MCP directory proves that it is relevant to users; it does not prove a stable global file path or wire schema.
+Arca deliberately separates client discovery from writable configuration support. A product appearing in an MCP directory proves that it is relevant to users; it does not prove a stable global file path or wire schema.
 
 ## Data sets
 
@@ -20,7 +20,7 @@ The broad catalog was assembled and cross-checked from:
 3. [Docker MCP client support](https://docs.docker.com/reference/cli/docker/mcp/client/), used to cross-check installable desktop/CLI targets.
 4. Official product documentation for supplemental clients absent from the public directory.
 
-`node scripts/update-agent-catalog.mjs` fetches the Glama directory, normalizes known aliases, merges the reviewed official supplements encoded in the script, sorts IDs, and aborts if Glama unexpectedly falls below 150 entries. The MCP matrix and Docker documentation are cross-check sources, not additional runtime fetches. With a fixed `MUX_CATALOG_DATE`, the output is deterministic. Catalog records have no writable path, no transports, and `format: unknown`.
+`node scripts/update-agent-catalog.mjs` fetches the Glama directory, normalizes known aliases, merges the reviewed official supplements encoded in the script, sorts IDs, and aborts if Glama unexpectedly falls below 150 entries. The MCP matrix and Docker documentation are cross-check sources, not additional runtime fetches. With a fixed `ARCA_CATALOG_DATE`, the output is deterministic. Catalog records have no writable path, no transports, and `format: unknown`.
 
 ## Promotion criteria
 
@@ -43,7 +43,7 @@ Skills support is audited separately from MCP configuration. Only definitions fr
 | Field | Contract |
 |---|---|
 | `target_id` | Stable identity for the preferred physical assignment target. |
-| `global_dir` | Preferred user-level writable directory; it must be a safe `~/.../skills` path outside `~/.mux`. |
+| `global_dir` | Preferred user-level writable directory; it must be a safe `~/.../skills` path outside `~/.arca`. |
 | `aliases` | Other verified target IDs and user-level directories the Agent reads. Aliases are compatibility targets, not the preferred write location. |
 | `docs` | Official documentation that supports the Skills capability. |
 | `evidence` | Verification level for the capability; the initial audited records require `official`. |
@@ -74,7 +74,7 @@ Every audited definition records a verification date and evidence URL; MCP-capab
 Run the validation suite after changing either data set:
 
 ```bash
-MUX_CATALOG_DATE=2026-07-14 node scripts/update-agent-catalog.mjs
+ARCA_CATALOG_DATE=2026-07-14 node scripts/update-agent-catalog.mjs
 cargo test --workspace --locked
 bash desktop/scripts/prepare-sidecar.sh
 cargo test --manifest-path desktop/src-tauri/Cargo.toml --locked
@@ -85,7 +85,7 @@ cd desktop && npm run build
 
 - Antigravity CLI shares `~/.gemini/config/mcp_config.json` with the IDE, with `serverUrl` for remote MCP. Its flat Markdown slash-command Skills are not advertised as directory-based Skills.
 - Continue CLI (`cn`) shares `~/.continue/config.yaml` and the reviewed list codec with Continue IDE. Explicit `--config` selections require a user path override.
-- TRAE CLI 2.0 uses `~/.trae/traecli.toml`, `mcp_servers`, and reviewed stdio entries. MUX does not fall back to the old YAML format or infer remote transport fields.
+- TRAE CLI 2.0 uses `~/.trae/traecli.toml`, `mcp_servers`, and reviewed stdio entries. Arca does not fall back to the old YAML format or infer remote transport fields.
 - OpenClaw exposes the verified `~/.openclaw/skills` directory and command/config installation probes. Its JSON5 MCP/Models configuration is not writable until `$include` and SecretRef ownership are handled.
 
 Full source-linked market review: [Agent and Provider coverage](agent-provider-research-2026-09-07.md).

@@ -70,7 +70,7 @@ pub fn push_apply_errors(errors: &mut Vec<String>, errs: Vec<ApplyError>) {
 
 fn retryable_target_error(error: &str) -> bool {
     error.contains("asset_operation_stale")
-        || error.contains("file changed while MUX was preparing")
+        || error.contains("file changed while Arca was preparing")
         || error.contains("in-place CAS boundary")
         || error.contains("target_convergence_failed")
 }
@@ -377,7 +377,7 @@ pub fn clear_agent(agent_id: &str) -> Result<(), String> {
         .ok_or_else(|| format!("unknown Agent: {agent_id}"))?;
     if !agent.enabled {
         return Err(format!(
-            "agent_disabled: Agent {agent_id} is disabled in MUX"
+            "agent_disabled: Agent {agent_id} is disabled in Arca"
         ));
     }
     let path = target_file(agent, "global", None)
@@ -493,7 +493,7 @@ fn extract_servers(
             return Some((m.clone(), codec));
         }
     }
-    // Older MUX copies contained only its internal transport wrapper, without
+    // Older Arca copies contained only its internal transport wrapper, without
     // the server name. Accept those as a single server, not a server named stdio.
     let single = if obj.len() == 1 {
         obj.get("stdio").or_else(|| obj.get("http")).unwrap_or(v)
@@ -638,7 +638,7 @@ pub fn import_pasted(text: &str) -> Result<Vec<String>, String> {
     Ok(names)
 }
 
-/// Serialize the complete effective catalog into a shareable MUX-array JSON
+/// Serialize the complete effective catalog into a shareable Arca-array JSON
 /// string. Shadowed copies are excluded by `read_registry`; origins are stripped
 /// so the file is portable, and the output is sorted for stable diffs.
 pub fn export_effective() -> Result<String, String> {
@@ -658,7 +658,7 @@ pub fn export_effective() -> Result<String, String> {
 // ── Install status scan + enable / disable / delete ────────────────────────
 
 /// A server found installed in an agent's real config file, or remembered in
-/// MUX's disabled store.
+/// Arca's disabled store.
 #[derive(Serialize)]
 pub struct InstalledMcp {
     pub name: String,
@@ -671,7 +671,7 @@ pub struct InstalledMcp {
     #[serde(default)]
     pub customized: bool,
     /// Whether this server is currently active in the agent's config file
-    /// (`true`) or paused natively / remembered in MUX's disabled store (`false`).
+    /// (`true`) or paused natively / remembered in Arca's disabled store (`false`).
     #[serde(default)]
     pub enabled: bool,
     /// Secret-free digest of the exact observed entry. Consumers use it for
@@ -689,7 +689,7 @@ fn observation_fingerprint(config: &McpConfig, enabled: bool) -> String {
 }
 
 /// Scan real agent config files → "who installed what". `customized` flags an
-/// on-disk config that differs from the registry base; MUX-remembered disabled
+/// on-disk config that differs from the registry base; Arca-remembered disabled
 /// servers are appended as `enabled:false` rows. Global-only unless a project dir
 /// is given.
 pub fn scan_installed(project_dir: Option<&str>) -> Vec<InstalledMcp> {
@@ -746,7 +746,7 @@ pub(crate) fn scan_installed_scoped(
             }
         })
         .collect();
-    // Append MUX-remembered disabled servers so a UI can show an "off" row for a
+    // Append Arca-remembered disabled servers so a UI can show an "off" row for a
     // server removed from the file but re-enable-able.
     let live: HashSet<(String, String, String, String)> = out
         .iter()

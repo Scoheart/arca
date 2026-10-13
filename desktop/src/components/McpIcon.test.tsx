@@ -52,7 +52,7 @@ it("prefers user choices and falls back when a custom image cannot load", () => 
   const custom: McpIconPreference = {
     kind: "custom",
     value: "custom.png",
-    path: "/Users/test/.mux/assets/mcp-icons/custom.png",
+    path: "/Users/test/.arca/assets/mcp-icons/custom.png",
   };
   view.rerender(
     <McpAvatar
@@ -63,7 +63,7 @@ it("prefers user choices and falls back when a custom image cannot load", () => 
     />,
   );
   const image = view.container.querySelector("img") as HTMLImageElement;
-  expect(image.src).toContain("asset:///Users/test/.mux/assets/mcp-icons/custom.png");
+  expect(image.src).toContain("asset:///Users/test/.arca/assets/mcp-icons/custom.png");
   fireEvent.error(image);
   expect(view.container.firstElementChild).toHaveAttribute("data-icon-source", "auto");
   expect(view.container.querySelector('[data-mcp-icon="search"]')).not.toBeNull();

@@ -4,8 +4,8 @@ use std::io::{self, BufRead, Read, Write};
 use std::path::{Path, PathBuf};
 
 use clap::Subcommand;
-use mux_core::application::operations::{CommitOperationRequest, OperationPlan, PlanOperationRequest};
-use mux_core::application::MuxCore;
+use arca_core::application::operations::{CommitOperationRequest, OperationPlan, PlanOperationRequest};
+use arca_core::application::ArcaCore;
 use serde_json::{json, Value};
 
 use crate::command::Cli;
@@ -35,7 +35,7 @@ pub fn dispatch(cli: &Cli, command: &OperationCommand) -> Result<CommandOutput, 
     } else { cli.mutation_options().validate()?; }
     let request: PlanOperationRequest = serde_json::from_value(crate::input::json_file(file)?)
         .map_err(|_| CliError::new("invalid_operation", "input must be a typed Core PlanOperationRequest"))?;
-    let plan = MuxCore::plan(request).map_err(CliError::from_core)?;
+    let plan = ArcaCore::plan(request).map_err(CliError::from_core)?;
     if !session { return execute_operation("operation.apply", plan, cli.mutation_options()); }
     review_session(plan, &mut io::stdin().lock(), &mut io::stdout().lock())
 }
@@ -77,7 +77,7 @@ fn review_session(
         Ok(Some(request)) => request,
         Err(error) => return Err(cancel_preserving(&plan, error)),
     };
-    let result = MuxCore::commit(request).map_err(|error|
+    let result = ArcaCore::commit(request).map_err(|error|
         cancel_preserving(&plan, CliError::from_core(error)))?;
     let inventory = commit_output(result, plan.operation_id())?;
     Ok(CommandOutput::new("operation.review", true,
@@ -87,13 +87,13 @@ fn review_session(
 fn commit_template(plan: &OperationPlan) -> CommitOperationRequest {
     match plan {
         OperationPlan::Asset { plan } => CommitOperationRequest::Asset {
-            request: mux_core::application::assets::AssetCommitRequest {
+            request: arca_core::application::assets::AssetCommitRequest {
                 operation_id: plan.operation_id.clone(), candidate_hash: plan.candidate_hash.clone(),
             },
         },
         OperationPlan::Skill { plan } => CommitOperationRequest::Skill {
             kind: plan.kind.clone(),
-            request: mux_core::application::skills::SkillCommitRequest {
+            request: arca_core::application::skills::SkillCommitRequest {
                 operation_id: plan.operation_id.clone(), candidate_hash: plan.candidate_hash.clone(),
                 findings_confirmation: plan.requires_risk_override.then(|| plan.findings_hash.clone()),
             },

@@ -23,9 +23,9 @@ pub mod workspace;
 pub use gate::{BackendStatus, CapabilityDomain};
 
 /// Stable service facade for non-Rust consumers and future frontends.
-pub struct MuxCore;
+pub struct ArcaCore;
 
-impl MuxCore {
+impl ArcaCore {
     pub fn bootstrap() -> bootstrap::BootstrapReport {
         bootstrap::bootstrap()
     }

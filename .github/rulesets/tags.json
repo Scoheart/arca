@@ -1,5 +1,5 @@
 {
-  "name": "MUX immutable stable tags",
+  "name": "Arca immutable stable tags",
   "target": "tag",
   "enforcement": "evaluate",
   "bypass_actors": [],

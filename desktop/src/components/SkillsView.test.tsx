@@ -108,7 +108,7 @@ const importedItem = (): SkillInventoryItem => ({
   source: {
     kind: "imported",
     original_path: "~/.cursor/skills/imported-legacy",
-    backup_path: "~/.mux/backups/skills/fixture/imported-legacy",
+    backup_path: "~/.arca/backups/skills/fixture/imported-legacy",
   },
 });
 
@@ -325,7 +325,7 @@ describe("SkillsView", () => {
         source: {
           kind: "imported",
           original_path: "~/.agents/skills/dws",
-          backup_path: "~/.mux/backups/skills/dws",
+          backup_path: "~/.arca/backups/skills/dws",
         },
         affected_agent_ids: ["codex", "cursor"],
       },
@@ -341,7 +341,7 @@ describe("SkillsView", () => {
         source: {
           kind: "imported",
           original_path: "~/.claude/skills/dws",
-          backup_path: "~/.mux/backups/skills/dws-claude",
+          backup_path: "~/.arca/backups/skills/dws-claude",
         },
         affected_agent_ids: ["claude-code"],
       },
@@ -366,7 +366,7 @@ describe("SkillsView", () => {
     ).toBeVisible();
     expect(screen.queryByRole("tablist", { name: "Skill 状态" })).not.toBeInTheDocument();
     expect(screen.getByRole("separator", { name: "调整侧边栏宽度" })).toBeVisible();
-    expect(screen.getByRole("list", { name: "Skill 资产" })).toHaveClass("mux-skill-card-grid");
+    expect(screen.getByRole("list", { name: "Skill 资产" })).toHaveClass("arca-skill-card-grid");
     expect(screen.getByText("Review repository changes")).toBeVisible();
     expect(screen.getByText("acme/skills")).toBeVisible();
     expect(screen.queryByText("风险")).not.toBeInTheDocument();

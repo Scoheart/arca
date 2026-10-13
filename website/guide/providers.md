@@ -1,6 +1,6 @@
 # Provider 模板
 
-以下目录来自 MUX 1.10.0 Core 的 Provider 模板，包含官方 API、地区与 Coding Plan、模型平台、网关和本地服务。搜索名称或类别可以缩小范围。
+以下目录来自 Arca Core 的 Provider 模板，包含官方 API、地区与 Coding Plan、模型平台、网关和本地服务。搜索名称或类别可以缩小范围。
 
 <ProviderReference />
 

@@ -26,6 +26,6 @@ it("uses trash icons for destructive remove controls while keeping X for close a
   expect(navigation).toMatch(/aria-label="清除搜索"[\s\S]*?<XIcon/);
   expect(dialog).toMatch(/aria-label=\{closeLabel\}[\s\S]*?<XIcon/);
   expect(workspace).toMatch(/aria-label="关闭详情"[\s\S]*?<XIcon/);
-  expect(dialog).not.toMatch(/mux-dialog-shell-close[\s\S]*?<TrashIcon/);
-  expect(workspace).not.toMatch(/mux-inspector-close[\s\S]*?<TrashIcon/);
+  expect(dialog).not.toMatch(/arca-dialog-shell-close[\s\S]*?<TrashIcon/);
+  expect(workspace).not.toMatch(/arca-inspector-close[\s\S]*?<TrashIcon/);
 });

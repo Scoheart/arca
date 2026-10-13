@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add six safe API-key workflows to MUX, resolve Provider credentials consistently, and deliver them only through Agent mechanisms that MUX has explicitly verified.
+**Goal:** Add six safe API-key workflows to Arca, resolve Provider credentials consistently, and deliver them only through Agent mechanisms that Arca has explicitly verified.
 
 **Architecture:** Core owns a four-variant credential-source resolver and a three-variant Agent-delivery policy. Provider catalog entries store default non-secret source metadata, Model consumption entries store per-Agent overrides and delivery policy, and a declarative capability matrix selects native references, verified Agent stores, or an explicitly confirmed private plaintext transaction. React and Tauri remain thin adapters over typed core views and commands.
 
@@ -42,7 +42,7 @@ Add table-driven tests covering these exact values:
 
 ```rust
 let sources = [
-    ApiKeySource::MuxStore,
+    ApiKeySource::ArcaStore,
     ApiKeySource::Env { name: "MAX_AI_API_KEY".into() },
     ApiKeySource::File { path: "/private/maxai.key".into() },
     ApiKeySource::Helper {
@@ -60,8 +60,8 @@ Assert that legacy `env_key` deserializes to `ApiKeySource::Env`, new serializat
 Run:
 
 ```bash
-cargo test -p mux-core domain::types::tests::api_key_source -- --nocapture
-cargo test -p mux-core settings::tests::provider_credential_policy -- --nocapture
+cargo test -p arca-core domain::types::tests::api_key_source -- --nocapture
+cargo test -p arca-core settings::tests::provider_credential_policy -- --nocapture
 ```
 
 Expected: compilation fails because the new enums and fields do not exist.
@@ -78,7 +78,7 @@ pub enum AuthRequirement { Required, Optional, None }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum ApiKeySource {
-    MuxStore,
+    ArcaStore,
     Env { name: String },
     File { path: String },
     Helper { command: String, #[serde(default)] args: Vec<String>, #[serde(default)] ttl_ms: Option<u64> },
@@ -116,7 +116,7 @@ Use isolated temporary paths. Assert rejection of invalid environment names; mis
 
 - [ ] **Step 2: Run the resolver test module and verify red**
 
-Run `cargo test -p mux-core resources::model::credential::tests -- --nocapture`.
+Run `cargo test -p arca-core resources::model::credential::tests -- --nocapture`.
 
 Expected: compilation fails because `credential` is not defined.
 
@@ -154,21 +154,21 @@ Table-drive the approved matrix for Claude Code, Claude Desktop, Codex, Pi, Open
 
 ```rust
 assert_eq!(select_delivery(opencode, Env, Auto), NativeEnvReference);
-assert_eq!(select_delivery(opencode, MuxStore, AgentStore), OpenCodeAuthStore);
+assert_eq!(select_delivery(opencode, ArcaStore, AgentStore), OpenCodeAuthStore);
 assert_eq!(select_delivery(pi, Helper, Auto), NativeHelper);
-assert_eq!(select_delivery(goose, MuxStore, Auto), Err(CREDENTIAL_DELIVERY_UNSUPPORTED));
+assert_eq!(select_delivery(goose, ArcaStore, Auto), Err(CREDENTIAL_DELIVERY_UNSUPPORTED));
 assert_ne!(select_delivery(any_agent, any_source, Auto), Plaintext);
 ```
 
 - [ ] **Step 2: Run the matrix tests and verify red**
 
-Run `cargo test -p mux-core resources::model::tests::credential_route -- --nocapture`.
+Run `cargo test -p arca-core resources::model::tests::credential_route -- --nocapture`.
 
 Expected: the typed matrix and route result do not exist.
 
 - [ ] **Step 3: Implement one core-owned capability matrix**
 
-Replace free-form `credential_mode` decisions with a serializable view containing supported native sources, verified Agent store availability, plaintext availability, and exact unsupported reasons. Keep the legacy string populated for wire compatibility until the desktop consumes the new fields. Implement `auto` priority as native source reference, MUX Keychain helper, verified Agent store, then error. Never select plaintext from `auto`.
+Replace free-form `credential_mode` decisions with a serializable view containing supported native sources, verified Agent store availability, plaintext availability, and exact unsupported reasons. Keep the legacy string populated for wire compatibility until the desktop consumes the new fields. Implement `auto` priority as native source reference, Arca Keychain helper, verified Agent store, then error. Never select plaintext from `auto`.
 
 - [ ] **Step 4: Run route tests and verify green**
 
@@ -196,7 +196,7 @@ Also assert malformed owned entries fail closed, concurrent candidate changes pr
 
 - [ ] **Step 2: Run focused OpenCode tests and verify red**
 
-Run `cargo test -p mux-core resources::model::open_code_auth::tests -- --nocapture`.
+Run `cargo test -p arca-core resources::model::open_code_auth::tests -- --nocapture`.
 
 Expected: module and candidate preparation do not exist.
 
@@ -227,7 +227,7 @@ Assert backups and operation JSON do not contain the supplied secret.
 
 - [ ] **Step 2: Run focused transaction tests and verify red**
 
-Run `cargo test -p mux-core assets::transaction::tests::model_credential -- --nocapture`.
+Run `cargo test -p arca-core assets::transaction::tests::model_credential -- --nocapture`.
 
 Expected: credential evidence and multi-file model target are absent.
 
@@ -261,7 +261,7 @@ Assert unsupported routes return `credential_delivery_unsupported` before any ca
 
 - [ ] **Step 2: Run only the named adapter tests and verify red**
 
-Run `cargo test -p mux-core resources::model::tests::credential_adapters -- --nocapture`.
+Run `cargo test -p arca-core resources::model::tests::credential_adapters -- --nocapture`.
 
 Expected: adapters still branch only on `env_key` or old `credential_mode`.
 
@@ -326,7 +326,7 @@ Expected: the current key/env tab UI fails the new assertions.
 
 - [ ] **Step 3: Implement the adaptive UI**
 
-Replace the two credential tabs with native/select-style dropdown controls. Keep secret reveal/replace/clear only for `mux-store`; use plain metadata inputs for `env`, `file`, and `helper`. Display core validation results and delivery reasons without duplicating the matrix. Render the danger dialog at the Models view overlay root, not inside the model grid or review panel.
+Replace the two credential tabs with native/select-style dropdown controls. Keep secret reveal/replace/clear only for `arca-store`; use plain metadata inputs for `env`, `file`, and `helper`. Display core validation results and delivery reasons without duplicating the matrix. Render the danger dialog at the Models view overlay root, not inside the model grid or review panel.
 
 - [ ] **Step 4: Run ModelsView tests and TypeScript build**
 
@@ -351,7 +351,7 @@ Expected: focused tests and production desktop build pass.
 Run:
 
 ```bash
-cargo test -p mux-core \
+cargo test -p arca-core \
   api_key_source credential::tests credential_route open_code_auth::tests \
   model_credential credential_adapters -- --nocapture
 ```
@@ -404,4 +404,4 @@ The PR body lists the six ways, OpenCode fix, migration behavior, security invar
 
 - [ ] **Step 4: Verify Direct Stable**
 
-Wait for the automatic release commit/tag/build, then verify the new immutable Stable tag, draft-to-published Release state, expected macOS/CLI/updater asset set, checksums, and latest-version ordering. Do not download or replace `/Applications/MUX.app` because the user explicitly asked to update it themselves.
+Wait for the automatic release commit/tag/build, then verify the new immutable Stable tag, draft-to-published Release state, expected macOS/CLI/updater asset set, checksums, and latest-version ordering. Do not download or replace `/Applications/Arca.app` because the user explicitly asked to update it themselves.

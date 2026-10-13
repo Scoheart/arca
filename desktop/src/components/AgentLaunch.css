@@ -1,94 +1,94 @@
-.mux-launch-action { position: relative; display: inline-flex; height: 36px; flex-shrink: 0; border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-raised); box-shadow: var(--shadow-card); }
-.mux-launch-primary, .mux-launch-more { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; background: transparent; color: var(--text-primary); cursor: pointer; }
-.mux-launch-primary { position: relative; width: 42px; padding: 0; border-radius: 9px 0 0 9px; }
-.mux-launch-more { width: 24px; border-left: 1px solid var(--border-hairline); border-radius: 0 9px 9px 0; color: var(--text-secondary); }
-.mux-launch-symbol { display: inline-flex; width: 18px; height: 18px; }
-.mux-launch-symbol > svg { width: 100%; height: 100%; }
-.mux-launch-ready-dot { position: absolute; right: 7px; top: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--color-green); }
-.mux-launch-symbol[data-spinning="true"] { animation: mux-launch-spin 1s linear infinite; }
-@keyframes mux-launch-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .mux-launch-symbol[data-spinning="true"] { animation: none; } }
-.mux-launch-primary:hover:not(:disabled), .mux-launch-more:hover:not(:disabled) { background: var(--surface-section); }
-.mux-launch-action button:disabled, .mux-launch-menu-content button:disabled { opacity: .5; cursor: default; }
-.mux-launch-menu, .mux-agent-launch-context { min-width: 196px; padding: 5px; border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-raised); box-shadow: var(--shadow-sheet); }
-.mux-launch-menu { position: absolute; right: 0; top: calc(100% + 7px); z-index: 130; }
-.mux-agent-launch-context { position: fixed; z-index: 900; }
-.mux-launch-menu [role="menuitem"], .mux-launch-menu-content [role="menuitem"] { display: flex; align-items: center; width: 100%; gap: 9px; min-height: 34px; padding: 7px 9px; border: 0; border-radius: 7px; background: transparent; color: var(--text-primary); text-align: left; font: 12px/1.35 var(--font-sans); cursor: pointer; }
-.mux-launch-menu [role="menuitem"]:hover:not(:disabled), .mux-launch-menu-content [role="menuitem"]:hover:not(:disabled), .mux-launch-menu [role="menuitem"]:focus-visible, .mux-launch-menu-content [role="menuitem"]:focus-visible { background: var(--surface-section); }
-.mux-launch-action button:focus-visible, .mux-launch-menu-content button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
-.mux-launch-settings { display: grid; gap: 18px; }
-.mux-launch-settings label { display: grid; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
-.mux-launch-settings .mux-seg { justify-self: start; }
-.mux-launch-settings .mux-dialog-input { font-size: 12px; }
-.mux-launch-settings .mux-launch-arguments { min-height: 88px; padding: 9px 10px; resize: vertical; font: 12px/1.5 var(--font-mono); }
-.mux-launch-path-input { display: flex; gap: 8px; }
-.mux-launch-path-input > input { flex: 1; }
-.mux-launch-hint { font-weight: 400; font-size: 11px; }
-.mux-launch-error { color: var(--color-red); font-size: 12px; overflow-wrap: anywhere; }
-.mux-launch-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
-.mux-launch-field-modes { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.mux-launch-field-modes .mux-seg-item { display: inline-flex; align-items: center; gap: 5px; }
-.mux-launch-reset { border: 0; border-radius: 6px; padding: 5px 7px; background: transparent; color: var(--text-secondary); font-size: 11px; cursor: pointer; }
-.mux-launch-reset:hover { background: var(--surface-section); color: var(--text-primary); }
-.mux-launch-reset:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
-.mux-agent-config-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
-.mux-agent-config-launch { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
-.mux-agent-config-launch > h3 { margin: 0 0 13px; color: var(--text-primary); font-size: 12px; font-weight: 600; }
-.mux-agent-config-launch .mux-launch-settings { gap: 13px; }
-.mux-launch-install { order: -1; flex-shrink: 0; }
-.mux-launch-version { display: block; flex-shrink: 0; max-width: 152px; height: 30px; padding: 0 9px; border: 1px solid var(--border-hairline); border-radius: 7px; background: var(--surface-control); color: var(--text-secondary); font-size: 11px; line-height: 28px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mux-agent-overview-actions .mux-launch-install { height: 30px; padding: 0 9px; gap: 6px; border-radius: 7px; font-size: 11px; }
-.mux-launch-install-status { width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: var(--text-tertiary); }
-.mux-launch-install-status[data-ready="true"] { background: var(--color-green); }
-.mux-launch-action[data-split="false"] .mux-launch-primary { border-radius: inherit; }
+.arca-launch-action { position: relative; display: inline-flex; height: 36px; flex-shrink: 0; border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-raised); box-shadow: var(--shadow-card); }
+.arca-launch-primary, .arca-launch-more { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; background: transparent; color: var(--text-primary); cursor: pointer; }
+.arca-launch-primary { position: relative; width: 42px; padding: 0; border-radius: 9px 0 0 9px; }
+.arca-launch-more { width: 24px; border-left: 1px solid var(--border-hairline); border-radius: 0 9px 9px 0; color: var(--text-secondary); }
+.arca-launch-symbol { display: inline-flex; width: 18px; height: 18px; }
+.arca-launch-symbol > svg { width: 100%; height: 100%; }
+.arca-launch-ready-dot { position: absolute; right: 7px; top: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--color-green); }
+.arca-launch-symbol[data-spinning="true"] { animation: arca-launch-spin 1s linear infinite; }
+@keyframes arca-launch-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .arca-launch-symbol[data-spinning="true"] { animation: none; } }
+.arca-launch-primary:hover:not(:disabled), .arca-launch-more:hover:not(:disabled) { background: var(--surface-section); }
+.arca-launch-action button:disabled, .arca-launch-menu-content button:disabled { opacity: .5; cursor: default; }
+.arca-launch-menu, .arca-agent-launch-context { min-width: 196px; padding: 5px; border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-raised); box-shadow: var(--shadow-sheet); }
+.arca-launch-menu { position: absolute; right: 0; top: calc(100% + 7px); z-index: 130; }
+.arca-agent-launch-context { position: fixed; z-index: 900; }
+.arca-launch-menu [role="menuitem"], .arca-launch-menu-content [role="menuitem"] { display: flex; align-items: center; width: 100%; gap: 9px; min-height: 34px; padding: 7px 9px; border: 0; border-radius: 7px; background: transparent; color: var(--text-primary); text-align: left; font: 12px/1.35 var(--font-sans); cursor: pointer; }
+.arca-launch-menu [role="menuitem"]:hover:not(:disabled), .arca-launch-menu-content [role="menuitem"]:hover:not(:disabled), .arca-launch-menu [role="menuitem"]:focus-visible, .arca-launch-menu-content [role="menuitem"]:focus-visible { background: var(--surface-section); }
+.arca-launch-action button:focus-visible, .arca-launch-menu-content button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
+.arca-launch-settings { display: grid; gap: 18px; }
+.arca-launch-settings label { display: grid; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+.arca-launch-settings .arca-seg { justify-self: start; }
+.arca-launch-settings .arca-dialog-input { font-size: 12px; }
+.arca-launch-settings .arca-launch-arguments { min-height: 88px; padding: 9px 10px; resize: vertical; font: 12px/1.5 var(--font-mono); }
+.arca-launch-path-input { display: flex; gap: 8px; }
+.arca-launch-path-input > input { flex: 1; }
+.arca-launch-hint { font-weight: 400; font-size: 11px; }
+.arca-launch-error { color: var(--color-red); font-size: 12px; overflow-wrap: anywhere; }
+.arca-launch-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+.arca-launch-field-modes { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.arca-launch-field-modes .arca-seg-item { display: inline-flex; align-items: center; gap: 5px; }
+.arca-launch-reset { border: 0; border-radius: 6px; padding: 5px 7px; background: transparent; color: var(--text-secondary); font-size: 11px; cursor: pointer; }
+.arca-launch-reset:hover { background: var(--surface-section); color: var(--text-primary); }
+.arca-launch-reset:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
+.arca-agent-config-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+.arca-agent-config-launch { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
+.arca-agent-config-launch > h3 { margin: 0 0 13px; color: var(--text-primary); font-size: 12px; font-weight: 600; }
+.arca-agent-config-launch .arca-launch-settings { gap: 13px; }
+.arca-launch-install { order: -1; flex-shrink: 0; }
+.arca-launch-version { display: block; flex-shrink: 0; max-width: 152px; height: 30px; padding: 0 9px; border: 1px solid var(--border-hairline); border-radius: 7px; background: var(--surface-control); color: var(--text-secondary); font-size: 11px; line-height: 28px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arca-agent-overview-actions .arca-launch-install { height: 30px; padding: 0 9px; gap: 6px; border-radius: 7px; font-size: 11px; }
+.arca-launch-install-status { width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: var(--text-tertiary); }
+.arca-launch-install-status[data-ready="true"] { background: var(--color-green); }
+.arca-launch-action[data-split="false"] .arca-launch-primary { border-radius: inherit; }
 
 @media (max-width: 620px) {
-  .mux-agent-config-field > .mux-form-select { grid-column: 1 / -1; }
+  .arca-agent-config-field > .arca-form-select { grid-column: 1 / -1; }
 }
 
-.mux-agent-config-field[data-path-field] { grid-template-columns: 30px 72px minmax(0, 1fr) auto; }
-.mux-agent-config-field-actions { display: inline-flex; gap: 4px; align-items: center; }
+.arca-agent-config-field[data-path-field] { grid-template-columns: 30px 72px minmax(0, 1fr) auto; }
+.arca-agent-config-field-actions { display: inline-flex; gap: 4px; align-items: center; }
 @media (max-width: 620px) {
-  .mux-agent-config-field[data-path-field] { grid-template-columns: 30px minmax(0, 1fr) auto; }
-  .mux-agent-config-field[data-path-field] > input { grid-column: 1 / 3; }
+  .arca-agent-config-field[data-path-field] { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .arca-agent-config-field[data-path-field] > input { grid-column: 1 / 3; }
 }
 
-.mux-launch-instance-option { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 12px; color: var(--text-primary); }
-.mux-launch-instance-option p { margin: 4px 0 0; color: var(--text-tertiary); }
-.mux-launch-instance-option > button { flex-shrink: 0; }
+.arca-launch-instance-option { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 12px; color: var(--text-primary); }
+.arca-launch-instance-option p { margin: 4px 0 0; color: var(--text-tertiary); }
+.arca-launch-instance-option > button { flex-shrink: 0; }
 
-.mux-launch-environment-block { min-height: 132px; }
+.arca-launch-environment-block { min-height: 132px; }
 
 /* Unified editor: persistent section navigation and compact, aligned fields. */
-.mux-dialog-agent-config .mux-dialog-shell-header { padding-top: 16px; padding-bottom: 14px; }
-.mux-dialog-agent-config .mux-dialog-shell-status { margin-top: 0; padding: 0; background: transparent; }
-.mux-agent-config-tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--border-hairline); }
-.mux-agent-config-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 11px 2px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-secondary); font: 500 13px var(--font-sans); cursor: pointer; }
-.mux-agent-config-tabs button[aria-selected="true"] { color: var(--color-blue); border-bottom-color: var(--color-blue); }
-.mux-agent-config-tabs button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -2px; border-radius: 4px; }
-.mux-agent-config-tabs i { width: 5px; height: 5px; border-radius: 50%; background: var(--color-blue); }
-.mux-dialog-agent-config .mux-dialog-shell-body { min-height: min(360px, calc(100dvh - 220px)); padding-top: 20px; padding-bottom: 20px; }
-.mux-dialog-agent-config [role="tabpanel"][hidden] { display: none; }
-.mux-dialog-agent-config .mux-agent-config-launch { margin: 0; padding: 0; border: 0; }
-.mux-dialog-agent-config .mux-agent-config-fields { gap: 16px; }
-.mux-agent-config-mcp { display: grid; grid-template-columns: minmax(0, 1fr) 152px; gap: 12px; }
-.mux-dialog-agent-config .mux-agent-config-field { display: flex; flex-direction: column; align-items: stretch; gap: 7px; }
-.mux-agent-field-caption { display: inline-flex; align-items: center; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
-.mux-agent-field-caption svg { width: 15px; height: 15px; color: var(--text-tertiary); flex-shrink: 0; }
-.mux-agent-field-control { display: flex; align-items: center; min-width: 0; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-control); }
-.mux-agent-field-control:focus-within { outline: 2px solid color-mix(in srgb, var(--color-blue) 45%, transparent); outline-offset: 1px; }
-.mux-agent-field-control > input.mux-model-field { flex: 1; min-width: 0; width: 0; min-height: 36px; border: 0; background: transparent; box-shadow: none; outline: none; font-size: 12px; }
-.mux-agent-config-field-actions { padding-right: 5px; }
-.mux-dialog-agent-config .mux-agent-config-remove { width: 28px; height: 28px; border: 0; background: transparent; }
-.mux-agent-config-unavailable { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; font-size: 11px; color: var(--text-tertiary); }
-.mux-dialog-agent-config .mux-agent-config-add { margin-left: 0; justify-self: start; padding: 0; }
-.mux-agent-config-credential { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
-.mux-agent-config-credential-row { display: grid; grid-template-columns: 1fr minmax(150px, 220px); align-items: center; gap: 12px; }
-.mux-dialog-agent-config .mux-launch-settings { gap: 16px; }
-.mux-launch-label-line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.mux-launch-label-line .mux-launch-hint { color: var(--text-tertiary); }
-.mux-dialog-agent-config .mux-launch-arguments { min-height: 62px; max-height: 160px; }
-.mux-dialog-agent-config .mux-launch-path-input { align-items: center; gap: 0; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-control); }
-.mux-dialog-agent-config .mux-launch-path-input > input { min-width: 0; width: 0; border: 0; background: transparent; box-shadow: none; }
-.mux-dialog-agent-config .mux-launch-path-input > button { flex-shrink: 0; border: 0; background: transparent; box-shadow: none; margin-right: 3px; padding: 7px; }
-@media (max-width: 520px) { .mux-agent-config-mcp { grid-template-columns: minmax(0, 1fr); } }
+.arca-dialog-agent-config .arca-dialog-shell-header { padding-top: 16px; padding-bottom: 14px; }
+.arca-dialog-agent-config .arca-dialog-shell-status { margin-top: 0; padding: 0; background: transparent; }
+.arca-agent-config-tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--border-hairline); }
+.arca-agent-config-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 11px 2px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-secondary); font: 500 13px var(--font-sans); cursor: pointer; }
+.arca-agent-config-tabs button[aria-selected="true"] { color: var(--color-blue); border-bottom-color: var(--color-blue); }
+.arca-agent-config-tabs button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -2px; border-radius: 4px; }
+.arca-agent-config-tabs i { width: 5px; height: 5px; border-radius: 50%; background: var(--color-blue); }
+.arca-dialog-agent-config .arca-dialog-shell-body { min-height: min(360px, calc(100dvh - 220px)); padding-top: 20px; padding-bottom: 20px; }
+.arca-dialog-agent-config [role="tabpanel"][hidden] { display: none; }
+.arca-dialog-agent-config .arca-agent-config-launch { margin: 0; padding: 0; border: 0; }
+.arca-dialog-agent-config .arca-agent-config-fields { gap: 16px; }
+.arca-agent-config-mcp { display: grid; grid-template-columns: minmax(0, 1fr) 152px; gap: 12px; }
+.arca-dialog-agent-config .arca-agent-config-field { display: flex; flex-direction: column; align-items: stretch; gap: 7px; }
+.arca-agent-field-caption { display: inline-flex; align-items: center; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+.arca-agent-field-caption svg { width: 15px; height: 15px; color: var(--text-tertiary); flex-shrink: 0; }
+.arca-agent-field-control { display: flex; align-items: center; min-width: 0; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-control); }
+.arca-agent-field-control:focus-within { outline: 2px solid color-mix(in srgb, var(--color-blue) 45%, transparent); outline-offset: 1px; }
+.arca-agent-field-control > input.arca-model-field { flex: 1; min-width: 0; width: 0; min-height: 36px; border: 0; background: transparent; box-shadow: none; outline: none; font-size: 12px; }
+.arca-agent-config-field-actions { padding-right: 5px; }
+.arca-dialog-agent-config .arca-agent-config-remove { width: 28px; height: 28px; border: 0; background: transparent; }
+.arca-agent-config-unavailable { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; font-size: 11px; color: var(--text-tertiary); }
+.arca-dialog-agent-config .arca-agent-config-add { margin-left: 0; justify-self: start; padding: 0; }
+.arca-agent-config-credential { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
+.arca-agent-config-credential-row { display: grid; grid-template-columns: 1fr minmax(150px, 220px); align-items: center; gap: 12px; }
+.arca-dialog-agent-config .arca-launch-settings { gap: 16px; }
+.arca-launch-label-line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.arca-launch-label-line .arca-launch-hint { color: var(--text-tertiary); }
+.arca-dialog-agent-config .arca-launch-arguments { min-height: 62px; max-height: 160px; }
+.arca-dialog-agent-config .arca-launch-path-input { align-items: center; gap: 0; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-control); }
+.arca-dialog-agent-config .arca-launch-path-input > input { min-width: 0; width: 0; border: 0; background: transparent; box-shadow: none; }
+.arca-dialog-agent-config .arca-launch-path-input > button { flex-shrink: 0; border: 0; background: transparent; box-shadow: none; margin-right: 3px; padding: 7px; }
+@media (max-width: 520px) { .arca-agent-config-mcp { grid-template-columns: minmax(0, 1fr); } }

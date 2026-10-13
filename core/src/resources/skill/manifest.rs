@@ -105,7 +105,7 @@ mod tests {
         let root = fixture("safe");
         let parsed = validate_candidate(&root).unwrap();
         assert_eq!(parsed.manifest.name, "safe");
-        assert_eq!(parsed.manifest.description, "Safe fixture for MUX tests");
+        assert_eq!(parsed.manifest.description, "Safe fixture for Arca tests");
         assert_eq!(parsed.content_kind, SkillContentKind::Reference);
 
         let th = TestHome::new("skill-name-mismatch");
@@ -148,13 +148,13 @@ mod tests {
         let th = TestHome::new("skill-manifest-fields");
         let root = th.home.join("field-test");
         fs::create_dir_all(&root).unwrap();
-        let text = "---\nname: field-test\ndescription: Field test\nlicense: MIT\ncompatibility: macOS\nmetadata:\n  owner: mux\nallowed-tools: Read Write\n---\nbody\n";
+        let text = "---\nname: field-test\ndescription: Field test\nlicense: MIT\ncompatibility: macOS\nmetadata:\n  owner: arca\nallowed-tools: Read Write\n---\nbody\n";
         let parsed = parse_manifest(&root, text).unwrap();
         assert_eq!(parsed.license.as_deref(), Some("MIT"));
         assert_eq!(parsed.compatibility.as_deref(), Some("macOS"));
         assert_eq!(
             parsed.metadata.get("owner").map(String::as_str),
-            Some("mux")
+            Some("arca")
         );
         assert_eq!(parsed.allowed_tools.as_deref(), Some("Read Write"));
 

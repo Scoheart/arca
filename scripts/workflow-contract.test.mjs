@@ -24,9 +24,9 @@ test("quality workflow runs independent producer jobs", async () => {
   const desktop = jobBlock(workflow, "desktop", "website");
   const website = jobBlock(workflow, "website", "verify");
 
-  assert.match(rust, /cargo test --locked -p mux-core -p mux-cli/);
+  assert.match(rust, /cargo test --locked -p arca-core -p arca-cli/);
   assert.match(rust, /cargo fmt --all --check/);
-  assert.match(rust, /cargo clippy --locked -p mux-core -p mux-cli --all-targets -- -D warnings/);
+  assert.match(rust, /cargo clippy --locked -p arca-core -p arca-cli --all-targets -- -D warnings/);
   assert.match(tauri, /runs-on:\s*macos-latest/);
   assert.match(
     tauri,
@@ -36,7 +36,7 @@ test("quality workflow runs independent producer jobs", async () => {
     tauri,
     /working-directory:\s*desktop[\s\S]*bash scripts\/prepare-sidecar\.sh[\s\S]*cargo clippy/,
   );
-  assert.doesNotMatch(tauri, /\btouch\s+.*binaries\/mux/);
+  assert.doesNotMatch(tauri, /\btouch\s+.*binaries\/arca/);
   assert.match(
     tauri,
     /cargo clippy --locked --manifest-path desktop\/src-tauri\/Cargo\.toml --all-targets -- -D warnings/,
@@ -96,7 +96,7 @@ test("one explicit main release request creates one Draft and dispatches one mai
   assert.match(workflow, /test "\$GITHUB_REF" = "refs\/heads\/main"/);
   assert.match(workflow, /actions:\s*write/);
   assert.match(workflow, /cancel-in-progress:\s*false/);
-  assert.doesNotMatch(workflow, /fast-lane|ends_at|MUX_FAST_LANE_UNTIL/i);
+  assert.doesNotMatch(workflow, /fast-lane|ends_at|ARCA_FAST_LANE_UNTIL/i);
   assert.match(workflow, /secrets\.RELEASE_PLEASE_TOKEN/);
   assert.match(workflow, /git rev-parse origin\/main/);
   assert.match(workflow, /current.*SOURCE_SHA/);
@@ -182,10 +182,10 @@ test("desktop release packaging reuses the CLI already built for the sidecar", a
   const sidecar = await read("desktop/scripts/prepare-sidecar.sh");
   const publisher = await read(".github/scripts/publish-release-assets.sh");
 
-  assert.match(sidecar, /cargo build --release --locked -p mux-cli/);
-  assert.match(sidecar, /\.\.\/target\/release\/mux/);
-  assert.doesNotMatch(workflow, /cargo build --release -p mux-cli/);
-  assert.match(workflow, /CLI=target\/release\/mux/);
+  assert.match(sidecar, /cargo build --release --locked -p arca-cli/);
+  assert.match(sidecar, /\.\.\/target\/release\/arca/);
+  assert.doesNotMatch(workflow, /cargo build --release -p arca-cli/);
+  assert.match(workflow, /CLI=target\/release\/arca/);
   assert.match(workflow, /tar -C target\/release/);
   assert.match(workflow, /desktop\/src-tauri -> target/);
   assert.match(workflow, /^\s+\. -> target$/m);

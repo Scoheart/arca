@@ -72,7 +72,7 @@ describe("Skills wire contracts", () => {
       {
         kind: "imported",
         original_path: "~/.cursor/skills/review-changes",
-        backup_path: "~/.mux/backups/skills/fixture/review-changes",
+        backup_path: "~/.arca/backups/skills/fixture/review-changes",
       },
     ];
     const locations: SkillLocation[] = [
@@ -217,7 +217,7 @@ describe("filterSkills", () => {
       source: {
         kind: "imported" as const,
         original_path: "~/.cursor/skills/legacy",
-        backup_path: "~/.mux/backups/skills/fixture/legacy",
+        backup_path: "~/.arca/backups/skills/fixture/legacy",
       },
     };
     expect(

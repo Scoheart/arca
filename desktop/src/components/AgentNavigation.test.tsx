@@ -52,7 +52,7 @@ it("groups unpinned Agents by origin and keeps pinned Agents out of both groups"
   const { container } = render(
     <AgentNavigation agents={[...agents, custom]} selectedAgentId="codex" onSelectAgent={vi.fn()} />,
   );
-  fireEvent.click(container.querySelector<HTMLButtonElement>(".mux-agent-picker-trigger")!);
+  fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
 
   const picker = within(screen.getByRole("dialog", { name: "选择和置顶 Agent" }));
   const customGroup = within(picker.getByRole("group", { name: "自定义 Agent" }));
@@ -72,7 +72,7 @@ it("groups search matches, retains pin state, and hides empty categories", () =>
   const { container } = render(
     <AgentNavigation agents={[...agents, custom]} selectedAgentId="codex" onSelectAgent={onSelectAgent} />,
   );
-  fireEvent.click(container.querySelector<HTMLButtonElement>(".mux-agent-picker-trigger")!);
+  fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
   const picker = within(screen.getByRole("dialog", { name: "选择和置顶 Agent" }));
   const search = picker.getByRole("searchbox", { name: "搜索 Agent" });
 
@@ -105,14 +105,14 @@ it("distinguishes shared Claude logos in the Agent picker", () => {
   );
 
   fireEvent.click(
-    container.querySelector<HTMLButtonElement>(".mux-agent-picker-trigger")!,
+    container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!,
   );
 
   const picker = within(screen.getByRole("dialog", { name: "选择和置顶 Agent" }));
-  const codeRow = picker.getByText("Claude Code").closest(".mux-agent-picker-select");
+  const codeRow = picker.getByText("Claude Code").closest(".arca-agent-picker-select");
   const desktopRow = picker
     .getByText("Claude Desktop")
-    .closest(".mux-agent-picker-select");
+    .closest(".arca-agent-picker-select");
   expect(codeRow?.querySelector("[data-agent-surface='cli']")).not.toBeNull();
   expect(
     desktopRow?.querySelector("[data-agent-surface='desktop']"),
@@ -136,7 +136,7 @@ it("keeps the HTML drag source hit-testable and commits the dropped order", asyn
   );
 
   const trigger = container.querySelector<HTMLButtonElement>(
-    ".mux-agent-picker-trigger",
+    ".arca-agent-picker-trigger",
   );
   expect(trigger).not.toBeNull();
   fireEvent.click(trigger!);
@@ -144,11 +144,11 @@ it("keeps the HTML drag source hit-testable and commits the dropped order", asyn
   const sourceHandle = screen.getByRole("button", {
     name: "调整 Qoder 的置顶顺序",
   });
-  const sourceSlot = sourceHandle.closest(".mux-agent-picker-slot");
+  const sourceSlot = sourceHandle.closest(".arca-agent-picker-slot");
   const targetHandle = screen.getByRole("button", {
     name: "调整 Claude Code 的置顶顺序",
   });
-  const targetSlot = targetHandle.closest(".mux-agent-picker-slot");
+  const targetSlot = targetHandle.closest(".arca-agent-picker-slot");
   expect(sourceSlot).not.toBeNull();
   expect(targetSlot).not.toBeNull();
 
@@ -195,7 +195,7 @@ it("uses a dedicated crossed pin for unpinning and keeps the action wired", asyn
     />,
   );
 
-  fireEvent.click(container.querySelector<HTMLButtonElement>(".mux-agent-picker-trigger")!);
+  fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
 
   const unpin = screen.getByRole("button", { name: "取消置顶 Claude Code" });
   const pin = screen.getByRole("button", { name: "置顶 Amp" });
@@ -224,10 +224,10 @@ it("uses the entire custom Agent footer as one native action", () => {
     />,
   );
 
-  fireEvent.click(container.querySelector<HTMLButtonElement>(".mux-agent-picker-trigger")!);
+  fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
 
   const addAgent = screen.getByRole("button", { name: "添加自定义 Agent" });
-  expect(addAgent).toHaveClass("mux-agent-picker-footer");
+  expect(addAgent).toHaveClass("arca-agent-picker-footer");
   expect(addAgent.querySelector("button")).toBeNull();
   fireEvent.click(addAgent);
   expect(onAddAgent).toHaveBeenCalledOnce();
@@ -250,7 +250,7 @@ it("lists and opens a projection-only Model Agent", () => {
     capabilities: {
       model: {
         mode: "managed",
-        storage_authority: "mux-mapping",
+        storage_authority: "arca-mapping",
         installed: true,
         config_paths: ["~/.model-only/config.json"],
         assigned_profiles: [],
@@ -270,7 +270,7 @@ it("lists and opens a projection-only Model Agent", () => {
     />,
   );
 
-  fireEvent.click(container.querySelector<HTMLButtonElement>(".mux-agent-picker-trigger")!);
+  fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
   fireEvent.click(screen.getByText("Projection Model").closest("button")!);
   expect(onSelectAgent).toHaveBeenCalledWith("model-only");
 });

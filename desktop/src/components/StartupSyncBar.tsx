@@ -60,7 +60,7 @@ export function StartupSyncBar({ state }: { state: StartupSyncState }) {
 
   return (
     <div
-      className="mux-startup-sync"
+      className="arca-startup-sync"
       data-slow={state.slow ? "true" : undefined}
       data-settled={state.settled ? "true" : undefined}
       data-failed={state.failed > 0 ? "true" : undefined}
@@ -68,18 +68,18 @@ export function StartupSyncBar({ state }: { state: StartupSyncState }) {
       aria-live="polite"
     >
       <RefreshIcon
-        className="mux-startup-sync-icon"
+        className="arca-startup-sync-icon"
         data-spinning={state.syncing ? "true" : undefined}
       />
       <strong>{title}</strong>
-      {detail && <span className="mux-startup-sync-detail">{detail}</span>}
-      <span className="mux-startup-sync-count">
+      {detail && <span className="arca-startup-sync-detail">{detail}</span>}
+      <span className="arca-startup-sync-count">
         {state.completed}/{state.total}
       </span>
       {state.failed > 0 && (
         <button
           type="button"
-          className="mux-startup-sync-retry"
+          className="arca-startup-sync-retry"
           disabled={state.syncing}
           onClick={() => void state.retryFailed()}
         >

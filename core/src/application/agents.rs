@@ -278,7 +278,7 @@ mod tests {
             );
         }
         for agent_id in ["claude-code", "claude-desktop", "codex"] {
-            assert_eq!(authority(agent_id), Some(ModelStorageAuthority::MuxMapping));
+            assert_eq!(authority(agent_id), Some(ModelStorageAuthority::ArcaMapping));
         }
         for agent_id in ["minimax-code", "qoder"] {
             assert_eq!(authority(agent_id), Some(ModelStorageAuthority::Guided));

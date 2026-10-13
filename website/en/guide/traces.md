@@ -14,20 +14,20 @@ Native formats depend on the current adapters; a launchable Agent does not autom
 
 ## Network records and proxy
 
-The **Network** menu exposes proxy configuration and records. MUX's proxy covers its own remote sources, GitHub Skills, and updates; it does not rewrite every Agent's system proxy.
+The **Network** menu exposes proxy configuration and records. Arca's proxy covers its own remote sources, GitHub Skills, and updates; it does not rewrite every Agent's system proxy.
 
 Inspect saved requests, responses, and individual flows. CLI Capture commands read saved content without starting capture or treating the current CLI process as desktop capture-state authority. Actual capture follows the desktop environment setup.
 
 ## Read from another Agent
 
 ```bash
-mux trace list --agent codex --limit 20 --json
-mux trace show SESSION_ID --json
-mux trace show SESSION_ID --event EVENT_ID --revision PAGE_REVISION --json
-mux trace show --file /path/to/session.jsonl --json
-mux capture list --agent codex --json
-mux capture show SESSION_ID --limit 100 --json
-mux capture show SESSION_ID --flow FLOW_ID --json
+arca trace list --agent codex --limit 20 --json
+arca trace show SESSION_ID --json
+arca trace show SESSION_ID --event EVENT_ID --revision PAGE_REVISION --json
+arca trace show --file /path/to/session.jsonl --json
+arca capture list --agent codex --json
+arca capture show SESSION_ID --limit 100 --json
+arca capture show SESSION_ID --flow FLOW_ID --json
 ```
 
 Continue with the returned cursor and use that page's revision for details. Capture's incremental cache avoids reparsing unchanged history.

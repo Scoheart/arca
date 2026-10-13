@@ -11,8 +11,8 @@ import warpIcon from "../assets/terminals/warp.png";
 const terminalIcons: Record<string, string> = { terminal: terminalIcon, ghostty: ghosttyIcon, warp: warpIcon };
 function TerminalGlyph({ id }: { id: string }) {
   const src = terminalIcons[id];
-  return src ? <img className="mux-terminal-icon" src={src} alt="" aria-hidden="true" draggable={false} />
-    : <TerminalIcon className="mux-terminal-icon" />;
+  return src ? <img className="arca-terminal-icon" src={src} alt="" aria-hidden="true" draggable={false} />
+    : <TerminalIcon className="arca-terminal-icon" />;
 }
 interface TerminalSettings { selected: string; options: { id: string; name: string; installed: boolean }[] }
 export function TerminalSelect() {
@@ -45,14 +45,14 @@ export function TerminalSelect() {
     } catch (error) { setError(formatError(error)); }
     finally { pending.current = false; setBusy(false); }
   }
-  return <div className="mux-terminal-select">
+  return <div className="arca-terminal-select">
     {settings && <FormSelect ariaLabel="默认终端" value={settings.selected} disabled={busy}
-      triggerContent={<span className="mux-terminal-selection"><TerminalGlyph id={settings.selected} />
+      triggerContent={<span className="arca-terminal-selection"><TerminalGlyph id={settings.selected} />
         <span>{settings.options.find((item) => item.id === settings.selected)?.name ?? settings.selected}</span></span>}
       options={settings.options.filter((item) => item.installed || item.id === settings.selected)
         .map((item) => ({ value: item.id, label: item.name + (item.installed ? "" : " · 未安装"), icon: <TerminalGlyph id={item.id} /> }))}
       onChange={(value) => void choose(value)} />}
     {!settings && !error && <span role="status">读取中…</span>}
-    {error && <span className="mux-launch-error" role="alert">{error}<button type="button" className="btn-ghost" disabled={busy} onClick={() => setRevision((value) => value + 1)}>重试</button></span>}
+    {error && <span className="arca-launch-error" role="alert">{error}<button type="button" className="btn-ghost" disabled={busy} onClick={() => setRevision((value) => value + 1)}>重试</button></span>}
   </div>;
 }

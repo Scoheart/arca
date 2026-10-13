@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add safe MiniMax Code MCP management and a credential-safe guided Models target to MUX.
+**Goal:** Add safe MiniMax Code MCP management and a credential-safe guided Models target to Arca.
 
 **Architecture:** Reuse the audited Agent-definition pipeline for `~/.mavis/mcp.json` and the existing guided Model target pattern for `~/.mavis/config.yaml`. Do not add a MiniMax-specific writer because the existing explicit-type JSON codec matches the packaged runtime, while the model provider contract cannot consume Keychain credentials without plaintext persistence.
 

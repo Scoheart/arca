@@ -4,10 +4,10 @@
 
 use crossterm::event::KeyEvent;
 
-use mux_core::application::agents::AgentInfo;
-use mux_core::application::mcp::operations::InstalledMcp;
-use mux_core::application::mcp::sources::SourceView;
-use mux_core::domain::types::RegistryEntry;
+use arca_core::application::agents::AgentInfo;
+use arca_core::application::mcp::operations::InstalledMcp;
+use arca_core::application::mcp::sources::SourceView;
+use arca_core::domain::types::RegistryEntry;
 
 pub enum Msg {
     /// First message: kick off the initial data load.

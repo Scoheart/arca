@@ -85,18 +85,18 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
       <EditIcon className="w-4 h-4" />启动设置…</button>}
   </>;
   return <>
-    {!contextMenu && version && info?.available && info.supported && <span className="mux-launch-version" role="status"
+    {!contextMenu && version && info?.available && info.supported && <span className="arca-launch-version" role="status"
       aria-label={t("agentRuntime.status", { name: runtimeName, status: runtimeStatus,
         version: version ? t("agentRuntime.version", { version }) : t("agentRuntime.unknownVersion") })}
       title={`${runtimeName}${version ? ` · v${version}` : ` · ${runtimeStatus}`}${installedPath ? `\n${installedPath}` : ""}`}>
       {version ? `${info.host_name || info.configured_target ? `${runtimeName} · ` : ""}v${version}` : runtimeStatus}
     </span>}
-    {!contextMenu && installUrl && <button type="button" className="mux-launch-install btn-secondary" onClick={openInstallation}
+    {!contextMenu && installUrl && <button type="button" className="arca-launch-install btn-secondary" onClick={openInstallation}
       title={`安装文档 · ${installationStatus}`} aria-label={`${info?.name ?? agentId} 安装文档，${installationStatus}`}>
       <DownloadIcon className="w-3.5 h-3.5" />安装文档
-      <span className="mux-launch-install-status" data-ready={ready || undefined} aria-hidden="true" />
+      <span className="arca-launch-install-status" data-ready={ready || undefined} aria-hidden="true" />
     </button>}
-    <div ref={root} className={contextMenu ? "mux-launch-menu-content" : "mux-launch-action"}
+    <div ref={root} className={contextMenu ? "arca-launch-menu-content" : "arca-launch-action"}
     data-ready={ready || undefined} data-labeled={showLabel || undefined} data-split={hasMenu} aria-busy={pending} onKeyDown={(event) => {
     if (contextMenu) return; // The portal menu owns focus, Escape and Tab.
     if (event.key === "Escape") { event.stopPropagation(); setExpanded(false); trigger.current?.focus(); }
@@ -109,18 +109,18 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
     }
   }}>
     {contextMenu ? menu : <>
-      <button type="button" className="mux-launch-primary" disabled={busy || (!info && !error) || info?.supported === false} onClick={launch}
+      <button type="button" className="arca-launch-primary" disabled={busy || (!info && !error) || info?.supported === false} onClick={launch}
         aria-label={actionLabel}
         title={`${actionLabel}${info?.available ? ` · ${info.host_name ?? info.name}` : ""}${info?.directory && info.kind === "cli" ? `\n${info.directory}` : ""}`}>
-        <span className="mux-launch-symbol" data-spinning={pending || undefined} aria-hidden="true">
+        <span className="arca-launch-symbol" data-spinning={pending || undefined} aria-hidden="true">
           {pending || (!info && error) ? <RefreshIcon /> : missing ? <DownloadIcon /> : !ready ? <EditIcon /> : <PlayIcon />}
         </span>
-        {showLabel && <span className="mux-launch-caption" aria-hidden="true">{shortLabel}</span>}
-        {ready && !pending && !showLabel && <i className="mux-launch-ready-dot" aria-hidden="true" />}
+        {showLabel && <span className="arca-launch-caption" aria-hidden="true">{shortLabel}</span>}
+        {ready && !pending && !showLabel && <i className="arca-launch-ready-dot" aria-hidden="true" />}
       </button>
-      {hasMenu && <button ref={trigger} type="button" className="mux-launch-more" aria-label="Agent 启动选项" aria-haspopup="menu" aria-expanded={expanded}
+      {hasMenu && <button ref={trigger} type="button" className="arca-launch-more" aria-label="Agent 启动选项" aria-haspopup="menu" aria-expanded={expanded}
         disabled={busy} onClick={() => setExpanded((value) => !value)}><ChevronDownIcon className="w-3.5 h-3.5" /></button>}
-      {hasMenu && expanded && <div className="mux-launch-menu" role="menu" aria-label="Agent 启动选项">{menu}</div>}
+      {hasMenu && expanded && <div className="arca-launch-menu" role="menu" aria-label="Agent 启动选项">{menu}</div>}
     </>}
     </div>
   </>;

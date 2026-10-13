@@ -58,18 +58,18 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
     }
   };
 
-  return <div className="mux-agent-navigation">
+  return <div className="arca-agent-navigation">
     <span className="sr-only" aria-live="polite">{announcement}</span>
-    <div className="mux-agent-picker-cluster" ref={anchorRef}>
+    <div className="arca-agent-picker-cluster" ref={anchorRef}>
       {pinnedIds.length > 0 && <PinnedAgentDock agents={agents} ids={pinnedIds} selectedId={selectedAgentId}
         disabled={!pinned.ready || pinned.saving} onSelect={onSelectAgent} onReorder={(ids, id) => void saveOrder(ids, id)} />}
-      <div className="mux-agent-picker-anchor">
-        <button ref={triggerRef} type="button" className="mux-agent-picker-trigger" data-active={selected ? "true" : undefined}
+      <div className="arca-agent-picker-anchor">
+        <button ref={triggerRef} type="button" className="arca-agent-picker-trigger" data-active={selected ? "true" : undefined}
           data-open={open ? "true" : undefined} aria-haspopup="dialog" aria-expanded={open}
           aria-label={selected ? `选择 Agent，当前：${selected.name}` : "选择 Agent"} aria-keyshortcuts="Meta+K Control+K" title="选择 Agent · ⌘K / Ctrl+K" onClick={() => setOpen(true)}>
           {selected ? <AgentGlyph id={selected.id} name={selected.name} size={24} /> : <PackageIcon className="w-5 h-5 flex-shrink-0" />}
-          <span className="mux-agent-picker-trigger-name">{selected?.name ?? "选择 Agent"}</span>
-          <ChevronDownIcon className="mux-agent-picker-chevron" />
+          <span className="arca-agent-picker-trigger-name">{selected?.name ?? "选择 Agent"}</span>
+          <ChevronDownIcon className="arca-agent-picker-chevron" />
         </button>
       </div>
     </div>

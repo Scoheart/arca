@@ -11,11 +11,10 @@ A Provider defines an API connection. A Model references it with a protocol and 
 5. Save the Provider, then add a Model with the Provider, protocol, and exact Model ID. Set token limits according to the actual model.
 6. Select the central Model in an Agent workspace. Restart the client or create a new conversation when required.
 
-![Provider editor: portal, model list, and protocols](/media/mux-1.10.0-provider.jpg)
 
 Protocols share one Base URL but can have different relative paths. Separate origins or accounts belong in separate Providers. For example, `https://gateway.example.com/v1` plus `/responses` resolves to `https://gateway.example.com/v1/responses`.
 
-MUX refuses to disable a protocol still referenced by a Model. It also refuses a relationship when the client cannot represent a custom request path losslessly.
+Arca refuses to disable a protocol still referenced by a Model. It also refuses a relationship when the client cannot represent a custom request path losslessly.
 
 ## Protocols
 
@@ -39,13 +38,13 @@ This table comes from the released Core capability output. Agent names and ident
 - **Codex CLI and its desktop entry** share user configuration; the `codex` Model writer manages that configuration.
 - **OpenCode CLI and Desktop** share native configuration and both expose managed Models.
 - **Qoder IDE, Desktop, and CLI** have distinct identities. IDE Models use official guidance; Desktop 0.1.8+ and CLI 1.1.50+ support managed custom endpoints.
-- **Qoder Desktop** selects Models per conversation; **Qoder CLI** supports global selection. Their settings file is shared, with separate MUX Provider identities. Other consumers in a shared store prevent clearing the entire registry.
+- **Qoder Desktop** selects Models per conversation; **Qoder CLI** supports global selection. Their settings file is shared, with separate Arca Provider identities. Other consumers in a shared store prevent clearing the entire registry.
 
 ## Credentials
 
 Central key material lives in the system Keychain. Native Agent capabilities determine delivery: retrieval commands, environment references, or explicitly reviewed export to a client's private configuration. Claude desktop, ZCode, and supported Qoder native delivery have individual constraints; the UI shows available options.
 
-When an environment reference is used, that variable must be available to the Agent's launch environment. A key saved in MUX Keychain does not automatically become an environment variable for every client. Keep real keys out of command arguments, example files, and shared screenshots.
+When an environment reference is used, that variable must be available to the Agent's launch environment. A key saved in Arca Keychain does not automatically become an environment variable for every client. Keep real keys out of command arguments, example files, and shared screenshots.
 
 Keychain read failures stop the affected operation instead of being treated as missing credentials. Provider edits include affected consumers; unrelated MCP and Skill operations remain available.
 

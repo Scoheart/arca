@@ -69,7 +69,7 @@ impl JsonAdapter {
         })?;
         if self.codec == Codec::Jcode && self.key == "servers"
             && root.object_value().is_some_and(|object| object.get("mcpServers").is_some()) {
-            return Err("jcode MCP uses a different map key in this file; set the actual key in MUX before writing".into());
+            return Err("jcode MCP uses a different map key in this file; set the actual key in Arca before writing".into());
         }
         Ok((root, text))
     }
@@ -291,7 +291,7 @@ impl JsonAdapter {
 
     /// Reject incompatible shared formats before any mutation. ChatMCP stores
     /// OAuth material beside MCP connection metadata. A normal
-    /// whole-file backup would copy those external credentials into MUX's
+    /// whole-file backup would copy those external credentials into Arca's
     /// backup area, so any credential-bearing entry makes the entire file
     /// read-only. The error deliberately reports only policy, never values.
     fn validate_section_mutation_policy(
@@ -370,7 +370,7 @@ impl Adapter for JsonAdapter {
         Self::ensure_unique_nested_keys(&value, path, &format!("{}.{}", self.key, name))?;
         let current = property.to_serde_value().ok_or("MCP entry is invalid")?;
         if &current != snapshot {
-            return Err("MCP entry changed while MUX was preparing its enabled state".into());
+            return Err("MCP entry changed while Arca was preparing its enabled state".into());
         }
         let (_, current_enabled) = self.codec.decode_with_enabled(&current).ok_or("invalid native MCP entry")?;
         if current_enabled == enabled { return Ok(()); }
@@ -683,7 +683,7 @@ mod tests {
 
     fn tmp(name: &str) -> std::path::PathBuf {
         let mut d = std::env::temp_dir();
-        d.push(format!("mux-json-{}-{}.json", name, std::process::id()));
+        d.push(format!("arca-json-{}-{}.json", name, std::process::id()));
         d
     }
 

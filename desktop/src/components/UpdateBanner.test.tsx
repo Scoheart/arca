@@ -33,7 +33,7 @@ it("keeps release body and GitHub release URLs out of the available update card"
   render(
     <UpdateBanner
       updater={availableUpdater(
-        "修复更新体验\n[查看发布页](https://github.com/Scoheart/mux/releases/tag/v1.9.0)\nhttps://github.com/Scoheart/mux/releases/latest",
+        "修复更新体验\n[查看发布页](https://github.com/Scoheart/arca/releases/tag/v1.9.0)\nhttps://github.com/Scoheart/arca/releases/latest",
       )}
     />,
   );
@@ -41,14 +41,14 @@ it("keeps release body and GitHub release URLs out of the available update card"
   expect(screen.getByText("发现新版本 v1.9.0")).toBeVisible();
   expect(screen.getByRole("button", { name: "立即更新" })).toBeVisible();
   expect(screen.getByRole("button", { name: "稍后" })).toBeVisible();
-  expect(screen.queryByText(/github\.com\/Scoheart\/mux\/releases/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/github\.com\/Scoheart\/arca\/releases/i)).not.toBeInTheDocument();
   expect(screen.queryByText("修复更新体验")).not.toBeInTheDocument();
 });
 
 it("renders no empty notes region when the release body is link-only", () => {
   const { container } = render(
     <UpdateBanner
-      updater={availableUpdater("https://github.com/Scoheart/mux/releases/latest")}
+      updater={availableUpdater("https://github.com/Scoheart/arca/releases/latest")}
     />,
   );
 

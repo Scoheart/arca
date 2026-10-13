@@ -22,7 +22,7 @@ const EDITOR_ICONS: Record<string, string> = {
   WebStorm: webStormIcon,
 };
 
-const STORAGE_KEY = "mux.file-editor";
+const STORAGE_KEY = "arca.file-editor";
 const EDITORS = ["Visual Studio Code", "Cursor", "Sublime Text", "Zed", "TextEdit"];
 const ICONS: Record<string, string> = { "Visual Studio Code": "vscode", Cursor: "cursor", Zed: "zed", Qoder: "qoder", "Qoder IDE": "qoder", Windsurf: "windsurf", Antigravity: "antigravity", ZCode: "zcode" };
 function EditorIcon({ editor }: { editor: string }) {
@@ -30,7 +30,7 @@ function EditorIcon({ editor }: { editor: string }) {
   if (EDITOR_ICONS[editor]) return <img src={EDITOR_ICONS[editor]} alt="" aria-hidden="true" draggable={false}
     style={{ width: 20, height: 20, objectFit: "contain", flexShrink: 0 }} />;
   if (ICONS[editor]) return <span aria-hidden="true"><AgentGlyph id={ICONS[editor]} size={20} /></span>;
-  if (editor === "Sublime Text") return <span className="mux-editor-sublime" aria-hidden="true">S</span>;
+  if (editor === "Sublime Text") return <span className="arca-editor-sublime" aria-hidden="true">S</span>;
   return editor ? <EditIcon className="w-4 h-4" /> : <FolderIcon className="w-4 h-4" />;
 }
 
@@ -108,7 +108,7 @@ export function FileEditorSelect({ showLabel = false }: { showLabel?: boolean })
   const options = ["", ...available, ...(editor && !available.includes(editor) ? [editor] : [])];
   const selectedLabel = editor ? editorDisplayName(editor) : t("fileEditor.systemDefault");
   return (
-    <div className="mux-editor-menu-wrap" ref={root}
+    <div className="arca-editor-menu-wrap" ref={root}
       onBlur={(event) => {
         // Safari can report null when clicking a button. Do not unmount it before click.
         if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setExpanded(false);
@@ -126,25 +126,25 @@ export function FileEditorSelect({ showLabel = false }: { showLabel?: boolean })
           items[next]?.focus();
         }
       }}>
-      <button type="button" ref={trigger} className="mux-model-field mux-form-select-trigger mux-editor-trigger"
+      <button type="button" ref={trigger} className="arca-model-field arca-form-select-trigger arca-editor-trigger"
         data-open={expanded ? "true" : undefined}
         aria-label={t("fileEditor.selected", { editor: selectedLabel })}
         title={t("fileEditor.choose")} aria-haspopup="menu" aria-expanded={expanded}
         disabled={choosing} onClick={() => setExpanded((value) => !value)}
         onKeyDown={(event) => { if (!expanded && event.key === "ArrowDown") { event.preventDefault(); setExpanded(true); } }}>
-        <span className="mux-form-select-value"><span className="mux-editor-selection">
-          <span className="mux-editor-glyph"><EditorIcon editor={editor} /></span>{showLabel && <span className="mux-editor-selected-label">{selectedLabel}</span>}
-        </span></span><ChevronDownIcon className="mux-form-select-chevron" />
+        <span className="arca-form-select-value"><span className="arca-editor-selection">
+          <span className="arca-editor-glyph"><EditorIcon editor={editor} /></span>{showLabel && <span className="arca-editor-selected-label">{selectedLabel}</span>}
+        </span></span><ChevronDownIcon className="arca-form-select-chevron" />
       </button>
-      {expanded && <div className="mux-editor-menu" role="menu" aria-label={t("fileEditor.label")}>
+      {expanded && <div className="arca-editor-menu" role="menu" aria-label={t("fileEditor.label")}>
         {options.map((value) => <button type="button" role="menuitemradio" aria-checked={value === editor}
           onMouseDown={(event) => event.preventDefault()}
           key={value || "default"} onClick={() => { void change(value); }}>
-          <span className="mux-editor-glyph"><EditorIcon editor={value} /></span>
+          <span className="arca-editor-glyph"><EditorIcon editor={value} /></span>
           <span>{value ? editorDisplayName(value) : t("fileEditor.systemDefault")}</span>
-          {value === editor && <span className="mux-editor-check" aria-hidden="true">✓</span>}
+          {value === editor && <span className="arca-editor-check" aria-hidden="true">✓</span>}
         </button>)}
-        <div role="separator" className="mux-editor-separator" />
+        <div role="separator" className="arca-editor-separator" />
         <button type="button" role="menuitem" onMouseDown={(event) => event.preventDefault()} onClick={() => { void change("__choose__"); }}>
           <PlusIcon className="w-4 h-4" /><span>{t("fileEditor.otherApplication")}</span>
         </button>

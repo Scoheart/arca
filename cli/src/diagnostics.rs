@@ -2,7 +2,7 @@
 //! and credential redaction; CLI never independently parses Agent logs.
 use std::path::PathBuf;
 use clap::Subcommand;
-use mux_core::application::{capture, traces};
+use arca_core::application::{capture, traces};
 use serde_json::{json, Value};
 use crate::command::Cli;
 use crate::output::{query_output, CliError, CommandOutput};
@@ -31,13 +31,13 @@ pub enum TraceCommand {
 pub enum CaptureCommand {
     /// Discover supported capture launchers and exact running process targets.
     Environment,
-    /// Read a verified live state, including a session owned by another MUX.
+    /// Read a verified live state, including a session owned by another Arca.
     State { session: String },
     /// Record traffic in the foreground, stopping after a bounded duration.
     Run {
         #[arg(long)] agent: String,
         #[arg(long)] target: String,
-        #[arg(long, default_value = "direct", value_parser = ["direct", "mux", "custom"])] egress: String,
+        #[arg(long, default_value = "direct", value_parser = ["direct", "arca", "custom"])] egress: String,
         #[arg(long)] proxy: Option<String>,
         #[arg(long, default_value_t = 60, value_parser = clap::value_parser!(u16).range(1..=3600))] seconds: u16,
     },

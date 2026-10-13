@@ -36,9 +36,9 @@ export function AssetSyncReviewDialog({
   }))];
   const paths = [...new Set(plan.target_files)];
   return <DialogShell kind="review" size="sm" title={t("syncReview.title")}
-    className="mux-sync-dialog" busy={busy} onClose={() => void onCancel()}
-    leading={<span className="mux-dialog-shell-glyph"><RefreshIcon className="w-4 h-4" aria-hidden="true" /></span>}
-    status={(!plan.can_commit || error) ? <div role="alert" className="mux-review-error">
+    className="arca-sync-dialog" busy={busy} onClose={() => void onCancel()}
+    leading={<span className="arca-dialog-shell-glyph"><RefreshIcon className="w-4 h-4" aria-hidden="true" /></span>}
+    status={(!plan.can_commit || error) ? <div role="alert" className="arca-review-error">
       {error || t("syncReview.blocked")}
     </div> : undefined}
     footerEnd={<>
@@ -47,27 +47,27 @@ export function AssetSyncReviewDialog({
         {busy ? t("syncReview.busy") : t("syncReview.confirm")}
       </button>
     </>}>
-    <div className="mux-sync-content">
-      <ul className="mux-sync-assets">
+    <div className="arca-sync-content">
+      <ul className="arca-sync-assets">
         {assets.map((asset) => <li key={asset.key}>
-          <span className="mux-sync-asset-icon" aria-hidden="true"><ResourceIcon domain="mcp" /></span>
+          <span className="arca-sync-asset-icon" aria-hidden="true"><ResourceIcon domain="mcp" /></span>
           <strong>{asset.name}</strong>
         </li>)}
       </ul>
-      {agents.length > 0 && <div className="mux-sync-destinations" aria-label={t("syncReview.destination")}>
+      {agents.length > 0 && <div className="arca-sync-destinations" aria-label={t("syncReview.destination")}>
         <span>{t("syncReview.destination")}</span>
         <ul>{agents.map((agent) => <li key={agent.id}>
           <AgentGlyph id={agent.id} name={agent.name} size={22} /><span>{agent.name}</span>
         </li>)}</ul>
       </div>}
-      <p className="mux-sync-description">{t("syncReview.description")}</p>
-      {warnings.length > 0 && <div role="note" className="mux-sync-warnings">
+      <p className="arca-sync-description">{t("syncReview.description")}</p>
+      {warnings.length > 0 && <div role="note" className="arca-sync-warnings">
         {warnings.map((warning) => <p key={warning}>{warning}</p>)}
       </div>}
       {(paths.length > 0 || plan.warnings.length > 0 || plan.central_changes.some((change) => change.summary.length > 0)) &&
         <DialogDisclosure title={t("syncReview.details")}
           summary={paths.length > 0 ? t("syncReview.files", { count: paths.length }) : undefined}>
-          <div className="mux-sync-details">
+          <div className="arca-sync-details">
             {plan.central_changes.map((change, index) => <ul key={index}>
               {change.summary.map((line, lineIndex) => <li key={lineIndex}>{line}</li>)}
             </ul>)}

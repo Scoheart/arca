@@ -31,7 +31,7 @@ if jq -e '.assignees[]? | select(.login == "copilot-swe-agent[bot]" or .login ==
 fi
 
 instructions=$(cat <<EOF
-Implement the reported issue in ${REPOSITORY}. Add or update focused tests and run the relevant Rust, desktop frontend, and documentation checks. Keep MUX global-config-only. Do not merge the pull request, publish a release, or weaken tests. Open a pull request against ${BASE_BRANCH} and request review from @${OWNER}.
+Implement the reported issue in ${REPOSITORY}. Add or update focused tests and run the relevant Rust, desktop frontend, and documentation checks. Keep Arca global-config-only. Do not merge the pull request, publish a release, or weaken tests. Open a pull request against ${BASE_BRANCH} and request review from @${OWNER}.
 EOF
 )
 

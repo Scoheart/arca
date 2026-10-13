@@ -1,10 +1,9 @@
 # Desktop app
 
-This guide covers MUX 1.10.0: three central libraries, Agent launching and versions, local Trace, and network settings.
+This guide covers Arca: three central libraries, Agent launching and versions, local Trace, and network settings.
 
 ## Workspace overview
 
-![Models library and navigation](/media/mux-1.10.0-models.jpg)
 
 | Area | Purpose |
 |---|---|
@@ -24,7 +23,6 @@ Then add a Model with its Provider, protocol, Model ID, and optional token setti
 
 ## MCPs
 
-![Central MCP catalog](/media/mux-1.10.0-mcps.jpg)
 
 Add or paste a configuration, subscribe to a remote URL, or import a local file. Sources appear on the left; the main view shows names, transports, and commands or endpoints. Duplicate same-name, same-transport copies follow precedence while shadowed copies remain visible.
 
@@ -32,7 +30,6 @@ Adding a service does not run it. After assignment, the Agent loads it.
 
 ## Skills
 
-![Skill sources and cards](/media/mux-1.10.0-skills.jpg)
 
 The left navigation groups GitHub repositories, local folders, archives, and imports. Each Skill has a card with its name, up to three lines of description, and Agent icons.
 
@@ -54,6 +51,6 @@ Ordinary additions, disabling, and low-risk updates report results directly. Del
 
 ## Trace and networking
 
-Trace browses supported local sessions, event and tool details, or imported session files. Saved network records help inspect requests and responses. MUX proxy settings apply to its own network traffic. See [Trace and network records](/en/guide/traces).
+Trace browses supported local sessions, event and tool details, or imported session files. Saved network records help inspect requests and responses. Arca proxy settings apply to its own network traffic. See [Trace and network records](/en/guide/traces).
 
 [Watch the demo](/en/guide/demo) · [CLI automation](/en/guide/cli)

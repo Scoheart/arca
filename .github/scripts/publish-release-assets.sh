@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 5 ]]; then
-  echo "usage: publish-release-assets.sh <vX.Y.Z> <installer> <cli> <updater> <latest.json>" >&2
+if [[ $# -ne 5 && $# -ne 6 ]]; then
+  echo "usage: publish-release-assets.sh <vX.Y.Z> <installer> <cli> <updater> <latest.json> [legacy-cli-bridge]" >&2
   exit 64
 fi
 
@@ -38,23 +38,26 @@ for path in "${assets[@]}"; do
   done
 
   case "$name" in
-    MUX-Desktop-Installer-"$tag"-macOS-Apple-Silicon.dmg)
+    Arca-Desktop-Installer-"$tag"-macOS-Apple-Silicon.dmg)
       label="Desktop installer · Apple Silicon"
       ;;
-    MUX-Desktop-Installer-"$tag"-macOS-Intel.dmg)
+    Arca-Desktop-Installer-"$tag"-macOS-Intel.dmg)
       label="Desktop installer · Intel"
       ;;
-    mux_"$tag"_aarch64-apple-darwin.tar.gz)
+    arca_"$tag"_aarch64-apple-darwin.tar.gz)
       label="Command-line tool · Apple Silicon"
       ;;
-    mux_"$tag"_x86_64-apple-darwin.tar.gz)
+    arca_"$tag"_x86_64-apple-darwin.tar.gz)
       label="Command-line tool · Intel"
       ;;
-    MUX-Desktop-AutoUpdate-"$tag"-macOS-Apple-Silicon.app.tar.gz)
+    Arca-Desktop-AutoUpdate-"$tag"-macOS-Apple-Silicon.app.tar.gz)
       label="Desktop auto-update payload · no manual download"
       ;;
-    MUX-Desktop-AutoUpdate-"$tag"-macOS-Intel.app.tar.gz)
+    Arca-Desktop-AutoUpdate-"$tag"-macOS-Intel.app.tar.gz)
       label="Desktop auto-update payload · no manual download"
+      ;;
+    mux_"$tag"_aarch64-apple-darwin.tar.gz|mux_"$tag"_x86_64-apple-darwin.tar.gz)
+      label="Legacy standalone CLI upgrade bridge · use Arca for new installs"
       ;;
     latest.json)
       label="Auto-update manifest · no manual download"
@@ -70,9 +73,9 @@ for path in "${assets[@]}"; do
 done
 
 required_names=$(printf '%s\n' "${names[@]}" | LC_ALL=C sort)
-[[ $(grep -c '^MUX-Desktop-Installer-' <<<"$required_names") -eq 1 ]]
-[[ $(grep -c '^mux_' <<<"$required_names") -eq 1 ]]
-[[ $(grep -c '^MUX-Desktop-AutoUpdate-' <<<"$required_names") -eq 1 ]]
+[[ $(grep -c '^Arca-Desktop-Installer-' <<<"$required_names") -eq 1 ]]
+[[ $(grep -c '^arca_' <<<"$required_names") -eq 1 ]]
+[[ $(grep -c '^Arca-Desktop-AutoUpdate-' <<<"$required_names") -eq 1 ]]
 [[ $(grep -c '^latest\.json$' <<<"$required_names") -eq 1 ]]
 
 sha256() {

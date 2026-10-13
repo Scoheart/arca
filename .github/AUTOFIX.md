@@ -1,6 +1,6 @@
 # Automated issue repair
 
-MUX uses a guarded automation chain:
+Arca uses a guarded automation chain:
 
 1. `Quality monitor` runs on pushes, pull requests, manual dispatches, and every day at 09:17 Asia/Shanghai.
 2. A failure is reported only while its commit is still the current `main` head. One sticky `ci-failure` Issue is reopened and its body updated across failure cycles; superseded commits do not comment or create Issues.
@@ -31,7 +31,7 @@ routine successful runs should not be email. In GitHub **Settings → Notificati
 ## One-time setup
 
 1. Enable Copilot cloud agent for the account and this repository. Confirm `copilot-swe-agent` appears in the Issue assignee picker.
-2. Create a fine-grained user token following GitHub's Copilot assignment API requirements: metadata read plus Actions, Contents, Issues, and Pull requests read/write access for `Scoheart/mux`.
+2. Create a fine-grained user token following GitHub's Copilot assignment API requirements: metadata read plus Actions, Contents, Issues, and Pull requests read/write access for `Scoheart/arca`.
 3. Add the token as the repository Actions Secret `COPILOT_PAT`.
 4. Run `Quality monitor` manually once. To test the repair path safely, create a small Issue and add the `autofix` label yourself.
 

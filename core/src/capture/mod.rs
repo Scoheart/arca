@@ -85,7 +85,7 @@ pub struct CapturedFlow {
     pub request_http_version: String, pub response_http_version: Option<String>, pub proxy_url: Option<String>,
 }
 
-fn root() -> PathBuf { crate::paths::mux_dir().join("captures") }
+fn root() -> PathBuf { crate::paths::arca_dir().join("captures") }
 fn session_dir(id: &str) -> Result<PathBuf, String> {
     Uuid::parse_str(id).map_err(|_| "抓包会话 ID 无效。".to_owned())?;
     let path = root().join(id);
@@ -190,7 +190,7 @@ fn targets() -> Vec<CaptureTarget> {
             if !known || matches!(name.as_str(), "node" | "python" | "python3" | "bash" | "zsh") { continue; }
             (format!("exe:{}", row.command), name)
         };
-        if name == "MUX" || name == "Mitmproxy Redirector" { continue; }
+        if name == "Arca" || name == "MUX" || name == "Mitmproxy Redirector" { continue; }
         let entry = groups.entry(id.clone()).or_insert_with(|| CaptureTarget { id, name, pids: vec![], agent_ids: vec![] });
         entry.pids.push(row.pid);
     }
@@ -288,7 +288,7 @@ pub fn launch_agent(agent_id: &str, directory: Option<&str>) -> Result<(), Strin
 }
 
 fn proxy(request: &StartCapture) -> Result<Option<String>, String> {
-    let value = match request.egress.as_str() { "direct" => return Ok(None), "mux" => crate::network::configured_proxy_url()?.ok_or("MUX 尚未配置代理出口。")?, "custom" => request.proxy_url.clone().ok_or("请填写代理地址。")?, _ => return Err("出口类型无效。".into()) };
+    let value = match request.egress.as_str() { "direct" => return Ok(None), "arca" | "mux" => crate::network::configured_proxy_url()?.ok_or("Arca 尚未配置代理出口。")?, "custom" => request.proxy_url.clone().ok_or("请填写代理地址。")?, _ => return Err("出口类型无效。".into()) };
     let url = url::Url::parse(value.trim()).map_err(|_| "请输入完整 HTTP 代理地址。".to_owned())?;
     if url.scheme() != "http" || url.host_str().is_none() || !url.username().is_empty() || url.password().is_some() || url.query().is_some() || url.fragment().is_some() || !matches!(url.path(), "" | "/") {
         return Err("第一版支持无认证 HTTP 上游代理，例如 http://127.0.0.1:6789。不会回退直连。".into());
@@ -311,7 +311,7 @@ pub fn start(request: StartCapture) -> Result<CaptureSnapshot, String> {
     let lease = options.open(root().join(".engine.lock")).map_err(|_| "无法安全打开抓包锁。")?;
     if !lease.metadata().is_ok_and(|metadata| metadata.is_file()) { return Err("抓包锁必须是普通文件。".into()); }
     fs2::FileExt::try_lock_exclusive(&lease).map_err(|error| if error.kind() == std::io::ErrorKind::WouldBlock {
-        "capture_busy: 另一个 MUX 实例正在抓包，请先停止该会话。".to_owned()
+        "capture_busy: 另一个 Arca 实例正在抓包，请先停止该会话。".to_owned()
     } else { "capture_lock_failed: 无法锁定抓包引擎。".to_owned() })?;
     let env = environment();
     if !env.supported { return Err("第一版按应用抓包仅支持 macOS。".into()); }
@@ -342,11 +342,11 @@ pub fn start(request: StartCapture) -> Result<CaptureSnapshot, String> {
     let owner = std::process::id().to_string();
     let owner_start = process_start(std::process::id()).ok_or("无法核验抓包所有者进程。")?;
     let mut command = Command::new(engine);
-    command.args(["-q", "--mode", &format!("local:{}", session.pids.iter().map(u32::to_string).collect::<Vec<_>>().join(",")), "--set", "connection_strategy=lazy", "--set", "upstream_cert=false", "--set", "rawtcp=false", "-s"]).arg(directory.join("addon.py")).env("MUX_CAPTURE_DIR", &directory).env("MUX_CAPTURE_OWNER", owner).env("MUX_CAPTURE_OWNER_START", &owner_start).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+    command.args(["-q", "--mode", &format!("local:{}", session.pids.iter().map(u32::to_string).collect::<Vec<_>>().join(",")), "--set", "connection_strategy=lazy", "--set", "upstream_cert=false", "--set", "rawtcp=false", "-s"]).arg(directory.join("addon.py")).env("ARCA_CAPTURE_DIR", &directory).env("ARCA_CAPTURE_OWNER", owner).env("ARCA_CAPTURE_OWNER_START", &owner_start).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
     #[cfg(unix)] {
         use std::os::{fd::{AsRawFd, BorrowedFd}, unix::process::CommandExt};
         let descriptor = lease.as_raw_fd();
-        // The engine retains the same lock if MUX crashes. Only its inherited
+        // The engine retains the same lock if Arca crashes. Only its inherited
         // descriptor changes; the parent's FD stays close-on-exec.
         unsafe { command.pre_exec(move || rustix::io::fcntl_setfd(BorrowedFd::borrow_raw(descriptor), rustix::io::FdFlags::empty()).map_err(Into::into)); }
     }
@@ -467,7 +467,7 @@ pub fn stop(id: &str) -> Result<CaptureSnapshot, String> {
             let path = directory.join("stop"); if !path.exists() { private_write(&path, b"stop")?; }
             let until = Instant::now() + Duration::from_secs(6);
             while runtime_alive(&directory) {
-                if Instant::now() >= until { return Err("capture_stop_pending: 已请求停止，请稍后刷新；没有强制终止其他 MUX 进程。".into()); }
+                if Instant::now() >= until { return Err("capture_stop_pending: 已请求停止，请稍后刷新；没有强制终止其他 Arca 进程。".into()); }
                 std::thread::sleep(Duration::from_millis(200));
             }
         }
@@ -482,7 +482,7 @@ pub fn export(session_id: &str, flow_id: Option<&str>, destination: &Path) -> Re
     // existing files (including a symlink appearing during export) stay intact.
     reject_symlink(destination)?;
     let parent = destination.parent().filter(|path| !path.as_os_str().is_empty()).unwrap_or(Path::new("."));
-    let temporary = parent.join(format!(".mux-capture-{}.tmp", Uuid::new_v4()));
+    let temporary = parent.join(format!(".arca-capture-{}.tmp", Uuid::new_v4()));
     let mut options = OpenOptions::new(); options.write(true).create_new(true);
     #[cfg(unix)] { use std::os::unix::fs::OpenOptionsExt; options.mode(0o600); }
     let file = options.open(&temporary).map_err(|_| "无法创建导出文件。".to_owned())?;

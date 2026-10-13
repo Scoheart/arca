@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19, TypeScript, CSS, Vitest, Testing Library.
 
-**Delivery constraint:** Prepare in the isolated worktree, create the commit with the GitHub Git Data API, merge through a PR, and verify Direct Stable without installing the App. Under MUX fast-delivery policy, do not run local tests/build unless explicitly requested.
+**Delivery constraint:** Prepare in the isolated worktree, create the commit with the GitHub Git Data API, merge through a PR, and verify Direct Stable without installing the App. Under Arca fast-delivery policy, do not run local tests/build unless explicitly requested.
 
 ---
 
@@ -23,12 +23,12 @@
 Extend the existing provider-discovery creation test after locating the Model ID combobox:
 
 ```tsx
-const modelPicker = modelId.closest(".mux-provider-model-picker");
-expect(modelPicker).toHaveClass("mux-model-form-wide");
-expect(modelPicker?.parentElement).toHaveClass("mux-model-form-grid");
-expect(screen.getByRole("combobox", { name: "协议" }).closest(".mux-model-form-grid"))
+const modelPicker = modelId.closest(".arca-provider-model-picker");
+expect(modelPicker).toHaveClass("arca-model-form-wide");
+expect(modelPicker?.parentElement).toHaveClass("arca-model-form-grid");
+expect(screen.getByRole("combobox", { name: "协议" }).closest(".arca-model-form-grid"))
   .toBe(modelPicker?.parentElement);
-expect(css).toMatch(/\.mux-provider-model-picker\s*\{[^}]*grid-column: 1 \/ -1/);
+expect(css).toMatch(/\.arca-provider-model-picker\s*\{[^}]*grid-column: 1 \/ -1/);
 ```
 
 These assertions verify structure instead of pixel values: Protocol and Model stay in one grid, while CSS makes the picker span the entire row.
@@ -49,7 +49,7 @@ Do not execute the test locally under the repository fast-delivery rule. Against
 Keep the Protocol/Model grid and render the picker as:
 
 ```tsx
-<div className="mux-model-form-field mux-provider-model-picker mux-model-form-wide">
+<div className="arca-model-form-field arca-provider-model-picker arca-model-form-wide">
 ```
 
 Keep its inner controls, discovery states, options, and handlers unchanged.
@@ -59,10 +59,10 @@ Keep its inner controls, discovery states, options, and handlers unchanged.
 Add:
 
 ```css
-.mux-provider-model-picker { grid-column: 1 / -1; }
+.arca-provider-model-picker { grid-column: 1 / -1; }
 ```
 
-The existing `.mux-provider-model-options { left: 0; right: 0; }` then spans the full-width picker without new positioning or media rules. Protocol remains in the first grid column on desktop and naturally fills the single column under the existing narrow-screen rule.
+The existing `.arca-provider-model-options { left: 0; right: 0; }` then spans the full-width picker without new positioning or media rules. Protocol remains in the first grid column on desktop and naturally fills the single column under the existing narrow-screen rule.
 
 ### Task 3: Verify and deliver remotely
 

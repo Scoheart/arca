@@ -28,6 +28,6 @@ pub async fn list_file_editors() -> Result<Vec<FileEditor>, String> {
 
 #[tauri::command]
 pub async fn detect_agent_installation(agent_id: String) -> Result<Option<bool>, String> {
-    tauri::async_runtime::spawn_blocking(move || mux_core::application::agents::runtime_detected(&agent_id))
+    tauri::async_runtime::spawn_blocking(move || arca_core::application::agents::runtime_detected(&agent_id))
         .await.map_err(|error| error.to_string())
 }

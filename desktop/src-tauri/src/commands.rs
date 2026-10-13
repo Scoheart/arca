@@ -1,24 +1,24 @@
-use mux_core::application::assets::{
+use arca_core::application::assets::{
     AssetCommitRequest, AssetOperationPlan, ConsumptionInventory, ModelAdoptionCandidate,
     PlanDeleteCentralAssetRequest, PlanSetAgentConsumptionRequest, PlanSetAssetConsumersRequest,
     PlanUpdateAgentCapabilitiesRequest, PlanUpdateCentralAssetRequest,
 };
-use mux_core::application::mcp::catalog::{
+use arca_core::application::mcp::catalog::{
     read_registry, read_registry_all, user_override_keys, CatalogItem,
 };
-use mux_core::application::operations::{
+use arca_core::application::operations::{
     CancelOperationRequest, CommitOperationRequest, OperationCommitResult,
     OperationPlan as UnifiedOperationPlan, PlanOperationRequest,
 };
-use mux_core::application::skills::{
+use arca_core::application::skills::{
     GithubEndpoints, OperationPlan, PlanImportRequest, PlanRemoveRequest, PlanRepairRequest,
     PlanSkillAssetImportRequest, PlanSkillAssetInstallRequest, PlanUpdateRequest, SkillAgentView,
     SkillCommitRequest, SkillDetail, SkillError, SkillSourceInput, SkillSourceResolution,
     SkillsInventory, UpdateCheckOutcome,
 };
-use mux_core::application::{BackendStatus, MuxCore};
-use mux_core::domain::error::{CoreError, CoreResult};
-use mux_core::domain::types::RegistryEntry;
+use arca_core::application::{BackendStatus, ArcaCore};
+use arca_core::domain::error::{CoreError, CoreResult};
+use arca_core::domain::types::RegistryEntry;
 use serde_json::Value;
 use std::collections::BTreeMap;
 #[cfg(target_os = "macos")]
@@ -60,7 +60,7 @@ fn core_error_from_legacy(error: String, fallback_code: &str) -> CoreError {
 }
 
 fn enrich_backend_error(mut error: CoreError) -> CoreError {
-    match MuxCore::backend_status() {
+    match ArcaCore::backend_status() {
         BackendStatus::Starting if error.code == "backend_initializing" => {
             error
                 .details
@@ -125,25 +125,25 @@ async fn blocking_command<T: Send + 'static>(
 }
 
 #[tauri::command]
-pub async fn get_registry_snapshot() -> Result<mux_core::application::mcp::catalog::RegistrySnapshot, String> {
-    blocking_command(mux_core::application::mcp::catalog::read_registry_snapshot).await
+pub async fn get_registry_snapshot() -> Result<arca_core::application::mcp::catalog::RegistrySnapshot, String> {
+    blocking_command(arca_core::application::mcp::catalog::read_registry_snapshot).await
 }
 
 #[tauri::command]
-pub async fn get_resource_observation() -> Result<mux_core::application::assets::ResourceObservation, String> {
-    blocking_command(mux_core::application::assets::observe_resources).await
+pub async fn get_resource_observation() -> Result<arca_core::application::assets::ResourceObservation, String> {
+    blocking_command(arca_core::application::assets::observe_resources).await
 }
 
 #[tauri::command]
 pub async fn get_workspace_snapshot(
-) -> CoreResult<mux_core::application::workspace::WorkspaceSnapshot> {
-    core_blocking(mux_core::application::MuxCore::snapshot).await
+) -> CoreResult<arca_core::application::workspace::WorkspaceSnapshot> {
+    core_blocking(arca_core::application::ArcaCore::snapshot).await
 }
 
 #[tauri::command]
 pub async fn get_backend_status() -> Result<BackendStatus, String> {
     blocking_command(move || {
-        MuxCore::backend_status()
+        ArcaCore::backend_status()
     }).await
 }
 
@@ -191,85 +191,85 @@ pub async fn copy_to_clipboard(text: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn list_agent_capabilities(
-) -> CoreResult<Vec<mux_core::application::agents::AgentCapabilityView>> {
-    core_blocking(mux_core::application::agents::list_capabilities).await
+) -> CoreResult<Vec<arca_core::application::agents::AgentCapabilityView>> {
+    core_blocking(arca_core::application::agents::list_capabilities).await
 }
 
 #[tauri::command]
 pub async fn plan_operation(request: PlanOperationRequest) -> CoreResult<UnifiedOperationPlan> {
-    core_blocking(move || mux_core::application::MuxCore::plan(request)).await
+    core_blocking(move || arca_core::application::ArcaCore::plan(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_operation(
     request: CommitOperationRequest,
 ) -> CoreResult<OperationCommitResult> {
-    core_blocking(move || mux_core::application::MuxCore::commit(request)).await
+    core_blocking(move || arca_core::application::ArcaCore::commit(request)).await
 }
 
 #[tauri::command]
 pub async fn cancel_operation(request: CancelOperationRequest) -> CoreResult<()> {
-    core_blocking(move || mux_core::application::MuxCore::cancel(request)).await
+    core_blocking(move || arca_core::application::ArcaCore::cancel(request)).await
 }
 
 #[tauri::command]
 pub async fn list_consumption_inventory() -> Result<ConsumptionInventory, AssetCommandError> {
-    asset_blocking(mux_core::application::assets::list_inventory).await
+    asset_blocking(arca_core::application::assets::list_inventory).await
 }
 
 #[tauri::command]
 pub async fn list_model_adoption_candidates(
 ) -> Result<Vec<ModelAdoptionCandidate>, AssetCommandError> {
-    asset_blocking(mux_core::application::assets::list_model_adoption_candidates).await
+    asset_blocking(arca_core::application::assets::list_model_adoption_candidates).await
 }
 
 #[tauri::command]
 pub async fn plan_set_agent_consumption(
     request: PlanSetAgentConsumptionRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_set_agent_consumption(request)).await
+    asset_blocking(move || arca_core::application::assets::plan_set_agent_consumption(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_set_mcp_enabled(
-    request: mux_core::application::assets::PlanSetMcpEnabledRequest,
+    request: arca_core::application::assets::PlanSetMcpEnabledRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_set_mcp_enabled(request)).await
+    asset_blocking(move || arca_core::application::assets::plan_set_mcp_enabled(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_set_skill_enabled(
-    request: mux_core::application::assets::PlanSetSkillEnabledRequest,
+    request: arca_core::application::assets::PlanSetSkillEnabledRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_set_skill_enabled(request)).await
+    asset_blocking(move || arca_core::application::assets::plan_set_skill_enabled(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_set_model_enabled(
-    request: mux_core::application::assets::PlanSetModelEnabledRequest,
+    request: arca_core::application::assets::PlanSetModelEnabledRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_set_model_enabled(request)).await
+    asset_blocking(move || arca_core::application::assets::plan_set_model_enabled(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_set_active_model(
-    request: mux_core::application::assets::PlanSetActiveModelRequest,
+    request: arca_core::application::assets::PlanSetActiveModelRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_set_active_model(request)).await
+    asset_blocking(move || arca_core::application::assets::plan_set_active_model(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_set_asset_consumers(
     request: PlanSetAssetConsumersRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_set_asset_consumers(request)).await
+    asset_blocking(move || arca_core::application::assets::plan_set_asset_consumers(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_update_agent_capabilities(
     request: PlanUpdateAgentCapabilitiesRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_update_agent_capabilities(request))
+    asset_blocking(move || arca_core::application::assets::plan_update_agent_capabilities(request))
         .await
 }
 
@@ -277,26 +277,26 @@ pub async fn plan_update_agent_capabilities(
 pub async fn plan_update_central_asset(
     request: PlanUpdateCentralAssetRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_update_central_asset(request)).await
+    asset_blocking(move || arca_core::application::assets::plan_update_central_asset(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_delete_central_asset(
     request: PlanDeleteCentralAssetRequest,
 ) -> Result<AssetOperationPlan, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::plan_delete_central_asset(request)).await
+    asset_blocking(move || arca_core::application::assets::plan_delete_central_asset(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_asset_operation(
     request: AssetCommitRequest,
 ) -> Result<ConsumptionInventory, AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::commit_asset_operation(request)).await
+    asset_blocking(move || arca_core::application::assets::commit_asset_operation(request)).await
 }
 
 #[tauri::command]
 pub async fn cancel_asset_operation(operation_id: String) -> Result<(), AssetCommandError> {
-    asset_blocking(move || mux_core::application::assets::cancel_asset_operation(&operation_id))
+    asset_blocking(move || arca_core::application::assets::cancel_asset_operation(&operation_id))
         .await
 }
 
@@ -368,17 +368,17 @@ where
 
 #[tauri::command]
 pub async fn list_skills_inventory() -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(mux_core::application::skills::list_inventory).await
+    skill_blocking(arca_core::application::skills::list_inventory).await
 }
 
 #[tauri::command]
 pub async fn list_skill_agents() -> Result<Vec<SkillAgentView>, SkillCommandError> {
-    skill_blocking(mux_core::application::skills::list_skill_agents).await
+    skill_blocking(arca_core::application::skills::list_skill_agents).await
 }
 
 #[tauri::command]
 pub async fn get_skill_detail(identity: String) -> Result<SkillDetail, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::get_skill_detail(&identity)).await
+    skill_blocking(move || arca_core::application::skills::get_skill_detail(&identity)).await
 }
 
 #[tauri::command]
@@ -386,7 +386,7 @@ pub async fn resolve_skill_source(
     value: String,
 ) -> Result<SkillSourceResolution, SkillCommandError> {
     skill_blocking(move || {
-        mux_core::application::skills::resolve_source(
+        arca_core::application::skills::resolve_source(
             SkillSourceInput::Github { value },
             GithubEndpoints::production(),
         )
@@ -420,7 +420,7 @@ pub async fn resolve_local_skill_source_dialog(
         .to_owned();
 
     skill_blocking(move || {
-        mux_core::application::skills::resolve_source(
+        arca_core::application::skills::resolve_source(
             SkillSourceInput::Local { path: value },
             GithubEndpoints::production(),
         )
@@ -459,7 +459,7 @@ pub async fn resolve_archive_skill_source_dialog(
         .to_owned();
 
     skill_blocking(move || {
-        mux_core::application::skills::resolve_source(
+        arca_core::application::skills::resolve_source(
             SkillSourceInput::Archive { path: value },
             GithubEndpoints::production(),
         )
@@ -472,131 +472,131 @@ pub async fn resolve_archive_skill_source_dialog(
 pub async fn plan_skill_asset_install(
     request: PlanSkillAssetInstallRequest,
 ) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::plan_asset_install(request)).await
+    skill_blocking(move || arca_core::application::skills::plan_asset_install(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_install(
     request: SkillCommitRequest,
 ) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::commit_install(request)).await
+    skill_blocking(move || arca_core::application::skills::commit_install(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_import(
     request: PlanImportRequest,
 ) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::plan_import(request)).await
+    skill_blocking(move || arca_core::application::skills::plan_import(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_asset_import(
     request: PlanSkillAssetImportRequest,
 ) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::plan_asset_import(request)).await
+    skill_blocking(move || arca_core::application::skills::plan_asset_import(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_import(
     request: SkillCommitRequest,
 ) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::commit_import(request)).await
+    skill_blocking(move || arca_core::application::skills::commit_import(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_update(
     request: PlanUpdateRequest,
 ) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::plan_update(request)).await
+    skill_blocking(move || arca_core::application::skills::plan_update(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_update(
     request: SkillCommitRequest,
 ) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::commit_update(request)).await
+    skill_blocking(move || arca_core::application::skills::commit_update(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_remove(
     request: PlanRemoveRequest,
 ) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::plan_remove(request)).await
+    skill_blocking(move || arca_core::application::skills::plan_remove(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_remove(
     request: SkillCommitRequest,
 ) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::commit_remove(request)).await
+    skill_blocking(move || arca_core::application::skills::commit_remove(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_assignment(
     request: SkillCommitRequest,
 ) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::commit_assignment(request)).await
+    skill_blocking(move || arca_core::application::skills::commit_assignment(request)).await
 }
 
 #[tauri::command]
 pub async fn plan_skill_repair(
     request: PlanRepairRequest,
 ) -> Result<OperationPlan, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::plan_repair(request)).await
+    skill_blocking(move || arca_core::application::skills::plan_repair(request)).await
 }
 
 #[tauri::command]
 pub async fn commit_skill_repair(
     request: SkillCommitRequest,
 ) -> Result<SkillsInventory, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::commit_repair(request)).await
+    skill_blocking(move || arca_core::application::skills::commit_repair(request)).await
 }
 
 #[tauri::command]
 pub async fn check_skill_updates(manual: bool) -> Result<UpdateCheckOutcome, SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::check_updates(manual)).await
+    skill_blocking(move || arca_core::application::skills::check_updates(manual)).await
 }
 
 #[tauri::command]
 pub async fn cancel_skill_operation(operation_id: String) -> Result<(), SkillCommandError> {
-    skill_blocking(move || mux_core::application::skills::cancel_operation(&operation_id)).await
+    skill_blocking(move || arca_core::application::skills::cancel_operation(&operation_id)).await
 }
 
 // ── Model endpoint profiles ─────────────────────────────────────────────
 
 #[tauri::command]
 pub async fn export_model_curl(profile_id: String, include_api_key: bool) -> Result<String, String> {
-    blocking_command(move || mux_core::application::models::export_curl(&profile_id, include_api_key)).await?
+    blocking_command(move || arca_core::application::models::export_curl(&profile_id, include_api_key)).await?
 }
 
 #[tauri::command]
-pub async fn list_model_profiles() -> Result<Vec<mux_core::application::models::ModelProfileView>, String> {
+pub async fn list_model_profiles() -> Result<Vec<arca_core::application::models::ModelProfileView>, String> {
     // Profile enumeration checks Keychain and may wait for the workspace gate.
     // Never perform that work on the WebView event thread.
-    tauri::async_runtime::spawn_blocking(mux_core::application::models::list_profiles)
+    tauri::async_runtime::spawn_blocking(arca_core::application::models::list_profiles)
         .await
         .map_err(|_| "model_profiles_worker_failed: Background profile query failed".to_owned())
 }
 
 #[tauri::command]
-pub fn list_model_providers() -> &'static [mux_core::application::models::ModelProviderView] {
-    mux_core::application::models::list_providers()
+pub fn list_model_providers() -> &'static [arca_core::application::models::ModelProviderView] {
+    arca_core::application::models::list_providers()
 }
 
 #[tauri::command]
 pub async fn list_model_provider_instances(
-) -> Result<Vec<mux_core::application::models::ModelProviderInstanceView>, String> {
+) -> Result<Vec<arca_core::application::models::ModelProviderInstanceView>, String> {
     blocking_command(move || {
-        mux_core::application::models::list_provider_instances()
+        arca_core::application::models::list_provider_instances()
     }).await
 }
 
 #[tauri::command]
 pub async fn discover_provider_models(
     provider_id: String,
-) -> Result<Vec<mux_core::application::models::ProviderModelSummary>, String> {
+) -> Result<Vec<arca_core::application::models::ProviderModelSummary>, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        mux_core::application::models::discover_provider_models(&provider_id)
+        arca_core::application::models::discover_provider_models(&provider_id)
     })
     .await
     .map_err(|_| "model_discovery_worker_failed: Background model discovery failed".to_owned())?
@@ -605,29 +605,29 @@ pub async fn discover_provider_models(
 #[tauri::command]
 pub async fn reveal_model_provider_credential(provider_id: String) -> Result<String, String> {
     blocking_command(move || {
-        mux_core::application::models::reveal_provider_credential(&provider_id)
+        arca_core::application::models::reveal_provider_credential(&provider_id)
     }).await?
 }
 
 #[tauri::command]
 pub fn infer_model_provider(base_url: String) -> String {
-    mux_core::application::models::infer_provider(&base_url)
+    arca_core::application::models::infer_provider(&base_url)
 }
 
 #[tauri::command]
 pub async fn validate_model_credential_source(
-    source: mux_core::domain::types::ApiKeySource,
-) -> Result<mux_core::application::models::CredentialValidationView, String> {
+    source: arca_core::domain::types::ApiKeySource,
+) -> Result<arca_core::application::models::CredentialValidationView, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        mux_core::application::models::validate_credential_source(&source)
+        arca_core::application::models::validate_credential_source(&source)
     })
     .await
     .map_err(|_| "credential_validation_worker_failed: credential validation worker failed".to_owned())?
 }
 
 #[tauri::command]
-pub async fn list_model_agents() -> Result<Vec<mux_core::application::models::ModelAgentView>, String> {
-    tauri::async_runtime::spawn_blocking(mux_core::application::models::list_agent_capabilities)
+pub async fn list_model_agents() -> Result<Vec<arca_core::application::models::ModelAgentView>, String> {
+    tauri::async_runtime::spawn_blocking(arca_core::application::models::list_agent_capabilities)
         .await
         .map_err(|_| "model_agents_worker_failed: Background capability query failed".to_owned())?
 }
@@ -636,11 +636,11 @@ pub async fn list_model_agents() -> Result<Vec<mux_core::application::models::Mo
 pub async fn set_model_credential_delivery(
     agent_id: String,
     profile_id: String,
-    delivery: mux_core::application::models::ApiKeyDelivery,
+    delivery: arca_core::application::models::ApiKeyDelivery,
     confirm_plaintext: bool,
-) -> Result<mux_core::resources::model::ModelApplyResult, String> {
+) -> Result<arca_core::resources::model::ModelApplyResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        mux_core::application::models::set_credential_delivery(
+        arca_core::application::models::set_credential_delivery(
             &agent_id,
             &profile_id,
             delivery,
@@ -654,11 +654,11 @@ pub async fn set_model_credential_delivery(
 #[tauri::command]
 pub async fn set_agent_credential_delivery(
     agent_id: String,
-    delivery: mux_core::application::models::ApiKeyDelivery,
+    delivery: arca_core::application::models::ApiKeyDelivery,
     confirm_plaintext: bool,
-) -> Result<mux_core::resources::model::ModelApplyResult, String> {
+) -> Result<arca_core::resources::model::ModelApplyResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        mux_core::application::models::set_agent_credential_delivery(
+        arca_core::application::models::set_agent_credential_delivery(
             &agent_id,
             delivery,
             confirm_plaintext,
@@ -707,7 +707,7 @@ pub struct PastedMcpSummary {
 #[tauri::command]
 pub async fn preview_pasted_config(text: String) -> CoreResult<Vec<PastedMcpSummary>> {
     tauri::async_runtime::spawn_blocking(move || {
-        mux_core::application::mcp::operations::parse_pasted_entries(&text)
+        arca_core::application::mcp::operations::parse_pasted_entries(&text)
             .map(|entries| entries.into_iter().map(|entry| {
                 let transport = entry.transport();
                 PastedMcpSummary { name: entry.name, transport }
@@ -725,7 +725,7 @@ pub async fn import_pasted_config(text: String) -> CoreResult<Vec<String>> {
 }
 
 fn import_pasted_config_blocking(text: String) -> CoreResult<Vec<String>> {
-    let entries = mux_core::application::mcp::operations::parse_pasted_entries(&text)
+    let entries = arca_core::application::mcp::operations::parse_pasted_entries(&text)
         .map_err(|error| core_error_from_legacy(error, "invalid_config"))?;
     let mut known_keys: std::collections::BTreeSet<_> = read_registry().iter().map(|entry| entry.key()).collect();
     let mut names = Vec::new();
@@ -733,9 +733,9 @@ fn import_pasted_config_blocking(text: String) -> CoreResult<Vec<String>> {
     for (index, entry) in entries.into_iter().enumerate() {
         let key = entry.key();
         let existing_key = known_keys.contains(&key).then(|| key.clone());
-        let plan = mux_core::application::assets::plan_update_central_asset(
+        let plan = arca_core::application::assets::plan_update_central_asset(
             PlanUpdateCentralAssetRequest {
-                draft: mux_core::application::assets::CentralAssetDraft::Mcp {
+                draft: arca_core::application::assets::CentralAssetDraft::Mcp {
                     existing_key,
                     entry: Box::new(entry),
                 },
@@ -743,7 +743,7 @@ fn import_pasted_config_blocking(text: String) -> CoreResult<Vec<String>> {
         )
         .map_err(|error| core_error_from_legacy(error, "asset_operation_failed"))?;
         if !plan.can_commit {
-            let _ = mux_core::application::assets::cancel_asset_operation(&plan.operation_id);
+            let _ = arca_core::application::assets::cancel_asset_operation(&plan.operation_id);
             return Err(CoreError::new(
                 "asset_operation_blocked",
                 "粘贴导入与当前资产状态冲突；请先在资源界面收敛对应消费关系",
@@ -752,12 +752,12 @@ fn import_pasted_config_blocking(text: String) -> CoreResult<Vec<String>> {
         let saved_names = plan.central_changes
                 .iter()
                 .filter_map(|change| match &change.asset {
-                    mux_core::application::assets::AssetRef::Mcp { key } => {
+                    arca_core::application::assets::AssetRef::Mcp { key } => {
                         key.rsplit_once("::").map(|(name, _)| name.to_string())
                     }
                     _ => None,
                 }).collect::<Vec<_>>();
-        if let Err(error) = mux_core::application::assets::commit_mcp_import(AssetCommitRequest {
+        if let Err(error) = arca_core::application::assets::commit_mcp_import(AssetCommitRequest {
             operation_id: plan.operation_id,
             candidate_hash: plan.candidate_hash,
         }) {
@@ -779,9 +779,9 @@ fn import_pasted_config_blocking(text: String) -> CoreResult<Vec<String>> {
 }
 
 // ── Catalog sources (subscribe remote / add local) ────────────────────────
-// Orchestration lives in `mux_core::application::mcp::sources`; these are thin command wrappers.
+// Orchestration lives in `arca_core::application::mcp::sources`; these are thin command wrappers.
 
-use mux_core::application::mcp::sources::{self, SourceView};
+use arca_core::application::mcp::sources::{self, SourceView};
 
 #[tauri::command]
 pub async fn list_sources() -> Result<Vec<SourceView>, String> {
@@ -839,13 +839,13 @@ pub async fn add_local_source_dialog(app: tauri::AppHandle) -> CoreResult<Option
 #[tauri::command]
 pub async fn export_effective_dialog(app: tauri::AppHandle) -> CoreResult<Option<String>> {
     use tauri_plugin_dialog::DialogExt;
-    let content = mux_core::application::mcp::operations::export_effective()
+    let content = arca_core::application::mcp::operations::export_effective()
         .map_err(|error| core_error_from_legacy(error, "export_failed"))?;
     let picked = tauri::async_runtime::spawn_blocking(move || {
         app.dialog()
             .file()
             .add_filter("MCP 配置", &["json"])
-            .set_file_name("mux-effective.json")
+            .set_file_name("arca-effective.json")
             .blocking_save_file()
     })
     .await
@@ -854,7 +854,7 @@ pub async fn export_effective_dialog(app: tauri::AppHandle) -> CoreResult<Option
     let path = fp
         .into_path()
         .map_err(|error| CoreError::new("invalid_export_path", error.to_string()))?;
-    MuxCore::independent_host_mutation("desktop_export", move || {
+    ArcaCore::independent_host_mutation("desktop_export", move || {
         std::fs::write(&path, content)
             .map_err(|error| CoreError::new("export_failed", error.to_string()))?;
         Ok(Some(path.display().to_string()))
@@ -892,15 +892,15 @@ pub async fn remove_source(id: String) -> CoreResult<()> {
     }).await
 }
 
-use mux_core::application::agents::{load_agents, AgentInfo};
-use mux_core::domain::types::AgentDefinition;
+use arca_core::application::agents::{load_agents, AgentInfo};
+use arca_core::domain::types::AgentDefinition;
 
 /// 新增一个自定义 agent，持久化到 settings.agents（在内置/已有定义之上合并）。
 /// id 为空或已存在时报错，避免误覆盖内置 agent。
 #[tauri::command]
 pub async fn add_agent(id: String, def: AgentDefinition) -> CoreResult<()> {
     core_blocking(move || {
-        mux_core::application::agents::put(id, def, false)
+        arca_core::application::agents::put(id, def, false)
             .map_err(|error| core_error_from_legacy(error, "agent_operation_failed"))
     }).await
 }
@@ -909,7 +909,7 @@ pub async fn add_agent(id: String, def: AgentDefinition) -> CoreResult<()> {
 #[tauri::command]
 pub async fn update_agent(id: String, def: AgentDefinition) -> CoreResult<()> {
     core_blocking(move || {
-        mux_core::application::agents::put(id, def, true)
+        arca_core::application::agents::put(id, def, true)
             .map_err(|error| core_error_from_legacy(error, "agent_operation_failed"))
     }).await
 }
@@ -917,21 +917,21 @@ pub async fn update_agent(id: String, def: AgentDefinition) -> CoreResult<()> {
 #[tauri::command]
 pub async fn list_agents() -> Result<Vec<AgentInfo>, String> {
     blocking_command(move || {
-        mux_core::application::agents::list_infos()
+        arca_core::application::agents::list_infos()
     }).await
 }
 
 #[tauri::command]
 pub async fn get_pinned_agents() -> Result<Vec<String>, String> {
     blocking_command(move || {
-        mux_core::application::ui::get_pinned_agents()
+        arca_core::application::ui::get_pinned_agents()
     }).await?
 }
 
 #[tauri::command]
 pub async fn set_pinned_agents(agent_ids: Vec<String>) -> CoreResult<Vec<String>> {
     core_blocking(move || {
-        mux_core::application::ui::set_pinned_agents(agent_ids)
+        arca_core::application::ui::set_pinned_agents(agent_ids)
             .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
     }).await
 }
@@ -939,23 +939,23 @@ pub async fn set_pinned_agents(agent_ids: Vec<String>) -> CoreResult<Vec<String>
 #[tauri::command]
 pub async fn get_ui_locale() -> Result<Option<String>, String> {
     blocking_command(move || {
-        mux_core::application::ui::get_ui_locale()
+        arca_core::application::ui::get_ui_locale()
     }).await?
 }
 
 #[tauri::command]
 pub async fn set_ui_locale(locale: Option<String>) -> CoreResult<Option<String>> {
     core_blocking(move || {
-        mux_core::application::ui::set_ui_locale(locale)
+        arca_core::application::ui::set_ui_locale(locale)
             .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
     }).await
 }
 
 #[tauri::command]
 pub async fn list_mcp_icon_preferences(
-) -> CoreResult<BTreeMap<String, mux_core::application::ui::McpIconPreferenceView>> {
+) -> CoreResult<BTreeMap<String, arca_core::application::ui::McpIconPreferenceView>> {
     core_blocking(|| {
-        mux_core::application::ui::list_mcp_icon_preferences()
+        arca_core::application::ui::list_mcp_icon_preferences()
             .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
     })
     .await
@@ -965,9 +965,9 @@ pub async fn list_mcp_icon_preferences(
 pub async fn set_mcp_builtin_icon(
     asset_key: String,
     icon_id: String,
-) -> CoreResult<BTreeMap<String, mux_core::application::ui::McpIconPreferenceView>> {
+) -> CoreResult<BTreeMap<String, arca_core::application::ui::McpIconPreferenceView>> {
     core_blocking(move || {
-        mux_core::application::ui::set_mcp_builtin_icon(asset_key, icon_id)
+        arca_core::application::ui::set_mcp_builtin_icon(asset_key, icon_id)
             .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
     }).await
 }
@@ -975,9 +975,9 @@ pub async fn set_mcp_builtin_icon(
 #[tauri::command]
 pub async fn reset_mcp_icon(
     asset_key: String,
-) -> CoreResult<BTreeMap<String, mux_core::application::ui::McpIconPreferenceView>> {
+) -> CoreResult<BTreeMap<String, arca_core::application::ui::McpIconPreferenceView>> {
     core_blocking(move || {
-        mux_core::application::ui::reset_mcp_icon(asset_key)
+        arca_core::application::ui::reset_mcp_icon(asset_key)
             .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
     }).await
 }
@@ -986,7 +986,7 @@ pub async fn reset_mcp_icon(
 pub async fn import_mcp_icon_dialog(
     app: tauri::AppHandle,
     asset_key: String,
-) -> CoreResult<Option<BTreeMap<String, mux_core::application::ui::McpIconPreferenceView>>> {
+) -> CoreResult<Option<BTreeMap<String, arca_core::application::ui::McpIconPreferenceView>>> {
     use tauri_plugin_dialog::DialogExt;
     let picked = tauri::async_runtime::spawn_blocking(move || {
         app.dialog()
@@ -1002,7 +1002,7 @@ pub async fn import_mcp_icon_dialog(
     let path = file_path
         .into_path()
         .map_err(|error| CoreError::new("invalid_icon_path", error.to_string()))?;
-    mux_core::application::ui::import_mcp_icon(asset_key, path)
+    arca_core::application::ui::import_mcp_icon(asset_key, path)
         .map(Some)
         .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
 }
@@ -1015,7 +1015,7 @@ pub struct ProxySettingsView {
 #[tauri::command]
 pub async fn get_proxy_settings() -> Result<ProxySettingsView, String> {
     blocking_command(move || {
-        mux_core::application::network::get_proxy_settings().map(|settings| ProxySettingsView {
+        arca_core::application::network::get_proxy_settings().map(|settings| ProxySettingsView {
             proxy_url: settings.proxy_url,
         })
     }).await?
@@ -1024,7 +1024,7 @@ pub async fn get_proxy_settings() -> Result<ProxySettingsView, String> {
 #[tauri::command]
 pub async fn set_proxy_settings(proxy_url: Option<String>) -> CoreResult<ProxySettingsView> {
     core_blocking(move || {
-        mux_core::application::network::set_proxy_url(proxy_url)
+        arca_core::application::network::set_proxy_url(proxy_url)
             .map(|settings| ProxySettingsView {
                 proxy_url: settings.proxy_url,
             })
@@ -1032,19 +1032,19 @@ pub async fn set_proxy_settings(proxy_url: Option<String>) -> CoreResult<ProxySe
     }).await
 }
 
-pub use mux_core::application::mcp::operations::InstalledMcp;
+pub use arca_core::application::mcp::operations::InstalledMcp;
 
-/// 扫描全局配置文件，返回「谁装在哪」。MUX 当前不管理项目级配置。
+/// 扫描全局配置文件，返回「谁装在哪」。Arca 当前不管理项目级配置。
 #[tauri::command]
 pub async fn scan_installed() -> Result<Vec<InstalledMcp>, String> {
     blocking_command(move || {
-        mux_core::application::mcp::operations::scan_installed(None)
+        arca_core::application::mcp::operations::scan_installed(None)
     }).await
 }
 
-use mux_core::application::mcp::operations::effective_config;
-use mux_core::application::mcp::operations::{resolve_entry, target_file};
-use mux_core::domain::mcp::OverridePatch;
+use arca_core::application::mcp::operations::effective_config;
+use arca_core::application::mcp::operations::{resolve_entry, target_file};
+use arca_core::domain::mcp::OverridePatch;
 use std::collections::HashMap;
 
 #[derive(serde::Deserialize)]
@@ -1098,7 +1098,7 @@ pub async fn preview_install(req: InstallRequest) -> Result<Vec<PlannedWrite>, S
             let def = agents
                 .get(agent_id)
                 .ok_or_else(|| format!("{agent_id}: unknown Agent"))?;
-            if !mux_core::application::agents::supports_transport(agent_id, &req.transport) {
+            if !arca_core::application::agents::supports_transport(agent_id, &req.transport) {
                 return Err(format!(
                     "{agent_id}: {} transport is not supported by this agent",
                     req.transport
@@ -1122,17 +1122,17 @@ pub async fn preview_install(req: InstallRequest) -> Result<Vec<PlannedWrite>, S
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mux_core::domain::types::{McpConfig, StdioConfig};
+    use arca_core::domain::types::{McpConfig, StdioConfig};
 
     #[test]
     fn preview_returns_planned_write_for_seeded_server() {
-        use mux_core::domain::types::{RegistryConfig, RegistryEntry, StdioConfig};
+        use arca_core::domain::types::{RegistryConfig, RegistryEntry, StdioConfig};
         // No built-in catalog anymore: seed a manual entry through the real store
-        // (a managed local source) in an isolated ~/.mux, then preview it.
-        let _th = mux_core::testenv::TestHome::new("preview");
-        let plan = mux_core::application::assets::plan_update_central_asset(
+        // (a managed local source) in an isolated ~/.arca, then preview it.
+        let _th = arca_core::testenv::TestHome::new("preview");
+        let plan = arca_core::application::assets::plan_update_central_asset(
             PlanUpdateCentralAssetRequest {
-                draft: mux_core::application::assets::CentralAssetDraft::Mcp {
+                draft: arca_core::application::assets::CentralAssetDraft::Mcp {
                     existing_key: None,
                     entry: Box::new(RegistryEntry {
                         name: "seeded".into(),
@@ -1154,7 +1154,7 @@ mod tests {
             },
         )
         .unwrap();
-        mux_core::application::assets::commit_asset_operation(AssetCommitRequest {
+        arca_core::application::assets::commit_asset_operation(AssetCommitRequest {
             operation_id: plan.operation_id,
             candidate_hash: plan.candidate_hash,
         })

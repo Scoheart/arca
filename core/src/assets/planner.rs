@@ -21,7 +21,7 @@ use crate::agents::{
 };
 use crate::domain::agents::ModelStorageAuthority;
 use crate::domain::skill::ManagedSkillRecord;
-use crate::paths::{mux_dir, settings_file};
+use crate::paths::{arca_dir, settings_file};
 use crate::resources::mcp::scanner::{collapse_home, expand_tilde};
 use crate::resources::skill::{
     assignment_reapply_state, canonical_skill_assignments, canonical_skill_target_path,
@@ -50,7 +50,7 @@ pub(crate) struct PersistedAssetOperation {
     pub plan: AssetOperationPlan,
     /// v2 bound every operation to the complete settings file. Keep the field
     /// readable so an operation with durable rollback evidence from an older
-    /// MUX can still recover safely.
+    /// Arca can still recover safely.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub settings_hash: Option<String>,
     /// v3 binds only the semantic state actually reviewed by this operation.
@@ -478,7 +478,7 @@ pub fn plan_clear_agent_models(
         .count();
     let configured_count = match capability.storage_authority {
         ModelStorageAuthority::NativeRegistry => managed_count + external_count,
-        ModelStorageAuthority::MuxMapping => before.profiles.len(),
+        ModelStorageAuthority::ArcaMapping => before.profiles.len(),
         ModelStorageAuthority::Guided => unreachable!(),
     };
     let domain_plan = DomainPlan::Model {
@@ -684,7 +684,7 @@ pub fn plan_set_mcp_enabled(
     )
 }
 
-/// Plan one target-scoped transition for every MCP currently managed by MUX
+/// Plan one target-scoped transition for every MCP currently managed by Arca
 /// for an Agent. Keeping this as one lifecycle operation lets the transaction
 /// layer roll the shared Agent file back as a unit if any entry cannot change.
 pub fn plan_set_all_mcp_enabled(
@@ -1002,7 +1002,7 @@ pub fn plan_reapply_model(request: PlanReapplyModelRequest) -> Result<AssetOpera
             crate::resources::model::ModelObservedState::Drifted
             | crate::resources::model::ModelObservedState::Conflicted => {
                 return Err(
-                    "model_reapply_unsafe_clear: the disabled Profile contains customized or ambiguous fields; inspect it or unassign it to release MUX ownership without overwriting those fields"
+                    "model_reapply_unsafe_clear: the disabled Profile contains customized or ambiguous fields; inspect it or unassign it to release Arca ownership without overwriting those fields"
                         .into(),
                 )
             }
@@ -1223,7 +1223,7 @@ pub fn plan_adopt_observed_skill(agent_id: &str, name: &str) -> Result<AssetOper
             asset: AssetRef::Skill { name: name.into() },
             action: crate::domain::assets::CentralAssetAction::Update,
             summary: vec![
-                "采用当前中央 Skill 内容作为新的 MUX 基线".into(),
+                "采用当前中央 Skill 内容作为新的 Arca 基线".into(),
                 "保留所有 Agent 关系与链接".into(),
             ],
         }],
@@ -1765,7 +1765,7 @@ pub(crate) fn validate_model_selection_contract(
         .ok_or_else(|| format!("unsupported model Agent: {agent_id}"))?;
     if !capability.supports_multiple && selection.profiles.len() > 1 {
         return Err(format!(
-            "model_single_profile_only: {} supports one MUX Model Profile",
+            "model_single_profile_only: {} supports one Arca Model Profile",
             capability.name
         ));
     }
@@ -1959,7 +1959,7 @@ fn require_enabled_agent(agent_id: &str) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!(
-            "agent_disabled: Agent {agent_id} is disabled in MUX"
+            "agent_disabled: Agent {agent_id} is disabled in Arca"
         ))
     }
 }
@@ -2273,10 +2273,10 @@ fn finalize_plan_with_inventory(
     // A write that would replace one exact observation must be expressed as an
     // explicit convergence action. Releasing that relationship remains safe.
     let can_commit = blocked.is_empty();
-    // Planning already persists a candidate under the MUX staging directory.
-    // Materialize the stable MUX root before parent fingerprints are captured
+    // Planning already persists a candidate under the Arca staging directory.
+    // Materialize the stable Arca root before parent fingerprints are captured
     // so that persisting this very plan cannot make its own target hash stale.
-    fs::create_dir_all(mux_dir()).map_err(|error| error.to_string())?;
+    fs::create_dir_all(arca_dir()).map_err(|error| error.to_string())?;
     let mut subjects = state_subjects(&domain_plan, &central_changes, lifecycle.as_ref());
     subjects.extend(shared_subjects);
     let state_preconditions = AssetStateStore::load()?.capture(subjects)?;
@@ -3366,7 +3366,7 @@ pub(crate) fn hash_skill_target_graph() -> Result<String, String> {
 }
 
 pub(crate) fn operation_root(operation_id: &str) -> PathBuf {
-    mux_dir().join("staging/consumption").join(operation_id)
+    arca_dir().join("staging/consumption").join(operation_id)
 }
 
 fn persist_operation(operation: &PersistedAssetOperation) -> Result<(), String> {
@@ -3666,7 +3666,7 @@ mod tests {
         assert_eq!(plan.relationship_changes[0].action, RelationshipAction::Add);
         let persisted = fs::read_to_string(
             home.home
-                .join(".mux/staging/consumption")
+                .join(".arca/staging/consumption")
                 .join(&plan.operation_id)
                 .join("plan.json"),
         )
@@ -4383,14 +4383,14 @@ mod tests {
             &fs::read_to_string(home.home.join(".pi/agent/settings.json")).unwrap(),
         )
         .unwrap();
-        assert_eq!(native["defaultProvider"], "mux-backup");
+        assert_eq!(native["defaultProvider"], "arca-backup");
         assert_eq!(native["defaultModel"], "backup-model");
         let providers: serde_json::Value = serde_json::from_str(
             &fs::read_to_string(home.home.join(".pi/agent/models.json")).unwrap(),
         )
         .unwrap();
-        assert!(providers["providers"].get("mux-current").is_some());
-        assert!(providers["providers"].get("mux-backup").is_some());
+        assert!(providers["providers"].get("arca-current").is_some());
+        assert!(providers["providers"].get("arca-backup").is_some());
     }
 
     fn claude_desktop_provider_profile() -> ModelProfile {
@@ -4445,7 +4445,7 @@ mod tests {
         );
         let serialized = fs::read_to_string(
             home.home
-                .join(".mux/staging/consumption")
+                .join(".arca/staging/consumption")
                 .join(&plan.operation_id)
                 .join("plan.json"),
         )
@@ -4527,10 +4527,10 @@ mod tests {
         crate::resources::model::save_profile(profile.clone(), Some("fake-credential".into()))
             .unwrap();
         let configured_paths = vec![
-            "~/.mux-claude/primary.json".into(),
-            "~/.mux-claude/deployment.json".into(),
-            "~/.mux-claude/meta.json".into(),
-            "~/.mux-claude/profile.json".into(),
+            "~/.arca-claude/primary.json".into(),
+            "~/.arca-claude/deployment.json".into(),
+            "~/.arca-claude/meta.json".into(),
+            "~/.arca-claude/profile.json".into(),
         ];
         mutate_settings(|settings| {
             settings.agent_config_paths.get_or_insert_default().insert(
@@ -4562,15 +4562,15 @@ mod tests {
         let profile = claude_desktop_provider_profile();
         crate::resources::model::save_profile(profile.clone(), Some("fake-credential".into()))
             .unwrap();
-        let duplicate = "~/.mux-claude/shared.json".to_string();
+        let duplicate = "~/.arca-claude/shared.json".to_string();
         mutate_settings(|settings| {
             settings.agent_config_paths.get_or_insert_default().insert(
                 "claude-desktop".into(),
                 AgentConfigPathOverride {
                     model_paths: Some(vec![
                         duplicate.clone(),
-                        "~/.mux-claude/deployment.json".into(),
-                        "~/.mux-claude/meta.json".into(),
+                        "~/.arca-claude/deployment.json".into(),
+                        "~/.arca-claude/meta.json".into(),
                         duplicate.clone(),
                     ]),
                     ..Default::default()

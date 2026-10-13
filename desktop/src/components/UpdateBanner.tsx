@@ -2,7 +2,7 @@ import type { UpdaterState } from "../hooks/useUpdater";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { DownloadIcon, FolderIcon, RefreshIcon, XIcon } from "./icons";
 
-const LATEST_RELEASE_URL = "https://github.com/Scoheart/mux/releases/latest";
+const LATEST_RELEASE_URL = "https://github.com/Scoheart/arca/releases/latest";
 
 /**
  * Non-blocking update card, floated below the header at the top-right —
@@ -116,10 +116,10 @@ export function UpdateBanner({ updater }: { updater: UpdaterState }) {
               <FolderIcon className="w-3.5 h-3.5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold">请先安装 MUX</div>
+              <div className="text-sm font-semibold">请先安装 Arca</div>
               <div className="mt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
-                当前应用位于只读磁盘映像或系统隔离目录，无法原地更新。请退出 MUX，
-                将 MUX.app 拖入“应用程序”后重新打开；现有配置不会丢失。
+                当前应用位于只读磁盘映像或系统隔离目录，无法原地更新。请退出 Arca，
+                将 Arca.app 拖入“应用程序”后重新打开；现有配置不会丢失。
               </div>
             </div>
           </div>

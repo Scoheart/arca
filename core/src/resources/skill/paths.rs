@@ -3,7 +3,7 @@ use std::path::{Component, Path, PathBuf};
 
 #[derive(Debug, Clone)]
 pub struct SkillsPaths {
-    mux_dir: PathBuf,
+    arca_dir: PathBuf,
     user_home: PathBuf,
 }
 
@@ -13,10 +13,10 @@ impl SkillsPaths {
     /// Read-only inventory callers must use this constructor. Lifecycle
     /// mutation paths use [`Self::from_env`] so their private roots exist.
     pub(crate) fn resolve_from_env() -> Result<Self, SkillError> {
-        let mux_dir = crate::paths::mux_dir();
-        if !mux_dir.is_absolute() {
+        let arca_dir = crate::paths::arca_dir();
+        if !arca_dir.is_absolute() {
             return Err(SkillError::InvalidSource {
-                message: "MUX_HOME must resolve to an absolute path".into(),
+                message: "ARCA_HOME must resolve to an absolute path".into(),
             });
         }
         let user_home = dirs::home_dir()
@@ -24,18 +24,18 @@ impl SkillsPaths {
             .ok_or_else(|| SkillError::InvalidSource {
                 message: "the user home directory is unavailable".into(),
             })?;
-        Ok(Self { mux_dir, user_home })
+        Ok(Self { arca_dir, user_home })
     }
 
     pub fn from_env() -> Result<Self, SkillError> {
         let paths = Self::resolve_from_env()?;
-        paths.ensure_mux_root()?;
+        paths.ensure_arca_root()?;
         paths.ensure_transaction_roots()?;
         Ok(paths)
     }
 
-    pub(crate) fn ensure_mux_root(&self) -> Result<(), SkillError> {
-        create_private_root(&self.mux_dir)
+    pub(crate) fn ensure_arca_root(&self) -> Result<(), SkillError> {
+        create_private_root(&self.arca_dir)
     }
 
     pub(crate) fn ensure_transaction_roots(&self) -> Result<(), SkillError> {
@@ -50,8 +50,8 @@ impl SkillsPaths {
         Ok(())
     }
 
-    pub fn mux_dir(&self) -> &Path {
-        &self.mux_dir
+    pub fn arca_dir(&self) -> &Path {
+        &self.arca_dir
     }
 
     pub fn user_home(&self) -> &Path {
@@ -63,15 +63,15 @@ impl SkillsPaths {
     }
 
     pub fn staging_skills_dir(&self) -> PathBuf {
-        self.mux_dir.join("staging/skills")
+        self.arca_dir.join("staging/skills")
     }
 
     pub fn backups_skills_dir(&self) -> PathBuf {
-        self.mux_dir.join("backups/skills")
+        self.arca_dir.join("backups/skills")
     }
 
     pub fn journals_skills_dir(&self) -> PathBuf {
-        self.mux_dir.join("journals/skills")
+        self.arca_dir.join("journals/skills")
     }
 
     /// Compatibility alias retained for the transaction fixture contract.
@@ -81,7 +81,7 @@ impl SkillsPaths {
     }
 
     pub fn skills_lock(&self) -> PathBuf {
-        self.mux_dir.join("skills.lock")
+        self.arca_dir.join("skills.lock")
     }
 
     pub fn central_skill(&self, name: &str) -> PathBuf {
@@ -98,14 +98,14 @@ impl SkillsPaths {
                 .components()
                 .all(|component| matches!(component, Component::Normal(_)))
             {
-                return Some(self.user_home.join(relative));
+                return Some(crate::brand::translate_legacy_path(self.user_home.join(relative)));
             }
             return None;
         }
         if value.starts_with('~') {
             return None;
         }
-        Some(PathBuf::from(value))
+        Some(crate::brand::translate_legacy_path(PathBuf::from(value)))
     }
 }
 
@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn old_skill_root_is_ignored_and_no_alias_is_created() {
         let th = TestHome::new("skill-canonical-root");
-        let old_root = th.home.join(".mux/skills");
+        let old_root = th.home.join(".arca/skills");
         std::fs::create_dir_all(&old_root).unwrap();
         std::fs::write(old_root.join("sentinel"), "untouched").unwrap();
 

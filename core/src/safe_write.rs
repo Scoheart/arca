@@ -1,6 +1,6 @@
-//! Crash-safe writes for MUX-owned state and reviewed Agent leaves.
+//! Crash-safe writes for Arca-owned state and reviewed Agent leaves.
 //!
-//! The guarantees cover process crashes, cooperating MUX processes, ordinary
+//! The guarantees cover process crashes, cooperating Arca processes, ordinary
 //! concurrent edits, and parent/symlink replacement detected at an anchored
 //! identity boundary. Unknown namespace state is preserved and reported as
 //! `recovery_required`. This is not a sandbox against a hostile process with
@@ -9,6 +9,8 @@
 //! or hide an entire WAL tree under an undiscoverable name. Preventing that
 //! requires an OS trust boundary rather than a filesystem protocol.
 
+// Durable .mux-* transaction claim names remain a versioned recovery protocol.
+// Arca keeps them so an interrupted old write is never orphaned or misidentified.
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, OpenOptions};
@@ -41,7 +43,7 @@ pub(crate) struct SettingsLock {
 ///
 /// This guard is deliberately separate from [`SettingsLock`]: a projection
 /// must coordinate with cooperating writers, but it must not make an empty
-/// MUX home observable merely by reading it.
+/// Arca home observable merely by reading it.
 pub(crate) struct SettingsReadLock {
     _ownership: SettingsReadLockOwnership,
     _thread_bound: PhantomData<Rc<()>>,
@@ -77,7 +79,7 @@ thread_local! {
         let base = std::fs::canonicalize(std::env::temp_dir())
             .unwrap_or_else(|_| std::env::temp_dir());
         base.join(format!(
-            "mux-safe-write-journal-{}-{}",
+            "arca-safe-write-journal-{}-{}",
             std::process::id(),
             uuid::Uuid::new_v4()
         ))
@@ -510,7 +512,7 @@ fn private_transaction_state_matches_anchored(
 /// returns to the transaction coordinator. The record is also synced under the
 /// durable rollback directory. A crash between publishing a target and syncing
 /// its record therefore fails closed during recovery instead of guessing that
-/// the current bytes belong to MUX.
+/// the current bytes belong to Arca.
 pub(crate) struct TransactionWriteTracker {
     active: Rc<RefCell<ActiveTransactionWrites>>,
     _thread_bound: PhantomData<Rc<()>>,
@@ -633,7 +635,7 @@ fn reenter_settings_lock(lock_path: &Path) -> Option<SettingsLock> {
     })
 }
 
-/// Acquire a shared settings lock only when MUX storage has already been
+/// Acquire a shared settings lock only when Arca storage has already been
 /// initialized. An existing settings document is enough to initialize the
 /// persistent lock file; when neither file exists this returns `None` without
 /// creating the parent directory.
@@ -685,7 +687,7 @@ pub(crate) fn try_acquire_settings_read_lock_if_initialized(
 
     // `open_settings_lock_file` may create only the lock file. Reaching this
     // point proves either it or settings.json already existed, so a read of an
-    // empty MUX home remains side-effect free.
+    // empty Arca home remains side-effect free.
     let lock_file = open_settings_lock_file(&lock_path)?;
     match FileExt::try_lock_shared(&lock_file) {
         Ok(()) => Ok(TrySettingsReadLock::Acquired(SettingsReadLock {
@@ -1613,8 +1615,8 @@ fn recover_one_mutation_intent(
         if guard_is_expected && (target_is_desired || target_is_semantically_desired) {
             // The live target already has the reviewed desired meaning. This
             // commonly happens when a watching Agent recreates the file while
-            // an older MUX release is publishing it. Keep the live target and
-            // retire only MUX-owned claim evidence; restoring the guard would
+            // an older Arca release is publishing it. Keep the live target and
+            // retire only Arca-owned claim evidence; restoring the guard would
             // incorrectly undo a successfully converged configuration.
             verify_mutation_parent_is_current(record)?;
             unlinkat(&parent.directory, guard_name, AtFlags::empty())
@@ -1903,7 +1905,7 @@ fn cleanup_intent_temp_if_owned(
         }
     };
     if !owned {
-        return Err("recovery_required: mutation temp no longer belongs to MUX".into());
+        return Err("recovery_required: mutation temp no longer belongs to Arca".into());
     }
     // An open directory descriptor keeps naming a directory after it has been
     // displaced. Re-open the reviewed path before deleting ownership evidence
@@ -3584,7 +3586,7 @@ fn global_mutation_intent_dir() -> PathBuf {
     }
     #[cfg(not(test))]
     {
-        crate::paths::mux_dir().join("staging/safe-write/claims")
+        crate::paths::arca_dir().join("staging/safe-write/claims")
     }
 }
 
@@ -3595,7 +3597,7 @@ fn global_mutation_lock_subject() -> PathBuf {
     }
     #[cfg(not(test))]
     {
-        crate::paths::mux_dir().join("staging/safe-write")
+        crate::paths::arca_dir().join("staging/safe-write")
     }
 }
 
@@ -3886,7 +3888,7 @@ fn rewrite_regular_file_in_place(
             != semantic_path_state_fingerprint(&desired)?
         {
             return Err(format!(
-                "target_convergence_failed: {} changed while MUX was editing it",
+                "target_convergence_failed: {} changed while Arca was editing it",
                 path.display()
             ));
         }
@@ -3948,7 +3950,7 @@ fn write_regular_file_anchored(
             ));
         }
         return Err(format!(
-            "refusing to modify {}: file changed while MUX was preparing the update",
+            "refusing to modify {}: file changed while Arca was preparing the update",
             path.display()
         ));
     }
@@ -4079,7 +4081,7 @@ fn write_regular_file_anchored(
                 ));
             }
             return Err(format!(
-                "refusing to modify {}: file changed while MUX was preparing the update",
+                "refusing to modify {}: file changed while Arca was preparing the update",
                 path.display()
             ));
         }
@@ -4115,7 +4117,7 @@ fn write_regular_file_anchored(
             let published = read_path_state_from_parent(path, &parent)?;
             if !anchored_states_match(&desired, &published) {
                 return Err(format!(
-                    "recovery_required: {} changed immediately after MUX published it",
+                    "recovery_required: {} changed immediately after Arca published it",
                     path.display()
                 ));
             }
@@ -4126,11 +4128,11 @@ fn write_regular_file_anchored(
                     .record,
             )?;
             unlinkat(&parent.directory, &temp, AtFlags::empty())
-                .map_err(|error| format!("failed to remove MUX temp entry: {error}"))?;
+                .map_err(|error| format!("failed to remove Arca temp entry: {error}"))?;
             parent
                 .directory
                 .sync_all()
-                .map_err(|error| format!("failed to sync retired MUX temp entry: {error}"))?;
+                .map_err(|error| format!("failed to sync retired Arca temp entry: {error}"))?;
             complete_mutation_intent(intent.as_ref())?;
         } else {
             run_before_mutation_claim_hook(path);
@@ -4207,7 +4209,7 @@ fn write_regular_file_anchored(
             let published = read_path_state_from_parent(path, &parent)?;
             if !anchored_states_match(&desired, &published) {
                 return Err(format!(
-                    "recovery_required: {} changed before MUX retired its claim guard",
+                    "recovery_required: {} changed before Arca retired its claim guard",
                     path.display()
                 ));
             }
@@ -4639,7 +4641,7 @@ fn write_symlink_anchored(
         let published = read_path_state_from_parent(path, &parent)?;
         if !anchored_states_match(&desired, &published) {
             return Err(format!(
-                "recovery_required: symlink {} changed before MUX retired its claim guard",
+                "recovery_required: symlink {} changed before Arca retired its claim guard",
                 path.display()
             ));
         }
@@ -4676,7 +4678,7 @@ pub(crate) fn write_if_unchanged(
 }
 
 /// Settings may contain environment variables, request headers, and disabled
-/// entry snapshots. Keep that MUX-owned store private while retaining all other
+/// entry snapshots. Keep that Arca-owned store private while retaining all other
 /// optimistic-concurrency and atomic-replace guarantees.
 pub(crate) fn write_private_if_unchanged(
     path: &Path,
@@ -4698,13 +4700,13 @@ pub(crate) fn remove_if_unchanged(path: &Path, expected: &str) -> Result<(), Str
         let current = file_state(current_state, path)?;
         let Some(current) = current else {
             return Err(format!(
-                "refusing to remove {} during rollback: file changed after MUX wrote it",
+                "refusing to remove {} during rollback: file changed after Arca wrote it",
                 path.display()
             ));
         };
         if current.bytes.as_slice() != expected.as_bytes() {
             return Err(format!(
-                "refusing to remove {} during rollback: file changed after MUX wrote it",
+                "refusing to remove {} during rollback: file changed after Arca wrote it",
                 path.display()
             ));
         }
@@ -4715,7 +4717,7 @@ pub(crate) fn remove_if_unchanged(path: &Path, expected: &str) -> Result<(), Str
     {
         if read_optional(path)?.as_deref() != Some(expected) {
             return Err(format!(
-                "refusing to remove {} during rollback: file changed after MUX wrote it",
+                "refusing to remove {} during rollback: file changed after Arca wrote it",
                 path.display()
             ));
         }
@@ -4901,7 +4903,7 @@ pub(crate) fn remove_bytes_if_unchanged_in_parent(
                 path.display()
             ));
         }
-        // Recheck immediately before unlinking. MUX writers are serialized by the
+        // Recheck immediately before unlinking. Arca writers are serialized by the
         // settings lock; this second comparison protects against ordinary external
         // edits during rollback preparation.
         if !file_bytes_match(read_optional_bytes(path)?.as_ref(), expected) {
@@ -5242,7 +5244,7 @@ fn write_if_unchanged_impl(
             .map_err(|error| format!("failed to read {} as UTF-8: {error}", path.display()))?;
         if current_text != expected {
             return Err(format!(
-                "refusing to modify {}: file changed while MUX was preparing the update",
+                "refusing to modify {}: file changed while Arca was preparing the update",
                 path.display()
             ));
         }
@@ -5270,7 +5272,7 @@ fn write_if_unchanged_impl(
         )?;
         if resolve_destination(path)? != destination {
             return Err(format!(
-                "refusing to modify {}: symlink target changed while MUX was preparing the update",
+                "refusing to modify {}: symlink target changed while Arca was preparing the update",
                 path.display()
             ));
         }
@@ -5281,7 +5283,7 @@ fn write_if_unchanged_impl(
     {
         if read_optional(path)?.as_deref() != expected {
             return Err(format!(
-                "refusing to modify {}: file changed while MUX was preparing the update",
+                "refusing to modify {}: file changed while Arca was preparing the update",
                 path.display()
             ));
         }
@@ -5327,13 +5329,13 @@ fn write_if_unchanged_impl(
 
             if read_optional(path)?.as_deref() != expected {
                 return Err(format!(
-                    "refusing to modify {}: file changed while MUX was preparing the update",
+                    "refusing to modify {}: file changed while Arca was preparing the update",
                     path.display()
                 ));
             }
             if resolve_destination(path)? != destination {
                 return Err(format!(
-                    "refusing to modify {}: symlink target changed while MUX was preparing the update",
+                    "refusing to modify {}: symlink target changed while Arca was preparing the update",
                     path.display()
                 ));
             }
@@ -5375,14 +5377,14 @@ mod tests {
     fn temp_file(name: &str) -> PathBuf {
         fs::canonicalize(std::env::temp_dir())
             .unwrap_or_else(|_| std::env::temp_dir())
-            .join(format!("mux-safe-write-{}-{}", name, std::process::id()))
+            .join(format!("arca-safe-write-{}-{}", name, std::process::id()))
     }
 
     #[test]
     fn refuses_to_replace_a_concurrent_edit() {
         let path = temp_file("concurrent");
         fs::write(&path, "newer").unwrap();
-        let result = write_if_unchanged(&path, Some("older"), "mux");
+        let result = write_if_unchanged(&path, Some("older"), "arca");
         assert!(result.is_err());
         assert_eq!(fs::read_to_string(&path).unwrap(), "newer");
         let _ = fs::remove_file(path);
@@ -5422,12 +5424,12 @@ mod tests {
 
         let temporary_root = fs::canonicalize(std::env::temp_dir()).unwrap();
         let base = temporary_root.join(format!(
-            "mux-lock-parent-{}-{}",
+            "arca-lock-parent-{}-{}",
             std::process::id(),
             uuid::Uuid::new_v4()
         ));
         let outside = temporary_root.join(format!(
-            "mux-lock-outside-{}-{}",
+            "arca-lock-outside-{}-{}",
             std::process::id(),
             uuid::Uuid::new_v4()
         ));
@@ -5494,14 +5496,14 @@ mod tests {
     fn settings_read_lock_does_not_initialize_an_empty_home() {
         let home = crate::testenv::TestHome::new("read-lock-empty");
         let path = crate::paths::settings_file();
-        assert!(!home.home.join(".mux").exists());
+        assert!(!home.home.join(".arca").exists());
 
         let guard = acquire_settings_read_lock_if_initialized(&path).unwrap();
 
         assert!(guard.is_none());
         assert!(
-            !home.home.join(".mux").exists(),
-            "a pure read must not create MUX storage"
+            !home.home.join(".arca").exists(),
+            "a pure read must not create Arca storage"
         );
     }
 
@@ -5534,7 +5536,7 @@ mod tests {
         acquired_rx.recv_timeout(Duration::from_secs(2)).unwrap();
         writer.join().unwrap();
 
-        assert!(home.home.join(".mux/settings.json.lockfile").is_file());
+        assert!(home.home.join(".arca/settings.json.lockfile").is_file());
     }
 
     #[test]
@@ -5557,12 +5559,12 @@ mod tests {
     fn rollback_bytes_use_the_captured_state_as_a_cas_precondition() {
         let path = temp_file("rollback-bytes-cas");
         let _ = fs::remove_file(&path);
-        fs::write(&path, b"mux-partial").unwrap();
+        fs::write(&path, b"arca-partial").unwrap();
         fs::write(&path, b"external-edit").unwrap();
 
         let mode = file_mode(&path).unwrap();
         let error =
-            write_bytes_if_unchanged(&path, Some((b"mux-partial", mode)), b"original", None)
+            write_bytes_if_unchanged(&path, Some((b"arca-partial", mode)), b"original", None)
                 .unwrap_err();
         assert!(error.contains("changed before rollback"), "{error}");
         assert_eq!(fs::read(&path).unwrap(), b"external-edit");
@@ -5574,10 +5576,10 @@ mod tests {
         let _home = crate::testenv::TestHome::new("safe-write-rollback-success");
         let path = temp_file("rollback-bytes-success");
         let _ = fs::remove_file(&path);
-        fs::write(&path, b"mux-partial").unwrap();
+        fs::write(&path, b"arca-partial").unwrap();
 
         let mode = file_mode(&path).unwrap();
-        write_bytes_if_unchanged(&path, Some((b"mux-partial", mode)), b"original", None).unwrap();
+        write_bytes_if_unchanged(&path, Some((b"arca-partial", mode)), b"original", None).unwrap();
         assert_eq!(fs::read(&path).unwrap(), b"original");
         let _ = fs::remove_file(path);
     }
@@ -5629,7 +5631,7 @@ mod tests {
             }
         });
 
-        let error = write_if_unchanged(&target, Some("reviewed"), "mux").unwrap_err();
+        let error = write_if_unchanged(&target, Some("reviewed"), "arca").unwrap_err();
 
         assert!(error.contains("canonical mutation parent"), "{error}");
         assert!(
@@ -5664,7 +5666,7 @@ mod tests {
             }
         });
 
-        let error = write_if_unchanged(&target, None, "mux").unwrap_err();
+        let error = write_if_unchanged(&target, None, "arca").unwrap_err();
 
         assert!(
             error.contains("canonical mutation parent changed"),
@@ -5676,14 +5678,14 @@ mod tests {
         );
         assert_eq!(
             fs::read_to_string(displaced.join("nested/config.json")).unwrap(),
-            "mux"
+            "arca"
         );
         assert!(global_mutation_intent_dir().is_dir());
 
         fs::remove_dir_all(&created_root).unwrap();
         fs::rename(&displaced, &created_root).unwrap();
         recover_global_mutation_intents().unwrap();
-        assert_eq!(fs::read_to_string(&target).unwrap(), "mux");
+        assert_eq!(fs::read_to_string(&target).unwrap(), "arca");
         ensure_no_transaction_mutation_intents(&global_mutation_intent_dir()).unwrap();
     }
 
@@ -5784,7 +5786,7 @@ mod tests {
             }
         });
 
-        let error = write_if_unchanged(&path, Some("reviewed"), "mux").unwrap_err();
+        let error = write_if_unchanged(&path, Some("reviewed"), "arca").unwrap_err();
 
         assert!(error.contains("claim boundary"), "{error}");
         assert_eq!(fs::read_to_string(&path).unwrap(), "external");

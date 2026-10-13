@@ -4,7 +4,7 @@
 
 - `gmi-cloud.png`: original PNG bytes served from <https://www.gmicloud.ai/favicon.ico> (256×256); the extension reflects the actual file format. Used for the GMI Cloud Provider, separately from Qwen/Alibaba model branding.
 
-These assets identify third-party model providers inside MUX. They were retrieved
+These assets identify third-party model providers inside Arca. They were retrieved
 from official product sites, official brand packages, or verified official GitHub
 organizations on 2026-07-27 and 2026-07-28. ICO assets were converted to PNG without altering
 the artwork. All trademarks remain the property of their respective owners.

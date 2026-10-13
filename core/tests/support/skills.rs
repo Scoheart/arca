@@ -2,8 +2,8 @@
 
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use mux_core::settings::{load_settings, mutate_settings};
-use mux_core::skills::{
+use arca_core::settings::{load_settings, mutate_settings};
+use arca_core::skills::{
     check_updates_with, crash_transaction_at_phase_for_test, hash_tree, list_inventory,
     plan_install, resolve_source, DirectoryMutation, GithubEndpoints, InventoryState, JournalPhase,
     LinkMutation, LinkState, ManagedSkillRecord, OperationPlan, PlanImportRequest,
@@ -11,7 +11,7 @@ use mux_core::skills::{
     SkillSource, SkillSourceInput, SkillSourceResolution, SkillUpdateState, SkillsInventory,
     SkillsPaths, TransactionOrder, TransactionSpec, UpdateCheckOutcome,
 };
-use mux_core::testenv::TestHome;
+use arca_core::testenv::TestHome;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::{Cursor, Read, Write};
@@ -330,10 +330,10 @@ impl SkillsFixture {
             .find_map(|item| {
                 (item.name == name)
                     .then(|| match &item.location {
-                        mux_core::skills::SkillLocation::AgentTarget { target_id, .. } => {
+                        arca_core::skills::SkillLocation::AgentTarget { target_id, .. } => {
                             Some(target_id.clone())
                         }
-                        mux_core::skills::SkillLocation::Central => None,
+                        arca_core::skills::SkillLocation::Central => None,
                     })
                     .flatten()
             })
@@ -426,13 +426,13 @@ impl SkillsFixture {
                     && item.states.contains(&InventoryState::External)
                     && matches!(
                         item.location,
-                        mux_core::skills::SkillLocation::AgentTarget { .. }
+                        arca_core::skills::SkillLocation::AgentTarget { .. }
                     )
             })
             .unwrap_or_else(|| panic!("external Skill {name} is not present"));
         let target_id = match &item.location {
-            mux_core::skills::SkillLocation::AgentTarget { target_id, .. } => target_id,
-            mux_core::skills::SkillLocation::Central => unreachable!(),
+            arca_core::skills::SkillLocation::AgentTarget { target_id, .. } => target_id,
+            arca_core::skills::SkillLocation::Central => unreachable!(),
         };
         let target = inventory
             .targets
@@ -1034,7 +1034,7 @@ fn handle_connection(mut stream: TcpStream, state: &MockGithubState) {
     state.request_headers.lock().unwrap().push(headers.clone());
     if !headers
         .get("user-agent")
-        .is_some_and(|value| value.starts_with("MUX/"))
+        .is_some_and(|value| value.starts_with("Arca/"))
         || headers.get("accept").map(String::as_str) != Some("application/vnd.github+json")
         || headers.get("x-github-api-version").map(String::as_str) != Some("2022-11-28")
         || headers.contains_key("authorization")

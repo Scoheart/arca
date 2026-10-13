@@ -1,4 +1,4 @@
-# MUX 三类资产外部变更观测与统一收敛设计
+# Arca 三类资产外部变更观测与统一收敛设计
 
 ## 状态
 
@@ -9,9 +9,9 @@
 
 ## 结论
 
-Agent 配置文件和用户级 Skill 目录是合法输入源。用户、Agent 或其他工具对它们的修改属于正常状态变化，不是 MUX 事务冲突，也不能成为整个产品的启动阻塞条件。
+Agent 配置文件和用户级 Skill 目录是合法输入源。用户、Agent 或其他工具对它们的修改属于正常状态变化，不是 Arca 事务冲突，也不能成为整个产品的启动阻塞条件。
 
-MUX 保存 `desired state`，实时扫描 `observed state`，并按单个 `Agent × asset` 投影差异。差异只在用户明确选择 `采用外部`、`恢复 MUX` 或 `解除管理` 时收敛。无法解析、身份歧义和不支持的内容只隔离对应观测；只有共享中央存储或未完成事务本身损坏时，才允许进入全局只读恢复。
+Arca 保存 `desired state`，实时扫描 `observed state`，并按单个 `Agent × asset` 投影差异。差异只在用户明确选择 `采用外部`、`恢复 Arca` 或 `解除管理` 时收敛。无法解析、身份歧义和不支持的内容只隔离对应观测；只有共享中央存储或未完成事务本身损坏时，才允许进入全局只读恢复。
 
 ## 目标语义
 
@@ -29,15 +29,15 @@ central asset + desired relationship
                     plan → verify → commit
 ```
 
-MUX 不在后台自动覆盖外部变更，也不把外部变更自动写回中央资产。观测与所有权是两条独立维度：一个被外部修改的关系仍然是 `managed`，直到用户显式解除或采用现场状态；一个外部新增项仍然是 `external`，直到采用成功。
+Arca 不在后台自动覆盖外部变更，也不把外部变更自动写回中央资产。观测与所有权是两条独立维度：一个被外部修改的关系仍然是 `managed`，直到用户显式解除或采用现场状态；一个外部新增项仍然是 `external`，直到采用成功。
 
 ## 统一状态机
 
 | 状态 | 含义 | 是否异常 | 可用动作 |
 |---|---|---:|---|
 | `synced` | desired 与 observed 一致 | 否 | 无 |
-| `external-added` | Agent 中存在、MUX 没有关系 | 否 | `adopt-observed` |
-| `external-changed` | MUX 管理的字段、启停或 current 被外部修改 | 否 | `adopt-observed`（可安全时）、`restore-desired`、`detach` |
+| `external-added` | Agent 中存在、Arca 没有关系 | 否 | `adopt-observed` |
+| `external-changed` | Arca 管理的字段、启停或 current 被外部修改 | 否 | `adopt-observed`（可安全时）、`restore-desired`、`detach` |
 | `external-removed` | desired 仍存在，但 Agent 目标已删除 | 否 | `restore-desired`、`detach` |
 | `unparseable` | 单个目标无法解析 | 局部异常 | `detach`（若已有关系） |
 | `ambiguous` | 单个目标存在多重身份或互相冲突的值 | 局部异常 | `detach`（若已有关系） |
@@ -54,7 +54,7 @@ MUX 不在后台自动覆盖外部变更，也不把外部变更自动写回中�
 - Skill：外部目录通过统一 Skill import 计划进入中央副本；托管中央 Skill 内容被修改时更新基线。
 - 接管前后都重新扫描，candidate 已变化则返回 `observation_stale`。
 
-### 恢复 MUX `restore-desired`
+### 恢复 Arca `restore-desired`
 
 - 只重写选中的准确关系，不借 `assign`、`enable`、`use` 或中央资产编辑隐式修复其他漂移。
 - 使用现有安全 writer、备份、同目录临时文件、原子替换和提交后验证。
@@ -63,8 +63,8 @@ MUX 不在后台自动覆盖外部变更，也不把外部变更自动写回中�
 ### 解除管理 `detach`
 
 - 删除 desired relationship，不删除中央资产。
-- 如果现场仍是准确的 MUX 内容，可执行正常清理。
-- 如果现场已漂移、缺失或变成外部内容，只释放 MUX 所有权并保留现场字节/目录。
+- 如果现场仍是准确的 Arca 内容，可执行正常清理。
+- 如果现场已漂移、缺失或变成外部内容，只释放 Arca 所有权并保留现场字节/目录。
 - 解除后仍存在的现场状态立即重新投影为 `external-added`。
 
 ## 观测与并发边界
@@ -80,7 +80,7 @@ MUX 不在后台自动覆盖外部变更，也不把外部变更自动写回中�
 
 Desktop 使用文件系统 watcher 监听：
 
-- `~/.mux/settings.json` 与中央 Skill 目录；
+- `~/.arca/settings.json` 与中央 Skill 目录；
 - 所有已配置 MCP 文件；
 - 所有受管 Model 文件；
 - 已核验用户级 Skill target。
@@ -108,7 +108,7 @@ Desktop 使用文件系统 watcher 监听：
 
 ## Schema 迁移
 
-Model v2/v3/v4 迁移只升级 `~/.mux/` 中央数据与安全凭据，不重写 Agent 现场配置。升级完成后，Agent 文件按当前字节重新扫描并投影为正常 observed state。旧 credential 只有在未迁移的 Agent 现场仍需要时才保留。
+Model v2/v3/v4 迁移只升级 `~/.arca/` 中央数据与安全凭据，不重写 Agent 现场配置。升级完成后，Agent 文件按当前字节重新扫描并投影为正常 observed state。旧 credential 只有在未迁移的 Agent 现场仍需要时才保留。
 
 启动期不再维护“迁移审核对话框”或 `migration review/resolve` 命令。中央数据迁移失败按 Model 能力隔离；未完成共享事务才进入全局恢复。
 
@@ -123,9 +123,9 @@ list · show · status · assign · unassign · enable · disable · converge
 收敛命令统一为：
 
 ```bash
-mux mcp converge <name::transport> --agent <id> <adopt|restore|detach>
-mux model converge <profile-or-external-id> --agent <id> <adopt|restore|detach>
-mux skill converge <name> --agent <id> <adopt|restore|detach>
+arca mcp converge <name::transport> --agent <id> <adopt|restore|detach>
+arca model converge <profile-or-external-id> --agent <id> <adopt|restore|detach>
+arca skill converge <name> --agent <id> <adopt|restore|detach>
 ```
 
 `discover` 是只读的全域观察入口。旧 `adopt`、`reapply`、`migration review/resolve` 路由不再存在，也不接受旧 wire 字段。

@@ -83,7 +83,7 @@ export function ResourceTabs<T extends string>({
   };
 
   return (
-    <div className="mux-resource-tabs" role="tablist" aria-label={label}>
+    <div className="arca-resource-tabs" role="tablist" aria-label={label}>
       {options.map((option, index) => {
         const tabId = `${tabListId}-${index}`;
         return (
@@ -93,7 +93,7 @@ export function ResourceTabs<T extends string>({
               tabRefs.current[index] = element;
             }}
             type="button"
-            className="mux-resource-tab"
+            className="arca-resource-tab"
             role="tab"
             id={tabId}
             aria-controls={panel?.panelId}
@@ -121,7 +121,7 @@ export function ResourceTabs<T extends string>({
             }}
           >
             <span>{option.label}</span>
-            <span className="mux-resource-tab-count">{option.count}</span>
+            <span className="arca-resource-tab-count">{option.count}</span>
           </button>
         );
       })}
@@ -170,7 +170,7 @@ export function ResourceWorkspace({
   const resizeSessionRef = useRef<SidebarResizeSession | null>(null);
   const [isResizing, setIsResizing] = useState(false);
   const workspaceId = useId();
-  const panelId = `mux-resource-workspace-panel-${workspaceId}`;
+  const panelId = `arca-resource-workspace-panel-${workspaceId}`;
   const [activeTabId, setActiveTabId] = useState<string>();
   const resourcePanelContext = useMemo(
     () => ({ panelId, setActiveTabId }),
@@ -271,37 +271,37 @@ export function ResourceWorkspace({
         }
       >
         <div
-          className="mux-workspace"
+          className="arca-workspace"
           data-sidebar={hasSidebar ? "true" : "false"}
           style={
             hasSidebar
-              ? ({ "--mux-workspace-sidebar-width": `${sidebarWidth}px` } as CSSProperties)
+              ? ({ "--arca-workspace-sidebar-width": `${sidebarWidth}px` } as CSSProperties)
               : undefined
           }
         >
           {sidebar}
-          <section className="mux-workspace-stage">
+          <section className="arca-workspace-stage">
             {overview ?? (title && (
-              <header className="mux-workspace-intro">
+              <header className="arca-workspace-intro">
                 <div>
                   <h1>{title}</h1>
                   {description && <p>{description}</p>}
                 </div>
               </header>
             ))}
-            <div className="mux-workspace-toolbar">
-              {listLabel && <h2 className="mux-workspace-list-heading">
+            <div className="arca-workspace-toolbar">
+              {listLabel && <h2 className="arca-workspace-list-heading">
                 {listLabel}
                 {typeof resultCount === "number" && <span>{resultCount}</span>}
               </h2>}
               <SearchBar value={query} onChange={onQueryChange} placeholder={searchPlaceholder} />
-              {toolbarActions && <div className="mux-workspace-actions">{toolbarActions}</div>}
+              {toolbarActions && <div className="arca-workspace-actions">{toolbarActions}</div>}
             </div>
-            {filters && <div className="mux-workspace-filters">{filters}</div>}
-            <div className="mux-workspace-content">
+            {filters && <div className="arca-workspace-filters">{filters}</div>}
+            <div className="arca-workspace-content">
               <div
                 id={panelId}
-                className="mux-workspace-scroll"
+                className="arca-workspace-scroll"
                 role={activeTabId ? "tabpanel" : "region"}
                 aria-label={searchPlaceholder}
                 aria-labelledby={activeTabId}
@@ -318,7 +318,7 @@ export function ResourceWorkspace({
                   layer="detail"
                   onClose={() => onInspectorClose?.()}
                 >
-                  <div className="mux-workspace-inspector-surface">{inspector}</div>
+                  <div className="arca-workspace-inspector-surface">{inspector}</div>
                 </Modal>
               )}
             </div>
@@ -345,17 +345,17 @@ export function WorkspaceSidebar({
   const resize = useContext(WorkspaceResizeContext);
 
   return (
-    <aside className="mux-workspace-sidebar">
-      <div className="mux-workspace-sidebar-head">
+    <aside className="arca-workspace-sidebar">
+      <div className="arca-workspace-sidebar-head">
         <strong>{title}</strong>
         <span>{count} 项</span>
       </div>
-      {actions && <div className="mux-workspace-sidebar-actions">{actions}</div>}
-      <div className="mux-workspace-sidebar-scroll">{children}</div>
-      {footer && <div className="mux-workspace-sidebar-footer">{footer}</div>}
+      {actions && <div className="arca-workspace-sidebar-actions">{actions}</div>}
+      <div className="arca-workspace-sidebar-scroll">{children}</div>
+      {footer && <div className="arca-workspace-sidebar-footer">{footer}</div>}
       {resize && (
         <div
-          className="mux-workspace-sidebar-resize"
+          className="arca-workspace-sidebar-resize"
           role="separator"
           aria-orientation="vertical"
           aria-label="调整侧边栏宽度"
@@ -389,17 +389,17 @@ export function ResourceOverview({
   children?: ReactNode;
 }) {
   return (
-    <header className="mux-resource-overview">
-      <div className="mux-resource-overview-heading">
-        <span className="mux-resource-overview-icon">{icon}</span>
-        <div className="mux-resource-overview-identity">
-          <span className="mux-resource-overview-eyebrow">{eyebrow}</span>
+    <header className="arca-resource-overview">
+      <div className="arca-resource-overview-heading">
+        <span className="arca-resource-overview-icon">{icon}</span>
+        <div className="arca-resource-overview-identity">
+          <span className="arca-resource-overview-eyebrow">{eyebrow}</span>
           <h1 title={title}>{title}</h1>
           {description && <p>{description}</p>}
         </div>
-        {actions && <div className="mux-resource-overview-actions">{actions}</div>}
+        {actions && <div className="arca-resource-overview-actions">{actions}</div>}
       </div>
-      {children && <div className="mux-resource-overview-details">{children}</div>}
+      {children && <div className="arca-resource-overview-details">{children}</div>}
     </header>
   );
 }
@@ -414,12 +414,12 @@ export function SidebarSection({
   children: ReactNode;
 }) {
   return (
-    <section className="mux-sidebar-section">
-      <div className="mux-sidebar-section-head">
+    <section className="arca-sidebar-section">
+      <div className="arca-sidebar-section-head">
         <span>{title}</span>
-        {actions && <div className="mux-sidebar-section-actions">{actions}</div>}
+        {actions && <div className="arca-sidebar-section-actions">{actions}</div>}
       </div>
-      <div className="mux-sidebar-section-list">{children}</div>
+      <div className="arca-sidebar-section-list">{children}</div>
     </section>
   );
 }
@@ -443,7 +443,7 @@ export function SidebarItem({
 }) {
   return (
     <div
-      className="mux-sidebar-item group"
+      className="arca-sidebar-item group"
       data-active={active ? "true" : undefined}
       title={title ?? label}
       role="button"
@@ -458,16 +458,16 @@ export function SidebarItem({
         }
       }}
     >
-      <span className="mux-sidebar-item-icon">{icon}</span>
-      <span className="mux-sidebar-item-label">{label}</span>
+      <span className="arca-sidebar-item-icon">{icon}</span>
+      <span className="arca-sidebar-item-label">{label}</span>
       {typeof count === "number" && (
-        <span className={`mux-sidebar-item-count ${actions ? "group-hover:hidden" : ""}`}>
+        <span className={`arca-sidebar-item-count ${actions ? "group-hover:hidden" : ""}`}>
           {count}
         </span>
       )}
       {actions && (
         <span
-          className="mux-sidebar-item-actions hidden group-hover:flex"
+          className="arca-sidebar-item-actions hidden group-hover:flex"
           onClick={(event) => event.stopPropagation()}
         >
           {actions}
@@ -478,7 +478,7 @@ export function SidebarItem({
 }
 
 export function ResourceGrid({ children }: { children: ReactNode }) {
-  return <div className="mux-resource-grid">{children}</div>;
+  return <div className="arca-resource-grid">{children}</div>;
 }
 
 export function ResourceEmpty({
@@ -493,8 +493,8 @@ export function ResourceEmpty({
   action?: ReactNode;
 }) {
   return (
-    <div className="mux-resource-empty">
-      {icon && <span className="mux-resource-empty-icon">{icon}</span>}
+    <div className="arca-resource-empty">
+      {icon && <span className="arca-resource-empty-icon">{icon}</span>}
       <strong>{title}</strong>
       {detail && <span>{detail}</span>}
       {action}
@@ -529,24 +529,24 @@ export function ResourceInspector({
 
   return (
     <aside
-      className="mux-resource-inspector"
+      className="arca-resource-inspector"
       data-resource-inspector
       data-modal-initial-focus
       tabIndex={-1}
       aria-label={`${title} 详情`}
     >
-      <header className="mux-resource-inspector-head">
+      <header className="arca-resource-inspector-head">
         {avatar}
         <div className="min-w-0 flex-1">
           <h2 title={title}>{title}</h2>
-          {subtitle && <div className="mux-resource-inspector-subtitle">{subtitle}</div>}
+          {subtitle && <div className="arca-resource-inspector-subtitle">{subtitle}</div>}
         </div>
-        <button type="button" className="mux-inspector-close" onClick={onClose} title="关闭" aria-label="关闭详情">
+        <button type="button" className="arca-inspector-close" onClick={onClose} title="关闭" aria-label="关闭详情">
           <XIcon className="w-4 h-4" />
         </button>
       </header>
-      <div className="mux-resource-inspector-body">{children}</div>
-      {footer && <footer className="mux-resource-inspector-footer">{footer}</footer>}
+      <div className="arca-resource-inspector-body">{children}</div>
+      {footer && <footer className="arca-resource-inspector-footer">{footer}</footer>}
     </aside>
   );
 }
@@ -561,7 +561,7 @@ export function InspectorSection({
   children: ReactNode;
 }) {
   return (
-    <section className="mux-inspector-section">
+    <section className="arca-inspector-section">
       <h3>
         {icon && <span aria-hidden="true">{icon}</span>}
         {title}
@@ -572,7 +572,7 @@ export function InspectorSection({
 }
 
 export function InspectorMetrics({ children }: { children: ReactNode }) {
-  return <div className="mux-inspector-metrics">{children}</div>;
+  return <div className="arca-inspector-metrics">{children}</div>;
 }
 
 export function InspectorMetric({
@@ -585,8 +585,8 @@ export function InspectorMetric({
   value: ReactNode;
 }) {
   return (
-    <div className="mux-inspector-metric" title={label}>
-      <span className="mux-inspector-metric-icon" aria-hidden="true">{icon}</span>
+    <div className="arca-inspector-metric" title={label}>
+      <span className="arca-inspector-metric-icon" aria-hidden="true">{icon}</span>
       <span>
         <strong>{value}</strong>
         <small>{label}</small>
@@ -611,11 +611,11 @@ export function InspectorField({
   wide?: boolean;
 }) {
   return (
-    <div className="mux-inspector-field" data-wide={wide ? "true" : undefined}>
-      <span className="mux-inspector-field-icon" data-empty={!icon ? "true" : undefined} aria-hidden="true">{icon}</span>
-      <span className="mux-inspector-field-label">{label}</span>
-      <div className={["mux-inspector-field-value", mono && "mux-inspector-field-mono"].filter(Boolean).join(" ")}>{children}</div>
-      {action && <div className="mux-inspector-field-action">{action}</div>}
+    <div className="arca-inspector-field" data-wide={wide ? "true" : undefined}>
+      <span className="arca-inspector-field-icon" data-empty={!icon ? "true" : undefined} aria-hidden="true">{icon}</span>
+      <span className="arca-inspector-field-label">{label}</span>
+      <div className={["arca-inspector-field-value", mono && "arca-inspector-field-mono"].filter(Boolean).join(" ")}>{children}</div>
+      {action && <div className="arca-inspector-field-action">{action}</div>}
     </div>
   );
 }
@@ -623,13 +623,13 @@ export function InspectorField({
 export function AgentStack({ ids: allIds, max = 4 }: { ids: string[]; max?: number }) {
   const ids = allIds.filter(isAgentVisible);
   if (allIds.length > 0 && ids.length === 0) return null;
-  if (ids.length === 0) return <span className="mux-resource-usage-empty">未连接</span>;
+  if (ids.length === 0) return <span className="arca-resource-usage-empty">未连接</span>;
   const visible = ids.slice(0, max);
   return (
-    <span className="mux-agent-stack" title={ids.map((id) => agentName(id)).join("、")}>
-      <span className="mux-agent-stack-icons">
+    <span className="arca-agent-stack" title={ids.map((id) => agentName(id)).join("、")}>
+      <span className="arca-agent-stack-icons">
         {visible.map((id) => (
-          <span className="mux-agent-stack-icon" key={id}>
+          <span className="arca-agent-stack-icon" key={id}>
             <AgentGlyph id={id} size={20} />
           </span>
         ))}

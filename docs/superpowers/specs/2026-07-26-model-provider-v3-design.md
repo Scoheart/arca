@@ -1,4 +1,4 @@
-# MUX Model Provider v3 设计
+# Arca Model Provider v3 设计
 
 ## 目标
 
@@ -13,7 +13,7 @@
 `settings.json` 升级为 v3，并增加 `model_providers`。Provider ID 和类型在编辑时不可变；同一 Provider 下 Model ID 必须唯一。协议 Endpoint 属于 Provider，Model 只可选择 Provider 已配置的协议。
 
 API Key 不进入 `settings.json`。永久 Keychain service 使用
-`com.scoheart.mux.model-provider.<providerId>`，同一 Provider 的所有 Model
+`com.scoheart.arca.model-provider.<providerId>`，同一 Provider 的所有 Model
 解析到同一 service。事务 rollback 凭据是短期恢复证据，不属于永久配置。
 
 ## 迁移

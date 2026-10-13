@@ -1,4 +1,5 @@
 #[cfg(not(unix))]
+// Existing .mux-* transaction temp names are retained solely for durable recovery.
 use super::anchored::unsupported_platform;
 use super::anchored::AnchoredRoot;
 #[cfg(unix)]
@@ -277,7 +278,7 @@ pub(crate) fn acquire_skills_lock(paths: &SkillsPaths) -> Result<SkillsOperation
     acquire_skills_lock_with_timeout(paths, LOCK_TIMEOUT)
 }
 
-/// Acquire the persistent Skills lock in shared mode without initializing MUX
+/// Acquire the persistent Skills lock in shared mode without initializing Arca
 /// storage. A caller that receives `None` must recheck after its projection:
 /// every cooperating Skills writer creates this lock before changing the
 /// central tree, links, journals, or settings.
@@ -356,8 +357,8 @@ fn open_existing_private_lock(paths: &SkillsPaths) -> Result<Option<File>, Skill
         return Ok(None);
     }
     let path = paths.skills_lock();
-    let mux = AnchoredRoot::open(paths.mux_dir())?;
-    let directory = mux.root_directory()?;
+    let arca = AnchoredRoot::open(paths.arca_dir())?;
+    let directory = arca.root_directory()?;
     let descriptor = match openat(
         &directory,
         "skills.lock",
@@ -406,8 +407,8 @@ fn open_private_lock(paths: &SkillsPaths) -> Result<File, SkillError> {
     use rustix::fs::{openat, Mode, OFlags};
 
     let path = paths.skills_lock();
-    let mux = AnchoredRoot::open(paths.mux_dir())?;
-    let directory = mux.root_directory()?;
+    let arca = AnchoredRoot::open(paths.arca_dir())?;
+    let directory = arca.root_directory()?;
     let descriptor = openat(
         &directory,
         "skills.lock",
@@ -427,7 +428,7 @@ fn open_private_lock(paths: &SkillsPaths) -> Result<File, SkillError> {
         .map_err(|error| io_error(&path, error))?;
     directory
         .sync_all()
-        .map_err(|error| io_error(paths.mux_dir(), error))?;
+        .map_err(|error| io_error(paths.arca_dir(), error))?;
     Ok(file)
 }
 
@@ -849,7 +850,7 @@ pub fn execute_transaction_with_failpoint(
 ) -> Result<(), SkillError> {
     require_secure_transaction_platform()?;
     let paths = SkillsPaths::resolve_from_env()?;
-    paths.ensure_mux_root()?;
+    paths.ensure_arca_root()?;
     let _lock = acquire_skills_lock(&paths)?;
     // Preserve the global writer order (Skills -> settings/safe-write). A
     // second, already-Ready process can otherwise pass its application gate,
@@ -902,7 +903,7 @@ fn validate_transaction_roots(
     paths: &SkillsPaths,
     journal_may_be_missing: bool,
 ) -> Result<(), SkillError> {
-    let mux_root = fs::canonicalize(paths.mux_dir()).map_err(|_| unsafe_transaction_path())?;
+    let arca_root = fs::canonicalize(paths.arca_dir()).map_err(|_| unsafe_transaction_path())?;
     for (root, may_be_missing) in [
         (paths.skills_dir(), false),
         (paths.staging_skills_dir(), false),
@@ -918,7 +919,7 @@ fn validate_transaction_roots(
             return Err(unsafe_transaction_path());
         }
         let canonical = fs::canonicalize(&root).map_err(|_| unsafe_transaction_path())?;
-        if canonical == mux_root || !canonical.starts_with(&mux_root) {
+        if canonical == arca_root || !canonical.starts_with(&arca_root) {
             return Err(unsafe_transaction_path());
         }
     }
@@ -2676,7 +2677,7 @@ pub(crate) fn write_skill_settings(
     if !applied {
         return Err(stale("Skills settings changed before they were written"));
     }
-    sync_directory(paths.mux_dir())
+    sync_directory(paths.arca_dir())
 }
 
 fn restore_skill_settings(
@@ -2715,7 +2716,7 @@ fn restore_skill_settings(
             message: "concurrent Skills settings prevent automatic recovery".into(),
         });
     }
-    sync_directory(paths.mux_dir())
+    sync_directory(paths.arca_dir())
 }
 
 fn rollback_transaction(spec: &TransactionSpec, paths: &SkillsPaths) -> Result<(), SkillError> {
@@ -4046,7 +4047,7 @@ fn journal_entry_exists(path: &Path) -> Result<bool, SkillError> {
 pub fn recover_pending() -> Result<(), SkillError> {
     require_secure_transaction_platform()?;
     let paths = SkillsPaths::resolve_from_env()?;
-    paths.ensure_mux_root().map_err(recovery_error)?;
+    paths.ensure_arca_root().map_err(recovery_error)?;
     // Lock contention is an active peer, not broken recovery evidence. Keep
     // it retryable so startup can leave unrelated read capabilities online.
     let _lock = acquire_skills_lock(&paths)?;
@@ -4513,7 +4514,7 @@ pub fn crash_transaction_at_phase_for_test(
     phase: JournalPhase,
 ) -> Result<(), SkillError> {
     let paths = SkillsPaths::resolve_from_env()?;
-    paths.ensure_mux_root()?;
+    paths.ensure_arca_root()?;
     let _lock = acquire_skills_lock(&paths)?;
     paths.ensure_transaction_roots()?;
     if has_pending_recovery_with_paths(&paths)? {
@@ -4563,7 +4564,7 @@ pub fn crash_transaction_before_phase_for_test(
     point: CrashPoint,
 ) -> Result<(), SkillError> {
     let paths = SkillsPaths::resolve_from_env()?;
-    paths.ensure_mux_root()?;
+    paths.ensure_arca_root()?;
     let _lock = acquire_skills_lock(&paths)?;
     paths.ensure_transaction_roots()?;
     if has_pending_recovery_with_paths(&paths)? {
@@ -4877,20 +4878,20 @@ mod tests {
 
     #[cfg(not(unix))]
     #[test]
-    fn unsupported_platforms_reject_public_transactions_before_creating_mux_state() {
+    fn unsupported_platforms_reject_public_transactions_before_creating_arca_state() {
         let home = TestHome::new("tx-unsupported-platform");
-        let mux = home.home.join(".mux");
+        let arca = home.home.join(".arca");
 
         assert!(matches!(
             execute_transaction(empty_spec("10010000-0000-4000-8000-000000000006")),
             Err(SkillError::InvalidSource { .. })
         ));
-        assert!(!mux.exists());
+        assert!(!arca.exists());
         assert!(matches!(
             recover_pending(),
             Err(SkillError::InvalidSource { .. })
         ));
-        assert!(!mux.exists());
+        assert!(!arca.exists());
     }
 
     #[test]
@@ -5024,13 +5025,13 @@ mod tests {
         use std::os::unix::fs::{symlink, DirBuilderExt};
 
         let home = TestHome::new("tx-control-root-link");
-        let mux = home.home.join(".mux");
+        let arca = home.home.join(".arca");
         let mut builder = fs::DirBuilder::new();
-        builder.mode(0o700).create(&mux).unwrap();
+        builder.mode(0o700).create(&arca).unwrap();
         let outside = home.home.join("outside-journals");
         builder.mode(0o711).create(&outside).unwrap();
         fs::write(outside.join("sentinel"), b"untouched").unwrap();
-        symlink(&outside, mux.join("journals")).unwrap();
+        symlink(&outside, arca.join("journals")).unwrap();
 
         let error =
             execute_transaction(empty_spec("11100000-0000-4000-8000-000000000006")).unwrap_err();
@@ -5056,15 +5057,15 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn recovery_rejects_a_symlinked_mux_home_without_touching_its_target() {
+    fn recovery_rejects_a_symlinked_arca_home_without_touching_its_target() {
         use std::os::unix::fs::{symlink, DirBuilderExt};
 
-        let home = TestHome::new("tx-mux-root-link");
-        let outside = home.home.join("outside-mux");
+        let home = TestHome::new("tx-arca-root-link");
+        let outside = home.home.join("outside-arca");
         let mut builder = fs::DirBuilder::new();
         builder.mode(0o711).create(&outside).unwrap();
         fs::write(outside.join("sentinel"), b"untouched").unwrap();
-        symlink(&outside, home.home.join(".mux")).unwrap();
+        symlink(&outside, home.home.join(".arca")).unwrap();
 
         let error = recover_pending().unwrap_err();
 
@@ -5079,7 +5080,7 @@ mod tests {
                 .map(|entry| entry.unwrap().file_name())
                 .collect::<Vec<_>>(),
             vec![OsString::from("sentinel")],
-            "recovery setup must not create through a symlinked MUX_HOME"
+            "recovery setup must not create through a symlinked ARCA_HOME"
         );
         assert_eq!(
             fs::metadata(&outside).unwrap().permissions().mode() & 0o777,
@@ -5853,14 +5854,14 @@ mod tests {
     fn shared_read_lock_does_not_initialize_an_empty_home() {
         let home = TestHome::new("tx-read-lock-empty");
         let paths = SkillsPaths::resolve_from_env().unwrap();
-        assert!(!home.home.join(".mux").exists());
+        assert!(!home.home.join(".arca").exists());
 
         let guard = acquire_skills_read_lock_if_initialized(&paths).unwrap();
 
         assert!(guard.is_none());
         assert!(
-            !home.home.join(".mux").exists(),
-            "a read-only Skills lock probe must not initialize MUX storage"
+            !home.home.join(".arca").exists(),
+            "a read-only Skills lock probe must not initialize Arca storage"
         );
     }
 
@@ -5870,7 +5871,7 @@ mod tests {
 
         let _home = TestHome::new("tx-read-lock-writer");
         let paths = SkillsPaths::resolve_from_env().unwrap();
-        paths.ensure_mux_root().unwrap();
+        paths.ensure_arca_root().unwrap();
         drop(acquire_skills_lock(&paths).unwrap());
         let read_guard = acquire_skills_read_lock_if_initialized(&paths)
             .unwrap()
@@ -6584,7 +6585,7 @@ mod tests {
                 "--exact",
                 "resources::skill::transaction::tests::advisory_lock_child_helper",
             ])
-            .env("MUX_TRANSACTION_LOCK_CHILD_READY", &ready)
+            .env("ARCA_TRANSACTION_LOCK_CHILD_READY", &ready)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()
@@ -6612,7 +6613,7 @@ mod tests {
     #[test]
     #[ignore]
     fn advisory_lock_child_helper() {
-        let Some(ready) = std::env::var_os("MUX_TRANSACTION_LOCK_CHILD_READY") else {
+        let Some(ready) = crate::brand::env_os("ARCA_TRANSACTION_LOCK_CHILD_READY") else {
             return;
         };
         let paths = SkillsPaths::from_env().unwrap();

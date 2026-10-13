@@ -46,14 +46,14 @@ function registryState(overrides: Record<string, unknown> = {}) {
 }
 
 it("maps MCP assets to the compact central index", () => {
-  expect(source).toMatch(/className="mux-registry-workspace"/);
-  expect(source).toMatch(/className="mux-asset-list mux-mcp-list"[\s\S]*?role="list"/);
+  expect(source).toMatch(/className="arca-registry-workspace"/);
+  expect(source).toMatch(/className="arca-asset-list arca-mcp-list"[\s\S]*?role="list"/);
   const row = source.slice(source.indexOf("function RegistryCard"), source.indexOf("function RegistryDetail"));
-  expect(row).toMatch(/className="mux-asset-list-row mux-mcp-list-row"/);
-  expect(row).toMatch(/mux-asset-list-identity/);
-  expect(row).toMatch(/mux-asset-list-transport/);
-  expect(row).toMatch(/mux-asset-list-source/);
-  expect(row).toMatch(/mux-asset-list-status/);
+  expect(row).toMatch(/className="arca-asset-list-row arca-mcp-list-row"/);
+  expect(row).toMatch(/arca-asset-list-identity/);
+  expect(row).toMatch(/arca-asset-list-transport/);
+  expect(row).toMatch(/arca-asset-list-source/);
+  expect(row).toMatch(/arca-asset-list-status/);
   expect(row).toMatch(/transportOf\(entry\)\.toUpperCase\(\)/);
   expect(row).toMatch(/<McpAvatar[\s\S]*?assetKey=\{keyOf\(entry\)\}/);
   expect(row).toMatch(/centralAssets\.effective/);
@@ -106,7 +106,7 @@ it("renders effective and shadowed MCP rows and opens the existing Inspector", a
   );
 
   const list = screen.getByRole("list", { name: "MCP 资产" });
-  expect(list).toHaveClass("mux-asset-list", "mux-mcp-list");
+  expect(list).toHaveClass("arca-asset-list", "arca-mcp-list");
   expect(within(list).getByText("名称与连接")).toBeVisible();
   expect(within(list).getByText("传输")).toBeVisible();
   expect(within(list).getByText("来源")).toBeVisible();

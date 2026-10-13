@@ -58,7 +58,7 @@ mod macos {
                         let y = (point.y - bounds.origin.y) / bounds.size.height;
                         // Match CSS coordinates even if the native view is not flipped.
                         let y = if view.isFlipped() { y } else { 1.0 - y };
-                        let _ = events.emit("mux-trackpad-scroll", Scroll {
+                        let _ = events.emit("arca-trackpad-scroll", Scroll {
                             gesture: gesture.get(), phase: phase.0, momentum,
                             // AppKit's horizontal sign is opposite DOM WheelEvent.
                             delta_x: -event.scrollingDeltaX(), delta_y: -event.scrollingDeltaY(), x, y,

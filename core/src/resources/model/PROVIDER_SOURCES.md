@@ -2,7 +2,7 @@
 
 ## GMI Cloud — 2026-10-09
 
-`gmi-cloud` is a separate gateway Provider with Chat Completions at `https://api.gmi-serving.com/v1/chat/completions`, Responses at `https://api.gmi-serving.com/v1/responses`, and Anthropic Messages at `https://api.gmi-serving.com/v1/messages`. Combining the documented protocol bases gives the normalized MUX Base URL `https://api.gmi-serving.com` and paths `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`.
+`gmi-cloud` is a separate gateway Provider with Chat Completions at `https://api.gmi-serving.com/v1/chat/completions`, Responses at `https://api.gmi-serving.com/v1/responses`, and Anthropic Messages at `https://api.gmi-serving.com/v1/messages`. Combining the documented protocol bases gives the normalized Arca Base URL `https://api.gmi-serving.com` and paths `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`.
 
 Official sources: [LLM API](https://docs.gmicloud.ai/inference-engine/api-reference/llm-api-reference), [Codex integration](https://docs.gmicloud.ai/coding-tools/codex), [Claude Code integration](https://docs.gmicloud.ai/coding-tools/claude-code), and [API key guide](https://docs.gmicloud.ai/cluster-engine/user-management/api-keys). The guide links `https://console.gmicloud.ai/user-setting/api-keys`; its unauthenticated redirect preserves the key-page destination behind sign-in.
 
@@ -16,7 +16,7 @@ Model discovery uses the documented authenticated `GET /v1/models`, with the exi
 
 The desktop's selected Provider banner, picker selection footer, and editor form use a core-provided portal: **Get API Key**, **Open console**, or **Setup guide**. Key-page entries include API Tokens and Access Tokens; account/region/subscription consoles are explicitly labeled as consoles, not promised as direct key pages. Ollama, LM Studio, and vLLM are local connection templates and retain setup guides rather than unrelated cloud account keys. The editor shows the effective address next to a browser-open action and can restore the template default. URLs open with the native system-browser opener without selecting a template, submitting a form, generating a key, or modifying a saved connection. Opener failures use the existing toast UI.
 
-Each saved Provider connection can persist an optional `portal_url` override. Core accepts only a credential-free HTTPS URL without a fragment and resolves the effective portal from the override or template. CLI Provider list/show and desktop use that same resolved value; templates retain their defaults. `mux model provider docs` and `docs_url` keep their documentation semantics. The portal URL is not exported to Agent configuration, used for model discovery, or treated as an inference endpoint. API credentials remain in Keychain.
+Each saved Provider connection can persist an optional `portal_url` override. Core accepts only a credential-free HTTPS URL without a fragment and resolves the effective portal from the override or template. CLI Provider list/show and desktop use that same resolved value; templates retain their defaults. `arca model provider docs` and `docs_url` keep their documentation semantics. The portal URL is not exported to Agent configuration, used for model discovery, or treated as an inference endpoint. API credentials remain in Keychain.
 
 Portal sources are the official key pages and linked quickstarts reviewed on this date. Login redirects and JavaScript-only shells confirm an account entry, not successful authenticated key creation. Stable console entries are used when an authenticated resource/team/plan selection prevents verification of a direct key route. Temporary OAuth URLs, guessed team IDs, referral codes, and credentials are never recorded.
 
@@ -52,7 +52,7 @@ Plan-specific Provider templates were audited on 2026-07-28 against
 documentation for authority. A Coding/Token Plan is a separate connection:
 its API key and endpoint must not be mixed with the vendor's pay-as-you-go API.
 
-| MUX Provider ID | OpenAI-compatible Base URL | Anthropic-compatible Base URL | Official source |
+| Arca Provider ID | OpenAI-compatible Base URL | Anthropic-compatible Base URL | Official source |
 |---|---|---|---|
 | `zai-coding-plan` | `https://api.z.ai/api/coding/paas/v4` | `https://api.z.ai/api/anthropic` | <https://docs.z.ai/devpack/quick-start> |
 | `zhipuai-coding-plan` | `https://open.bigmodel.cn/api/coding/paas/v4` | `https://open.bigmodel.cn/api/anthropic` | <https://docs.bigmodel.cn/cn/coding-plan/quick-start> |
@@ -73,7 +73,7 @@ its API key and endpoint must not be mixed with the vendor's pay-as-you-go API.
 | `tencent-token-plan-global` | `https://tokenhub-intl.tencentcloudmaas.com/plan/v3` | `https://tokenhub-intl.tencentcloudmaas.com/plan/anthropic` | <https://intl.cloud.tencent.com/document/product/1300/81315> |
 
 Many plan products are restricted to interactive coding tools and supported
-agents. MUX only stores the user-selected connection and credentials locally;
+agents. Arca only stores the user-selected connection and credentials locally;
 users remain responsible for the vendor's plan eligibility and usage policy.
 
 The China MiniMax template endpoints were reverified on 2026-09-07 against the current official Token Plan and OpenAI/Anthropic SDK guides (`api.minimax.cn`). Existing saved connections are not rewritten.
@@ -83,12 +83,12 @@ The September 2026 expansion adds 19 templates and removes the retired GitHub Mo
 ## Gateway Provider templates
 
 These gateway templates were reviewed on 2026-09-20. They are selectable
-first-class MUX Providers, not aliases for the underlying model vendors. MUX
+first-class Arca Providers, not aliases for the underlying model vendors. Arca
 keeps the OpenAI Responses/Completions and Anthropic Messages paths as separate
 protocol entries so one Provider can be reused by Agents with different
 protocol requirements.
 
-| MUX Provider ID | OpenAI-compatible Base URL | Anthropic-compatible Base URL | Official source |
+| Arca Provider ID | OpenAI-compatible Base URL | Anthropic-compatible Base URL | Official source |
 |---|---|---|---|
 | `routeway` | `https://api.routeway.ai/v1` | `https://api.routeway.ai` | [Codex integration](https://docs.routeway.ai/integrations/agents/codex), [Claude Code integration](https://docs.routeway.ai/integrations/agents/claude-code) |
 | `infron` | `https://llm.onerouter.pro/v1` | `https://llm.onerouter.pro` | [API reference](https://infron.ai/models/deepseek/deepseek-v4-flash:free/api-reference) |

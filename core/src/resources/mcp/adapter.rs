@@ -40,7 +40,7 @@ pub trait Adapter {
     /// entries that are not decodable as supported MCP transports.
     fn has_entries(&self, path: &Path) -> Result<bool, String>;
     /// Capture one complete server entry before a destructive operation. Unlike
-    /// `read`, this includes Agent-owned policy fields that MUX does not model.
+    /// `read`, this includes Agent-owned policy fields that Arca does not model.
     fn snapshot(&self, path: &Path, name: &str) -> Result<Option<Value>, String>;
     /// Remove one entry only if its complete semantic value still matches the
     /// snapshot persisted by the disable flow.

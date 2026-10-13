@@ -13,8 +13,8 @@ export function ManualModelCard({ disabled, onAdd }: { disabled: boolean; onAdd(
   const { t } = useTranslation();
   return (
     <div role="listitem">
-      <button type="button" className="mux-model-manual-card" onClick={onAdd} disabled={disabled}>
-        <span className="mux-model-manual-icon"><PlusIcon className="w-5 h-5" /></span>
+      <button type="button" className="arca-model-manual-card" onClick={onAdd} disabled={disabled}>
+        <span className="arca-model-manual-icon"><PlusIcon className="w-5 h-5" /></span>
         <span><strong>{t("models.manualAdd")}</strong><small>{t("models.manualAddHint")}</small></span>
       </button>
     </div>
@@ -76,8 +76,8 @@ export function ProviderModelCatalog({
   }, [models, existingIds, query]);
 
   return (
-    <section className="mux-model-catalog-section" aria-label={t("models.availableModels")}>
-      <div className="mux-model-section-heading">
+    <section className="arca-model-catalog-section" aria-label={t("models.availableModels")}>
+      <div className="arca-model-section-heading">
         <h2>{t("models.availableModels")} <span>{loading && models.length === 0 ? "…" : available.length}</span></h2>
         <button type="button" className="btn-ghost" disabled={loading} aria-busy={loading}
           title={t("models.refreshModelCatalog")} onClick={() => void load(true)}>
@@ -85,25 +85,25 @@ export function ProviderModelCatalog({
           {t("models.refreshModelCatalog")}
         </button>
       </div>
-      {loading && <p className="mux-model-catalog-notice" role="status">{t("models.loadingModelCatalog")}</p>}
-      {error && <p className="mux-model-catalog-notice" role="status">
+      {loading && <p className="arca-model-catalog-notice" role="status">{t("models.loadingModelCatalog")}</p>}
+      {error && <p className="arca-model-catalog-notice" role="status">
         {error.includes("credential_missing")
           ? t("models.discoveryNeedsCredential")
           : error.includes("model_discovery_endpoint_invalid") ? t("models.discoveryNeedsEndpoint")
           : t("models.discoveryError", { error })}
       </p>}
-      {!loading && !error && available.length === 0 && <p className="mux-model-catalog-notice">
+      {!loading && !error && available.length === 0 && <p className="arca-model-catalog-notice">
         {query.trim() ? t("models.noModelCatalogMatches") : models.length > 0
           ? t("models.catalogAllAdded") : t("models.catalogEmpty")}
       </p>}
-      {available.length > 0 && <div className="mux-asset-list mux-model-candidate-list" role="list" aria-label={t("models.availableModels")}>
+      {available.length > 0 && <div className="arca-asset-list arca-model-candidate-list" role="list" aria-label={t("models.availableModels")}>
         {available.slice(0, limit).map((model) => <CandidateModelCard key={model.id}
           model={model} provider={provider} protocols={protocols}
           disabled={disabled || addingId !== null || loading}
           busy={addingId === model.id}
           onAdd={async (protocol) => { await onAdd(model, protocol); }} />)}
       </div>}
-      {available.length > limit && <button type="button" className="mux-model-catalog-more btn-ghost"
+      {available.length > limit && <button type="button" className="arca-model-catalog-more btn-ghost"
         onClick={() => setLimit((current) => current + PAGE_SIZE)}>
         {t("models.showMoreAvailable", { count: Math.min(PAGE_SIZE, available.length - limit) })}
       </button>}
@@ -131,21 +131,21 @@ function CandidateModelCard({ model, provider, protocols, disabled, busy, onAdd 
     catch (cause) { setError(formatError(cause)); }
   };
   return (
-    <article className="mux-model-candidate-card" role="listitem" aria-label={t("models.catalogCandidate", { name: model.name || model.id })}>
-      <div className="mux-asset-list-identity">
+    <article className="arca-model-candidate-card" role="listitem" aria-label={t("models.catalogCandidate", { name: model.name || model.id })}>
+      <div className="arca-asset-list-identity">
         <ProviderGlyph id={provider.provider} name={provider.name} size={30} />
-        <span className="mux-asset-list-copy">
+        <span className="arca-asset-list-copy">
           <strong title={model.name || model.id}>{model.name || model.id}</strong>
           <code title={model.id}>{model.id}</code>
         </span>
       </div>
-      <div className="mux-model-candidate-facts">
+      <div className="arca-model-candidate-facts">
         <span>{t("models.catalogCandidateLabel")}</span>
         {model.context_length != null && model.context_length > 0 && <span>
           {t("models.context")} {new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(model.context_length)}
         </span>}
       </div>
-      <div className="mux-model-candidate-controls">
+      <div className="arca-model-candidate-controls">
         {protocols.length > 1 ? <FormSelect ariaLabel={`${t("models.protocol")} · ${model.id}`}
           value={validProtocol ? protocol : ""} options={protocols} placeholder={t("models.chooseProtocol")}
           disabled={disabled} onChange={setChosenProtocol} />
@@ -156,7 +156,7 @@ function CandidateModelCard({ model, provider, protocols, disabled, busy, onAdd 
           {busy ? t("models.addingAction") : t("models.addAction")}
         </button>
       </div>
-      {error && <p className="mux-model-candidate-error" role="alert">{error}</p>}
+      {error && <p className="arca-model-candidate-error" role="alert">{error}</p>}
     </article>
   );
 }

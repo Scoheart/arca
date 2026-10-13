@@ -44,14 +44,14 @@ function TreeNode({ node, selected, onSelect }: { node: Tree; selected: string; 
   </div></details>;
 }
 
-export function CaptureView({ agents, initialAgentId, muxProxy }: { agents: AgentInfo[]; initialAgentId?: string; muxProxy: string | null }) {
+export function CaptureView({ agents, initialAgentId, arcaProxy }: { agents: AgentInfo[]; initialAgentId?: string; arcaProxy: string | null }) {
   const toast = useToast();
   const [environment, setEnvironment] = useState<CaptureEnvironment | null>(null);
   const [sessions, setSessions] = useState<CaptureSession[]>([]);
   const [snapshot, setSnapshot] = useState<CaptureSnapshot | null>(null);
   const [agentId, setAgentId] = useState(initialAgentId ?? agents[0]?.id ?? '');
   const [targetId, setTargetId] = useState('');
-  const [egress, setEgress] = useState(muxProxy ? 'mux' : 'direct');
+  const [egress, setEgress] = useState(arcaProxy ? 'arca' : 'direct');
   const [proxy, setProxy] = useState('');
   const [directory, setDirectory] = useState('');
   const [query, setQuery] = useState('');
@@ -168,7 +168,7 @@ export function CaptureView({ agents, initialAgentId, muxProxy }: { agents: Agen
   const bodyPreview = useMemo(() => !showsBody ? '' : content ? format === 'body' ? pretty(content) : content : pending ? '等待完整响应事件…' : flow?.error ?? '（空正文）', [showsBody, content, format, Boolean(pending), flow?.error]);
   const status = snapshot ? stateLabel[snapshot.status.state] ?? snapshot.status.state : '未开始';
   const css = { '--capture-tree-width': `${treeWidth}px`, '--capture-list-height': `${listHeight}px` } as CSSProperties;
-  return <div className="mux-capture" style={css}>
+  return <div className="arca-capture" style={css}>
     <header className="capture-titlebar"><div><h1>网络抓包</h1><span className="capture-recording-state" data-live={Boolean(active)}>{status}</span>
       {selectedAgent && <span className="capture-agent-label"><AgentGlyph id={selectedAgent.id} size={18} />{selectedAgent.name}</span>}</div>
       <div className="capture-title-actions"><button className="capture-button" onClick={() => setSettingsOpen(true)}><SlidersIcon className="w-4 h-4" />设置</button>
@@ -232,7 +232,7 @@ export function CaptureView({ agents, initialAgentId, muxProxy }: { agents: Agen
         {support?.kind === 'cli' && <label>工作目录（使用默认目录可留空）<input value={directory} onChange={event => setDirectory(event.target.value)} placeholder="/path/to/project" /></label>}
         <p className="capture-setting-note">追加 CA 保留证书校验，只影响新进程。已打开的桌面应用可能复用原进程，需要结束原实例后重新启动。</p>
         {support && support.ca_scope !== 'process' && <p className="capture-setting-note">{support.ca_scope === 'mixed' ? '追加 CA 覆盖采用它的运行时及辅助进程请求；浏览器网络栈仍需要系统信任抓包 CA。' : '此桌面客户端需要系统信任抓包 CA；进程环境变量不能覆盖全部网络请求。'}</p>}
-        <div className="capture-setting-columns"><label>出口<select value={egress} disabled={Boolean(active)} onChange={event => setEgress(event.target.value)}><option value="direct">直连</option><option value="mux" disabled={!muxProxy}>MUX 代理</option><option value="custom">自定义 HTTP 代理</option></select></label>{egress === 'custom' && <label>代理地址<input disabled={Boolean(active)} value={proxy} onChange={event => setProxy(event.target.value)} placeholder="http://127.0.0.1:6789" /></label>}</div>
+        <div className="capture-setting-columns"><label>出口<select value={egress} disabled={Boolean(active)} onChange={event => setEgress(event.target.value)}><option value="direct">直连</option><option value="arca" disabled={!arcaProxy}>Arca 代理</option><option value="custom">自定义 HTTP 代理</option></select></label>{egress === 'custom' && <label>代理地址<input disabled={Boolean(active)} value={proxy} onChange={event => setProxy(event.target.value)} placeholder="http://127.0.0.1:6789" /></label>}</div>
         <div className="capture-setting-health"><span>mitmproxy {environment?.engine ? '可用' : '未安装'}</span><span>网络扩展 {environment?.extension_enabled ? '已启用' : '未启用'}</span><span>CA {environment?.certificate_trusted ? '系统已信任' : environment?.certificate_present ? '系统未信任，需验证客户端' : '未生成'}</span></div>
         {environment?.other_extensions.length ? <p className="capture-setting-note">{environment.other_extensions.join('、')} 也在接管网络。流量为空时检查目标应用的规则；不要停用其他应用的连接。</p> : null}
         <p className="capture-setting-note">只记录所选进程及后代的 HTTP／HTTPS。上游失败不回退直连；内部环回 TLS、证书固定及 QUIC 需按客户端验证。正文上限 2 MiB，会话上限 5000 条／100 MiB。</p>

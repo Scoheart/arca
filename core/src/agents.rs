@@ -198,8 +198,8 @@ fn validate_skill_directory(path: &str) -> Result<(), String> {
     {
         return Err(format!("{path} contains an unsafe path component"));
     }
-    if components.first() == Some(&".mux") {
-        return Err(format!("{path} is inside MUX-managed storage"));
+    if matches!(components.first(), Some(&".arca") | Some(&crate::brand::LEGACY_HOME)) {
+        return Err(format!("{path} is inside Arca-managed storage"));
     }
     Ok(())
 }
@@ -1309,7 +1309,7 @@ mod tests {
             "~/.agents//skills",
             "~/.agents/./skills",
             "~/.agents/../skills",
-            "~/.mux/assets/skills/items",
+            "~/.arca/assets/skills/items",
         ] {
             let agents = BTreeMap::from([(
                 "unsafe".into(),
@@ -1327,7 +1327,7 @@ mod tests {
         let mut unsafe_alias = skills_capability("safe-user", "~/.safe/skills");
         unsafe_alias.aliases.push(AgentSkillsDirectory {
             target_id: "unsafe-alias".into(),
-            global_dir: "~/.mux/assets/skills/items".into(),
+            global_dir: "~/.arca/assets/skills/items".into(),
         });
         let agents = BTreeMap::from([(
             "unsafe-alias".into(),

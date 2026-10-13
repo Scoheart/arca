@@ -96,7 +96,7 @@ pub(super) fn prepare(
     ] {
         set_json(&provider, key, Some(json!(value)));
     }
-    // Each MUX-created provider owns one model; preserve provider metadata.
+    // Each Arca-created provider owns one model; preserve provider metadata.
     if provider.get("displayName").is_none() {
         set_json(&provider, "displayName", Some(json!(profile.name)));
     }
@@ -224,7 +224,7 @@ mod tests {
     struct TempDir(PathBuf);
     impl TempDir {
         fn new() -> Self {
-            let path = std::env::temp_dir().join(format!("mux-qoder-models-{}", uuid::Uuid::new_v4()));
+            let path = std::env::temp_dir().join(format!("arca-qoder-models-{}", uuid::Uuid::new_v4()));
             fs::create_dir_all(&path).unwrap();
             Self(path)
         }
@@ -238,7 +238,7 @@ mod tests {
         serde_json::from_value(json!({
             "id": "qoder-fixture", "name": "Fixture model", "model": "fixture-model",
             "protocol": "openai-completions", "base_url": "https://example.invalid/v1",
-            "env_key": "MUX_QODER_FIXTURE_KEY", "context_window": 128000
+            "env_key": "ARCA_QODER_FIXTURE_KEY", "context_window": 128000
         })).unwrap()
     }
 
@@ -313,7 +313,7 @@ mod tests {
             let root = read_jsonc(&path).unwrap().0.to_serde_value().unwrap();
             let provider = &root["providers"][provider_id_for(AGENT, &profile)];
             assert_eq!(provider["protocol"], wire);
-            assert_eq!(provider["apiKey"], "${MUX_QODER_FIXTURE_KEY}");
+            assert_eq!(provider["apiKey"], "${ARCA_QODER_FIXTURE_KEY}");
             assert_eq!(root["model"]["name"], "cli-selection");
             assert_eq!(root["mcpServers"]["keep"]["command"], "fixture");
             assert_eq!(prepare(AGENT, &path, &profile, false, None).unwrap().content.as_deref(), Some(content.as_str()));

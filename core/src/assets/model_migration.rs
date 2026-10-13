@@ -53,7 +53,7 @@ pub struct ModelAdoptionCandidate {
     pub candidate_id: String,
     pub agent_id: String,
     pub native_id: String,
-    /// Existing MUX Profile whose native slot produced this observation.
+    /// Existing Arca Profile whose native slot produced this observation.
     /// Present only when the Agent changed fields of a managed Profile.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub managed_profile_id: Option<String>,
@@ -139,7 +139,7 @@ impl ExtractedModel {
     }
 
     fn status(&self) -> (ModelAdoptionStatus, Option<String>) {
-        if self.agent_id == "qoder-desktop" && self.native_id.starts_with("mux_cli_") {
+        if self.agent_id == "qoder-desktop" && self.native_id.starts_with("arca_cli_") {
             return (ModelAdoptionStatus::Unsupported, Some("此条目由 Qoder CLI 管理，请在 CLI 页面操作".into()));
         }
         if matches!(self.credential, ExtractedCredential::Conflict) {
@@ -163,7 +163,7 @@ impl ExtractedModel {
             ),
             (ExtractedCredential::Env(_), true) => (
                 ModelAdoptionStatus::NeedsCredential,
-                Some("该 Agent 的 MUX writer 使用 Keychain，不能无损接管外部环境变量引用".into()),
+                Some("该 Agent 的 Arca writer 使用 Keychain，不能无损接管外部环境变量引用".into()),
             ),
             (ExtractedCredential::Literal(_), false) => (
                 ModelAdoptionStatus::NeedsCredential,
@@ -284,7 +284,7 @@ pub(super) fn list_model_adoption_candidates_scoped(agent_ids: &BTreeSet<String>
     Ok(candidates)
 }
 
-/// Exact Agent-native observations that already match an assigned MUX Profile.
+/// Exact Agent-native observations that already match an assigned Arca Profile.
 ///
 /// Model writers intentionally own only one model entry, not the entire native
 /// provider container. Comparing extracted model identity avoids classifying
@@ -386,7 +386,7 @@ pub fn plan_model_adoption(
     let mut draft = selected[0].profile();
     draft.native_ids.clear();
     for candidate in &selected {
-        // Imports into these shared registries get a new MUX-owned provider, preserving the external
+        // Imports into these shared registries get a new Arca-owned provider, preserving the external
         // provider and every sibling model instead of adopting its identity.
         if agent_uses_native_id(&candidate.agent_id) && !matches!(candidate.agent_id.as_str(), "zcode" | "qoder-cli" | "opencode-desktop" | "kilo-desktop") {
             draft
@@ -414,7 +414,7 @@ pub fn plan_model_adoption(
         let current = settings.model_selection(&candidate.agent_id);
         if matches!(candidate.agent_id.as_str(), "zcode" | "qoder-cli" | "opencode-desktop" | "kilo-desktop") {
             // ModelAdopt intentionally never writes native configuration. Import
-            // only the central asset; an explicit Add later creates its MUX slot.
+            // only the central asset; an explicit Add later creates its Arca slot.
             before.insert(candidate.agent_id.clone(), current.clone());
             after.insert(candidate.agent_id.clone(), current);
             continue;
@@ -589,7 +589,7 @@ fn mark_unsafe_native_identities(extracted: &mut [ExtractedModel]) {
     for candidate in extracted {
         if agent_uses_native_id(&candidate.agent_id) && !safe_native_id(&candidate.native_id) {
             candidate.credential = ExtractedCredential::Invalid(
-                "Agent-native provider identity 含有不安全字符，MUX 不会把它用于配置键或文件名"
+                "Agent-native provider identity 含有不安全字符，Arca 不会把它用于配置键或文件名"
                     .into(),
             );
         }
@@ -617,7 +617,7 @@ fn mark_shared_native_provider_models(extracted: &mut [ExtractedModel]) {
             .unwrap_or(indices[0]);
         for index in indices.into_iter().filter(|index| *index != keep) {
             extracted[index].credential = ExtractedCredential::Invalid(
-                "多个 Model 共用同一个 Agent-native provider；请先在 Agent 中拆分 provider identity，MUX 不会覆盖兄弟模型"
+                "多个 Model 共用同一个 Agent-native provider；请先在 Agent 中拆分 provider identity，Arca 不会覆盖兄弟模型"
                     .into(),
             );
         }
@@ -1105,7 +1105,7 @@ fn qwen_provider_models_for_discovery<'a>(
     auth: &str,
 ) -> Result<&'a [Value], String> {
     // Keep discovery aligned with the writer: Qwen Code 0.20.0 consumes the
-    // direct ModelConfig[] shape. Older MUX builds wrote the exact
+    // direct ModelConfig[] shape. Older Arca builds wrote the exact
     // `{ protocol, models }` wrapper, which remains safe to discover, but an
     // extended or malformed wrapper is Agent-owned and must fail closed.
     match provider {
@@ -1125,7 +1125,7 @@ fn qwen_provider_models_for_discovery<'a>(
                 })
         }
         Value::Object(_) => Err(format!(
-            "Qwen modelProviders.{auth} is neither the stable array shape nor the exact legacy MUX wrapper"
+            "Qwen modelProviders.{auth} is neither the stable array shape nor the exact legacy Arca wrapper"
         )),
         _ => Err(format!(
             "Qwen modelProviders.{auth} must use the stable array shape"
@@ -1489,7 +1489,7 @@ fn profile_owns_candidate(
     if expected_native_id != candidate.native_id {
         return false;
     }
-    // Pi Provider names are shared by every MUX Model under the same Provider,
+    // Pi Provider names are shared by every Arca Model under the same Provider,
     // while adopted provider containers may also hold several models. In both
     // cases the provider id alone is not asset identity; the model id completes it.
     if matches!(candidate.agent_id.as_str(), "pi" | "zcode") {
@@ -1520,7 +1520,7 @@ fn generated_native_id(settings: &Settings, agent_id: &str, profile: &ModelProfi
         ),
         "factory-droid" => format!("{}:{}", profile.model, profile.base_url),
         _ => {
-            let mut id = String::from("mux_");
+            let mut id = String::from("arca_");
             for byte in profile.id.bytes() {
                 id.push_str(&format!("{byte:02x}"));
             }
@@ -1743,7 +1743,7 @@ mod tests {
     fn qoder_cli_observes_selection_and_matches_its_distinct_native_identity() {
         let home = TestHome::new("qoder-cli-discovery");
         let path = home.home.join("settings.json");
-        fs::write(&path, r#"{"providers":{"mux_cli_66697874757265":{"baseUrl":"https://example.invalid/v1","apiKey":"${QODER_FIXTURE_KEY}","protocol":"openai-responses","models":[{"model":"vendor/model"}]}},"model":{"name":"mux_cli_66697874757265/vendor/model"}}"#).unwrap();
+        fs::write(&path, r#"{"providers":{"arca_cli_66697874757265":{"baseUrl":"https://example.invalid/v1","apiKey":"${QODER_FIXTURE_KEY}","protocol":"openai-responses","models":[{"model":"vendor/model"}]}},"model":{"name":"arca_cli_66697874757265/vendor/model"}}"#).unwrap();
         let rows = extract_qoder("qoder-cli", &path).unwrap();
         assert_eq!(rows.len(), 1);
         assert!(rows[0].active);

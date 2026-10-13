@@ -1,10 +1,10 @@
-# MUX Agent 与模型供应商覆盖调研
+# Arca Agent 与模型供应商覆盖调研
 
-核验日期：2026-09-07。代码基线：MUX v1.8.178。本文记录本次补充及其边界，不以产品目录条数冒充可写能力，也不以供应商模板数量冒充厂商数量。
+核验日期：2026-09-07。代码基线：Arca v1.8.178。本文记录本次补充及其边界，不以产品目录条数冒充可写能力，也不以供应商模板数量冒充厂商数量。
 
 ## 结论与交付范围
 
-MUX 已覆盖 Claude Code、Codex、Gemini CLI、Cursor、Windsurf、Cline/Roo/Kilo、OpenCode、Copilot CLI、Kimi Code、Qwen Code、Qoder 家族、Kiro、Amp、Droid、Goose、Hermes、Pi、OpenHands 等主要开发工具。缺口主要有三类：新 CLI 与 IDE 的身份区分、OpenClaw 这样的个人 Agent，以及需要专属地址或独立套餐的模型服务。
+Arca 已覆盖 Claude Code、Codex、Gemini CLI、Cursor、Windsurf、Cline/Roo/Kilo、OpenCode、Copilot CLI、Kimi Code、Qwen Code、Qoder 家族、Kiro、Amp、Droid、Goose、Hermes、Pi、OpenHands 等主要开发工具。缺口主要有三类：新 CLI 与 IDE 的身份区分、OpenClaw 这样的个人 Agent，以及需要专属地址或独立套餐的模型服务。
 
 本次增加 **4 个经过配置核验的 Agent 定义、19 个 Provider 模板**，移除已经退役的 GitHub Models 新建模板，并修正模型目录查询与地址推断。新增模板里包含地区和套餐，不是 19 家独立公司。
 
@@ -17,7 +17,7 @@ MUX 已覆盖 Claude Code、Codex、Gemini CLI、Cursor、Windsurf、Cline/Roo/K
 | 合并去重后的 Agent 身份 | 212 | 216 |
 | Provider 模板，含 Custom | 51 | 69 |
 
-没有市场份额数据可支持严格的“主流排名”。此次优先级依据是：开发者工作流相关性、国内外常见服务覆盖、厂商或项目自己的公开契约，以及 MUX 能否安全管理其全局配置。检索发现线索后，再用官方文档、上游项目自己的适配说明和公开只读 API 交叉核验。HTTP 401 单独不足以证明某条 API 路由或响应格式正确。
+没有市场份额数据可支持严格的“主流排名”。此次优先级依据是：开发者工作流相关性、国内外常见服务覆盖、厂商或项目自己的公开契约，以及 Arca 能否安全管理其全局配置。检索发现线索后，再用官方文档、上游项目自己的适配说明和公开只读 API 交叉核验。HTTP 401 单独不足以证明某条 API 路由或响应格式正确。
 
 ## Agent：已覆盖、此次补充、尚有缺口
 
@@ -25,13 +25,13 @@ MUX 已覆盖 Claude Code、Codex、Gemini CLI、Cursor、Windsurf、Cline/Roo/K
 |---|---|---|
 | Claude Code / Claude Desktop | 已有独立身份和不同配置适配 | Desktop 的 Connectors、MCP 文件与 Model 配置是不同能力，不能混用 |
 | Codex / Gemini CLI / Copilot CLI | 已有 | 本次不重复新增品牌条目 |
-| Cursor / Windsurf / VS Code / Zed | 已有 | 全局与项目级配置必须区分；MUX 只写全局 |
+| Cursor / Windsurf / VS Code / Zed | 已有 | 全局与项目级配置必须区分；Arca 只写全局 |
 | Cline / Roo Code / Kilo Code / Continue | 已有 | 插件宿主、列表布局、协议字段不能照搬一个通用 JSON |
 | OpenCode / Amp / Factory Droid / Goose / Hermes / Pi / OpenHands | 已有 | Pi 的 MCP 来自明确标注的社区扩展；目录出现不等于原生支持 |
 | Qoder IDE / Qoder CLI / Qoder Desktop / QoderWork | 已有独立身份 | 保持此前独立图标和不同配置文件适配 |
 | Kiro | 已覆盖家族的全局 MCP 和 Skills | 当前官方文档统一描述多端配置；不是本轮遗漏的一个全新配置协议。[MCP](https://kiro.dev/docs/mcp/configuration/)、[Skills](https://kiro.dev/docs/skills/) |
 | **Antigravity CLI** | **本次增加 MCP** | 与 IDE 共用 `~/.gemini/config/mcp_config.json`；远程字段是 `serverUrl`。[官方 CLI MCP](https://www.antigravity.google/docs/cli/mcp) |
-| **Continue CLI (`cn`)** | **本次增加 MCP** | 使用 `~/.continue/config.yaml` 中的 `mcpServers` 列表，与 IDE 共用；`--config` 可改变实际文件，需调整 MUX 目标路径。[CLI 配置](https://docs.continue.dev/cli/configuration) |
+| **Continue CLI (`cn`)** | **本次增加 MCP** | 使用 `~/.continue/config.yaml` 中的 `mcpServers` 列表，与 IDE 共用；`--config` 可改变实际文件，需调整 Arca 目标路径。[CLI 配置](https://docs.continue.dev/cli/configuration) |
 | **TRAE CLI 2.0** | **本次增加 stdio MCP** | 默认 `~/.trae/traecli.toml`，`[mcp_servers.<name>]`。不写旧版 YAML，不猜测远程字段或命名 profile。[2.0 配置参考](https://docs.trae.cn/cli_config-file) |
 | **OpenClaw** | **本次增加用户级 Skills** | 默认 `~/.openclaw/skills/<name>/SKILL.md`；通过命令或独立配置文件判断安装证据。[Skills](https://docs.openclaw.ai/tools/skills) |
 | Aider | 未增加自动 Model writer | 用户级 `.aider.conf.yml` 已找到；还需分别审核 LiteLLM 路由、main/editor/weak model 与凭据交付。不是“没有配置文件”。[配置](https://aider.chat/docs/config/aider_conf.html) |
@@ -44,13 +44,13 @@ MUX 已覆盖 Claude Code、Codex、Gemini CLI、Cursor、Windsurf、Cline/Roo/K
 
 已经找到其 `~/.openclaw/openclaw.json`，它使用 JSON5，支持 `$include`，MCP 是 `mcp.servers`，Models 又有 Provider、模型列表和 Agent 默认模型指针。凭据还可能是 SecretRef。参考 [配置](https://docs.openclaw.ai/gateway/configuration)、[MCP](https://docs.openclaw.ai/tools/mcp)。
 
-MUX 的 JSON CST 解析器本身能保留注释、单引号和宽松属性名，缺口不是简单加一个 JSON5 库。真正需要解决的是：展开 include 后谁拥有每个字段、写回哪个物理文件、SecretRef 的结构化引用如何保留，以及多文件写入的 CAS、备份和失败边界。直接声明 `key = mcp.servers` 会隐藏这些问题。本轮先接已有完整目录契约的 Skills。
+Arca 的 JSON CST 解析器本身能保留注释、单引号和宽松属性名，缺口不是简单加一个 JSON5 库。真正需要解决的是：展开 include 后谁拥有每个字段、写回哪个物理文件、SecretRef 的结构化引用如何保留，以及多文件写入的 CAS、备份和失败边界。直接声明 `key = mcp.servers` 会隐藏这些问题。本轮先接已有完整目录契约的 Skills。
 
-Antigravity CLI 的另一个特殊点是，其文档中的全局 Skills 是平铺 `.md` 斜杠命令，不是 MUX 当前的 `<name>/SKILL.md` 目录布局。不会仅因目录名也叫 `skills` 就启用链接分配。[CLI plugins / skills](https://www.antigravity.google/docs/cli/plugins/)
+Antigravity CLI 的另一个特殊点是，其文档中的全局 Skills 是平铺 `.md` 斜杠命令，不是 Arca 当前的 `<name>/SKILL.md` 目录布局。不会仅因目录名也叫 `skills` 就启用链接分配。[CLI plugins / skills](https://www.antigravity.google/docs/cli/plugins/)
 
 ## 本次新增的 19 个 Provider 模板
 
-以下 Base URL 是协议客户端看到的地址。MUX core 会拆为公共连接根与各协议的请求路径；不用在 UI 手动拼接重复的 `/v1`。
+以下 Base URL 是协议客户端看到的地址。Arca core 会拆为公共连接根与各协议的请求路径；不用在 UI 手动拼接重复的 `/v1`。
 
 协议缩写：C = OpenAI Chat Completions；R = OpenAI Responses；A = Anthropic Messages。模型目录“手工”表示本轮未启用自动查询，仍可添加模型 ID 或显式配置兼容的 Models 列表 URL。
 
@@ -78,13 +78,13 @@ Antigravity CLI 的另一个特殊点是，其文档中的全局 Skills 是平�
 
 Azure 使用资源 API Key；Bedrock Mantle 使用 Bedrock API Key；Cloudflare 使用有 Workers AI 权限的 API Token。这里没有实现 Entra 登录、AWS SigV4/STS，或替用户创建云资源。模板支持某协议，不保证该账号下每个模型、每个区域都开放它。
 
-火山文档站部分正文在当前读取环境中依赖 JavaScript。本次用它的官方社区接入示例和 OpenClaw 项目自己的 Provider 契约交叉核对；没有把社区文章中的性能、价格、模型排名作为结论。模型型号和价格继续从用户账号与厂商目录确认，不在 MUX 中写死一组容易过期的“最新模型”。
+火山文档站部分正文在当前读取环境中依赖 JavaScript。本次用它的官方社区接入示例和 OpenClaw 项目自己的 Provider 契约交叉核对；没有把社区文章中的性能、价格、模型排名作为结论。模型型号和价格继续从用户账号与厂商目录确认，不在 Arca 中写死一组容易过期的“最新模型”。
 
 ### 模型目录的具体实现
 
 - **Cloudflare**：从已保存的完整 Chat Completions 请求 URL 推导同账号 `/ai/models/search`，请求官方支持的 `format=openrouter`、文本生成任务筛选与分页；读取可用于请求的模型 ID。不会向猜测的 `/ai/v1/models` 发请求。保留总时限、响应大小、页数和条目数限制，拒绝无效 ID 和不前进的分页。
 - **DeepInfra**：公开目录当前把上下文长度放在 `metadata.context_length`。新增专用解析，并依据 `metadata.tags` 过滤明确不是 chat 的模型。
-- **Vercel**：公开目录包含图像、视频、语音、嵌入等模型；新增适配只将语言模型放入当前 MUX Model 选择器。
+- **Vercel**：公开目录包含图像、视频、语音、嵌入等模型；新增适配只将语言模型放入当前 Arca Model 选择器。
 - **Azure / Sonar / 部分国内服务**：本轮不声称存在可用的自动模型列表契约；输入框显示手工填写说明，Azure 说明部署名语义。用户显式填写兼容的 Models 列表 URL 后可以启用查询。
 - **SiliconFlow 中国站**：使用官方 `sub_type=chat` 筛选，避免把嵌入、图像和音频模型混入；显式 Models 列表 URL 不受这一默认参数影响。
 - **Custom**：保留按用户已配置协议推导的目录查询和显式列表 URL；网络错误不会阻止手工添加 Model ID。

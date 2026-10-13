@@ -1,4 +1,4 @@
-use mux_core::application::capture as core;
+use arca_core::application::capture as core;
 use tauri_plugin_dialog::DialogExt;
 
 async fn worker<T: Send + 'static>(f: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<T, String> {
@@ -26,7 +26,7 @@ pub async fn capture_start(request: core::StartCapture) -> Result<core::CaptureS
 pub async fn capture_stop(session_id: String) -> Result<core::CaptureSnapshot, String> { worker(move || core::stop(&session_id)).await }
 #[tauri::command]
 pub async fn capture_export(app: tauri::AppHandle, session_id: String, flow_id: Option<String>) -> Result<Option<String>, String> {
-    let filename = if flow_id.is_some() { "mux-request-response.json" } else { "mux-capture-session.json" };
+    let filename = if flow_id.is_some() { "arca-request-response.json" } else { "arca-capture-session.json" };
     let picked = tauri::async_runtime::spawn_blocking(move || app.dialog().file().add_filter("抓包记录", &["json"]).set_file_name(filename).blocking_save_file()).await.map_err(|_| "无法打开导出窗口。".to_owned())?;
     let Some(picked) = picked else { return Ok(None); };
     let path = picked.into_path().map_err(|_| "导出位置无效。".to_owned())?;

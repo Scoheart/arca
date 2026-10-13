@@ -579,7 +579,7 @@ where
     // the historical lock inversion and lets Skill links be owned directly by
     // the outer Asset transaction.
     let skills_guard = acquire_asset_skills_lock()?;
-    // Every cooperating MUX process already uses this lock for settings/source
+    // Every cooperating Arca process already uses this lock for settings/source
     // mutations. Holding it across verify + apply closes the catalog and Agent
     // writer TOCTOU; nested settings mutations are reentrant on this thread.
     let _filesystem_guard = acquire_settings_lock(&settings_file())?;
@@ -846,7 +846,7 @@ pub fn recover_pending_asset_operations() -> Result<Vec<String>, String> {
     let _skills_guard = acquire_asset_skills_lock()?;
     let _filesystem_guard = acquire_settings_lock(&settings_file())?;
     recover_global_mutation_intents()?;
-    let root = crate::paths::mux_dir().join("staging/consumption");
+    let root = crate::paths::arca_dir().join("staging/consumption");
     let root_before = match fs::symlink_metadata(&root) {
         Ok(metadata) if metadata.file_type().is_dir() => metadata,
         Ok(_) => return Err("recovery_required: the Asset operation root is unsafe".into()),
@@ -894,7 +894,7 @@ pub fn recover_pending_asset_operations() -> Result<Vec<String>, String> {
                 recovered.push(operation_id);
             }
             Err(error) if !persisted.plan.target_files.is_empty() => {
-                // A target that changed after MUX wrote it is a local convergence
+                // A target that changed after Arca wrote it is a local convergence
                 // incident. Preserve the journal and rollback evidence, record
                 // the exact affected target(s), and continue recovering peers.
                 load_settings_strict().map_err(|settings_error| {
@@ -1159,7 +1159,7 @@ fn localize_runtime_recovery_failure(plan: &AssetOperationPlan) -> bool {
 fn acquire_asset_skills_lock() -> Result<SkillsOperationLock, String> {
     let paths = SkillsPaths::resolve_from_env().map_err(|error| format!("{error:?}"))?;
     paths
-        .ensure_mux_root()
+        .ensure_arca_root()
         .map_err(|error| format!("{error:?}"))?;
     acquire_skills_lock(&paths).map_err(|error| format!("{error:?}"))
 }
@@ -1333,7 +1333,7 @@ where
     after_barrier(CommitMarkerDurabilityBarrier::ParentDirectory)
 }
 
-/// A pure relationship removal releases MUX's desired ownership. Central
+/// A pure relationship removal releases Arca's desired ownership. Central
 /// lifecycle operations and enabled-state edits do not get this exemption:
 /// they still own and must reconcile their Agent bytes.
 fn releases_relationship_ownership(plan: &AssetOperationPlan) -> bool {
@@ -1431,7 +1431,7 @@ fn apply_operation(
                         })
                         .map_err(ModelTargetError::from)
                 }
-                ModelStorageAuthority::MuxMapping => {
+                ModelStorageAuthority::ArcaMapping => {
                     let mut result = Ok(());
                     for (profile_id, _) in &before.profiles {
                         let active =
@@ -1746,7 +1746,7 @@ fn apply_operation(
                 return Err("asset_operation_stale: Model adoption payload changed".into());
             }
             save_profile(*profile, None)?;
-            // Adoption changes MUX authority to match the reviewed Agent state.
+            // Adoption changes Arca authority to match the reviewed Agent state.
             // It must never normalize or rewrite that state; doing so can erase
             // unrelated external models from a shared Agent configuration.
             let DomainPlan::Model { after, .. } = &persisted.plan.domain_plan else {
@@ -2456,7 +2456,7 @@ fn verify_preconditions(persisted: &PersistedAssetOperation) -> Result<(), Strin
     if persisted.schema_version == 2 {
         let current_hash = hash_file(&settings_file());
         if persisted.settings_hash.as_deref() != Some(current_hash.as_str()) {
-            return Err("asset_operation_stale: MUX settings changed after review".into());
+            return Err("asset_operation_stale: Arca settings changed after review".into());
         }
     } else {
         AssetStateStore::load()?.verify(&persisted.state_preconditions)?;
@@ -2467,7 +2467,7 @@ fn verify_preconditions(persisted: &PersistedAssetOperation) -> Result<(), Strin
         hash_settings_target(&settings_file())
     };
     if settings_target_hash != persisted.settings_target_hash {
-        return Err("asset_operation_stale: MUX settings target changed after review".into());
+        return Err("asset_operation_stale: Arca settings target changed after review".into());
     }
     if hash_targets(&persisted.plan.target_files) != persisted.target_hashes {
         return Err("asset_operation_stale: an Agent target changed after review".into());
@@ -2561,7 +2561,7 @@ fn verify_captured_snapshots(
         hash_settings_target(&settings_path) != persisted.settings_target_hash
     };
     if settings_target_changed {
-        return Err("asset_operation_stale: MUX settings changed while preparing commit".into());
+        return Err("asset_operation_stale: Arca settings changed while preparing commit".into());
     }
     if persisted.schema_version >= 3 {
         // The settings lock is still held. Recompute the semantic revisions
@@ -2686,7 +2686,7 @@ fn apply_domain_plan(
 }
 
 /// A pure relationship removal may release ownership when the Agent bytes no
-/// longer match MUX authority. Synchronized entries are still removed
+/// longer match Arca authority. Synchronized entries are still removed
 /// normally; missing central metadata or drifted bytes are preserved as
 /// external observations. Toggle and update operations never enter this set.
 fn model_relationship_releases(plan: &AssetOperationPlan) -> BTreeSet<(String, String)> {
@@ -4031,7 +4031,7 @@ impl PathSnapshot {
                 || !expected.matches_current(&current)
             {
                 return Err(format!(
-                    "refusing to roll back {}: target changed after MUX wrote it",
+                    "refusing to roll back {}: target changed after Arca wrote it",
                     self.path.display()
                 ));
             }
@@ -4748,7 +4748,7 @@ mod tests {
     }
 
     #[test]
-    fn clear_agent_models_removes_native_pi_registry_even_without_mux_relationships() {
+    fn clear_agent_models_removes_native_pi_registry_even_without_arca_relationships() {
         let home = TestHome::new("clear-agent-models-native-pi");
         let models = home.home.join(".pi/agent/models.json");
         let settings = home.home.join(".pi/agent/settings.json");
@@ -5024,7 +5024,7 @@ mod tests {
             .is_none());
         assert!(!private_file_snapshot_exists(&operation_id, &private));
         assert!(!evidence_contains(
-            &home.home.join(".mux"),
+            &home.home.join(".arca"),
             b"PRIVATE-ALIAS-PRESTATE-SENTINEL"
         ));
     }
@@ -5282,13 +5282,13 @@ mod tests {
         fs::write(&target, b"PRIVATE-PRESTATE-SENTINEL").unwrap();
         let snapshots = vec![PathSnapshot::capture_private(&target).unwrap()];
         persist_rollback_snapshots(operation_id, &snapshots).unwrap();
-        fs::write(&target, b"PRIVATE-MUX-POSTSTATE-SENTINEL").unwrap();
-        let mux = read_path_state_anchored(&target, &snapshots[0].parent).unwrap();
+        fs::write(&target, b"PRIVATE-Arca-POSTSTATE-SENTINEL").unwrap();
+        let arca = read_path_state_anchored(&target, &snapshots[0].parent).unwrap();
         let AnchoredPathState::File {
             bytes,
             mode,
             identity,
-        } = mux
+        } = arca
         else {
             panic!("private target should be a file");
         };
@@ -5707,7 +5707,7 @@ mod tests {
         let parent = home.home.join(".agents/skills");
         fs::create_dir_all(&parent).unwrap();
         let target = parent.join("reviewed-skill");
-        let central = home.home.join(".mux/assets/skills/items/reviewed-skill");
+        let central = home.home.join(".arca/assets/skills/items/reviewed-skill");
         let original = PathSnapshot::capture_link(&target).unwrap();
         let paths = vec![target.clone()];
         let tracker = begin_transaction_write_tracking(
@@ -5751,7 +5751,7 @@ mod tests {
         let parent = home.home.join(".agents/skills");
         fs::create_dir_all(&parent).unwrap();
         let target = parent.join("reviewed-skill");
-        let central = home.home.join(".mux/assets/skills/items/reviewed-skill");
+        let central = home.home.join(".arca/assets/skills/items/reviewed-skill");
         fs::create_dir_all(&central).unwrap();
         let paths = vec![target.clone()];
         let tracker = begin_transaction_write_tracking(
@@ -5786,7 +5786,7 @@ mod tests {
         let tracker =
             begin_transaction_write_tracking(&evidence, paths, &parent_snapshots_for_paths(paths))
                 .unwrap();
-        crate::safe_write::write_if_unchanged(&target, Some("original"), "mux-partial").unwrap();
+        crate::safe_write::write_if_unchanged(&target, Some("original"), "arca-partial").unwrap();
         fs::write(&target, "external-edit").unwrap();
         let states = tracker.states();
         drop(tracker);
@@ -5796,7 +5796,7 @@ mod tests {
 
         let error = original.restore_if_owned(expected.as_ref()).unwrap_err();
 
-        assert!(error.contains("changed after MUX wrote it"), "{error}");
+        assert!(error.contains("changed after Arca wrote it"), "{error}");
         assert_eq!(fs::read_to_string(target).unwrap(), "external-edit");
     }
 
@@ -5818,7 +5818,7 @@ mod tests {
             .replace("reviewed", "external-update");
         fs::write(&path, &external).unwrap();
 
-        let error = mutate_settings(|settings| settings.state = Some(serde_json::json!("mux")))
+        let error = mutate_settings(|settings| settings.state = Some(serde_json::json!("arca")))
             .unwrap_err();
         assert!(
             error.to_string().contains("reviewed target changed"),
@@ -5843,7 +5843,7 @@ mod tests {
         let tracker =
             begin_transaction_write_tracking(&evidence, paths, &parent_snapshots_for_paths(paths))
                 .unwrap();
-        crate::safe_write::write_if_unchanged(&target, Some("original"), "mux-partial").unwrap();
+        crate::safe_write::write_if_unchanged(&target, Some("original"), "arca-partial").unwrap();
         let states = tracker.states();
         drop(tracker);
         let expected = states
@@ -5876,10 +5876,10 @@ mod tests {
         crate::safe_write::write_if_unchanged(
             &externally_edited,
             Some("first-original"),
-            "first-mux",
+            "first-arca",
         )
         .unwrap();
-        crate::safe_write::write_if_unchanged(&still_owned, Some("second-original"), "second-mux")
+        crate::safe_write::write_if_unchanged(&still_owned, Some("second-original"), "second-arca")
             .unwrap();
         fs::write(&externally_edited, "external-edit").unwrap();
         let states = tracker.states();
@@ -5892,7 +5892,7 @@ mod tests {
             fs::read_to_string(externally_edited).unwrap(),
             "external-edit"
         );
-        assert_eq!(fs::read_to_string(still_owned).unwrap(), "second-mux");
+        assert_eq!(fs::read_to_string(still_owned).unwrap(), "second-arca");
     }
 
     #[test]
@@ -6053,7 +6053,7 @@ mod tests {
         use std::os::unix::fs::symlink;
 
         let home = TestHome::new("consume-root-symlink");
-        let staging = home.home.join(".mux/staging");
+        let staging = home.home.join(".arca/staging");
         fs::create_dir_all(&staging).unwrap();
         let outside = home.home.join("outside-consumption");
         fs::create_dir(&outside).unwrap();

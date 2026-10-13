@@ -64,7 +64,7 @@ fn dispatch_command_file(app: &std::path::Path, line: &str) -> Result<(), String
     use std::io::Write;
     #[cfg(unix)] use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
     let cache = dirs::cache_dir().ok_or("找不到用户缓存目录")?;
-    let directory = cache.join(format!("mux-launch-{}", uuid::Uuid::new_v4()));
+    let directory = cache.join(format!("arca-launch-{}", uuid::Uuid::new_v4()));
     let mut builder = fs::DirBuilder::new();
     #[cfg(unix)] builder.mode(0o700);
     builder.create(&directory).map_err(|_| "无法创建终端启动文件夹")?;

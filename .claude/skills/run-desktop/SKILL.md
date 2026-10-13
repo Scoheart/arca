@@ -1,9 +1,9 @@
 ---
 name: run-desktop
-description: Launch, screenshot, and drive the MUX Tauri desktop GUI headlessly (Xvfb + scrot + xdotool). Use when asked to run/start/open/screenshot the desktop app, or to visually verify a desktop (desktop/ Tauri+React) change in this repo — including clicking buttons and filling forms to confirm a feature works end-to-end.
+description: Launch, screenshot, and drive the Arca Tauri desktop GUI headlessly (Xvfb + scrot + xdotool). Use when asked to run/start/open/screenshot the desktop app, or to visually verify a desktop (desktop/ Tauri+React) change in this repo — including clicking buttons and filling forms to confirm a feature works end-to-end.
 ---
 
-# Run the MUX desktop app (headless)
+# Run the Arca desktop app (headless)
 
 The repo has two front-ends: a TS CLI/TUI (`src/`, run with `node dist/index.js`)
 and a **Tauri desktop GUI** (`desktop/`, React + Rust). This skill runs the
@@ -66,7 +66,7 @@ bash $SKILL stop       # kill app + vite (leaves Xvfb up for the next run)
 
 - `libEGL warning: DRI3 ...` lines in the log are harmless (software rendering).
 - The app's data comes from `data/registry.json` + `data/agents.json`. With no
-  `~/.mux/` user override present, those committed defaults are what render.
+  `~/.arca/` user override present, those committed defaults are what render.
 - Headless launch needs `WEBKIT_DISABLE_COMPOSITING_MODE=1` and
   `WEBKIT_DISABLE_DMABUF_RENDERER=1` (the script sets these) or the window stays
   blank.

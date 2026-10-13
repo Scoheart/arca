@@ -33,7 +33,7 @@ function mediaBlocks(source: string, heading: string): string[] {
 }
 
 it("uses a refresh glyph for the checking state instead of spinning the download arrow", () => {
-  expect(layout).toMatch(/className="mux-update-check-icon"/);
+  expect(layout).toMatch(/className="arca-update-check-icon"/);
   expect(layout).toMatch(/data-busy=\{checkingUpdate \? "true" : undefined\}/);
   expect(layout).toMatch(/checkingUpdate\s*\? <RefreshIcon/);
   expect(layout).toMatch(/: <DownloadIcon/);
@@ -41,13 +41,13 @@ it("uses a refresh glyph for the checking state instead of spinning the download
 });
 
 it("centers the update spinner and disables motion when requested", () => {
-  expect(declarations(css, ".mux-update-check-icon")).toMatch(/transform-origin:\s*center/);
-  expect(declarations(css, '.mux-update-check-icon[data-busy="true"]')).toMatch(
+  expect(declarations(css, ".arca-update-check-icon")).toMatch(/transform-origin:\s*center/);
+  expect(declarations(css, '.arca-update-check-icon[data-busy="true"]')).toMatch(
     /animation:\s*spin\s+\.8s\s+linear\s+infinite/,
   );
 
   const reducedMotion = mediaBlocks(css, "@media (prefers-reduced-motion: reduce)")
-    .map((block) => declarations(block, '.mux-update-check-icon[data-busy="true"]'))
+    .map((block) => declarations(block, '.arca-update-check-icon[data-busy="true"]'))
     .find((rule) => rule !== null);
   expect(reducedMotion).toMatch(/animation:\s*none/);
 });

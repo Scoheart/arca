@@ -1,24 +1,24 @@
-.mux-settings-trigger { display: inline-flex; align-items: center; gap: 7px; position: relative; flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-control); color: var(--text-secondary); font: inherit; font-size: 12px; cursor: pointer; }
-.mux-settings-trigger:hover { background: var(--surface-section); color: var(--text-primary); }
-.mux-settings-trigger:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
-.mux-settings-update-dot { position: absolute; right: 6px; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--color-blue); }
-.mux-settings-section + .mux-settings-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
-.mux-settings-row { display: grid; grid-template-columns: minmax(112px, 1fr) minmax(0, 190px); align-items: center; gap: 20px; min-height: 48px; }
-.mux-settings-label { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-primary); }
-.mux-settings-label > svg { color: var(--text-secondary); flex-shrink: 0; }
-.mux-settings-row > .mux-seg { justify-self: end; }
-.mux-editor-selected-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: left; }
-.mux-workspace-settings .mux-editor-menu { width: min(260px, 75vw); max-height: 240px; }
-.mux-settings-value { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border: 0; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12px; cursor: pointer; padding: 8px; }
-.mux-settings-status { width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); }
-.mux-settings-status[data-active="true"] { background: var(--color-green); }
-.mux-settings-action { width: 100%; display: flex; align-items: center; gap: 10px; padding: 11px 8px; border: 0; border-radius: 8px; background: transparent; color: var(--text-primary); font: inherit; font-size: 12px; cursor: pointer; text-align: left; }
-.mux-settings-action:hover { background: var(--surface-section); }
-.mux-settings-action small { margin-left: auto; color: var(--text-tertiary); }
-.mux-settings-action:disabled { opacity: .5; cursor: default; }
-.mux-terminal-select { min-width: 0; }
-@media (max-width: 500px) { .mux-settings-row { gap: 12px; grid-template-columns: 108px minmax(0, 1fr); } }
-.mux-editor-selection, .mux-terminal-selection, .mux-terminal-select .mux-form-select-option-content { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.mux-editor-glyph { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: 0 0 20px; }
-.mux-terminal-icon { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
-.mux-terminal-selection > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arca-settings-trigger { display: inline-flex; align-items: center; gap: 7px; position: relative; flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-control); color: var(--text-secondary); font: inherit; font-size: 12px; cursor: pointer; }
+.arca-settings-trigger:hover { background: var(--surface-section); color: var(--text-primary); }
+.arca-settings-trigger:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+.arca-settings-update-dot { position: absolute; right: 6px; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--color-blue); }
+.arca-settings-section + .arca-settings-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
+.arca-settings-row { display: grid; grid-template-columns: minmax(112px, 1fr) minmax(0, 190px); align-items: center; gap: 20px; min-height: 48px; }
+.arca-settings-label { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-primary); }
+.arca-settings-label > svg { color: var(--text-secondary); flex-shrink: 0; }
+.arca-settings-row > .arca-seg { justify-self: end; }
+.arca-editor-selected-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: left; }
+.arca-workspace-settings .arca-editor-menu { width: min(260px, 75vw); max-height: 240px; }
+.arca-settings-value { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border: 0; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12px; cursor: pointer; padding: 8px; }
+.arca-settings-status { width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); }
+.arca-settings-status[data-active="true"] { background: var(--color-green); }
+.arca-settings-action { width: 100%; display: flex; align-items: center; gap: 10px; padding: 11px 8px; border: 0; border-radius: 8px; background: transparent; color: var(--text-primary); font: inherit; font-size: 12px; cursor: pointer; text-align: left; }
+.arca-settings-action:hover { background: var(--surface-section); }
+.arca-settings-action small { margin-left: auto; color: var(--text-tertiary); }
+.arca-settings-action:disabled { opacity: .5; cursor: default; }
+.arca-terminal-select { min-width: 0; }
+@media (max-width: 500px) { .arca-settings-row { gap: 12px; grid-template-columns: 108px minmax(0, 1fr); } }
+.arca-editor-selection, .arca-terminal-selection, .arca-terminal-select .arca-form-select-option-content { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.arca-editor-glyph { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: 0 0 20px; }
+.arca-terminal-icon { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+.arca-terminal-selection > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -2,14 +2,14 @@
 
 ## Goal
 
-Add MiniMax Code as a first-class MUX Agent without guessing configuration paths or weakening MUX's credential boundary.
+Add MiniMax Code as a first-class Arca Agent without guessing configuration paths or weakening Arca's credential boundary.
 
 ## Evidence
 
 - The signed and notarized MiniMax Code `3.0.51` macOS bundle uses bundle ID `com.minimax.agent`.
 - Its packaged `@mavis/config` source resolves the user data directory to `~/.mavis`, the main configuration to `~/.mavis/config.yaml`, and the MCP configuration to `~/.mavis/mcp.json`.
 - Its packaged MCP runtime reads the `mcpServers` map and accepts stdio, HTTP, Streamable HTTP, and SSE entries.
-- Its custom model provider flow stores `options.apiKey` as a literal YAML value. It does not expose a documented command or environment indirection that can consume a MUX Keychain credential safely.
+- Its custom model provider flow stores `options.apiKey` as a literal YAML value. It does not expose a documented command or environment indirection that can consume a Arca Keychain credential safely.
 - The public `MiniMax-AI/minimax-code` repository currently collects issue reports; it is not the product source repository. The official M3 article says open-sourcing is planned for the future.
 
 ## Design
@@ -25,11 +25,11 @@ Add a writable `minimax-code` Agent definition with:
 - explicit transport codec
 - stdio plus URL-based HTTP, Streamable HTTP, and SSE entries
 
-MUX continues to own only the `mcpServers` subtree. Existing root fields and unknown server fields must survive apply, disable, remove, and rewrite operations.
+Arca continues to own only the `mcpServers` subtree. Existing root fields and unknown server fields must survive apply, disable, remove, and rewrite operations.
 
 ### Models
 
-Add MiniMax Code to Models as a guided target. Show `~/.mavis/config.yaml`, all three profile protocols, and the official product page. Do not assign a MUX profile automatically because that would require writing the Keychain secret into plaintext YAML.
+Add MiniMax Code to Models as a guided target. Show `~/.mavis/config.yaml`, all three profile protocols, and the official product page. Do not assign a Arca profile automatically because that would require writing the Keychain secret into plaintext YAML.
 
 ### Discovery and presentation
 

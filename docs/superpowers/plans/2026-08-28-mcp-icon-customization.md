@@ -4,11 +4,11 @@
 
 **Goal:** Replace low-information MCP monograms with deterministic semantic icons while letting users select a built-in icon, upload a local image, or restore automatic behavior.
 
-**Architecture:** Core owns `ui.mcp_icons`, validates asset keys and image payloads, and copies custom images into a private MUX-managed directory. Tauri exposes thin preference commands plus one native image picker. React owns the 18-icon catalog, deterministic inference, reusable MCP avatar, preference hook, and picker UI used by Registry and Agent views.
+**Architecture:** Core owns `ui.mcp_icons`, validates asset keys and image payloads, and copies custom images into a private Arca-managed directory. Tauri exposes thin preference commands plus one native image picker. React owns the 18-icon catalog, deterministic inference, reusable MCP avatar, preference hook, and picker UI used by Registry and Agent views.
 
 **Tech Stack:** Rust, serde, SHA-256, Tauri 2 asset protocol/dialog plugin, React 19, TypeScript, Vitest, Testing Library, CSS.
 
-**Delivery constraint:** Prepare only in the isolated worktree, create one remote GitHub Data API commit, merge through a PR, and verify Direct Stable without installing or launching the App. MUX fast-delivery policy skips local tests/build unless the current user explicitly requests them.
+**Delivery constraint:** Prepare only in the isolated worktree, create one remote GitHub Data API commit, merge through a PR, and verify Direct Stable without installing or launching the App. Arca fast-delivery policy skips local tests/build unless the current user explicitly requests them.
 
 ---
 
@@ -107,7 +107,7 @@ Add all four commands to `tauri::generate_handler!` in `desktop/src-tauri/src/li
 
 - [ ] **Step 3: Scope custom image loading**
 
-Enable `app.security.assetProtocol` in `tauri.conf.json` with the sole scope `$HOME/.mux/assets/mcp-icons/**` so `convertFileSrc` cannot read unrelated user paths.
+Enable `app.security.assetProtocol` in `tauri.conf.json` with the sole scope `$HOME/.arca/assets/mcp-icons/**` so `convertFileSrc` cannot read unrelated user paths.
 
 - [ ] **Step 4: Add the frontend wire types**
 
@@ -197,7 +197,7 @@ Verify Registry cards and Inspector use the same stable-key preference, the foot
 
 - [ ] **Step 1: Audit the exact diff**
 
-Run `git diff --check`, inspect every changed/untracked path, verify the Tauri asset scope is limited to the managed icon directory, and confirm no version, changelog, lockfile, MCP config, Agent codec or credential surface changed. Do not run local tests/build under MUX fast-delivery policy.
+Run `git diff --check`, inspect every changed/untracked path, verify the Tauri asset scope is limited to the managed icon directory, and confirm no version, changelog, lockfile, MCP config, Agent codec or credential surface changed. Do not run local tests/build under Arca fast-delivery policy.
 
 - [ ] **Step 2: Commit and merge remotely**
 

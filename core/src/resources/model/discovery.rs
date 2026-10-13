@@ -79,7 +79,7 @@ pub(crate) fn prepare_provider_discovery(provider_id: &str) -> Result<ModelDisco
         .and_then(|providers| providers.get(provider_id)).cloned()
         .ok_or_else(|| format!("model_provider_not_found: Provider '{provider_id}' does not exist"))?;
     let stored_credential = if provider.auth_requirement != AuthRequirement::None
-        && matches!(provider.api_key_source, None | Some(ApiKeySource::MuxStore)) {
+        && matches!(provider.api_key_source, None | Some(ApiKeySource::ArcaStore)) {
         read_credential_checked(&provider_credential_subject(provider_id))?.map(Zeroizing::new)
     } else { None };
     Ok(ModelDiscoveryInput { provider, stored_credential })
@@ -93,10 +93,10 @@ pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<V
     let provider = &input.provider;
     let spec = discovery_spec_for_provider(provider)?;
     let source = provider.api_key_source.clone().or_else(||
-        input.stored_credential.is_some().then_some(ApiKeySource::MuxStore));
+        input.stored_credential.is_some().then_some(ApiKeySource::ArcaStore));
     let credential = if provider.auth_requirement == AuthRequirement::None {
         None
-    } else if matches!(source, Some(ApiKeySource::MuxStore))
+    } else if matches!(source, Some(ApiKeySource::ArcaStore))
         && input.stored_credential.is_none() && provider.auth_requirement == AuthRequirement::Optional {
         None
     } else if let Some(source) = source.as_ref() {
@@ -624,7 +624,7 @@ fn discovery_agent_with_timeout(timeout: Duration) -> Result<ureq::Agent, String
             .max_redirects(0)
             .http_status_as_error(false)
             .timeout_global(Some(timeout))
-            .user_agent("mux-provider-model-discovery"),
+            .user_agent("arca-provider-model-discovery"),
     )
 }
 

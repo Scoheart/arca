@@ -1,11 +1,11 @@
 use std::process::{Command, Output};
 
 fn run(args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_mux"))
+    Command::new(env!("CARGO_BIN_EXE_arca"))
         .args(args)
-        .env("MUX_NO_UPDATE_CHECK", "1")
+        .env("ARCA_NO_UPDATE_CHECK", "1")
         .output()
-        .expect("run mux")
+        .expect("run arca")
 }
 
 fn success_envelope(args: &[&str], command: &str) -> serde_json::Value {
@@ -33,7 +33,7 @@ fn json_help_and_version_use_the_stable_success_envelope() {
         .is_some_and(|text| text.contains("Usage:")));
 
     let version = success_envelope(&["--json", "--version"], "version");
-    assert_eq!(version["data"]["name"], "mux");
+    assert_eq!(version["data"]["name"], "arca");
     assert!(version["data"]["version"]
         .as_str()
         .is_some_and(|value| !value.is_empty()));

@@ -47,7 +47,7 @@ export function McpIconGlyph({ id }: { id: McpIconId }) {
     security: <><path d="M12 3 4.5 6v5.5c0 4.7 3 8.1 7.5 9.5 4.5-1.4 7.5-4.8 7.5-9.5V6z" /><path d="m9 12 2 2 4-5" /></>,
     ai: <><path d="m12 3-1.7 5.3A3 3 0 0 1 8.3 10L3 12l5.3 1.7a3 3 0 0 1 2 2L12 21l1.7-5.3a3 3 0 0 1 2-2L21 12l-5.3-1.7a3 3 0 0 1-2-2Z" /></>,
   };
-  return <span className="mux-mcp-icon-glyph" data-mcp-icon={id}><LineIcon>{paths[id]}</LineIcon></span>;
+  return <span className="arca-mcp-icon-glyph" data-mcp-icon={id}><LineIcon>{paths[id]}</LineIcon></span>;
 }
 
 const RULES: Array<{ id: McpIconId; words: string[] }> = [
@@ -122,7 +122,7 @@ export function McpAvatar({
 
   return (
     <div
-      className="mux-asset-avatar mux-mcp-avatar flex-shrink-0"
+      className="arca-asset-avatar arca-mcp-avatar flex-shrink-0"
       data-kind="mcp"
       data-icon-source={source}
       data-icon-tone={custom ? "custom" : option?.tone ?? "neutral"}
@@ -140,7 +140,7 @@ export function McpAvatar({
       ) : iconId ? (
         <McpIconGlyph id={iconId} />
       ) : (
-        <span className="mux-mcp-monogram">{mcpMonogram(entry.name)}</span>
+        <span className="arca-mcp-monogram">{mcpMonogram(entry.name)}</span>
       )}
     </div>
   );

@@ -15,7 +15,7 @@ pub enum ModelProtocol {
 }
 
 impl ModelProtocol {
-    /// The request path appended by the protocol clients managed by MUX.
+    /// The request path appended by the protocol clients managed by Arca.
     pub fn default_endpoint_path(&self) -> &'static str {
         match self {
             Self::AnthropicMessages => "/v1/messages",
@@ -42,7 +42,8 @@ pub enum AuthRequirement {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum ApiKeySource {
-    MuxStore,
+    #[serde(alias = "mux-store")]
+    ArcaStore,
     Env {
         name: String,
     },
@@ -60,7 +61,7 @@ pub enum ApiKeySource {
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct ModelProviderConfig {
-    /// Stable MUX identity for one account/endpoint configuration. The
+    /// Stable Arca identity for one account/endpoint configuration. The
     /// provider kind (for example `openrouter`) is intentionally not unique.
     pub id: String,
     pub name: String,
@@ -68,7 +69,7 @@ pub struct ModelProviderConfig {
     pub provider: String,
     /// Shared connection root. Protocol-specific request paths live below.
     pub base_url: String,
-    /// Optional full model-catalog endpoint. When absent, MUX derives one from
+    /// Optional full model-catalog endpoint. When absent, Arca derives one from
     /// the Provider protocol endpoint.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_catalog_url: Option<String>,
@@ -265,7 +266,7 @@ pub struct ModelProfile {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_vendor: Option<String>,
     /// Agent-native provider/model keys retained during explicit adoption.
-    /// New MUX profiles leave this empty and use a derived `mux_*` identity.
+    /// New profiles leave this empty and use the stable native ownership namespace.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub native_ids: BTreeMap<String, String>,
     pub protocol: ModelProtocol,
@@ -340,7 +341,7 @@ pub struct RegistryEntry {
     pub tags: Vec<String>,
     pub config: RegistryConfig,
     /// Where this entry came from. Absent for builtin entries (those are
-    /// inferred at runtime); present for entries written to ~/.mux/registry.
+    /// inferred at runtime); present for entries written to ~/.arca/registry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub origin: Option<RegistryOrigin>,
     /// Optional homepage / source repository URL (e.g. a GitHub repo). Shown as a
@@ -403,7 +404,7 @@ fn default_mcp_key() -> String {
 
 /// A user-added catalog source: either a subscribed remote URL or a local file.
 /// The actual servers are parsed from a cached copy on disk under
-/// `~/.mux/assets/mcps/sources/<kind>/<id>.<ext>`. There is intentionally no
+/// `~/.arca/assets/mcps/sources/<kind>/<id>.<ext>`. There is intentionally no
 /// "builtin" kind —
 /// the catalog is entirely user-driven (subscribe / add local).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -630,7 +631,7 @@ mod tests {
     #[test]
     fn api_key_source_roundtrips_all_non_secret_forms() {
         let cases = [
-            ApiKeySource::MuxStore,
+            ApiKeySource::ArcaStore,
             ApiKeySource::Env {
                 name: "MAX_AI_API_KEY".into(),
             },

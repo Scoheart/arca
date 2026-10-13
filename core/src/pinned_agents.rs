@@ -79,7 +79,7 @@ mod tests {
     use std::fs;
 
     fn settings_path(home: &TestHome) -> std::path::PathBuf {
-        home.home.join(".mux/settings.json")
+        home.home.join(".arca/settings.json")
     }
 
     #[test]

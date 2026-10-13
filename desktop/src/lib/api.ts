@@ -194,7 +194,7 @@ export const setAgentCredentialDelivery = (
 });
 /** All entry copies across sources (not deduped), each flagged in_effect. */
 export const listRegistryAll = () => invoke<CatalogItem[]>("list_registry_all");
-/** 桌面包内 mux CLI 的安装状态（sidecar → ~/.local/bin 软链）。 */
+/** 桌面包内 arca CLI 的安装状态（sidecar → ~/.local/bin 软链）。 */
 export type CliStatus = { bundled: boolean; installed: boolean; link_path: string; in_path: boolean };
 export const cliStatus = () => invoke<CliStatus>("cli_status");
 export const installCli = () => invoke<CliStatus>("install_cli");

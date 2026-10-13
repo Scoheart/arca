@@ -16,7 +16,7 @@ async function writeJson(path, value) {
 }
 
 async function createFixture(overrides = {}) {
-  const root = await mkdtemp(join(tmpdir(), "mux-release-version-"));
+  const root = await mkdtemp(join(tmpdir(), "arca-release-version-"));
   await mkdir(join(root, "core"), { recursive: true });
   await mkdir(join(root, "cli"), { recursive: true });
   await mkdir(join(root, "desktop", "src-tauri"), { recursive: true });
@@ -25,11 +25,11 @@ async function createFixture(overrides = {}) {
   await writeFile(join(root, "version.txt"), `${version}\n`);
   await writeFile(
     join(root, "core", "Cargo.toml"),
-    `[package]\nname = "mux-core"\nversion = "${overrides.core ?? version}"\n`,
+    `[package]\nname = "arca-core"\nversion = "${overrides.core ?? version}"\n`,
   );
   await writeFile(
     join(root, "cli", "Cargo.toml"),
-    `[package]\nname = "mux-cli"\nversion = "${overrides.cli ?? version}"\n`,
+    `[package]\nname = "arca-cli"\nversion = "${overrides.cli ?? version}"\n`,
   );
   await writeJson(join(root, "desktop", "package.json"), {
     name: "desktop",
@@ -52,7 +52,7 @@ async function createFixture(overrides = {}) {
     `[package]\nname = "desktop"\nversion = "${overrides.tauriCargo ?? version}"\n`,
   );
   await writeJson(join(root, "desktop", "src-tauri", "tauri.conf.json"), {
-    productName: "MUX",
+    productName: "Arca",
     version: overrides.tauriConfig ?? version,
   });
 
@@ -68,7 +68,7 @@ test("refreshes only local Cargo lock packages", () => {
   const lock = `version = 4
 
 [[package]]
-name = "mux-core"
+name = "arca-core"
 version = "1.2.18"
 
 [[package]]
@@ -84,16 +84,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
   assert.equal(
     updateCargoLockPackageVersions(
       lock,
-      ["mux-core", "desktop"],
+      ["arca-core", "desktop"],
       "1.2.19",
     ),
     lock
-      .replace('name = "mux-core"\nversion = "1.2.18"', 'name = "mux-core"\nversion = "1.2.19"')
+      .replace('name = "arca-core"\nversion = "1.2.18"', 'name = "arca-core"\nversion = "1.2.19"')
       .replace('name = "desktop"\nversion = "1.2.18"', 'name = "desktop"\nversion = "1.2.19"'),
   );
   assert.throws(
-    () => updateCargoLockPackageVersions(lock, ["mux-cli"], "1.2.19"),
-    /exactly one local mux-cli package; found 0/,
+    () => updateCargoLockPackageVersions(lock, ["arca-cli"], "1.2.19"),
+    /exactly one local arca-cli package; found 0/,
   );
 });
 
@@ -110,7 +110,7 @@ test("uses the explicitly selected semantic release scope", () => {
 
 test("updates only the Cargo package version", () => {
   const manifest = `[package]
-name = "mux"
+name = "arca"
 version = "1.8.5" # release-owned
 
 [dependencies]

@@ -98,7 +98,7 @@ describe("ResourceWorkspace", () => {
     expect(separator).toHaveAttribute("aria-valuenow", "224");
     fireEvent.keyDown(separator, { key: "End" });
     expect(separator).toHaveAttribute("aria-valuenow", "340");
-    expect(localStorage.getItem("mux.resourceWorkspace.sidebarWidth")).toBe("340");
+    expect(localStorage.getItem("arca.resourceWorkspace.sidebarWidth")).toBe("340");
     fireEvent.keyDown(separator, { key: "Home" });
     expect(separator).toHaveAttribute("aria-valuenow", "184");
   });
@@ -117,12 +117,12 @@ describe("ResourceWorkspace", () => {
       </ResourceWorkspace>,
     );
 
-    expect(container.querySelector(".mux-workspace")).toHaveAttribute("data-sidebar", "false");
+    expect(container.querySelector(".arca-workspace")).toHaveAttribute("data-sidebar", "false");
     expect(screen.getByRole("region", { name: "搜索无侧栏资源" })).toBeVisible();
     expect(screen.queryByRole("separator", { name: "调整侧边栏宽度" })).not.toBeInTheDocument();
-    expect(getItem).not.toHaveBeenCalledWith("mux.resourceWorkspace.sidebarWidth");
+    expect(getItem).not.toHaveBeenCalledWith("arca.resourceWorkspace.sidebarWidth");
     expect(setItem).not.toHaveBeenCalledWith(
-      "mux.resourceWorkspace.sidebarWidth",
+      "arca.resourceWorkspace.sidebarWidth",
       expect.any(String),
     );
     getItem.mockRestore();

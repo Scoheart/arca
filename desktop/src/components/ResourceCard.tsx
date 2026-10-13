@@ -53,7 +53,7 @@ export function ResourceCard({
 
   return (
     <article
-      className={`mux-resource-card${className ? ` ${className}` : ""}`}
+      className={`arca-resource-card${className ? ` ${className}` : ""}`}
       role="button"
       tabIndex={0}
       aria-label={ariaLabel}
@@ -63,21 +63,21 @@ export function ResourceCard({
       onClick={openFromPointer}
       onKeyDown={openFromKeyboard}
     >
-      <header className="mux-resource-card-identity" data-resource-slot="identity">
+      <header className="arca-resource-card-identity" data-resource-slot="identity">
         {identity}
       </header>
       {configuration != null && (
-        <div className="mux-resource-card-configuration" data-resource-slot="configuration">
+        <div className="arca-resource-card-configuration" data-resource-slot="configuration">
           {configuration}
         </div>
       )}
       {state != null && (
-        <div className="mux-resource-card-state" data-resource-slot="state">
+        <div className="arca-resource-card-state" data-resource-slot="state">
           {state}
         </div>
       )}
       {impact != null && (
-        <footer className="mux-resource-card-impact" data-resource-slot="impact">
+        <footer className="arca-resource-card-impact" data-resource-slot="impact">
           {impact}
         </footer>
       )}

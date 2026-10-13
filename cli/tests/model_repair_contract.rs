@@ -3,9 +3,9 @@
 use std::fs;
 use std::process::{Command, Output};
 
-use mux_core::domain::types::{ModelProfile, ModelProtocol};
-use mux_core::resources::model::save_profile;
-use mux_core::testenv::TestHome;
+use arca_core::domain::types::{ModelProfile, ModelProtocol};
+use arca_core::resources::model::save_profile;
+use arca_core::testenv::TestHome;
 
 fn profile() -> ModelProfile {
     ModelProfile {
@@ -27,11 +27,11 @@ fn profile() -> ModelProfile {
 }
 
 fn run(args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_mux"))
+    Command::new(env!("CARGO_BIN_EXE_arca"))
         .args(args)
-        .env("MUX_NO_UPDATE_CHECK", "1")
+        .env("ARCA_NO_UPDATE_CHECK", "1")
         .output()
-        .expect("run isolated mux command")
+        .expect("run isolated arca command")
 }
 
 fn success_json(output: Output) -> serde_json::Value {

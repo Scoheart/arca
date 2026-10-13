@@ -1,5 +1,5 @@
 use desktop_lib::commands;
-use mux_core::skills::{
+use arca_core::skills::{
     PlanInstallRequest, PlanRepairRequest, RepairKind, SkillCommitRequest, SkillError,
 };
 use serde_json::{json, Value};
@@ -183,7 +183,7 @@ fn nested_skill_requests_keep_the_core_snake_case_wire_shape() {
 
 #[test]
 fn inventory_command_runs_async_inside_an_isolated_test_home() {
-    let th = mux_core::testenv::TestHome::new("tauri-skills-command");
+    let th = arca_core::testenv::TestHome::new("tauri-skills-command");
     std::fs::create_dir_all(th.home.join(".codex")).unwrap();
 
     let inventory = tauri::async_runtime::block_on(commands::list_skills_inventory()).unwrap();
@@ -219,13 +219,13 @@ fn main_window_starts_hidden_without_changing_existing_window_contracts() {
 fn startup_degrades_before_showing_and_checks_skill_updates_only_when_allowed() {
     let source = include_str!("../src/lib.rs");
     let bootstrap = source
-        .find("mux_core::application::MuxCore::bootstrap(")
+        .find("arca_core::application::ArcaCore::bootstrap(")
         .expect("startup must delegate recovery to the core bootstrap");
     let conditional_check = source
         .find("if bootstrap.skill_updates_allowed {")
         .expect("due checking must be conditional on successful recovery");
     let due_check = source
-        .find("mux_core::application::skills::check_updates_if_due()")
+        .find("arca_core::application::skills::check_updates_if_due()")
         .expect("startup must schedule the metadata-only due check");
     let show = source
         .find("window.show()?")

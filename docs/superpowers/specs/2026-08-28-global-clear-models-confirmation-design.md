@@ -8,16 +8,16 @@ The user wants this inline review surface removed. Clearing Models must still re
 
 ## Decision
 
-`clear-models` uses a compact, window-level confirmation dialog. It is rendered through MUX's existing portal-backed `DialogShell`, so the overlay covers the application window and does not participate in the Models panel layout.
+`clear-models` uses a compact, window-level confirmation dialog. It is rendered through Arca's existing portal-backed `DialogShell`, so the overlay covers the application window and does not participate in the Models panel layout.
 
 The generic `AssetOperationReviewDialog` remains unchanged for other operation kinds.
 
 ## Interaction
 
 1. The user clicks **清空全部 Models**.
-2. MUX prepares the existing `clear_agent_models` plan.
-3. If planning fails, MUX shows the existing error toast and does not open a dialog.
-4. If planning succeeds, MUX opens a global review dialog over the whole application.
+2. Arca prepares the existing `clear_agent_models` plan.
+3. If planning fails, Arca shows the existing error toast and does not open a dialog.
+4. If planning succeeds, Arca opens a global review dialog over the whole application.
 5. The dialog contains only:
    - title: **清空全部 Models？**
    - message: **将删除 N 个 Models**
@@ -66,7 +66,7 @@ Out of scope:
 ## Acceptance criteria
 
 - Clicking **清空全部 Models** never replaces or resizes the Models panel.
-- A centered application-level modal appears above the entire MUX window.
+- A centered application-level modal appears above the entire Arca window.
 - The modal displays only the compact title, `将删除 N 个 Models`, and two actions, plus a concise error only after failure.
 - The destructive action remains plan → explicit confirmation → commit.
 - Other operation review surfaces behave exactly as before.

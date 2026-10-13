@@ -105,7 +105,7 @@ export type ModelProtocol =
 export type AuthRequirement = "required" | "optional" | "none";
 
 export type ApiKeySource =
-  | { kind: "mux-store" }
+  | { kind: "arca-store" }
   | { kind: "env"; name: string }
   | { kind: "file"; path: string }
   | { kind: "helper"; command: string; args: string[]; ttl_ms?: number };
@@ -207,7 +207,7 @@ export interface ModelProviderView {
   } | null;
 }
 
-export type ModelStorageAuthority = "native-registry" | "mux-mapping" | "guided";
+export type ModelStorageAuthority = "native-registry" | "arca-mapping" | "guided";
 
 export interface ModelAgentView {
   id: "claude-code" | "codex" | "pi" | "qoder" | string;
@@ -226,7 +226,7 @@ export interface ModelAgentView {
   credential_mode: "keychain-command" | "environment-reference" | "guided" | string;
   credential_capabilities?: {
     native_sources: Array<ApiKeySource["kind"]>;
-    mux_keychain_helper: boolean;
+    arca_keychain_helper: boolean;
     agent_store: boolean;
     plaintext: boolean;
     note?: string;
@@ -304,7 +304,7 @@ export interface InstalledMcp {
   name: string; agent: string; scope: string; file_path: string; transport: string;
   customized?: boolean;
   /** Whether the server is active in the agent's config (true) or paused natively /
-   *  remembered in MUX's disabled store (false). */
+   *  remembered in Arca's disabled store (false). */
   enabled: boolean;
   observation_fingerprint: string;
 }
@@ -369,7 +369,7 @@ export type View =
   | { kind: "traces"; agentId?: string };
 
 /** A catalog source (mirrors Rust SourceView): a subscribed remote URL or a
- *  local file. Its servers are parsed under ~/.mux/assets/mcps/sources/. */
+ *  local file. Its servers are parsed under ~/.arca/assets/mcps/sources/. */
 export type SourceKind = "remote" | "local";
 export interface SourceView {
   id: string;

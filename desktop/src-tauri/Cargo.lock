@@ -57,6 +57,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "arca-core"
+version = "1.14.5"
+dependencies = [
+ "chrono",
+ "core-foundation",
+ "dirs 5.0.1",
+ "flate2",
+ "fs2",
+ "hex",
+ "jsonc-parser",
+ "plist",
+ "regex",
+ "rustix",
+ "security-framework-sys",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+ "sha2 0.11.0",
+ "similar",
+ "tar",
+ "toml 1.1.4+spec-1.1.0",
+ "toml_edit 0.20.2",
+ "ureq",
+ "url",
+ "uuid",
+ "yaml-edit",
+ "zeroize",
+ "zip",
+]
+
+[[package]]
 name = "async-broadcast"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -772,11 +803,11 @@ dependencies = [
 name = "desktop"
 version = "1.14.5"
 dependencies = [
+ "arca-core",
  "block2",
  "chrono",
  "dirs 6.0.0",
  "libc",
- "mux-core",
  "notify",
  "objc2",
  "objc2-app-kit",
@@ -2309,37 +2340,6 @@ dependencies = [
  "serde",
  "thiserror 2.0.18",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "mux-core"
-version = "1.14.5"
-dependencies = [
- "chrono",
- "core-foundation",
- "dirs 5.0.1",
- "flate2",
- "fs2",
- "hex",
- "jsonc-parser",
- "plist",
- "regex",
- "rustix",
- "security-framework-sys",
- "serde",
- "serde_json",
- "serde_yaml_ng",
- "sha2 0.11.0",
- "similar",
- "tar",
- "toml 1.1.4+spec-1.1.0",
- "toml_edit 0.20.2",
- "ureq",
- "url",
- "uuid",
- "yaml-edit",
- "zeroize",
- "zip",
 ]
 
 [[package]]

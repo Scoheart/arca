@@ -8,14 +8,14 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const catalog = JSON.parse(await readFile(resolve(root, "data/agent-catalog.json"), "utf8"));
 const output = resolve(root, "analysis/agent-capability-audit/catalog-source-discovery.json");
 const ignoredGithubOwners = new Set(["glama-ai", "punkpeye"]);
-const checkedAt = process.env.MUX_AUDIT_DATE || new Intl.DateTimeFormat("en-CA", {
+const checkedAt = process.env.ARCA_AUDIT_DATE || new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Shanghai",
   year: "numeric",
   month: "2-digit",
   day: "2-digit",
 }).format(new Date());
 if (!/^\d{4}-\d{2}-\d{2}$/.test(checkedAt)) {
-  throw new Error(`MUX_AUDIT_DATE must use YYYY-MM-DD, received: ${checkedAt}`);
+  throw new Error(`ARCA_AUDIT_DATE must use YYYY-MM-DD, received: ${checkedAt}`);
 }
 
 function decodeHtml(value) {
@@ -53,7 +53,7 @@ async function fetchWithRetry(url) {
   let lastError;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const response = await fetch(url, { headers: { "user-agent": "MUX-Agent-Capability-Audit/1.0" } });
+      const response = await fetch(url, { headers: { "user-agent": "Arca-Agent-Capability-Audit/1.0" } });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.text();
     } catch (error) {

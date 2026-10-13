@@ -1,7 +1,7 @@
 mod support;
 
-use mux_core::settings::{load_settings, mutate_settings};
-use mux_core::skills::{
+use arca_core::settings::{load_settings, mutate_settings};
+use arca_core::skills::{
     check_updates_with, commit_update, hash_tree, plan_update, FileChangeKind, GithubEndpoints,
     PlanUpdateRequest, SkillCommitRequest, SkillError, SkillSource, SkillsPaths,
     UpdateCheckOutcome,
@@ -158,7 +158,7 @@ fn metadata_result_is_discarded_when_revision_changes_during_request() {
 #[test]
 fn automatic_check_is_not_due_within_twenty_four_hours_but_is_due_at_boundary() {
     let fixture = UpdateFixture::last_checked("2026-07-16T08:00:01Z");
-    let settings_path = fixture.skills.home.home.join(".mux/settings.json");
+    let settings_path = fixture.skills.home.home.join(".arca/settings.json");
     let before_bytes = fs::read(&settings_path).unwrap();
     #[cfg(unix)]
     let before_inode = {
@@ -326,7 +326,7 @@ fn update_replaces_central_copy_retains_links_and_records_backup() {
     let private_plan: serde_json::Value =
         serde_json::from_slice(&fs::read(private_plan).unwrap()).unwrap();
     let backup_path = private_plan["input"]["backup_path"].as_str().unwrap();
-    assert!(backup_path.starts_with("~/.mux/backups/skills/update-"));
+    assert!(backup_path.starts_with("~/.arca/backups/skills/update-"));
     assert!(backup_path.ends_with("/review-changes"));
     let inventory = commit_update(plan.confirmation()).unwrap();
     assert!(inventory

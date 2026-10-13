@@ -2295,7 +2295,7 @@ fn aggregate_findings_hash(skills: &[PlannedSkill]) -> Result<String, SkillError
 
 fn current_settings_snapshot() -> Result<SkillSettingsSnapshot, SkillError> {
     let settings = load_settings_strict().map_err(|_| SkillError::Io {
-        message: "MUX settings could not be read safely".into(),
+        message: "Arca settings could not be read safely".into(),
         path: None,
     })?;
     Ok(snapshot_from_settings(&settings))
@@ -2916,7 +2916,7 @@ mod tests {
         operation.write_private_atomic("resolution.json", &serde_json::to_vec(&resolution).unwrap(), MAX_PLAN_BYTES).unwrap();
         let persisted = build_update_plan(PlanUpdateRequest {
             skill_name: name.into(), replace_local_changes: false,
-        }, resolution, format!("~/.mux/backups/skills/update-metadata/{name}")).unwrap();
+        }, resolution, format!("~/.arca/backups/skills/update-metadata/{name}")).unwrap();
         assert!(!persisted.plan.skills[0].replace_existing);
         assert!(persisted.plan.skills[0].files.is_empty());
         assert!(!persisted.plan.warnings.is_empty());
@@ -3277,7 +3277,7 @@ mod tests {
                 repair: RepairKind::Central,
             },
             resolution,
-            "~/.mux/backups/skills/repair-test/repair-preserves-update".into(),
+            "~/.arca/backups/skills/repair-test/repair-preserves-update".into(),
             false,
         )
         .unwrap();
@@ -3367,7 +3367,7 @@ mod tests {
                     replace_local_changes: false,
                 },
                 resolution,
-                "~/.mux/backups/skills/update-test/review-changes".into(),
+                "~/.arca/backups/skills/update-test/review-changes".into(),
             ),
             Err(SkillError::PlanStale { .. }) | Err(SkillError::Conflict { .. })
         ));

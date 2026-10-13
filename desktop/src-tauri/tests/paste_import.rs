@@ -3,13 +3,13 @@
 use desktop_lib::commands::list_registry;
 use tauri::async_runtime::block_on;
 
-fn import_pasted_config(text: String) -> mux_core::domain::error::CoreResult<Vec<String>> {
+fn import_pasted_config(text: String) -> arca_core::domain::error::CoreResult<Vec<String>> {
     tauri::async_runtime::block_on(desktop_lib::commands::import_pasted_config(text))
 }
 
 #[test]
 fn paste_import_recognizes_and_adds_manual_entries() {
-    let th = mux_core::testenv::TestHome::new("paste");
+    let th = arca_core::testenv::TestHome::new("paste");
     let h = th.home.clone();
 
     // 1) A standard mcpServers block (the yunxiao example).
@@ -41,7 +41,7 @@ fn paste_import_recognizes_and_adds_manual_entries() {
             .unwrap(),
         "<YOUR_TOKEN>"
     );
-    assert!(h.join(".mux/sources/local/manual.json").exists());
+    assert!(h.join(".arca/sources/local/manual.json").exists());
 
     // 2) A bare name->config map (no mcpServers wrapper).
     let added = import_pasted_config(r#"{"git":{"command":"npx","args":["-y","git-mcp"]}}"#.into())

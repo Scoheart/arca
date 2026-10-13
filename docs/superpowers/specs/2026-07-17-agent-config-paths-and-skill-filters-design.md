@@ -7,7 +7,7 @@
 
 本轮调整解决两个相邻的信息架构问题：
 
-1. Skills 工作区删除 MUX 自行推断、且对外部或断链 Skill 不可靠的“内容类型”导航。
+1. Skills 工作区删除 Arca 自行推断、且对外部或断链 Skill 不可靠的“内容类型”导航。
 2. Agent 页把含糊的两块“Agent 配置文件 / MCP 配置文件”重构为 Model、MCP、Skills 三个同级配置位置。
 
 结果应让用户看到真实、可核验的路径语义，同时保持 v1.2.16 已发布的 Skills 持久化与恢复数据可兼容。
@@ -16,7 +16,7 @@
 
 ### 2.1 “内容类型”不是可靠的用户分类
 
-当前 MUX 根据 Skill 文件树推断 `automation`、`assets`、`reference` 或 `instructions`。外部列表扫描为避免遍历完整目录，会先把类型统一兜底为 `instructions`；断链条目无法在详情加载时重新分类。因此侧栏计数会把未知内容显示成“说明型”，形成错误暗示。
+当前 Arca 根据 Skill 文件树推断 `automation`、`assets`、`reference` 或 `instructions`。外部列表扫描为避免遍历完整目录，会先把类型统一兜底为 `instructions`；断链条目无法在详情加载时重新分类。因此侧栏计数会把未知内容显示成“说明型”，形成错误暗示。
 
 该字段同时已经进入 v1.2.16 的 managed record、source resolution、operation plan、settings snapshot 和 recovery journal。直接删除 wire/persistence 字段会使旧计划、旧恢复日志和版本降级不兼容。
 
@@ -46,7 +46,7 @@ Skills inventory 只包含安装探针命中的 Agent，不能单独用来判断
 ### 3.2 本轮不包含
 
 - 不删除 Rust/IPC/persistence 中的 `SkillContentKind` 或 `content_kind`。
-- 不迁移或重写 `~/.mux/settings.json`、staging、plan 或 journal。
+- 不迁移或重写 `~/.arca/settings.json`、staging、plan 或 journal。
 - 不改变 Skills 安装探针、分配目标或共享目录语义。
 - 不新增 Model 或 Skills 编辑入口；各自仍由下方现有管理区负责。
 - 不修正 Qoder Desktop 与 Qoder CLI 的既有产品映射；本轮只用现有 capability。
@@ -150,7 +150,7 @@ Model 缺失时不得回退到 MCP 路径。Skills 缺失时不得从 MCP 路径
 ### 8.3 验收
 
 - 运行 Desktop 单元测试、Rust 相关测试、类型检查和生产构建。
-- 使用正式安装的 `/Applications/MUX.app` 验收，不使用 Preview bundle 或浏览器 mock。
+- 使用正式安装的 `/Applications/Arca.app` 验收，不使用 Preview bundle 或浏览器 mock。
 - 截图检查 Skills 页已移除分类，以及 Codex Agent 页三块配置位置在常规窗口和 `900×600` 下无横向溢出。
 
 ## 9. 兼容与交付

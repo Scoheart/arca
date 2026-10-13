@@ -1,4 +1,4 @@
-# MUX Target-scoped 收敛、故障隔离与恢复设计
+# Arca Target-scoped 收敛、故障隔离与恢复设计
 
 ## 状态
 
@@ -9,7 +9,7 @@
 
 ## 决策
 
-MUX 对 MCP、Model、Skill 采用中央 Desired State 与 Agent Observed State 分离的最终一致模型。
+Arca 对 MCP、Model、Skill 采用中央 Desired State 与 Agent Observed State 分离的最终一致模型。
 
 一次用户操作可以修改一个中央资产并影响多个 Agent，但只有中央写入属于中央提交；每个物理 Agent target 都是独立的收敛单元。四个 target 成功、一个 target 失败时，四个成功结果必须保留，中央 Desired State 必须保留，失败 target 进入局部 incident 并可单独重试。
 
@@ -67,11 +67,11 @@ TargetIncident
   retryable
 ```
 
-Incident 不保存凭据、配置内容、回滚字节或底层错误路径。原始恢复证据继续保存在私有 MUX 目录，只用于安全判断。
+Incident 不保存凭据、配置内容、回滚字节或底层错误路径。原始恢复证据继续保存在私有 Arca 目录，只用于安全判断。
 
 Incident 的动作与普通外部漂移一致：
 
-- `restore-desired`：基于最新 observation 重新计划并覆盖 MUX-owned 字段；
+- `restore-desired`：基于最新 observation 重新计划并覆盖 Arca-owned 字段；
 - `adopt-observed`：采用当前现场并使旧 evidence 失效；
 - `detach`：释放 desired ownership，保留现场。
 

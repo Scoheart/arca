@@ -2,7 +2,7 @@
 
 ## Summary
 
-MUX will replace its current collection of visually divergent dialogs with one compact desktop dialog system. The approved direction is flat, icon-led, and information-complete: necessary values remain visible, icons replace repeated labels and obvious actions, and content is organized with spacing and quiet dividers instead of nested cards.
+Arca will replace its current collection of visually divergent dialogs with one compact desktop dialog system. The approved direction is flat, icon-led, and information-complete: necessary values remain visible, icons replace repeated labels and obvious actions, and content is organized with spacing and quiet dividers instead of nested cards.
 
 This change covers resource details, editors, pickers, reviews, confirmations, and multi-step Skill dialogs. It changes presentation only; resource behavior, persistence, validation, and modal accessibility semantics remain unchanged.
 
@@ -126,7 +126,7 @@ Explanatory copy is removed when it repeats the title, visible field, or action.
 - Keep existing modal stack, focus, Escape, and responsive overflow tests.
 - Build the desktop production bundle through Direct Stable.
 - Verify the official Stable assets, signature, DMG, updater, and CLI.
-- Final visual acceptance uses only the official `/Applications/MUX.app`; if local replacement is not authorized, report asset verification and leave installation to the user.
+- Final visual acceptance uses only the official `/Applications/Arca.app`; if local replacement is not authorized, report asset verification and leave installation to the user.
 
 ## Non-goals
 

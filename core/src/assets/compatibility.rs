@@ -65,7 +65,7 @@ pub fn compatibility_for(agent_id: &str, asset: &AssetRef) -> Result<Compatibili
     if !agent.enabled {
         return Ok(CompatibilityView::unsupported(
             "agent_disabled",
-            "Agent 已在 MUX 中停用。",
+            "Agent 已在 Arca 中停用。",
         ));
     }
     match asset {
@@ -136,7 +136,7 @@ impl McpCompatibilityResolver {
         if !agent.enabled {
             return Ok(CompatibilityView::unsupported(
                 "agent_disabled",
-                "Agent 已在 MUX 中停用。",
+                "Agent 已在 Arca 中停用。",
             ));
         }
         let transport = key

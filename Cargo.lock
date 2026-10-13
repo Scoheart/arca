@@ -1273,19 +1273,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "mux-cli"
+name = "arca-cli"
 version = "1.14.5"
 dependencies = [
  "clap",
  "crossterm",
  "fuzzy-matcher",
- "mux-core",
+ "arca-core",
  "ratatui",
  "serde_json",
 ]
 
 [[package]]
-name = "mux-core"
+name = "arca-core"
 version = "1.14.5"
 dependencies = [
  "chrono",

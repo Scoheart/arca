@@ -3,10 +3,10 @@ set -euo pipefail
 
 MODE="${1:-run}"
 APP_PROCESS="desktop"
-APP_BUNDLE_ID="com.scoheart.mux"
+APP_BUNDLE_ID="com.scoheart.arca"
 DEV_PORT="1420"
-DEV_PID_FILE="/tmp/com.scoheart.mux-dev.pid"
-DEV_LOG_FILE="/tmp/com.scoheart.mux-dev.log"
+DEV_PID_FILE="/tmp/com.scoheart.arca-dev.pid"
+DEV_LOG_FILE="/tmp/com.scoheart.arca-dev.log"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DESKTOP_DIR="$ROOT_DIR/desktop"
 
@@ -72,7 +72,7 @@ case "$MODE" in
     run_tauri >"$DEV_LOG_FILE" 2>&1 &
     echo "$!" > "$DEV_PID_FILE"
     if wait_for_app; then
-      echo "MUX development app is running (PID $(/usr/bin/pgrep -x "$APP_PROCESS" | head -n 1))."
+      echo "Arca development app is running (PID $(/usr/bin/pgrep -x "$APP_PROCESS" | head -n 1))."
     else
       tail -n 80 "$DEV_LOG_FILE" >&2 || true
       exit 1

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use clap::Subcommand;
-use mux_core::application::ui;
+use arca_core::application::ui;
 use serde_json::json;
 use crate::{command::Cli, output::{query_output, CliError, CommandOutput}, projection::safe_path, review::execute_direct_mutation};
 

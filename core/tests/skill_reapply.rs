@@ -2,20 +2,20 @@
 
 mod support;
 
-use mux_core::consumption::{
+use arca_core::consumption::{
     cancel_asset_operation, commit_asset_operation, plan_reapply_skill, plan_set_skill_enabled,
     AssetCommitRequest, AssetRef, ConsumptionStatus, PlanReapplySkillRequest,
     PlanSetSkillEnabledRequest,
 };
-use mux_core::settings::mutate_settings;
-use mux_core::skills::hash_tree;
+use arca_core::settings::mutate_settings;
+use arca_core::skills::hash_tree;
 use std::fs;
 use std::os::unix::fs::symlink;
 use support::skills::{assert_managed_link, managed_record, write_skill, SkillsFixture};
 
 fn commit(
-    plan: &mux_core::consumption::AssetOperationPlan,
-) -> Result<mux_core::consumption::ConsumptionInventory, String> {
+    plan: &arca_core::consumption::AssetOperationPlan,
+) -> Result<arca_core::consumption::ConsumptionInventory, String> {
     commit_asset_operation(AssetCommitRequest {
         operation_id: plan.operation_id.clone(),
         candidate_hash: plan.candidate_hash.clone(),
@@ -174,7 +174,7 @@ fn skill_reapply_becomes_stale_when_a_new_agent_joins_the_shared_target() {
     })
     .unwrap();
     let target = fixture.target("agents-user", "safe");
-    let settings_path = fixture.home.home.join(".mux/settings.json");
+    let settings_path = fixture.home.home.join(".arca/settings.json");
     let settings_before = fs::read(&settings_path).unwrap();
     let central_before = fs::read(central.join("SKILL.md")).unwrap();
 
@@ -235,7 +235,7 @@ fn skill_reapply_enforces_a_disabled_desired_relationship_without_deleting_forei
 fn skill_reapply_rejects_a_disabled_agent_without_writing() {
     let fixture = SkillsFixture::missing_managed_link("safe", "agents-user");
     let target = fixture.target("agents-user", "safe");
-    mux_core::agents::set_enabled("codex", false).unwrap();
+    arca_core::agents::set_enabled("codex", false).unwrap();
 
     let error = plan_reapply_skill(PlanReapplySkillRequest {
         agent_id: "codex".into(),

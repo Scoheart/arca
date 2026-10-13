@@ -6,21 +6,21 @@ use std::collections::BTreeSet;
 use std::sync::mpsc::Sender;
 use std::thread;
 
-use mux_core::application::agents::list_infos;
-use mux_core::application::assets::{
+use arca_core::application::agents::list_infos;
+use arca_core::application::assets::{
     AssetCommitRequest, AssetOperationPlan, AssetRef, CentralAssetDraft, ConsumptionInventory,
     PlanDeleteCentralAssetRequest, PlanSetMcpEnabledRequest, PlanUpdateAssetConsumersRequest,
     PlanUpdateCentralAssetRequest,
 };
-use mux_core::application::mcp::catalog::{read_registry, read_registry_all, user_override_keys};
-use mux_core::application::mcp::operations::{parse_pasted_entries, scan_installed};
-use mux_core::application::mcp::sources;
-use mux_core::application::operations::{
+use arca_core::application::mcp::catalog::{read_registry, read_registry_all, user_override_keys};
+use arca_core::application::mcp::operations::{parse_pasted_entries, scan_installed};
+use arca_core::application::mcp::sources;
+use arca_core::application::operations::{
     CancelOperationRequest, CommitOperationRequest, OperationCommitResult, OperationPlan,
     PlanOperationRequest,
 };
-use mux_core::application::MuxCore;
-use mux_core::domain::types::{AgentDefinition, RegistryEntry};
+use arca_core::application::ArcaCore;
+use arca_core::domain::types::{AgentDefinition, RegistryEntry};
 
 use super::message::{LoadedData, Msg};
 
@@ -108,12 +108,12 @@ impl EffectRunner {
 /// Join per-agent errors into one line for the status bar.
 fn commit_plan(plan: AssetOperationPlan) -> Result<ConsumptionInventory, String> {
     if !plan.can_commit {
-        let _ = MuxCore::cancel(CancelOperationRequest::Asset {
+        let _ = ArcaCore::cancel(CancelOperationRequest::Asset {
             operation_id: plan.operation_id.clone(),
         });
         return Err(plan.warnings.join("；"));
     }
-    match MuxCore::commit(CommitOperationRequest::Asset {
+    match ArcaCore::commit(CommitOperationRequest::Asset {
         request: AssetCommitRequest {
             operation_id: plan.operation_id,
             candidate_hash: plan.candidate_hash,
@@ -127,7 +127,7 @@ fn commit_plan(plan: AssetOperationPlan) -> Result<ConsumptionInventory, String>
         } => Ok(inventory),
         OperationCommitResult::Asset {
             converged: false, ..
-        } => Err("MUX 已保存期望配置，但 Agent 文件尚未完成收敛".into()),
+        } => Err("Arca 已保存期望配置，但 Agent 文件尚未完成收敛".into()),
         OperationCommitResult::Skill { .. } => {
             Err("Core returned a Skill result for an asset commit".into())
         }
@@ -139,7 +139,7 @@ fn update_mcp_consumers(
     add_agent_ids: Vec<String>,
     remove_agent_ids: Vec<String>,
 ) -> Result<(), String> {
-    let plan = MuxCore::plan(PlanOperationRequest::UpdateAssetConsumers(
+    let plan = ArcaCore::plan(PlanOperationRequest::UpdateAssetConsumers(
         PlanUpdateAssetConsumersRequest {
             asset: AssetRef::Mcp { key: asset_key },
             add_agent_ids,
@@ -159,7 +159,7 @@ fn upsert_entry(
     _confirm_conflict: bool,
 ) -> Result<Vec<String>, String> {
     let plan =
-        mux_core::application::assets::plan_update_central_asset(PlanUpdateCentralAssetRequest {
+        arca_core::application::assets::plan_update_central_asset(PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::Mcp {
                 existing_key,
                 entry: Box::new(entry),
@@ -178,12 +178,12 @@ fn put_agent_preserving_skills(
     // Core owns omission semantics and performs a compare-and-swap against the
     // current definition. Preloading Skills here can turn a stale frontend read
     // into an explicit overwrite of a newer capability.
-    mux_core::application::agents::put(id, definition, overwrite)
+    arca_core::application::agents::put(id, definition, overwrite)
 }
 
 fn delete_entry_source(name: &str, transport: &str, source_id: &str) -> Result<(), String> {
     let plan =
-        mux_core::application::assets::plan_delete_central_asset(PlanDeleteCentralAssetRequest {
+        arca_core::application::assets::plan_delete_central_asset(PlanDeleteCentralAssetRequest {
             asset: AssetRef::Mcp {
                 key: format!("{name}::{transport}"),
             },
@@ -235,7 +235,7 @@ fn run_effect(eff: Effect) -> Msg {
             agent,
         } => Msg::Mutated {
             label: format!("启用 {server}"),
-            result: mux_core::application::assets::plan_set_mcp_enabled(PlanSetMcpEnabledRequest {
+            result: arca_core::application::assets::plan_set_mcp_enabled(PlanSetMcpEnabledRequest {
                 agent_id: agent,
                 asset_key: format!("{server}::{transport}"),
                 enabled: true,
@@ -248,7 +248,7 @@ fn run_effect(eff: Effect) -> Msg {
             agent,
         } => Msg::Mutated {
             label: format!("停用 {server}"),
-            result: mux_core::application::assets::plan_set_mcp_enabled(PlanSetMcpEnabledRequest {
+            result: arca_core::application::assets::plan_set_mcp_enabled(PlanSetMcpEnabledRequest {
                 agent_id: agent,
                 asset_key: format!("{server}::{transport}"),
                 enabled: false,
@@ -334,7 +334,7 @@ fn run_effect(eff: Effect) -> Msg {
         },
         Effect::SetAgentEnabled { id, enabled } => Msg::Mutated {
             label: format!("{} agent {id}", if enabled { "启用" } else { "停用" }),
-            result: mux_core::application::agents::set_enabled(&id, enabled),
+            result: arca_core::application::agents::set_enabled(&id, enabled),
         },
         Effect::ForgetEntry { name, transport } => Msg::Mutated {
             label: format!("删除 {name}"),
@@ -346,11 +346,11 @@ fn run_effect(eff: Effect) -> Msg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mux_core::domain::types::{AgentInstallProbe, AgentSkillsCapability};
+    use arca_core::domain::types::{AgentInstallProbe, AgentSkillsCapability};
 
     #[test]
     fn mcp_form_edit_preserves_custom_agent_skills() {
-        let _home = mux_core::testenv::TestHome::new("tui-agent-skills");
+        let _home = arca_core::testenv::TestHome::new("tui-agent-skills");
         let skills = AgentSkillsCapability {
             target_id: "custom-user".into(),
             global_dir: "~/.custom/skills".into(),
@@ -362,7 +362,7 @@ mod tests {
                 name: "custom".into(),
             }],
         };
-        mux_core::application::agents::put(
+        arca_core::application::agents::put(
             "custom".into(),
             AgentDefinition {
                 global: Some("~/.custom/mcp.json".into()),
@@ -389,7 +389,7 @@ mod tests {
         )
         .unwrap();
 
-        let loaded = mux_core::application::agents::load_agents();
+        let loaded = arca_core::application::agents::load_agents();
         assert_eq!(loaded["custom"].skills.as_ref(), Some(&skills));
         assert_eq!(
             loaded["custom"].global.as_deref(),
@@ -399,7 +399,7 @@ mod tests {
 
     #[test]
     fn set_enabled_effect_preserves_skill_only_definition() {
-        let _home = mux_core::testenv::TestHome::new("tui-agent-toggle");
+        let _home = arca_core::testenv::TestHome::new("tui-agent-toggle");
         let skills = AgentSkillsCapability {
             target_id: "skill-user".into(),
             global_dir: "~/.skill-only/skills".into(),
@@ -411,7 +411,7 @@ mod tests {
                 name: "skill-only".into(),
             }],
         };
-        mux_core::application::agents::put(
+        arca_core::application::agents::put(
             "skill-only".into(),
             AgentDefinition {
                 enabled: true,
@@ -427,7 +427,7 @@ mod tests {
             enabled: false,
         });
         assert!(matches!(message, Msg::Mutated { result: Ok(()), .. }));
-        let loaded = mux_core::application::agents::load_agents();
+        let loaded = arca_core::application::agents::load_agents();
         assert!(!loaded["skill-only"].enabled);
         assert_eq!(loaded["skill-only"].skills.as_ref(), Some(&skills));
     }

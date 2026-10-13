@@ -1,4 +1,4 @@
-# MUX Provider 缺口调研与接入 — 2026-10-04
+# Arca Provider 缺口调研与接入 — 2026-10-04
 
 本次以源码中的 73 个模板为基线，检查开发者常用模型网关、托管推理平台、模型厂商和云平台。新增 30 个模板，合计 103 个（含 Custom）。17 个启用模型列表，13 个先使用手动 Model ID。这是按开发者接入价值和现有协议可实现性筛选的目录补全，不是基于付费流量数据的市场份额排名。
 
@@ -80,7 +80,7 @@ Tinfoil 的[官方编程工具指南](https://tinfoil.sh/coding-agents)明确要
 
 ### OpenCode Go
 
-[官方使用要求](https://opencode.ai/docs/go/#where-can-i-use-it)要求典型编程 Agent 流量、真实客户端 User-Agent 与稳定会话信息。MUX 只管理连接和凭据，不替 Agent 伪造会话标识；客户端能否正确发送这些请求信息还取决于它自己的版本。
+[官方使用要求](https://opencode.ai/docs/go/#where-can-i-use-it)要求典型编程 Agent 流量、真实客户端 User-Agent 与稳定会话信息。Arca 只管理连接和凭据，不替 Agent 伪造会话标识；客户端能否正确发送这些请求信息还取决于它自己的版本。
 
 ### Portkey 与 Helicone
 

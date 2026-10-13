@@ -63,7 +63,7 @@ const TraceView = lazy(() => import("./components/TraceView").then(module => ({ 
 
 function ViewLoading() {
   return (
-    <div className="mux-view-loading" role="status">
+    <div className="arca-view-loading" role="status">
       <RefreshIcon data-spinning="true" />
       正在打开视图…
     </div>
@@ -298,7 +298,7 @@ function App() {
       startupSync={startupSync}
     >
       <Suspense fallback={<ViewLoading />}>
-        {view.kind === "traces" ? (<TraceView initialAgentId={view.agentId} />) : view.kind === "capture" ? (<CaptureView agents={agents} initialAgentId={view.agentId} muxProxy={networkSettings.settings.proxy_url} />) : view.kind === "skills" ? (
+        {view.kind === "traces" ? (<TraceView initialAgentId={view.agentId} />) : view.kind === "capture" ? (<CaptureView agents={agents} initialAgentId={view.agentId} arcaProxy={networkSettings.settings.proxy_url} />) : view.kind === "skills" ? (
           <SkillsView
             state={skillsState}
             onOpenAgent={(id) => setView({ kind: "agent", id, tab: "skills" })}
@@ -360,7 +360,7 @@ function App() {
       )}
 
       {backendStatus?.state === "read_only" && (
-        <div className="mux-asset-recovery-banner" role="alert">
+        <div className="arca-asset-recovery-banner" role="alert">
           <strong>{t("migration.recoveryTitle")}</strong>
           <span>{t("migration.recoveryMessage", {
             stage: backendStatus.stage,
@@ -369,7 +369,7 @@ function App() {
       )}
 
       {backendStatus?.state === "capability_unavailable" && (
-        <div className="mux-asset-recovery-banner mux-capability-warning-banner" role="alert">
+        <div className="arca-asset-recovery-banner arca-capability-warning-banner" role="alert">
           <strong>{t("migration.capabilityTitle")}</strong>
           <span>{t("migration.capabilityMessage", { stage: backendStatus.stage })}</span>
         </div>
@@ -378,7 +378,7 @@ function App() {
       {backendStatus?.state !== "capability_unavailable"
         && (consumptionState.inventory?.capability_errors ?? []).map((diagnostic) => (
           <div
-            className="mux-asset-recovery-banner mux-capability-warning-banner"
+            className="arca-asset-recovery-banner arca-capability-warning-banner"
             role="status"
             key={`${diagnostic.capability}:${diagnostic.code}`}
           >

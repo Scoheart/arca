@@ -30,7 +30,7 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
     };
     match auth {
         CurlAuth::None => {},
-        CurlAuth::Placeholder => lines.push(format!("  --header \"{prefix}${{MUX_API_KEY}}\"")),
+        CurlAuth::Placeholder => lines.push(format!("  --header \"{prefix}${{ARCA_API_KEY}}\"")),
         CurlAuth::Key(key) => {
             if key.is_empty() || key.contains(['\0', '\r', '\n']) {
                 return Err("credential_invalid: API Key must be one non-empty line".into());
@@ -82,16 +82,16 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
         } else { CurlAuth::Placeholder };
         return render(&profile.protocol, &url, &profile.model, auth);
     }
-    let stored = if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::MuxStore)) {
+    let stored = if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore)) {
         if let Some(provider) = provider {
             super::read_credential_service_checked(&super::provider_keychain_service(&provider.id))?
         } else { super::read_credential_checked(profile_id)? }
     } else { None };
-    if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::MuxStore))
+    if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore))
         && stored.is_none() && *auth_requirement == AuthRequirement::Optional {
         return render(&profile.protocol, &url, &profile.model, CurlAuth::None);
     }
-    let resolved = credential::resolve_source(&configured_source.unwrap_or(ApiKeySource::MuxStore), stored)?;
+    let resolved = credential::resolve_source(&configured_source.unwrap_or(ApiKeySource::ArcaStore), stored)?;
     let key = Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
         .map_err(|_| "credential_invalid: API Key must be UTF-8")?);
     render(&profile.protocol, &url, &profile.model, CurlAuth::Key(&key))

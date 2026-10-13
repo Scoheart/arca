@@ -548,12 +548,12 @@ export function SkillsView({
   };
 
   const stateNotice = recoveryError ? (
-    <div className="mux-skill-notice" data-tone="recovery" role="status">
+    <div className="arca-skill-notice" data-tone="recovery" role="status">
       <strong>Skills 已进入只读恢复状态</strong>
       <span>{recoveryError}</span>
     </div>
   ) : state.error && state.inventory ? (
-    <div className="mux-skill-notice" data-tone="error" role="status">
+    <div className="arca-skill-notice" data-tone="error" role="status">
       <strong>最近一次操作未完成</strong>
       <span>{state.error.message}</span>
       {state.error.retry_at && <code>可重试时间：{state.error.retry_at}</code>}
@@ -562,7 +562,7 @@ export function SkillsView({
   const inventoryNotice = navigationNotice || stateNotice ? (
     <>
       {navigationNotice && (
-        <div className="mux-skill-notice" data-tone="error" role="status">
+        <div className="arca-skill-notice" data-tone="error" role="status">
           <strong>{navigationNotice}</strong>
         </div>
       )}
@@ -571,7 +571,7 @@ export function SkillsView({
   ) : null;
 
   return (
-    <div className="mux-skill-workspace">
+    <div className="arca-skill-workspace">
       <ResourceWorkspace
         overview={
           <ResourceOverview
@@ -588,11 +588,11 @@ export function SkillsView({
               </button>
             ) : undefined}
           >
-            {sourceLocation && <dl className="mux-resource-overview-facts">
+            {sourceLocation && <dl className="arca-resource-overview-facts">
               <div>
                 <dt>{selectedSource?.category === "github" ? "GitHub" : t("skillLibrary.sources")}</dt>
                 <dd>{selectedSource?.category === "github" ? (
-                  <a href={sourceLocation} className="mux-inline-link" title="在浏览器中打开 GitHub"
+                  <a href={sourceLocation} className="arca-inline-link" title="在浏览器中打开 GitHub"
                     onClick={(event) => {
                       event.preventDefault();
                       void openUrl(sourceLocation).catch(() => toast.show({ kind: "error", msg: "无法打开 GitHub，请稍后重试。" }));
@@ -625,7 +625,7 @@ export function SkillsView({
                 onClick={() => void checkUpdates()}
               >
                 <span
-                  className="mux-skill-check-icon"
+                  className="arca-skill-check-icon"
                   data-busy={checking ? "true" : undefined}
                   aria-hidden="true"
                 >
@@ -720,7 +720,7 @@ export function SkillsView({
           <>
             {inventoryNotice}
             <div
-              className="mux-skill-card-grid"
+              className="arca-skill-card-grid"
               role="list"
               aria-label={t("centralAssets.skillList")}
             >

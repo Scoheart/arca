@@ -12,8 +12,8 @@ export function BoundedText({ text, className, raw }: { text: string; className?
   const page = Math.min(selectedPage, offsets.length - 1);
   const start = offsets[page];
   const end = offsets[page + 1] ?? text.length;
-  return <div className="mux-bounded-text">
-    {offsets.length > 1 && <div className="mux-text-segments" aria-label={t('textSegments.label')}>
+  return <div className="arca-bounded-text">
+    {offsets.length > 1 && <div className="arca-text-segments" aria-label={t('textSegments.label')}>
       <span>{t('textSegments.position', { current: page + 1, total: offsets.length })}</span>
       <button type="button" disabled={page === 0} onClick={() => setSelectedPage(page - 1)}>{t('textSegments.previous')}</button>
       <button type="button" disabled={page + 1 === offsets.length} onClick={() => setSelectedPage(page + 1)}>{t('textSegments.next')}</button>

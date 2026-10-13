@@ -1,6 +1,6 @@
 # Provider templates
 
-This directory comes from the MUX 1.10.0 Core templates: official APIs, regional and Coding Plans, model platforms, gateways, and local services. Search a name or category to narrow it down.
+This directory comes from the Arca Core templates: official APIs, regional and Coding Plans, model platforms, gateways, and local services. Search a name or category to narrow it down.
 
 <ProviderReference lang="en" />
 

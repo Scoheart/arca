@@ -58,18 +58,18 @@ export function SkillInspector({
       subtitle={<Badge tone={item.source?.kind === "github" ? "info" : "neutral"}>{sourceKindLabel(item)}</Badge>}
       onClose={onClose}
     >
-      <article className="mux-skill-reading" key={item.identity}>
-        {item.description && <p className="mux-skill-reading-description">{item.description}</p>}
-        <div className="mux-skill-detail-source">
+      <article className="arca-skill-reading" key={item.identity}>
+        {item.description && <p className="arca-skill-reading-description">{item.description}</p>}
+        <div className="arca-skill-detail-source">
           <LinkIcon className="w-3.5 h-3.5" />
           <span>{item.source?.kind === "github" ? `${item.source.owner}/${item.source.repo}` : skillSourceText(item.source)}</span>
           {item.updated_at && <small>更新于 {shortDate(item.updated_at)}</small>}
         </div>
-        <section className="mux-skill-reading-body" aria-label="Skill 正文">
+        <section className="arca-skill-reading-body" aria-label="Skill 正文">
           {loading ? <p role="status">正在读取正文…</p>
-            : error ? <p className="mux-skill-inspector-error" role="alert">读取失败：{error.message}</p>
+            : error ? <p className="arca-skill-inspector-error" role="alert">读取失败：{error.message}</p>
             : detail ? <>
-              {detail.skill_md_truncated && <p className="mux-skill-inspector-truncation">正文预览已截断</p>}
+              {detail.skill_md_truncated && <p className="arca-skill-inspector-truncation">正文预览已截断</p>}
               <pre>{skillBody(detail.skill_md) || "暂无正文。"}</pre>
             </> : <p>尚未加载正文。</p>}
         </section>

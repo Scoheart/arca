@@ -82,19 +82,19 @@ impl YamlAdapter {
     }
 
     fn json_to_node(value: &Value) -> Result<YamlNode, String> {
-        let wrapper = serde_json::json!({"__mux_value": value});
+        let wrapper = serde_json::json!({"__arca_value": value});
         let yaml = serde_yaml::to_string(&wrapper).map_err(|error| error.to_string())?;
         Document::from_str(&yaml)
             .map_err(|error| error.to_string())?
-            .get("__mux_value")
+            .get("__arca_value")
             .ok_or_else(|| "failed to construct YAML value".into())
     }
 
     fn json_to_flow_node(value: &Value) -> Result<YamlNode, String> {
-        let wrapper = serde_json::json!({"__mux_value": value});
+        let wrapper = serde_json::json!({"__arca_value": value});
         Document::from_str(&wrapper.to_string())
             .map_err(|error| error.to_string())?
-            .get("__mux_value")
+            .get("__arca_value")
             .ok_or_else(|| "failed to construct flow-style YAML value".into())
     }
 

@@ -123,7 +123,7 @@ describe("SkillInstallDialog central asset intake", () => {
   it("keeps the source step compact without an empty single-action footer", async () => {
     const { props } = renderInstall();
     const dialog = screen.getByRole("dialog", { name: "添加 Skills" });
-    expect(dialog.querySelector(".mux-dialog-shell-footer")).not.toBeInTheDocument();
+    expect(dialog.querySelector(".arca-dialog-shell-footer")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "取消" })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "关闭" }));
@@ -136,8 +136,8 @@ describe("SkillInstallDialog central asset intake", () => {
     expect(screen.getByRole("button", { name: "选择本地文件夹" })).toBeVisible();
     expect(screen.getByRole("button", { name: "选择 Skill 压缩包" })).toBeVisible();
     expect(screen.queryByText("或")).not.toBeInTheDocument();
-    expect(document.querySelector(".mux-skill-source-divider")).not.toBeInTheDocument();
-    expect(document.querySelector(".mux-skill-local-sources")).not.toBeInTheDocument();
+    expect(document.querySelector(".arca-skill-source-divider")).not.toBeInTheDocument();
+    expect(document.querySelector(".arca-skill-local-sources")).not.toBeInTheDocument();
   });
 
   it("imports every resolved central candidate immediately without assigning Agents", async () => {
@@ -369,8 +369,8 @@ describe("Skills central lifecycle orchestration", () => {
 
 describe("Skill dialog layout contract", () => {
   it("keeps dialog bodies bounded and scrollable", () => {
-    expect(dialogCss).toContain(".mux-skill-dialog-body");
-    expect(dialogCss).toContain(".mux-skill-review-body");
+    expect(dialogCss).toContain(".arca-skill-dialog-body");
+    expect(dialogCss).toContain(".arca-skill-review-body");
     expect(dialogCss).toContain("overflow-y: auto");
     expect(dialogCss).toContain("@media (max-width: 920px)");
     expect(dialogCss).toContain("@media (max-height: 640px)");

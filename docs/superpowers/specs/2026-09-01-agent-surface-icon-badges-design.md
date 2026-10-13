@@ -8,7 +8,7 @@
 
 Make Agents that intentionally share a brand logo distinguishable at icon-only sizes. The first required case is Claude Code versus Claude Desktop; Qoder CLI versus Qoder Desktop follows the same rule.
 
-The base brand logo remains unchanged. MUX adds a small lower-right device symbol only when a shared logo represents multiple product surfaces.
+The base brand logo remains unchanged. Arca adds a small lower-right device symbol only when a shared logo represents multiple product surfaces.
 
 ## Existing Context
 
@@ -71,7 +71,7 @@ This policy produces badges for both members of the Claude and Qoder pairs while
 | Surface | Symbol | Color |
 |---|---|---|
 | CLI | terminal prompt | graphite |
-| Desktop | monitor | MUX blue |
+| Desktop | monitor | Arca blue |
 | IDE | split editor pane | violet |
 | Web | browser/globe | teal |
 

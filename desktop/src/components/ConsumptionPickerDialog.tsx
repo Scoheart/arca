@@ -83,20 +83,20 @@ export function ConsumptionPickerDialog({
 
   return (
     <DialogShell
-      leading={domain ? <span className="mux-dialog-shell-glyph"><ResourceIcon domain={domain} /></span> : undefined}
+      leading={domain ? <span className="arca-dialog-shell-glyph"><ResourceIcon domain={domain} /></span> : undefined}
       kind="picker"
       title={title}
       subtitle={subtitle}
       busy={busy}
       status={busy ? (
-        <span className="mux-operation-progress" role="status">
+        <span className="arca-operation-progress" role="status">
           <RefreshIcon data-spinning="true" />
           正在检查兼容性并同步到 Agent…
         </span>
       ) : error ? <span role="alert">{error}</span> : undefined}
       onClose={onClose}
       footerStart={
-        <span className="mux-picker-count">
+        <span className="arca-picker-count">
           {selected.length > 0 ? `已选 ${selected.length} · ` : ""}{filtered.length} 项
         </span>
       }
@@ -104,7 +104,7 @@ export function ConsumptionPickerDialog({
         <>
           <button type="button" className="btn-ghost" disabled={busy} onClick={onClose}>取消</button>
           <button type="button" className="btn-primary" disabled={selected.length === 0 || busy} onClick={() => void apply()}>
-            {busy && <RefreshIcon className="mux-button-progress-icon" data-spinning="true" />}
+            {busy && <RefreshIcon className="arca-button-progress-icon" data-spinning="true" />}
             {busy
               ? (busyLabel ?? `${actionLabel}中…`)
               : mode === "multiple" && selectedIds.size > 1
@@ -114,12 +114,12 @@ export function ConsumptionPickerDialog({
         </>
       }
     >
-      <div className="mux-picker-search">
+      <div className="arca-picker-search">
         <SearchBar value={query} onChange={setQuery} placeholder={searchPlaceholder} autoFocus onKeyDown={navigatePickerOptions} />
       </div>
-      <div className="mux-picker-list" onKeyDown={navigatePickerOptions} role={mode === "single" ? "listbox" : "group"} aria-label={title}>
+      <div className="arca-picker-list" onKeyDown={navigatePickerOptions} role={mode === "single" ? "listbox" : "group"} aria-label={title}>
         {filtered.length === 0 ? (
-          <div className="mux-picker-empty">{emptyMessage}</div>
+          <div className="arca-picker-empty">{emptyMessage}</div>
         ) : filtered.map((option) => (
           <button
             key={option.id}
@@ -128,23 +128,23 @@ export function ConsumptionPickerDialog({
             aria-describedby={option.description || option.reason ? `${pickerId}-${encodeURIComponent(option.id)}` : undefined}
             type="button"
             role={mode === "single" ? "option" : undefined}
-            className="mux-picker-option mux-consumption-picker-option"
+            className="arca-picker-option arca-consumption-picker-option"
             data-selected={selectedIds.has(option.id) ? "true" : undefined}
             disabled={option.disabled || busy}
             aria-selected={mode === "single" ? selectedIds.has(option.id) : undefined}
             aria-pressed={mode === "multiple" ? selectedIds.has(option.id) : undefined}
             onClick={() => toggle(option.id)}
           >
-            <span className="mux-consumption-picker-check" aria-hidden="true">
+            <span className="arca-consumption-picker-check" aria-hidden="true">
               {selectedIds.has(option.id) ? "✓" : ""}
             </span>
-            {option.icon && <span className="mux-consumption-picker-icon">{option.icon}</span>}
-            <span className="mux-picker-option-copy">
+            {option.icon && <span className="arca-consumption-picker-icon">{option.icon}</span>}
+            <span className="arca-picker-option-copy">
               <strong>{option.name}</strong>
               <span id={`${pickerId}-${encodeURIComponent(option.id)}`}><small>{option.description}</small>
               {option.reason && <em>{option.reason}</em>}</span>
             </span>
-            {option.meta && <span className="mux-picker-option-meta">{option.meta}</span>}
+            {option.meta && <span className="arca-picker-option-meta">{option.meta}</span>}
           </button>
         ))}
       </div>

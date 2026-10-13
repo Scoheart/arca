@@ -66,29 +66,29 @@ export function ResourcePickerDialog({
       subtitle={subtitle}
       busy={busy}
       status={busy ? (
-        <span className="mux-operation-progress" role="status">
+        <span className="arca-operation-progress" role="status">
           <RefreshIcon data-spinning="true" />
           正在检查并添加…
         </span>
       ) : error ? <span role="alert">{error}</span> : undefined}
       onClose={onClose}
-      footerStart={<span className="mux-picker-count">{filtered.length} 个可选项</span>}
+      footerStart={<span className="arca-picker-count">{filtered.length} 个可选项</span>}
       footerEnd={
         <>
           <button type="button" className="btn-ghost" disabled={busy} onClick={onClose}>取消</button>
           <button type="button" className="btn-primary" disabled={!selected || selected.disabled || busy} onClick={() => void add()}>
-            {busy && <RefreshIcon className="mux-button-progress-icon" data-spinning="true" />}
+            {busy && <RefreshIcon className="arca-button-progress-icon" data-spinning="true" />}
             {busy ? "添加中…" : addLabel}
           </button>
         </>
       }
     >
-      <div className="mux-picker-search">
+      <div className="arca-picker-search">
         <SearchBar value={query} onChange={setQuery} placeholder="搜索资源" autoFocus onKeyDown={navigatePickerOptions} />
       </div>
-      <div className="mux-picker-list" onKeyDown={navigatePickerOptions} role="listbox" aria-label={title}>
+      <div className="arca-picker-list" onKeyDown={navigatePickerOptions} role="listbox" aria-label={title}>
         {filtered.length === 0 ? (
-          <div className="mux-picker-empty">没有匹配项</div>
+          <div className="arca-picker-empty">没有匹配项</div>
         ) : filtered.map((option) => (
           <button
             key={option.id}
@@ -98,17 +98,17 @@ export function ResourcePickerDialog({
             type="button"
             role="option"
             aria-selected={selectedId === option.id}
-            className="mux-picker-option"
+            className="arca-picker-option"
             data-selected={selectedId === option.id ? "true" : undefined}
             disabled={option.disabled}
             onClick={() => setSelectedId(option.id)}
           >
             {option.avatar}
-            <span className="mux-picker-option-copy">
+            <span className="arca-picker-option-copy">
               <strong>{option.name}</strong>
               {option.description && <small id={`${pickerId}-${encodeURIComponent(option.id)}`}>{option.description}</small>}
             </span>
-            {option.meta && <span className="mux-picker-option-meta">{option.meta}</span>}
+            {option.meta && <span className="arca-picker-option-meta">{option.meta}</span>}
           </button>
         ))}
       </div>

@@ -22,7 +22,7 @@ export function ConsumptionStatus({
   };
   return (
     <span
-      className="mux-consumption-status"
+      className="arca-consumption-status"
       data-status={status}
       data-compact={compact ? "true" : undefined}
       title={reason ?? labels[status]}

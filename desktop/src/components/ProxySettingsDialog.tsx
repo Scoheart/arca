@@ -36,11 +36,11 @@ export function ProxySettingsDialog({
 
   return (
     <DialogShell
-      className="mux-dialog-proxy-settings"
+      className="arca-dialog-proxy-settings"
       kind="editor"
       size="sm"
       title="网络代理"
-      subtitle="用于 MUX 的联网请求。"
+      subtitle="用于 Arca 的联网请求。"
       busy={saving}
       onClose={onClose}
       footerEnd={(
@@ -48,16 +48,16 @@ export function ProxySettingsDialog({
           <button type="button" className="btn-ghost" disabled={saving} onClick={onClose}>
             取消
           </button>
-          <button type="submit" className="btn-primary" form="mux-proxy-settings-form" disabled={saving}>
+          <button type="submit" className="btn-primary" form="arca-proxy-settings-form" disabled={saving}>
             {saving ? "保存中…" : "保存"}
           </button>
         </>
       )}
     >
-      <form id="mux-proxy-settings-form" className="mux-proxy-form" onSubmit={submit}>
-        <label htmlFor="mux-proxy-url">代理地址</label>
+      <form id="arca-proxy-settings-form" className="arca-proxy-form" onSubmit={submit}>
+        <label htmlFor="arca-proxy-url">代理地址</label>
         <input
-          id="mux-proxy-url"
+          id="arca-proxy-url"
           data-modal-initial-focus
           type="text"
           inputMode="url"
@@ -67,18 +67,18 @@ export function ProxySettingsDialog({
           value={value}
           placeholder="http://127.0.0.1:7890"
           disabled={saving}
-          aria-describedby="mux-proxy-help"
+          aria-describedby="arca-proxy-help"
           aria-invalid={error ? "true" : undefined}
           onChange={(event) => {
             setValue(event.target.value);
             if (error) setError("");
           }}
         />
-        <div id="mux-proxy-help" className="mux-proxy-help">
+        <div id="arca-proxy-help" className="arca-proxy-help">
           <span>HTTP · SOCKS4 · SOCKS5</span>
           <span>留空即关闭</span>
         </div>
-        {error && <div className="mux-proxy-error" role="alert">{error}</div>}
+        {error && <div className="arca-proxy-error" role="alert">{error}</div>}
       </form>
     </DialogShell>
   );

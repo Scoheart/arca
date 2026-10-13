@@ -169,7 +169,7 @@ function AgentSurfaceBadge({ surface, size }: { surface: AgentSurface; size: num
   const badgeSize = surfaceBadgeSize(size);
   return (
     <span
-      className="mux-agent-surface-badge"
+      className="arca-agent-surface-badge"
       data-agent-surface={surface}
       aria-hidden="true"
       style={{ width: badgeSize, height: badgeSize }}
@@ -288,8 +288,8 @@ export function AgentGlyph({ id, name, size = 26 }: { id: string; name?: string;
 
   const surface = logo ? visibleSurface(id) : null;
   return (
-    <span className="mux-agent-glyph" data-agent-id={id} style={{ width: size, height: size }}>
-      <span className="mux-agent-glyph-base" style={{ width: size, height: size }}>
+    <span className="arca-agent-glyph" data-agent-id={id} style={{ width: size, height: size }}>
+      <span className="arca-agent-glyph-base" style={{ width: size, height: size }}>
         {baseGlyph}
       </span>
       {surface && <AgentSurfaceBadge surface={surface} size={size} />}

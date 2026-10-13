@@ -1,5 +1,5 @@
 //! Synthetic, isolated transcript fixtures: no real HOME, credentials or sessions.
-use mux_core::{application::traces, testenv::TestHome};
+use arca_core::{application::traces, testenv::TestHome};
 use serde_json::{json, Value};
 use std::{fs, path::Path};
 

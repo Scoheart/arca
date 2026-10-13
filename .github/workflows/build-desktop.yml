@@ -129,7 +129,7 @@ jobs:
             test -d "$app"
             actual=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
             test "$actual" = "$EXPECTED"
-            test "$("$app/Contents/MacOS/mux" --version)" = "mux $EXPECTED"
+            test "$("$app/Contents/MacOS/arca" --version)" = "arca $EXPECTED"
             codesign --verify --deep --strict --verbose=2 "$app"
           }
 
@@ -154,18 +154,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          CLI=target/release/mux
+          CLI=target/release/arca
           EXPECTED=$(tr -d '[:space:]' <version.txt)
           test -x "$CLI"
-          test "$("$CLI" --version)" = "mux $EXPECTED"
+          test "$("$CLI" --version)" = "arca $EXPECTED"
           case "$(uname -m)" in
             arm64|aarch64) TRIPLE=aarch64-apple-darwin ;;
             x86_64) TRIPLE=x86_64-apple-darwin ;;
             *) echo "unsupported macOS architecture" >&2; exit 1 ;;
           esac
-          OUT="mux_${RELEASE_TAG}_${TRIPLE}.tar.gz"
-          tar -C target/release -czf "$OUT" mux
+          OUT="arca_${RELEASE_TAG}_${TRIPLE}.tar.gz"
+          tar -C target/release -czf "$OUT" arca
           echo "path=$OUT" >>"$GITHUB_OUTPUT"
+          # Old standalone clients request a fixed asset/member name. This is a
+          # compatibility transport only; the executable identifies as Arca.
+          LEGACY_OUT="mux_${RELEASE_TAG}_${TRIPLE}.tar.gz"
+          LEGACY_DIR=$(mktemp -d)
+          cp "$CLI" "$LEGACY_DIR/mux"
+          tar -C "$LEGACY_DIR" -czf "$LEGACY_OUT" mux
+          rm -rf "$LEGACY_DIR"
+          echo "legacy_path=$LEGACY_OUT" >>"$GITHUB_OUTPUT"
 
       - name: Name desktop installer
         id: installer
@@ -178,7 +186,7 @@ jobs:
             x86_64) ARCH_LABEL=Intel ;;
             *) echo "unsupported macOS architecture" >&2; exit 1 ;;
           esac
-          DEST="desktop/src-tauri/target/release/bundle/dmg/MUX-Desktop-Installer-${RELEASE_TAG}-macOS-${ARCH_LABEL}.dmg"
+          DEST="desktop/src-tauri/target/release/bundle/dmg/Arca-Desktop-Installer-${RELEASE_TAG}-macOS-${ARCH_LABEL}.dmg"
           mv "$SRC" "$DEST"
           echo "path=$DEST" >>"$GITHUB_OUTPUT"
 
@@ -197,13 +205,13 @@ jobs:
           test -s "${TAR}.sig"
           SIG=$(cat "${TAR}.sig")
           VER=$(node -p "require('./desktop/src-tauri/tauri.conf.json').version")
-          ASSET="MUX-Desktop-AutoUpdate-${RELEASE_TAG}-macOS-${ARCH_LABEL}.app.tar.gz"
+          ASSET="Arca-Desktop-AutoUpdate-${RELEASE_TAG}-macOS-${ARCH_LABEL}.app.tar.gz"
           cp "$TAR" "$ASSET"
           PUB_DATE=$(git show -s --format=%cI "${{ steps.source.outputs.sha }}")
           cat >latest.json <<EOF
           {
             "version": "${VER}",
-            "notes": "MUX ${RELEASE_TAG} — https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}",
+            "notes": "Arca ${RELEASE_TAG} — https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}",
             "pub_date": "${PUB_DATE}",
             "platforms": {
               "darwin-${ARCH}": {
@@ -221,6 +229,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INSTALLER: ${{ steps.installer.outputs.path }}
           CLI_ARCHIVE: ${{ steps.cli.outputs.path }}
+          LEGACY_CLI_ARCHIVE: ${{ steps.cli.outputs.legacy_path }}
           UPDATER: ${{ steps.updater.outputs.asset }}
         run: |
           PUBLISHER=.github/scripts/publish-release-assets.sh
@@ -228,4 +237,4 @@ jobs:
             PUBLISHER=.delivery/.github/scripts/publish-release-assets.sh
           fi
           bash "$PUBLISHER" \
-            "$RELEASE_TAG" "$INSTALLER" "$CLI_ARCHIVE" "$UPDATER" latest.json
+            "$RELEASE_TAG" "$INSTALLER" "$CLI_ARCHIVE" "$UPDATER" latest.json "$LEGACY_CLI_ARCHIVE"

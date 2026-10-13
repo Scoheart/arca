@@ -3,19 +3,19 @@
 use std::fs;
 use std::os::unix::fs::symlink;
 
-use mux_core::consumption::{
+use arca_core::consumption::{
     commit_asset_operation, plan_reapply_mcp, plan_reapply_model, plan_set_agent_consumption,
     plan_update_agent_capabilities, AgentConsumptionSelection, AssetCommitRequest, McpReapplyScope,
     PlanReapplyMcpRequest, PlanReapplyModelRequest, PlanSetAgentConsumptionRequest,
     PlanUpdateAgentCapabilitiesRequest,
 };
-use mux_core::models::save_profile;
-use mux_core::registry::write_manual_entry;
-use mux_core::settings::mutate_settings;
-use mux_core::testenv::TestHome;
-use mux_core::types::{ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::models::save_profile;
+use arca_core::registry::write_manual_entry;
+use arca_core::settings::mutate_settings;
+use arca_core::testenv::TestHome;
+use arca_core::types::{ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig};
 
-fn commit(plan: mux_core::consumption::AssetOperationPlan) {
+fn commit(plan: arca_core::consumption::AssetOperationPlan) {
     commit_asset_operation(AssetCommitRequest {
         operation_id: plan.operation_id,
         candidate_hash: plan.candidate_hash,
@@ -171,7 +171,7 @@ fn skill_path_migration_rejects_a_reviewed_missing_destination_after_parent_beco
 
     let destination_parent = home.home.join(".codex-private/skills");
     fs::create_dir_all(&destination_parent).unwrap();
-    let mut patch = mux_core::application::agents::get_configuration_patch("codex").unwrap();
+    let mut patch = arca_core::application::agents::get_configuration_patch("codex").unwrap();
     patch.skill.as_mut().unwrap().global_dir = "~/.codex-private/skills".into();
     let plan = plan_update_agent_capabilities(PlanUpdateAgentCapabilitiesRequest {
         agent_id: "codex".into(),

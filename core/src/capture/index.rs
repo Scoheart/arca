@@ -237,7 +237,7 @@ mod tests {
 
     fn session(home: &TestHome) -> PathBuf {
         let id = Uuid::new_v4().to_string();
-        let directory = home.home.join(".mux/captures").join(&id);
+        let directory = home.home.join(".arca/captures").join(&id);
         fs::create_dir_all(directory.join("summaries")).unwrap();
         fs::write(directory.join("session.json"), serde_json::to_vec(&super::super::CaptureSession {
             id, agent_id: "codex".into(), agent_name: "Codex".into(), target_id: "fixture".into(),

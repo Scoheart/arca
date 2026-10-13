@@ -4,11 +4,11 @@
 
 **Goal:** Make each Agent Models panel use the Agent's declared storage authority, and make native-registry clear-all remove every configured Model—including external/manual entries—without deleting central assets or unrelated configuration.
 
-**Architecture:** Core declares `native-registry`, `mux-mapping`, or `guided` for every Model Agent. A dedicated `clear_agent_models` reviewed operation follows the existing MCP clear lifecycle: clear desired mapping, run an authority-specific target writer, re-observe, and report incidents rather than presenting optimistic empty state. Desktop renders native counts from managed plus external observed rows and mapping-only counts from MUX consumptions.
+**Architecture:** Core declares `native-registry`, `arca-mapping`, or `guided` for every Model Agent. A dedicated `clear_agent_models` reviewed operation follows the existing MCP clear lifecycle: clear desired mapping, run an authority-specific target writer, re-observe, and report incidents rather than presenting optimistic empty state. Desktop renders native counts from managed plus external observed rows and mapping-only counts from Arca consumptions.
 
-**Tech Stack:** Rust (`mux-core`, serde, JSONC/TOML/YAML adapters, target-scoped transaction engine), React 19, TypeScript, Vitest/Testing Library.
+**Tech Stack:** Rust (`arca-core`, serde, JSONC/TOML/YAML adapters, target-scoped transaction engine), React 19, TypeScript, Vitest/Testing Library.
 
-**Delivery constraint:** Keep the user's original MUX checkout unchanged. Add implementation to Draft PR #135 through one exact-manifest GitHub API commit; do not use local `git commit` or `git push`. MUX fast-delivery policy skips local tests/build unless the current user explicitly requests them; test code is still required, and the Stable production build plus four-asset verifier remain mandatory.
+**Delivery constraint:** Keep the user's original Arca checkout unchanged. Add implementation to Draft PR #135 through one exact-manifest GitHub API commit; do not use local `git commit` or `git push`. Arca fast-delivery policy skips local tests/build unless the current user explicitly requests them; test code is still required, and the Stable production build plus four-asset verifier remain mandatory.
 
 ---
 
@@ -31,7 +31,7 @@ Add to `core/src/domain/agents.rs`:
 #[serde(rename_all = "kebab-case")]
 pub enum ModelStorageAuthority {
     NativeRegistry,
-    MuxMapping,
+    ArcaMapping,
     Guided,
 }
 ```
@@ -45,7 +45,7 @@ Add the same typed field to `ModelAgentView` in `core/src/resources/model/mod.rs
 ```text
 native-registry: pi, grok-build, opencode, kilo-code, qwen-code, crush,
                  mistral-vibe, hermes, factory-droid, goose
-mux-mapping:     claude-code, codex
+arca-mapping:     claude-code, codex
 guided:          minimax-code, qoder
 ```
 
@@ -56,7 +56,7 @@ Pass the field through `core/src/application/agents.rs` without recreating the m
 In `desktop/src/lib/types.ts` add:
 
 ```ts
-export type ModelStorageAuthority = "native-registry" | "mux-mapping" | "guided";
+export type ModelStorageAuthority = "native-registry" | "arca-mapping" | "guided";
 ```
 
 and add `storage_authority: ModelStorageAuthority` to the Model capability and `ModelAgentView` interfaces.
@@ -70,7 +70,7 @@ Assert the 14 current Agent IDs map exactly to the three sets above. The test mu
 Targeted command when tests are authorized:
 
 ```bash
-cargo test -p mux-core application::agents -- --test-threads=1
+cargo test -p arca-core application::agents -- --test-threads=1
 ```
 
 Expected: the capability projection and exact authority matrix pass. Under the active fast-delivery rule, keep the test unexecuted locally.
@@ -93,7 +93,7 @@ pub(crate) fn clear_all_configured_models(agent_id: &str) -> Result<(), String>;
 pub(crate) fn agent_has_configured_models(agent_id: &str) -> Result<bool, String>;
 ```
 
-Both functions must reject `mux-mapping` and `guided` Agents. The presence check must inspect the same adapter-owned registry fields that clear-all removes.
+Both functions must reject `arca-mapping` and `guided` Agents. The presence check must inspect the same adapter-owned registry fields that clear-all removes.
 
 - [ ] **Step 2: Implement Pi as one two-file transaction**
 
@@ -153,7 +153,7 @@ Malformed roots, duplicate keys, wrong field types, or ambiguous structures retu
 
 - [ ] **Step 5: Add destructive-boundary fixtures**
 
-Add isolated HOME/MUX_HOME tests proving:
+Add isolated HOME/ARCA_HOME tests proving:
 
 ```text
 Pi: 8 Providers / 16 Models -> providers {}, default pointers absent
@@ -166,8 +166,8 @@ Duplicate keys and malformed structures fail before write
 Targeted commands when tests are authorized:
 
 ```bash
-cargo test -p mux-core resources::model::tests -- --test-threads=1
-cargo test -p mux-core resources::model::adapters::tests -- --test-threads=1
+cargo test -p arca-core resources::model::tests -- --test-threads=1
+cargo test -p arca-core resources::model::adapters::tests -- --test-threads=1
 ```
 
 Expected: every native observer/clear surface is symmetric. Keep unexecuted under the current fast-delivery rule.
@@ -223,14 +223,14 @@ The counts are non-sensitive reviewed metadata. Include `ClearModels` wherever p
 
 1. validate and load the canonical Model capability;
 2. reject `guided` with `model_agent_guided`;
-3. load current MUX Model selection and current inventory;
+3. load current Arca Model selection and current inventory;
 4. count all Model `consumptions + external` rows for a native Agent, and only mapped rows for mapping-only;
 5. create `DomainPlan::Model { before, after: empty }`;
 6. bind every configured Model target path for native authority and the existing writer path for mapping authority;
 7. add warnings containing total and external counts for native clear;
 8. persist `LifecycleBinding::ModelClear` and exact target hashes.
 
-No-op is allowed only when both the authority's source and MUX mapping are empty.
+No-op is allowed only when both the authority's source and Arca mapping are empty.
 
 - [ ] **Step 4: Commit central state then the authority target**
 
@@ -239,7 +239,7 @@ In transaction lifecycle handling:
 ```text
 1. remove agent from model_consumptions and model_assignments;
 2. native-registry -> clear_all_configured_models(agent_id);
-3. mux-mapping -> clear every Profile in the reviewed before selection using
+3. arca-mapping -> clear every Profile in the reviewed before selection using
    clear_profile_consumption with the reviewed active flag;
 4. guided -> unreachable because planning rejects it;
 5. re-observe; native must have no configured Model, mapping must have no mapping;
@@ -267,9 +267,9 @@ Cover:
 Targeted commands when authorized:
 
 ```bash
-cargo test -p mux-core assets::planner::tests -- --test-threads=1
-cargo test -p mux-core assets::transaction::tests -- --test-threads=1
-cargo test -p mux-core --test central_assets_e2e -- --test-threads=1
+cargo test -p arca-core assets::planner::tests -- --test-threads=1
+cargo test -p arca-core assets::transaction::tests -- --test-threads=1
+cargo test -p arca-core --test central_assets_e2e -- --test-threads=1
 ```
 
 Expected: all clear lifecycle contracts pass. Keep unexecuted locally under fast-delivery policy.
@@ -320,13 +320,13 @@ Use:
 
 ```text
 native-registry -> 配置中 X 个 · 同一时间使用其中一个
-mux-mapping     -> MUX 管理 X 个
+arca-mapping     -> Arca 管理 X 个
 guided          -> existing Agent-managed guidance
 ```
 
 Keep both managed and external cards visible for native Agents. Mapping-only continues to render mapped rows, with actual current drift as status rather than as an added card.
 
-Pass `modelExternal` to `AgentConsumptionPanel` only for `native-registry`; use an empty external list for `mux-mapping`. This prevents a single-slot Agent's observed external current value from being presented as a MUX-added Model.
+Pass `modelExternal` to `AgentConsumptionPanel` only for `native-registry`; use an empty external list for `arca-mapping`. This prevents a single-slot Agent's observed external current value from being presented as a Arca-added Model.
 
 - [ ] **Step 3: Replace the old empty-selection clear handler**
 
@@ -335,7 +335,7 @@ Pass `modelExternal` to `AgentConsumptionPanel` only for `native-registry`; use 
 ```text
 label: 清空全部 Models
 native title: 清空 <Agent> 真实配置中的全部 Model，包括外部和手工配置；中央资产与凭据保留
-mapping title: 清空 <Agent> 的全部 MUX Model 映射；中央资产与凭据保留
+mapping title: 清空 <Agent> 的全部 Arca Model 映射；中央资产与凭据保留
 ```
 
 Enable native clear from `modelConfiguredCount > 0`, mapping clear from `modelRows.length > 0`, and keep guided hidden.
@@ -354,7 +354,7 @@ Assert:
 
 ```text
 native 0 managed + 16 external -> “配置中 16 个”, clear enabled
-mapping 2 mapped -> “MUX 管理 2 个”
+mapping 2 mapped -> “Arca 管理 2 个”
 mapping external-current -> status only, not an added card
 guided -> no add/clear controls
 click clear -> one clear_agent_models plan, no immediate commit
@@ -365,7 +365,7 @@ Targeted command when authorized:
 
 ```bash
 cd desktop
-NODE_OPTIONS=--localstorage-file=/private/tmp/mux-model-source-localstorage npx vitest run src/components/AgentView.test.tsx src/hooks/useConsumptionState.test.tsx
+NODE_OPTIONS=--localstorage-file=/private/tmp/arca-model-source-localstorage npx vitest run src/components/AgentView.test.tsx src/hooks/useConsumptionState.test.tsx
 ```
 
 Expected: authority-aware UI tests pass. Keep unexecuted locally under fast-delivery policy.

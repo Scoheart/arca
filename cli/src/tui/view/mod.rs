@@ -42,7 +42,7 @@ fn render_header(model: &Model, f: &mut Frame, area: Rect) {
     f.render_widget(block, area);
 
     let mut spans: Vec<Span> = vec![
-        Span::styled(" MUX ", theme::chip(Tone::Brand)),
+        Span::styled(" Arca ", theme::chip(Tone::Brand)),
         Span::raw(theme::GAP),
     ];
     for (i, s) in Screen::ALL.iter().enumerate() {
@@ -194,7 +194,7 @@ mod tests {
     use crate::tui::message::LoadedData;
     use crate::tui::message::Msg;
     use crate::tui::update::update;
-    use mux_core::domain::types::{RegistryConfig, RegistryEntry, RegistryOrigin, StdioConfig};
+    use arca_core::domain::types::{RegistryConfig, RegistryEntry, RegistryOrigin, StdioConfig};
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
 
@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn renders_chrome_and_loading() {
         let text = render(&Model::new());
-        assert!(text.contains("MUX"));
+        assert!(text.contains("Arca"));
         assert!(text.contains("Registry"));
         assert!(text.contains("Agents"));
         assert!(text.contains("加载中"));

@@ -34,7 +34,7 @@ export function useHandTrackpadPaging(
     let lastFallbackAt = 0;
     const accepts = (target: Element | null) => Boolean(target && overlay.contains(target) &&
       target.closest("[data-modal-overlay]") === overlay &&
-      !target.closest(".mux-agent-hand-topbar, .mux-agent-hand-footer, input, textarea, select"));
+      !target.closest(".arca-agent-hand-topbar, .arca-agent-hand-footer, input, textarea, select"));
     const reset = () => { consumed = false; x = 0; y = 0; };
     const move = (dx: number, dy: number) => {
       if (consumed || !latest.current.enabled) return;
@@ -73,7 +73,7 @@ export function useHandTrackpadPaging(
     if (isTauri()) {
       void (async () => {
         try {
-          const stop = await listen<NativeScroll>("mux-trackpad-scroll", ({ payload }) => onNative(payload));
+          const stop = await listen<NativeScroll>("arca-trackpad-scroll", ({ payload }) => onNative(payload));
           if (!active) { stop(); return; }
           unlisten = stop;
           const available = await invoke<boolean>("trackpad_gestures_available");

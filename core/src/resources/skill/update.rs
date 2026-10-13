@@ -389,7 +389,7 @@ fn display_probe_error(error: SkillError) -> (String, Option<String>) {
 
 fn settings_read_error(_error: std::io::Error) -> SkillError {
     SkillError::Io {
-        message: "MUX settings could not be read safely".into(),
+        message: "Arca settings could not be read safely".into(),
         path: None,
     }
 }

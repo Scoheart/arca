@@ -1,4 +1,4 @@
-# MUX GitHub 交付与自动发布设计
+# Arca GitHub 交付与自动发布设计
 
 日期：2026-07-17
 
@@ -6,7 +6,7 @@
 
 ## 1. 目标
 
-将 MUX 从“允许直接推送 `main`、每次推送直接创建 Pre-release、正式版本靠人工改版本和打 tag”改造为可审查、可恢复的持续交付流程：
+将 Arca 从“允许直接推送 `main`、每次推送直接创建 Pre-release、正式版本靠人工改版本和打 tag”改造为可审查、可恢复的持续交付流程：
 
 1. `main` 只接受 Pull Request，合并前必须通过 CI。
 2. 每个普通 PR 合并到 `main` 后自动生成一个可安装的 Pre-release 包。
@@ -46,7 +46,7 @@
 
 ### 4.1 三种状态
 
-MUX 只保留三种清晰状态：
+Arca 只保留三种清晰状态：
 
 | 状态 | 触发 | 产物 | 是否进入自动更新 |
 |---|---|---|---|
@@ -79,7 +79,7 @@ MUX 只保留三种清晰状态：
 Release Please 使用一个目标分支和一个发布组件：
 
 - 目标分支：`main`
-- 发布组件：仓库根组件 `mux`
+- 发布组件：仓库根组件 `arca`
 - 版本关系：Desktop、CLI、Core 共用一个 SemVer
 - `separate-pull-requests`: `false`
 - Release PR 标题固定为 `chore(main): release X.Y.Z`
@@ -109,8 +109,8 @@ Release PR 必须与最新 `main` 同步。若功能 PR 在 Release PR 打开期
 - `desktop/package-lock.json` 的顶层版本和根 package 版本
 - `desktop/src-tauri/Cargo.toml`
 - `desktop/src-tauri/tauri.conf.json`
-- 根 `Cargo.lock` 中的 MUX workspace packages
-- `desktop/src-tauri/Cargo.lock` 中的 Desktop 与 MUX packages
+- 根 `Cargo.lock` 中的 Arca workspace packages
+- `desktop/src-tauri/Cargo.lock` 中的 Desktop 与 Arca packages
 
 新增版本一致性检查，比较所有权威 manifest 与 lockfile，并验证 npm regular/optional dependency 在 lockfile 的 Node 解析层级中完整闭包。任何不一致都使 `verify` 失败。npm lock 同步必须在不含开发机 `node_modules` 的临时目录运行：完整 lock 只通过 `npm version --allow-same-version --no-git-tag-version` 更新根版本元数据，发现平台依赖被裁剪时才从 `package.json` 全量重建，避免普通 Release PR 意外升级依赖。同步结果提交到同一 Release PR 分支，而不是运行时临时修改或忽略漂移；`npm ci` 和 `cargo test --locked` 不承担修复版本漂移的职责。
 
@@ -122,7 +122,7 @@ Release PR 必须与最新 `main` 同步。若功能 PR 在 Release PR 打开期
 
 保留 `quality-monitor.yml` 作为 required check 的来源，但把串行验证拆成可并行的三个任务：
 
-1. Rust：`cargo test --locked -p mux-core -p mux-cli`
+1. Rust：`cargo test --locked -p arca-core -p arca-cli`
 2. Desktop：`npm ci`、单元测试、前端生产构建和版本一致性检查
 3. Website：`npm ci`、文档生产构建
 
@@ -143,7 +143,7 @@ Release Please 配置 `draft: true` 和 `force-tag-creation: true`。Draft Relea
 
 Release Please 不能使用默认 `GITHUB_TOKEN` 创建 PR 和 tag，因为该 token 生成的事件不会再次触发 CI 和 tag 构建。使用仓库专用、可过期、最小权限的 fine-grained token `RELEASE_PLEASE_TOKEN`：
 
-- 仅授权 `Scoheart/mux`
+- 仅授权 `Scoheart/arca`
 - Contents: read/write
 - Pull requests: read/write
 - Issues: read/write，仅用于 Release Please labels
@@ -247,7 +247,7 @@ Ruleset 优先以 Evaluate 模式观察，确认功能 PR、Release PR 和 Actio
 4. 在 Release PR 过期时确认 GitHub 阻止合并，机器人同步后重新检查。
 5. 使用 Draft 或测试版本演练 Stable 构建失败，确认 `releases/latest` 不变化。
 6. 演练同 tag 手动恢复，确认资产不重复、Draft 能完成发布。
-7. 正式发布后验证 DMG、CLI、Updater 签名、`latest.json` 和 `/Applications/MUX.app` 更新。
+7. 正式发布后验证 DMG、CLI、Updater 签名、`latest.json` 和 `/Applications/Arca.app` 更新。
 
 正式 tag、正式 Release、客户端更新和 Ruleset Active 都是对外或高影响操作，必须在实施阶段分别获得授权，不能用测试演练隐式代替。
 
@@ -267,7 +267,7 @@ Ruleset 优先以 Evaluate 模式观察，确认功能 PR、Release PR 和 Actio
 
 - `main` 无法直接推送，所有合并都有 PR 和成功的 `verify`。
 - 普通 `main` 合并自动产生唯一、可验证的 Pre-release。
-- 不论多少功能分支进入 `main`，同一时间最多一个 MUX Release PR。
+- 不论多少功能分支进入 `main`，同一时间最多一个 Arca Release PR。
 - 合并 Release PR 后无需人工改版本、打 tag 或整理 Release Notes。
 - 正式资产未齐全时不会改变 `releases/latest` 或客户端更新通道。
 - 版本文件和 lockfile 不再漂移。

@@ -1,7 +1,7 @@
 //! MCP catalog **sources**: subscribed remote URLs and added local files.
 //!
 //! A source's servers are parsed from a cached copy on disk under
-//! `~/.mux/assets/mcps/sources/<kind>/<id>.<ext>`. This module owns the parse / fetch /
+//! `~/.arca/assets/mcps/sources/<kind>/<id>.<ext>`. This module owns the parse / fetch /
 //! store primitives; the Tauri commands in `commands.rs` orchestrate them.
 //! There is no "builtin" source — the catalog is entirely user-driven.
 
@@ -49,7 +49,7 @@ fn entry_from(name: String, cfg: McpConfig, origin: &RegistryOrigin) -> Registry
     }
 }
 
-/// Parse a config file into registry entries. Tries the rich MUX array format
+/// Parse a config file into registry entries. Tries the rich Arca array format
 /// first (a JSON `[RegistryEntry, …]`, so curated collections keep their
 /// descriptions/tags), else the standard `mcpServers` map via the adapter
 /// (transport auto-detected by `McpConfig`).
@@ -226,7 +226,7 @@ fn parse_candidate_content(def: &SourceDef, content: &str) -> Result<Vec<Registr
         .and_then(|name| name.to_str())
         .unwrap_or("source");
     let candidate = parent.join(format!(
-        ".{file_name}.mux-candidate-{}-{}",
+        ".{file_name}.arca-candidate-{}-{}",
         std::process::id(),
         NEXT_CANDIDATE_FILE.fetch_add(1, Ordering::Relaxed)
     ));
@@ -241,9 +241,9 @@ fn parse_candidate_content(def: &SourceDef, content: &str) -> Result<Vec<Registr
     Ok(entries)
 }
 
-/// Reduce a user-selected local file to the MCP data MUX owns before caching it.
+/// Reduce a user-selected local file to the MCP data Arca owns before caching it.
 /// This prevents unrelated account, history, model, or credential fields from
-/// being duplicated under `~/.mux/assets/mcps/sources/local/`.
+/// being duplicated under `~/.arca/assets/mcps/sources/local/`.
 fn sanitized_local_content(
     path: &Path,
     content: &str,
@@ -318,7 +318,7 @@ use crate::resources::mcp::scanner::{collapse_home, expand_tilde};
 use crate::settings::{load_settings, load_settings_strict, mutate_settings_checked, Settings};
 use serde::Serialize;
 
-const CURATED_SOURCE_NAME: &str = "Mux 精选";
+const CURATED_SOURCE_NAME: &str = "Arca 精选";
 const LEGACY_CURATED_SOURCE_NAME: &str = "官方精选合集";
 
 fn is_curated_source(def: &SourceDef) -> bool {
@@ -535,7 +535,7 @@ pub fn list_views() -> Vec<SourceView> {
 }
 
 /// Subscribe to a remote config URL: fetch, validate, cache it under
-/// `~/.mux/assets/mcps/sources/remote/<id>`, and register it as an enabled source.
+/// `~/.arca/assets/mcps/sources/remote/<id>`, and register it as an enabled source.
 pub(crate) struct PreparedSubscription {
     def: SourceDef,
     path: PathBuf,
@@ -579,8 +579,8 @@ pub(crate) fn probe_subscription(url: String, name: Option<String>) -> Result<Pr
 }
 
 /// Register a local config file as a source: read and validate it, then cache only
-/// its MCP entries under `~/.mux/assets/mcps/sources/local/<id>`. Unrelated user settings are
-/// never copied into MUX's source store.
+/// its MCP entries under `~/.arca/assets/mcps/sources/local/<id>`. Unrelated user settings are
+/// never copied into Arca's source store.
 pub fn add_local(path: String, name: Option<String>) -> Result<SourceView, String> {
     let src = expand_tilde(&path);
     let content = fs::read_to_string(&src).map_err(|e| format!("读取文件失败: {e}"))?;
@@ -638,7 +638,7 @@ pub fn add_official() -> Result<SourceView, String> {
 
 fn require_user_managed_source(id: &str) -> Result<(), String> {
     if id == MANUAL_ID || id == DISCOVERED_ID {
-        return Err("source_managed: MUX maintains this source; edit individual central MCP assets instead".into());
+        return Err("source_managed: Arca maintains this source; edit individual central MCP assets instead".into());
     }
     Ok(())
 }
@@ -898,7 +898,7 @@ mod tests {
 
     fn tmp(name: &str, ext: &str) -> PathBuf {
         let mut d = std::env::temp_dir();
-        d.push(format!("mux-src-{}-{}.{}", name, std::process::id(), ext));
+        d.push(format!("arca-src-{}-{}.{}", name, std::process::id(), ext));
         d
     }
 
@@ -1116,7 +1116,7 @@ args = ["-y", "github-mcp"]
         let everything = source_entries(&current)
             .into_iter()
             .find(|entry| entry.name == "everything-test")
-            .expect("refreshed Mux 精选 must include everything-test");
+            .expect("refreshed Arca 精选 must include everything-test");
         let stdio = everything.config.stdio.unwrap();
         assert_eq!(stdio.command, "npx");
         assert_eq!(
@@ -1236,7 +1236,7 @@ args = ["-y", "github-mcp"]
         )
         .unwrap_err();
 
-        assert!(error.contains("invalid MUX settings"), "{error}");
+        assert!(error.contains("invalid Arca settings"), "{error}");
         assert_eq!(
             fs::read_to_string(settings_path).unwrap(),
             "{ invalid settings"

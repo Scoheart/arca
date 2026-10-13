@@ -1,6 +1,6 @@
 //! Shared preferences; window theme and editor launch remain host presentation.
 use clap::Subcommand;
-use mux_core::application::{terminals, ui};
+use arca_core::application::{terminals, ui};
 use serde_json::json;
 use crate::{command::Cli, output::{query_output, CliError, CommandOutput}, review::execute_direct_mutation};
 
@@ -33,7 +33,7 @@ pub fn dispatch(cli: &Cli, command: &SettingsCommand) -> Result<CommandOutput, C
         SettingsCommand::Terminal { id: Some(id) } => {
             let current = terminals::settings().map_err(CliError::from_legacy)?;
             if !current.options.iter().any(|option| option.id == *id && option.installed) {
-                return Err(CliError::new("terminal_unavailable", "choose an installed terminal listed by mux settings terminal"));
+                return Err(CliError::new("terminal_unavailable", "choose an installed terminal listed by arca settings terminal"));
             }
             execute_direct_mutation("settings.terminal", cli.mutation_options(), json!({"terminal": id}),
                 &format!("Use {id} for Agent CLI launches."), current.selected == *id,
@@ -47,7 +47,7 @@ pub fn dispatch(cli: &Cli, command: &SettingsCommand) -> Result<CommandOutput, C
             let locale = (value != "system").then(|| value.clone());
             let current = ui::get_ui_locale().map_err(CliError::from_legacy)?;
             execute_direct_mutation("settings.locale", cli.mutation_options(), json!({"locale": locale}),
-                &format!("Use {value} as the MUX interface language."), current == locale,
+                &format!("Use {value} as the Arca interface language."), current == locale,
                 || ui::set_ui_locale(locale).map(|_| ()).map_err(CliError::from_legacy))
         }
         SettingsCommand::Pins { agents, clear } if agents.is_empty() && !clear => {

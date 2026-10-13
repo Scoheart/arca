@@ -43,9 +43,9 @@ export function AgentResourcePanel({
   };
 
   return (
-    <ToolbarTarget.Provider value={toolbarTarget}><section className="mux-agent-resource-panel" aria-label="Agent 资源与配置">
-      <div className="mux-agent-resource-panel-head">
-        <div className="mux-agent-resource-tabs" role="tablist" aria-label="Agent 资源">
+    <ToolbarTarget.Provider value={toolbarTarget}><section className="arca-agent-resource-panel" aria-label="Agent 资源与配置">
+      <div className="arca-agent-resource-panel-head">
+        <div className="arca-agent-resource-tabs" role="tablist" aria-label="Agent 资源">
           {TABS.map((tab, index) => (
             <button
               key={tab.id}
@@ -60,19 +60,19 @@ export function AgentResourcePanel({
               onClick={() => onChange(tab.id)}
               onKeyDown={(event) => handleKeyDown(event, index)}
             >
-              <span className="mux-agent-resource-tab-icon" aria-hidden="true"><tab.Icon className="w-4 h-4" /></span>
+              <span className="arca-agent-resource-tab-icon" aria-hidden="true"><tab.Icon className="w-4 h-4" /></span>
               <span>{tab.label}</span>
               <span>{counts[tab.id]}</span>
             </button>
           ))}
         </div>
-        <div className="mux-agent-toolbar-actions">
-          <div className="mux-agent-toolbar-target" ref={setToolbarTarget} />
+        <div className="arca-agent-toolbar-actions">
+          <div className="arca-agent-toolbar-target" ref={setToolbarTarget} />
 
         </div>
       </div>
       <div
-        className="mux-agent-resource-panel-body"
+        className="arca-agent-resource-panel-body"
         id={panelId}
         role="tabpanel"
         aria-labelledby={`${id}-${TABS[selectedIndex]?.id ?? value}`}

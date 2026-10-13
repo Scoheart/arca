@@ -8,7 +8,7 @@ use ratatui::Frame;
 use super::theme::{self, glyph, Tone};
 use super::widgets::{self, fit, width};
 use crate::tui::model::{bucket_of, Model, OriginFilter};
-use mux_core::domain::types::RegistryEntry;
+use arca_core::domain::types::RegistryEntry;
 
 /// Name column bounds (cells): wide enough for typical server names without
 /// starving the description on an 80-column terminal.
@@ -92,7 +92,7 @@ fn render_catalog(model: &Model, f: &mut Frame, area: Rect) {
                 "目录为空。",
                 &[
                     "到「来源」订阅或导入；",
-                    "用 mux discover mcp 查看外部配置。",
+                    "用 arca discover mcp 查看外部配置。",
                 ],
             );
         } else {

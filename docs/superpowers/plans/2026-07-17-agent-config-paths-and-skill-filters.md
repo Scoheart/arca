@@ -16,8 +16,8 @@
 - The configuration summary is three equal columns at normal desktop widths and `900×600`, then one column only at `≤820px`.
 - Keep the lower management sections ordered Model, Skills, MCP and preserve their existing behavior.
 - `has_global = false` reference pages remain unchanged and do not render writable configuration targets.
-- Do not launch a source-built, Preview, synthetic IPC, or browser-mocked MUX app for visual acceptance.
-- Do not publish or replace `/Applications/MUX.app` without separate release authorization.
+- Do not launch a source-built, Preview, synthetic IPC, or browser-mocked Arca app for visual acceptance.
+- Do not publish or replace `/Applications/Arca.app` without separate release authorization.
 
 ---
 
@@ -60,7 +60,7 @@ fn agent_info_projects_only_trusted_primary_skills_directories() {
 Run:
 
 ```bash
-cargo test -p mux-core agents::tests::agent_info_projects_only_trusted_primary_skills_directories -- --exact
+cargo test -p arca-core agents::tests::agent_info_projects_only_trusted_primary_skills_directories -- --exact
 ```
 
 Expected: compilation fails because `AgentInfo` has no `skills_global_dir` field.
@@ -110,8 +110,8 @@ Do not project aliases and do not read the filesystem.
 Run:
 
 ```bash
-cargo test -p mux-core agents::tests::agent_info_projects_only_trusted_primary_skills_directories -- --exact
-cargo test -p mux-core agents::tests
+cargo test -p arca-core agents::tests::agent_info_projects_only_trusted_primary_skills_directories -- --exact
+cargo test -p arca-core agents::tests
 ```
 
 Expected: the focused test and all `agents::tests` pass.
@@ -355,10 +355,10 @@ it("does not copy the MCP path into unavailable capabilities", async () => {
 Extend the CSS test:
 
 ```ts
-expect(groupedDeclarations(agentCss, ".mux-agent-file-map")).toMatch(
+expect(groupedDeclarations(agentCss, ".arca-agent-file-map")).toMatch(
   /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/,
 );
-expect(groupedDeclarations(agentCss, ".mux-agent-file-copy code")).toMatch(
+expect(groupedDeclarations(agentCss, ".arca-agent-file-copy code")).toMatch(
   /overflow-wrap:\s*anywhere/,
 );
 ```
@@ -415,18 +415,18 @@ Render the section as an accessible region:
 
 ```tsx
 <section
-  className="mux-agent-section"
+  className="arca-agent-section"
   aria-labelledby="agent-files-title"
   aria-label="配置位置"
 >
-  <div className="mux-agent-section-head">
+  <div className="arca-agent-section-head">
     <div>
       <h3 id="agent-files-title">配置位置</h3>
       <p>Model、MCP 与 Skills 使用的用户级配置入口。</p>
     </div>
     {modelRelationship && <Badge tone="info">{modelRelationship}</Badge>}
   </div>
-  <div className="mux-agent-file-map">
+  <div className="arca-agent-file-map">
     <ConfigPath
       icon={<LayersIcon className="w-4 h-4" />}
       label="Model"
@@ -460,7 +460,7 @@ Render the section as an accessible region:
 Change `ConfigPath.path` to `string | null`. Render a real path with the existing `<code title={path}>`; otherwise render:
 
 ```tsx
-<span className="mux-agent-file-unavailable">不可用</span>
+<span className="arca-agent-file-unavailable">不可用</span>
 ```
 
 - [x] **Step 6: Implement the responsive three-column styles**
@@ -468,7 +468,7 @@ Change `ConfigPath.path` to `string | null`. Render a real path with the existin
 Change the grid and dividers:
 
 ```css
-.mux-agent-file-map {
+.arca-agent-file-map {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
@@ -476,7 +476,7 @@ Change the grid and dividers:
   border-radius: 8px;
   background: var(--surface-raised);
 }
-.mux-agent-file-unavailable {
+.arca-agent-file-unavailable {
   display: block;
   margin-top: 10px;
   color: var(--text-secondary);
@@ -484,7 +484,7 @@ Change the grid and dividers:
 }
 ```
 
-Keep the existing `≤820px` single-column rule and top-border conversion. Ensure `.mux-agent-file-copy code` retains `overflow-wrap: anywhere`.
+Keep the existing `≤820px` single-column rule and top-border conversion. Ensure `.arca-agent-file-copy code` retains `overflow-wrap: anywhere`.
 
 - [x] **Step 7: Run focused tests and production build**
 
@@ -537,7 +537,7 @@ Run:
 
 ```bash
 cargo fmt --all -- --check
-cargo test -p mux-core agents::tests
+cargo test -p arca-core agents::tests
 ```
 
 Expected: formatting check and all Agent module tests pass.
@@ -581,4 +581,4 @@ git commit -m "docs(skills): align configuration navigation"
 
 - [x] **Step 6: Stop at the release boundary**
 
-Report the tested source commit as ready for release. Do not install a source build, create a Preview bundle, publish a release, replace `/Applications/MUX.app`, or claim visual acceptance. A screenshot of the new UI requires a separately authorized official stable release followed by the `mux-ui-review` installed-app workflow.
+Report the tested source commit as ready for release. Do not install a source build, create a Preview bundle, publish a release, replace `/Applications/Arca.app`, or claim visual acceptance. A screenshot of the new UI requires a separately authorized official stable release followed by the `arca-ui-review` installed-app workflow.
