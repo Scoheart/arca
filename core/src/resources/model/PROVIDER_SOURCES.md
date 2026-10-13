@@ -1,5 +1,11 @@
 # Provider Catalog sources
 
+## BeatAPI — 2026-10-13
+
+`beatapi` is a gateway Provider for BeatAPI, a unified OpenAI-compatible API platform that currently offers limited-time free models. The [quick guide](https://docs.beatapi.io/quick-guide) gives the API host `https://api.beatapi.io`, and the [text API reference](https://docs.beatapi.io/text-api/claude) documents `POST https://api.beatapi.io/v1/chat/completions`, so Arca uses the Base URL `https://api.beatapi.io/v1` with the Chat Completions protocol. The same reference also lists `/v1/responses` and `/v1/messages`; like `codecraft`, the template exposes only Chat Completions.
+
+Requests use `Authorization: Bearer <BEATAPI_API_KEY>`; requests without a key return HTTP 401 (`missing_api_key`). Model discovery uses the documented `GET /v1/models` (OpenAI list shape, see the [text API reference](https://docs.beatapi.io/text-api/claude)) with the OpenAI catalog decoder and the required credential policy. Only `api.beatapi.io` is mapped for host inference; the apex `beatapi.io` is the marketing site. Accounts and API keys are managed at <https://beatapi.io/dashboard/get-started>, which is the template portal.
+
 ## CodeCraft API — 2026-10-13
 
 `codecraft` is a gateway Provider for CodeCraft API, an OpenAI-compatible gateway with a permanent free tier (1M tokens/month, no credit card; see [pricing](https://codecraftapi.com/pricing)). The [docs](https://codecraftapi.com/docs) give the base URL `https://codecraftapi.com/v1` and document `POST /chat/completions`, so Arca uses that Base URL with the Chat Completions protocol. No Responses or Anthropic Messages endpoint is documented, so none is exposed.
@@ -150,6 +156,7 @@ protocol requirements.
 | `tokenharbor` | `https://tokenharbor.ai/v1` | `https://tokenharbor.ai` | [Chat and Messages](https://tokenharbor.ai/docs/api/curl), [Codex integration](https://tokenharbor.ai/docs/integrations/codex) |
 | `flock` | `https://api.flock.io/v1` (Chat Completions only) | — | [API endpoint](https://docs.flock.io/flock-products/api-platform/api-endpoint), [Getting started](https://docs.flock.io/flock-products/api-platform/getting-started) |
 | `codecraft` | `https://codecraftapi.com/v1` (Chat Completions only) | — | [Docs](https://codecraftapi.com/docs), [Authentication](https://codecraftapi.com/docs/authentication), [Models](https://codecraftapi.com/docs/models) |
+| `beatapi` | `https://api.beatapi.io/v1` (Chat Completions only) | — | [Quick guide](https://docs.beatapi.io/quick-guide), [Text API](https://docs.beatapi.io/text-api/claude) |
 | `munito` | `https://api.munito.ai/inference/v1` | `https://api.munito.ai/inference` | [API reference](https://docs.munito.ai/api), [Claude Code](https://docs.munito.ai/claude-code) |
 | `ppq` | `https://api.ppq.ai/v1` | `https://api.ppq.ai` | [llms.txt](https://ppq.ai/llms.txt) |
 | `trustedrouter` | `https://api.trustedrouter.com/v1` | `https://api.trustedrouter.com` | [API docs](https://trustedrouter.com/docs), [Agent setup](https://trustedrouter.com/docs/agent-setup) |

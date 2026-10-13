@@ -258,6 +258,13 @@
       "kind": "console"
     }
   },
+  "beatapi": {
+    "docs_url": "https://docs.beatapi.io/quick-guide",
+    "portal": {
+      "url": "https://beatapi.io/dashboard/get-started",
+      "kind": "console"
+    }
+  },
   "clean-apis": {
     "docs_url": "https://cleanapis.com/docs/getting-started",
     "portal": {

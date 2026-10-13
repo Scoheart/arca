@@ -180,6 +180,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "tokenharbor"
         | "flock"
         | "codecraft"
+        | "beatapi"
         | "clean-apis"
         | "dolphin"
         | "iteracompute"
@@ -821,6 +822,7 @@ mod tests {
         "tokenharbor",
         "flock",
         "codecraft",
+        "beatapi",
         "clean-apis",
         "dolphin",
         "iteracompute",
