@@ -901,6 +901,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "beatapi",
+        name: "BeatAPI",
+        default_base_url: Some("https://api.beatapi.io/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "clean-apis",
         name: "Clean APIs",
         default_base_url: Some("https://cleanapis.com/v1"),
@@ -1657,6 +1664,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "tokenharbor.ai" => "tokenharbor",
         "api.flock.io" => "flock",
         "codecraftapi.com" => "codecraft",
+        "api.beatapi.io" => "beatapi",
         "cleanapis.com" => "clean-apis",
         "lighthouse.dphn.ai" => "dolphin",
         "api.iteracompute.com" => "iteracompute",
@@ -6946,6 +6954,9 @@ mod tests {
             ("https://codecraftapi.com/v1", "codecraft"),
             ("https://codecraftapi.com/v1/chat/completions", "codecraft"),
             ("https://codecraftapi.com.evil.test/v1", "custom"),
+            ("https://api.beatapi.io/v1", "beatapi"),
+            ("https://api.beatapi.io/v1/chat/completions", "beatapi"),
+            ("https://api.beatapi.io.evil.test/v1", "custom"),
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
@@ -7059,7 +7070,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 119);
+        assert_eq!(list_providers().len(), 120);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
