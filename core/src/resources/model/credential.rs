@@ -36,6 +36,7 @@ pub enum PreparedCredentialRoute {
     NativeEnvReference,
     NativeFileReference,
     NativeHelper,
+    #[serde(alias = "mux-keychain-helper")]
     ArcaKeychainHelper,
     OpenCodeAuthStore,
     ClaudeDesktopProfile,
@@ -46,6 +47,7 @@ pub enum PreparedCredentialRoute {
 pub struct AgentCredentialCapabilities {
     #[serde(default)]
     pub native_sources: Vec<String>,
+    #[serde(alias = "mux_keychain_helper")]
     pub arca_keychain_helper: bool,
     pub agent_store: bool,
     pub plaintext: bool,

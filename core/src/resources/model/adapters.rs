@@ -1,6 +1,6 @@
 //! Lossless native Model configuration adapters for multi-model Agents.
 //!
-//! Each adapter owns only Arca-prefixed provider entries plus the documented
+//! Each adapter owns only stable owned provider entries plus the documented
 //! primary/current pointer. Unknown fields remain untouched and credentials are
 //! use native references unless the selected delivery policy explicitly exports
 //! to a private plaintext target.
@@ -24,7 +24,7 @@ use std::str::FromStr;
 use toml_edit::{ArrayOfTables, Document, Item, Table};
 use yaml_edit::{Document as YamlDocument, Mapping as YamlMapping, YamlFile, YamlNode};
 
-const CREDENTIAL_FILE_NATIVE_ID: &str = "__arca_credential_file";
+const CREDENTIAL_FILE_NATIVE_ID: &str = "__mux_credential_file";
 
 #[derive(Debug, Clone)]
 pub struct PreparedModelFile {
@@ -401,7 +401,7 @@ fn yaml_string(path: &Path, keys: &[&str]) -> Option<String> {
 }
 
 fn provider_id(profile_id: &str) -> String {
-    let mut encoded = String::from("arca_");
+    let mut encoded = String::from("mux_");
     for byte in profile_id.bytes() {
         encoded.push_str(&format!("{byte:02x}"));
     }
@@ -418,11 +418,11 @@ fn provider_id_for(agent_id: &str, profile: &ModelProfile) -> String {
             if agent_id == "opencode" {
                 super::generated_open_code_provider_id(&crate::settings::load_settings(), profile)
             } else if agent_id == "opencode-desktop" {
-                format!("arca_desktop_{}", &provider_id(&profile.id)[4..])
+                format!("mux_desktop_{}", &provider_id(&profile.id)[4..])
             } else if agent_id == "kilo-desktop" {
-                format!("arca_kilo_desktop_{}", &provider_id(&profile.id)[4..])
+                format!("mux_kilo_desktop_{}", &provider_id(&profile.id)[4..])
             } else if agent_id == "qoder-cli" {
-                format!("arca_cli_{}", &provider_id(&profile.id)[4..])
+                format!("mux_cli_{}", &provider_id(&profile.id)[4..])
             } else {
                 provider_id(&profile.id)
             }
@@ -641,7 +641,7 @@ fn open_code_provider(
     }
     models.insert(profile.model.clone(), Value::Object(model));
     provider.insert("name".into(), Value::String(
-        profile.native_ids.get("__arca_provider_name").unwrap_or(&profile.name).clone(),
+        profile.native_ids.get("__mux_provider_name").unwrap_or(&profile.name).clone(),
     ));
     provider.insert("npm".into(), Value::String(package.into()));
     provider.insert("options".into(), Value::Object(options));
@@ -671,7 +671,7 @@ fn prepare_open_code(
         .get(&native_id)
         .and_then(|property| property.value())
         .and_then(|value| value.to_serde_value());
-    if agent_id == "opencode" && profile.native_ids.contains_key("__arca_generated_opencode_provider") {
+    if agent_id == "opencode" && profile.native_ids.contains_key("__mux_generated_opencode_provider") {
         if let Some(value) = existing.as_ref() {
             let incompatible_package = value.get("npm").and_then(Value::as_str)
                 .is_some_and(|npm| npm != open_code_package(&profile.protocol));
@@ -2223,7 +2223,7 @@ mod tests {
             let content = files[0].content.as_deref().unwrap();
             assert!(content.contains("// keep me"));
             assert!(content.contains("{env:WORK_API_KEY}"));
-            assert!(content.contains("arca_776f726b/vendor/model"));
+            assert!(content.contains("mux_776f726b/vendor/model"));
             fs::remove_file(path).unwrap();
         }
     }
@@ -2368,7 +2368,7 @@ mod tests {
         assert_eq!(value["models"]["small"]["model"], "tiny");
         assert_eq!(value["models"]["large"]["model"], "vendor/model");
         assert_eq!(
-            value["providers"]["arca_776f726b"]["api_key"],
+            value["providers"]["mux_776f726b"]["api_key"],
             "$WORK_API_KEY"
         );
         fs::remove_file(path).unwrap();
@@ -2387,7 +2387,7 @@ mod tests {
         .unwrap()[0];
         let content = file.content.as_deref().unwrap();
         assert!(content.contains("# keep me"));
-        assert!(content.contains("active_model = \"arca_776f726b\""));
+        assert!(content.contains("active_model = \"mux_776f726b\""));
         assert!(content.contains("api_key_env_var = \"WORK_API_KEY\""));
         fs::remove_file(path).unwrap();
     }
@@ -2468,7 +2468,7 @@ model:
         );
         assert!(content.contains("key_env: WORK_API_KEY"), "{content}");
         assert!(
-            content.contains("provider: custom:arca_776f726b"),
+            content.contains("provider: custom:mux_776f726b"),
             "{content}"
         );
         assert!(!content.contains("model:\n  base_url:"), "{content}");
@@ -2491,7 +2491,7 @@ model:
             &path,
             r#"auxiliary:
   compression:
-    provider: custom:arca_776f726b
+    provider: custom:mux_776f726b
     model: gpt-custom
     timeout: 90 # keep task policy
   vision:
@@ -2500,15 +2500,15 @@ model:
 providers:
   external:
     api: https://external.example/v1 # keep external provider
-  arca_776f726b:
+  mux_776f726b:
     api: https://gateway.example.test/v1
 model_aliases:
-  arca_776f726b:
+  mux_776f726b:
     model: gpt-custom
-    provider: custom:arca_776f726b
+    provider: custom:mux_776f726b
 model:
   default: gpt-custom
-  provider: custom:arca_776f726b
+  provider: custom:mux_776f726b
   temperature: 0.2 # keep model policy
 "#,
         )
@@ -2584,25 +2584,25 @@ extensions: {}
 providers:
   external:
     enabled: true # keep external provider
-  arca_776f726b:
+  mux_776f726b:
     enabled: true
     model: gpt-custom
     configured: true
-active_provider: arca_776f726b
+active_provider: mux_776f726b
 other_policy: strict # keep policy
 "#,
         )
         .unwrap();
         let profile = profile(ModelProtocol::OpenaiCompletions);
         let provider_path = goose_provider_path(&path, &profile).unwrap();
-        fs::write(&provider_path, "{\"name\":\"arca_776f726b\"}\n").unwrap();
+        fs::write(&provider_path, "{\"name\":\"mux_776f726b\"}\n").unwrap();
 
         let files = prepare_clear("goose", std::slice::from_ref(&path), &profile).unwrap();
         assert_eq!(files.len(), 2);
         let content = files[0].content.as_deref().unwrap();
         let value: Value = serde_yaml::from_str(content).unwrap();
         assert_eq!(value["providers"]["external"]["enabled"], true);
-        assert!(value["providers"].get("arca_776f726b").is_none());
+        assert!(value["providers"].get("mux_776f726b").is_none());
         assert!(value.get("active_provider").is_none());
         assert_eq!(value["other_policy"], "strict");
         assert!(content.contains("# keep root comment"));

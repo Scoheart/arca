@@ -11,7 +11,7 @@
 | Core / 前端 | 代码标识、CSS 类、DOM 事件、ARCA_*、arca-store / arca-mapping | 旧环境变量和序列化值仍可读，输出只使用新 API 名称 |
 | 用户数据 | ~/.arca 为新默认物理根；旧根恢复成功后原地 rename | 不复制、不合并两份库；保留 ~/.mux → ~/.arca 只读兼容路径入口，实际内容只有一份 |
 | 凭据 | 所有用户可见提示改为 Arca | Keychain service、rollback snapshot service 与 Agent 已写入 credential command 的服务参数保持原值；不读取所有密钥做改名 |
-| 原生 Agent 身份 | 类型、函数与说明改为 Arca | UUID、模型 provider ID、__mux_* native metadata 是所有权协议，保留稳定值，不靠品牌变更接管外部条目 |
+| 原生 Agent 身份 | 类型、函数与说明改为 Arca | UUID、模型 provider ID（writer / observer / migration 同步）、__mux_* native metadata 是所有权协议，保留稳定值，不靠品牌变更接管外部条目 |
 | 崩溃恢复 | 代码与诊断改名 | .mux-* temp claim 名称及 schema UUID seed 是已有 durable protocol；继续核验旧记录 |
 | 发布 | Arca.app、Arca-Desktop-*、arca_vX.Y.Z_*、更新 manifest、仓库链接 | 更新签名公钥完全不变；旧 GitHub URL 依赖仓库改名后的 redirect，旧 CLI 桥接资产是唯一额外包 |
 | 文档 | Arca 标题、组件、CLI reference、what-is-arca、安装/升级说明 | 旧指南 URL redirect；历史 changelog / 审计 / 视频不伪造重录，原媒体文件保留；现有域名需另行部署才能改 DNS |
@@ -42,3 +42,7 @@
 ## GitHub 管理权限边界
 
 实测 repo metadata 返回 admin=true，但当前 GitHub integration 对 PATCH 仓库改名返回 HTTP 403 Resource not accessible by integration。不能把 admin 展示字段当作 API administration 权限。产品/代码/发布包仍按 Arca 交付；为避免把 updater、CLI upgrade、精选来源、issue/edit/release 链接指向不存在的仓库，对外运输 URL 暂留 Scoheart/mux。仓库所有者可在 Settings 将其改为 arca，旧地址由 GitHub redirect 继续工作。不要创建一个同名的新空仓库替代原仓库，也不要复制/覆盖已有 Stable tags。
+
+## 原生 Model 所有权对照验证
+
+从 d5c1db8 原源码单独编译旧 mux CLI（没有移动当前 HEAD 或创建 worktree），在隔离 HOME 内由旧 Core 创建两种协议的 Provider/Models，再实际分配给 Codex、Qoder CLI、OpenCode、Pi。Arca 在同一目录启动迁移后，这四种 Agent 的 managed、external、capability_errors、target_incidents 记录逐字段相同，managed 仍为 synced；原生文件 SHA-256 全部不变。OpenCode fixture 原先已有一个 external row，该 row 原样保留，不伪称清除了既有外部观测。只忽略查询时点与 workspace revision，不把重建原生配置当作兼容通过。旧 writer/observer/migration 的 native prefix 与内部 credential metadata key 必须作为同一个版本化契约维护。
