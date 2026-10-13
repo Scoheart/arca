@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.3](https://github.com/Scoheart/arca/compare/v2.0.2...v2.0.3) (2026-10-13)
+
+### Changes
+
+* fix(brand): use the canonical Arca repository across update channels ([f65a5c2](https://github.com/Scoheart/arca/commit/f65a5c2e6f1a64411f4fd2109db64fbddd694276))
+
 ## [2.0.2](https://github.com/Scoheart/mux/compare/v2.0.1...v2.0.2) (2026-10-13)
 
 ### Changes
