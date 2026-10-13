@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0](https://github.com/Scoheart/mux/compare/v1.14.5...v2.0.0) (2026-10-13)
+
+### Changes
+
+* feat(brand)!: rename MUX to Arca and migrate shared assets ([d9ddb8a](https://github.com/Scoheart/mux/commit/d9ddb8a3587cceda73bda0b447d15c1cbb0fae0d))
+* fix(brand): keep repository transport usable during rename ([5c858be](https://github.com/Scoheart/mux/commit/5c858bec2c8ae60c6cc08afb3410626aff696544))
+
 ## [1.14.5](https://github.com/Scoheart/mux/compare/v1.14.4...v1.14.5) (2026-10-13)
 
 ### Changes
