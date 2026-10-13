@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.2](https://github.com/Scoheart/mux/compare/v2.0.1...v2.0.2) (2026-10-13)
+
+### Changes
+
+* feat(models): add FLock API Platform gateway provider (#208) ([cfb336f](https://github.com/Scoheart/mux/commit/cfb336feceb9ad932e6aacae32c761ffde69184e))
+
 ## [2.0.1](https://github.com/Scoheart/mux/compare/v2.0.0...v2.0.1) (2026-10-13)
 
 ### Changes
