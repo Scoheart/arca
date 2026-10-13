@@ -1,5 +1,11 @@
 # Provider Catalog sources
 
+## Liquid AI — 2026-10-13
+
+`liquid-ai` is an official Provider for Liquid AI's hosted inference of its LFM models. The [LFM2.5-24B-A2B announcement](https://www.liquid.ai/blog/lfm2-5-24b-a2b) directs API users to [Liquid Console](https://console.liquid.ai/), which grants $2 of signup credit and lists the model at $0.10/1M input tokens and $1.00/1M output tokens. The [docs](https://docs.liquid.ai/) cover models and self-hosting but do not document a hosted API reference. The inference host's own [OpenAPI spec](https://inference.liquid.ai/openapi.json) lists `POST /v1/chat/completions`, `POST /v1/completions`, and `GET /v1/models` with HTTP Bearer authentication, so Arca uses the Base URL `https://inference.liquid.ai/v1` with the Chat Completions protocol. No Responses or Anthropic Messages endpoint exists (`/v1/responses` returns 404), so none is exposed.
+
+Unauthenticated `POST /v1/chat/completions` and `GET /v1/models` return HTTP 403 (`Not authenticated`), and an unknown path returns 404. No model discovery adapter is registered: the spec gives `/v1/models` an empty response schema, so the list shape could not be verified without a key. Only `inference.liquid.ai` is mapped for host inference. Accounts and API keys are managed at <https://console.liquid.ai/>, which is the template portal.
+
 ## BeatAPI — 2026-10-13
 
 `beatapi` is a gateway Provider for BeatAPI, a unified OpenAI-compatible API platform that currently offers limited-time free models. The [quick guide](https://docs.beatapi.io/quick-guide) gives the API host `https://api.beatapi.io`, and the [text API reference](https://docs.beatapi.io/text-api/claude) documents `POST https://api.beatapi.io/v1/chat/completions`, so Arca uses the Base URL `https://api.beatapi.io/v1` with the Chat Completions protocol. The same reference also lists `/v1/responses` and `/v1/messages`; like `codecraft`, the template exposes only Chat Completions.

@@ -1174,6 +1174,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "liquid-ai",
+        name: "Liquid AI",
+        default_base_url: Some("https://inference.liquid.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "cohere",
         name: "Cohere",
         default_base_url: Some("https://api.cohere.ai/compatibility/v1"),
@@ -1639,6 +1646,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.x.ai" => "xai",
         "api.mistral.ai" => "mistral",
         "api.sarashina.ai" => "sarashina",
+        "inference.liquid.ai" => "liquid-ai",
         "api.cohere.ai" => "cohere",
         "api.deepseek.com" => "deepseek",
         "api.groq.com" => "groq",
@@ -6960,6 +6968,9 @@ mod tests {
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
+            ("https://inference.liquid.ai/v1", "liquid-ai"),
+            ("https://inference.liquid.ai/v1/chat/completions", "liquid-ai"),
+            ("https://inference.liquid.ai.evil.test/v1", "custom"),
             ("https://cleanapis.com/v1/chat/completions", "clean-apis"),
             ("https://lighthouse.dphn.ai/run/text-v/v1/chat/completions", "dolphin"),
             ("https://api.iteracompute.com/v1/responses", "iteracompute"),
@@ -7070,7 +7081,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 120);
+        assert_eq!(list_providers().len(), 121);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

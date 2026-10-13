@@ -524,6 +524,13 @@
       "kind": "console"
     }
   },
+  "liquid-ai": {
+    "docs_url": "https://docs.liquid.ai/",
+    "portal": {
+      "url": "https://console.liquid.ai/",
+      "kind": "console"
+    }
+  },
   "cohere": {
     "docs_url": "https://docs.cohere.com/docs/models",
     "portal": {
