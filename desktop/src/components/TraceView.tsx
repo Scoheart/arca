@@ -5,6 +5,8 @@ import { copyToClipboard } from "../lib/api";
 import { formatError } from "../lib/format";
 import { useToast } from "./Toast";
 import { CopyIcon, DocumentIcon, DownloadIcon, FolderIcon, RefreshIcon } from "./icons";
+import { BoundedText } from "./BoundedText";
+import { ByteBudgetCache, jsonMemoryWeight } from "../lib/byteBudgetCache";
 import "./TraceView.css";
 
 function jsonText(value: unknown): string {
@@ -37,7 +39,7 @@ export function TraceView({ initialAgentId }: { initialAgentId?: string }) {
   const indexEpoch = useRef(0);
   const detailEpoch = useRef(0);
   const selectedSession = useRef<string | null>(null);
-  const detailCache = useRef(new Map<string, TraceDetail>());
+  const detailCache = useRef(new ByteBudgetCache<string, TraceDetail>(6, 4 * 1024 * 1024));
 
   const selectSession = useCallback(async (id: string) => {
     const generation = ++epoch.current;
@@ -66,14 +68,14 @@ export function TraceView({ initialAgentId }: { initialAgentId?: string }) {
       const selected = selectedSession.current;
       const id = selected && value.sessions.some(s => s.id === selected) ? selected : candidates[0]?.id;
       if (id) await selectSession(id);
-      else { ++epoch.current; ++detailEpoch.current; selectedSession.current = null; setPage(null); setEvents([]); setDetail(null); setSelectedEvent(null); setLoadingPage(false); setLoadingDetail(false); }
+      else { ++epoch.current; ++detailEpoch.current; detailCache.current.clear(); selectedSession.current = null; setPage(null); setEvents([]); setDetail(null); setSelectedEvent(null); setLoadingPage(false); setLoadingDetail(false); }
     } catch (error) { if (generation === indexEpoch.current) setError(formatError(error)); }
     finally { if (generation === indexEpoch.current) setLoadingIndex(false); }
   }, [initialAgentId, selectSession]);
 
   useEffect(() => {
     void refresh(true);
-    return () => { ++epoch.current; ++indexEpoch.current; ++detailEpoch.current; };
+    return () => { ++epoch.current; ++indexEpoch.current; ++detailEpoch.current; detailCache.current.clear(); };
   }, [refresh]);
 
   const sessions = useMemo(() => (index?.sessions ?? []).filter(s => {
@@ -86,7 +88,7 @@ export function TraceView({ initialAgentId }: { initialAgentId?: string }) {
     setSourceId(id); setSessionQuery("");
     const first = index?.sessions.find(s => id === "all" || (id === "imported" || id === "unsupported" ? s.imported : s.source_id === id));
     if (first) void selectSession(first.id);
-    else { ++epoch.current; ++detailEpoch.current; selectedSession.current = null; setPage(null); setEvents([]); setDetail(null); setSelectedEvent(null); setError(null); setLoadingPage(false); setLoadingDetail(false); }
+    else { ++epoch.current; ++detailEpoch.current; detailCache.current.clear(); selectedSession.current = null; setPage(null); setEvents([]); setDetail(null); setSelectedEvent(null); setError(null); setLoadingPage(false); setLoadingDetail(false); }
   };
   const loadMore = async () => {
     if (!page?.next_cursor || loadingPage) return;
@@ -110,9 +112,8 @@ export function TraceView({ initialAgentId }: { initialAgentId?: string }) {
       const value = cached ?? await traceDetail(page.session.id, event.id, page.revision);
       if (generation !== detailEpoch.current) return;
       if (!cached) {
-        // Raw trace bodies stay in memory only, with a bounded number of entries.
-        if (detailCache.current.size >= 6) detailCache.current.delete(detailCache.current.keys().next().value!);
-        detailCache.current.set(event.id, value);
+        // Large records remain viewable without retaining six full copies.
+        detailCache.current.set(event.id, value, jsonMemoryWeight(value, 4 * 1024 * 1024));
       }
       setDetail(value);
     } catch (error) { if (generation === detailEpoch.current) toast.show({ kind: "error", msg: formatError(error) }); }
@@ -124,8 +125,8 @@ export function TraceView({ initialAgentId }: { initialAgentId?: string }) {
     try { await action(); } catch (error) { toast.show({ kind: "error", msg: formatError(error) }); }
     finally { setOperationBusy(false); }
   };
-  const rawValue = detail ? tab === "response" ? detail.related.map(r => r.raw) : detail.raw : null;
-  const raw = useMemo(() => rawValue === null ? "" : jsonText(rawValue), [rawValue]);
+  const raw = useMemo(() => !detail || tab === "text" ? "" :
+    jsonText(tab === "response" ? detail.related.map(r => r.raw) : detail.raw), [detail, tab]);
   const preview = detail ? tab === "text" ? detail.text || t("trace.noText") : tab === "response" && detail.related.length === 0 ? detail.pairing_note ?? t("trace.noResponse") : raw : "";
   const source = index?.sources.find(s => s.id === sourceId);
 
@@ -154,9 +155,9 @@ export function TraceView({ initialAgentId }: { initialAgentId?: string }) {
       <section className="mux-trace-detail" aria-label={t("trace.raw")}>
         {!detail ? <div className="mux-trace-empty">{loadingDetail ? t("trace.loading") : t("trace.chooseEvent")}</div> : <>
           <div className="mux-trace-detail-heading"><div><small>{t(`trace.${detail.event.kind}`)} · {time(detail.event.timestamp)}</small><h2>{detail.event.kind.startsWith("tool_") ? detail.event.title : t(`trace.${detail.event.kind}`)}</h2><code>{detail.event.call_id ?? detail.event.id}</code></div><button className="mux-trace-button" title={t("trace.export")} aria-label={t("trace.export")} disabled={operationBusy || !page} onClick={() => void perform(async () => { if (page && await traceExport(page.session.id, detail.event.id, page.revision)) toast.show({ kind: "success", msg: t("trace.exported") }); })}><DownloadIcon className="w-4 h-4" /></button></div>
-          <div className="mux-trace-tabs"><div className="mux-seg">{(["text", "raw", ...(detail.event.kind === "tool_call" ? (["response"] as const) : [])] as const).map(k => <button className="mux-seg-item" key={k} aria-pressed={tab === k} data-active={tab === k || undefined} onClick={() => setTab(k)}>{t(`trace.${k}`)}</button>)}</div><button className="mux-trace-button" aria-label={t("trace.copy")} title={t("trace.copy")} disabled={operationBusy} onClick={() => void perform(async () => { await copyToClipboard(raw); toast.show({ kind: "success", msg: t("trace.copied") }); })}><CopyIcon className="w-4 h-4" /></button></div>
+          <div className="mux-trace-tabs"><div className="mux-seg">{(["text", "raw", ...(detail.event.kind === "tool_call" ? (["response"] as const) : [])] as const).map(k => <button className="mux-seg-item" key={k} aria-pressed={tab === k} data-active={tab === k || undefined} onClick={() => setTab(k)}>{t(`trace.${k}`)}</button>)}</div><button className="mux-trace-button" aria-label={t("trace.copy")} title={t("trace.copy")} disabled={operationBusy} onClick={() => void perform(async () => { await copyToClipboard(tab === "text" && detail ? jsonText(detail.raw) : raw); toast.show({ kind: "success", msg: t("trace.copied") }); })}><CopyIcon className="w-4 h-4" /></button></div>
           <p className="mux-trace-detail-note">{t("trace.rawHint")}</p>
-          <pre tabIndex={0} className="mux-trace-body" data-raw={tab !== "text"}>{preview}</pre>
+          <BoundedText key={`${page?.session.id}:${selectedEvent}:${tab}`} text={preview} className="mux-trace-body" raw={tab !== "text"} />
         </>}
       </section>
     </div>

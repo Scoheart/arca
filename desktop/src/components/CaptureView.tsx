@@ -7,12 +7,13 @@ import { useToast } from './Toast';
 import { DialogShell } from './DialogShell';
 import { AgentGlyph } from './brandIcons';
 import { RefreshIcon, DownloadIcon, SearchIcon, SlidersIcon } from './icons';
+import { BoundedText } from './BoundedText';
 import './CaptureView.css';
 
 const stateLabel: Record<string, string> = { starting: '启动中', running: '正在记录', stopped: '已停止', failed: '启动失败' };
 const phaseLabel: Record<string, string> = { pending: '等待响应', receiving: '接收中', streaming: '流式传输', complete: '完成', failed: '失败', cancelled: '已中断' };
-function address(url: string) {
-  try { const parsed = new URL(url); let path = parsed.pathname + parsed.search; try { path = decodeURI(path); } catch { /* Preserve malformed escapes for inspection. */ } return { host: parsed.host, path, pathname: parsed.pathname, parameters: [...parsed.searchParams] }; }
+function address(url: string, withParameters = false) {
+  try { const parsed = new URL(url); let path = parsed.pathname + parsed.search; try { path = decodeURI(path); } catch { /* Preserve malformed escapes for inspection. */ } return { host: parsed.host, path, pathname: parsed.pathname, parameters: withParameters ? [...parsed.searchParams] : [] }; }
   catch { return { host: '(未知主机)', path: url, pathname: url, parameters: [] as [string, string][] }; }
 }
 function size(bytes?: number | null) { return bytes == null ? '—' : bytes < 1024 ? `${bytes} B` : bytes < 1048576 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1048576).toFixed(1)} MB`; }
@@ -136,7 +137,7 @@ export function CaptureView({ agents, initialAgentId, muxProxy }: { agents: Agen
     `${value.method} ${value.url}`.toLowerCase().includes(query.toLowerCase()) &&
     (filter === 'all' || (filter === 'errors' ? value.error || (value.status ?? 0) >= 400 : filter === 'streaming' ? phase(value) === 'streaming' : phase(value) === 'complete' && (value.status ?? 0) < 400))
   ).sort((a, b) => a.started_at - b.started_at || a.id.localeCompare(b.id)), [snapshot?.flows, query, filter]);
-  const tree = useMemo(() => requestTree(flows), [flows]);
+  const tree = useMemo(() => navigation === 'structure' ? requestTree(flows) : [], [flows, navigation]);
   const visibleSelection = flows.some(item => item.id === flowId);
   useEffect(() => { requestRows.current.get(flowId)?.scrollIntoView({ block: 'nearest' }); }, [flowId, snapshot?.session.id]);
   const perform = async (operation: () => Promise<void>) => {
@@ -160,9 +161,11 @@ export function CaptureView({ agents, initialAgentId, muxProxy }: { agents: Agen
     const current = await captureStart({ agent_id: agentId, target_id: targetId, egress, proxy_url: egress === 'custom' ? proxy : null });
     if (generation === epoch.current) { setSnapshot(current); setSettingsOpen(false); await refresh(); }
   });
-  const message = flow?.[tab === 'request' ? 'request' : 'response'];
-  const content = format === 'headers' ? message?.headers.map(([key, value]) => `${key}: ${value}`).join('\n') ?? '' : format === 'parameters' && flow ? address(flow.url).parameters.map(([key, value]) => `${key}: ${value}`).join('\n') : message?.body ?? '';
+  const message = tab === 'request' || tab === 'response' ? flow?.[tab] : undefined;
+  const content = format === 'headers' ? message?.headers.map(([key, value]) => `${key}: ${value}`).join('\n') ?? '' : format === 'parameters' && flow ? address(flow.url, true).parameters.map(([key, value]) => `${key}: ${value}`).join('\n') : message?.body ?? '';
   const pending = flow && ['pending', 'receiving', 'streaming'].includes(phase(flow));
+  const showsBody = (tab === 'request' || tab === 'response') && (format === 'body' || format === 'raw');
+  const bodyPreview = useMemo(() => !showsBody ? '' : content ? format === 'body' ? pretty(content) : content : pending ? '等待完整响应事件…' : flow?.error ?? '（空正文）', [showsBody, content, format, Boolean(pending), flow?.error]);
   const status = snapshot ? stateLabel[snapshot.status.state] ?? snapshot.status.state : '未开始';
   const css = { '--capture-tree-width': `${treeWidth}px`, '--capture-list-height': `${listHeight}px` } as CSSProperties;
   return <div className="mux-capture" style={css}>
@@ -214,7 +217,7 @@ export function CaptureView({ agents, initialAgentId, muxProxy }: { agents: Agen
           </dl> : tab === 'timing' ? <dl className="capture-overview"><dt>First byte</dt><dd>{elapsed(flow.time_to_first_byte_ms)}</dd><dt>Total</dt><dd>{pending ? '请求仍在进行' : elapsed(flow.duration_ms)}</dd><dt>Started</dt><dd>{new Date(flow.started_at * 1000).toLocaleTimeString()}</dd><dt>Last update</dt><dd>{flow.updated_at ? new Date(flow.updated_at * 1000).toLocaleTimeString() : '—'}</dd></dl> : <>
             <div className="capture-body-toolbar"><div role="tablist" aria-label="正文格式">{['body', 'headers', ...(tab === 'request' ? ['parameters'] : []), 'raw'].map(value => <button key={value} role="tab" aria-selected={format === value} onClick={() => setFormat(value as typeof format)}>{value === 'body' ? 'Pretty' : value === 'headers' ? 'Headers' : value === 'parameters' ? 'Query' : 'Raw'}</button>)}</div>
               <button className="capture-button" disabled={!content} onClick={() => void perform(async () => { await copyToClipboard(content); toast.show({ kind: 'success', msg: '已复制脱敏内容。' }); })}>复制</button><button className="capture-button" disabled={busy} onClick={() => void perform(async () => { if (snapshot) await captureExport(snapshot.session.id, flow.id); })}>导出 req/res</button></div>
-            {format === 'headers' ? <div className="capture-content-scroll"><table className="capture-key-values"><tbody>{message?.headers.map(([key, value], index) => <tr key={index}><th>{key}</th><td>{value}</td></tr>)}</tbody></table></div> : format === 'parameters' ? <div className="capture-content-scroll"><table className="capture-key-values"><tbody>{address(flow.url).parameters.map(([key, value], index) => <tr key={index}><th>{key}</th><td>{value}</td></tr>)}</tbody></table></div> : <pre tabIndex={0}>{content ? format === 'body' ? pretty(content) : content : pending ? '等待完整响应事件…' : flow.error ?? '（空正文）'}</pre>}
+            {format === 'headers' ? <div className="capture-content-scroll"><table className="capture-key-values"><tbody>{message?.headers.map(([key, value], index) => <tr key={index}><th>{key}</th><td>{value}</td></tr>)}</tbody></table></div> : format === 'parameters' ? <div className="capture-content-scroll"><table className="capture-key-values"><tbody>{address(flow.url, true).parameters.map(([key, value], index) => <tr key={index}><th>{key}</th><td>{value}</td></tr>)}</tbody></table></div> : <BoundedText key={`${snapshot?.session.id}:${flow.id}:${tab}:${format}`} text={bodyPreview} />}
             <div className="capture-body-meta">{size(message?.bytes)} · {message?.encoding === 'binary' ? '二进制正文未保存' : '敏感字段已脱敏'}{message?.truncated ? ' · 正文未完整保存' : ''}{flow.stream_type === 'websocket' ? ' · WebSocket 消息' : phase(flow) === 'streaming' ? ' · SSE 实时更新' : ''}</div>
           </>}
         </section>

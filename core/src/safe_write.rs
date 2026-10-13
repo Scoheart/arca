@@ -2200,7 +2200,7 @@ fn is_journal_pending_path(path: &Path) -> bool {
 }
 
 #[cfg(any(target_vendor = "apple", target_os = "linux", target_os = "android"))]
-fn publish_path_noreplace(source: &Path, destination: &Path) -> Result<(), String> {
+pub(crate) fn publish_path_noreplace(source: &Path, destination: &Path) -> Result<(), String> {
     use rustix::fs::{renameat_with, RenameFlags, CWD};
 
     renameat_with(CWD, source, CWD, destination, RenameFlags::NOREPLACE)
@@ -2208,7 +2208,7 @@ fn publish_path_noreplace(source: &Path, destination: &Path) -> Result<(), Strin
 }
 
 #[cfg(not(any(target_vendor = "apple", target_os = "linux", target_os = "android")))]
-fn publish_path_noreplace(source: &Path, destination: &Path) -> Result<(), String> {
+pub(crate) fn publish_path_noreplace(source: &Path, destination: &Path) -> Result<(), String> {
     fs::hard_link(source, destination)
         .map_err(|error| format!("failed to publish {}: {error}", destination.display()))?;
     fs::remove_file(source).map_err(|error| error.to_string())

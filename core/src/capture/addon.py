@@ -75,7 +75,8 @@ def credentials(flow, extra=None):
         elif isinstance(value, list):
             for child in value:
                 walk(child)
-    for msg in [flow.request, flow.response]:
+    for direction in ('request', 'response'):
+        msg = getattr(flow, direction)
         if msg is None:
             continue
         for key, value in msg.headers.items(multi=True):
@@ -88,7 +89,10 @@ def credentials(flow, extra=None):
                         if '=' in item:
                             add(item.split('=', 1)[1].strip())
         try:
-            body = decoded_body(msg)
+            stream = msg.stream if isinstance(msg.stream, BodyStream) else None
+            if stream and (stream.omitted or stream.failed or not stream.complete):
+                continue
+            body = stream.body if stream else decoded_body(msg)
             if len(body) <= LIMIT:
                 walk(json.loads(body))
         except (ValueError, TypeError, RecursionError, zlib.error):
@@ -147,15 +151,22 @@ def clean_url(url):
     return urlunsplit((value.scheme, authority, value.path, urlencode([(key, '[REDACTED]' if SENSITIVE.search(key) else val) for key, val in parse_qsl(value.query, keep_blank_values=True)]), ''))
 
 
-def message(msg, secrets):
+def message(msg, secrets, stream=None):
     if msg is None:
         return None
+    if stream and stream.wire_bytes and not stream.complete:
+        # A partial document may contain a credential whose defining field has
+        # not arrived yet. Never persist it before learning the complete body.
+        return {'headers': [[key, '[REDACTED]' if SENSITIVE.search(key) else clean_text(value, secrets)] for key, value in msg.headers.items(multi=True)],
+                'body': '[正文尚未完整接收；未保存内容]', 'bytes': stream.wire_bytes, 'truncated': True, 'encoding': 'text'}
     raw = msg.raw_content or b''
     try:
-        body = decoded_body(msg)
+        if stream and stream.failed:
+            raise ValueError('Unsafe streamed body')
+        body = stream.body if stream else decoded_body(msg)
     except (ValueError, zlib.error):
-        return {'headers': [[key, '[REDACTED]' if SENSITIVE.search(key) else clean_text(value, secrets)] for key, value in msg.headers.items(multi=True)], 'body': '[无法安全解压正文；未保存正文]', 'bytes': len(raw), 'truncated': True, 'encoding': 'text'}
-    if len(body) > LIMIT:
+        return {'headers': [[key, '[REDACTED]' if SENSITIVE.search(key) else clean_text(value, secrets)] for key, value in msg.headers.items(multi=True)], 'body': '[无法安全解压正文；未保存正文]', 'bytes': stream.wire_bytes if stream else len(raw), 'truncated': True, 'encoding': 'text'}
+    if len(body) > LIMIT or stream and stream.omitted:
         # Do not partially persist structured credentials from a truncated JSON.
         text = '[正文超过 2 MiB；未保存正文]'
         encoding = 'text'
@@ -193,7 +204,63 @@ def message(msg, secrets):
             text = '[二进制正文；未保存正文]'
             encoding = 'binary'
     headers = [[key, '[REDACTED]' if SENSITIVE.search(key) else clean_text(value, secrets)] for key, value in msg.headers.items(multi=True)]
-    return {'headers': headers, 'body': text, 'bytes': len(raw), 'truncated': len(body) > LIMIT, 'encoding': encoding}
+    return {'headers': headers, 'body': text, 'bytes': stream.wire_bytes if stream else len(raw),
+            'truncated': len(body) > LIMIT or bool(stream and stream.omitted), 'encoding': encoding}
+
+
+class BodyStream:
+    """Forward every wire byte; retain at most LIMIT decoded bytes for recording."""
+    def __init__(self, msg, omitted=False):
+        self.body = bytearray()
+        self.wire_bytes = 0
+        self.omitted = omitted
+        self.complete = False
+        encoding = msg.headers.get('content-encoding', '').strip().lower()
+        self.failed = encoding not in ('', 'identity', 'gzip', 'deflate')
+        self.decoder = None
+        if not omitted and not self.failed:
+            if encoding == 'gzip':
+                self.decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+            elif encoding == 'deflate':
+                self.decoder = zlib.decompressobj()
+
+    def __call__(self, chunk):
+        self.wire_bytes += len(chunk)
+        self.complete = not chunk
+        if not self.omitted and not self.failed:
+            try:
+                decoded = self.decoder.decompress(chunk, LIMIT - len(self.body) + 1) if self.decoder else chunk
+                if len(self.body) + len(decoded) > LIMIT:
+                    self.omitted = True
+                elif not chunk and self.decoder and not self.decoder.eof:
+                    self.failed = True
+                else:
+                    self.body.extend(decoded)
+            except zlib.error:
+                self.failed = True
+            if self.omitted or self.failed:
+                self.body.clear()
+                self.decoder = None
+        return chunk
+
+
+def stream_body(flow, direction):
+    """Known small bodies stay native; unknown lengths must also stay bounded."""
+    msg = getattr(flow, direction)
+    try:
+        length = int(msg.headers.get('content-length', ''))
+    except ValueError:
+        length = None
+    if length is not None and 0 <= length <= LIMIT:
+        return
+    stream = BodyStream(msg, omitted=length is not None and length > LIMIT)
+    msg.stream = stream
+
+
+def captured_message(flow, direction, secrets):
+    msg = getattr(flow, direction)
+    stream = msg.stream if msg is not None and isinstance(msg.stream, BodyStream) else None
+    return message(msg, secrets, stream)
 
 
 LIBPROC = ctypes.CDLL('/usr/lib/libproc.dylib')
@@ -468,6 +535,7 @@ class Capture:
             flow.server_conn.via = ('http', (proxy.hostname, proxy.port or 80))
         else:
             flow.server_conn.via = None
+        stream_body(flow, 'request')
         self.save(flow, 'pending')
 
     def request(self, flow):
@@ -475,6 +543,8 @@ class Capture:
 
     def responseheaders(self, flow):
         streaming = flow.response.headers.get('content-type', '').lower().startswith('text/event-stream')
+        if not streaming and flow.response.status_code != 101:
+            stream_body(flow, 'response')
         self.save(flow, 'streaming' if streaming else 'receiving')
         if streaming:
             stream = EventStream(flow)
@@ -533,7 +603,12 @@ class Capture:
         if timer:
             timer.cancel()
         self.inflight.discard(flow_id)
-        self.pending_flows.pop(flow_id, None)
+        flow = self.pending_flows.pop(flow_id, None)
+        if flow:
+            for direction in ('request', 'response'):
+                msg = getattr(flow, direction)
+                if msg is not None and isinstance(msg.stream, BodyStream):
+                    msg.stream = True
         self.streams.pop(flow_id, None)
         self.websockets.pop(flow_id, None)
 
@@ -548,8 +623,8 @@ class Capture:
         if not flow.request:
             return
         secrets = credentials(flow)
-        response = self.streams[flow.id].message() if flow.id in self.streams else message(flow.response, secrets)
-        request = message(flow.request, secrets)
+        response = self.streams[flow.id].message() if flow.id in self.streams else captured_message(flow, 'response', secrets)
+        request = captured_message(flow, 'request', secrets)
         websocket = self.websockets.get(flow.id)
         if websocket:
             request = websocket.message('request', secrets)

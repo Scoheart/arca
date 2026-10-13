@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::{LazyLock, Mutex};
@@ -477,10 +477,56 @@ pub fn stop(id: &str) -> Result<CaptureSnapshot, String> {
 }
 pub fn shutdown() { let id = ACTIVE.lock().ok().and_then(|a| a.as_ref().map(|w| w.session_id.clone())); if let Some(id) = id { let _ = stop(&id); } }
 pub fn export(session_id: &str, flow_id: Option<&str>, destination: &Path) -> Result<(), String> {
-    let content = if let Some(id) = flow_id { serde_json::to_vec_pretty(&detail(session_id, id)?).map_err(|_| "无法导出请求。".to_owned())? } else {
-        let snapshot = snapshot(session_id)?;
-        let flows = snapshot.flows.iter().map(|f| detail(session_id, &f.id)).collect::<Result<Vec<_>, _>>()?;
-        serde_json::to_vec_pretty(&serde_json::json!({"session": snapshot.session, "status": snapshot.status, "redacted": true, "flows": flows})).map_err(|_| "无法导出会话。".to_owned())?
-    };
-    private_write(destination, &content)
+    // Stage beside the destination; publish only after every detail was safely
+    // read and serialized. Reuse core's create-only publication primitive so
+    // existing files (including a symlink appearing during export) stay intact.
+    reject_symlink(destination)?;
+    let parent = destination.parent().filter(|path| !path.as_os_str().is_empty()).unwrap_or(Path::new("."));
+    let temporary = parent.join(format!(".mux-capture-{}.tmp", Uuid::new_v4()));
+    let mut options = OpenOptions::new(); options.write(true).create_new(true);
+    #[cfg(unix)] { use std::os::unix::fs::OpenOptionsExt; options.mode(0o600); }
+    let file = options.open(&temporary).map_err(|_| "无法创建导出文件。".to_owned())?;
+    let result = (|| {
+        let mut writer = BufWriter::new(&file);
+        if let Some(id) = flow_id {
+            serde_json::to_writer_pretty(&mut writer, &detail(session_id, id)?)
+                .map_err(|_| "无法导出请求。".to_owned())?;
+        } else {
+            let snapshot = snapshot(session_id)?;
+            serde_json::to_writer_pretty(&mut writer, &SessionExport { snapshot: &snapshot })
+                .map_err(|_| "无法完整导出会话；请检查记录和所选目录。".to_owned())?;
+        }
+        writer.flush().and_then(|_| file.sync_all()).map_err(|_| "导出未完成，请检查所选目录。".to_owned())?;
+        crate::safe_write::publish_path_noreplace(&temporary, destination)
+            .map_err(|_| "无法保存抓包文件；目标可能已经存在。".to_owned())
+    })();
+    drop(file);
+    let _ = fs::remove_file(&temporary);
+    result
+}
+
+struct SessionExport<'a> { snapshot: &'a CaptureSnapshot }
+impl Serialize for SessionExport<'_> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+        let mut document = serializer.serialize_struct("CaptureExport", 4)?;
+        document.serialize_field("session", &self.snapshot.session)?;
+        document.serialize_field("status", &self.snapshot.status)?;
+        document.serialize_field("redacted", &true)?;
+        document.serialize_field("flows", &ExportFlows { snapshot: self.snapshot })?;
+        document.end()
+    }
+}
+
+struct ExportFlows<'a> { snapshot: &'a CaptureSnapshot }
+impl Serialize for ExportFlows<'_> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::{Error, SerializeSeq};
+        let mut flows = serializer.serialize_seq(Some(self.snapshot.flows.len()))?;
+        for summary in &self.snapshot.flows {
+            let flow = detail(&self.snapshot.session.id, &summary.id).map_err(S::Error::custom)?;
+            flows.serialize_element(&flow)?;
+        }
+        flows.end()
+    }
 }

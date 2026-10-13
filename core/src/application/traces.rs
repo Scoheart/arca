@@ -517,15 +517,13 @@ fn normalize(value: &Value, format: &str, offset: u64, redactor: &Redactor) -> V
     }
     items
 }
-fn document_items(document: &Value, locator: &Locator, redactor: &Redactor) -> Vec<Parsed> {
+fn document_items<'a>(document: &'a Value, locator: &'a Locator, redactor: &'a Redactor) -> impl Iterator<Item = Parsed> + 'a {
     let values = document.as_array().or_else(|| document.get("messages").and_then(Value::as_array));
-    let mut items = Vec::new();
-    for value in values.map(|v| v.as_slice()).unwrap_or(std::slice::from_ref(document)) {
-        let mut next = normalize(value, &locator.source.format, 0, redactor);
-        for item in &mut next { item.event.id = format!("0.{}", items.len()); items.push(Parsed { event: item.event.clone(), raw: item.raw.clone(), text: item.text.clone() }); }
-    }
-    items
+    values.map(|v| v.as_slice()).unwrap_or(std::slice::from_ref(document)).iter()
+        .flat_map(move |value| normalize(value, &locator.source.format, 0, redactor))
+        .enumerate().map(|(index, mut item)| { item.event.id = format!("0.{index}"); item })
 }
+
 #[derive(Serialize, Deserialize)]
 struct Cursor { offset: u64, index: usize, revision: String }
 fn encode(cursor: &Cursor) -> Result<String, String> { serde_json::to_vec(cursor).map(hex::encode).map_err(|_| "无法生成分页游标。".into()) }
@@ -544,11 +542,23 @@ pub fn page(session_id: &str, cursor: Option<&str>) -> Result<TracePage, String>
     let (mut events, next_cursor): (Vec<TraceEvent>, Option<String>) = if document_mode(&locator) {
         let document = read_document(&locator, file)?;
         redactor.learn(&document)?;
-        let items = document_items(&document, &locator, &redactor);
-        if cursor.index > items.len() { return Err("分页位置无效。".into()); }
-        let end = (cursor.index + PAGE_RECORDS).min(items.len());
-        let events = items[cursor.index..end].iter().map(|i| i.event.clone()).collect();
-        let next = if end < items.len() { Some(encode(&Cursor { offset: 0, index: end, revision: rev.clone() })?) } else { None };
+        // Normalize one source record at a time, never retain a second full
+        // document of raw bodies just to return a page of small summaries.
+        let mut events = Vec::new();
+        let mut total = 0;
+        for item in document_items(&document, &locator, &redactor) {
+            if total >= cursor.index && events.len() < PAGE_RECORDS {
+                let mut event = item.event;
+                // The complete document has already supplied the redaction
+                // context, so no unbounded preview needs to survive this loop.
+                redact_event(&mut event, &redactor);
+                events.push(event);
+            }
+            total += 1;
+        }
+        if cursor.index > total { return Err("分页位置无效。".into()); }
+        let end = cursor.index + events.len();
+        let next = if end < total { Some(encode(&Cursor { offset: 0, index: end, revision: rev.clone() })?) } else { None };
         (events, next)
     } else {
         let (mut reader, mut budget) = context_reader(file, cursor.offset, &mut redactor)?;
@@ -584,11 +594,14 @@ pub fn detail(session_id: &str, event_id: &str, expected_revision: &str) -> Resu
         if offset != 0 { return Err("记录 ID 无效。".into()); }
         let document = read_document(&locator, file)?;
         redactor.learn(&document)?;
-        let mut items = document_items(&document, &locator, &redactor);
-        if index >= items.len() { return Err("记录不存在。".into()); }
-        let selected = items.remove(index);
+        let selected = document_items(&document, &locator, &redactor).nth(index).ok_or("记录不存在。")?;
         if selected.event.kind == "tool_call" {
-            if let Some(id) = &selected.event.call_id { for result in items.iter().filter(|i| i.event.kind == "tool_result" && i.event.call_id.as_ref() == Some(id)) { related.push(TraceRaw { label: "tool_result".into(), raw: result.raw.clone() }); } }
+            if let Some(id) = &selected.event.call_id {
+                for result in document_items(&document, &locator, &redactor)
+                    .filter(|i| i.event.kind == "tool_result" && i.event.call_id.as_ref() == Some(id)) {
+                    related.push(TraceRaw { label: "tool_result".into(), raw: result.raw });
+                }
+            }
         }
         selected
     } else {

@@ -17,6 +17,7 @@ const zhCN = {
   notifications: { close: "关闭通知", closeError: "关闭错误通知", closeSuccess: "关闭成功通知" },
   agentRuntime: { installed: "已安装", hostAvailable: "宿主可用", entryAvailable: "启动入口可用", customEntry: "自定义启动入口", status: "{{name}} {{status}}，{{version}}", version: "版本 {{version}}", unknownVersion: "版本未知" },
   trace: traceZhCN,
+  textSegments: { label: "正文分段", position: "第 {{current}} / {{total}} 段 · 全文可复制或导出", previous: "上一段", next: "下一段" },
   syncReview: {
     title: "重新同步 MCPs", confirm: "重新同步", busy: "同步中…",
     destination: "同步到", description: "将用 MUX 中的配置覆盖所选 Agent 中的这份 MCP 配置。",
@@ -416,6 +417,7 @@ const enUS: TranslationShape<typeof zhCN> = {
   notifications: { close: "Dismiss notification", closeError: "Dismiss error notification", closeSuccess: "Dismiss success notification" },
   agentRuntime: { installed: "Installed", hostAvailable: "Host available", entryAvailable: "Launcher available", customEntry: "Custom launcher", status: "{{name}} {{status}}, {{version}}", version: "version {{version}}", unknownVersion: "version unknown" },
   trace: traceEnUS,
+  textSegments: { label: "Text sections", position: "Section {{current}} / {{total}} · Copy or export the full text", previous: "Previous", next: "Next" },
   syncReview: {
     title: "Resync MCPs", confirm: "Resync", busy: "Syncing…",
     destination: "Sync to", description: "Replace this MCP configuration in the selected Agents with the MUX configuration.",

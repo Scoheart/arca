@@ -346,7 +346,7 @@ export function ModelsView({
   intent?: Extract<ResourceNavigationIntent, { domain: "model" }>;
   onIntentConsumed?(id: number): void;
 } = {}) {
-  const [initialLibrary] = useState(cachedModelLibrary);
+  const initialLibrary = cachedModelLibrary();
   const [profiles, setProfiles] = useState<ModelProfileView[]>(initialLibrary?.profiles ?? []);
   const [providers, setProviders] = useState<ModelProviderView[]>(initialLibrary?.providers ?? []);
   const [providerInstances, setProviderInstances] = useState<ModelProviderInstanceView[]>(initialLibrary?.instances ?? []);

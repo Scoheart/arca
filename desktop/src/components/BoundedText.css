@@ -1,0 +1,6 @@
+.mux-bounded-text { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; overflow:hidden; }
+.mux-text-segments { display:flex; align-items:center; gap:6px; padding:6px 10px; flex-shrink:0; border-top:1px solid var(--border-hairline); color:var(--text-secondary); font:10px/1.5 var(--font-sans); }
+.mux-text-segments span { margin-right:auto; min-width:0; }
+.mux-text-segments button { flex-shrink:0; border:1px solid var(--border-hairline); border-radius:5px; padding:3px 6px; background:var(--surface-control); color:var(--text-primary); font:inherit; cursor:pointer; }
+.mux-text-segments button:disabled { opacity:.4; cursor:default; }
+.mux-bounded-text>pre { min-width:0; }
