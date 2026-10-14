@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.0](https://github.com/Scoheart/arca/compare/v2.0.10...v2.1.0) (2026-10-14)
+
+### Changes
+
+* feat(capture): unify agent recording and streamline stable delivery ([caf3f05](https://github.com/Scoheart/arca/commit/caf3f0565ccc421932e9fe997407529d285c6360))
+
 ## [2.0.10](https://github.com/Scoheart/arca/compare/v2.0.9...v2.0.10) (2026-10-14)
 
 ### Changes
