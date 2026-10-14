@@ -265,6 +265,13 @@
       "kind": "console"
     }
   },
+  "experiential-labs": {
+    "docs_url": "https://platform.experientiallabs.ai/docs",
+    "portal": {
+      "url": "https://platform.experientiallabs.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
   "clean-apis": {
     "docs_url": "https://cleanapis.com/docs/getting-started",
     "portal": {
