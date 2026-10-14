@@ -78,8 +78,14 @@ impl Matcher {
 }
 
 pub(super) fn bind_launchers(rows: &[Process]) -> Vec<CaptureTarget> {
+    bind(rows, None)
+}
+pub(super) fn bind_agent(rows: &[Process], id: &str) -> Vec<CaptureTarget> {
+    bind(rows, Some(id))
+}
+fn bind(rows: &[Process], selected: Option<&str>) -> Vec<CaptureTarget> {
     let mut targets: BTreeMap<String, CaptureTarget> = BTreeMap::new();
-    for id in PROFILES.keys() {
+    for id in PROFILES.keys().filter(|id| selected.is_none_or(|selected| selected == id.as_str())) {
         let Ok(info) = crate::application::agent_launch::info_unlocked(id) else { continue; };
         let Some(launcher) = info.resolved_target else { continue; };
         let matcher = Matcher::new(&launcher);

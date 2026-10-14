@@ -19,7 +19,7 @@ asset_json() {
       {id:2,name:$n2,label:"Command-line tool · Apple Silicon"},
       {id:3,name:$n3,label:"Desktop auto-update payload · no manual download"},
       {id:4,name:$n4,label:"Auto-update manifest · no manual download"}
-    ]'
+    ]' | jq --arg scenario "$FAKE_SCENARIO" 'if $scenario == "publish-label-failure" then map(if .id == 2 then .label = "" else . end) else . end'
 }
 
 release_json() {
@@ -96,8 +96,8 @@ elif [[ "$1" == release && "$2" == upload ]]; then
   : >"$FAKE_STATE/uploaded"
   shift 3
   while [[ $# -gt 0 && "$1" != --repo ]]; do
-    basename "$1" >>"$FAKE_STATE/uploaded"
-    echo "upload:$(basename "$1")" >>"$FAKE_STATE/log"
+    basename "${1%%#*}" >>"$FAKE_STATE/uploaded"
+    echo "upload:$(basename "${1%%#*}")" >>"$FAKE_STATE/log"
     shift
   done
 else
@@ -145,7 +145,7 @@ rm -f "$FAKE_STATE/published"
 FAKE_SCENARIO=publish-missing \
   bash "$ROOT/.github/scripts/publish-release-assets.sh" "$TAG" "${assets[@]}"
 [[ $(grep -c '^upload:' "$FAKE_STATE/log") -eq 4 ]]
-[[ $(grep -c '^label:' "$FAKE_STATE/log") -eq 4 ]]
+! grep -q '^label:' "$FAKE_STATE/log"
 [[ $(tail -n 1 "$FAKE_STATE/log") == publish ]]
 
 : >"$FAKE_STATE/log"

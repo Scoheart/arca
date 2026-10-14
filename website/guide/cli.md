@@ -61,7 +61,7 @@ arca capture show SESSION_ID --limit 100 --json
 arca capture show SESSION_ID --flow FLOW_ID --json
 ```
 
-Trace 按 Core 的分页和脱敏规则读取，后续页使用 `--cursor`；事件详情必须绑定页面返回的 revision。CLI 每次调用重新建立可信会话定位，不接受把任意路径编码成 session ID。Capture 命令只读取已保存记录，不启动抓包，也不根据当前 CLI 进程去猜测桌面抓包会话是否仍在运行。
+Trace 按 Core 的分页和脱敏规则读取，后续页使用 `--cursor`；事件详情必须绑定页面返回的 revision。CLI 每次调用重新建立可信会话定位，不接受把任意路径编码成 session ID。Capture 的 `list/show` 只读已保存记录；`run` 可以记录已有进程，或通过 `--launch` 启动追加 CA 的新实例。`state` 核验会话所属进程的 PID 与启动时间，Desktop 和 CLI 使用同一套 Core 流程。详见 [网络记录](/guide/traces#网络记录与代理)。
 
 Trace JSONL 每次读取会重建必要的凭据脱敏上下文。上下文与本次读取合计最多 32 MiB / 100000 条记录；损坏、未写完整或超限时会返回错误，避免在上下文缺失时输出正文。大文件可在 Agent 中导出较小的独立会话再读取。
 

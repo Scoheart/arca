@@ -7,7 +7,7 @@ async fn worker<T: Send + 'static>(f: impl FnOnce() -> Result<T, String> + Send 
 #[tauri::command]
 pub async fn capture_environment() -> Result<core::CaptureEnvironment, String> { worker(|| Ok(core::environment())).await }
 #[tauri::command]
-pub async fn capture_launch_agent(agent_id: String, directory: Option<String>) -> Result<(), String> {
+pub async fn capture_launch_agent(agent_id: String, directory: Option<String>) -> Result<core::CaptureTarget, String> {
     worker(move || core::launch_agent(&agent_id, directory.as_deref())).await
 }
 #[tauri::command]
@@ -21,7 +21,9 @@ pub async fn capture_delta(session_id: String, revision: Option<String>) -> Resu
 #[tauri::command]
 pub async fn capture_detail(session_id: String, flow_id: String) -> Result<core::CapturedFlow, String> { worker(move || core::detail(&session_id, &flow_id)).await }
 #[tauri::command]
-pub async fn capture_start(request: core::StartCapture) -> Result<core::CaptureSnapshot, String> { worker(move || core::start(request)).await }
+pub async fn capture_start(request: core::StartCapture, launch: Option<bool>, directory: Option<String>) -> Result<core::CaptureSnapshot, String> {
+    worker(move || if launch.unwrap_or(false) { core::start_fresh(request, directory.as_deref()) } else { core::start(request) }).await
+}
 #[tauri::command]
 pub async fn capture_stop(session_id: String) -> Result<core::CaptureSnapshot, String> { worker(move || core::stop(&session_id)).await }
 #[tauri::command]

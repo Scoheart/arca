@@ -16,7 +16,9 @@ Native formats depend on the current adapters; a launchable Agent does not autom
 
 The **Network** menu exposes proxy configuration and records. Arca's proxy covers its own remote sources, GitHub Skills, and updates; it does not rewrite every Agent's system proxy.
 
-Inspect saved requests, responses, and individual flows. CLI Capture commands read saved content without starting capture or treating the current CLI process as desktop capture-state authority. Actual capture follows the desktop environment setup.
+Open **Capture** from an Agent page and choose a fresh instance or an existing process. A fresh supported runtime receives additional capture CA roots and capture binds to that instance. Select direct egress, the Arca proxy, or a custom HTTP proxy. Clients using the system certificate store still require system trust for the capture CA.
+
+Desktop and CLI share Core's discovery, launch, forwarding, redaction, and stop workflow. `capture list/show` read saved records, `capture environment` inspects prerequisites, and `capture state` verifies process identities. `capture run` records in the foreground for a bounded duration and stops afterward; losing its owner also ends capture.
 
 ## Read from another Agent
 
@@ -28,9 +30,15 @@ arca trace show --file /path/to/session.jsonl --json
 arca capture list --agent codex --json
 arca capture show SESSION_ID --limit 100 --json
 arca capture show SESSION_ID --flow FLOW_ID --json
+arca capture environment --json
+arca capture run --agent pi --target TARGET_ID --seconds 60 --json
+arca capture run --agent pi --launch --directory /path/to/project --seconds 60 --json
+arca capture state SESSION_ID --json
 ```
 
 Continue with the returned cursor and use that page's revision for details. Capture's incremental cache avoids reparsing unchanged history.
+
+Existing processes cannot receive new CA roots at runtime, and proxy settings or existing connections may bypass capture. Prefer a fresh process after a TLS failure. An unresponsive launcher returns an error after 10 seconds; an engine that is not ready stops after 12 seconds and preserves a redacted diagnosis. Process capture currently requires macOS, official mitmproxy, and an enabled Mitmproxy Redirector extension.
 
 ## Content and redaction
 

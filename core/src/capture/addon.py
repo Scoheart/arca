@@ -303,14 +303,26 @@ def loopback(address):
         return False
 
 
+def process_alive(pid, started_at):
+    try:
+        result = subprocess.run(['/bin/ps', '-p', str(pid), '-o', 'lstart='], capture_output=True, text=True, timeout=5)
+        return result.returncode == 0 and ' '.join(result.stdout.split()) == started_at
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
 def owner_alive():
     owner = os.environ.get('ARCA_CAPTURE_OWNER')
-    if not owner:
+    if not owner or not process_alive(owner, os.environ.get('ARCA_CAPTURE_OWNER_START')):
         return False
     try:
-        result = subprocess.run(['/bin/ps', '-p', owner, '-o', 'lstart='], capture_output=True, text=True, timeout=5)
-        return result.returncode == 0 and ' '.join(result.stdout.split()) == os.environ.get('ARCA_CAPTURE_OWNER_START')
-    except (OSError, subprocess.TimeoutExpired):
+        # A packaged engine can have a bootloader parent. If that parent dies
+        # while Arca remains open, its Python child must release interception
+        # and the inherited lease rather than becoming an invisible engine.
+        with open(ROOT / 'runtime.json', 'rb') as source:
+            identity = json.loads(source.read(2048))
+        return identity['engine_pid'] == os.getpid() or process_alive(identity['engine_pid'], identity['engine_start'])
+    except (OSError, ValueError, KeyError, TypeError):
         return False
 
 
@@ -440,6 +452,19 @@ class Capture:
         self.pending_flows = {}
         self.terminal_state = None
 
+    def configure(self, updated):
+        # mitmproxy loads config.yaml after --set. Reassert the capture
+        # contract after configuration and on later updates: don't let native
+        # preferences restore eager connections, raw dumps or unsafe TLS.
+        required = {
+            'connection_strategy': 'lazy', 'upstream_cert': False,
+            'rawtcp': False, 'store_streamed_bodies': False,
+            'save_stream_file': None, 'ssl_insecure': False,
+        }
+        changed = {key: value for key, value in required.items() if getattr(ctx.options, key) != value}
+        if changed:
+            ctx.options.update(**changed)
+
     def status(self, state, message=''):
         if state in ('stopped', 'failed'):
             self.terminal_state = state
@@ -459,7 +484,7 @@ class Capture:
             owner = os.environ.get('ARCA_CAPTURE_OWNER')
             if owner:
                 if not await asyncio.to_thread(owner_alive):
-                    self.status('stopped', 'Arca 已退出，抓包已停止。')
+                    self.status('stopped', '抓包所属进程已退出，记录已停止。')
                     ctx.master.shutdown()
                     return
             if (ROOT / 'stop').exists():

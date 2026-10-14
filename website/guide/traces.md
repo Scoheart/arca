@@ -16,7 +16,9 @@ Arca 支持的原生会话格式以当前客户端适配器为准；有启动入
 
 **网络**菜单提供代理设置与记录入口。代理配置用于 Arca 的远程来源、GitHub Skills、更新检查等联网操作，不会自动改写所有 Agent 的系统代理。
 
-查看已保存记录，可以检查请求、响应与单个 flow。CLI 的 Capture 命令只读取保存内容，不启动抓包，也不把当前 CLI 进程当成桌面抓包状态的权威。实际抓取需按桌面环境说明配置。
+在 Agent 页面打开 **抓包**，可以选择 **启动新进程** 或 **运行中的进程**。前者为支持的运行时追加抓包证书，再绑定新实例；后者记录指定的已有进程。出口可选择直连、Arca 代理或自定义 HTTP 代理。系统证书型客户端仍需系统信任抓包 CA。
+
+Desktop 与 CLI 共用 Core 的发现、启动、转发、脱敏和停止流程。`capture list/show` 读取已保存记录，`capture environment` 检查环境，`capture state` 通过进程身份核验会话状态。`capture run` 在前台记录指定时长并停止；关闭其所属进程也会结束抓包。
 
 ## 给其他 Agent 读取
 
@@ -28,9 +30,15 @@ arca trace show --file /path/to/session.jsonl --json
 arca capture list --agent codex --json
 arca capture show SESSION_ID --limit 100 --json
 arca capture show SESSION_ID --flow FLOW_ID --json
+arca capture environment --json
+arca capture run --agent pi --target TARGET_ID --seconds 60 --json
+arca capture run --agent pi --launch --directory /path/to/project --seconds 60 --json
+arca capture state SESSION_ID --json
 ```
 
 使用页面返回的 cursor 继续读取，事件详情使用对应的 revision。Capture 使用增量缓存避免反复解析未改变的历史内容。
+
+已有进程不能在运行中追加 CA，代理设置或已经建立的连接也可能使请求绕过记录。TLS 失败时优先使用新进程；启动器无响应时会在 10 秒后明确报错，抓包引擎未就绪时会在 12 秒后停止并保存脱敏原因。按进程抓包目前仅支持 macOS，需要官方 mitmproxy 与已启用的 Mitmproxy Redirector。
 
 ## 内容与脱敏
 

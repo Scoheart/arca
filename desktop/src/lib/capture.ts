@@ -29,11 +29,11 @@ export function mergeCaptureDelta(current: CaptureSnapshot | null, delta: Captur
     flows: [...flows.values()].sort((left, right) => right.started_at - left.started_at || left.id.localeCompare(right.id)) };
 }
 export const captureEnvironment = () => invoke<CaptureEnvironment>('capture_environment');
-export const captureLaunchAgent = (agentId: string, directory?: string) => invoke<void>('capture_launch_agent', { agentId, directory: directory ?? null });
+export const captureLaunchAgent = (agentId: string, directory?: string) => invoke<CaptureTarget>('capture_launch_agent', { agentId, directory: directory ?? null });
 export const captureSessions = () => invoke<CaptureSession[]>('capture_sessions');
 export const captureSnapshot = (sessionId: string) => invoke<CaptureSnapshot>('capture_snapshot', { sessionId });
 export const captureDelta = (sessionId: string, revision: string | null = null) => invoke<CaptureDelta>('capture_delta', { sessionId, revision });
 export const captureDetail = (sessionId: string, flowId: string) => invoke<CapturedFlow>('capture_detail', { sessionId, flowId });
-export const captureStart = (request: { agent_id: string; target_id: string; egress: string; proxy_url: string | null }) => invoke<CaptureSnapshot>('capture_start', { request });
+export const captureStart = (request: { agent_id: string; target_id: string; egress: string; proxy_url: string | null }, options?: { launch: boolean; directory?: string }) => invoke<CaptureSnapshot>('capture_start', { request, launch: options?.launch ?? false, directory: options?.directory ?? null });
 export const captureStop = (sessionId: string) => invoke<CaptureSnapshot>('capture_stop', { sessionId });
 export const captureExport = (sessionId: string, flowId?: string) => invoke<string | null>('capture_export', { sessionId, flowId: flowId ?? null });

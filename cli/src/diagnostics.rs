@@ -36,7 +36,10 @@ pub enum CaptureCommand {
     /// Record traffic in the foreground, stopping after a bounded duration.
     Run {
         #[arg(long)] agent: String,
-        #[arg(long)] target: String,
+        #[arg(long, required_unless_present = "launch", conflicts_with = "launch")] target: Option<String>,
+        /// Launch a fresh Agent with the capture CA and record that instance.
+        #[arg(long)] launch: bool,
+        #[arg(long, requires = "launch")] directory: Option<String>,
         #[arg(long, default_value = "direct", value_parser = ["direct", "arca", "custom"])] egress: String,
         #[arg(long)] proxy: Option<String>,
         #[arg(long, default_value_t = 60, value_parser = clap::value_parser!(u16).range(1..=3600))] seconds: u16,
@@ -110,8 +113,9 @@ pub fn captured(cli: &Cli, command: &CaptureCommand) -> Result<CommandOutput, Cl
             .map_err(|error| CliError::private("serialization", error.to_string()))?),
         CaptureCommand::State { session } => query_output("capture.state", serde_json::to_value(capture::snapshot(session).map_err(CliError::from_legacy)?)
             .map_err(|error| CliError::private("serialization", error.to_string()))?),
-        CaptureCommand::Run { agent, target, egress, proxy, seconds } => {
-            let snapshot = capture::start(capture::StartCapture { agent_id: agent.clone(), target_id: target.clone(), egress: egress.clone(), proxy_url: proxy.clone() })
+        CaptureCommand::Run { agent, target, launch, directory, egress, proxy, seconds } => {
+            let request = capture::StartCapture { agent_id: agent.clone(), target_id: target.clone().unwrap_or_default(), egress: egress.clone(), proxy_url: proxy.clone() };
+            let snapshot = (if *launch { capture::start_fresh(request, directory.as_deref()) } else { capture::start(request) })
                 .map_err(CliError::from_legacy)?;
             // Core owns the worker, redaction and stop semantics. The process
             // stays alive as its owner; no detached, untracked daemon is made.

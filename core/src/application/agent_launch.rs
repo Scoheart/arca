@@ -388,9 +388,27 @@ pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Resul
             return super::terminals::dispatch(&line);
         }
     }
-    let result = command.output().map_err(|_| "无法调用系统启动器")?;
-    if result.status.success() { Ok(()) }
-    else { Err("系统未能打开 Agent；请检查应用状态或终端自动化权限".into()) }
+    dispatch_command(command)
+}
+
+/// Host launchers can block on automation permissions or an unresponsive app.
+/// Bound that wait and discard their output, which may echo launch arguments.
+pub(super) fn dispatch_command(mut command: Command) -> Result<(), String> {
+    let mut child = command.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null())
+        .spawn().map_err(|_| "agent_launch_failed: 无法调用系统启动器。".to_owned())?;
+    let until = Instant::now() + Duration::from_secs(10);
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) => return if status.success() { Ok(()) }
+                else { Err("agent_launch_failed: 启动器未能打开 Agent，请检查终端自动化权限与应用状态。".into()) },
+            Ok(None) if Instant::now() >= until => {
+                let _ = child.kill(); let _ = child.wait();
+                return Err("agent_launch_timeout: 启动器在 10 秒内未响应，请检查默认终端与自动化权限。".into());
+            }
+            Ok(None) => std::thread::sleep(Duration::from_millis(100)),
+            Err(_) => return Err("agent_launch_failed: 无法查询启动器进程状态。".into()),
+        }
+    }
 }
 
 #[derive(Serialize)]

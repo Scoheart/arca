@@ -115,7 +115,7 @@ for index in "${!names[@]}"; do
   path=${paths[$index]}
   existing_id=$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .id' <<<"$release")
   if [[ -z "$existing_id" ]]; then
-    missing+=("$path")
+    missing+=("$path#${labels[$index]}")
     continue
   fi
 
@@ -143,8 +143,11 @@ for index in "${!names[@]}"; do
   name=${names[$index]}
   asset_id=$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .id' <<<"$release")
   [[ -n "$asset_id" ]]
-  gh api --method PATCH "repos/$repository/releases/assets/$asset_id" \
-    -f "label=${labels[$index]}" --silent
+  actual_label=$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .label // ""' <<<"$release")
+  if [[ "$actual_label" != "${labels[$index]}" ]]; then
+    gh api --method PATCH "repos/$repository/releases/assets/$asset_id" \
+      -f "label=${labels[$index]}" --silent
+  fi
 done
 
 release=$(gh api "$release_endpoint")

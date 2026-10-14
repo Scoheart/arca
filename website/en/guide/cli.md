@@ -56,7 +56,7 @@ arca capture list --agent codex --json
 arca capture show SESSION_ID --flow FLOW_ID --json
 ```
 
-Trace pagination uses returned cursors; details bind the page revision. Capture reads saved records and does not start capture. JSON includes backend state and redacted diagnostics. Runtime detection is separate from configuration presence.
+Trace pagination uses returned cursors; details bind the page revision. Capture `list/show` read saved records; `run` records an existing process or uses `--launch` to start a fresh instance with additional CA roots. `state` verifies owner and engine identities. Desktop and CLI share the Core workflow; see [network records](/en/guide/traces#network-records-and-proxy). JSON includes backend state and redacted diagnostics. Runtime detection is separate from configuration presence.
 
 ## Review and commit the original plan
 

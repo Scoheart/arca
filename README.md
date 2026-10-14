@@ -179,6 +179,14 @@ Grab the **Desktop installer · Apple Silicon** asset from the latest stable [**
 
 Arca uses a direct Stable flow started by an explicit `workflow_dispatch` request on the current ordinary `main` commit. Select `patch` for fixes, `minor` for compatible new capabilities, or `major` for breaking changes. Ordinary commits and pushes do not publish a release. Direct Stable creates the release metadata commit, Draft, and immutable version tag, then dispatches exactly one macOS Stable build from the resulting `main` commit; automated Quality is currently paused and is run manually when requested. Stable publication still requires release provenance, version consistency, signing, App/DMG inspection, updater and CLI packaging, complete-asset validation, and semantic-version latest-channel ordering.
 
+The stable build uses a shared Cargo target directory for CLI and Desktop, with frontend and CLI preparation in parallel. After the Draft and tag exist, independently verify the published artifacts without waiting for the build job's cache upload:
+
+```bash
+bash .github/scripts/verify-stable-release.sh --source-root "$PWD" --wait vX.Y.Z
+```
+
+The verifier downloads the five expected assets in parallel, checks SHA-256 digests, verifies updater payload and trusted-comment signatures, and inspects both the updater App and the mounted DMG. It also checks the standalone CLI and the existing upgrade bridge. Verification does not install or launch the app.
+
 Build from source:
 
 ```bash
