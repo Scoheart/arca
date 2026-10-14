@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { formatError } from "../lib/format";
 import { DialogShell } from "./DialogShell";
@@ -65,12 +66,8 @@ export function ResourcePickerDialog({
       title={title}
       subtitle={subtitle}
       busy={busy}
-      status={busy ? (
-        <span className="arca-operation-progress" role="status">
-          <RefreshIcon data-spinning="true" />
-          正在检查并添加…
-        </span>
-      ) : error ? <span role="alert">{error}</span> : undefined}
+      status={<ToastNotice kind={busy ? "info" : "error"} persistent={busy}
+        noticeKey={`resource-picker:${pickerId}`} message={busy ? "正在检查并添加…" : error} />}
       onClose={onClose}
       footerStart={<span className="arca-picker-count">{filtered.length} 个可选项</span>}
       footerEnd={

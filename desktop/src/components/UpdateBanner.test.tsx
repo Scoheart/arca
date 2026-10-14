@@ -1,4 +1,5 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import { afterEach, expect, it, vi } from "vitest";
 import type { UpdaterState } from "../hooks/useUpdater";
 import { UpdateBanner } from "./UpdateBanner";

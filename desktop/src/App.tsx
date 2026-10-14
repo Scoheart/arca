@@ -1,3 +1,4 @@
+import { ToastNotice } from "./components/Toast";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invalidateModelObservation } from "./lib/modelObservation";
 import { invalidatePreferences } from "./lib/preferenceObservation";
@@ -359,39 +360,18 @@ function App() {
         />
       )}
 
-      {backendStatus?.state === "read_only" && (
-        <div className="arca-asset-recovery-banner" role="alert">
-          <strong>{t("migration.recoveryTitle")}</strong>
-          <span>{t("migration.recoveryMessage", {
-            stage: backendStatus.stage,
-          })}</span>
-        </div>
-      )}
-
-      {backendStatus?.state === "capability_unavailable" && (
-        <div className="arca-asset-recovery-banner arca-capability-warning-banner" role="alert">
-          <strong>{t("migration.capabilityTitle")}</strong>
-          <span>{t("migration.capabilityMessage", { stage: backendStatus.stage })}</span>
-        </div>
-      )}
-
+      <ToastNotice kind="warning" noticeKey="backend-recovery" message={backendStatus?.state === "read_only"
+        ? `${t("migration.recoveryTitle")} · ${t("migration.recoveryMessage", { stage: backendStatus.stage })}` : null} />
+      <ToastNotice kind="warning" noticeKey="backend-capability" message={backendStatus?.state === "capability_unavailable"
+        ? `${t("migration.capabilityTitle")} · ${t("migration.capabilityMessage", { stage: backendStatus.stage })}` : null} />
       {backendStatus?.state !== "capability_unavailable"
-        && (consumptionState.inventory?.capability_errors ?? []).map((diagnostic) => (
-          <div
-            className="arca-asset-recovery-banner arca-capability-warning-banner"
-            role="status"
-            key={`${diagnostic.capability}:${diagnostic.code}`}
-          >
-            <strong>{t("observations.capabilityUnavailable", {
-              capability: capabilityLabel(diagnostic.capability),
-            })}</strong>
-            <span>{diagnostic.code === "skill_inventory_unavailable"
-              ? t("observations.skillInventoryUnavailable")
-              : diagnostic.code === "skill_recovery_required"
-                ? t("observations.skillRecoveryRequired")
-                : t("observations.capabilityFallback")}</span>
-          </div>
-        ))}
+        && (consumptionState.inventory?.capability_errors ?? [])
+          .filter((diagnostic) => diagnostic.capability !== "skill" || view.kind !== "skills")
+          .map((diagnostic) => <ToastNotice kind="warning" key={`${diagnostic.capability}:${diagnostic.code}`}
+            message={`${t("observations.capabilityUnavailable", { capability: capabilityLabel(diagnostic.capability) })} · ${
+              diagnostic.code === "skill_inventory_unavailable" ? t("observations.skillInventoryUnavailable")
+              : diagnostic.code === "skill_recovery_required" ? t("observations.skillRecoveryRequired")
+              : t("observations.capabilityFallback")}`} />)}
 
       <UpdateBanner updater={updater} />
     </Layout>

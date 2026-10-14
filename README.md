@@ -268,6 +268,16 @@ state. A capability-local migration or parser failure isolates that capability;
 only damaged shared settings or an incomplete transaction that cannot be safely
 recovered make the whole workspace read-only.
 
+Skill registration and assignment retire only their own operation records. The
+shared journal directory stays in place, so an empty directory or old cleanup
+residue does not turn a completed operation into a recovery failure. Startup
+still checks and recovers unfinished writes before further Skill mutations.
+
+Operation feedback uses one notification bar at the top right, sliding in from
+the right. Success, errors, validation, recovery, startup sync and software updates
+share this surface. Repeated messages are deduplicated; background progress
+updates one notice while other operation results remain visible above it.
+
 ---
 
 ## Data layout

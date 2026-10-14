@@ -18,7 +18,7 @@ import { formatError } from "../lib/format";
 import { DialogShell } from "./DialogShell";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
 import { ExternalLinkIcon, KeyIcon, PlusIcon, TrashIcon } from "./icons";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import { configureAgentLaunch, getAgentLaunchInfo, type AgentLaunchInfo } from "../lib/agentLaunch";
 import { AgentLaunchFields, agentLaunchDraftChanged, agentLaunchDraftTarget, agentLaunchDraftValid, createAgentLaunchDraft, type AgentLaunchDraft } from "./AgentLaunchFields";
 import { AgentGlyph } from "./brandIcons";
@@ -429,12 +429,11 @@ export function AgentConfigurationDialog({
         {launchLoading ? <p className="arca-launch-hint" role="status">{t("agentConfiguration.reading")}</p>
           : launchInfo && launchDraft ? <AgentLaunchFields info={launchInfo} draft={launchDraft} disabled={busy || browsing}
             onChange={setLaunchDraft} onBusyChange={setBrowsing} onError={setLaunchError} /> : null}
-        {launchError && <div className="arca-launch-error" role="alert">{launchError}
-          {!launchInfo && <button type="button" className="btn-ghost" disabled={busy || browsing || launchLoading} onClick={() => setLaunchRequest((value) => value + 1)}>{t("common.retry")}</button>}
-        </div>}
+        {launchError && <ToastNotice message={launchError} action={!launchInfo
+          ? <button type="button" className="btn-ghost" onClick={() => setLaunchRequest((value) => value + 1)}>{t("common.retry")}</button> : undefined} />}
       </section>
       </div>
-      {error && <p className="arca-launch-error" role="alert">{error}</p>}
+      {error && <ToastNotice message={t("agentConfiguration.saveFailed", { error })} />}
     </DialogShell>
   );
 }

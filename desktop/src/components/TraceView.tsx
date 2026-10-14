@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { traceDetail, traceExport, traceImport, traceIndex, traceMatches, tracePage, type TraceDetail, type TraceEvent, type TraceIndex, type TracePage } from "../lib/traces";
 import { copyToClipboard } from "../lib/api";
 import { formatError } from "../lib/format";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import { CopyIcon, DocumentIcon, DownloadIcon, FolderIcon, RefreshIcon } from "./icons";
 import { BoundedText } from "./BoundedText";
 import { ByteBudgetCache, jsonMemoryWeight } from "../lib/byteBudgetCache";
@@ -136,9 +136,9 @@ export function TraceView({ initialAgentId }: { initialAgentId?: string }) {
       setIndex(previous => previous ? { ...previous, sessions: [imported, ...previous.sessions.filter(s => s.id !== imported.id)] } : { sources: [], sessions: [imported], warnings: [] });
       setSourceId("imported"); setSessionQuery(""); await selectSession(imported.id);
     })}><FolderIcon className="w-4 h-4" />{t("trace.import")}</button></div></header>
-    {error && <div className="arca-trace-alert" role="alert">{error}<button disabled={loadingPage} onClick={() => selectedSession.current ? void selectSession(selectedSession.current) : void refresh()}>{t("trace.reload")}</button></div>}
+    {error && <ToastNotice message={error} action={<button className="btn-ghost" onClick={() => selectedSession.current ? void selectSession(selectedSession.current) : void refresh()}>{t("trace.reload")}</button>} />}
     {sourceId === "unsupported" && <p className="arca-trace-hint">{t("trace.unsupportedHint")}</p>}
-    {(index?.warnings.length ?? 0) > 0 && <details className="arca-trace-warnings"><summary>{index?.warnings[0]}</summary>{index?.warnings.slice(1).map(w => <p key={w}>{w}</p>)}</details>}
+    <ToastNotice kind="warning" noticeKey="trace-index" message={index?.warnings.join(" · ")} />
     <div className="arca-trace-workspace">
       <aside className="arca-trace-sessions" aria-label={t("trace.sessions")}>
         <div className="arca-trace-source-controls"><select aria-label={t("trace.source")} value={sourceId} onChange={e => changeSource(e.target.value)}><option value="all">{t("trace.allSources")}</option>{index?.sources.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}<option value="imported">{t("trace.imported")}</option>{sourceId === "unsupported" && <option value="unsupported">{t("trace.unsupported")}</option>}</select><input type="search" aria-label={t("trace.sessionSearch")} placeholder={t("trace.sessionSearch")} value={sessionQuery} onChange={e => setSessionQuery(e.target.value)} /><small>{t("trace.counts", { count: sessions.length })}</small></div>
@@ -149,7 +149,7 @@ export function TraceView({ initialAgentId }: { initialAgentId?: string }) {
         <div className="arca-trace-event-controls"><input type="search" aria-label={t("trace.eventSearch")} placeholder={t("trace.eventSearch")} value={query} onChange={e => setQuery(e.target.value)} /><div><select aria-label={t("trace.records")} value={role} onChange={e => setRole(e.target.value)}>{["all", "user", "assistant", "tools", "event"].map(k => <option key={k} value={k}>{t(`trace.${k}`)}</option>)}</select><small>{t("trace.loaded", { count: events.length })}</small></div></div>
         <div className="arca-trace-event-list">{!page && !loadingPage ? <div className="arca-trace-empty">{t("trace.chooseSession")}</div> : visibleEvents.length === 0 ? <div className="arca-trace-empty">{loadingPage ? t("trace.loading") : t("trace.emptyEvents")}</div> : visibleEvents.map(event => <button className="arca-trace-event" key={event.id} data-kind={event.kind} data-selected={selectedEvent === event.id} onClick={() => void selectEvent(event)}><span><b>{t(`trace.${event.kind}`)}</b>{event.is_error && <em>{t("trace.error")}</em>}<time>{time(event.timestamp)}</time></span><strong>{event.kind.startsWith("tool_") ? event.title : event.preview.slice(0, 100) || event.title}</strong>{event.kind.startsWith("tool_") && <p>{event.preview || event.call_id}</p>}{event.call_id && <code title={event.call_id}>{event.call_id}</code>}</button>)}
           {page?.next_cursor ? <button className="arca-trace-load-more" disabled={loadingPage} onClick={() => void loadMore()}>{loadingPage ? t("trace.loading") : t("trace.loadMore")}</button> : page && <div className="arca-trace-end">{t(page.warnings.length ? "trace.stopped" : "trace.finished")}</div>}
-          {page?.warnings.map(w => <p className="arca-trace-inline-warning" key={w}>{w}</p>)}
+          <ToastNotice kind="warning" noticeKey="trace-page" message={page?.warnings.join(" · ")} />
         </div>
       </section>
       <section className="arca-trace-detail" aria-label={t("trace.raw")}>

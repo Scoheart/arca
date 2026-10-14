@@ -3,7 +3,7 @@ import type { AgentInfo } from '../lib/types';
 import { captureDetail, captureEnvironment, captureExport, captureSessions, captureDelta, mergeCaptureDelta, captureStart, captureStop, captureLaunchAgent, type CaptureEnvironment, type CaptureSession, type CaptureSnapshot, type CapturedFlow, type FlowSummary } from '../lib/capture';
 import { copyToClipboard } from '../lib/api';
 import { formatError } from '../lib/format';
-import { useToast } from './Toast';
+import { ToastNotice, useToast } from './Toast';
 import { DialogShell } from './DialogShell';
 import { AgentGlyph } from './brandIcons';
 import { RefreshIcon, DownloadIcon, SearchIcon, SlidersIcon } from './icons';
@@ -182,7 +182,7 @@ export function CaptureView({ agents, initialAgentId, arcaProxy }: { agents: Age
       <select aria-label="筛选请求" value={filter} onChange={event => setFilter(event.target.value)}><option value="all">全部</option><option value="success">已完成</option><option value="errors">错误</option><option value="streaming">流式</option></select>
       <button className="capture-button" title="导出脱敏会话 JSON" aria-label="导出会话" disabled={!snapshot || busy} onClick={() => void perform(async () => { if (snapshot && await captureExport(snapshot.session.id)) toast.show({ kind: 'success', msg: '会话已导出。' }); })}><DownloadIcon className="w-4 h-4" /></button>
     </div>
-    {failure && <p className="capture-notice" role="alert">{failure}</p>}
+    <ToastNotice message={failure} />
     <div className="capture-workbench" data-navigation={navigation} ref={workbench}>
       {navigation === 'structure' && <><aside className="capture-tree" aria-label="按主机和路径分组"><div className="capture-pane-title">Structure <small>{tree.length} hosts</small></div>
         {tree.length ? tree.map(node => <TreeNode key={node.path} node={node} selected={flowId} onSelect={setFlowId} />) : <div className="capture-empty">尚无请求</div>}</aside>

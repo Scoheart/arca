@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useEffect, useRef, useState } from "react";
 import { normalizeSkillCommandError } from "../hooks/useSkillsState";
 import type {
@@ -360,7 +361,7 @@ export function SkillReviewDialog({
     >
       <div className="arca-skill-review-dialog">
         <div className="arca-skill-review-body">
-          {error && <p className="arca-skill-review-error" role="alert">{error.message}</p>}
+          <ToastNotice message={error?.message} />
 
           <section className="arca-skill-review-section" aria-label="Skill 变更">
             {plan.skills.map((skill) => (

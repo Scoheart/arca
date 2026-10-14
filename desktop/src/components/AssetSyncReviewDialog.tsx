@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { ResourceIcon } from "./resourcePresentation";
 import { useTranslation } from "react-i18next";
 import type { AssetOperationPlan } from "../lib/types";
@@ -38,9 +39,7 @@ export function AssetSyncReviewDialog({
   return <DialogShell kind="review" size="sm" title={t("syncReview.title")}
     className="arca-sync-dialog" busy={busy} onClose={() => void onCancel()}
     leading={<span className="arca-dialog-shell-glyph"><RefreshIcon className="w-4 h-4" aria-hidden="true" /></span>}
-    status={(!plan.can_commit || error) ? <div role="alert" className="arca-review-error">
-      {error || t("syncReview.blocked")}
-    </div> : undefined}
+    status={(!plan.can_commit || error) ? <ToastNotice message={error || t("syncReview.blocked")} /> : undefined}
     footerEnd={<>
       <button type="button" className="btn-secondary" disabled={busy} onClick={() => void onCancel()}>{cancelLabel}</button>
       <button type="button" className="btn-primary" disabled={busy || !plan.can_commit} onClick={() => void onCommit()}>

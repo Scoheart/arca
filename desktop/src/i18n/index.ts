@@ -44,8 +44,11 @@ const zhCN = {
     description: "按来源整理工作流与参考资料", searchSource: "搜索当前来源的 Skills…",
     unassigned: "尚未分配", agents: "使用此 Skill 的 Agent", allAgents: "全部 Agent",
     openAgent: "打开 {{name}} 的 Skills", moreAgents: "查看另外 {{count}} 个 Agent",
+    recoveryTitle: "上次 Skill 操作未完成",
+    recoveryMessage: "请重新打开 Arca，程序会自动重试恢复。",
   },
   centralAssets: {
+    noContent: "暂无可显示的内容",
     mcpList: "MCP 资产",
     skillList: "Skill 资产",
     mcpIdentity: "名称与连接",
@@ -444,8 +447,11 @@ const enUS: TranslationShape<typeof zhCN> = {
     description: "Workflows and references organized by source", searchSource: "Search Skills in this source…",
     unassigned: "Not assigned", agents: "Agents using this Skill", allAgents: "All Agents",
     openAgent: "Open Skills for {{name}}", moreAgents: "View {{count}} more Agents",
+    recoveryTitle: "The last Skill operation needs recovery",
+    recoveryMessage: "Reopen Arca to retry recovery automatically.",
   },
   centralAssets: {
+    noContent: "No content to display",
     mcpList: "MCP assets",
     skillList: "Skill assets",
     mcpIdentity: "Name and connection",

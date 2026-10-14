@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { RESOURCE_PRESENTATION } from "./resourcePresentation";
 import type { AssetCommandError, AssetOperationPlan, AssetRef, ConvergenceAction } from "../lib/types";
 import { assetIdentity } from "../lib/consumption";
@@ -378,8 +379,8 @@ export function AssetOperationReviewDialog({
               </span>;
             })}
           </div>}
-          {reviewError && <p role="alert" className="arca-review-error">{reviewError}</p>}
-          {!plan.can_commit && <p role="alert" className="arca-review-error">暂时无法删除，请查看原因。</p>}
+          <ToastNotice message={reviewError} />
+          {!plan.can_commit && <ToastNotice kind="warning" message="暂时无法删除，请查看原因。" />}
           {plan.warnings.length > 0 && <section className="arca-provider-update-issues">
             {plan.warnings.map((warning) => <p key={warning}>{warningCopy(warning)}</p>)}
           </section>}
@@ -403,8 +404,8 @@ export function AssetOperationReviewDialog({
             </span>;
           })}
         </div>}
-        {reviewError && <p role="alert" className="arca-review-error">{reviewError}</p>}
-        {!plan.can_commit && <p role="alert" className="arca-review-error">部分配置暂时无法更新，请查看原因。</p>}
+        <ToastNotice message={reviewError} />
+        {!plan.can_commit && <ToastNotice kind="warning" message="部分配置暂时无法更新，请查看原因。" />}
         {plan.warnings.length > 0 && <section className="arca-provider-update-issues">
           {plan.warnings.map((warning) => <p key={warning}>{warningCopy(warning)}</p>)}
         </section>}
@@ -420,12 +421,9 @@ export function AssetOperationReviewDialog({
       busy={busy}
       onClose={() => void onCancel()}
       status={!plan.can_commit ? (
-        <div className="arca-review-error" role="alert">存在冲突，暂不可继续。</div>
+        <ToastNotice kind="warning" message="存在冲突，暂不可继续。" />
       ) : reviewError ? (
-        <div className="arca-asset-review-error" role="alert">
-          <strong>操作未完成</strong>
-          <span>{reviewError}</span>
-        </div>
+        <ToastNotice message={`操作未完成 · ${reviewError}`} />
       ) : undefined}
       footerEnd={(
         <>

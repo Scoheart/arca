@@ -3,7 +3,7 @@ import { usePreferenceRevision } from "../lib/preferenceObservation";
 import { invoke } from "@tauri-apps/api/core";
 import { FormSelect } from "./FormSelect";
 import { formatError } from "../lib/format";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import { TerminalIcon } from "./icons";
 import terminalIcon from "../assets/terminals/terminal.png";
 import ghosttyIcon from "../assets/terminals/ghostty.png";
@@ -53,6 +53,6 @@ export function TerminalSelect() {
         .map((item) => ({ value: item.id, label: item.name + (item.installed ? "" : " · 未安装"), icon: <TerminalGlyph id={item.id} /> }))}
       onChange={(value) => void choose(value)} />}
     {!settings && !error && <span role="status">读取中…</span>}
-    {error && <span className="arca-launch-error" role="alert">{error}<button type="button" className="btn-ghost" disabled={busy} onClick={() => setRevision((value) => value + 1)}>重试</button></span>}
+    {error && <ToastNotice message={error} action={<button type="button" className="btn-ghost" onClick={() => setRevision((value) => value + 1)}>重试</button>} />}
   </div>;
 }

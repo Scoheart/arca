@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatError } from "../lib/format";
@@ -86,12 +87,10 @@ export function ProviderModelCatalog({
         </button>
       </div>
       {loading && <p className="arca-model-catalog-notice" role="status">{t("models.loadingModelCatalog")}</p>}
-      {error && <p className="arca-model-catalog-notice" role="status">
-        {error.includes("credential_missing")
+      {error && <ToastNotice message={error.includes("credential_missing")
           ? t("models.discoveryNeedsCredential")
           : error.includes("model_discovery_endpoint_invalid") ? t("models.discoveryNeedsEndpoint")
-          : t("models.discoveryError", { error })}
-      </p>}
+          : t("models.discoveryError", { error })} />}
       {!loading && !error && available.length === 0 && <p className="arca-model-catalog-notice">
         {query.trim() ? t("models.noModelCatalogMatches") : models.length > 0
           ? t("models.catalogAllAdded") : t("models.catalogEmpty")}
@@ -156,7 +155,7 @@ function CandidateModelCard({ model, provider, protocols, disabled, busy, onAdd 
           {busy ? t("models.addingAction") : t("models.addAction")}
         </button>
       </div>
-      {error && <p className="arca-model-candidate-error" role="alert">{error}</p>}
+      <ToastNotice message={error} />
     </article>
   );
 }

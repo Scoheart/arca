@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useTranslation } from "react-i18next";
 import type { PastedMcpSummary } from "../lib/api";
 
@@ -54,7 +55,7 @@ export function McpPasteInput({ value, onChange, disabled, preview, error, pendi
     />
     </div>
     {value.trim() && <div className="arca-mcp-paste-result" aria-live="polite">
-      {pending ? <p>{t("mcpEditor.detecting")}</p> : error ? <p className="arca-mcp-field-error">{error}</p> : preview && <>
+      {pending ? <p>{t("mcpEditor.detecting")}</p> : error ? <ToastNotice kind="warning" delay={500} message={error} /> : preview && <>
         <strong>{t("mcpEditor.detected", { count: preview.length })}</strong>
         <ul aria-label={t("mcpEditor.previewLabel")}>
           {preview.map((entry) => {

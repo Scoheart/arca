@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { McpIconPreference, RegistryEntry } from "../lib/types";
@@ -59,7 +60,7 @@ export function McpIconPickerDialog({
       subtitle={t("mcpIcons.subtitle")}
       busy={busy}
       onClose={onClose}
-      status={error && <div className="arca-mcp-icon-error" role="alert">{error}</div>}
+      status={error && <ToastNotice message={error} />}
       footerStart={preference && (
         <button type="button" className="btn-ghost" disabled={busy} onClick={() => void run(onReset)}>
           <RefreshIcon className="w-4 h-4" />

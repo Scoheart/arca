@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { AgentCapabilityView, AgentInfo } from "../lib/types";
 import { mergeAgentInfos } from "../lib/agentCapabilities";

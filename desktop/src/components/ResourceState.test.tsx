@@ -1,4 +1,5 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import { afterEach, describe, expect, it } from "vitest";
 import { ResourceState } from "./ResourceState";
 
@@ -13,7 +14,7 @@ describe("ResourceState", () => {
 
   it.each(["read-error", "recovery"] as const)("announces %s as an alert", (kind) => {
     render(<ResourceState kind={kind} title="资源不可用" detail="请稍后重试" />);
-    expect(screen.getByRole("alert")).toHaveTextContent("资源不可用请稍后重试");
+    expect(screen.getByRole("alert")).toHaveTextContent("资源不可用 · 请稍后重试");
   });
 
   it("renders one explicit empty-state action", () => {

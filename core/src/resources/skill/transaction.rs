@@ -3863,7 +3863,7 @@ fn remove_journal_with_rename_hooks(
     failpoint: Option<JournalRetireFailpoint>,
     mut before_active_to_retiring: Option<&mut dyn FnMut()>,
     mut before_retiring_to_retired: Option<&mut dyn FnMut()>,
-    mut before_root_removal: Option<&mut dyn FnMut()>,
+    mut before_completion: Option<&mut dyn FnMut()>,
 ) -> Result<(), SkillError> {
     let active = journal_path(paths, operation_id)?;
     let retiring = journal_retiring_path(paths, operation_id)?;
@@ -3961,46 +3961,15 @@ fn remove_journal_with_rename_hooks(
             // `unlink_root_entry` already synced the held journal directory.
         }
     }
-    if let Some(hook) = before_root_removal.take() {
+    if let Some(hook) = before_completion.take() {
         hook();
     }
-    remove_empty_anchored_root(root, &root_path)
-}
-
-#[cfg(unix)]
-fn remove_empty_anchored_root(root: AnchoredRoot, root_path: &Path) -> Result<(), SkillError> {
-    let directory = root.root_directory()?;
-    if !root.read_directory(&directory, root_path)?.is_empty() {
-        return Ok(());
-    }
-    let expected = root.identity()?;
-    let parent_path = root_path.parent().ok_or_else(recovery_evidence_error)?;
-    let parent = AnchoredRoot::open(parent_path).map_err(|_| recovery_evidence_error())?;
-    let quarantined = quarantine_exact_entry(parent, root_path, &expected)?;
-    let quarantined_root = quarantined_directory_root(&quarantined)?;
-    let quarantined_directory = quarantined_root.root_directory()?;
-    if !quarantined_root
-        .read_directory(&quarantined_directory, &quarantined.quarantine_path)?
-        .is_empty()
-    {
-        drop(quarantined_directory);
-        drop(quarantined_root);
-        restore_quarantined_entry(&quarantined)?;
-        return Ok(());
-    }
-    drop(quarantined_directory);
-    drop(quarantined_root);
-    quarantined
-        .parent
-        .unlink_root_entry(
-            quarantined
-                .quarantine_path
-                .file_name()
-                .ok_or_else(recovery_evidence_error)?,
-            true,
-            &quarantined.quarantine_path,
-        )
-        .map_err(|_| recovery_evidence_error())
+    // The shared journal directory is infrastructure, not an operation artifact.
+    // Once this journal is durably retired, removing an empty parent must never
+    // turn a completed registration/assignment into a rollback or recovery lock.
+    // Keep its inode stable for other instances and leave unrelated old cleanup
+    // residues untouched. Only individual, verified journal files are retired.
+    Ok(())
 }
 
 #[cfg(not(unix))]
@@ -4010,7 +3979,7 @@ fn remove_journal_with_rename_hooks(
     _failpoint: Option<JournalRetireFailpoint>,
     _before_active_to_retiring: Option<&mut dyn FnMut()>,
     _before_retiring_to_retired: Option<&mut dyn FnMut()>,
-    _before_root_removal: Option<&mut dyn FnMut()>,
+    _before_completion: Option<&mut dyn FnMut()>,
 ) -> Result<(), SkillError> {
     Err(recovery_evidence_error())
 }
@@ -6000,7 +5969,8 @@ mod tests {
         recover_pending_with_paths(&paths).unwrap();
 
         assert!(!temporary.exists());
-        assert!(!paths.journals_skills_dir().exists());
+        assert!(paths.journals_skills_dir().is_dir());
+        assert_eq!(fs::read_dir(paths.journals_skills_dir()).unwrap().count(), 0);
         recover_pending_with_paths(&paths).unwrap();
     }
 
@@ -6481,7 +6451,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn journal_root_cleanup_never_unlinks_a_replacement_directory() {
+    fn journal_retirement_preserves_a_replacement_root() {
         let _home = TestHome::new("tx-journal-root-collision");
         let paths = SkillsPaths::from_env().unwrap();
         let id = "25325000-0000-4000-8000-000000000006";
@@ -6498,9 +6468,33 @@ mod tests {
         let result =
             remove_journal_with_rename_hooks(&paths, id, None, None, None, Some(&mut replace_root));
 
-        assert!(matches!(result, Err(SkillError::RecoveryRequired { .. })));
+        assert!(result.is_ok());
         assert!(root.exists());
         assert!(displaced.exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn completed_journals_keep_the_shared_root_and_ignore_old_cleanup_residue() {
+        let _home = TestHome::new("tx-journal-stable-root");
+        let paths = SkillsPaths::from_env().unwrap();
+        let root = paths.journals_skills_dir();
+        let original_inode = fs::metadata(&root).unwrap().ino();
+        let residue = removal_quarantine_path(&root).unwrap();
+        fs::create_dir(&residue).unwrap();
+        let sentinel = residue.join("sentinel");
+        fs::write(&sentinel, "untouched").unwrap();
+
+        for id in [
+            "25326000-0000-4000-8000-000000000006",
+            "25327000-0000-4000-8000-000000000006",
+        ] {
+            execute_transaction(empty_spec(id)).unwrap();
+            assert_eq!(fs::metadata(&root).unwrap().ino(), original_inode);
+            assert_eq!(fs::read_dir(&root).unwrap().count(), 0);
+            assert!(!has_pending_recovery_with_paths(&paths).unwrap());
+            assert_eq!(fs::read_to_string(&sentinel).unwrap(), "untouched");
+        }
     }
 
     #[test]

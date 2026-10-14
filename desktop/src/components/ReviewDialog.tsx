@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useState, type ReactNode } from "react";
 import { formatError } from "../lib/format";
 import { DialogShell } from "./DialogShell";
@@ -48,7 +49,7 @@ export function ReviewDialog({
       ) : undefined}
       title={title}
       subtitle={subtitle}
-      status={error ? <div className="arca-review-error" role="alert">{error}</div> : undefined}
+      status={error ? <ToastNotice message={error} /> : undefined}
       busy={busy}
       onClose={onClose}
       footerEnd={

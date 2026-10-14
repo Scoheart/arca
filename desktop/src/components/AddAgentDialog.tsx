@@ -11,7 +11,7 @@ import { formatError } from "../lib/format";
 import { AgentGlyph } from "./brandIcons";
 import { DialogShell } from "./DialogShell";
 import { DialogDisclosure } from "./DialogDisclosure";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 
 const FORMATS = [
   { value: "json", label: "JSON" },
@@ -236,9 +236,7 @@ export function AddAgentDialog({
                   onChange={(event) => setId(event.target.value)}
                 />
                 {id.length > 0 && !idValid && (
-                  <small data-error="true">
-                    {t(skillsStarted ? "agents.idInvalidWithSkills" : "agents.idInvalid")}
-                  </small>
+                  <ToastNotice kind="warning" delay={500} message={t(skillsStarted ? "agents.idInvalidWithSkills" : "agents.idInvalid")} />
                 )}
               </label>
               <DialogDisclosure title={t("common.advancedSettings")}>
@@ -388,7 +386,7 @@ export function AddAgentDialog({
                     onChange={(event) => setSkillsDir(event.target.value)}
                   />
                   {skillsDir.length > 0 && !skillsDirValid && (
-                    <small data-error="true">{t("agents.skillsPathInvalid")}</small>
+                    <ToastNotice kind="warning" delay={500} message={t("agents.skillsPathInvalid")} />
                   )}
                 </label>
                 <label className="arca-agent-create-field">
@@ -403,7 +401,7 @@ export function AddAgentDialog({
                     onChange={(event) => setSkillsDocs(event.target.value)}
                   />
                   {skillsDocs.length > 0 && !skillsDocsValid && (
-                    <small data-error="true">{t("agents.skillsDocsInvalid")}</small>
+                    <ToastNotice kind="warning" delay={500} message={t("agents.skillsDocsInvalid")} />
                   )}
                 </label>
               </div>

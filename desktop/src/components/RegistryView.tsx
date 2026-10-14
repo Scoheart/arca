@@ -30,7 +30,7 @@ import { Badge, IconButton, TransportPill } from "./ui";
 import { McpAvatar } from "./McpIcon";
 import { McpIconPickerDialog } from "./McpIconPickerDialog";
 import { ResourceState } from "./ResourceState";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
 import { RegistryEditPage } from "./RegistryEditPage";
 import {
@@ -617,17 +617,7 @@ function RegistryDetail({
         </>
       }
     >
-      {overriddenBy && (
-        <div className="arca-detail-warning">
-          <LayersIcon className="w-4 h-4 flex-shrink-0" />
-          <div className="min-w-0">
-            <div className="text-xs font-semibold">已被覆盖</div>
-            <div className="text-[11px] mt-0.5 leading-relaxed">
-              当前使用「{overriddenBy}」，此副本不参与安装。
-            </div>
-          </div>
-        </div>
-      )}
+      {overriddenBy && <ToastNotice kind="info" message={`已被覆盖 · 当前使用「${overriddenBy}」，此副本不参与安装。`} />}
 
       {entry.description && <p className="arca-inspector-description">{entry.description}</p>}
 

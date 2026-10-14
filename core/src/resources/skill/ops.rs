@@ -3146,7 +3146,8 @@ mod tests {
         assert!(!untouched_parent.exists());
         assert_eq!(current_settings_snapshot().unwrap(), before_settings);
         assert!(!paths.staging_skills_dir().join(&plan.operation_id).exists());
-        assert!(!paths.journals_skills_dir().exists());
+        assert!(paths.journals_skills_dir().is_dir());
+        assert_eq!(fs::read_dir(paths.journals_skills_dir()).unwrap().count(), 0);
     }
 
     #[test]
@@ -3206,7 +3207,8 @@ mod tests {
         }
         assert_eq!(current_settings_snapshot().unwrap(), before_settings);
         assert!(!paths.staging_skills_dir().join(&plan.operation_id).exists());
-        assert!(!paths.journals_skills_dir().exists());
+        assert!(paths.journals_skills_dir().is_dir());
+        assert_eq!(fs::read_dir(paths.journals_skills_dir()).unwrap().count(), 0);
     }
 
     #[test]

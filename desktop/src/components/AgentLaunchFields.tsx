@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { AgentLaunchInfo, LaunchTarget } from "../lib/agentLaunch";
@@ -110,7 +111,7 @@ export function AgentLaunchFields({ info, draft, disabled, onChange, onBusyChang
         <textarea className="arca-dialog-input arca-launch-arguments arca-launch-environment-block" rows={6} spellCheck={false} aria-label={t("agentConfiguration.environment")}
           placeholder={"HTTP_PROXY=http://127.0.0.1:6789\nNO_PROXY=localhost,127.0.0.1"} value={draft.environment}
           onChange={(event) => change({ environment: event.target.value })} />
-        {validation?.errorCode && <p className="arca-launch-error" role="alert">{t(`agentConfiguration.environmentErrors.${validation.errorCode}`, { line: validation.line })}</p>}
+        {validation?.errorCode && <ToastNotice kind="warning" delay={500} message={t(`agentConfiguration.environmentErrors.${validation.errorCode}`, { line: validation.line })} />}
       </label>
       {draft.kind === "app" && <div className="arca-launch-instance-option">
         <div><span>{t("agentConfiguration.newInstance")}</span><p className="arca-launch-hint">{t("agentConfiguration.newInstanceHint")}</p></div>

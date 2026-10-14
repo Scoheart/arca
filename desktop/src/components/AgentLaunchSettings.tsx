@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useState } from "react";
 import { configureAgentLaunch, type AgentLaunchInfo } from "../lib/agentLaunch";
 import { formatError } from "../lib/format";
@@ -25,6 +26,6 @@ export function AgentLaunchSettings({ info, onClose, onSaved }: {
     footerEnd={<><button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>取消</button>
       <button type="button" className="btn-primary" disabled={busy || !agentLaunchDraftValid(draft)} onClick={() => void save()}>保存</button></>}>
     <AgentLaunchFields info={info} draft={draft} disabled={busy} onChange={setDraft} onBusyChange={setBusy} onError={setError} />
-    {error && <p role="alert" className="arca-launch-error">{error}</p>}
+    <ToastNotice message={error} />
   </DialogShell>;
 }

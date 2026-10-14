@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { EyeIcon, EyeOffIcon, PlusIcon, TrashIcon } from "./icons";
@@ -115,7 +116,7 @@ export function EnvEditor({ value, onChange, onValidityChange, kind = "env", dis
             <TrashIcon className="w-3.5 h-3.5" />
           </button>
         </div>
-        {errors[index] && <small className="arca-mcp-field-error">{errors[index]}</small>}
+        {errors[index] && <ToastNotice kind="warning" delay={500} message={errors[index]} />}
         </div>
       ))}
       <button

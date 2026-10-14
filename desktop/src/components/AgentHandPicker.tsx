@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { startTransition, useEffect, useLayoutEffect, useMemo, useId, useRef, useState, type CSSProperties, type RefObject } from "react";
 import type { AgentInfo } from "../lib/types";
 import { MAX_PINNED_AGENTS } from "../lib/pinnedAgents";
@@ -542,7 +543,8 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
         {([['pinned', '常用'], ['builtin', '内置'], ['custom', '自定义']] as const).map(([id, label]) => <button type="button" key={id}
           aria-pressed={group === id && !query.trim()} disabled={busy || saving} onClick={() => changeGroup(id)}>{label}</button>)}
       </div>
-      <p className="arca-agent-hand-announcement" aria-live="polite">{replacement ? `选择上方牌槽，替换为 ${replacement.name} · Esc 取消` : announcement}</p>
+      {replacement && <p className="arca-agent-hand-announcement">{`选择上方牌槽，替换为 ${replacement.name} · Esc 取消`}</p>}
+      <ToastNotice kind={announcement.includes("未保存") ? "error" : "success"} message={announcement} />
       </div>
     </div>
     {entryTransition && <AgentEntryTransition {...entryTransition} onDone={onClose} />}

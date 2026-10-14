@@ -12,7 +12,7 @@ import { DialogShell } from "./DialogShell";
 import { FormSelect } from "./FormSelect";
 import { ResourceInspector } from "./ResourceWorkspace";
 import { LayersIcon, NetworkIcon, SaveIcon, TerminalIcon } from "./icons";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import { McpAvatar } from "./McpIcon";
 import { McpPasteInput } from "./McpPasteInput";
 import { formatError } from "../lib/format";
@@ -251,7 +251,7 @@ export function RegistryEditPage({
           <input aria-label={t("mcpEditor.name")} className="arca-dialog-input" value={serverName}
             readOnly={!!createsLocalOverride} onChange={(event) => setServerName(event.target.value)}
             placeholder={t("mcpEditor.namePlaceholder")} aria-invalid={!!duplicateName || undefined} spellCheck={false} />
-          {duplicateName && <small className="arca-mcp-field-error">{t("mcpEditor.duplicateKey")}</small>}
+          {duplicateName && <ToastNotice kind="warning" delay={500} message={t("mcpEditor.duplicateKey")} />}
         </label>
         <label className="arca-mcp-field">
           <span>{t("mcpEditor.description")} <small>{t("mcpEditor.optional")}</small></span>
@@ -294,7 +294,7 @@ export function RegistryEditPage({
               <input className="arca-dialog-input arca-dialog-input-mono" value={url}
                 onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com/mcp"
                 aria-invalid={urlInvalid || undefined} spellCheck={false} autoCapitalize="off" autoCorrect="off" />
-              {urlInvalid && <small className="arca-mcp-field-error">{t("mcpEditor.invalidUrl")}</small>}
+              {urlInvalid && <ToastNotice kind="warning" delay={500} message={t("mcpEditor.invalidUrl")} />}
             </label>
             <div className="arca-mcp-field">
               <span>{t("mcpEditor.protocol")}</span>

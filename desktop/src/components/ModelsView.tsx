@@ -56,7 +56,7 @@ import {
   TerminalIcon,
   TrashIcon,
 } from "./icons";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import {
   InspectorField,
   InspectorMetric,
@@ -1309,7 +1309,7 @@ function ModelProfileDialog({
             placeholder={t("models.modelDefault")}
             onChange={(event) => setDraft({ ...draft,
               context_window: event.currentTarget.value ? Number(event.currentTarget.value) : undefined })} />
-          {!contextValid && <small data-error>{t("models.positiveIntegerRequired")}</small>}
+          {!contextValid && <ToastNotice kind="warning" delay={500} message={t("models.positiveIntegerRequired")} />}
         </label>
         <label>
           <span>{t("models.maxOutput")} <small>tokens</small></span>
@@ -1318,7 +1318,7 @@ function ModelProfileDialog({
             placeholder={t("models.modelDefault")}
             onChange={(event) => setDraft({ ...draft,
               max_output_tokens: event.currentTarget.value ? Number(event.currentTarget.value) : undefined })} />
-          {!outputValid && <small data-error>{t("models.positiveIntegerRequired")}</small>}
+          {!outputValid && <ToastNotice kind="warning" delay={500} message={t("models.positiveIntegerRequired")} />}
         </label>
       </div>
       <div className="arca-model-form-field">
@@ -1586,7 +1586,7 @@ function ModelProviderDialog({
               placeholder={template?.setup?.base_url_placeholder ?? "https://gateway.example.com/api/v2"}
               spellCheck={false}
             />
-            {draft.base_url && !normalizedBaseUrl && <small>{t("models.invalidBaseUrl")}</small>}
+            {draft.base_url && !normalizedBaseUrl && <ToastNotice kind="warning" delay={500} message={t("models.invalidBaseUrl")} />}
             {template?.setup && <small>{t(`models.providerSetup.${template.setup.hint}`)}</small>}
           </label>
 
@@ -1633,14 +1633,10 @@ function ModelProviderDialog({
             </div>
           </div>
 
-          {credentialReadError && (
-            <div role="alert" className="flex items-center gap-2">
-              <small>{t("models.revealApiKeyFailed", { error: credentialReadError })}</small>
-              <button type="button" className="btn-ghost" onClick={() => setCredentialLoadAttempt((attempt) => attempt + 1)}>
-                <RefreshIcon className="w-4 h-4" />{t("common.retry")}
-              </button>
-            </div>
-          )}
+          {credentialReadError && <ToastNotice message={t("models.revealApiKeyFailed", { error: credentialReadError })}
+            action={<button type="button" className="btn-ghost" onClick={() => setCredentialLoadAttempt((attempt) => attempt + 1)}>
+              <RefreshIcon className="w-4 h-4" />{t("common.retry")}
+            </button>} />}
         </section>
         )}
 
@@ -1675,7 +1671,7 @@ function ModelProviderDialog({
           {((portalUrl.trim() && !normalizedPortalUrl) || (portalCustomized && defaultPortal)) && (
           <div className="arca-provider-portal-note">
             {portalUrl.trim() && !normalizedPortalUrl && (
-              <small className="arca-provider-portal-error">{t("models.invalidProviderPortalUrl")}</small>
+              <ToastNotice kind="warning" delay={500} message={t("models.invalidProviderPortalUrl")} />
             )}
             {portalCustomized && defaultPortal && (
               <button type="button" className="arca-provider-portal-reset" onClick={() => setPortalUrl(defaultPortal.url)}>
@@ -1701,7 +1697,7 @@ function ModelProviderDialog({
               spellCheck={false}
             />
             {draft.model_catalog_url && !normalizedModelCatalogUrl && (
-              <small>{t("models.invalidModelCatalogUrl")}</small>
+              <ToastNotice kind="warning" delay={500} message={t("models.invalidModelCatalogUrl")} />
             )}
           </label>
         </section>
@@ -1709,9 +1705,7 @@ function ModelProviderDialog({
           <div className="arca-provider-section-head">
             <strong>{t("models.protocolsShort")}</strong>
             {enabledProtocols.length === 0 && (
-              <small className="arca-provider-protocol-error" role="status">
-                {t("models.protocolRequired")}
-              </small>
+              <ToastNotice kind="warning" delay={500} message={t("models.protocolRequired")} />
             )}
           </div>
           <div className="arca-provider-protocol-list">
@@ -1804,7 +1798,7 @@ function ModelProviderDialog({
               </output>
             </div>
             {selectedProtocolEnabled && selectedProtocolPath && !normalizeEndpointPath(selectedProtocolPath) && (
-              <small className="arca-provider-route-error">{t("models.invalidEndpointPath")}</small>
+              <ToastNotice kind="warning" delay={500} message={t("models.invalidEndpointPath")} />
             )}
           </div>
         </section>

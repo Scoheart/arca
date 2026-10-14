@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ReviewDialog } from "./ReviewDialog";
 

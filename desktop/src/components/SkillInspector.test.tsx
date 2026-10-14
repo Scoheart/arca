@@ -1,4 +1,5 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { skillDetailFixture, skillsInventoryFixture } from "../test/skillsFixtures";
 import { SkillInspector } from "./SkillInspector";

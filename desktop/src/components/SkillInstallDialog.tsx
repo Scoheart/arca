@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { ResourceIcon } from "./resourcePresentation";
 import {
   useCallback,
@@ -480,12 +481,7 @@ export function SkillInstallDialog({
                 </span>
               </button>
 
-              {sourceError && (
-                <div className="arca-skill-dialog-error" role="alert">
-                  <strong>{sourceError.message}</strong>
-                  {sourceError.retry_at && <code>可重试时间：{sourceError.retry_at}</code>}
-                </div>
-              )}
+              <ToastNotice message={sourceError ? `${sourceError.message}${sourceError.retry_at ? ` · 可重试时间：${sourceError.retry_at}` : ""}` : null} />
             </div>
           ) : (
             <div className="arca-skill-selection-step">
@@ -534,17 +530,7 @@ export function SkillInstallDialog({
                 </div>
               </section>
 
-              {planError && (
-                <div
-                  className={planError.code === "conflict" ? "arca-skill-conflict-prompt" : "arca-skill-dialog-error"}
-                  role="alert"
-                >
-                  <strong>{planError.code === "conflict" ? "发现冲突" : planError.message}</strong>
-                  {planError.code === "conflict" && <span>{planError.message}</span>}
-                  {planError.code === "conflict" && <small>再次操作会先备份原内容。</small>}
-                  {planError.retry_at && <code>可重试时间：{planError.retry_at}</code>}
-                </div>
-              )}
+              <ToastNotice message={planError ? `${planError.message}${planError.code === "conflict" ? " · 再次操作会先备份原内容。" : ""}${planError.retry_at ? ` · 可重试时间：${planError.retry_at}` : ""}` : null} />
             </div>
           )}
         </div>

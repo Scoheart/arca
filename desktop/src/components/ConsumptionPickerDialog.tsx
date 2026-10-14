@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { ResourceIcon, type ResourceDomain } from "./resourcePresentation";
 import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { formatError } from "../lib/format";
@@ -88,12 +89,8 @@ export function ConsumptionPickerDialog({
       title={title}
       subtitle={subtitle}
       busy={busy}
-      status={busy ? (
-        <span className="arca-operation-progress" role="status">
-          <RefreshIcon data-spinning="true" />
-          正在检查兼容性并同步到 Agent…
-        </span>
-      ) : error ? <span role="alert">{error}</span> : undefined}
+      status={<ToastNotice kind={busy ? "info" : "error"} persistent={busy}
+        noticeKey={`consumption-picker:${pickerId}`} message={busy ? "正在检查兼容性并同步到 Agent…" : error} />}
       onClose={onClose}
       footerStart={
         <span className="arca-picker-count">

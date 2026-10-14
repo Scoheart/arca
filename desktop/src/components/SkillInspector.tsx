@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import type { PlanRepairRequest, SkillCommandError, SkillDetail, SkillInventoryItem } from "../lib/types";
 import { ResourceInspector } from "./ResourceWorkspace";
 import { skillSourceText } from "./SkillCard";
@@ -67,7 +68,7 @@ export function SkillInspector({
         </div>
         <section className="arca-skill-reading-body" aria-label="Skill 正文">
           {loading ? <p role="status">正在读取正文…</p>
-            : error ? <p className="arca-skill-inspector-error" role="alert">读取失败：{error.message}</p>
+            : error ? <ToastNotice message={`读取失败：${error.message}`} />
             : detail ? <>
               {detail.skill_md_truncated && <p className="arca-skill-inspector-truncation">正文预览已截断</p>}
               <pre>{skillBody(detail.skill_md) || "暂无正文。"}</pre>

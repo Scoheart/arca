@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { FormEvent, useEffect, useState } from "react";
 import type { ProxySettings } from "../lib/types";
 import { DialogShell } from "./DialogShell";
@@ -78,7 +79,7 @@ export function ProxySettingsDialog({
           <span>HTTP · SOCKS4 · SOCKS5</span>
           <span>留空即关闭</span>
         </div>
-        {error && <div className="arca-proxy-error" role="alert">{error}</div>}
+        <ToastNotice message={error} />
       </form>
     </DialogShell>
   );

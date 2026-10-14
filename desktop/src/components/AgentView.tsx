@@ -45,7 +45,7 @@ import { Avatar, Badge } from "./ui";
 import { AgentGlyph } from "./brandIcons";
 import { ProviderGlyph } from "./providerIcons";
 import { AgentConfigurationDialog } from "./AgentConfigurationDialog";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import { AgentResourcePanel, type AgentResourceTab } from "./AgentResourcePanel";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
 import {
@@ -696,12 +696,8 @@ export function AgentView({
               onCancel={consumptionState.cancel}
             />
           ) : null}
-          {preparingChange && (
-            <div className="arca-agent-operation-progress" role="status" aria-live="polite">
-              <RefreshIcon data-spinning="true" />
-              <span>正在检查并同步 {agent.name} 的资产…</span>
-            </div>
-          )}
+          <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
+            message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
           {resourceTab === "mcps" ? !agent.has_global ? (
             <div className="arca-agent-inline-state">此 Agent 未接入 MCP。</div>
           ) : (

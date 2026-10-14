@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AgentInfo } from "../lib/types";
 import { buildAgentPickerSections, MAX_PINNED_AGENTS } from "../lib/pinnedAgents";
@@ -59,7 +60,7 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
   };
 
   return <div className="arca-agent-navigation">
-    <span className="sr-only" aria-live="polite">{announcement}</span>
+    <ToastNotice kind={announcement.includes("已满") ? "warning" : "success"} message={announcement} />
     <div className="arca-agent-picker-cluster" ref={anchorRef}>
       {pinnedIds.length > 0 && <PinnedAgentDock agents={agents} ids={pinnedIds} selectedId={selectedAgentId}
         disabled={!pinned.ready || pinned.saving} onSelect={onSelectAgent} onReorder={(ids, id) => void saveOrder(ids, id)} />}
