@@ -908,6 +908,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "experiential-labs",
+        name: "Experiential Labs",
+        default_base_url: Some("https://api.experientiallabs.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "clean-apis",
         name: "Clean APIs",
         default_base_url: Some("https://cleanapis.com/v1"),
@@ -1673,6 +1680,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.flock.io" => "flock",
         "codecraftapi.com" => "codecraft",
         "api.beatapi.io" => "beatapi",
+        "api.experientiallabs.ai" => "experiential-labs",
         "cleanapis.com" => "clean-apis",
         "lighthouse.dphn.ai" => "dolphin",
         "api.iteracompute.com" => "iteracompute",
@@ -6965,6 +6973,9 @@ mod tests {
             ("https://api.beatapi.io/v1", "beatapi"),
             ("https://api.beatapi.io/v1/chat/completions", "beatapi"),
             ("https://api.beatapi.io.evil.test/v1", "custom"),
+            ("https://api.experientiallabs.ai/v1", "experiential-labs"),
+            ("https://api.experientiallabs.ai/v1/chat/completions", "experiential-labs"),
+            ("https://api.experientiallabs.ai.evil.test/v1", "custom"),
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
@@ -7081,7 +7092,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 121);
+        assert_eq!(list_providers().len(), 122);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

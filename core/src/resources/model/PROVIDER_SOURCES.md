@@ -1,5 +1,11 @@
 # Provider Catalog sources
 
+## Experiential Labs — 2026-10-14
+
+`experiential-labs` is a gateway Provider for Experiential Labs, an OpenAI-compatible model gateway that currently offers a free allowance for Gemini 4 Argon to eligible accounts (see the [model page](https://platform.experientiallabs.ai/models/gemini-4-argon)). The [docs overview](https://platform.experientiallabs.ai/docs) gives the Base URL `https://api.experientiallabs.ai/v1` and documents `POST /v1/chat/completions`, so Arca uses that Base URL with the Chat Completions protocol. The [OpenAI compatibility guide](https://platform.experientiallabs.ai/docs/openai-compatibility) also documents `POST /v1/responses`, and the [Anthropic API guide](https://platform.experientiallabs.ai/docs/anthropic) documents `POST /v1/messages`; like `beatapi`, the template exposes only Chat Completions.
+
+Requests use `Authorization: Bearer <EXPLABS_API_KEY>` with an `xpl_` key ([authentication](https://platform.experientiallabs.ai/docs/authentication)); requests without a key return HTTP 401 (`invalid_key`). Model discovery uses the documented, key-required `GET /v1/models` (see [the core loop](https://platform.experientiallabs.ai/docs/core-loop)) with the OpenAI catalog decoder and the required credential policy. Only `api.experientiallabs.ai` is mapped for host inference; `platform.experientiallabs.ai` hosts the web app, docs, and [model catalog](https://platform.experientiallabs.ai/models). API keys are managed at <https://platform.experientiallabs.ai/api-keys>, which is the template portal.
+
 ## Liquid AI — 2026-10-13
 
 `liquid-ai` is an official Provider for Liquid AI's hosted inference of its LFM models. The [LFM2.5-24B-A2B announcement](https://www.liquid.ai/blog/lfm2-5-24b-a2b) directs API users to [Liquid Console](https://console.liquid.ai/), which grants $2 of signup credit and lists the model at $0.10/1M input tokens and $1.00/1M output tokens. The [docs](https://docs.liquid.ai/) cover models and self-hosting but do not document a hosted API reference. The inference host's own [OpenAPI spec](https://inference.liquid.ai/openapi.json) lists `POST /v1/chat/completions`, `POST /v1/completions`, and `GET /v1/models` with HTTP Bearer authentication, so Arca uses the Base URL `https://inference.liquid.ai/v1` with the Chat Completions protocol. No Responses or Anthropic Messages endpoint exists (`/v1/responses` returns 404), so none is exposed.
@@ -163,6 +169,7 @@ protocol requirements.
 | `flock` | `https://api.flock.io/v1` (Chat Completions only) | — | [API endpoint](https://docs.flock.io/flock-products/api-platform/api-endpoint), [Getting started](https://docs.flock.io/flock-products/api-platform/getting-started) |
 | `codecraft` | `https://codecraftapi.com/v1` (Chat Completions only) | — | [Docs](https://codecraftapi.com/docs), [Authentication](https://codecraftapi.com/docs/authentication), [Models](https://codecraftapi.com/docs/models) |
 | `beatapi` | `https://api.beatapi.io/v1` (Chat Completions only) | — | [Quick guide](https://docs.beatapi.io/quick-guide), [Text API](https://docs.beatapi.io/text-api/claude) |
+| `experiential-labs` | `https://api.experientiallabs.ai/v1` (Chat Completions only) | — | [Docs](https://platform.experientiallabs.ai/docs), [OpenAI compatibility](https://platform.experientiallabs.ai/docs/openai-compatibility), [Authentication](https://platform.experientiallabs.ai/docs/authentication) |
 | `munito` | `https://api.munito.ai/inference/v1` | `https://api.munito.ai/inference` | [API reference](https://docs.munito.ai/api), [Claude Code](https://docs.munito.ai/claude-code) |
 | `ppq` | `https://api.ppq.ai/v1` | `https://api.ppq.ai` | [llms.txt](https://ppq.ai/llms.txt) |
 | `trustedrouter` | `https://api.trustedrouter.com/v1` | `https://api.trustedrouter.com` | [API docs](https://trustedrouter.com/docs), [Agent setup](https://trustedrouter.com/docs/agent-setup) |
