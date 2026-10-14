@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.10](https://github.com/Scoheart/arca/compare/v2.0.9...v2.0.10) (2026-10-14)
+
+### Changes
+
+* fix(skills): prevent recovery locks and unify operation notifications ([eda5124](https://github.com/Scoheart/arca/commit/eda5124b9da8f037b84bea866fb434c2389df268))
+
 ## [2.0.9](https://github.com/Scoheart/arca/compare/v2.0.8...v2.0.9) (2026-10-14)
 
 ### Changes
