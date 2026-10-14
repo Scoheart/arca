@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.9](https://github.com/Scoheart/arca/compare/v2.0.8...v2.0.9) (2026-10-14)
+
+### Changes
+
+* feat(models): add Experiential Labs gateway provider (#216) ([f07a8e2](https://github.com/Scoheart/arca/commit/f07a8e2e135a424a8852437d8d4f86be397180e1))
+
 ## [2.0.8](https://github.com/Scoheart/arca/compare/v2.0.7...v2.0.8) (2026-10-13)
 
 ### Changes
