@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.1](https://github.com/Scoheart/arca/compare/v2.1.0...v2.1.1) (2026-10-15)
+
+### Changes
+
+* feat(models): add Atria official provider (#217) ([5ec4257](https://github.com/Scoheart/arca/commit/5ec4257f8c35068210e9001ac7bb803c7403c995))
+
 ## [2.1.0](https://github.com/Scoheart/arca/compare/v2.0.10...v2.1.0) (2026-10-14)
 
 ### Changes
