@@ -538,6 +538,13 @@
       "kind": "console"
     }
   },
+  "atria": {
+    "docs_url": "https://api.atria-asi.ai/docs",
+    "portal": {
+      "url": "https://api.atria-asi.ai/console/keys",
+      "kind": "api-key"
+    }
+  },
   "cohere": {
     "docs_url": "https://docs.cohere.com/docs/models",
     "portal": {
