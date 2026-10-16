@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.2](https://github.com/Scoheart/arca/compare/v2.1.1...v2.1.2) (2026-10-16)
+
+### Changes
+
+* fix(capture): bind recording to the current agent ([5aa6c62](https://github.com/Scoheart/arca/commit/5aa6c62420af1ee7c2548deaceb270b42de565f4))
+* fix(capture): allow first-run redirector installation ([9e8ff98](https://github.com/Scoheart/arca/commit/9e8ff988ee282ddb98ae2948f5cac94f28648536))
+* fix(capture): guide system approval inside the app ([2bb4958](https://github.com/Scoheart/arca/commit/2bb4958ae9e374985bff8bbd8476a45a91ffdbd6))
+* feat(models): add UnoRouter gateway provider (#218) ([b5d6fa0](https://github.com/Scoheart/arca/commit/b5d6fa0563e2f9c3b345b9612434a1fbcf201b7c))
+* feat(models): add RunAnywhere gateway provider (#219) ([e201a3e](https://github.com/Scoheart/arca/commit/e201a3e6e3826219970da3b5893315f05e3ec4ca))
+
 ## [2.1.1](https://github.com/Scoheart/arca/compare/v2.1.0...v2.1.1) (2026-10-15)
 
 ### Changes
