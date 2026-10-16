@@ -939,6 +939,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "runanywhere",
+        name: "RunAnywhere",
+        default_base_url: Some("https://inference.runanywhere.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "clean-apis",
         name: "Clean APIs",
         default_base_url: Some("https://cleanapis.com/v1"),
@@ -1720,6 +1727,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "codecraftapi.com" => "codecraft",
         "api.beatapi.io" => "beatapi",
         "api.experientiallabs.ai" => "experiential-labs",
+        "inference.runanywhere.ai" => "runanywhere",
         "cleanapis.com" => "clean-apis",
         "lighthouse.dphn.ai" => "dolphin",
         "api.iteracompute.com" => "iteracompute",
@@ -7016,6 +7024,11 @@ mod tests {
             ("https://api.experientiallabs.ai/v1", "experiential-labs"),
             ("https://api.experientiallabs.ai/v1/chat/completions", "experiential-labs"),
             ("https://api.experientiallabs.ai.evil.test/v1", "custom"),
+            ("https://inference.runanywhere.ai/v1", "runanywhere"),
+            ("https://inference.runanywhere.ai/v1/chat/completions", "runanywhere"),
+            ("https://runanywhere.ai/v1", "custom"),
+            ("https://console.runanywhere.ai/v1", "custom"),
+            ("https://inference.runanywhere.ai.evil.test/v1", "custom"),
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
@@ -7144,7 +7157,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 124);
+        assert_eq!(list_providers().len(), 125);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
