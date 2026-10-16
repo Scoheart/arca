@@ -1,18 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-  <!-- The Delta character, scaled up to fill the vertical space better -->
-  <!-- Adjusted y-position so it balances perfectly with the lines below it -->
-  <text x="12" y="15" text-anchor="middle" font-size="16"
-        font-family="Georgia, 'Times New Roman', serif"
-        font-style="italic" fill="currentColor">δ</text>
-        
-  <!-- The subtle background underline (Width spans almost the full 24px box now) -->
-  <line x1="2" y1="21" x2="22" y2="21" stroke="currentColor" stroke-opacity="0.4"
-        stroke-width="1.5" stroke-linecap="round"/>
-        
-  <!-- The vertical agent indicator line -->
-  <line x1="12" y1="21" x2="12" y2="18" stroke="currentColor"
-        stroke-width="1.5" stroke-linecap="round"/>
-        
-  <!-- The glowing agent dot -->
-  <circle cx="12" cy="17.5" r="1" fill="currentColor"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><text x="12" y="15" fill="currentColor" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" text-anchor="middle">δ</text><line x1="2" x2="22" y1="21" y2="21" stroke="currentColor" stroke-linecap="round" stroke-opacity=".4" stroke-width="1.5"/><line x1="12" x2="12" y1="21" y2="18" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><circle cx="12" cy="17.5" r="1" fill="currentColor"/></svg>
