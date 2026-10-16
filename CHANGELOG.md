@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.0](https://github.com/Scoheart/arca/compare/v2.3.2...v2.4.0) (2026-10-16)
+
+### Changes
+
+* feat(agents): add MCP Apps client and framework guide entries ([226aed1](https://github.com/Scoheart/arca/commit/226aed146fb5e199f01b476c89d79cb2038b4197))
+
 ## [2.3.2](https://github.com/Scoheart/arca/compare/v2.3.1...v2.3.2) (2026-10-16)
 
 ### Changes
