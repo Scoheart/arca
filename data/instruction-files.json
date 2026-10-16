@@ -449,7 +449,12 @@
       },
       "fallback_sources": [
         1
-      ]
+      ],
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
     },
     {
       "agent_ids": [

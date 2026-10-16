@@ -13,6 +13,47 @@ impl Drop for NativeEnv {
 }
 
 #[test]
+fn opencode_initialization_is_explicit_for_cli_and_desktop() {
+    for agent in ["opencode", "opencode-desktop"] {
+        let home = TestHome::new("opencode-instructions-create");
+        let directory = home.home.join(".config/opencode");
+        let _native_root = NativeEnv::set("OPENCODE_CONFIG_DIR", &directory);
+        let target = directory.join("AGENTS.md");
+        let inventory = instructions::list(agent).unwrap();
+        assert!(inventory.complete);
+        assert_eq!(inventory.create.as_ref().unwrap().path, target.to_string_lossy());
+        assert!(!directory.exists());
+        let plan = instructions::prepare_create(agent, &inventory.revision, "My global instructions\n").unwrap();
+        assert!(!directory.exists());
+        let saved = instructions::commit(&plan.operation_id, &plan.candidate_hash).unwrap();
+        assert_eq!(saved.text, "My global instructions\n");
+        assert_eq!(fs::read_to_string(&target).unwrap(), "My global instructions\n");
+        assert!(instructions::list(agent).unwrap().create.is_none());
+        assert!(!home.home.join(".claude").exists());
+    }
+}
+
+#[test]
+fn opencode_creation_uses_selected_directory_and_preserves_compatibility_files() {
+    let home = TestHome::new("opencode-instructions-selected");
+    let native = home.home.join(".config/opencode");
+    let _native_root = NativeEnv::set("OPENCODE_CONFIG_DIR", &native);
+    let config = instructions::get_paths("opencode").unwrap();
+    instructions::set_paths("opencode", &config.revision, vec![InstructionPathUpdate { id: "global".into(), path: Some("~/selected-opencode".into()) }]).unwrap();
+    let inventory = instructions::list("opencode").unwrap();
+    assert_eq!(inventory.create.as_ref().unwrap().path, home.home.join("selected-opencode/AGENTS.md").to_string_lossy());
+    let plan = instructions::prepare_create("opencode", &inventory.revision, "New content\n").unwrap();
+    let fallback = home.home.join(".claude/CLAUDE.md");
+    fs::create_dir_all(fallback.parent().unwrap()).unwrap();
+    fs::write(&fallback, "Existing compatibility instructions").unwrap();
+    assert!(instructions::commit(&plan.operation_id, &plan.candidate_hash).is_err());
+    assert!(instructions::list("opencode").unwrap().create.is_none());
+    assert_eq!(fs::read_to_string(&fallback).unwrap(), "Existing compatibility instructions");
+    assert!(!home.home.join("selected-opencode").exists());
+    assert!(!native.exists());
+}
+
+#[test]
 fn directory_preferences_select_files_without_migration_and_reject_stale_edits() {
     let home = TestHome::new("instructions-custom-directory");
     let _native_root = NativeEnv::set("CODEX_HOME", &home.home.join(".codex"));

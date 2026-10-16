@@ -28,6 +28,8 @@ Only a complete scan with no existing supported fixed file, rule file or compati
 
 Arca creates one verified native entry point, never a set of optional files. For Codex it creates ordinary `AGENTS.md`, not a higher-priority override. For supported context filename settings, it resolves the native configured name. A file appearing before commit blocks initialization; ordinary Save never turns into Create after an external deletion.
 
+OpenCode CLI and Desktop can explicitly create `AGENTS.md` in their selected global Instructions directory (native default `~/.config/opencode`). Existing global or Claude-compatibility files suppress initialization; a compatibility file appearing during preparation blocks the commit and is preserved. Viewing the page and opening the creation editor leave files and directories unchanged.
+
 Unreadable paths, symlinks, incomplete scans, unknown roots or launcher profiles are not treated as absence. Products without a complete initialization contract remain guided rather than receiving guessed files. Cursor / TRAE / IBM Bob Markdown candidates are inspection-only pending a precise native format contract. OpenHands Skills are not flattened into a Prompt editor.
 
 ## Saving and recovery
