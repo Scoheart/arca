@@ -182,6 +182,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "codecraft"
         | "beatapi"
         | "experiential-labs"
+        | "runanywhere"
         | "clean-apis"
         | "dolphin"
         | "iteracompute"
@@ -826,6 +827,7 @@ mod tests {
         "codecraft",
         "beatapi",
         "experiential-labs",
+        "runanywhere",
         "clean-apis",
         "dolphin",
         "iteracompute",

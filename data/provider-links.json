@@ -272,6 +272,13 @@
       "kind": "api-key"
     }
   },
+  "runanywhere": {
+    "docs_url": "https://docs.runanywhere.ai/wally-cloud/api",
+    "portal": {
+      "url": "https://console.runanywhere.ai",
+      "kind": "console"
+    }
+  },
   "clean-apis": {
     "docs_url": "https://cleanapis.com/docs/getting-started",
     "portal": {
