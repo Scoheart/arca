@@ -191,6 +191,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "ppq"
         | "river"
         | "trustedrouter"
+        | "unorouter"
         | "unisound"
         | "mistral"
         | "deepseek"
@@ -834,6 +835,7 @@ mod tests {
         "ppq",
         "river",
         "trustedrouter",
+        "unorouter",
         "unisound",
         "mistral",
         "deepseek",
