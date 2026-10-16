@@ -1,8 +1,8 @@
 export const traceZhCN = {
-  title: "Agent Trace", subtitle: "本地会话、工具输入与原始返回", open: "Trace", local: "只读 · 仅本机 · 常见凭据脱敏",
+  title: "Agent Trace", subtitle: "回看对话，展开每一步工具调用", open: "Trace", local: "只读 · 仅本机 · 常见凭据脱敏",
   refresh: "刷新", import: "导入 JSON / JSONL", export: "导出当前记录", exported: "Trace 记录已导出。", copied: "原始记录已复制。",
   allSources: "全部 Agent", imported: "导入记录", unsupported: "当前 Agent：仅支持导入", unsupportedHint: "当前 Agent 尚无自动发现适配器，可导入其导出的 JSON / JSONL；通用格式保留原始事件，不猜测工具配对。",
-  sessionSearch: "搜索会话、项目或路径", eventSearch: "搜索已加载记录的摘要或调用 ID", sessions: "会话", records: "记录", loaded: "已加载 {{count}} 条",
+  sessionSearch: "搜索会话或项目", eventSearch: "搜索已加载的对话与工具", sessions: "会话", records: "记录", loaded: "已加载 {{count}} 条",
   emptySessions: "未发现会话。可选择其他 Agent，或导入导出的 JSON / JSONL。", chooseSession: "选择会话后查看对话和工具轨迹。",
   emptyEvents: "当前页没有符合筛选的记录。可清空筛选，或继续加载后续记录。", chooseEvent: "选择一条消息或工具调用，查看完整正文和原始 JSON。",
   loading: "正在读取…", loadMore: "加载后续记录", finished: "已读到文件末尾", stopped: "读取在此停止，请查看下方说明", reload: "重新加载会话", all: "全部记录", user: "用户", assistant: "助理", tools: "工具", event: "其他事件",
@@ -10,13 +10,14 @@ export const traceZhCN = {
   noText: "这条记录没有文本正文，请查看原始 JSON。", noResponse: "未找到配对返回", counts: "{{count}} 个会话", source: "来源", bytes: "{{count}} 字节",
   sourceHint: "Pi / Codex / Claude Code 按 JSONL 分页；Gemini 重建本地会话文档。通用导入只展示原始事件。",
   privacyHint: "不上传、不执行日志内容、不修改 Agent 会话。系统与内部推理条目省略；凭据脱敏不是完整隐私审计。Pi 原始时间线包含分支，ID / parentId 保留在 JSON 中。",
-  previewHint: "搜索只覆盖已加载摘要；完整输入、返回和元数据在右侧按需读取。", generic: "通用格式", rawHint: "保留原始数据结构；仅常见凭据脱敏，系统与推理字段不展示。",
+  previewHint: "搜索当前已加载内容 · 展开工具查看输入与返回", generic: "通用格式", rawHint: "保留原始数据结构；仅常见凭据脱敏，系统与推理字段不展示。",
+  conversation: "对话", you: "你", input: "输入", output: "返回", returned: "已返回", readFull: "读取完整消息", copyText: "复制正文", textCopied: "正文已复制。", inspect: "查看原始记录", imageAttachment: "图片附件", detailUnavailable: "记录暂时不可用，请重新展开或刷新会话。",
 };
 export const traceEnUS: Record<keyof typeof traceZhCN, string> = {
-  title: "Agent Trace", subtitle: "Local conversations, tool inputs and original results", open: "Trace", local: "Read-only · local · common credentials redacted",
+  title: "Agent Trace", subtitle: "Revisit conversations and explore every tool call", open: "Trace", local: "Read-only · local · common credentials redacted",
   refresh: "Refresh", import: "Import JSON / JSONL", export: "Export selected record", exported: "Trace record exported.", copied: "Original record copied.",
   allSources: "All agents", imported: "Imported records", unsupported: "Current agent: import only", unsupportedHint: "This agent has no automatic discovery adapter yet. Import an exported JSON / JSONL file; generic events remain raw without guessed tool pairing.",
-  sessionSearch: "Search sessions, projects or paths", eventSearch: "Search loaded previews or call IDs", sessions: "Sessions", records: "Records", loaded: "{{count}} loaded",
+  sessionSearch: "Search sessions or projects", eventSearch: "Search loaded conversations and tools", sessions: "Sessions", records: "Records", loaded: "{{count}} loaded",
   emptySessions: "No sessions found. Select another agent or import exported JSON / JSONL.", chooseSession: "Select a session to inspect its conversation and tool trace.",
   emptyEvents: "No matching events on this page. Clear filters or load subsequent records.", chooseEvent: "Select a message or tool call to inspect its full text and original JSON.",
   loading: "Reading…", loadMore: "Load subsequent records", finished: "End of file", stopped: "Reading stopped here; see the warning below", reload: "Reload session", all: "All records", user: "User", assistant: "Assistant", tools: "Tools", event: "Other events",
@@ -24,5 +25,6 @@ export const traceEnUS: Record<keyof typeof traceZhCN, string> = {
   noText: "This record has no text body. Inspect the original JSON.", noResponse: "No paired result found", counts: "{{count}} sessions", source: "Source", bytes: "{{count}} bytes",
   sourceHint: "Pi / Codex / Claude Code JSONL files are paginated; Gemini journals are reconstructed locally. Generic imports show original events.",
   privacyHint: "No uploads, execution of log content or changes to agent sessions. System and internal reasoning records are omitted; credential redaction is not a full privacy audit. Pi timelines include branches; IDs / parentId remain in JSON.",
-  previewHint: "Search covers loaded previews only; full inputs, outputs and metadata are fetched on demand in the detail pane.", generic: "Generic format", rawHint: "Original structures are preserved with common credentials redacted; system and reasoning fields are omitted.",
+  previewHint: "Search loaded content · Expand tools to inspect inputs and results", generic: "Generic format", rawHint: "Original structures are preserved with common credentials redacted; system and reasoning fields are omitted.",
+  conversation: "Conversation", you: "You", input: "Input", output: "Result", returned: "Completed", readFull: "Read full message", copyText: "Copy text", textCopied: "Message copied.", inspect: "Inspect record", imageAttachment: "Image attachment", detailUnavailable: "Record unavailable. Expand it again or refresh the session.",
 };

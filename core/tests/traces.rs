@@ -27,6 +27,7 @@ fn pi_keeps_full_tool_inputs_results_and_redacts_password_context() {
     assert_eq!(detail.raw["arguments"]["text"], "[密码已脱敏]");
     assert_eq!(detail.raw["arguments"]["extra"]["preserved"], true);
     assert_eq!(detail.related[0].raw["message"]["details"]["kept"], 123);
+    assert_eq!(detail.related[0].text, "original returned data");
     assert!(detail.related[0].raw["message"]["isError"].as_bool().unwrap());
     let output = serde_json::to_string(&detail).unwrap();
     assert!(!output.contains("739182"));
@@ -36,6 +37,28 @@ fn pi_keeps_full_tool_inputs_results_and_redacts_password_context() {
     let exported = home.home.join("export.json");
     traces::export_detail(&session.id, &call.id, &page.revision, &exported).unwrap();
     #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; assert_eq!(fs::metadata(exported).unwrap().permissions().mode() & 0o777, 0o600); }
+}
+#[test]
+fn inline_conversation_obeys_utf8_page_budgets_and_redacts_before_slicing() {
+    let home = TestHome::new("trace-inline");
+    let file = home.home.join(".pi/agent/sessions/project/session.jsonl");
+    let secret = "synthetic-inline-secret";
+    let text = format!("{}{}🧰", "对".repeat(10920), secret);
+    let mut records = vec![json!({"type":"session","id":"inline"})];
+    for _ in 0..58 { records.push(json!({"type":"message","message":{"role":"assistant","content":text}})); }
+    records.push(json!({"type":"message","message":{"role":"assistant","content":[{"type":"toolCall","id":"s","name":"fixture","arguments":{"api_key":secret}}]}}));
+    jsonl(&file, &records);
+    let session = traces::index().unwrap().sessions.into_iter().find(|s| s.format == "pi").unwrap();
+    let page = traces::page(&session.id, None).unwrap();
+    let bodies: Vec<_> = page.events.iter().filter_map(|e| e.text.as_deref()).collect();
+    assert!(bodies.iter().all(|text| text.len() <= 32 * 1024));
+    assert!(bodies.iter().map(|text| text.len()).sum::<usize>() <= 512 * 1024);
+    assert!(page.events.iter().any(|e| e.text_truncated));
+    assert!(!serde_json::to_string(&page).unwrap().contains(secret));
+    let first = &page.events[0];
+    let full = traces::detail(&session.id, &first.id, &page.revision).unwrap();
+    assert!(!full.text.contains(secret));
+    assert!(full.text.ends_with('🧰'));
 }
 #[test]
 fn codex_paginates_without_mirrored_messages_or_reasoning() {

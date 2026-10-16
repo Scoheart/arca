@@ -30,6 +30,7 @@ pub(super) struct Worker {
     child: Child,
     issue: Arc<Mutex<Option<Issue>>>,
     _lease: fs::File,
+    reaped: bool,
 }
 impl Worker {
     pub fn spawn(mut command: Command, session_id: String, lease: fs::File) -> Result<Self, String> {
@@ -45,7 +46,7 @@ impl Worker {
             std::io::ErrorKind::PermissionDenied => "capture_engine_permission: 抓包引擎无法执行，请检查文件权限。".to_owned(),
             _ => "capture_engine_spawn: 无法启动抓包引擎，请检查 mitmproxy 安装。".to_owned(),
         })?;
-        let mut worker = Self { session_id, child, issue: Arc::new(Mutex::new(None)), _lease: lease };
+        let mut worker = Self { session_id, child, issue: Arc::new(Mutex::new(None)), _lease: lease, reaped: false };
         if let Some(reader) = worker.child.stdout.take() { worker.observe(reader); }
         if let Some(reader) = worker.child.stderr.take() { worker.observe(reader); }
         Ok(worker)
@@ -68,6 +69,16 @@ impl Worker {
         });
     }
     pub fn alive(&mut self) -> Result<bool, String> {
+        if self.reaped { return Ok(false); }
+        #[cfg(any(target_os = "macos", target_os = "linux"))] {
+            use rustix::process::{waitid, Pid, WaitId, WaitIdOptions};
+            let pid = Pid::from_raw(self.child.id() as i32).ok_or("抓包引擎进程标识无效。")?;
+            // Keep an exited leader waitable until its owned group is cleaned.
+            // Reaping it here frees its PID and loses safe group ownership.
+            return waitid(WaitId::Pid(pid), WaitIdOptions::EXITED | WaitIdOptions::NOHANG | WaitIdOptions::NOWAIT)
+                .map(|status| status.is_none()).map_err(|_| "无法查询抓包引擎进程。".to_owned());
+        }
+        #[cfg(not(any(target_os = "macos", target_os = "linux")))]
         self.child.try_wait().map(|status| status.is_none()).map_err(|_| "无法查询抓包引擎进程。".to_owned())
     }
     pub fn error(&self, fallback: &str) -> String {
@@ -110,23 +121,72 @@ impl Worker {
             if Instant::now() >= until { return self.terminate(); }
             std::thread::sleep(Duration::from_millis(100));
         }
-        Ok(())
+        self.terminate()
     }
     fn terminate(&mut self) -> Result<(), String> {
-        if !self.alive()? { return Ok(()); }
+        if self.reaped { return Ok(()); }
         #[cfg(unix)] {
             // Packaged engines may have a bootloader plus Python child. Both
             // belong to the dedicated group created above, never an Agent's.
             if let Some(pid) = rustix::process::Pid::from_raw(self.child.id() as i32) {
+                #[cfg(any(target_os = "macos", target_os = "linux"))]
+                // The unreaped child reserves this PID even after it exits.
+                // Its group can still contain a bootloader/helper holding flock.
+                match rustix::process::kill_process_group(pid, rustix::process::Signal::KILL) {
+                    Ok(()) | Err(rustix::io::Errno::SRCH) => {}
+                    Err(_) => return Err("无法清理抓包引擎的辅助进程。".into()),
+                }
+                #[cfg(not(any(target_os = "macos", target_os = "linux")))]
                 if rustix::process::getpgid(Some(pid)).is_ok_and(|group| group == pid) {
                     let _ = rustix::process::kill_process_group(pid, rustix::process::Signal::KILL);
                 }
             }
         }
         if self.alive()? { self.child.kill().map_err(|_| "无法停止抓包引擎。".to_owned())?; }
-        self.child.wait().map(|_| ()).map_err(|_| "无法回收抓包引擎。".to_owned())
+        self.child.wait().map_err(|_| "无法回收抓包引擎。".to_owned())?;
+        self.reaped = true;
+        Ok(())
     }
 }
 impl Drop for Worker {
-    fn drop(&mut self) { let _ = self.terminate(); }
+    fn drop(&mut self) {
+        if self.terminate().is_ok() {
+            // Inherited descriptors refer to the same flock description.
+            // A helper must not keep a completed/failed worker's lease alive.
+            let _ = fs2::FileExt::unlock(&self._lease);
+        }
+    }
+}
+
+#[cfg(all(test, any(target_os = "macos", target_os = "linux")))]
+mod tests {
+    use super::*;
+    use fs2::FileExt;
+    use std::os::unix::process::CommandExt;
+
+    #[test]
+    fn exited_leader_does_not_leave_its_helper_or_lease_behind() {
+        let home = crate::testenv::TestHome::new("capture-worker-lease");
+        let path = home.home.join("engine.lock");
+        let lease = fs::OpenOptions::new().create(true).read(true).write(true).open(&path).unwrap();
+        lease.try_lock_exclusive().unwrap();
+        let mut unrelated = Command::new("sleep").arg("30").process_group(0).spawn().unwrap();
+        let mut command = Command::new("sh");
+        command.args(["-c", "sleep 30 & exit 0"]);
+        let mut worker = Worker::spawn(command, "fixture".into(), lease).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while worker.alive().unwrap() {
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        let contender = fs::OpenOptions::new().read(true).write(true).open(path).unwrap();
+        assert_eq!(contender.try_lock_exclusive().unwrap_err().kind(), std::io::ErrorKind::WouldBlock);
+        drop(worker);
+        let acquired = contender.try_lock_exclusive();
+        let unrelated_alive = unrelated.try_wait().unwrap().is_none();
+        if unrelated_alive { unrelated.kill().unwrap(); }
+        unrelated.wait().unwrap();
+        assert!(acquired.is_ok(), "helper retained a finished worker's lease");
+        assert!(unrelated_alive, "cleanup touched an unrelated process group");
+    }
 }

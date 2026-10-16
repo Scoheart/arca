@@ -409,9 +409,9 @@ Agent labels use the actual application name, or the official CLI/plugin product
 
 顶部「Trace」或 Agent 详情页的「Trace」按钮打开只读会话工作台。它与「网络 → Agent 抓包」不同：直接读取已有会话文件，不拦截流量、启动 Agent 或修改原始日志。
 
-自动发现 Pi、Codex CLI / ChatGPT、Claude Code 和 Gemini CLI 的默认用户级会话目录。左侧按 Agent、项目和路径查找会话，中间按页查看用户、助理、工具与其他事件，右侧按需读取完整正文、原始调用 JSON 和按调用 ID 配对的返回 JSON。复制与导出当前记录均保留原始结构及元数据，仅常见凭据脱敏。
+自动发现 Pi、Codex CLI / ChatGPT、Claude Code 和 Gemini CLI 的默认用户级会话目录。左侧按 Agent、项目和路径查找会话，右侧以对话形态阅读：用户靠右、Agent 靠左，Markdown 正文直接展示，工具调用展开查看完整输入与按原生 ID 配对的返回。原始 JSON 在独立查看器中按需读取。复制正文与复制 / 导出原始记录分别提供，原始记录保留结构及元数据，仅常见凭据脱敏。
 
-其他 Agent 可选择其导出的 JSON / JSONL 文件导入；导入只登记本次 Arca 进程内的只读文件引用，不复制到中央资产库。无法识别的格式显示通用原始事件，不猜测角色或工具配对。搜索只覆盖已加载记录的摘要，不是全文 / 全历史搜索。
+其他 Agent 可选择其导出的 JSON / JSONL 文件导入；导入只登记本次 Arca 进程内的只读文件引用，不复制到中央资产库。无法识别的格式显示通用原始事件，不猜测角色或工具配对。搜索覆盖当前已加载的正文、摘要及调用 ID，不扫描未加载历史或工具的完整原始数据。
 
 系统与内部推理条目不展示。Pi 时间线包含历史分支，原始 ID / parentId 保留。JSONL 单条记录上限 8 MiB，按 60 条原始记录分页；JSON / Gemini 文档上限 32 MiB。文件变化、无效 JSON、超限和未配对返回明确提示，不静默截断。来源路径和适配器权威在 `data/trace-sources.json` 与 Rust Core。更多边界见 [Agent Trace](docs/agent-traces.md)。
 
@@ -420,7 +420,7 @@ Agent labels use the actual application name, or the official CLI/plugin product
 从 Agent 详情页点击「抓包」进入该 Agent 的工作台。开始记录时直接沿用当前 Agent，弹窗只展示名称，不再重复选择；进程和历史会话也仅展示该 Agent 的记录。
 选择启动新进程或记录已有实例，再指定直连、Arca 已配置的代理或任意无认证 HTTP 上游地址。抓包出口独立于 Arca 自身联网设置，指定代理后失败不回退直连。
 
-依赖本机官方 mitmproxy（`mitmdump`）。首次开始记录会由官方引擎安装并注册 Mitmproxy Redirector，无需运行终端命令；注册前，系统设置的网络扩展列表中可能没有该项。通知条提供「打开授权设置」入口，Arca 自动检测授权状态，批准后继续记录，无需手动刷新，最多等待 3 分钟。已就绪引擎仍使用 12 秒启动上限。Arca 不代替用户批准系统权限。
+依赖本机官方 mitmproxy（`mitmdump`）。首次开始记录会由官方引擎安装并注册 Mitmproxy Redirector，无需运行终端命令；注册前，系统设置的网络扩展列表中可能没有该项。通知条提供「打开授权设置」入口，Arca 自动检测授权状态，批准后继续记录，无需手动刷新，最多等待 3 分钟。已就绪引擎仍使用 12 秒启动上限。Arca 不代替用户批准系统权限。启动失败、停止和引擎意外退出都会清理本次引擎的进程组并释放抓包锁，避免辅助进程继续占用；重复启动会提示等待当前操作结束。若旧版已遗留占用，可先退出旧版再重试；不会通过删除锁文件或结束 Agent 进程绕过占用。
 
 HTTPS 记录还涉及 `~/.mitmproxy/mitmproxy-ca-cert.pem`。Arca 只检查系统信任，不自动安装系统证书。「启动新进程」给支持的运行时传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。设置会区分进程证书、Node / 浏览器混合网络栈和系统信任：Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端的启动和抓包均拒绝执行，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
 

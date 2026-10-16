@@ -20,6 +20,7 @@ pub use targets::{AgentCaptureSupport, CaptureCaScope};
 const ADDON: &str = include_str!("addon.py");
 const MAX_RECORD_BYTES: u64 = 20 * 1024 * 1024;
 static ACTIVE: LazyLock<Mutex<Option<Worker>>> = LazyLock::new(|| Mutex::new(None));
+static STARTING: Mutex<()> = Mutex::new(());
 #[derive(Serialize, Deserialize)]
 struct RuntimeIdentity { owner_pid: u32, owner_start: String, engine_pid: u32, engine_start: String }
 
@@ -263,6 +264,7 @@ pub fn start_fresh(request: StartCapture, directory: Option<&str>) -> Result<Cap
 }
 enum TargetSelection<'a> { Existing, Fresh { directory: Option<&'a str> } }
 fn start_session(request: StartCapture, selection: TargetSelection<'_>) -> Result<CaptureSnapshot, String> {
+    let _starting = STARTING.try_lock().map_err(|_| "capture_starting: 抓包引擎正在启动，请等待本次启动完成。".to_owned())?;
     {
         let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
         if let Some(worker) = active.as_mut() { if worker.alive()? { return Err("capture_busy: 请先停止当前抓包会话。".into()); } }
@@ -326,7 +328,7 @@ fn acquire_lease(name: &str) -> Result<fs::File, String> {
     let lease = options.open(root().join(name)).map_err(|_| "无法安全打开抓包锁。")?;
     if !lease.metadata().is_ok_and(|metadata| metadata.is_file()) { return Err("抓包锁必须是普通文件。".into()); }
     fs2::FileExt::try_lock_exclusive(&lease).map_err(|error| if error.kind() == std::io::ErrorKind::WouldBlock {
-        "capture_busy: 另一个 Arca 实例正在抓包，请先停止该会话。".to_owned()
+        "capture_busy: 抓包引擎仍被占用，请先停止已有记录；若刚才启动失败，请退出旧版 Arca 后重试。".to_owned()
     } else { "capture_lock_failed: 无法锁定抓包引擎。".to_owned() })?;
     Ok(lease)
 }

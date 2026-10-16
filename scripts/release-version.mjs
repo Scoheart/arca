@@ -385,7 +385,11 @@ async function refreshNpmLock(root) {
       );
       if (closureErrors.length === 0) {
         await copyFile(packageLock, join(temporary, "package-lock.json"));
-        rebuild = false;
+        // Feature dependency additions must also use this clean-directory
+        // installer; npm version alone does not synchronize manifest changes.
+        rebuild = ["dependencies", "devDependencies", "optionalDependencies"].some(group =>
+          JSON.stringify(Object.entries(current.packages?.[""]?.[group] ?? {}).sort())
+          !== JSON.stringify(Object.entries(manifest[group] ?? {}).sort()));
       } else {
         console.warn(
           `Rebuilding a portable desktop lockfile because ${closureErrors.length} dependency entry or entries are missing.`,
