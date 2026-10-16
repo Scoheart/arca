@@ -38,7 +38,9 @@ arca capture state SESSION_ID --json
 
 Continue with the returned cursor and use that page's revision for details. Capture's incremental cache avoids reparsing unchanged history.
 
-Existing processes cannot receive new CA roots at runtime, and proxy settings or existing connections may bypass capture. Prefer a fresh process after a TLS failure. An unresponsive launcher returns an error after 10 seconds; an engine that is not ready stops after 12 seconds and preserves a redacted diagnosis. Process capture currently requires macOS, official mitmproxy, and an enabled Mitmproxy Redirector extension.
+On first capture, official mitmproxy installs and registers Mitmproxy Redirector. It may be absent from System Settings before registration. Approve the macOS installation and activation prompts; Arca waits up to three minutes and continues when the engine is ready. After registration, find it under System Settings → General → Login Items & Extensions → Network Extensions.
+
+Existing processes cannot receive new CA roots at runtime, and proxy settings or existing connections may bypass capture. Prefer a fresh process after a TLS failure. An unresponsive launcher returns an error after 10 seconds; ordinary engine startup with an initialized extension retains its 12-second limit and preserves a redacted diagnosis on failure. Process capture currently requires macOS and official mitmproxy. System permissions still require user approval.
 
 ## Content and redaction
 

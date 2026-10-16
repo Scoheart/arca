@@ -74,25 +74,31 @@ impl Worker {
         self.issue.lock().ok().and_then(|value| *value)
             .map(|issue| format!("{}: {}", issue.code, issue.message)).unwrap_or_else(|| fallback.to_owned())
     }
-    pub fn ready(&mut self, directory: &Path) -> Result<(), String> {
+    pub fn ready(&mut self, directory: &Path, awaiting_extension_approval: bool) -> Result<(), String> {
         let identity = RuntimeIdentity {
             owner_pid: std::process::id(), owner_start: process_start(std::process::id()).ok_or("无法核验抓包所有者进程。")?,
             engine_pid: self.child.id(), engine_start: process_start(self.child.id()).ok_or("capture_engine_exit: 引擎在初始化时退出。")?,
         };
         private_write(&directory.join("runtime.json"), &serde_json::to_vec(&identity).map_err(|_| "无法保存抓包进程标识。")?)?;
-        let until = Instant::now() + Duration::from_secs(12);
+        // First launch may need a human to approve the official system
+        // extension. Keep ordinary engine startup bounded to twelve seconds.
+        let until = Instant::now() + Duration::from_secs(if awaiting_extension_approval { 180 } else { 12 });
         loop {
             if !self.alive()? {
                 // Let the pipe observers consume the last diagnostic chunk.
                 std::thread::sleep(Duration::from_millis(30));
-                return Err(self.error("capture_engine_exit: 抓包引擎在就绪前退出，请检查 mitmproxy 安装与网络扩展。"));
+                return Err(self.error(if awaiting_extension_approval {
+                    "capture_extension_setup_failed: 官方网络扩展初始化未完成。请检查 macOS 的安装或授权提示，完成后重试。"
+                } else { "capture_engine_exit: 抓包引擎在就绪前退出，请检查 mitmproxy 安装与网络扩展。" }));
             }
             if let Ok(status) = read_json::<CaptureState>(&directory.join("status.json")) {
                 if status.state == "running" { return Ok(()); }
                 if status.state == "failed" { return Err(status.message); }
             }
             if Instant::now() >= until {
-                return Err(self.error("capture_engine_timeout: 抓包引擎未在 12 秒内就绪，本次记录已停止。"));
+                return Err(self.error(if awaiting_extension_approval {
+                    "capture_extension_setup_pending: 未在 3 分钟内完成网络扩展初始化，本次记录已停止。请完成 macOS 的安装与授权后重试。"
+                } else { "capture_engine_timeout: 抓包引擎未在 12 秒内就绪，本次记录已停止。" }));
             }
             std::thread::sleep(Duration::from_millis(100));
         }

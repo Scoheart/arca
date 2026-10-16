@@ -272,7 +272,10 @@ fn start_session(request: StartCapture, selection: TargetSelection<'_>) -> Resul
     let lease = acquire_lease(".engine.lock")?;
     let env = environment();
     if !env.supported { return Err("按应用抓包仅支持 macOS。".into()); }
-    if !env.extension_enabled { return Err("请在系统设置的登录项与扩展中启用 Mitmproxy Redirector 网络扩展。".into()); }
+    // Official local capture installs and activates the Redirector on first
+    // startup. Requiring it here prevents that installation from ever running.
+    // Engine readiness remains mandatory before we report a running session.
+    let awaiting_extension_approval = !env.extension_enabled;
     let engine = env.engine.ok_or("未找到 mitmdump，请先安装官方 mitmproxy。")?;
     if !env.certificate_trusted && env.agents.iter().any(|agent| agent.agent_id == request.agent_id && agent.ca_scope == CaptureCaScope::System) {
         return Err("capture_system_ca_required: 请先让系统信任抓包 CA，再记录此桌面客户端；否则会中断其 HTTPS 请求。".into());
@@ -305,7 +308,7 @@ fn start_session(request: StartCapture, selection: TargetSelection<'_>) -> Resul
     command.args(["-q", "--server", "--no-ssl-insecure", "--no-rawtcp", "--no-store-streamed-bodies", "--mode", &format!("local:{}", session.pids.iter().map(u32::to_string).collect::<Vec<_>>().join(",")), "--set", "connection_strategy=lazy", "--set", "upstream_cert=false", "-s"]).arg(directory.join("addon.py")).env("ARCA_CAPTURE_DIR", &directory).env("ARCA_CAPTURE_OWNER", owner).env("ARCA_CAPTURE_OWNER_START", &owner_start);
     let worker: Result<Worker, String> = (|| {
         let mut worker = Worker::spawn(command, session.id.clone(), lease)?;
-        worker.ready(&directory)?;
+        worker.ready(&directory, awaiting_extension_approval)?;
         Ok(worker)
     })();
     let worker = match worker {

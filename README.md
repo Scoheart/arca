@@ -420,7 +420,9 @@ Agent labels use the actual application name, or the official CLI/plugin product
 从 Agent 详情页点击「抓包」进入该 Agent 的工作台。开始记录时直接沿用当前 Agent，弹窗只展示名称，不再重复选择；进程和历史会话也仅展示该 Agent 的记录。
 选择启动新进程或记录已有实例，再指定直连、Arca 已配置的代理或任意无认证 HTTP 上游地址。抓包出口独立于 Arca 自身联网设置，指定代理后失败不回退直连。
 
-依赖本机官方 mitmproxy（`mitmdump`）。在系统设置「通用 → 登录项与扩展」启用 Mitmproxy Redirector 网络扩展，客户端还需信任 `~/.mitmproxy/mitmproxy-ca-cert.pem`。Arca 只检查系统信任，不自动安装证书或批准系统权限。「追加 CA 启动」给新进程传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。设置会区分进程证书、Node / 浏览器混合网络栈和系统信任：Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端的启动和抓包均拒绝执行，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
+依赖本机官方 mitmproxy（`mitmdump`）。首次开始记录会由官方引擎安装并注册 Mitmproxy Redirector；注册前，系统设置的网络扩展列表中可能没有该项。按 macOS 提示批准安装与启用后会自动继续，最多等待 3 分钟；已就绪引擎仍使用 12 秒启动上限。注册后可在系统设置「通用 → 登录项与扩展 → 网络扩展」查看。Arca 不代替用户批准系统权限。
+
+HTTPS 记录还涉及 `~/.mitmproxy/mitmproxy-ca-cert.pem`。Arca 只检查系统信任，不自动安装系统证书。「启动新进程」给支持的运行时传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。设置会区分进程证书、Node / 浏览器混合网络栈和系统信任：Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端的启动和抓包均拒绝执行，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
 
 按实际 launcher 和可执行文件识别 Cursor、Grok Build、Qoder IDE/Desktop、Codex CLI/Desktop、Pi、Qoder CLI、OpenCode CLI/Desktop、QwenWork、QwenWorkCN 与 QoderWork。桌面应用可选择整个应用或独立顶层 PID 实例；CLI 实例也使用 PID 与启动时间绑定，跟踪其后代。Node/Bun 按脚本路径、已核验的包入口或 Pi 的进程标题识别，不会捕获所有 Node 进程。适配记录和「可启动」不代表该产品已经完成真实请求验证；未安装的客户端没有可选择的进程。
 

@@ -63,6 +63,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   const [format, setFormat] = useState<'body' | 'headers' | 'parameters' | 'raw'>('body');
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [awaitingExtension, setAwaitingExtension] = useState(false);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState('');
   const [treeWidth, setTreeWidth] = useState(205);
@@ -161,7 +162,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   };
   const needsSystemCa = support?.ca_scope === 'system' && !environment?.certificate_trusted;
   const prerequisite = loading ? '正在检测抓包环境…' : !environment?.supported ? '当前仅支持 macOS 按进程抓包。'
-    : !environment.engine ? '请先安装官方 mitmproxy。' : !environment.extension_enabled ? '请在系统设置中启用 Mitmproxy Redirector 网络扩展。'
+    : !environment.engine ? '请先安装官方 mitmproxy。'
     : needsSystemCa ? '此客户端需要系统信任抓包证书后才能记录 HTTPS。'
     : launchMode === 'fresh' && !support ? '此 Agent 尚未支持自动启动，请选择运行中的进程。'
     : launchMode === 'fresh' && !support?.available ? '请先安装 Agent 或配置它的启动方式。'
@@ -169,8 +170,11 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   const canStart = !prerequisite && agentId && !active && !busy && (egress !== 'custom' || proxy.trim());
   const start = () => perform(async () => {
     const generation = ++epoch.current; revision.current = null; setFlowId(''); setFlow(null);
-    const current = await captureStart({ agent_id: agentId, target_id: targetId, egress, proxy_url: egress === 'custom' ? proxy : null }, { launch: launchMode === 'fresh', directory: directory.trim() || undefined });
-    if (generation === epoch.current) { setSnapshot(current); setTargetId(current.session.target_id); setSettingsOpen(false); await refresh(); }
+    setAwaitingExtension(!environment?.extension_enabled);
+    try {
+      const current = await captureStart({ agent_id: agentId, target_id: targetId, egress, proxy_url: egress === 'custom' ? proxy : null }, { launch: launchMode === 'fresh', directory: directory.trim() || undefined });
+      if (generation === epoch.current) { setSnapshot(current); setTargetId(current.session.target_id); setSettingsOpen(false); await refresh(); }
+    } finally { setAwaitingExtension(false); }
   });
   const message = tab === 'request' || tab === 'response' ? flow?.[tab] : undefined;
   const content = format === 'headers' ? message?.headers.map(([key, value]) => `${key}: ${value}`).join('\n') ?? '' : format === 'parameters' && flow ? address(flow.url, true).parameters.map(([key, value]) => `${key}: ${value}`).join('\n') : message?.body ?? '';
@@ -194,6 +198,8 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
       <button className="capture-button" title="导出脱敏会话 JSON" aria-label="导出会话" disabled={!snapshot || busy} onClick={() => void perform(async () => { if (snapshot && await captureExport(snapshot.session.id)) toast.show({ kind: 'success', msg: '会话已导出。' }); })}><DownloadIcon className="w-4 h-4" /></button>
     </div>
     <ToastNotice message={failure} />
+    <ToastNotice kind="info" noticeKey="capture-extension-setup" persistent message={awaitingExtension
+      ? '正在请求官方网络扩展安装与授权。请按 macOS 提示允许 Mitmproxy Redirector；批准后会自动继续记录，最多等待 3 分钟。' : null} />
     <div className="capture-workbench" data-navigation={navigation} ref={workbench}>
       {navigation === 'structure' && <><aside className="capture-tree" aria-label="按主机和路径分组"><div className="capture-pane-title">Structure <small>{tree.length} hosts</small></div>
         {tree.length ? tree.map(node => <TreeNode key={node.path} node={node} selected={flowId} onSelect={setFlowId} />) : <div className="capture-empty">尚无请求</div>}</aside>
@@ -237,14 +243,15 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
     <footer className="capture-statusbar"><span>{snapshot ? `${snapshot.session.target_name} · ${snapshot.session.pids.length} 个初始进程` : '仅记录当前 Agent 及其辅助进程'}{snapshot?.session.proxy_url ? ` · ${snapshot.session.proxy_url}` : snapshot ? ' · 直连' : ''}</span><span>{snapshot?.status.message || `${snapshot?.flows.length ?? 0} requests · 本机脱敏记录`}</span></footer>
     {settingsOpen && <DialogShell kind="editor" size="wide" className="capture-settings" title="开始网络记录" subtitle="只记录当前 Agent 及其辅助进程" busy={busy} onClose={() => setSettingsOpen(false)}
       footerStart={<span className="capture-setting-note">本机脱敏保存 · 单条正文 2 MiB</span>}
-      footerEnd={<><button className="btn-secondary" onClick={() => setSettingsOpen(false)} disabled={busy}>关闭</button><button className="btn-primary" disabled={!canStart} onClick={() => void start()}>{busy ? '正在准备…' : launchMode === 'fresh' ? '启动并记录' : '开始记录'}</button></>}>
+      footerEnd={<><button className="btn-secondary" onClick={() => setSettingsOpen(false)} disabled={busy}>关闭</button><button className="btn-primary" disabled={!canStart} onClick={() => void start()}>{awaitingExtension ? '等待网络扩展就绪…' : busy ? '正在准备…' : launchMode === 'fresh' ? '启动并记录' : '开始记录'}</button></>}>
       <div className="capture-setting-fields">
         <div className="capture-setup-heading"><AgentGlyph id={agentId} size={28} /><div className="capture-setup-agent"><span>Agent</span><strong title={selectedAgent?.name ?? agentId}>{selectedAgent?.name ?? agentId}</strong></div><button className="capture-button" aria-label="刷新抓包环境" disabled={busy || loading} onClick={() => void perform(async () => { await refresh(); })}><RefreshIcon className="w-4 h-4" />刷新</button></div>
         <div className="capture-launch-modes" aria-label="记录方式"><button aria-pressed={launchMode === 'fresh'} disabled={busy || Boolean(active)} onClick={() => setLaunchMode('fresh')}><strong>启动新进程</strong><span>{support?.ca_scope === 'system' ? '打开独立客户端实例' : '自动追加抓包证书'}</span></button><button aria-pressed={launchMode === 'existing'} disabled={busy || Boolean(active)} onClick={() => setLaunchMode('existing')}><strong>运行中的进程</strong><span>选择已有实例</span></button></div>
         {launchMode === 'existing' ? <><label>目标进程<select value={targetId} disabled={Boolean(active) || busy} onChange={event => setTargetId(event.target.value)}><option value="">{targets.length ? '选择进程' : '未检测到运行进程'}</option>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · {target.pids.length} 个进程</option>)}</select></label>{!environment?.certificate_trusted && support?.ca_scope !== 'system' && <p className="capture-setting-note">已有进程需自行信任抓包证书；遇到 TLS 错误时，请使用“启动新进程”。</p>}</>
           : support?.kind === 'cli' && <label>工作目录<input value={directory} disabled={busy} onChange={event => setDirectory(event.target.value)} placeholder="留空使用 Agent 的默认目录" /></label>}
         <div className="capture-setting-columns"><label>出口<select value={egress} disabled={Boolean(active) || busy} onChange={event => setEgress(event.target.value)}><option value="direct">直连</option><option value="arca" disabled={!arcaProxy}>Arca 代理</option><option value="custom">自定义 HTTP 代理</option></select></label>{egress === 'custom' ? <label>代理地址<input disabled={Boolean(active) || busy} value={proxy} onChange={event => setProxy(event.target.value)} placeholder="http://127.0.0.1:6789" /></label> : <div className="capture-egress-summary"><span>{egress === 'arca' ? arcaProxy : '使用引擎的直连出口'}</span><small>{egress === 'arca' ? '转发失败时保留错误，不回退直连' : '内部环回连接保持原有路由'}</small></div>}</div>
-        <div className="capture-setting-health" aria-label="抓包环境"><span data-ready={Boolean(environment?.engine)}>引擎 {loading ? '检测中' : environment?.engine ? '可用' : '未安装'}</span><span data-ready={Boolean(environment?.extension_enabled)}>网络扩展 {loading ? '检测中' : environment?.extension_enabled ? '已启用' : '未启用'}</span><span data-ready={!needsSystemCa && Boolean(environment)}>证书 {loading ? '检测中' : environment?.certificate_trusted ? '系统已信任' : support?.ca_scope === 'system' ? '需系统信任' : launchMode === 'fresh' ? '随新进程追加' : '需客户端信任'}</span></div>
+        <div className="capture-setting-health" aria-label="抓包环境"><span data-ready={Boolean(environment?.engine)}>引擎 {loading ? '检测中' : environment?.engine ? '可用' : '未安装'}</span><span data-ready={Boolean(environment?.extension_enabled)}>网络扩展 {loading ? '检测中' : environment?.extension_enabled ? '已启用' : '待初始化或授权'}</span><span data-ready={!needsSystemCa && Boolean(environment)}>证书 {loading ? '检测中' : environment?.certificate_trusted ? '系统已信任' : support?.ca_scope === 'system' ? '需系统信任' : launchMode === 'fresh' ? '随新进程追加' : '需客户端信任'}</span></div>
+        {environment?.supported && environment.engine && !environment.extension_enabled && <p className="capture-setting-note">首次开始记录会请求安装和启用 Mitmproxy Redirector。请按系统提示批准；注册后可在系统设置 → 通用 → 登录项与扩展 → 网络扩展中查看。</p>}
         {prerequisite && <p className="capture-setup-feedback" role="status">{prerequisite}</p>}
         {support?.ca_scope === 'mixed' && !environment?.certificate_trusted && <p className="capture-setting-note">浏览器网络栈仍需要系统信任抓包证书，追加证书仅覆盖支持它的运行时。</p>}
         {launchMode === 'existing' && environment?.other_extensions.length ? <p className="capture-setting-note">{environment.other_extensions.join('、')} 也在接管网络；请求为空时，检查目标应用的代理规则和实际发起进程。</p> : null}
