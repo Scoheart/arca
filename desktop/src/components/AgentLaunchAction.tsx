@@ -6,6 +6,7 @@ import { ChevronDownIcon, DownloadIcon, ExternalLinkIcon, FolderIcon, EditIcon, 
 import { useAgentLauncher } from "../lib/agentLauncherContext";
 import { useToast } from "./Toast";
 import installLinks from "../../../data/agent-install-links.json";
+import agentDocsHome from "../../../data/agent-docs-home.json";
 import { useTranslation } from "react-i18next";
 
 export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = false, onChosen, onConfigure }: { agentId: string; contextMenu?: boolean; showLabel?: boolean; onChosen?(): void; onConfigure?(): void }) {
@@ -74,6 +75,16 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
   const openInstallation = () => {
     if (installUrl) void openUrl(installUrl).catch((failure) => show({ kind: "error", msg: formatError(failure) }));
   };
+  // Web clients and frameworks have no native runtime target. Their guide is
+  // useful; asking users to choose an App or CLI entry would create a false one.
+  if (info && !info.kind) {
+    const docsUrl = (agentDocsHome as Record<string, string>)[agentId];
+    if (!docsUrl) return null;
+    return <button type="button" className={contextMenu ? undefined : "btn-secondary"}
+      role={contextMenu ? "menuitem" : undefined} onClick={() => choose(() => {
+        void openUrl(docsUrl).catch((failure) => show({ kind: "error", msg: formatError(failure) }));
+      })}><ExternalLinkIcon className="w-4 h-4" />配置指南</button>;
+  }
   const menu = <>
     {contextMenu && <button type="button" role="menuitem" disabled={busy || (!info && !error) || info?.supported === false} onClick={launch}>
       {missing ? <DownloadIcon className="w-4 h-4" /> : <ExternalLinkIcon className="w-4 h-4" />}{label}</button>}

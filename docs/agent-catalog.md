@@ -6,21 +6,21 @@ Arca deliberately separates client discovery from writable configuration support
 
 | File | Purpose | Current size |
 |---|---|---:|
-| `data/agents.json` | Deep-audited definitions with product-specific MCP and/or Skills capabilities and evidence | 67 |
-| `data/agent-catalog.json` | Discovery-only client records; unknown paths and formats always fail closed | 204 |
+| `data/agents.json` | Deep-audited definitions with product-specific capabilities and evidence | 89 |
+| `data/agent-catalog.json` | Discovery-only client records; unknown paths and formats always fail closed | 251 |
+| `data/agent-catalog-supplements.json` | Reviewed discovery entries, configuration guidance, and source evidence | 11 |
 
-There are 49 overlapping IDs. Audited definitions override directory records, producing 222 distinct retained Agent identities. Of the 67 audited definitions, 52 expose a writable user-level MCP target, ten are Skills-only targets, and Devin, Cline Desktop, and Freebuff remain explicitly read-only. Catalog-only records remain available to the core for future promotion but never gain a writer by inference.
+There are 64 overlapping IDs, producing 276 distinct retained identities as of 2026-10-16. Audited definitions override discovery entries. A retained identity is not necessarily visible: built-in entries require a bundled brand icon. Visibility never grants a writer.
 
 ## Discovery sources
 
-The broad catalog was assembled and cross-checked from:
+The catalog combines [Glama](https://glama.ai/mcp/clients), pinned [ACP Registry](https://github.com/agentclientprotocol/registry) manifests, official supplements, and audited definition names. [MCP client support](https://modelcontextprotocol.io/extensions/client-matrix) and [Docker client documentation](https://docs.docker.com/reference/cli/docker/mcp/client/) provide cross-checks.
 
-1. [Glama MCP clients](https://glama.ai/mcp/clients), used for broad public discovery.
-2. [MCP client feature matrix](https://modelcontextprotocol.io/extensions/client-matrix), used to catch major hosted and desktop clients.
-3. [Docker MCP client support](https://docs.docker.com/reference/cli/docker/mcp/client/), used to cross-check installable desktop/CLI targets.
-4. Official product documentation for supplemental clients absent from the public directory.
+`node scripts/update-agent-catalog.mjs` refreshes network discovery, resolves ACP to one commit, and applies reviewed supplements without promoting them into writable targets. It aborts below 180 catalog entries. A fixed `ARCA_CATALOG_DATE` controls collection dates, not the changing network sources.
 
-`node scripts/update-agent-catalog.mjs` fetches the Glama directory, normalizes known aliases, merges the reviewed official supplements encoded in the script, sorts IDs, and aborts if Glama unexpectedly falls below 150 entries. The MCP matrix and Docker documentation are cross-check sources, not additional runtime fetches. With a fixed `ARCA_CATALOG_DATE`, the output is deterministic. Catalog records have no writable path, no transports, and `format: unknown`.
+`node scripts/update-agent-catalog.mjs --reviewed-only` applies only the reviewed JSON layer, retaining unrelated records and ordering without fetching network discovery. All generated discovery records have null global/project paths, no transports, and `format: unknown`. Their evidence verifies identity and guidance, not a file-writing contract.
+
+See [MCP Apps client coverage](mcp-apps-clients.md) for the 2026-10-16 additions and their management boundaries.
 
 ## Promotion criteria
 

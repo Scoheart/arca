@@ -182,41 +182,62 @@ async function fetchAcpManifests() {
   });
 }
 
-const response = await fetch(SOURCE, { headers: { "user-agent": "arca-agent-catalog/1" } });
-if (!response.ok) throw new Error(`Glama request failed: ${response.status}`);
-const html = await response.text();
-const pattern = /href="\/mcp\/clients\/([^\"]+)"[^>]*>([^<]+)/g;
-const catalog = {};
-for (const match of html.matchAll(pattern)) {
-  const slug = match[1];
-  const id = ALIASES[slug] || slug.toLowerCase();
-  const name = match[2].replaceAll("&amp;", "&").trim();
-  catalog[id] ||= entry(name, `${SOURCE}/${slug}`);
+const here = dirname(fileURLToPath(import.meta.url));
+const reviewed = JSON.parse(await readFile(resolve(here, "../data/agent-catalog-supplements.json"), "utf8"));
+// Refresh reviewed additions without fetching or replacing unrelated discovery
+// records. Full network refreshes apply this same layer before ACP discovery.
+const reviewedOnly = process.argv.includes("--reviewed-only");
+const catalog = reviewedOnly
+  ? JSON.parse(await readFile(resolve(here, "../data/agent-catalog.json"), "utf8"))
+  : {};
+let html = "";
+let acpManifests = [];
+if (!reviewedOnly) {
+  const response = await fetch(SOURCE, { headers: { "user-agent": "arca-agent-catalog/1" } });
+  if (!response.ok) throw new Error(`Glama request failed: ${response.status}`);
+  html = await response.text();
+  const pattern = /href="\/mcp\/clients\/([^\"]+)"[^>]*>([^<]+)/g;
+  for (const match of html.matchAll(pattern)) {
+    const slug = match[1];
+    const id = ALIASES[slug] || slug.toLowerCase();
+    const name = match[2].replaceAll("&amp;", "&").trim();
+    catalog[id] ||= entry(name, `${SOURCE}/${slug}`);
+  }
+
+  for (const [id, [name, docs, category]] of Object.entries(SUPPLEMENTAL)) {
+    catalog[id] = entry(name, docs, category, "official");
+  }
 }
 
-for (const [id, [name, docs, category]] of Object.entries(SUPPLEMENTAL)) {
-  catalog[id] = entry(name, docs, category, "official");
+for (const [id, definition] of Object.entries(reviewed)) {
+  catalog[id] = {
+    ...entry(definition.name, definition.docs, definition.category, definition.evidence ?? "official"),
+    note: definition.note,
+    verified_at: definition.verified_at,
+  };
 }
 
-const acpManifests = await fetchAcpManifests();
-for (const { manifest, manifestUrl } of acpManifests) {
-  const id = ACP_ALIASES[manifest.id] || manifest.id;
-  // A hand-maintained official supplemental entry carries stronger config
-  // evidence than ACP launch metadata and must not be downgraded.
-  if (catalog[id]?.evidence === "official") continue;
-  catalog[id] = acpEntry(manifest, manifestUrl);
+if (!reviewedOnly) {
+  acpManifests = await fetchAcpManifests();
+  for (const { manifest, manifestUrl } of acpManifests) {
+    const id = ACP_ALIASES[manifest.id] || manifest.id;
+    // A hand-maintained official supplemental entry carries stronger config
+    // evidence than ACP launch metadata and must not be downgraded.
+    if (reviewed[id] || catalog[id]?.evidence === "official") continue;
+    catalog[id] = acpEntry(manifest, manifestUrl);
+  }
 }
 
 if (Object.keys(catalog).length < 180) {
   throw new Error(`catalog unexpectedly small: ${Object.keys(catalog).length}`);
 }
 
-const here = dirname(fileURLToPath(import.meta.url));
 const audited = JSON.parse(await readFile(resolve(here, "../data/agents.json"), "utf8"));
 for (const [id, definition] of Object.entries(audited)) {
   if (catalog[id] && definition.name) catalog[id].name = definition.name;
 }
-const sorted = Object.fromEntries(Object.entries(catalog).sort(([a], [b]) => a.localeCompare(b)));
+const sorted = reviewedOnly ? catalog
+  : Object.fromEntries(Object.entries(catalog).sort(([a], [b]) => a.localeCompare(b)));
 await writeFile(resolve(here, "../data/agent-catalog.json"), `${JSON.stringify(sorted, null, 2)}\n`);
 console.log(JSON.stringify({
   entries: Object.keys(sorted).length,

@@ -467,6 +467,7 @@ body {
 .arca-agent-surface-badge[data-agent-surface="desktop"] { background: var(--color-blue); }
 .arca-agent-surface-badge[data-agent-surface="ide"] { background: #7656d6; }
 .arca-agent-surface-badge[data-agent-surface="plugin"] { background: #c47b16; }
+.arca-agent-surface-badge[data-agent-surface="web"] { background: #16856b; }
 .arca-agent-surface-badge > svg { width: 78%; height: 78%; }
 .arca-agent-surface-badge :is(path, rect, circle) {
   stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round;

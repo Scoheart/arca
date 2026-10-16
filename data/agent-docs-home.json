@@ -87,5 +87,16 @@
   "kilo-vscode": "https://github.com/kilo-org/kilocode/blob/76bcfd40be616a72f4697b3041565f322245b462/packages/kilo-vscode/src/kilo-provider/config-file.ts",
   "kiro-cli": "https://kiro.dev/docs/cli/chat/configuration/",
   "mimo-code": "https://github.com/XiaomiMiMo/MiMo-Code/blob/6babeb0b98f9b4818bddf04a4331edfee04dbf85/packages/cli/src/config/config.ts",
-  "kilo-desktop": "https://kilo.ai/docs/desktop/overview"
+  "kilo-desktop": "https://kilo.ai/docs/desktop/overview",
+  "claude-ai": "https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp",
+  "chatgpt": "https://platform.openai.com/docs/guides/developer-mode",
+  "librechat": "https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers",
+  "open-webui": "https://docs.openwebui.com/features/extensibility/mcp/",
+  "postman": "https://learning.postman.com/docs/postman-ai/mcp-requests/overview/",
+  "mcpjam": "https://docs.mcpjam.com/inspector/playground",
+  "mcp-use": "https://mcp-use.com/docs",
+  "mcp-use-inspector": "https://mcp-use.com/docs/inspector",
+  "smithery-playground": "https://smithery.ai/playground",
+  "copilotkit": "https://docs.copilotkit.ai/",
+  "ag-ui": "https://docs.ag-ui.com/"
 }

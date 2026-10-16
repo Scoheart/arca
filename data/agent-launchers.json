@@ -574,5 +574,17 @@
     "candidates": [
       "Kilo"
     ]
+  },
+  "postman": {
+    "kind": "app",
+    "candidates": [
+      "Postman"
+    ]
+  },
+  "mcpjam": {
+    "kind": "app",
+    "candidates": [
+      "MCPJam Inspector"
+    ]
   }
 }

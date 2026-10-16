@@ -4,9 +4,9 @@ import builtinAgents from "../../../data/agents.json";
 import catalogAgents from "../../../data/agent-catalog.json";
 import type { ReactNode } from "react";
 
-type AgentSurface = "cli" | "desktop" | "ide" | "plugin";
+type AgentSurface = "cli" | "desktop" | "ide" | "plugin" | "web";
 
-const iconModules = import.meta.glob("../assets/agents/*.{png,svg,webp}", {
+const iconModules = import.meta.glob("../assets/agents/*.{png,svg,webp,ico}", {
   eager: true,
   query: "?url",
   import: "default",
@@ -16,7 +16,7 @@ const LOGOS = Object.fromEntries(
   Object.entries(iconModules).map(([path, url]) => [path.split("/").pop()!.replace(/\.[^.]+$/, ""), url])
 ) as Record<string, string>;
 const ICON_ALIASES: Record<string, string> = iconAliases;
-const SURFACE_VALUES = new Set<AgentSurface>(["cli", "desktop", "ide", "plugin"]);
+const SURFACE_VALUES = new Set<AgentSurface>(["cli", "desktop", "ide", "plugin", "web"]);
 const AGENT_SURFACES: Record<string, string> = agentSurfaces;
 
 function resolvedLogoKey(id: string): string {
@@ -198,6 +198,12 @@ function AgentSurfaceBadge({ surface, size }: { surface: AgentSurface; size: num
             <path d="M4.25 1.75v2.1M6.75 1.75v2.1" />
             <rect x="2.25" y="3.75" width="6.5" height="4.25" rx="1" />
             <path d="M8.75 5.15H10.5M8.75 6.65H10.5" />
+          </>
+        )}
+        {surface === "web" && (
+          <>
+            <circle cx="6" cy="6" r="4.5" />
+            <path d="M1.5 6h9M6 1.5c2.25 2.5 2.25 6.5 0 9-2.25-2.5-2.25-6.5 0-9Z" />
           </>
         )}
       </svg>

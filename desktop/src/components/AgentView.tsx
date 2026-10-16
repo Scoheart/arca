@@ -345,7 +345,13 @@ export function AgentView({
       <div className="arca-agent-page">
         <div className="arca-agent-shell">
           <section className="arca-agent-context" aria-label={`${agent.name} 参考信息`}>
-            <AgentHeader agent={agent} tone="reference" actions={<><button className="arca-agent-tool" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button><button className="arca-agent-tool" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button><AgentLaunchAction key={agent.id} agentId={agent.id} /></>} />
+            <AgentHeader agent={agent} tone="reference" actions={<>
+              {agent.category !== "web" && agent.category !== "framework" && <>
+                <button className="arca-agent-tool" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button>
+                <button className="arca-agent-tool" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button>
+              </>}
+              <AgentLaunchAction key={agent.id} agentId={agent.id} />
+            </>} />
             <div className="arca-agent-reference">
               <strong>{agent.note ?? "未提供可写的用户级全局配置。"}</strong>
             </div>
@@ -353,7 +359,7 @@ export function AgentView({
               {RESOURCE_CATEGORIES.filter((resource) => (capabilityGuides as Record<string, Record<string, string>>)[agentId][resource.domain]).map((resource) => <ConfigPath
                 key={resource.domain} label={resource.label}
                 icon={<resource.Icon className="w-4 h-4" />}
-                docsUrl={(capabilityGuides as Record<string, Record<string, string>>)[agentId][resource.domain]} description="应用内配置" paths={[]} kind="file" home={userHome}
+                docsUrl={(capabilityGuides as Record<string, Record<string, string>>)[agentId][resource.domain]} description={agent.category === "framework" ? "开发文档" : "应用内配置"} paths={[]} kind="file" home={userHome}
                 onOpen={() => {}} unavailableLabel="查看设置文档" />)}
             </div>}
           </section>
@@ -975,7 +981,7 @@ function AgentHeader({
     <div className="arca-agent-header-copy">
       <div>
         <h2 data-agent-entry-name>{agent.name}</h2>
-        {tone === "reference" ? <Badge>仅供参考</Badge> : agent.evidence === "community-extension" ? (
+        {tone === "reference" ? <Badge>{agent.category === "framework" ? "开发框架" : agent.category === "web" ? "Web 客户端" : "仅供参考"}</Badge> : agent.evidence === "community-extension" ? (
           <Badge tone="warning">社区扩展</Badge>
         ) : !agent.builtin ? <Badge>自定义</Badge> : null}
       </div>

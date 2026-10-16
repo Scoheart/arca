@@ -12,6 +12,10 @@
 .arca-agent-overview-actions { grid-column: 3; grid-row: 1; justify-self: end; display: flex; flex-wrap: wrap; justify-content: flex-end; min-width: 0; max-width: 100%; align-items: center; gap: 6px; }
 .arca-agent-overview-actions > * { flex-shrink: 0; }
 .arca-agent-overview-actions svg { flex-shrink: 0; }
+.arca-agent-overview-header[data-tone="reference"] { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.arca-agent-overview-header[data-tone="reference"] .arca-agent-header-identity,
+.arca-agent-overview-header[data-tone="reference"] .arca-agent-header-copy > div { justify-content: flex-start; }
+.arca-agent-overview-header[data-tone="reference"] .arca-agent-overview-actions { margin-left: auto; }
 .arca-agent-tool {
   display: inline-flex; flex: 0 0 auto; width: auto; height: 36px; align-items: center; justify-content: center; white-space: nowrap;
   padding: 0; border: 1px solid var(--border-hairline); border-radius: 10px;

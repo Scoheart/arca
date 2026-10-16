@@ -23,5 +23,7 @@
   "jan-cli": "jan-desktop",
   "junie-cli": "jetbrains",
   "kilo-vscode": "kilo-code",
-  "kiro-cli": "kiro"
+  "kiro-cli": "kiro",
+  "claude-ai": "claude",
+  "chatgpt": "openai"
 }

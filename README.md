@@ -10,6 +10,13 @@ Skills are created and maintained in their top-level libraries; each Agent then
 selects which compatible assets it should consume. Arca adapts that desired state
 to the Agent's native format while preserving unrelated settings.
 
+The Agent picker also includes [Web clients and MCP development tools](docs/mcp-apps-clients.md),
+including LibreChat, Open WebUI, ChatGPT, Claude.ai, Postman, MCPJam Inspector,
+and MCP Inspector by mcp-use. Web entries provide official configuration guides;
+Postman and MCPJam also offer native macOS launch entries. CopilotKit, AG-UI,
+and mcp-use are labeled as development frameworks. These reference entries do
+not imply local asset assignment or MCP Apps rendering inside Arca.
+
 Model credentials managed by Arca stay in macOS Keychain. Agents without a safe
 Keychain command receive only a non-secret environment-variable reference; Arca
 never edits shell startup files. Primary model selection is managed independently
@@ -31,7 +38,7 @@ a pinned Agent icon. Desktop applications open through the system launcher; CLI
 Agents open in Terminal and ask for a working directory on first use. Arca remembers
 that directory per Agent. The run dropdown lets CLI Agents use another directory;
 **安装文档** is a separate toolbar button. Configure the application, executable
-with arguments, or website through **编辑配置**. Extension entries name the host editor they open. Missing
+with arguments through **编辑配置**. Extension entries name the host editor they open. Missing
 built-in runtimes offer their official installation page. On the first CLI launch,
 macOS may ask for permission to let Arca control Terminal.
 Installed Agent pages show a detected version beside the launch controls. Arca
@@ -47,7 +54,7 @@ description, and footer so shared-state badges and controls stay readable. Their
 **…** menu exposes details and removal when supported. Narrow windows reduce the
 number of columns.
 
-**编辑配置** includes application / CLI / website launch settings alongside the
+**编辑配置** includes application / CLI launch settings alongside the
 MCP, Model and Skills paths. Changing only the launcher saves directly; path edits
 retain the impact review. Cancelling that review leaves launch preferences
 unchanged. Configurable Agents keep launch settings in this editor instead of

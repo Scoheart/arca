@@ -10,7 +10,7 @@ const agents = {
   ...JSON.parse(readFileSync(resolve(root, "data/agents.json"), "utf8")),
 };
 const aliases = JSON.parse(readFileSync(resolve(assetDir, "aliases.json"), "utf8"));
-const extensions = new Set([".png", ".svg", ".webp"]);
+const extensions = new Set([".png", ".svg", ".webp", ".ico"]);
 const assets = new Set(
   readdirSync(assetDir)
     .filter((file) => extensions.has(extname(file)))

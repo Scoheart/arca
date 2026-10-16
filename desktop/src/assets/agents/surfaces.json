@@ -43,5 +43,10 @@
   "kiro": "ide",
   "kiro-cli": "cli",
   "mimo-code": "cli",
-  "kilo-desktop": "desktop"
+  "kilo-desktop": "desktop",
+  "claude-ai": "web",
+  "chatgpt": "web",
+  "postman": "desktop",
+  "mcpjam": "desktop",
+  "mcp-use-inspector": "web"
 }

@@ -95,3 +95,20 @@ Official assets verified 2026-10-04 (original bytes):
 - Cline CLI, Kiro CLI, Junie CLI, Goose Desktop, Kilo Code VS Code and Codex IDE reuse their verified brand icons; `surfaces.json` distinguishes the product surface.
 
 - `kilo-desktop.png`: PNG decoded from `Kilo.app/Contents/Resources/electron.icns` in the official [Kilo Desktop macOS arm64 ZIP](https://autoupdate.desktop.anaconda.com/kilo-desktop/latest/latest/macos/arm64/Kilo.zip), version 0.1.11, bundle ID `ai.kilo.desktop`, verified 2026-10-07. It preserves the Desktop icon's bright yellow background instead of reusing the older IDE/CLI asset. The installed app name is `Kilo`.
+
+
+Assets added 2026-10-16, original bytes:
+
+| Asset | Source |
+|---|---|
+| `librechat.svg` | [LibreChat logo](https://github.com/danny-avila/LibreChat/blob/e1dfc10449ff713faffacd60273fddcfe2c0a698/client/public/assets/logo.svg) |
+| `open-webui.svg` | [Open WebUI favicon](https://github.com/open-webui/open-webui/blob/6a18585ff4c2e5f6805f682222cfbc46dc669ef8/static/static/favicon.svg) |
+| `mcp-use.svg` | [mcp-use documentation favicon](https://github.com/mcp-use/mcp-use/blob/ad8fbee97af6c39fc95b46486a04142d68644822/docs/favicon.svg) |
+| `mcp-use-inspector.svg` | [Inspector favicon](https://github.com/mcp-use/mcp-use/blob/ad8fbee97af6c39fc95b46486a04142d68644822/libraries/typescript/packages/inspector/public/favicon.svg) |
+| `mcpjam.ico` | [MCPJam Inspector app icon](https://github.com/MCPJam/inspector/blob/5f652c40b574921ba800727dd7ad0b4159c1633b/mcpjam-inspector/assets/icon.ico), retained as ICO |
+| `postman.png` | [Postman Labs documentation favicon](https://github.com/postmanlabs/labs-docs/blob/a95dc277cc0cef48883344d0ca35e6555c3e1bbc/src/images/favicon.png) |
+| `copilotkit.svg` | [CopilotKit logo mark](https://github.com/CopilotKit/CopilotKit/blob/6e4cb6ad9ce32881636edaa212b7dbb440f0a0c3/examples/integrations/langgraph-js/public/copilotkit-logo-mark.svg) |
+| `ag-ui.svg` | [AG-UI documentation favicon](https://github.com/ag-ui-protocol/ag-ui/blob/a1131c90709d51d562202b7b6cc0a2a1b48b05fc/docs/favicon.svg) |
+| `smithery-playground.svg` | [Smithery brand asset in Raycast's MCP registry extension](https://github.com/raycast/extensions/blob/c0eba1590385588f2b265cec8bdefb653f30816f/extensions/model-context-protocol-registry/assets/smithery.svg), reused unchanged from that MIT-licensed extension; this is a third-party copy of the brand asset, not a provider-hosted download |
+
+Claude.ai and ChatGPT reuse the already sourced Claude/OpenAI marks. Their Web surface badge distinguishes them from CLI and Desktop products.

@@ -354,5 +354,13 @@
   "kilo-desktop": {
     "url": "https://kilo.ai/install",
     "label": "官方下载"
+  },
+  "postman": {
+    "url": "https://www.postman.com/downloads/",
+    "label": "官方下载"
+  },
+  "mcpjam": {
+    "url": "https://docs.mcpjam.com/installation",
+    "label": "官方下载"
   }
 }
