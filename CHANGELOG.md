@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.3.1](https://github.com/Scoheart/arca/compare/v2.3.0...v2.3.1) (2026-10-16)
+
+### Changes
+
+* fix(instructions): configure native directories per Agent ([4219b4b](https://github.com/Scoheart/arca/commit/4219b4b0c9dac427c42f872300425477b7af8b66))
+
 ## [2.3.0](https://github.com/Scoheart/arca/compare/v2.2.0...v2.3.0) (2026-10-16)
 
 ### Changes
