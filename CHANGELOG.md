@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.3.2](https://github.com/Scoheart/arca/compare/v2.3.1...v2.3.2) (2026-10-16)
+
+### Changes
+
+* fix(instructions): enable explicit OpenCode global file creation ([2443675](https://github.com/Scoheart/arca/commit/24436754d87f6b5fd1e85a215a14007127f48941))
+
 ## [2.3.1](https://github.com/Scoheart/arca/compare/v2.3.0...v2.3.1) (2026-10-16)
 
 ### Changes
