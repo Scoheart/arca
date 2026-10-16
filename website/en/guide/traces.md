@@ -16,7 +16,7 @@ Native formats depend on the current adapters; a launchable Agent does not autom
 
 The **Network** menu exposes proxy configuration and records. Arca's proxy covers its own remote sources, GitHub Skills, and updates; it does not rewrite every Agent's system proxy.
 
-Open **Capture** from an Agent page and choose a fresh instance or an existing process. A fresh supported runtime receives additional capture CA roots and capture binds to that instance. Select direct egress, the Arca proxy, or a custom HTTP proxy. Clients using the system certificate store still require system trust for the capture CA.
+Open **Capture** from an Agent page. The workbench uses that Agent directly, with no second Agent selector, and shows only its processes and saved sessions. Choose a fresh instance or an existing process. A fresh supported runtime receives additional capture CA roots and capture binds to that instance. Select direct egress, the Arca proxy, or a custom HTTP proxy. Clients using the system certificate store still require system trust for the capture CA.
 
 Desktop and CLI share Core's discovery, launch, forwarding, redaction, and stop workflow. `capture list/show` read saved records, `capture environment` inspects prerequisites, and `capture state` verifies process identities. `capture run` records in the foreground for a bounded duration and stops afterward; losing its owner also ends capture.
 

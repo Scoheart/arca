@@ -417,8 +417,8 @@ Agent labels use the actual application name, or the official CLI/plugin product
 
 ### Agent 抓包（macOS）
 
-顶部「网络 → Agent 抓包」打开独立工作台；Agent 详情页的「抓包」按钮会预选当前 Agent。
-先启动 Agent，选择实际运行的应用或独立 CLI 进程，再指定直连、Arca 已配置的代理或任意无认证 HTTP 上游地址。抓包出口独立于 Arca 自身联网设置，指定代理后失败不回退直连。
+从 Agent 详情页点击「抓包」进入该 Agent 的工作台。开始记录时直接沿用当前 Agent，弹窗只展示名称，不再重复选择；进程和历史会话也仅展示该 Agent 的记录。
+选择启动新进程或记录已有实例，再指定直连、Arca 已配置的代理或任意无认证 HTTP 上游地址。抓包出口独立于 Arca 自身联网设置，指定代理后失败不回退直连。
 
 依赖本机官方 mitmproxy（`mitmdump`）。在系统设置「通用 → 登录项与扩展」启用 Mitmproxy Redirector 网络扩展，客户端还需信任 `~/.mitmproxy/mitmproxy-ca-cert.pem`。Arca 只检查系统信任，不自动安装证书或批准系统权限。「追加 CA 启动」给新进程传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。设置会区分进程证书、Node / 浏览器混合网络栈和系统信任：Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端的启动和抓包均拒绝执行，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
 

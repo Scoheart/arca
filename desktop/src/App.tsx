@@ -299,7 +299,7 @@ function App() {
       startupSync={startupSync}
     >
       <Suspense fallback={<ViewLoading />}>
-        {view.kind === "traces" ? (<TraceView initialAgentId={view.agentId} />) : view.kind === "capture" ? (<CaptureView agents={agents} initialAgentId={view.agentId} arcaProxy={networkSettings.settings.proxy_url} />) : view.kind === "skills" ? (
+        {view.kind === "traces" ? (<TraceView initialAgentId={view.agentId} />) : view.kind === "capture" ? (<CaptureView key={view.agentId} agents={agents} agentId={view.agentId} arcaProxy={networkSettings.settings.proxy_url} />) : view.kind === "skills" ? (
           <SkillsView
             state={skillsState}
             onOpenAgent={(id) => setView({ kind: "agent", id, tab: "skills" })}

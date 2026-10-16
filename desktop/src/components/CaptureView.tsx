@@ -44,12 +44,11 @@ function TreeNode({ node, selected, onSelect }: { node: Tree; selected: string; 
   </div></details>;
 }
 
-export function CaptureView({ agents, initialAgentId, arcaProxy }: { agents: AgentInfo[]; initialAgentId?: string; arcaProxy: string | null }) {
+export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[]; agentId: string; arcaProxy: string | null }) {
   const toast = useToast();
   const [environment, setEnvironment] = useState<CaptureEnvironment | null>(null);
   const [sessions, setSessions] = useState<CaptureSession[]>([]);
   const [snapshot, setSnapshot] = useState<CaptureSnapshot | null>(null);
-  const [agentId, setAgentId] = useState(initialAgentId ?? agents[0]?.id ?? '');
   const [targetId, setTargetId] = useState('');
   const [egress, setEgress] = useState(arcaProxy ? 'arca' : 'direct');
   const [proxy, setProxy] = useState('');
@@ -62,7 +61,7 @@ export function CaptureView({ agents, initialAgentId, arcaProxy }: { agents: Age
   const [flowId, setFlowId] = useState('');
   const [tab, setTab] = useState<'overview' | 'request' | 'response' | 'timing'>('overview');
   const [format, setFormat] = useState<'body' | 'headers' | 'parameters' | 'raw'>('body');
-  const [settingsOpen, setSettingsOpen] = useState(Boolean(initialAgentId));
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState('');
@@ -76,24 +75,20 @@ export function CaptureView({ agents, initialAgentId, arcaProxy }: { agents: Age
   const revision = useRef<{ sessionId: string; value: string } | null>(null);
   const active = snapshot?.status.state === 'running' || snapshot?.status.state === 'starting';
   const support = environment?.agents?.find(agent => agent.agent_id === agentId);
-  const captureAgents = agents.filter(agent => environment?.agents?.some(profile => profile.agent_id === agent.id) || environment?.targets.some(target => target.agent_ids.includes(agent.id)));
   const targets = environment?.targets.filter(target => target.agent_ids.includes(agentId)) ?? [];
-  const selectedAgent = agents.find(agent => agent.id === (snapshot?.session.agent_id ?? agentId));
+  const selectedAgent = agents.find(agent => agent.id === agentId);
   const refresh = useCallback(async () => {
-    const result = await Promise.all([captureEnvironment(), captureSessions()]);
-    setEnvironment(result[0]); setSessions(result[1]); return result;
-  }, []);
-  useEffect(() => {
-    if (!initialAgentId && captureAgents.length && !captureAgents.some(agent => agent.id === agentId)) {
-      setAgentId(captureAgents.find(agent => agent.id === 'cursor')?.id ?? captureAgents[0].id);
-    }
-  }, [environment, agents, initialAgentId, agentId]);
+    const [nextEnvironment, allSessions] = await Promise.all([captureEnvironment(), captureSessions()]);
+    const agentSessions = allSessions.filter(session => session.agent_id === agentId);
+    setEnvironment(nextEnvironment); setSessions(agentSessions);
+    return [nextEnvironment, agentSessions] as const;
+  }, [agentId]);
   useEffect(() => {
     let disposed = false; const generation = ++epoch.current;
     setLoading(true); setFailure(''); setFlowId(''); setFlow(null); revision.current = null;
     void refresh().then(async ([, list]) => {
       if (disposed || generation !== epoch.current) return;
-      const selected = initialAgentId ? list.find(session => session.agent_id === initialAgentId) : list[0];
+      const selected = list[0];
       if (!selected) { setSnapshot(null); setSettingsOpen(true); }
       else {
         const current = await captureDelta(selected.id);
@@ -104,8 +99,7 @@ export function CaptureView({ agents, initialAgentId, arcaProxy }: { agents: Age
       }
     }).catch(error => { if (!disposed) setFailure(formatError(error)); }).finally(() => { if (!disposed) setLoading(false); });
     return () => { disposed = true; epoch.current++; };
-  }, [refresh, initialAgentId]);
-  useEffect(() => { if (initialAgentId) { setAgentId(initialAgentId); setSettingsOpen(true); } }, [initialAgentId]);
+  }, [refresh]);
   useEffect(() => {
     const matches = environment?.targets.filter(target => target.agent_ids.includes(agentId)) ?? [];
     setTargetId(current => matches.some(target => target.id === current) ? current : matches[0]?.id ?? '');
@@ -240,12 +234,12 @@ export function CaptureView({ agents, initialAgentId, arcaProxy }: { agents: Age
         </section>
       </div>
     </div>
-    <footer className="capture-statusbar"><span>{snapshot ? `${snapshot.session.target_name} · ${snapshot.session.pids.length} 个初始进程` : '按 Agent 选择实际进程'}{snapshot?.session.proxy_url ? ` · ${snapshot.session.proxy_url}` : snapshot ? ' · 直连' : ''}</span><span>{snapshot?.status.message || `${snapshot?.flows.length ?? 0} requests · 本机脱敏记录`}</span></footer>
-    {settingsOpen && <DialogShell kind="editor" size="wide" className="capture-settings" title="开始网络记录" subtitle="只记录所选 Agent 及其辅助进程" busy={busy} onClose={() => setSettingsOpen(false)}
+    <footer className="capture-statusbar"><span>{snapshot ? `${snapshot.session.target_name} · ${snapshot.session.pids.length} 个初始进程` : '仅记录当前 Agent 及其辅助进程'}{snapshot?.session.proxy_url ? ` · ${snapshot.session.proxy_url}` : snapshot ? ' · 直连' : ''}</span><span>{snapshot?.status.message || `${snapshot?.flows.length ?? 0} requests · 本机脱敏记录`}</span></footer>
+    {settingsOpen && <DialogShell kind="editor" size="wide" className="capture-settings" title="开始网络记录" subtitle="只记录当前 Agent 及其辅助进程" busy={busy} onClose={() => setSettingsOpen(false)}
       footerStart={<span className="capture-setting-note">本机脱敏保存 · 单条正文 2 MiB</span>}
       footerEnd={<><button className="btn-secondary" onClick={() => setSettingsOpen(false)} disabled={busy}>关闭</button><button className="btn-primary" disabled={!canStart} onClick={() => void start()}>{busy ? '正在准备…' : launchMode === 'fresh' ? '启动并记录' : '开始记录'}</button></>}>
       <div className="capture-setting-fields">
-        <div className="capture-setup-heading"><AgentGlyph id={agentId} size={28} /><label>Agent<select value={agentId} disabled={Boolean(active) || busy || loading} onChange={event => { setAgentId(event.target.value); setFailure(''); }}>{!captureAgents.some(agent => agent.id === agentId) && agentId && <option value={agentId}>{agents.find(agent => agent.id === agentId)?.name ?? agentId}{loading ? '' : ' · 尚未适配'}</option>}{captureAgents.map(agent => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></label><button className="capture-button" aria-label="刷新抓包环境" disabled={busy || loading} onClick={() => void perform(async () => { await refresh(); })}><RefreshIcon className="w-4 h-4" />刷新</button></div>
+        <div className="capture-setup-heading"><AgentGlyph id={agentId} size={28} /><div className="capture-setup-agent"><span>Agent</span><strong title={selectedAgent?.name ?? agentId}>{selectedAgent?.name ?? agentId}</strong></div><button className="capture-button" aria-label="刷新抓包环境" disabled={busy || loading} onClick={() => void perform(async () => { await refresh(); })}><RefreshIcon className="w-4 h-4" />刷新</button></div>
         <div className="capture-launch-modes" aria-label="记录方式"><button aria-pressed={launchMode === 'fresh'} disabled={busy || Boolean(active)} onClick={() => setLaunchMode('fresh')}><strong>启动新进程</strong><span>{support?.ca_scope === 'system' ? '打开独立客户端实例' : '自动追加抓包证书'}</span></button><button aria-pressed={launchMode === 'existing'} disabled={busy || Boolean(active)} onClick={() => setLaunchMode('existing')}><strong>运行中的进程</strong><span>选择已有实例</span></button></div>
         {launchMode === 'existing' ? <><label>目标进程<select value={targetId} disabled={Boolean(active) || busy} onChange={event => setTargetId(event.target.value)}><option value="">{targets.length ? '选择进程' : '未检测到运行进程'}</option>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · {target.pids.length} 个进程</option>)}</select></label>{!environment?.certificate_trusted && support?.ca_scope !== 'system' && <p className="capture-setting-note">已有进程需自行信任抓包证书；遇到 TLS 错误时，请使用“启动新进程”。</p>}</>
           : support?.kind === 'cli' && <label>工作目录<input value={directory} disabled={busy} onChange={event => setDirectory(event.target.value)} placeholder="留空使用 Agent 的默认目录" /></label>}
