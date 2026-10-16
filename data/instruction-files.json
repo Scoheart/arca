@@ -13,7 +13,8 @@
             "CLAUDE.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.claude",
@@ -25,7 +26,8 @@
           "recursive": true,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -59,7 +61,8 @@
             "AGENTS.md"
           ],
           "selection": "first-nonempty",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -101,7 +104,8 @@
             "CLAUDE.MD"
           ],
           "selection": "first-nonempty",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.pi/agent",
@@ -113,7 +117,8 @@
             "APPEND_SYSTEM.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "system"
         }
       ],
       "reload": "native-reload",
@@ -149,7 +154,8 @@
             "CLAUDE.MD"
           ],
           "selection": "first-nonempty",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.stepcode/agent",
@@ -161,7 +167,8 @@
             "APPEND_SYSTEM.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "system"
         }
       ],
       "reload": "native-reload",
@@ -194,7 +201,8 @@
             "CLAUDE.md"
           ],
           "selection": "first-existing",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.config",
@@ -205,7 +213,8 @@
             "CLAUDE.md"
           ],
           "selection": "first-existing",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         }
       ],
       "reload": "new-session",
@@ -238,7 +247,8 @@
           "filename_config": {
             "path": "settings.json",
             "pointer": "/context/fileName"
-          }
+          },
+          "id": "global"
         }
       ],
       "reload": "native-reload",
@@ -274,7 +284,8 @@
           "filename_config": {
             "path": "settings.json",
             "pointer": "/context/fileName"
-          }
+          },
+          "id": "global"
         },
         {
           "root": "~/.qwen",
@@ -288,7 +299,8 @@
           "recursive": true,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "native-reload",
@@ -325,7 +337,8 @@
           "filename_config": {
             "path": "settings.json",
             "pointer": "/context/fileName"
-          }
+          },
+          "id": "global"
         }
       ],
       "reload": "native-reload",
@@ -359,7 +372,8 @@
             "CODEBUDDY.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.codebuddy",
@@ -371,7 +385,8 @@
           "recursive": true,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -408,7 +423,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.claude",
@@ -417,7 +433,8 @@
             "CLAUDE.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         }
       ],
       "reload": "new-session",
@@ -449,7 +466,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.claude",
@@ -458,7 +476,8 @@
             "CLAUDE.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         }
       ],
       "reload": "new-session",
@@ -491,7 +510,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.claude",
@@ -500,7 +520,8 @@
             "CLAUDE.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         }
       ],
       "reload": "new-session",
@@ -532,7 +553,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.agents",
@@ -541,7 +563,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         },
         {
           "root": "~/.kimi-code",
@@ -552,7 +575,8 @@
             "SYSTEM.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "system"
         }
       ],
       "reload": "new-session",
@@ -588,7 +612,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -618,7 +643,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -650,7 +676,8 @@
             "SOUL.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -676,7 +703,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -700,7 +728,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -726,7 +755,8 @@
             "global_rules.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -752,7 +782,8 @@
             "user_rules.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -788,7 +819,8 @@
             "CLAUDE.local.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -819,7 +851,8 @@
             "Claude.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.agents",
@@ -832,7 +865,8 @@
             "Claude.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         },
         {
           "root": "~/.agent",
@@ -845,7 +879,8 @@
             "Claude.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback-2"
         }
       ],
       "reload": "new-session",
@@ -874,7 +909,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.agents",
@@ -885,7 +921,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         }
       ],
       "reload": "new-session",
@@ -918,7 +955,8 @@
             ".claude.md"
           ],
           "selection": "first-existing",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -946,7 +984,8 @@
             "CRUSH.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.config",
@@ -955,7 +994,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         }
       ],
       "reload": "new-session",
@@ -982,7 +1022,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "@goose-agents",
@@ -991,7 +1032,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         }
       ],
       "reload": "new-session",
@@ -1021,7 +1063,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.vtcode",
@@ -1030,7 +1073,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "fallback"
         }
       ],
       "reload": "new-session",
@@ -1056,7 +1100,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -1082,7 +1127,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -1111,7 +1157,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -1138,7 +1185,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -1168,7 +1216,8 @@
             "SOUL.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -1193,7 +1242,8 @@
             "SOUL.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -1218,7 +1268,8 @@
             "SOUL.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         }
       ],
       "reload": "new-session",
@@ -1245,7 +1296,8 @@
           "recursive": true,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -1278,7 +1330,8 @@
           "recursive": false,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -1313,7 +1366,8 @@
           "recursive": true,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         },
         {
           "root": "~/.roo",
@@ -1325,7 +1379,8 @@
           "recursive": true,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "mode-rules"
         }
       ],
       "reload": "new-session",
@@ -1357,7 +1412,8 @@
           "recursive": true,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -1387,7 +1443,8 @@
           "recursive": false,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -1414,7 +1471,8 @@
           "recursive": false,
           "extensions": [
             "mdc"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "next-request",
@@ -1444,7 +1502,8 @@
             "GEMINI.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.gemini",
@@ -1456,7 +1515,8 @@
           "recursive": false,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -1481,7 +1541,8 @@
             "GEMINI.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.gemini",
@@ -1493,7 +1554,8 @@
           "recursive": false,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         },
         {
           "root": "~/.gemini",
@@ -1505,7 +1567,8 @@
           "recursive": false,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules-2"
         }
       ],
       "reload": "new-session",
@@ -1531,7 +1594,8 @@
             "AGENTS.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.cline",
@@ -1543,7 +1607,8 @@
           "recursive": false,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules"
         },
         {
           "root": "~/Documents/Cline",
@@ -1555,7 +1620,8 @@
           "recursive": false,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules-2"
         },
         {
           "root": "~/Cline",
@@ -1567,7 +1633,8 @@
           "recursive": false,
           "extensions": [
             "md"
-          ]
+          ],
+          "id": "rules-3"
         }
       ],
       "reload": "new-session",
@@ -1598,7 +1665,8 @@
             "copilot-instructions.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.copilot",
@@ -1612,7 +1680,8 @@
           "recursive": true,
           "extensions": [
             "instructions.md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -1650,7 +1719,8 @@
           "extensions": [
             "md",
             "mdc"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -1682,7 +1752,8 @@
           "extensions": [
             "md",
             "mdc"
-          ]
+          ],
+          "id": "rules"
         },
         {
           "root": "~/.trae-cn",
@@ -1695,7 +1766,8 @@
           "extensions": [
             "md",
             "mdc"
-          ]
+          ],
+          "id": "rules-2"
         }
       ],
       "reload": "new-session",
@@ -1724,7 +1796,8 @@
           "extensions": [
             "md",
             "mdc"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",
@@ -1768,7 +1841,8 @@
             "copilot-instructions.md"
           ],
           "selection": "additive",
-          "editable": true
+          "editable": true,
+          "id": "global"
         },
         {
           "root": "~/.copilot",
@@ -1782,7 +1856,8 @@
           "recursive": true,
           "extensions": [
             "instructions.md"
-          ]
+          ],
+          "id": "rules"
         }
       ],
       "reload": "new-session",

@@ -147,6 +147,8 @@ pub fn run() {
             commands::reset_mcp_icon,
             traces::trace_index,
             instructions::instruction_list,
+            instructions::instruction_get_paths,
+            instructions::instruction_set_paths,
             instructions::instruction_read,
             instructions::instruction_prepare_save,
             instructions::instruction_prepare_create,

@@ -143,6 +143,7 @@ export function AgentView({
   const { show: showToast } = useToast();
   const agentLauncher = useAgentLauncher();
   const [editingAgent, setEditingAgent] = useState(false);
+  const [instructionsRevision, setInstructionsRevision] = useState(0);
   const [editLaunchFirst, setEditLaunchFirst] = useState(false);
   const [pickerDomain, setPickerDomain] = useState<PickerDomain | null>(null);
   const [modelProfiles, setModelProfiles] = useState<ModelProfileView[]>([]);
@@ -700,7 +701,7 @@ export function AgentView({
           ) : null}
           <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
             message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
-          {resourceTab === "instructions" ? <InstructionsEditor key={agent.id} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global ? (
+          {resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global ? (
             <div className="arca-agent-inline-state">此 Agent 未接入 MCP。</div>
           ) : (
             <AgentConsumptionPanel
@@ -935,6 +936,7 @@ export function AgentView({
           modelAgent={modelAgent}
           initialSection={editLaunchFirst ? "launch" : "paths"}
           onLaunchSaved={agentLauncher.refresh}
+          onInstructionPathsSaved={() => setInstructionsRevision(value => value + 1)}
           onClose={() => setEditingAgent(false)}
           onSaved={async () => {
             await Promise.allSettled([

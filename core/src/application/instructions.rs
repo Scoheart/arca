@@ -24,7 +24,7 @@ struct Profile {
 }
 #[derive(Deserialize)]
 struct Source {
-    root: String, env: Vec<String>, files: Vec<String>, selection: String, editable: bool,
+    id: String, root: String, env: Vec<String>, files: Vec<String>, selection: String, editable: bool,
     directory: Option<String>, #[serde(default)] recursive: bool,
     #[serde(default)] extensions: Vec<String>, filename_config: Option<FilenameConfig>,
 }
@@ -89,6 +89,105 @@ fn root(source: &Source, home: &Path) -> CoreResult<PathBuf> {
     }
     absolute(&source.root, home)
 }
+fn overrides<'a>(settings: &'a crate::settings::Settings, agent_id: &str) -> Option<&'a BTreeMap<String, String>> {
+    settings.agent_config_paths.as_ref()?.get(agent_id)?.instruction_paths.as_ref()
+}
+fn default_location(source: &Source, home: &Path) -> CoreResult<PathBuf> {
+    let base = root(source, home)?;
+    Ok(match source.directory.as_deref() {
+        Some(directory) if directory != "@mode-rules" => base.join(directory),
+        _ => base,
+    })
+}
+fn location(source: &Source, home: &Path, paths: Option<&BTreeMap<String, String>>) -> CoreResult<PathBuf> {
+    match paths.and_then(|paths| paths.get(&source.id)) {
+        Some(path) => absolute(path, home),
+        None => default_location(source, home),
+    }
+}
+fn validate_directory(path: &Path) -> CoreResult<()> {
+    for ancestor in path.ancestors() {
+        match fs::symlink_metadata(ancestor) {
+            Ok(metadata) if !metadata.is_dir() || metadata.file_type().is_symlink() => return Err(err("instruction_paths_invalid", "Instructions directories must use real directory paths, without file or symlink components.")),
+            Ok(_) => {},
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
+            Err(_) => return Err(err("instruction_paths_invalid", "Cannot inspect this Instructions directory. Existing files were not changed.")),
+        }
+    }
+    Ok(())
+}
+fn checked_location(source: &Source, home: &Path, paths: Option<&BTreeMap<String, String>>) -> CoreResult<PathBuf> {
+    let path = location(source, home, paths)?;
+    validate_directory(&path)?;
+    Ok(path)
+}
+fn display_path(path: &Path, home: &Path) -> String {
+    match path.strip_prefix(home) {
+        Ok(relative) if relative.as_os_str().is_empty() => "~".into(),
+        Ok(relative) => format!("~/{}", relative.to_string_lossy()),
+        Err(_) => path.to_string_lossy().into_owned(),
+    }
+}
+fn path_configuration(agent_id: &str, settings: &crate::settings::Settings) -> CoreResult<InstructionPathConfiguration> {
+    let home = home()?;
+    let stored = overrides(settings, agent_id);
+    let mut sources = vec![];
+    if let Some(profile) = profile(agent_id) {
+        for source in &profile.sources {
+            let default_path = default_location(source, &home).ok().map(|path| display_path(&path, &home));
+            let path = location(source, &home, stored).ok().map(|path| display_path(&path, &home)).unwrap_or_default();
+            let kind = if source.directory.as_deref() == Some("@mode-rules") { "mode-rules" } else if source.directory.is_some() { "rules" } else { "files" };
+            let patterns = if source.directory.is_some() { source.extensions.iter().map(|ext| format!("*.{ext}")).collect() } else { native_filenames(source, &home).unwrap_or_else(|_| source.files.clone()) };
+            sources.push(InstructionPathSource { id: source.id.clone(), kind: kind.into(), path, default_path, overridden: stored.is_some_and(|p| p.contains_key(&source.id)), patterns });
+        }
+    }
+    let revision = hash(serde_json::to_vec(&(agent_id, &home, &sources, stored)).map_err(|_| err("instruction_revision_failed", "Cannot inspect instruction directory preferences."))?);
+    Ok(InstructionPathConfiguration { agent_id: agent_id.into(), revision, sources })
+}
+pub fn get_paths(agent_id: &str) -> CoreResult<InstructionPathConfiguration> {
+    super::gate::query(|| {
+        let settings = crate::settings::load_settings_strict().map_err(|_| err("instruction_settings_unreadable", "Cannot read Arca directory preferences. Existing files were not changed."))?;
+        path_configuration(agent_id, &settings)
+    })
+}
+/// Save editor locations only. This does not initialize, move, copy or delete
+/// native files, or alter the Agent's own runtime configuration.
+pub fn set_paths(agent_id: &str, expected_revision: &str, paths: Vec<InstructionPathUpdate>) -> CoreResult<InstructionPathConfiguration> {
+    super::gate::mutate_independent_core("instruction_paths", || {
+        let p = profile(agent_id).filter(|p| !p.sources.is_empty()).ok_or_else(|| err("instruction_unsupported", "This Agent has no verified native instruction directories."))?;
+        if paths.is_empty() || paths.len() > p.sources.len() { return Err(err("instruction_paths_invalid", "Select a known Instructions directory to update.")); }
+        let home = home()?;
+        let mut updates = BTreeMap::new();
+        for update in paths {
+            if !p.sources.iter().any(|s| s.id == update.id) || updates.contains_key(&update.id) { return Err(err("instruction_paths_invalid", "Instructions source IDs must be known and unique.")); }
+            let path = update.path.map(|path| {
+                let value = path.trim();
+                if value.is_empty() || value.len() > 4096 || value.chars().any(char::is_control) { return Err(err("instruction_paths_invalid", "Enter an absolute directory or a ~/ path.")); }
+                let path = absolute(value, &home)?;
+                // Absent directories are valid and remain absent after Save.
+                validate_directory(&path)?;
+                state(&path.join(".arca-instructions-directory-check"))?;
+                Ok(path.to_string_lossy().into_owned())
+            }).transpose()?;
+            updates.insert(update.id, path);
+        }
+        crate::settings::mutate_settings_checked(|settings| {
+            let current = path_configuration(agent_id, settings).map_err(|e| std::io::Error::other(e.to_string()))?;
+            if current.revision != expected_revision { return Err(std::io::Error::new(std::io::ErrorKind::WouldBlock, "instruction_paths_conflict")); }
+            let all = settings.agent_config_paths.get_or_insert_default();
+            let preference = all.entry(agent_id.into()).or_default();
+            let stored = preference.instruction_paths.get_or_insert_default();
+            for (id, path) in updates { if let Some(path) = path { stored.insert(id, path); } else { stored.remove(&id); } }
+            if stored.is_empty() { preference.instruction_paths = None; }
+            if preference == &crate::settings::AgentConfigPathOverride::default() { all.remove(agent_id); }
+            if all.is_empty() { settings.agent_config_paths = None; }
+            path_configuration(agent_id, settings).map_err(|e| std::io::Error::other(e.to_string()))
+        }).map_err(|error| {
+            if error.kind() == std::io::ErrorKind::WouldBlock { err("instruction_paths_conflict", "Instructions directories changed in another window. Reopen configuration before saving; your files were not changed.") }
+            else { err("instruction_paths_save_failed", "Cannot safely save Instructions directory preferences. Native files were not changed.") }
+        })
+    })
+}
 fn safe_relative(value: &str) -> bool {
     !value.is_empty() && Path::new(value).components().all(|c| matches!(c, Component::Normal(_)))
 }
@@ -120,20 +219,26 @@ fn filenames(source: &Source, root: &Path) -> CoreResult<Vec<String>> {
     }
     Ok(names)
 }
-fn reader_matches(source: &Source, base: &Path, path: &Path) -> bool {
-    if source.files.iter().any(|name| base.join(name) == path) { return true; }
+fn native_filenames(source: &Source, home: &Path) -> CoreResult<Vec<String>> {
+    if source.filename_config.is_none() { return Ok(source.files.clone()); }
+    // A directory preference moves the editor's lookup, not the Agent's
+    // settings.json. Native context.fileName still owns the filenames.
+    filenames(source, &root(source, home)?)
+}
+fn reader_matches(source: &Source, base: &Path, path: &Path, home: &Path) -> bool {
+    if !source.files.is_empty() && native_filenames(source, home).is_ok_and(|names| names.iter().any(|name| base.join(name) == path)) { return true; }
     let Some(directory) = &source.directory else { return false; };
-    let directory = base.join(directory);
-    let Ok(relative) = path.strip_prefix(directory) else { return false; };
+    let Ok(relative) = path.strip_prefix(base) else { return false; };
+    if directory == "@mode-rules" && !relative.components().next().is_some_and(|c| c.as_os_str().to_string_lossy().starts_with("rules-")) { return false; }
     (source.recursive || relative.components().count() == 1)
         && source.extensions.iter().any(|ext| path.file_name().is_some_and(|n| n.to_string_lossy().ends_with(&format!(".{ext}"))))
 }
-fn readers(path: &Path, home: &Path) -> Vec<InstructionReader> {
+fn readers(path: &Path, home: &Path, settings: &crate::settings::Settings) -> Vec<InstructionReader> {
     let definitions = crate::agents::load_agents();
-    REGISTRY.profiles.iter().filter(|profile| profile.sources.iter().any(|s| root(s, home).is_ok_and(|base| reader_matches(s, &base, path))))
-        .flat_map(|p| &p.agent_ids).filter_map(|id| definitions.get(id).map(|d| InstructionReader { id: id.clone(), name: d.name.clone().unwrap_or_else(|| id.clone()) })).collect()
+    REGISTRY.profiles.iter().flat_map(|p| p.agent_ids.iter().filter(move |id| p.sources.iter().any(|s| checked_location(s, home, overrides(settings, id)).is_ok_and(|base| reader_matches(s, &base, path, home)))))
+        .filter_map(|id| definitions.get(id).map(|d| InstructionReader { id: id.clone(), name: d.name.clone().unwrap_or_else(|| id.clone()) })).collect()
 }
-fn inspect(path: PathBuf, editable: bool, loading: &str, home: &Path, files: &mut Vec<Located>, issues: &mut BTreeSet<String>, seen: &mut BTreeSet<String>) {
+fn inspect(path: PathBuf, editable: bool, loading: &str, home: &Path, settings: &crate::settings::Settings, files: &mut Vec<Located>, issues: &mut BTreeSet<String>, seen: &mut BTreeSet<String>) {
     if files.len() >= MAX_FILES { issues.insert("scan-limit".into()); return; }
     let metadata = match fs::symlink_metadata(&path) {
         Ok(value) => value,
@@ -153,9 +258,9 @@ fn inspect(path: PathBuf, editable: bool, loading: &str, home: &Path, files: &mu
     if !readable { issues.insert("editor-size-limit".into()); }
     let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
     let purpose = match name.as_str() { "SYSTEM.md" => "system-prompt", "APPEND_SYSTEM.md" => "append-system", "SOUL.md" => "identity", _ => "instructions" }.into();
-    files.push(Located { file: InstructionFile { id: hash(path.as_os_str().as_encoded_bytes()), path: path.to_string_lossy().into_owned(), name, purpose, loading: loading.into(), bytes: metadata.len(), editable: editable && readable && cfg!(unix), readers: readers(&path, home) }, path });
+    files.push(Located { file: InstructionFile { id: hash(path.as_os_str().as_encoded_bytes()), path: path.to_string_lossy().into_owned(), name, purpose, loading: loading.into(), bytes: metadata.len(), editable: editable && readable && cfg!(unix), readers: readers(&path, home, settings) }, path });
 }
-fn scan(directory: &Path, source: &Source, home: &Path, depth: usize, files: &mut Vec<Located>, issues: &mut BTreeSet<String>, seen: &mut BTreeSet<String>, visited: &mut usize) {
+fn scan(directory: &Path, source: &Source, home: &Path, settings: &crate::settings::Settings, depth: usize, files: &mut Vec<Located>, issues: &mut BTreeSet<String>, seen: &mut BTreeSet<String>, visited: &mut usize) {
     if *visited >= 2048 || depth > MAX_DEPTH || files.len() >= MAX_FILES { issues.insert("scan-limit".into()); return; }
     if state(&directory.join(".arca-read-probe")).is_err() { issues.insert("unsafe-or-unreadable-directory".into()); return; }
     let entries = match fs::read_dir(directory) {
@@ -168,10 +273,10 @@ fn scan(directory: &Path, source: &Source, home: &Path, depth: usize, files: &mu
         if *visited >= 2048 || files.len() >= MAX_FILES { issues.insert("scan-limit".into()); break; }
         let Ok(entry) = entry else { issues.insert("unreadable-directory".into()); continue; };
         let Ok(kind) = entry.file_type() else { issues.insert("unreadable-file".into()); continue; };
-        if kind.is_dir() && source.recursive { scan(&entry.path(), source, home, depth + 1, files, issues, seen, visited); }
+        if kind.is_dir() && source.recursive { scan(&entry.path(), source, home, settings, depth + 1, files, issues, seen, visited); }
         else if kind.is_symlink() { issues.insert("symlink-not-followed".into()); }
         else if kind.is_file() && source.extensions.iter().any(|ext| entry.file_name().to_string_lossy().ends_with(&format!(".{ext}"))) {
-            inspect(entry.path(), source.editable, "native-rule", home, files, issues, seen);
+            inspect(entry.path(), source.editable, "native-rule", home, settings, files, issues, seen);
         }
     }
 }
@@ -180,15 +285,15 @@ fn discover(agent_id: &str) -> CoreResult<Discovery> {
     let mut view = InstructionInventory { agent_id: agent_id.into(), supported: supported(agent_id), revision: String::new(), files: vec![], create: None, complete: true, issues: vec![], reload: "unknown".into(), native_notes: String::new(), docs: vec![] };
     let Some(p) = profile(agent_id) else { view.revision = hash(agent_id); return Ok(Discovery { view, located: vec![], create_path: None }); };
     view.reload.clone_from(&p.reload); view.docs.clone_from(&p.docs); view.native_notes = p.native_notes.get(agent_id).cloned().unwrap_or_default();
-    if p.blocked_env.iter().any(|name| std::env::var_os(name).is_some_and(|v| !v.is_empty())) {
-        view.complete = false; view.issues.push("native-custom-sources-unresolved".into()); view.revision = hash(format!("{agent_id}:custom-sources"));
-        return Ok(Discovery { view, located: vec![], create_path: None });
-    }
+    let blocked_environment = p.blocked_env.iter().any(|name| std::env::var_os(name).is_some_and(|v| !v.is_empty()));
     // A configured launcher may use a profile/root that differs from Arca's
     // environment. Do not initialize a default file for that different runtime.
     let launch_context = crate::settings::load_settings_strict();
     let context_readable = launch_context.is_ok();
-    if let Ok(settings) = launch_context {
+    let settings = launch_context.unwrap_or_default();
+    let configured_paths = overrides(&settings, agent_id);
+    let mut custom_launch = false;
+    {
         if let Some(target) = settings.agent_launch.as_ref().and_then(|all| all.get(agent_id)).and_then(|p| p.target.as_ref()) {
             use crate::domain::agents::LaunchTarget;
             let custom = match target {
@@ -200,19 +305,22 @@ fn discover(agent_id: &str) -> CoreResult<Discovery> {
                 }
                 LaunchTarget::Web { .. } => true,
             };
-            if custom {
-                view.complete = false; view.issues.push("native-launch-context-unresolved".into()); view.revision = hash(format!("{agent_id}:custom-launcher"));
-                return Ok(Discovery { view, located: vec![], create_path: None });
-            }
+            custom_launch = custom;
         }
     }
     let mut located = vec![]; let mut issues = BTreeSet::new(); let mut seen = BTreeSet::new(); let mut context = vec![]; let mut roots = vec![]; let mut visited = 0;
     if !context_readable { issues.insert("native-launch-context-unreadable".into()); }
+    if blocked_environment { issues.insert("native-custom-sources-unresolved".into()); }
     for (source_index, source) in p.sources.iter().enumerate() {
         let has_primary = !located.is_empty();
-        let base = match root(source, &home) { Ok(base) => base, Err(_) => { issues.insert("native-root-unresolved".into()); roots.push(None); continue; } };
+        // An explicit directory resolves that editor source even when the
+        // launcher uses another root. Unconfigured sources remain unresolved.
+        if (custom_launch || blocked_environment) && !configured_paths.is_some_and(|paths| paths.contains_key(&source.id)) {
+            issues.insert("native-launch-context-unresolved".into()); roots.push(None); continue;
+        }
+        let base = match checked_location(source, &home, configured_paths) { Ok(base) => base, Err(_) => { issues.insert("native-root-unresolved".into()); roots.push(None); continue; } };
         context.push(base.to_string_lossy().into_owned()); roots.push(Some(base.clone()));
-        let names = match filenames(source, &base) { Ok(names) => names, Err(_) => { issues.insert("native-filename-unresolved".into()); source.files.clone() } };
+        let names = match native_filenames(source, &home) { Ok(names) => names, Err(_) => { issues.insert("native-filename-unresolved".into()); source.files.clone() } };
         let mut winner = false;
         for name in names {
             if !safe_relative(&name) { issues.insert("native-filename-unresolved".into()); continue; }
@@ -220,7 +328,7 @@ fn discover(agent_id: &str) -> CoreResult<Discovery> {
             let nonempty = state(&path).ok().is_some_and(|(_, s)| match s { AnchoredPathState::File { bytes, .. } => source.selection == "first-existing" || !String::from_utf8_lossy(&bytes).trim().is_empty(), _ => false });
             let loading = if source.selection == "additive" { "native-file" } else if winner { "fallback" } else if nonempty { "preferred" } else { "empty" };
             let loading = if p.fallback_sources.contains(&source_index) { if has_primary { "shadowed" } else { "compatibility-fallback" } } else { loading };
-            inspect(path, source.editable, loading, &home, &mut located, &mut issues, &mut seen);
+            inspect(path, source.editable, loading, &home, &settings, &mut located, &mut issues, &mut seen);
             winner |= nonempty;
         }
         if let Some(directory) = &source.directory {
@@ -230,7 +338,7 @@ fn discover(agent_id: &str) -> CoreResult<Discovery> {
                         visited += 1;
                         if visited >= 2048 { issues.insert("scan-limit".into()); break; }
                         match entry {
-                            Ok(entry) if entry.file_name().to_string_lossy().starts_with("rules-") => scan(&entry.path(), source, &home, 0, &mut located, &mut issues, &mut seen, &mut visited),
+                            Ok(entry) if entry.file_name().to_string_lossy().starts_with("rules-") => scan(&entry.path(), source, &home, &settings, 0, &mut located, &mut issues, &mut seen, &mut visited),
                             Ok(_) => {},
                             Err(_) => { issues.insert("unreadable-directory".into()); }
                         }
@@ -238,12 +346,19 @@ fn discover(agent_id: &str) -> CoreResult<Discovery> {
                     Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
                     Err(_) => { issues.insert("unreadable-directory".into()); }
                 }
-            } else { scan(&base.join(directory), source, &home, 0, &mut located, &mut issues, &mut seen, &mut visited); }
+            } else { scan(&base, source, &home, &settings, 0, &mut located, &mut issues, &mut seen, &mut visited); }
         }
     }
     let create_path = p.create.as_ref().and_then(|create| roots.get(create.source).and_then(Option::as_ref).and_then(|root| {
-        if create.name == "@context-file" { filenames(&p.sources[create.source], root).ok()?.first().map(|name| root.join(name)) }
-        else { Some(root.join(&create.name)) }
+        if create.name == "@context-file" { native_filenames(&p.sources[create.source], &home).ok()?.first().map(|name| root.join(name)) }
+        else {
+            let source = &p.sources[create.source];
+            let name = match source.directory.as_deref() {
+                Some(directory) if directory != "@mode-rules" => Path::new(&create.name).strip_prefix(directory).ok()?,
+                _ => Path::new(&create.name),
+            };
+            Some(root.join(name))
+        }
     }));
     if !context_readable { for located in &mut located { located.file.editable = false; } }
     // Keep native fixed-file priority, with a stable order for directory rows.

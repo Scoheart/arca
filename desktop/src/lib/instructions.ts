@@ -10,6 +10,13 @@ export interface InstructionInventory {
 }
 export interface InstructionSnapshot { file: InstructionFile; text: string; revision: string; reload: string }
 export interface InstructionPlan { operation_id: string; candidate_hash: string; path: string; creating: boolean }
+export interface InstructionPathSource {
+  id: string; kind: 'files' | 'rules' | 'mode-rules'; path: string; default_path: string | null; overridden: boolean; patterns: string[];
+}
+export interface InstructionPathConfiguration { agent_id: string; revision: string; sources: InstructionPathSource[] }
+export interface InstructionPathUpdate { id: string; path: string | null }
+export const instructionGetPaths = (agentId: string) => invoke<InstructionPathConfiguration>('instruction_get_paths', { agentId });
+export const instructionSetPaths = (agentId: string, expectedRevision: string, paths: InstructionPathUpdate[]) => invoke<InstructionPathConfiguration>('instruction_set_paths', { agentId, expectedRevision, paths });
 export const instructionList = (agentId: string) => invoke<InstructionInventory>('instruction_list', { agentId });
 export const instructionRead = (agentId: string, fileId: string) => invoke<InstructionSnapshot>('instruction_read', { agentId, fileId });
 export const instructionPrepareSave = (agentId: string, fileId: string, expectedRevision: string, text: string) => invoke<InstructionPlan>('instruction_prepare_save', { agentId, fileId, expectedRevision, text });

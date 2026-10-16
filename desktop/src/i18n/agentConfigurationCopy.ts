@@ -1,4 +1,6 @@
 export const agentConfigurationZhCN = {
+  selectInstructionsDirectory: "选择 Instructions 目录", selectInstructionsDirectoryLabel: "选择 Instructions 目录 {{index}}", resetInstructionsDirectory: "恢复 Instructions 目录 {{index}} 默认值",
+  instructionsPathHint: "只配置 Arca 读取与编辑的位置，不迁移文件，也不改变 Agent 的原生加载设置。",
   tabs: "配置分类", launch: "启动", paths: "配置文件", unsaved: "未保存",
   pathChangeHint: "配置路径变更将显示影响范围", continue: "继续", unavailable: "未接入",
   configKey: "配置键", removeSkillsDirectory: "移除 Skills 目录 {{index}}", addSkillsDirectory: "添加 Skills 目录",
@@ -10,7 +12,7 @@ export const agentConfigurationZhCN = {
   updated: "{{name}} 配置已更新。", saveFailed: "无法保存配置：{{error}}",
   convergencePending: "Arca 已保存期望配置，但 Agent 文件尚未完成收敛；请在当前配置位置重试。",
   refreshFailed: "配置已保存，刷新失败：{{error}}",
-  preferencesIncomplete: "配置路径已保存，凭据或启动设置尚未全部保存，可重试：{{error}}",
+  preferencesIncomplete: "配置路径已保存，Instructions、凭据或启动设置尚未全部保存，可重试：{{error}}",
   openFailed: "无法打开：{{error}}", openEditor: "使用编辑器打开", openFolder: "打开文件夹", openLabel: "打开 {{label}}",
   selectApp: "选择 Agent 应用", selectExecutable: "选择可执行程序", applications: "应用程序",
   defaultDirectory: "默认工作目录", hostApp: "宿主应用", app: "应用", executable: "可执行程序",
@@ -23,6 +25,8 @@ export const agentConfigurationZhCN = {
 };
 
 export const agentConfigurationEnUS = {
+  selectInstructionsDirectory: "Choose Instructions directory", selectInstructionsDirectoryLabel: "Choose Instructions directory {{index}}", resetInstructionsDirectory: "Restore default Instructions directory {{index}}",
+  instructionsPathHint: "Sets where Arca reads and edits files. Does not move files or change the Agent's native loading settings.",
   tabs: "Configuration sections", launch: "Launch", paths: "Configuration files", unsaved: "Unsaved",
   pathChangeHint: "Review the impact of configuration path changes", continue: "Continue", unavailable: "Not integrated",
   configKey: "Configuration key", removeSkillsDirectory: "Remove Skills directory {{index}}", addSkillsDirectory: "Add Skills directory",
@@ -34,7 +38,7 @@ export const agentConfigurationEnUS = {
   updated: "{{name}} configuration updated.", saveFailed: "Could not save configuration: {{error}}",
   convergencePending: "Arca saved the desired configuration, but Agent files have not converged. Retry at the current configuration location.",
   refreshFailed: "Configuration saved, but refresh failed: {{error}}",
-  preferencesIncomplete: "Configuration paths were saved. Credentials or launch settings are incomplete; retry: {{error}}",
+  preferencesIncomplete: "Configuration paths were saved. Instructions, credentials or launch settings are incomplete; retry: {{error}}",
   openFailed: "Could not open: {{error}}", openEditor: "Open in editor", openFolder: "Open folder", openLabel: "Open {{label}}",
   selectApp: "Choose Agent application", selectExecutable: "Choose executable", applications: "Applications",
   defaultDirectory: "Default working directory", hostApp: "Host application", app: "Application", executable: "Executable",

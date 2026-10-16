@@ -1,4 +1,5 @@
 export const instructionsZhCN = {
+  draftDirectoryChanged: 'Instructions 目录已更改。旧目录的草稿已保留；请复制需要的内容并刷新，原文件未被修改。',
   closeTitle: '关闭 Arca 并放弃未保存的草稿？', closeBody: '{{count}} 个 Agent 的指令草稿尚未保存，原文件未被修改。', closeDiscard: '放弃草稿并关闭',
   title: '全局指令', subtitle: '本机 Agent 的原生全局文件', refresh: '刷新', source: '源文件', preview: '预览', save: '保存', saving: '正在保存…', cancel: '取消编辑', saved: '已保存到原文件。', created: '已创建原生全局指令文件。',
   unreadable: '请选择可读取的原生文件', chooseFile: '可重新选择文件，或使用默认编辑器打开，原文未修改。',
@@ -11,6 +12,7 @@ export const instructionsZhCN = {
   purpose: { instructions: '全局指导', 'system-prompt': '替换系统提示', 'append-system': '追加系统提示', identity: '身份 / 风格' },
 };
 export const instructionsEnUS = {
+  draftDirectoryChanged: 'Instructions directories changed. The draft from the previous location is preserved; copy any content you need, then refresh. No native file was changed.',
   closeTitle: 'Close Arca and discard unsaved drafts?', closeBody: 'Instruction drafts in {{count}} Agents are unsaved. Their original files are unchanged.', closeDiscard: 'Discard drafts and close',
   title: 'Global Instructions', subtitle: 'Native global files on this machine', refresh: 'Refresh', source: 'Source', preview: 'Preview', save: 'Save', saving: 'Saving…', cancel: 'Cancel edits', saved: 'Saved to the original file.', created: 'Native global instruction file created.',
   unreadable: 'Select a readable native file', chooseFile: 'Select another file or open it in your preferred editor. The original is unchanged.',

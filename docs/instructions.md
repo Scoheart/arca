@@ -4,6 +4,16 @@ Open an Agent and select **Instructions**. Arca shows the Agent's existing local
 
 This feature is a native-file editor, independent of central MCP / Model / Skill assets. There is no central Prompt copy, asset assignment, generated managed block, delete, rename, rule toggle, collection import or cross-Agent synchronization. Shared paths refer to the same original file.
 
+## Directory preferences
+
+In **Agent → Edit → Configuration files**, configure the **Instructions** directories alongside MCP, Model and Skills paths. Type a directory or use the folder picker; each row shows the native filenames or rule patterns it covers. Fixed-file rows select the containing directory. Rule rows select the rule directory itself (for example `~/.claude/rules`), and mode-rule rows select the parent of the native `rules-*` directories.
+
+Built-in native paths are defaults, not mandatory editor locations. Preferences are stored per Agent and stable native source ID in `agent_config_paths.<agent>.instruction_paths` in Arca settings. Restore default removes the override and resumes native environment/platform resolution. Opening configuration and saving directory preferences never create, copy, move, delete or rewrite Agent files; changing these editor locations does not configure the Agent runtime to load them.
+
+Native `context.fileName` settings still determine fixed filenames; selecting an Instructions directory does not relocate the Agent's `settings.json`.
+
+Discovery, sharing metadata, reads, edit plans and explicit missing-file initialization all use these same effective locations. Directory changes refresh the editor; an old draft remains available, while a pending write to a source no longer selected fails closed. Preferences have revision conflict protection independent of central asset projection. Incomplete native contracts remain read-only/guided even at custom locations.
+
 ## Existing files
 
 - Fixed files, native rule-directory files and compatibility candidates remain separate. Native frontmatter, conditional activation, priority and file names stay under the original Agent's control.

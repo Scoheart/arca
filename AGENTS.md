@@ -9,6 +9,7 @@
 - 当前只管理全局 Agent 配置和用户级 Skills；不得重新暴露项目级写入或在多个前端复制 core 编排。
 - 顶层 `MCPs`、`Models`、`Skills` 是中央资产生命周期入口；Agent 页面只能选择和解除消费关系，不能创建、导入、编辑或安装资产。外部扫描结果保持只读，只有显式导入才进入中央资产库；唯一例外是 `native-registry` Model Agent 的专用 reviewed `clear_agent_models`，它可删除当前 Agent observer 已列出的全部原生 Model（含 external），但不得删除中央资产、Provider 或凭据，单个 external 卡片仍不可直接写入。
 - 用户明确授权的 `Instructions` 是 Agent 原生全局文件查看/编辑能力，不属于中央资产。只保存用户对原文件的修改；完整检查确认没有原生入口后才允许用户主动新建一个文件。不得增加删除、迁移、分配、托管标记、中央正文副本、自动补文件或规则集合 CRUD。
+- `Instructions` 目录通过 Agent「编辑 → 配置文件」配置，由 Core 按稳定原生 source ID 保存和解析；registry 路径只是默认值。更改路径只更新 Arca 偏好，不迁移原文件、不变更 Agent 原生加载设置，也不触发中央资产投影。
 
 ## 安全不变量
 

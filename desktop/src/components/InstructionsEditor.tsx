@@ -62,7 +62,8 @@ export function InstructionsEditor({ agentId }: { agentId: string }) {
         // Preserve the creation revision used by an older draft. Saving must
         // reject newly appeared native files instead of treating them as absent.
         if (draft.creating) setInventory(draft.inventory);
-        toast.show({ kind: 'info', msg: t('instructions.restored') });
+        const moved = draft.creating ? value.revision !== draft.inventory.revision : !value.files.some(file => file.id === draft.snapshot?.file.id);
+        toast.show({ kind: moved ? 'warning' : 'info', msg: t(moved ? 'instructions.draftDirectoryChanged' : 'instructions.restored') });
       } else {
         drafts.delete(agentId);
         setSnapshot(null); setText(''); setCreating(false);

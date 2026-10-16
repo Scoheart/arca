@@ -69,7 +69,8 @@ pub struct NetworkSettings {
 
 /// User-selected write locations that are independent from an Agent's audited
 /// wire schema. MCP section keys plus Model and Skills paths live here so a
-/// location override never mutates the built-in codec contract. Skills keeps
+/// location override never mutates the built-in codec contract. Instructions
+/// locations select native editor sources without asset projection. Skills keeps
 /// one primary write directory plus zero or more compatibility read targets.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct AgentConfigPathOverride {
@@ -81,6 +82,12 @@ pub struct AgentConfigPathOverride {
     pub skills_global_dir: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skills_alias_dirs: Option<Vec<String>>,
+    /// Explicit local Instructions locations, keyed by stable native source ID.
+    /// These only select files for Arca's editor; they never project resources.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_paths: Option<BTreeMap<String, String>>,
+    #[serde(flatten)]
+    pub extra: BTreeMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]

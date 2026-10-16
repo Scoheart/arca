@@ -17,7 +17,7 @@ import {
 import { formatError } from "../lib/format";
 import { DialogShell } from "./DialogShell";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
-import { ExternalLinkIcon, KeyIcon, PlusIcon, TrashIcon } from "./icons";
+import { DocumentIcon, ExternalLinkIcon, FolderIcon, KeyIcon, PlusIcon, RefreshIcon, TrashIcon } from "./icons";
 import { ToastNotice, useToast } from "./Toast";
 import { configureAgentLaunch, getAgentLaunchInfo, type AgentLaunchInfo } from "../lib/agentLaunch";
 import { AgentLaunchFields, agentLaunchDraftChanged, agentLaunchDraftTarget, agentLaunchDraftValid, createAgentLaunchDraft, type AgentLaunchDraft } from "./AgentLaunchFields";
@@ -27,6 +27,8 @@ import "./AgentLaunch.css";
 import { homeDir } from "@tauri-apps/api/path";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { preferredFileEditor } from "./FileEditorSelect";
+import { open as choosePath } from "@tauri-apps/plugin-dialog";
+import { instructionGetPaths, instructionSetPaths, type InstructionPathConfiguration } from "../lib/instructions";
 
 function deliveryLabel(value: ApiKeyDelivery) {
   if (value === "env") return "agentConfiguration.deliveryEnv";
@@ -50,6 +52,7 @@ export function AgentConfigurationDialog({
   onClose,
   onSaved,
   onLaunchSaved,
+  onInstructionPathsSaved,
   initialSection = "paths",
 }: {
   agent: AgentInfo;
@@ -57,6 +60,7 @@ export function AgentConfigurationDialog({
   onClose(): void;
   onSaved(): Promise<unknown> | unknown;
   onLaunchSaved?(): void;
+  onInstructionPathsSaved?(): void;
   initialSection?: "paths" | "launch";
 }) {
   const { t } = useTranslation();
@@ -91,6 +95,11 @@ export function AgentConfigurationDialog({
   const [launchError, setLaunchError] = useState("");
   const [launchRequest, setLaunchRequest] = useState(0);
   const [browsing, setBrowsing] = useState(false);
+  const [instructionPaths, setInstructionPaths] = useState<InstructionPathConfiguration | null>(null);
+  const [instructionEdits, setInstructionEdits] = useState<Record<string, string | null>>({});
+  const [instructionLoading, setInstructionLoading] = useState(Boolean(agent.has_instructions));
+  const [instructionError, setInstructionError] = useState("");
+  const [instructionRequest, setInstructionRequest] = useState(0);
   const reviewedConfiguration = useRef<string | null>(null);
   const launchSection = useRef<HTMLElement>(null);
   const didFocusLaunch = useRef(false);
@@ -107,13 +116,26 @@ export function AgentConfigurationDialog({
   const [savedConfiguration, setSavedConfiguration] = useState(() => JSON.stringify(configurationPatch()));
   const configurationChanged = JSON.stringify(configurationPatch()) !== savedConfiguration;
   const launchChanged = Boolean(launchInfo && launchDraft && agentLaunchDraftChanged(launchInfo, launchDraft));
+  const instructionsChanged = Object.keys(instructionEdits).length > 0;
+  const instructionsValid = Object.values(instructionEdits).every(path => path === null || path.trim().length > 0);
   const configurationValid = (!hasMcp || (mcpPath.trim().length > 0 && mcpKey.trim().length > 0))
     && (!hasModel || (modelPaths.length > 0
       && modelPaths.every((path) => path.trim().length > 0)))
     && (!hasSkills || (skillsPaths.length > 0
       && skillsPaths.every((path) => path.trim().length > 0)));
-  const canSubmit = !busy && !browsing && !launchLoading && (configurationChanged || launchChanged || deliveryChanged)
+  const canSubmit = !busy && !browsing && !launchLoading && !instructionLoading && instructionsValid && (configurationChanged || launchChanged || deliveryChanged || instructionsChanged)
     && (!configurationChanged || configurationValid) && (!launchChanged || launchDraft && agentLaunchDraftValid(launchDraft));
+
+  useEffect(() => {
+    if (!agent.has_instructions) return;
+    let active = true;
+    setInstructionLoading(true); setInstructionError("");
+    void instructionGetPaths(agent.id).then(value => {
+      if (active) { setInstructionPaths(value); setInstructionEdits({}); }
+    }).catch(failure => { if (active) setInstructionError(formatError(failure)); })
+      .finally(() => { if (active) setInstructionLoading(false); });
+    return () => { active = false; };
+  }, [agent.id, agent.has_instructions, instructionRequest]);
 
   useEffect(() => {
     let active = true;
@@ -141,6 +163,14 @@ export function AgentConfigurationDialog({
   };
 
   const savePreferences = async () => {
+    if (instructionsChanged && instructionPaths) {
+      const paths = Object.entries(instructionEdits).map(([id, path]) => ({ id,
+        path: path === null || path.trim() === instructionPaths.sources.find(source => source.id === id)?.default_path ? null : path.trim(),
+      }));
+      const saved = await instructionSetPaths(agent.id, instructionPaths.revision, paths);
+      setInstructionPaths(saved); setInstructionEdits({});
+      onInstructionPathsSaved?.();
+    }
     if (deliveryChanged) {
       await setAgentCredentialDelivery(agent.id, delivery, plaintextApproved.current);
       setSavedDelivery(delivery);
@@ -255,6 +285,26 @@ export function AgentConfigurationDialog({
     )));
   };
 
+  const updateInstructionPath = (id: string, value: string | null) => {
+    const source = instructionPaths?.sources.find(source => source.id === id);
+    setInstructionEdits(current => {
+      const next = { ...current };
+      if (value === source?.path || value === null && !source?.overridden) delete next[id];
+      else next[id] = value;
+      return next;
+    });
+  };
+  const browseInstructionPath = async (id: string, value: string) => {
+    setBrowsing(true);
+    try {
+      const home = (await homeDir()).replace(/\/$/, "");
+      const defaultPath = value === "~" ? home : value.startsWith("~/") ? `${home}/${value.slice(2)}` : value || undefined;
+      const selected = await choosePath({ directory: true, multiple: false, defaultPath, title: t("agentConfiguration.selectInstructionsDirectory") });
+      if (typeof selected === "string") updateInstructionPath(id, selected);
+    } catch (failure) { toast.show({ kind: "error", msg: formatError(failure) }); }
+    finally { setBrowsing(false); }
+  };
+
   if (confirmingPlaintext) {
     return (
       <DialogShell kind="review" size="sm" className="arca-plaintext-confirmation"
@@ -310,7 +360,7 @@ export function AgentConfigurationDialog({
             const next = event.key === "Home" ? 0 : event.key === "End" ? 1 : 1 - index;
             setSection(next === 0 ? "launch" : "paths"); sectionButtons.current[next]?.focus();
           }}>
-          {label}{(value === "launch" ? launchChanged : configurationChanged || deliveryChanged) && <i aria-label={t("agentConfiguration.unsaved")} />}
+          {label}{(value === "launch" ? launchChanged : configurationChanged || deliveryChanged || instructionsChanged) && <i aria-label={t("agentConfiguration.unsaved")} />}
         </button>)}
       </div>}
       busy={busy || browsing}
@@ -412,6 +462,25 @@ export function AgentConfigurationDialog({
         )}
           </>}
         </Fragment>)}
+        {agent.has_instructions && <section className="arca-agent-instruction-paths" aria-label="Instructions">
+          {instructionLoading ? <p className="arca-launch-hint" role="status">{t("agentConfiguration.reading")}</p>
+            : instructionPaths?.sources.map((source, index) => {
+              const value = source.id in instructionEdits ? instructionEdits[source.id] ?? source.default_path ?? "" : source.path;
+              return <div key={source.id} className="arca-agent-instruction-path">
+                <ConfigField icon={<DocumentIcon className="w-4 h-4" />} label={index === 0 ? "Instructions" : `Instructions ${index + 1}`}
+                  value={value} openKind="folder" hint={`${source.kind === 'mode-rules' ? 'rules-*/ · ' : ''}${source.patterns.join(' · ')}`}
+                  onChange={path => updateInstructionPath(source.id, path)}
+                  action={<>
+                    <button type="button" className="arca-agent-config-remove" title={t("agentConfiguration.selectInstructionsDirectory")} aria-label={t("agentConfiguration.selectInstructionsDirectoryLabel", { index: index + 1 })}
+                      onClick={event => { event.preventDefault(); void browseInstructionPath(source.id, value); }}><FolderIcon className="w-4 h-4" /></button>
+                    <button type="button" className="arca-agent-config-remove" title={t("agentConfiguration.restoreDefault")} aria-label={t("agentConfiguration.resetInstructionsDirectory", { index: index + 1 })}
+                      disabled={!source.overridden && !(source.id in instructionEdits)} onClick={event => { event.preventDefault(); updateInstructionPath(source.id, null); }}><RefreshIcon className="w-4 h-4" /></button>
+                  </>} />
+              </div>;
+            })}
+          {instructionPaths && <p className="arca-agent-instruction-hint">{t("agentConfiguration.instructionsPathHint")}</p>}
+          {instructionError && <ToastNotice message={instructionError} action={<button type="button" className="btn-ghost" onClick={() => setInstructionRequest(value => value + 1)}>{t("common.retry")}</button>} />}
+        </section>}
       </fieldset>
       {hasDelivery && (
         <section className="arca-agent-config-credential" aria-label={t("agentConfiguration.credentials")}>
@@ -446,6 +515,7 @@ function ConfigField({
   onChange,
   action,
   openKind,
+  hint,
 }: {
   icon: ReactNode;
   label: string;
@@ -454,9 +524,11 @@ function ConfigField({
   onChange?(value: string): void;
   action?: ReactNode;
   openKind?: "file" | "folder";
+  hint?: string;
 }) {
   const toast = useToast();
   const { t } = useTranslation();
+  const hintId = useId();
   const openLocation = async () => {
     try {
       const home = (await homeDir()).replace(/\/$/, "");
@@ -475,9 +547,11 @@ function ConfigField({
       <span className="arca-agent-field-control">
       <input
         className="arca-model-field"
+        aria-label={label}
         value={value}
         disabled={disabled}
         spellCheck={false}
+        aria-describedby={hint ? hintId : undefined}
         onChange={(event) => onChange?.(event.target.value)}
       />
       {(openKind || action) && <span className="arca-agent-config-field-actions">
@@ -487,6 +561,7 @@ function ConfigField({
         {action}
       </span>}
       </span>
+      {hint && <small className="arca-agent-path-patterns" id={hintId}>{hint}</small>}
     </label>
   );
 }

@@ -1,6 +1,54 @@
 //! Native-document fixtures never touch real Agent files or Keychain entries.
 use arca_core::{application::instructions, testenv::TestHome};
 use std::fs;
+use instructions::InstructionPathUpdate;
+struct NativeEnv(&'static str, Option<std::ffi::OsString>);
+impl NativeEnv {
+    fn set(name: &'static str, value: &std::path::Path) -> Self {
+        let old = std::env::var_os(name); std::env::set_var(name, value); Self(name, old)
+    }
+}
+impl Drop for NativeEnv {
+    fn drop(&mut self) { if let Some(value) = &self.1 { std::env::set_var(self.0, value); } else { std::env::remove_var(self.0); } }
+}
+
+#[test]
+fn directory_preferences_select_files_without_migration_and_reject_stale_edits() {
+    let home = TestHome::new("instructions-custom-directory");
+    let _native_root = NativeEnv::set("CODEX_HOME", &home.home.join(".codex"));
+    let original = home.home.join(".codex/AGENTS.md");
+    let selected = home.home.join("custom-codex/AGENTS.md");
+    for path in [&original, &selected] { fs::create_dir_all(path.parent().unwrap()).unwrap(); }
+    fs::write(&original, "native default").unwrap(); fs::write(&selected, "selected native file").unwrap();
+    let before = instructions::list("codex").unwrap();
+    let snapshot = instructions::read("codex", &before.files[0].id).unwrap();
+    let pending = instructions::prepare_save("codex", &snapshot.file.id, &snapshot.revision, "old draft").unwrap();
+    let config = instructions::get_paths("codex").unwrap();
+    let changed = instructions::set_paths("codex", &config.revision, vec![InstructionPathUpdate { id: config.sources[0].id.clone(), path: Some("~/custom-codex".into()) }]).unwrap();
+    assert_eq!(instructions::list("codex").unwrap().files[0].path, selected.to_string_lossy());
+    assert!(instructions::commit(&pending.operation_id, &pending.candidate_hash).is_err());
+    assert_eq!(fs::read_to_string(&original).unwrap(), "native default");
+    assert_eq!(fs::read_to_string(&selected).unwrap(), "selected native file");
+    assert!(instructions::set_paths("codex", &config.revision, vec![InstructionPathUpdate { id: config.sources[0].id.clone(), path: None }]).is_err());
+    instructions::set_paths("codex", &changed.revision, vec![InstructionPathUpdate { id: changed.sources[0].id.clone(), path: None }]).unwrap();
+    assert_eq!(instructions::list("codex").unwrap().files[0].path, original.to_string_lossy());
+}
+
+#[test]
+fn rule_directory_preferences_never_initialize_until_explicit_content_save() {
+    let home = TestHome::new("instructions-custom-rules");
+    let config = instructions::get_paths("augment").unwrap();
+    instructions::set_paths("augment", &config.revision, vec![InstructionPathUpdate { id: config.sources[0].id.clone(), path: Some("~/custom-rules".into()) }]).unwrap();
+    let target = home.home.join("custom-rules/global.md");
+    assert!(!target.parent().unwrap().exists());
+    let inventory = instructions::list("augment").unwrap();
+    assert_eq!(inventory.create.as_ref().unwrap().path, target.to_string_lossy());
+    let plan = instructions::prepare_create("augment", &inventory.revision, "Explicit instructions\n").unwrap();
+    assert!(!target.exists());
+    instructions::commit(&plan.operation_id, &plan.candidate_hash).unwrap();
+    assert_eq!(fs::read_to_string(&target).unwrap(), "Explicit instructions\n");
+    assert!(!home.home.join(".augment").exists());
+}
 #[test]
 fn viewing_is_read_only_and_initialization_never_upserts() {
     let home = TestHome::new("instructions-create");

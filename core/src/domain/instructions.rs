@@ -2,6 +2,31 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
+pub struct InstructionPathSource {
+    pub id: String,
+    pub kind: String,
+    pub path: String,
+    pub default_path: Option<String>,
+    pub overridden: bool,
+    pub patterns: Vec<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct InstructionPathConfiguration {
+    pub agent_id: String,
+    pub revision: String,
+    pub sources: Vec<InstructionPathSource>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InstructionPathUpdate {
+    pub id: String,
+    /// Null restores native path resolution. No filesystem content is changed.
+    pub path: Option<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct InstructionReader { pub id: String, pub name: String }
 
 #[derive(Clone, Serialize, Deserialize)]

@@ -6,6 +6,12 @@ async fn worker<T: Send + 'static>(f: impl FnOnce() -> CoreResult<T> + Send + 's
 #[tauri::command]
 pub async fn instruction_list(agent_id: String) -> CoreResult<core::InstructionInventory> { worker(move || core::list(&agent_id)).await }
 #[tauri::command]
+pub async fn instruction_get_paths(agent_id: String) -> CoreResult<core::InstructionPathConfiguration> { worker(move || core::get_paths(&agent_id)).await }
+#[tauri::command]
+pub async fn instruction_set_paths(agent_id: String, expected_revision: String, paths: Vec<core::InstructionPathUpdate>) -> CoreResult<core::InstructionPathConfiguration> {
+    worker(move || core::set_paths(&agent_id, &expected_revision, paths)).await
+}
+#[tauri::command]
 pub async fn instruction_read(agent_id: String, file_id: String) -> CoreResult<core::InstructionSnapshot> { worker(move || core::read(&agent_id, &file_id)).await }
 #[tauri::command]
 pub async fn instruction_prepare_save(agent_id: String, file_id: String, expected_revision: String, text: String) -> CoreResult<core::InstructionEditPlan> {
