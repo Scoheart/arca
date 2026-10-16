@@ -420,7 +420,7 @@ Agent labels use the actual application name, or the official CLI/plugin product
 从 Agent 详情页点击「抓包」进入该 Agent 的工作台。开始记录时直接沿用当前 Agent，弹窗只展示名称，不再重复选择；进程和历史会话也仅展示该 Agent 的记录。
 选择启动新进程或记录已有实例，再指定直连、Arca 已配置的代理或任意无认证 HTTP 上游地址。抓包出口独立于 Arca 自身联网设置，指定代理后失败不回退直连。
 
-依赖本机官方 mitmproxy（`mitmdump`）。首次开始记录会由官方引擎安装并注册 Mitmproxy Redirector；注册前，系统设置的网络扩展列表中可能没有该项。按 macOS 提示批准安装与启用后会自动继续，最多等待 3 分钟；已就绪引擎仍使用 12 秒启动上限。注册后可在系统设置「通用 → 登录项与扩展 → 网络扩展」查看。Arca 不代替用户批准系统权限。
+依赖本机官方 mitmproxy（`mitmdump`）。首次开始记录会由官方引擎安装并注册 Mitmproxy Redirector，无需运行终端命令；注册前，系统设置的网络扩展列表中可能没有该项。通知条提供「打开授权设置」入口，Arca 自动检测授权状态，批准后继续记录，无需手动刷新，最多等待 3 分钟。已就绪引擎仍使用 12 秒启动上限。Arca 不代替用户批准系统权限。
 
 HTTPS 记录还涉及 `~/.mitmproxy/mitmproxy-ca-cert.pem`。Arca 只检查系统信任，不自动安装系统证书。「启动新进程」给支持的运行时传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。设置会区分进程证书、Node / 浏览器混合网络栈和系统信任：Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端的启动和抓包均拒绝执行，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
 
