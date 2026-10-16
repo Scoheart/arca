@@ -94,6 +94,7 @@ pub(crate) fn list_capabilities_with_skills(
             )
         });
         let installed = mcp.as_ref().is_some_and(|(observed, _)| *observed);
+        let instructions = super::instructions::supported(&info.id);
         views.insert(
             info.id.clone(),
             AgentCapabilityView {
@@ -112,6 +113,7 @@ pub(crate) fn list_capabilities_with_skills(
                 runtime_detected: None,
                 config_detected: false,
                 capabilities: AgentCapabilitySet {
+                    instructions,
                     mcp: mcp.map(|(_, capability)| capability),
                     ..AgentCapabilitySet::default()
                 },

@@ -74,6 +74,9 @@ thread_local! {
         const { RefCell::new(BTreeMap::new()) };
     static ACTIVE_TRANSACTION_WRITES: RefCell<Option<Rc<RefCell<ActiveTransactionWrites>>>> =
         const { RefCell::new(None) };
+    // Native document edits are independent of central asset recovery. Their
+    // durable claims must never become a global MCP/Model/Skill blocker.
+    static FILE_EDIT_CLAIMS: RefCell<Option<PathBuf>> = const { RefCell::new(None) };
     #[cfg(test)]
     static TEST_GLOBAL_MUTATION_ROOT: PathBuf = {
         let base = std::fs::canonicalize(std::env::temp_dir())
@@ -3165,9 +3168,43 @@ pub(crate) fn read_path_state_anchored(
 }
 
 #[cfg(unix)]
+pub(crate) fn read_path_state_anchored_limited(
+    path: &Path, snapshot: &ParentDirectorySnapshot, limit: u64,
+) -> Result<AnchoredPathState, String> {
+    if target_parent(path) != snapshot.parent_path { return Err("file parent changed".into()); }
+    let Some(parent) = open_parent_anchored(snapshot, false)? else { return Ok(AnchoredPathState::Missing); };
+    read_path_state_from_parent_limited(path, &parent, Some(limit))
+}
+
+#[cfg(not(unix))]
+pub(crate) fn read_path_state_anchored_limited(
+    _path: &Path, _snapshot: &ParentDirectorySnapshot, _limit: u64,
+) -> Result<AnchoredPathState, String> { Err("native file editing is unavailable on this platform".into()) }
+
+/// Run the existing durable leaf-write protocol in one document's local scope.
+/// Reads do not call this and therefore never create Arca or Agent directories.
+pub(crate) fn with_file_edit_claims<T>(directory: &Path, operation: impl FnOnce() -> Result<T, String>) -> Result<T, String> {
+    recover_transaction_mutation_intents(directory, &BTreeMap::new())?;
+    let occupied = FILE_EDIT_CLAIMS.with(|slot| slot.borrow().is_some());
+    if occupied { return Err("nested native file edit".into()); }
+    struct Scope;
+    impl Drop for Scope { fn drop(&mut self) { FILE_EDIT_CLAIMS.with(|slot| *slot.borrow_mut() = None); } }
+    FILE_EDIT_CLAIMS.with(|slot| *slot.borrow_mut() = Some(directory.to_path_buf()));
+    let _scope = Scope;
+    operation()
+}
+
+#[cfg(unix)]
 fn read_path_state_from_parent(
     path: &Path,
     parent: &OpenParent,
+) -> Result<AnchoredPathState, String> {
+    read_path_state_from_parent_limited(path, parent, None)
+}
+
+#[cfg(unix)]
+fn read_path_state_from_parent_limited(
+    path: &Path, parent: &OpenParent, limit: Option<u64>,
 ) -> Result<AnchoredPathState, String> {
     use rustix::fs::{openat, readlinkat, statat, AtFlags, FileType, Mode, OFlags};
     use rustix::io::Errno;
@@ -3188,7 +3225,7 @@ fn read_path_state_from_parent(
     };
     match FileType::from_raw_mode(stat.st_mode as _) {
         FileType::RegularFile => {
-            let mut file = fs::File::from(
+            let file = fs::File::from(
                 openat(
                     &parent.directory,
                     name,
@@ -3208,8 +3245,10 @@ fn read_path_state_from_parent(
             }
             let mode = Some(metadata.permissions().mode());
             let mut bytes = Vec::new();
-            file.read_to_end(&mut bytes)
+            if limit.is_some_and(|limit| metadata.len() > limit) { return Err("file exceeds editor size limit".into()); }
+            file.take(limit.map(|limit| limit + 1).unwrap_or(u64::MAX)).read_to_end(&mut bytes)
                 .map_err(|error| format!("failed to read {}: {error}", path.display()))?;
+            if limit.is_some_and(|limit| bytes.len() as u64 > limit) { return Err("file exceeds editor size limit".into()); }
             Ok(AnchoredPathState::File {
                 bytes: Zeroizing::new(bytes),
                 mode,
@@ -3481,7 +3520,7 @@ fn create_mutation_intent_record(
             .as_nanos()
             .min(u64::MAX as u128) as u64;
         (
-            global_mutation_intent_dir(),
+            FILE_EDIT_CLAIMS.with(|slot| slot.borrow().clone()).unwrap_or_else(global_mutation_intent_dir),
             sequence,
             TransactionPathPrivacy::Ordinary,
         )

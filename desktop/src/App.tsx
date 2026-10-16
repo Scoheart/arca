@@ -1,3 +1,4 @@
+import { InstructionDraftGuard } from './components/InstructionDraftGuard';
 import { ToastNotice } from "./components/Toast";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invalidateModelObservation } from "./lib/modelObservation";
@@ -298,6 +299,7 @@ function App() {
       onRescan={() => refreshObservedTasks(ALL_OBSERVATION_TASK_IDS)}
       startupSync={startupSync}
     >
+      <InstructionDraftGuard />
       <Suspense fallback={<ViewLoading />}>
         {view.kind === "traces" ? (<TraceView initialAgentId={view.agentId} />) : view.kind === "capture" ? (<CaptureView key={view.agentId} agents={agents} agentId={view.agentId} arcaProxy={networkSettings.settings.proxy_url} />) : view.kind === "skills" ? (
           <SkillsView
@@ -314,6 +316,7 @@ function App() {
           />
         ) : view.kind === "agent" ? (
           <AgentView
+            key={view.id}
             state={state}
             skillsState={skillsState}
             consumptionState={consumptionState}

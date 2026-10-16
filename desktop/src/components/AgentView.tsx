@@ -58,6 +58,7 @@ import { mergeAgentInfos } from "../lib/agentCapabilities";
 import { SkillReviewDialog } from "./SkillReviewDialog";
 import { useTranslation } from "react-i18next";
 import { McpAvatar } from "./McpIcon";
+import { InstructionsEditor } from "./InstructionsEditor";
 
 type PickerDomain = "mcp" | "model" | "skill";
 type ConfigLocationKind = "file" | "folder";
@@ -338,7 +339,7 @@ export function AgentView({
 
   if (!agent) return <div className="arca-agent-state">未找到该 Agent</div>;
 
-  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent) {
+  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent && !agent.has_instructions) {
     return (
       <div className="arca-agent-page">
         <div className="arca-agent-shell">
@@ -657,6 +658,7 @@ export function AgentView({
           key={agent.id}
           value={resourceTab}
           onChange={setResourceTab}
+          instructions={agent.has_instructions}
           counts={{
             mcps: mcpRows.length + mcpExternal.length,
             models: modelVisibleCount,
@@ -698,7 +700,7 @@ export function AgentView({
           ) : null}
           <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
             message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
-          {resourceTab === "mcps" ? !agent.has_global ? (
+          {resourceTab === "instructions" ? <InstructionsEditor key={agent.id} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global ? (
             <div className="arca-agent-inline-state">此 Agent 未接入 MCP。</div>
           ) : (
             <AgentConsumptionPanel

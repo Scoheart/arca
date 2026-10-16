@@ -1,6 +1,7 @@
 import { createContext, useContext, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { RESOURCE_CATEGORIES, type ResourceCategoryId } from "./resourcePresentation";
+import { DocumentIcon } from "./icons";
 
 const ToolbarTarget = createContext<HTMLDivElement | null | undefined>(undefined);
 
@@ -10,20 +11,23 @@ export function AgentResourceActions({ children }: { children: ReactNode }) {
   return target ? createPortal(children, target) : null;
 }
 
-export type AgentResourceTab = ResourceCategoryId;
-const TABS = RESOURCE_CATEGORIES;
+export type AgentResourceTab = ResourceCategoryId | "instructions";
 
 export function AgentResourcePanel({
   value,
   onChange,
   counts,
+  instructions = false,
   children,
 }: {
   value: AgentResourceTab;
   onChange: (value: AgentResourceTab) => void;
-  counts: Record<AgentResourceTab, number>;
+  counts: Record<ResourceCategoryId, number>;
+  instructions?: boolean;
   children: ReactNode;
 }) {
+  const TABS: Array<{ id: AgentResourceTab; label: string; Icon: typeof DocumentIcon }> = [...RESOURCE_CATEGORIES,
+    ...(instructions ? [{ id: "instructions" as const, label: "Instructions", Icon: DocumentIcon }] : [])];
   const id = useId();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const selectedIndex = TABS.findIndex((tab) => tab.id === value);
@@ -62,7 +66,7 @@ export function AgentResourcePanel({
             >
               <span className="arca-agent-resource-tab-icon" aria-hidden="true"><tab.Icon className="w-4 h-4" /></span>
               <span>{tab.label}</span>
-              <span>{counts[tab.id]}</span>
+              {tab.id !== "instructions" && <span>{counts[tab.id]}</span>}
             </button>
           ))}
         </div>

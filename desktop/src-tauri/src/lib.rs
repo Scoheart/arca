@@ -2,6 +2,7 @@ pub mod cli_tool;
 pub mod commands;
 mod capture;
 mod traces;
+mod instructions;
 mod observation_watcher;
 mod file_editors;
 mod agent_launch;
@@ -145,6 +146,11 @@ pub fn run() {
             commands::import_mcp_icon_dialog,
             commands::reset_mcp_icon,
             traces::trace_index,
+            instructions::instruction_list,
+            instructions::instruction_read,
+            instructions::instruction_prepare_save,
+            instructions::instruction_prepare_create,
+            instructions::instruction_commit,
             traces::trace_page,
             traces::trace_detail,
             traces::trace_import,

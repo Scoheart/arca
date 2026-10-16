@@ -36,6 +36,7 @@ export interface AgentInfo {
   has_global: boolean; has_project: boolean; enabled: boolean;
   /** Derived from WorkspaceSnapshot; absent on the legacy MCP-shaped wire. */
   has_model?: boolean;
+  has_instructions?: boolean;
   supported_transports: Array<"stdio" | "http">;
   /** Raw stored config paths (e.g. `~/Library/Application Support/…/mcp.json`). */
   global: string | null; project: string | null;
@@ -67,6 +68,7 @@ export interface AgentCapabilityView {
   runtime_detected?: boolean | null;
   config_detected?: boolean;
   capabilities: {
+    instructions?: boolean;
     mcp?: {
       writable: boolean;
       config_path?: string | null;

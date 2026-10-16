@@ -2,26 +2,40 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "opener:default",
     {
       "identifier": "opener:allow-open-url",
       "allow": [
-        { "url": "x-apple.systempreferences:com.apple.LoginItems-Settings.extension" }
+        {
+          "url": "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
+        }
       ]
     },
     {
       "identifier": "opener:allow-open-path",
       "allow": [
-        { "path": "$HOME/**", "app": true },
-        { "path": "$HOME/.*", "app": true },
-        { "path": "$HOME/.*/**", "app": true }
+        {
+          "path": "$HOME/**",
+          "app": true
+        },
+        {
+          "path": "$HOME/.*",
+          "app": true
+        },
+        {
+          "path": "$HOME/.*/**",
+          "app": true
+        }
       ]
     },
     "dialog:default",
     "updater:default",
-    "process:default"
+    "process:default",
+    "core:window:allow-close"
   ]
 }

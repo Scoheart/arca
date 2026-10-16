@@ -1,0 +1,1802 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "agent_ids": [
+        "claude-code"
+      ],
+      "sources": [
+        {
+          "root": "~/.claude",
+          "env": [],
+          "files": [
+            "CLAUDE.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.claude",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "rules",
+          "recursive": true,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://code.claude.com/docs/en/memory"
+      ],
+      "native_notes": {
+        "claude-code": "User CLAUDE.md and rules are loaded by Claude Code. Native exclusions or managed-only settings can suppress them. Existing conditional rules retain their original conditions."
+      },
+      "create": {
+        "source": 0,
+        "name": "CLAUDE.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "codex",
+        "codex-ide",
+        "codex-desktop"
+      ],
+      "sources": [
+        {
+          "root": "~/.codex",
+          "env": [
+            "CODEX_HOME"
+          ],
+          "files": [
+            "AGENTS.override.md",
+            "AGENTS.md"
+          ],
+          "selection": "first-nonempty",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://developers.openai.com/codex/guides/agents-md",
+        "https://learn.chatgpt.com/docs/agent-configuration/agents-md",
+        "https://developers.openai.com/codex/config-basic",
+        "https://github.com/openai/codex/blob/6ae8b8aa7c608730d4315d59c5c081897ae02780/codex-rs/codex-home/src/instructions/mod.rs",
+        "https://learn.chatgpt.com/docs/reference/settings",
+        "https://help.openai.com/en/articles/8096356-chatgpt-custom-instructions"
+      ],
+      "native_notes": {
+        "codex": "In the current local CODEX_HOME, a non-empty AGENTS.override.md takes precedence over AGENTS.md. Changes apply to new runs. A desktop or remote backend may use a different home. The default 32 KiB instruction budget is shared with project guidance and can be configured natively.",
+        "codex-ide": "In the current local CODEX_HOME, a non-empty AGENTS.override.md takes precedence over AGENTS.md. Changes apply to new runs. A desktop or remote backend may use a different home. The default 32 KiB instruction budget is shared with project guidance and can be configured natively.",
+        "codex-desktop": "In the current local CODEX_HOME, a non-empty AGENTS.override.md takes precedence over AGENTS.md. Changes apply to new runs. A desktop or remote backend may use a different home. The default 32 KiB instruction budget is shared with project guidance and can be configured natively."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "pi"
+      ],
+      "sources": [
+        {
+          "root": "~/.pi/agent",
+          "env": [
+            "PI_CODING_AGENT_DIR"
+          ],
+          "files": [
+            "AGENTS.override.md",
+            "AGENTS.md",
+            "AGENTS.MD",
+            "CLAUDE.md",
+            "CLAUDE.MD"
+          ],
+          "selection": "first-nonempty",
+          "editable": true
+        },
+        {
+          "root": "~/.pi/agent",
+          "env": [
+            "PI_CODING_AGENT_DIR"
+          ],
+          "files": [
+            "SYSTEM.md",
+            "APPEND_SYSTEM.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "native-reload",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://pi.dev/docs/latest/configuration",
+        "https://pi.dev/docs/latest/cli"
+      ],
+      "native_notes": {
+        "pi": "Context candidates use their native priority. SYSTEM.md replaces the system prompt; APPEND_SYSTEM.md appends to it. Native flags or project files may change loading. Use /reload or a new session."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "step-code"
+      ],
+      "sources": [
+        {
+          "root": "~/.stepcode/agent",
+          "env": [
+            "STEP_CODING_AGENT_DIR"
+          ],
+          "files": [
+            "AGENTS.override.md",
+            "AGENTS.md",
+            "AGENTS.MD",
+            "CLAUDE.md",
+            "CLAUDE.MD"
+          ],
+          "selection": "first-nonempty",
+          "editable": true
+        },
+        {
+          "root": "~/.stepcode/agent",
+          "env": [
+            "STEP_CODING_AGENT_DIR"
+          ],
+          "files": [
+            "SYSTEM.md",
+            "APPEND_SYSTEM.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "native-reload",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/stepfun-ai/Step-Code/blob/b5dbed938d9ae589397cf522dcf2ff89ecf4c494/packages/coding-agent/src/config.ts",
+        "https://github.com/stepfun-ai/Step-Code/blob/b5dbed938d9ae589397cf522dcf2ff89ecf4c494/packages/coding-agent/src/core/resource-loader.ts",
+        "https://github.com/stepfun-ai/Step-Code/blob/b5dbed938d9ae589397cf522dcf2ff89ecf4c494/packages/coding-agent/src/step-bootstrap.ts"
+      ],
+      "native_notes": {
+        "step-code": "These paths belong to the Step entry point. Its native context priority is preserved. SYSTEM.md and APPEND_SYSTEM.md have different roles; project files can override them."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "amp"
+      ],
+      "sources": [
+        {
+          "root": "~/.config/amp",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "AGENT.md",
+            "CLAUDE.md"
+          ],
+          "selection": "first-existing",
+          "editable": true
+        },
+        {
+          "root": "~/.config",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "AGENT.md",
+            "CLAUDE.md"
+          ],
+          "selection": "first-existing",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://ampcode.com/docs/customize/agents-md"
+      ],
+      "native_notes": {
+        "amp": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "gemini"
+      ],
+      "sources": [
+        {
+          "root": "~/.gemini",
+          "env": [],
+          "files": [
+            "GEMINI.md"
+          ],
+          "selection": "additive",
+          "editable": true,
+          "filename_config": {
+            "path": "settings.json",
+            "pointer": "/context/fileName"
+          }
+        }
+      ],
+      "reload": "native-reload",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://geminicli.com/docs/cli/gemini-md/",
+        "https://geminicli.com/docs/reference/configuration/"
+      ],
+      "native_notes": {
+        "gemini": "Uses the configured context.fileName when available. Gemini loads and combines its native context sources; imports and reload behavior remain native. Use /memory reload or a new session."
+      },
+      "create": {
+        "source": 0,
+        "name": "@context-file",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "qwen-code"
+      ],
+      "sources": [
+        {
+          "root": "~/.qwen",
+          "env": [
+            "QWEN_HOME"
+          ],
+          "files": [
+            "QWEN.md"
+          ],
+          "selection": "additive",
+          "editable": true,
+          "filename_config": {
+            "path": "settings.json",
+            "pointer": "/context/fileName"
+          }
+        },
+        {
+          "root": "~/.qwen",
+          "env": [
+            "QWEN_HOME"
+          ],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "rules",
+          "recursive": true,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "native-reload",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://qwenlm.github.io/qwen-code-docs/en/users/features/memory/",
+        "https://qwenlm.github.io/qwen-code-docs/en/users/features/rules/",
+        "https://qwenlm.github.io/qwen-code-docs/en/users/configuration/settings/"
+      ],
+      "native_notes": {
+        "qwen-code": "QWEN_HOME and context.fileName may change the path. Rules with paths frontmatter are conditional; baseline rules and QWEN.md have different native loading behavior."
+      },
+      "create": {
+        "source": 0,
+        "name": "@context-file",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "qoder-cli"
+      ],
+      "sources": [
+        {
+          "root": "~/.qoder",
+          "env": [
+            "QODER_CONFIG_DIR"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true,
+          "filename_config": {
+            "path": "settings.json",
+            "pointer": "/context/fileName"
+          }
+        }
+      ],
+      "reload": "native-reload",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.qoder.com/cli/how-memory-works",
+        "https://docs.qoder.com/cli/settings-reference",
+        "https://docs.qoder.com/cli/troubleshoot-loading",
+        "https://docs.qoder.com/cli/sdk/system-prompt",
+        "https://docs.qoder.com/cli/cli-reference"
+      ],
+      "native_notes": {
+        "qoder-cli": "QODER_CONFIG_DIR and context.fileName may change the path. This is the local CLI contract, not the IDE rules system. Use the native memory reload or a new session."
+      },
+      "create": {
+        "source": 0,
+        "name": "@context-file",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "codebuddy-code",
+        "workbuddy-cn"
+      ],
+      "sources": [
+        {
+          "root": "~/.codebuddy",
+          "env": [],
+          "files": [
+            "CODEBUDDY.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.codebuddy",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "rules",
+          "recursive": true,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://www.codebuddy.ai/docs/cli/memory",
+        "https://www.codebuddy.ai/docs/cli/codebuddy-dir",
+        "https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Setting",
+        "https://www.workbuddy.cn/docs/cli/codebuddy-dir",
+        "https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Memory"
+      ],
+      "native_notes": {
+        "codebuddy-code": "The user CODEBUDDY.md and rules are native sources. WorkBuddy China uses this contract in code-development mode. Auto memory is separate; conditional rules keep their original conditions.",
+        "workbuddy-cn": "The user CODEBUDDY.md and rules are native sources. WorkBuddy China uses this contract in code-development mode. Auto memory is separate; conditional rules keep their original conditions."
+      },
+      "create": {
+        "source": 0,
+        "name": "CODEBUDDY.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "opencode",
+        "opencode-desktop"
+      ],
+      "sources": [
+        {
+          "root": "~/.config/opencode",
+          "env": [
+            "OPENCODE_CONFIG_DIR"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.claude",
+          "env": [],
+          "files": [
+            "CLAUDE.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://opencode.ai/docs/rules/",
+        "https://opencode.ai/docs/"
+      ],
+      "native_notes": {
+        "opencode": "The product-specific AGENTS.md takes precedence over the Claude compatibility fallback. Additional configured instructions and remote sources are not managed here. Paths refer to the current local environment.",
+        "opencode-desktop": "The product-specific AGENTS.md takes precedence over the Claude compatibility fallback. Additional configured instructions and remote sources are not managed here. Paths refer to the current local environment."
+      },
+      "fallback_sources": [
+        1
+      ]
+    },
+    {
+      "agent_ids": [
+        "kilo-code",
+        "kilo-desktop"
+      ],
+      "sources": [
+        {
+          "root": "~/.config/kilo",
+          "env": [
+            "KILO_CONFIG_DIR"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.claude",
+          "env": [],
+          "files": [
+            "CLAUDE.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://kilo.ai/docs/customize/custom-instructions",
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/desktop/overview",
+        "https://github.com/Kilo-Org/kilocode/blob/0c85028970ca19d8f5b87c32db5578575db7cb31/packages/opencode/src/session/instruction.ts"
+      ],
+      "native_notes": {
+        "kilo-code": "Kilo uses its own global AGENTS.md; the Claude compatibility fallback depends on migration and native settings. KILO_CONFIG_DIR can change the local target.",
+        "kilo-desktop": "Kilo uses its own global AGENTS.md; the Claude compatibility fallback depends on migration and native settings. KILO_CONFIG_DIR can change the local target."
+      },
+      "fallback_sources": [
+        1
+      ]
+    },
+    {
+      "agent_ids": [
+        "mimo-code"
+      ],
+      "sources": [
+        {
+          "root": "~/.config/mimocode",
+          "env": [
+            "MIMOCODE_CONFIG_DIR"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.claude",
+          "env": [],
+          "files": [
+            "CLAUDE.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/XiaomiMiMo/MiMo-Code/blob/bf0563ddc201b44e3f59c35b18dba17c4386564d/packages/cli/src/session/instruction.ts",
+        "https://github.com/XiaomiMiMo/MiMo-Code/blob/bf0563ddc201b44e3f59c35b18dba17c4386564d/packages/shared/src/global.ts",
+        "https://github.com/XiaomiMiMo/MiMo-Code/blob/bf0563ddc201b44e3f59c35b18dba17c4386564d/packages/cli/src/config/paths.ts"
+      ],
+      "native_notes": {
+        "mimo-code": "Native root overrides and Claude compatibility settings can change loading. This view edits existing local candidates; it does not alter config.instructions or compatibility switches."
+      },
+      "fallback_sources": [
+        1
+      ]
+    },
+    {
+      "agent_ids": [
+        "kimi-code",
+        "kimi-code-desktop"
+      ],
+      "sources": [
+        {
+          "root": "~/.kimi-code",
+          "env": [
+            "KIMI_CODE_HOME"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.agents",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.kimi-code",
+          "env": [
+            "KIMI_CODE_HOME"
+          ],
+          "files": [
+            "SYSTEM.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://www.kimi.com/code/docs/en/kimi-code-cli/customization/agents.html",
+        "https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started",
+        "https://www.kimi.com/code/docs/en/kimi-code/whats-new.html",
+        "https://www.kimi.com/code/docs/en/kimi-code-desktop/changelog.html",
+        "https://www.kimi.com/code/docs/en/kimi-code-cli/configuration/data-locations.html"
+      ],
+      "native_notes": {
+        "kimi-code": "Agent-specific and shared AGENTS.md files are native sources. SYSTEM.md replaces the default main-agent system prompt and is not a general instruction file. Custom agents can bypass it.",
+        "kimi-code-desktop": "Agent-specific and shared AGENTS.md files are native sources. SYSTEM.md replaces the default main-agent system prompt and is not a general instruction file. Custom agents can bypass it."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "mistral-vibe"
+      ],
+      "sources": [
+        {
+          "root": "~/.vibe",
+          "env": [
+            "VIBE_HOME"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/mistralai/mistral-vibe/blob/main/README.md",
+        "https://docs.mistral.ai/vibe/code/cli/configuration-reference"
+      ],
+      "native_notes": {
+        "mistral-vibe": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "zcode"
+      ],
+      "sources": [
+        {
+          "root": "~/.zcode",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://zcode.z.ai/cn/docs/agents",
+        "https://zcode.z.ai/cn/docs/subagents"
+      ],
+      "native_notes": {
+        "zcode": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "hermes"
+      ],
+      "sources": [
+        {
+          "root": "~/.hermes",
+          "env": [
+            "HERMES_HOME"
+          ],
+          "files": [
+            "SOUL.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/NousResearch/hermes-agent/blob/e5eb6b36fe78eb012cefd1f5f436cd458411b8b3/website/docs/user-guide/features/personality.md",
+        "https://github.com/NousResearch/hermes-agent/blob/e5eb6b36fe78eb012cefd1f5f436cd458411b8b3/website/docs/user-guide/configuration.md",
+        "https://github.com/NousResearch/hermes-agent/blob/e5eb6b36fe78eb012cefd1f5f436cd458411b8b3/agent/system_prompt.py"
+      ],
+      "native_notes": {
+        "hermes": "SOUL.md supplies the native identity section and can replace the default identity. It is shown only when it already exists; Arca does not initialize a replacement identity."
+      }
+    },
+    {
+      "agent_ids": [
+        "jcode"
+      ],
+      "sources": [
+        {
+          "root": "~",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://jcode.sh/docs"
+      ],
+      "native_notes": {
+        "jcode": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "junie-cli"
+      ],
+      "sources": [
+        {
+          "root": "~/.junie",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://junie.jetbrains.com/docs/guidelines-and-memory.html",
+        "https://junie.jetbrains.com/docs/parameters.html",
+        "https://junie.jetbrains.com/docs/junie-cli-configuration.html"
+      ],
+      "native_notes": {
+        "junie-cli": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "windsurf"
+      ],
+      "sources": [
+        {
+          "root": "~/.codeium/windsurf/memories",
+          "env": [],
+          "files": [
+            "global_rules.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.windsurf.com/windsurf/cascade/memories",
+        "https://docs.devin.ai/desktop/cascade/memories"
+      ],
+      "native_notes": {
+        "windsurf": "Cascade global rules have a documented 6000-character budget. This does not establish support for a different default Agent backend. Native files and existing content are preserved."
+      },
+      "max_chars": 6000
+    },
+    {
+      "agent_ids": [
+        "agentkube"
+      ],
+      "sources": [
+        {
+          "root": "~/.agentkube/rules",
+          "env": [],
+          "files": [
+            "user_rules.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.agentkube.com/agents/rules"
+      ],
+      "native_notes": {
+        "agentkube": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "user_rules.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "grok-build"
+      ],
+      "sources": [
+        {
+          "root": "~/.grok",
+          "env": [
+            "GROK_HOME"
+          ],
+          "files": [
+            "AGENTS.md",
+            "Agents.md",
+            "AGENT.md",
+            "CLAUDE.md",
+            "Claude.md",
+            "CLAUDE.local.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.x.ai/build/features/project-rules",
+        "https://docs.x.ai/build/settings",
+        "https://docs.x.ai/build/features/skills-plugins-marketplaces"
+      ],
+      "native_notes": {
+        "grok-build": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "factory-droid",
+        "factory-desktop"
+      ],
+      "sources": [
+        {
+          "root": "~/.factory",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "agents.md",
+            "Agents.md",
+            "CLAUDE.md",
+            "Claude.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.agents",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "agents.md",
+            "Agents.md",
+            "CLAUDE.md",
+            "Claude.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.agent",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "agents.md",
+            "Agents.md",
+            "CLAUDE.md",
+            "Claude.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.factory.com/harness/agents-md",
+        "https://github.com/Factory-AI/factory/blob/c6ea47082007a32a8a76bb99da42e387565f119a/docs/cli/configuration/agents-md.mdx",
+        "https://docs.factory.com/factory-app/overview"
+      ],
+      "native_notes": {
+        "factory-droid": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority.",
+        "factory-desktop": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "deepseek-harness"
+      ],
+      "sources": [
+        {
+          "root": "~/.dsh",
+          "env": [
+            "DSH_HOME"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.agents",
+          "env": [
+            "DSH_AGENTS_HOME"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/deepseek-ai/deepseek-harness/blob/86a402200d95fecef4529d969836f1fe13c6cb0d/packages/context/agent-instructions/README.md",
+        "https://github.com/deepseek-ai/deepseek-harness/blob/86a402200d95fecef4529d969836f1fe13c6cb0d/packages/context/agent-instructions/src/config.ts"
+      ],
+      "native_notes": {
+        "deepseek-harness": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "freebuff"
+      ],
+      "sources": [
+        {
+          "root": "~",
+          "env": [],
+          "files": [
+            ".AGENTS.md",
+            ".agents.md",
+            ".CLAUDE.md",
+            ".claude.md"
+          ],
+          "selection": "first-existing",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://freebuff.com/",
+        "https://github.com/CodebuffAI/codebuff/blob/02f2865d96cda0027aa4001ca706b2919b3ffb6f/freebuff/cli/build.ts",
+        "https://github.com/CodebuffAI/codebuff/blob/02f2865d96cda0027aa4001ca706b2919b3ffb6f/sdk/src/run-state.ts",
+        "https://github.com/CodebuffAI/codebuff/blob/02f2865d96cda0027aa4001ca706b2919b3ffb6f/common/src/constants/knowledge.ts",
+        "https://github.com/CodebuffAI/codebuff/blob/02f2865d96cda0027aa4001ca706b2919b3ffb6f/sdk/src/__tests__/user-knowledge-files.test.ts"
+      ],
+      "native_notes": {
+        "freebuff": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "crush"
+      ],
+      "sources": [
+        {
+          "root": "~/.config/crush",
+          "env": [],
+          "files": [
+            "CRUSH.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.config",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/charmbracelet/crush/blob/b0f7811828a6775d7fa77fdac3cde162dd45aa30/README.md",
+        "https://github.com/charmbracelet/crush/blob/b0f7811828a6775d7fa77fdac3cde162dd45aa30/internal/config/load.go"
+      ],
+      "native_notes": {
+        "crush": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "goose",
+        "goose-desktop"
+      ],
+      "sources": [
+        {
+          "root": "@goose",
+          "env": [],
+          "files": [
+            ".goosehints",
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "@goose-agents",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://goose-docs.ai/docs/guides/context-engineering/using-goosehints/",
+        "https://github.com/block/goose/blob/44c2ed53b26e5b8ea087af2be1839ade2af7d57e/crates/goose/src/hints/load_hints.rs",
+        "https://github.com/block/goose/blob/44c2ed53b26e5b8ea087af2be1839ade2af7d57e/crates/goose/src/config/paths.rs",
+        "https://goose-docs.ai/docs/guides/environment-variables/",
+        "https://github.com/aaif-goose/goose/blob/44c2ed53b26e5b8ea087af2be1839ade2af7d57e/crates/goose/src/hints/load_hints.rs",
+        "https://github.com/aaif-goose/goose/blob/44c2ed53b26e5b8ea087af2be1839ade2af7d57e/crates/goose/src/config/paths.rs"
+      ],
+      "native_notes": {
+        "goose": "Paths depend on the native platform and GOOSE_PATH_ROOT. The Developer extension and context filename configuration may affect loading. Existing local candidates are preserved.",
+        "goose-desktop": "Paths depend on the native platform and GOOSE_PATH_ROOT. The Developer extension and context filename configuration may affect loading. Existing local candidates are preserved."
+      }
+    },
+    {
+      "agent_ids": [
+        "vt-code"
+      ],
+      "sources": [
+        {
+          "root": "@vtcode",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.vtcode",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/vinhnx/VTCode/blob/d84634efabbe18696441c10e4a8ab586a6b52928/docs/config/config.md",
+        "https://github.com/vinhnx/VTCode/blob/d84634efabbe18696441c10e4a8ab586a6b52928/docs/guides/user-data-directories.md",
+        "https://github.com/vinhnx/VTCode/blob/d84634efabbe18696441c10e4a8ab586a6b52928/crates/common/vtcode-commons/src/vtcode_paths.rs"
+      ],
+      "native_notes": {
+        "vt-code": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "poolside"
+      ],
+      "sources": [
+        {
+          "root": "~/.config/poolside",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.poolside.ai/agent-instructions",
+        "https://github.com/poolsideai/pool/blob/fcabc59ff67810ecec5429ec9d45fa1dda6c1136/README.md",
+        "https://docs.poolside.ai/settings-file-reference"
+      ],
+      "native_notes": {
+        "poolside": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "rovo-dev"
+      ],
+      "sources": [
+        {
+          "root": "~/.rovodev",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://support.atlassian.com/rovo/docs/use-memory-in-rovo-dev-cli/"
+      ],
+      "native_notes": {
+        "rovo-dev": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "AGENTS.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "zed"
+      ],
+      "sources": [
+        {
+          "root": "~/.config/zed",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://zed.dev/docs/ai/instructions"
+      ],
+      "native_notes": {
+        "zed": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "minimax-code"
+      ],
+      "sources": [
+        {
+          "root": "~/.minimax",
+          "env": [
+            "MINIMAX_DATA_DIR",
+            "MAVIS_DATA_DIR"
+          ],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/MiniMax-AI/minimax-code/blob/9a935605956c4500e9cb415f29258e2887e97817/packages/local-runtime-v2/src/service/turn-system/persistence/global-instructions.ts",
+        "https://github.com/MiniMax-AI/minimax-code/blob/9a935605956c4500e9cb415f29258e2887e97817/packages/local-runtime-v2/src/service/turn-system/agent-host/preparation/config/local-agent-config-builder.ts",
+        "https://github.com/MiniMax-AI/minimax-code/blob/9a935605956c4500e9cb415f29258e2887e97817/packages/tui/src/runtime/data-dir.ts",
+        "https://github.com/MiniMax-AI/minimax-code/blob/9a935605956c4500e9cb415f29258e2887e97817/packages/config/src/data-dir.ts",
+        "https://agent.minimax.io/download",
+        "https://agent.minimax.cn/docs/cli/quick-start"
+      ],
+      "native_notes": {
+        "minimax-code": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "qoderwork"
+      ],
+      "sources": [
+        {
+          "root": "~/qoderwork/awareness/main",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "SOUL.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.qoder.com/qoderwork/memory"
+      ],
+      "native_notes": {
+        "qoderwork": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "qwenwork"
+      ],
+      "sources": [
+        {
+          "root": "~/.qwenwork/awareness/main",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "SOUL.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.qwenwork.ai/desktop/memory"
+      ],
+      "native_notes": {
+        "qwenwork": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "qwenwork-cn"
+      ],
+      "sources": [
+        {
+          "root": "~/.qwenworkcn/awareness/main",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "SOUL.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.qwenwork.cn/desktop/memory"
+      ],
+      "native_notes": {
+        "qwenwork-cn": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "augment"
+      ],
+      "sources": [
+        {
+          "root": "~/.augment",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "rules",
+          "recursive": true,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.augmentcode.com/cli/rules"
+      ],
+      "native_notes": {
+        "augment": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "rules/global.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "kiro",
+        "kiro-cli"
+      ],
+      "sources": [
+        {
+          "root": "~/.kiro",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "steering",
+          "recursive": false,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://kiro.dev/docs/steering/",
+        "https://kiro.dev/docs/reference/settings/",
+        "https://kiro.dev/docs/cli/chat/configuration/"
+      ],
+      "native_notes": {
+        "kiro": "Global steering uses native inclusion modes. Custom agents may require explicit resources. Editing a rule does not change its mode or enable it.",
+        "kiro-cli": "Global steering uses native inclusion modes. Custom agents may require explicit resources. Editing a rule does not change its mode or enable it."
+      },
+      "create": {
+        "source": 0,
+        "name": "steering/global.md",
+        "text": "---\ninclusion: always\n---\n\n"
+      }
+    },
+    {
+      "agent_ids": [
+        "roo-code"
+      ],
+      "sources": [
+        {
+          "root": "~/.roo",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "rules",
+          "recursive": true,
+          "extensions": [
+            "md"
+          ]
+        },
+        {
+          "root": "~/.roo",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "@mode-rules",
+          "recursive": true,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/apps/docs/docs/features/custom-instructions.md"
+      ],
+      "native_notes": {
+        "roo-code": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "rules/global.md",
+        "text": ""
+      }
+    },
+    {
+      "agent_ids": [
+        "dirac"
+      ],
+      "sources": [
+        {
+          "root": "~/.dirac",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "Rules",
+          "recursive": true,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/dirac-run/dirac/blob/361588217a5f9eb8d191daeafbf32a566e1fd288/src/core/storage/directoryEnsurers.ts",
+        "https://github.com/dirac-run/dirac/blob/361588217a5f9eb8d191daeafbf32a566e1fd288/src/core/context/instructions/user-instructions/dirac-rules.ts",
+        "https://github.com/dirac-run/dirac/blob/361588217a5f9eb8d191daeafbf32a566e1fd288/src/core/context/instructions/user-instructions/rule-helpers.ts",
+        "https://github.com/dirac-run/dirac/blob/361588217a5f9eb8d191daeafbf32a566e1fd288/src/core/task/TaskRequestBuilder.ts"
+      ],
+      "native_notes": {
+        "dirac": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "tabnine"
+      ],
+      "sources": [
+        {
+          "root": "~/.tabnine",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "guidelines",
+          "recursive": false,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.tabnine.com/main/getting-started/tabnine-agent/guidelines"
+      ],
+      "native_notes": {
+        "tabnine": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "firebender"
+      ],
+      "sources": [
+        {
+          "root": "~/.firebender",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "rules",
+          "recursive": false,
+          "extensions": [
+            "mdc"
+          ]
+        }
+      ],
+      "reload": "next-request",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.firebender.com/multi-agent/global-rules"
+      ],
+      "native_notes": {
+        "firebender": "Personal .mdc rules use native alwaysApply or file-match conditions. Saving preserves those conditions; native live reload controls when changes are read."
+      },
+      "create": {
+        "source": 0,
+        "name": "rules/global.mdc",
+        "text": "---\nalwaysApply: true\n---\n\n"
+      }
+    },
+    {
+      "agent_ids": [
+        "antigravity"
+      ],
+      "sources": [
+        {
+          "root": "~/.gemini",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "GEMINI.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.gemini",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "config/rules",
+          "recursive": false,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://antigravity.google/docs/rules"
+      ],
+      "native_notes": {
+        "antigravity": "Fixed guidance and modular rules have distinct loading behavior. Modular rules require valid native trigger frontmatter; Arca preserves it and does not enable or generate additional rules."
+      }
+    },
+    {
+      "agent_ids": [
+        "antigravity-cli"
+      ],
+      "sources": [
+        {
+          "root": "~/.gemini",
+          "env": [],
+          "files": [
+            "AGENTS.md",
+            "GEMINI.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.gemini",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "config/rules",
+          "recursive": false,
+          "extensions": [
+            "md"
+          ]
+        },
+        {
+          "root": "~/.gemini",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "antigravity-cli/rules",
+          "recursive": false,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://antigravity.google/docs/rules/?app=cli"
+      ],
+      "native_notes": {
+        "antigravity-cli": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      }
+    },
+    {
+      "agent_ids": [
+        "cline",
+        "cline-cli",
+        "cline-desktop"
+      ],
+      "sources": [
+        {
+          "root": "~/.agents",
+          "env": [],
+          "files": [
+            "AGENTS.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.cline",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "rules",
+          "recursive": false,
+          "extensions": [
+            "md"
+          ]
+        },
+        {
+          "root": "~/Documents/Cline",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "Rules",
+          "recursive": false,
+          "extensions": [
+            "md"
+          ]
+        },
+        {
+          "root": "~/Cline",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "Rules",
+          "recursive": false,
+          "extensions": [
+            "md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.cline.bot/customization/cline-rules",
+        "https://github.com/cline/cline/blob/01b8a9724da905423e636396d7fb4acdf47796bb/sdk/packages/shared/src/storage/paths.ts",
+        "https://github.com/cline/cline/blob/01b8a9724da905423e636396d7fb4acdf47796bb/sdk/packages/core/src/runtime/safety/rules.ts",
+        "https://docs.cline.bot/usage/cline-desktop"
+      ],
+      "native_notes": {
+        "cline": "Only confirmed local global files are inspected. Rule toggles and conditions remain under the native client. Shared .agents guidance may also be read by other tools.",
+        "cline-cli": "Only confirmed local global files are inspected. Rule toggles and conditions remain under the native client. Shared .agents guidance may also be read by other tools.",
+        "cline-desktop": "Only confirmed local global files are inspected. Rule toggles and conditions remain under the native client. Shared .agents guidance may also be read by other tools."
+      }
+    },
+    {
+      "agent_ids": [
+        "copilot-cli"
+      ],
+      "sources": [
+        {
+          "root": "~/.copilot",
+          "env": [
+            "COPILOT_HOME"
+          ],
+          "files": [
+            "copilot-instructions.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.copilot",
+          "env": [
+            "COPILOT_HOME"
+          ],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "instructions",
+          "recursive": true,
+          "extensions": [
+            "instructions.md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions",
+        "https://code.visualstudio.com/docs/agent-customization/custom-instructions"
+      ],
+      "native_notes": {
+        "copilot-cli": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+      },
+      "create": {
+        "source": 0,
+        "name": "copilot-instructions.md",
+        "text": ""
+      },
+      "blocked_env": [
+        "COPILOT_CUSTOM_INSTRUCTIONS_DIRS"
+      ]
+    },
+    {
+      "agent_ids": [
+        "cursor",
+        "cursor-cli"
+      ],
+      "sources": [
+        {
+          "root": "~/.cursor",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": false,
+          "directory": "rules",
+          "recursive": true,
+          "extensions": [
+            "md",
+            "mdc"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://cursor.com/help/customization/rules",
+        "https://cursor.com/docs/rules",
+        "https://cursor.com/docs/cli/using",
+        "https://prod.cursor.com/help/customization/rules"
+      ],
+      "native_notes": {
+        "cursor": "The user rules directory is confirmed, but its exact native file-format contract is not fully established here. Markdown candidates are inspection-only; Arca does not generate or edit them.",
+        "cursor-cli": "The user rules directory is confirmed, but its exact native file-format contract is not fully established here. Markdown candidates are inspection-only; Arca does not generate or edit them."
+      }
+    },
+    {
+      "agent_ids": [
+        "trae-ide"
+      ],
+      "sources": [
+        {
+          "root": "~/.trae",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": false,
+          "directory": "user_rules",
+          "recursive": true,
+          "extensions": [
+            "md",
+            "mdc"
+          ]
+        },
+        {
+          "root": "~/.trae-cn",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": false,
+          "directory": "user_rules",
+          "recursive": true,
+          "extensions": [
+            "md",
+            "mdc"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.trae.ai/ide/rules",
+        "https://docs.trae.cn/ide_rules"
+      ],
+      "native_notes": {
+        "trae-ide": "International and China editions have different user-rule roots. The exact native file-format contract is incomplete here; candidates are inspection-only."
+      }
+    },
+    {
+      "agent_ids": [
+        "ibm-bob"
+      ],
+      "sources": [
+        {
+          "root": "~/.bob",
+          "env": [],
+          "files": [],
+          "selection": "additive",
+          "editable": false,
+          "directory": "rules",
+          "recursive": true,
+          "extensions": [
+            "md",
+            "mdc"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://bob.ibm.com/docs/ide/configuration/rules"
+      ],
+      "native_notes": {
+        "ibm-bob": "Global and mode rules have native activation and workspace precedence. Candidates remain inspection-only until the complete file-format contract is verified."
+      }
+    },
+    {
+      "agent_ids": [
+        "openhands"
+      ],
+      "sources": [],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://github.com/OpenHands/OpenHands-CLI/blob/0403f1a79a9fc62a6c7be21c17d7b51f64245ad2/openhands_cli/stores/agent_store.py",
+        "https://github.com/OpenHands/software-agent-sdk/blob/main/openhands-sdk/openhands/sdk/context/agent_context.py",
+        "https://github.com/OpenHands/software-agent-sdk/blob/main/openhands-sdk/openhands/sdk/skills/skill.py",
+        "https://docs.openhands.dev/sdk/guides/skill",
+        "https://docs.openhands.dev/overview/skills/adding"
+      ],
+      "native_notes": {
+        "openhands": "Native legacy always-on rules and progressive Skills are different mechanisms. Arca does not treat the Skills directories as an editable global Prompt source."
+      }
+    },
+    {
+      "agent_ids": [
+        "vscode"
+      ],
+      "sources": [
+        {
+          "root": "~/.copilot",
+          "env": [
+            "COPILOT_HOME"
+          ],
+          "files": [
+            "copilot-instructions.md"
+          ],
+          "selection": "additive",
+          "editable": true
+        },
+        {
+          "root": "~/.copilot",
+          "env": [
+            "COPILOT_HOME"
+          ],
+          "files": [],
+          "selection": "additive",
+          "editable": true,
+          "directory": "instructions",
+          "recursive": true,
+          "extensions": [
+            "instructions.md"
+          ]
+        }
+      ],
+      "reload": "new-session",
+      "verified_at": "2026-10-16",
+      "docs": [
+        "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions",
+        "https://code.visualstudio.com/docs/agent-customization/custom-instructions"
+      ],
+      "native_notes": {
+        "vscode": "These existing files belong to the Copilot harness. Claude, Codex and other VS Code backends use their own native instruction files; the selected harness is not changed here."
+      },
+      "blocked_env": [
+        "COPILOT_CUSTOM_INSTRUCTIONS_DIRS"
+      ]
+    }
+  ]
+}

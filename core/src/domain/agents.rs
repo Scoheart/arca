@@ -105,6 +105,9 @@ pub struct SkillAgentCapabilityView {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct AgentCapabilitySet {
+    /// Native file inspection/editing; this is not a central asset domain.
+    #[serde(default)]
+    pub instructions: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mcp: Option<McpAgentCapabilityView>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

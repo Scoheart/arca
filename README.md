@@ -405,6 +405,14 @@ ChatGPT (`codex-desktop`) opens ChatGPT.app and shares `~/.codex/config.toml` pl
 Agent labels use the actual application name, or the official CLI/plugin product name. Region, version, and surface are not added to the name. Existing IDs and bindings stay stable; see the [name audit](docs/agent-name-audit.md).
 
 
+### 原生全局 Instructions / Rules
+
+Agent 详情页的 **Instructions** 展示已确认的本机全局 Prompt / Rules 文件，可直接查看原文、预览并编辑保存。保留原路径、规则条件、格式和优先级；不建立中央指令库，不提供文件删除、规则集合增删、分配或自动补写。
+
+只有完整检查确认没有已有原生入口时，才提供主动新建一个文件的入口；普通保存不会把外部已删除的文件重新创建。保存校验外部变化并保留草稿，已有文件保留 inode、BOM 和未编辑行的换行。同一路径的多个 Agent 读取者会标明共用影响。保存成功不代表当前模型请求已经加载，刷新方式仍遵循原生客户端。
+
+未完整确认格式、初始化或自定义后端的入口保持只读/引导。详情见 [原生指令文件](docs/instructions.md)。
+
 ### Agent Trace（本地会话）
 
 顶部「Trace」或 Agent 详情页的「Trace」按钮打开只读会话工作台。它与「网络 → Agent 抓包」不同：直接读取已有会话文件，不拦截流量、启动 Agent 或修改原始日志。

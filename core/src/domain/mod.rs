@@ -4,6 +4,7 @@
 //! filesystem, Keychain, network, or frontend orchestration.
 
 pub mod agents;
+pub mod instructions;
 pub mod assets;
 pub mod error;
 pub mod mcp;
