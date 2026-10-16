@@ -335,6 +335,13 @@
       "kind": "api-key"
     }
   },
+  "unorouter": {
+    "docs_url": "https://unorouter.com/en/docs/platform/quickstart",
+    "portal": {
+      "url": "https://unorouter.com/en/token",
+      "kind": "api-key"
+    }
+  },
   "ant-ling": {
     "docs_url": "https://developer.ant-ling.com/en/docs/api-reference/openai/",
     "portal": {

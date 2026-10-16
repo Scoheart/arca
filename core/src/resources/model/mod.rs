@@ -524,6 +524,20 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.trustedrouter.com",
             },
         ],
+        "unorouter" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.unorouter.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.unorouter.com",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://api.unorouter.com/v1beta",
+            },
+        ],
         "ant-ling" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.ant-ling.com/anthropic",
@@ -985,6 +999,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         name: "TrustedRouter",
         default_base_url: Some("https://api.trustedrouter.com/v1"),
         default_protocol: ModelProtocol::OpenaiResponses,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "unorouter",
+        name: "UnoRouter",
+        default_base_url: Some("https://api.unorouter.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
     ModelProviderView {
@@ -1708,6 +1729,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.ppq.ai" => "ppq",
         "api.river.ai" => "river",
         "api.trustedrouter.com" => "trustedrouter",
+        "api.unorouter.com" => "unorouter",
         "api.ant-ling.com" => "ant-ling",
         "maas-api.antdigital.com" => "antdigital-dtmaas",
         "maas-api.unisound.com" => "unisound",
@@ -7026,6 +7048,12 @@ mod tests {
             ("https://api.trustedrouter.com/v1/chat/completions", "trustedrouter"),
             ("https://api.trustedrouter.com/v1/messages", "trustedrouter"),
             ("https://trustedrouter.com/v1", "custom"),
+            ("https://api.unorouter.com/v1/chat/completions", "unorouter"),
+            ("https://api.unorouter.com/v1/responses", "unorouter"),
+            ("https://api.unorouter.com/v1/messages", "unorouter"),
+            ("https://api.unorouter.com/v1beta/models/gemini-4-flash:generateContent", "unorouter"),
+            ("https://unorouter.com/v1", "custom"),
+            ("https://api.unorouter.com.evil.test/v1", "custom"),
             ("https://api.ant-ling.com/v1/chat/completions", "ant-ling"),
             ("https://api.ant-ling.com/anthropic/v1/messages", "ant-ling"),
             ("https://maas-api.antdigital.com/v1/chat/completions", "antdigital-dtmaas"),
@@ -7116,7 +7144,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 123);
+        assert_eq!(list_providers().len(), 124);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
