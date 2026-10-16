@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.3.0](https://github.com/Scoheart/arca/compare/v2.2.0...v2.3.0) (2026-10-16)
+
+### Changes
+
+* feat(instructions): edit native global Agent files in place ([4a3db95](https://github.com/Scoheart/arca/commit/4a3db9548a5e95c2490f5e818ffae67b607fcd8e))
+
 ## [2.2.0](https://github.com/Scoheart/arca/compare/v2.1.2...v2.2.0) (2026-10-16)
 
 ### Changes
