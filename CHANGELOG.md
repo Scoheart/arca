@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.0](https://github.com/Scoheart/arca/compare/v2.1.2...v2.2.0) (2026-10-16)
+
+### Changes
+
+* feat(traces): present conversations inline and release failed capture leases ([e6791b0](https://github.com/Scoheart/arca/commit/e6791b047e03b7975777eaf84b979a7b22559d78))
+
 ## [2.1.2](https://github.com/Scoheart/arca/compare/v2.1.1...v2.1.2) (2026-10-16)
 
 ### Changes
