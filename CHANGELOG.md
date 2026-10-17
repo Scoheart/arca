@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.2](https://github.com/Scoheart/arca/compare/v2.4.1...v2.4.2) (2026-10-17)
+
+### Changes
+
+* fix(desktop): arrange Agent workspace with sidebar navigation ([2b4b947](https://github.com/Scoheart/arca/commit/2b4b94716ffbb54417e62f915421b0eb3159755f))
+
 ## [2.4.1](https://github.com/Scoheart/arca/compare/v2.4.0...v2.4.1) (2026-10-17)
 
 ### Changes
