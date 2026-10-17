@@ -39,6 +39,7 @@ impl Worker {
             use std::os::{fd::{AsRawFd, BorrowedFd}, unix::process::CommandExt};
             command.process_group(0);
             let descriptor = lease.as_raw_fd();
+            command.env("ARCA_CAPTURE_LEASE_FD", descriptor.to_string());
             // Keep the lease across an Arca crash until its engine exits.
             unsafe { command.pre_exec(move || rustix::io::fcntl_setfd(BorrowedFd::borrow_raw(descriptor), rustix::io::FdFlags::empty()).map_err(Into::into)); }
         }
@@ -122,6 +123,25 @@ impl Worker {
             std::thread::sleep(Duration::from_millis(100));
         }
         self.terminate()
+    }
+    pub fn pause_recording(&mut self, directory: &Path) -> Result<(), String> {
+        super::request_stop(directory)?;
+        let until = Instant::now() + Duration::from_secs(6);
+        while self.alive()? {
+            if read_json::<CaptureState>(&directory.join("status.json")).is_ok_and(|state| state.state == "stopped") { return Ok(()); }
+            if Instant::now() >= until { return Err("capture_stop_pending: 正在停止记录，请稍后刷新。".into()); }
+            std::thread::sleep(Duration::from_millis(100));
+        }
+        Ok(())
+    }
+    /// A spawned CLI still uses this proxy after recording stops. Keep routing
+    /// without retaining traffic until the Agent (or owning Arca) exits.
+    pub fn forward_until_exit(mut self) -> Result<(), String> {
+        fs2::FileExt::unlock(&self._lease).map_err(|_| "无法释放已停止会话的记录锁。")?;
+        std::thread::spawn(move || {
+            while self.alive().unwrap_or(false) { std::thread::sleep(Duration::from_secs(2)); }
+        });
+        Ok(())
     }
     fn terminate(&mut self) -> Result<(), String> {
         if self.reaped { return Ok(()); }

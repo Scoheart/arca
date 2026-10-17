@@ -1,11 +1,20 @@
 use arca_core::application::capture as core;
 use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_opener::OpenerExt;
 
 async fn worker<T: Send + 'static>(f: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<T, String> {
     tauri::async_runtime::spawn_blocking(f).await.map_err(|_| "抓包后台任务失败。".to_owned())?
 }
 #[tauri::command]
 pub async fn capture_environment() -> Result<core::CaptureEnvironment, String> { worker(|| Ok(core::environment())).await }
+#[tauri::command]
+pub async fn capture_install_engine() -> Result<(), String> { worker(|| core::install_engine().map(|_| ())).await }
+#[tauri::command]
+pub async fn capture_open_certificate(app: tauri::AppHandle) -> Result<(), String> {
+    let path = worker(core::prepare_certificate).await?;
+    app.opener().open_path(path.to_string_lossy(), Some("Keychain Access"))
+        .map_err(|_| "无法打开证书设置，请在钥匙串访问中导入抓包证书。".to_owned())
+}
 #[tauri::command]
 pub async fn capture_launch_agent(agent_id: String, directory: Option<String>) -> Result<core::CaptureTarget, String> {
     worker(move || core::launch_agent(&agent_id, directory.as_deref())).await

@@ -1,6 +1,8 @@
 //! Desktop-independent capture use cases.
 pub use crate::capture::{AgentCaptureSupport, CaptureDelta, CaptureEnvironment, CaptureSession, CaptureSnapshot, CaptureTarget, CapturedFlow, FlowSummary, StartCapture};
 pub fn environment() -> CaptureEnvironment { crate::capture::environment() }
+pub fn prepare_certificate() -> Result<std::path::PathBuf, String> { crate::capture::prepare_certificate() }
+pub fn install_engine() -> Result<std::path::PathBuf, String> { crate::capture::install_engine() }
 pub fn launch_agent(agent_id: &str, directory: Option<&str>) -> Result<CaptureTarget, String> { crate::capture::launch_agent(agent_id, directory) }
 pub fn sessions() -> Result<Vec<CaptureSession>, String> { crate::capture::sessions() }
 pub fn snapshot(id: &str) -> Result<CaptureSnapshot, String> { crate::capture::snapshot(id) }

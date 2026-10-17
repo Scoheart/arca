@@ -12,6 +12,7 @@ pub enum CaptureCaScope { Process, Mixed, System }
 #[derive(Deserialize)]
 pub(super) struct CaptureProfile {
     pub ca_environment: Vec<String>,
+    #[serde(default)] pub explicit_proxy: bool,
     #[serde(default)] pub chromium: bool,
     #[serde(default)] pub process_title: Option<String>,
     #[serde(default)] pub npm_package: Option<String>,
@@ -32,6 +33,7 @@ pub struct AgentCaptureSupport {
     pub ca_environment: Vec<String>,
     pub chromium: bool,
     pub ca_scope: CaptureCaScope,
+    pub explicit_proxy: bool,
 }
 
 fn canonical(path: &str) -> String {
@@ -146,11 +148,13 @@ fn bind(rows: &[Process], selected: Option<&str>) -> Vec<CaptureTarget> {
 pub(super) fn support(targets: &[CaptureTarget]) -> Vec<AgentCaptureSupport> {
     PROFILES.iter().filter_map(|(id, profile)| {
         let info = crate::application::agent_launch::info_unlocked(id).ok()?;
+        let explicit_proxy = profile.explicit_proxy && info.kind.as_deref() == Some("cli");
         Some(AgentCaptureSupport {
             agent_id: id.clone(), available: info.available, kind: info.kind,
             target_ids: targets.iter().filter(|target| target.agent_ids.contains(id)).map(|target| target.id.clone()).collect(),
             ca_environment: profile.ca_environment.clone(), chromium: profile.chromium && info.resolved_target.as_ref().is_some_and(chromium),
             ca_scope: profile.ca_scope,
+            explicit_proxy,
         })
     }).collect()
 }

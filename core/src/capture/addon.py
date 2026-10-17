@@ -2,6 +2,7 @@
 import asyncio
 import codecs
 import ctypes
+import fcntl
 import json
 import html
 import ipaddress
@@ -315,6 +316,10 @@ def owner_alive():
     owner = os.environ.get('ARCA_CAPTURE_OWNER')
     if not owner or not process_alive(owner, os.environ.get('ARCA_CAPTURE_OWNER_START')):
         return False
+    return engine_alive()
+
+
+def engine_alive():
     try:
         # A packaged engine can have a bootloader parent. If that parent dies
         # while Arca remains open, its Python child must release interception
@@ -451,6 +456,11 @@ class Capture:
         self.websocket_timers = {}
         self.pending_flows = {}
         self.terminal_state = None
+        self.recording = True
+        self.ending = False
+        self.explicit_proxy = CONFIG.get('transport') == 'proxy'
+        self.listen_address = None
+        self.binding_deadline = time.monotonic() + 20
 
     def configure(self, updated):
         # mitmproxy loads config.yaml after --set. Reassert the capture
@@ -461,6 +471,8 @@ class Capture:
             'rawtcp': False, 'store_streamed_bodies': False,
             'save_stream_file': None, 'ssl_insecure': False,
         }
+        if self.explicit_proxy:
+            required['mode'] = ['regular@127.0.0.1:0']
         changed = {key: value for key, value in required.items() if getattr(ctx.options, key) != value}
         if changed:
             ctx.options.update(**changed)
@@ -472,9 +484,17 @@ class Capture:
             state = self.terminal_state
         if message and message not in self.warnings:
             self.warnings.append(message)
-        private_json(ROOT / 'status.json', {'state': state, 'message': ' '.join(self.warnings[-5:]), 'pids': self.pids, 'flow_count': self.count})
+        private_json(ROOT / 'status.json', {'state': state, 'message': ' '.join(self.warnings[-5:]), 'pids': self.pids, 'flow_count': self.count, 'listen_address': self.listen_address})
 
     async def running(self):
+        if self.explicit_proxy:
+            addresses = ctx.master.addons.get('proxyserver').listen_addrs()
+            address = next((item for item in addresses if item[0] == '127.0.0.1' and item[1] > 0), None)
+            if address is None:
+                self.status('failed', '未能建立本机抓包代理，未启动 Agent。')
+                ctx.master.shutdown()
+                return
+            self.listen_address = f'{address[0]}:{address[1]}'
         self.status('running')
         self.task = asyncio.create_task(self.watch())
 
@@ -484,13 +504,28 @@ class Capture:
             owner = os.environ.get('ARCA_CAPTURE_OWNER')
             if owner:
                 if not await asyncio.to_thread(owner_alive):
-                    self.status('stopped', '抓包所属进程已退出，记录已停止。')
-                    ctx.master.shutdown()
+                    if self.explicit_proxy and await asyncio.to_thread(engine_alive) and (ROOT / 'target.json').exists():
+                        self.end_recording('Arca 已退出，记录已停止；现有 Agent 的连接继续转发。')
+                    else:
+                        self.status('stopped', '抓包所属进程已退出，记录已停止。')
+                        ctx.master.shutdown()
+                        return
+            if self.recording and (ROOT / 'stop').exists():
+                self.end_recording('记录已停止；当前 Agent 的连接继续转发，退出 Agent 后自动释放。' if self.explicit_proxy else '')
+                if not self.explicit_proxy:
                     return
-            if (ROOT / 'stop').exists():
-                ctx.master.shutdown()
-                return
             try:
+                if CONFIG['target_id'].startswith('pending:'):
+                    target_file = ROOT / 'target.json'
+                    if target_file.exists():
+                        target = json.loads(target_file.read_text())
+                        CONFIG.update(target_id=target['target_id'], pids=target['pids'])
+                        self.pids = target['pids']
+                        self.status('running')
+                    elif time.monotonic() < self.binding_deadline:
+                        continue
+                    else:
+                        raise RuntimeError('Agent launch did not complete')
                 ids = await asyncio.to_thread(processes)
                 if not ids:
                     self.status('stopped', '目标进程已退出；请重新选择正在运行的应用。')
@@ -502,12 +537,13 @@ class Capture:
                     # Update the existing redirector in place. Replacing the
                     # local mode instance stops/restarts its singleton and can
                     # clear interception while an existing SSE is still open.
-                    redirector = mode_servers.LocalRedirectorInstance._server
-                    if redirector is None or mode_servers.LocalRedirectorInstance._instance is None:
-                        raise RuntimeError('Local redirector is unavailable')
-                    redirector.set_intercept(','.join(map(str, ids)) + ',!' + str(os.getpid()))
+                    if not self.explicit_proxy:
+                        redirector = mode_servers.LocalRedirectorInstance._server
+                        if redirector is None or mode_servers.LocalRedirectorInstance._instance is None:
+                            raise RuntimeError('Local redirector is unavailable')
+                        redirector.set_intercept(','.join(map(str, ids)) + ',!' + str(os.getpid()))
                     self.pids = ids
-                    self.status('running', '进程范围已更新；切换期间可能存在短暂间隙。')
+                    self.status('running', '' if self.explicit_proxy else '进程范围已更新；切换期间可能存在短暂间隙。')
             except Exception:
                 self.status('failed', '无法更新拦截进程范围，抓包已停止。')
                 ctx.master.shutdown()
@@ -551,8 +587,6 @@ class Capture:
                 self.status('running', '有连接未被 HTTP 出口支持；未回退直连。')
 
     def requestheaders(self, flow):
-        self.inflight.add(flow.id)
-        self.pending_flows[flow.id] = flow
         if loopback((flow.request.host, flow.request.port)):
             flow.server_conn.via = None
         elif CONFIG['proxy_url']:
@@ -560,6 +594,11 @@ class Capture:
             flow.server_conn.via = ('http', (proxy.hostname, proxy.port or 80))
         else:
             flow.server_conn.via = None
+        if not self.recording:
+            flow.request.stream = True
+            return
+        self.inflight.add(flow.id)
+        self.pending_flows[flow.id] = flow
         stream_body(flow, 'request')
         self.save(flow, 'pending')
 
@@ -567,6 +606,9 @@ class Capture:
         self.save(flow, 'pending')
 
     def responseheaders(self, flow):
+        if not self.recording:
+            flow.response.stream = True
+            return
         streaming = flow.response.headers.get('content-type', '').lower().startswith('text/event-stream')
         if not streaming and flow.response.status_code != 101:
             stream_body(flow, 'response')
@@ -575,6 +617,8 @@ class Capture:
             stream = EventStream(flow)
             self.streams[flow.id] = stream
             def forward(chunk):
+                if not self.recording:
+                    return chunk
                 stream.consume(chunk)
                 now = time.monotonic()
                 if not chunk or now - stream.last_saved >= 0.2:
@@ -584,6 +628,8 @@ class Capture:
             flow.response.stream = forward
 
     def response(self, flow):
+        if not self.recording:
+            return
         if flow.response.status_code == 101 and flow.response.headers.get('upgrade', '').lower() == 'websocket':
             self.websockets.setdefault(flow.id, WebSocketStream(flow))
             self.save(flow, 'streaming')
@@ -592,12 +638,17 @@ class Capture:
         self.finish(flow.id)
 
     def websocket_start(self, flow):
+        if not self.recording:
+            return
         self.inflight.add(flow.id)
         self.pending_flows[flow.id] = flow
         self.websockets.setdefault(flow.id, WebSocketStream(flow))
         self.save(flow, 'streaming')
 
     def websocket_message(self, flow):
+        if not self.recording:
+            flow.websocket.messages.clear()
+            return
         stream = self.websockets.get(flow.id)
         if stream is None or not flow.websocket.messages:
             return
@@ -638,12 +689,42 @@ class Capture:
         self.websockets.pop(flow_id, None)
 
     def tls_failed_client(self, data):
-        self.status('running', '客户端 TLS 握手失败；请检查抓包 CA 信任或证书固定。')
+        if self.recording:
+            self.status('running', '客户端尚未信任抓包证书。请使用“启动新进程”，桌面客户端请打开证书设置。')
+
+    def end_recording(self, message=''):
+        if not self.recording or self.ending:
+            return
+        self.ending = True
+        for flow in list(self.pending_flows.values()):
+            self.save(flow, 'cancelled')
+            self.finish(flow.id)
+        self.recording = False
+        self.status('stopped', message)
+        if self.explicit_proxy:
+            # Release only the inherited recording lease, verified by inode.
+            # A forwarding-only helper must not block a later recording.
+            descriptor = os.environ.get('ARCA_CAPTURE_LEASE_FD')
+            if descriptor:
+                descriptor = int(descriptor)
+                actual = os.fstat(descriptor)
+                expected = (ROOT.parent / '.engine.lock').stat()
+                if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
+                    raise RuntimeError('Capture lease identity changed')
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+            # Continue forwarding after the UI/CLI owner exits without writing
+            # into its closed diagnostic pipes or retaining any raw traffic.
+            with open(os.devnull, 'wb') as sink:
+                os.dup2(sink.fileno(), 1)
+                os.dup2(sink.fileno(), 2)
+        else:
+            ctx.master.shutdown()
 
     def save(self, flow, phase):
+        if not self.recording:
+            return
         if flow.id not in self.saved_sizes and self.count >= MAX_FLOWS:
-            self.status('stopped', '已达到 5000 条请求上限，请开始新的会话。')
-            ctx.master.shutdown()
+            self.end_recording('已达到 5000 条请求上限，记录已停止。')
             return
         if not flow.request:
             return
@@ -681,8 +762,7 @@ class Capture:
         size = len(json.dumps(record, ensure_ascii=False).encode('utf-8')) + len(json.dumps(summary, ensure_ascii=False).encode('utf-8'))
         next_size = self.saved_bytes - self.saved_sizes.get(flow.id, 0) + size
         if next_size > 100 * 1024 * 1024:
-            self.status('stopped', '会话达到 100 MiB 保存上限，请开始新的会话。')
-            ctx.master.shutdown()
+            self.end_recording('会话达到 100 MiB 保存上限，记录已停止。')
             return
         self.saved_bytes = next_size
         self.saved_sizes[flow.id] = size

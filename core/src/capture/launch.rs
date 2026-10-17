@@ -7,6 +7,10 @@ use uuid::Uuid;
 /// Launch a fresh Agent with additional public CA roots, without saving proxy,
 /// credential or launcher preferences and without disabling TLS validation.
 pub fn launch_agent(agent_id: &str, directory: Option<&str>) -> Result<CaptureTarget, String> {
+    launch_with_proxy(agent_id, directory, None)
+}
+
+pub(super) fn launch_with_proxy(agent_id: &str, directory: Option<&str>, proxy: Option<&str>) -> Result<CaptureTarget, String> {
     let profile = targets::PROFILES.get(agent_id).ok_or("该 Agent 尚未核验抓包启动方式。")?;
     let info = crate::application::agent_launch::info(agent_id)?;
     let mut target = info.resolved_target.ok_or("请先安装该 Agent 或配置启动方式。")?;
@@ -46,9 +50,9 @@ pub fn launch_agent(agent_id: &str, directory: Option<&str>) -> Result<CaptureTa
     // The capture session owns its selected egress. An inherited shell proxy
     // can otherwise hand requests to a different process before interception.
     for name in ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"] {
-        environment.insert(name.into(), String::new());
+        environment.insert(name.into(), proxy.unwrap_or_default().to_owned());
     }
-    for name in ["NO_PROXY", "no_proxy"] { environment.insert(name.into(), "*".into()); }
+    for name in ["NO_PROXY", "no_proxy"] { environment.insert(name.into(), if proxy.is_some() { "" } else { "*" }.into()); }
     let chromium = profile.chromium && targets::chromium(&target);
     if let crate::domain::agents::LaunchTarget::App { new_instance, args, .. } = &mut target {
         *new_instance = true;
@@ -81,7 +85,7 @@ pub fn launch_agent(agent_id: &str, directory: Option<&str>) -> Result<CaptureTa
 }
 
 
-fn initialize_ca(ca: &Path) -> Result<(), String> {
+pub(super) fn initialize_ca(ca: &Path) -> Result<(), String> {
     let engine = tool().ok_or("未找到 mitmdump，请先安装官方 mitmproxy。")?;
     let lease = acquire_lease(".ca.lock")?;
     if ca.exists() { return Ok(()); }

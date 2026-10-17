@@ -158,6 +158,8 @@ pub fn run() {
             traces::trace_import,
             traces::trace_export,
             capture::capture_environment,
+            capture::capture_install_engine,
+            capture::capture_open_certificate,
             capture::capture_launch_agent,
             capture::capture_sessions,
             capture::capture_snapshot,

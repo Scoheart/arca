@@ -241,7 +241,7 @@ mod tests {
         fs::create_dir_all(directory.join("summaries")).unwrap();
         fs::write(directory.join("session.json"), serde_json::to_vec(&super::super::CaptureSession {
             id, agent_id: "codex".into(), agent_name: "Codex".into(), target_id: "fixture".into(),
-            target_name: "Fixture".into(), pids: vec![], proxy_url: None, started_at: "2026-10-05T00:00:00Z".into(), loopback_tls: vec![],
+            target_name: "Fixture".into(), pids: vec![], proxy_url: None, started_at: "2026-10-05T00:00:00Z".into(), loopback_tls: vec![], transport: super::super::CaptureTransport::Local,
         }).unwrap()).unwrap();
         directory
     }

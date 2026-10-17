@@ -1,8 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 export interface CaptureTarget { id: string; name: string; pids: number[]; agent_ids: string[] }
-export interface AgentCaptureSupport { agent_id: string; available: boolean; kind: string | null; target_ids: string[]; ca_environment: string[]; chromium: boolean; ca_scope: 'process' | 'mixed' | 'system' }
+export interface AgentCaptureSupport { agent_id: string; available: boolean; kind: string | null; target_ids: string[]; ca_environment: string[]; chromium: boolean; ca_scope: 'process' | 'mixed' | 'system'; explicit_proxy: boolean }
 export interface CaptureEnvironment { supported: boolean; engine: string | null; extension_enabled: boolean; certificate_present: boolean; certificate_trusted: boolean; other_extensions: string[]; targets: CaptureTarget[]; agents: AgentCaptureSupport[] }
-export interface CaptureSession { id: string; agent_id: string; agent_name: string; target_id: string; target_name: string; pids: number[]; proxy_url: string | null; started_at: string }
+export interface CaptureSession { id: string; agent_id: string; agent_name: string; target_id: string; target_name: string; pids: number[]; proxy_url: string | null; started_at: string; transport?: 'local' | 'proxy' }
 export interface CaptureStatus { state: string; message: string; pids: number[]; flow_count: number }
 export interface FlowSummary { id: string; method: string; url: string; status: number | null; started_at: number; duration_ms: number | null; error: string | null;
   phase?: 'pending' | 'receiving' | 'streaming' | 'complete' | 'failed' | 'cancelled' | null;
@@ -29,6 +29,8 @@ export function mergeCaptureDelta(current: CaptureSnapshot | null, delta: Captur
     flows: [...flows.values()].sort((left, right) => right.started_at - left.started_at || left.id.localeCompare(right.id)) };
 }
 export const captureEnvironment = () => invoke<CaptureEnvironment>('capture_environment');
+export const captureOpenCertificate = () => invoke<void>('capture_open_certificate');
+export const captureInstallEngine = () => invoke<void>('capture_install_engine');
 export const captureLaunchAgent = (agentId: string, directory?: string) => invoke<CaptureTarget>('capture_launch_agent', { agentId, directory: directory ?? null });
 export const captureSessions = () => invoke<CaptureSession[]>('capture_sessions');
 export const captureSnapshot = (sessionId: string) => invoke<CaptureSnapshot>('capture_snapshot', { sessionId });

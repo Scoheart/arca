@@ -29,6 +29,8 @@ pub enum TraceCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum CaptureCommand {
+    /// Download and verify Arca's private capture runtime (no system install).
+    Prepare,
     /// Discover supported capture launchers and exact running process targets.
     Environment,
     /// Read a verified live state, including a session owned by another Arca.
@@ -40,7 +42,7 @@ pub enum CaptureCommand {
         /// Launch a fresh Agent with the capture CA and record that instance.
         #[arg(long)] launch: bool,
         #[arg(long, requires = "launch")] directory: Option<String>,
-        #[arg(long, default_value = "direct", value_parser = ["direct", "arca", "custom"])] egress: String,
+        #[arg(long, default_value = "auto", value_parser = ["auto", "direct", "arca", "custom"])] egress: String,
         #[arg(long)] proxy: Option<String>,
         #[arg(long, default_value_t = 60, value_parser = clap::value_parser!(u16).range(1..=3600))] seconds: u16,
     },
@@ -109,6 +111,10 @@ pub fn trace(cli: &Cli, command: &TraceCommand) -> Result<CommandOutput, CliErro
 pub fn captured(cli: &Cli, command: &CaptureCommand) -> Result<CommandOutput, CliError> {
     cli.reject_mutation_options()?;
     match command {
+        CaptureCommand::Prepare => {
+            let engine = capture::install_engine().map_err(CliError::from_legacy)?;
+            query_output("capture.prepare", json!({"engine": safe_path(&engine.to_string_lossy()), "ready": true}))
+        },
         CaptureCommand::Environment => query_output("capture.environment", serde_json::to_value(capture::environment())
             .map_err(|error| CliError::private("serialization", error.to_string()))?),
         CaptureCommand::State { session } => query_output("capture.state", serde_json::to_value(capture::snapshot(session).map_err(CliError::from_legacy)?)
@@ -117,8 +123,8 @@ pub fn captured(cli: &Cli, command: &CaptureCommand) -> Result<CommandOutput, Cl
             let request = capture::StartCapture { agent_id: agent.clone(), target_id: target.clone().unwrap_or_default(), egress: egress.clone(), proxy_url: proxy.clone() };
             let snapshot = (if *launch { capture::start_fresh(request, directory.as_deref()) } else { capture::start(request) })
                 .map_err(CliError::from_legacy)?;
-            // Core owns the worker, redaction and stop semantics. The process
-            // stays alive as its owner; no detached, untracked daemon is made.
+            // Core owns recording and stop semantics. Proxy-launched Agents
+            // retain a non-recording forwarder until their exact process exits.
             let until = std::time::Instant::now() + std::time::Duration::from_secs(u64::from(*seconds));
             while std::time::Instant::now() < until {
                 std::thread::sleep(std::time::Duration::from_millis(250));

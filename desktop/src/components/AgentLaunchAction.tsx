@@ -100,7 +100,7 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
       aria-label={t("agentRuntime.status", { name: runtimeName, status: runtimeStatus,
         version: version ? t("agentRuntime.version", { version }) : t("agentRuntime.unknownVersion") })}
       title={`${runtimeName}${version ? ` · v${version}` : ` · ${runtimeStatus}`}${installedPath ? `\n${installedPath}` : ""}`}>
-      {version ? `${info.host_name || info.configured_target ? `${runtimeName} · ` : ""}v${version}` : runtimeStatus}
+      v{version}
     </span>}
     {!contextMenu && installUrl && <button type="button" className="arca-launch-install btn-secondary" onClick={openInstallation}
       title={`安装文档 · ${installationStatus}`} aria-label={`${info?.name ?? agentId} 安装文档，${installationStatus}`}>

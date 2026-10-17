@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import type { AgentInfo } from '../lib/types';
-import { captureDetail, captureEnvironment, captureExport, captureSessions, captureDelta, mergeCaptureDelta, captureStart, captureStop, type CaptureEnvironment, type CaptureSession, type CaptureSnapshot, type CapturedFlow, type FlowSummary } from '../lib/capture';
+import { captureDetail, captureEnvironment, captureExport, captureInstallEngine, captureOpenCertificate, captureSessions, captureDelta, mergeCaptureDelta, captureStart, captureStop, type CaptureEnvironment, type CaptureSession, type CaptureSnapshot, type CapturedFlow, type FlowSummary } from '../lib/capture';
 import { copyToClipboard } from '../lib/api';
 import { formatError } from '../lib/format';
 import { ToastNotice, useToast } from './Toast';
@@ -51,7 +51,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   const [sessions, setSessions] = useState<CaptureSession[]>([]);
   const [snapshot, setSnapshot] = useState<CaptureSnapshot | null>(null);
   const [targetId, setTargetId] = useState('');
-  const [egress, setEgress] = useState(arcaProxy ? 'arca' : 'direct');
+  const [egress, setEgress] = useState('auto');
   const [proxy, setProxy] = useState('');
   const [directory, setDirectory] = useState('');
   const [launchMode, setLaunchMode] = useState<'fresh' | 'existing'>('fresh');
@@ -62,8 +62,11 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   const [flowId, setFlowId] = useState('');
   const [tab, setTab] = useState<'overview' | 'request' | 'response' | 'timing'>('overview');
   const [format, setFormat] = useState<'body' | 'headers' | 'parameters' | 'raw'>('body');
-  const [settingsOpen, setSettingsOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [setupOnly, setSetupOnly] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [installing, setInstalling] = useState(false);
   const [awaitingExtension, setAwaitingExtension] = useState(false);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState('');
@@ -77,6 +80,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   const revision = useRef<{ sessionId: string; value: string } | null>(null);
   const active = snapshot?.status.state === 'running' || snapshot?.status.state === 'starting';
   const support = environment?.agents?.find(agent => agent.agent_id === agentId);
+  const processProxy = launchMode === 'fresh' && Boolean(support?.explicit_proxy);
   const targets = environment?.targets.filter(target => target.agent_ids.includes(agentId)) ?? [];
   const selectedAgent = agents.find(agent => agent.id === agentId);
   const refresh = useCallback(async () => {
@@ -107,7 +111,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
     void refresh().then(async ([, list]) => {
       if (disposed || generation !== epoch.current) return;
       const selected = list[0];
-      if (!selected) { setSnapshot(null); setSettingsOpen(true); }
+      if (!selected) { setSnapshot(null); }
       else {
         const current = await captureDelta(selected.id);
         if (!disposed && generation === epoch.current) {
@@ -118,6 +122,12 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
     }).catch(error => { if (!disposed) setFailure(formatError(error)); }).finally(() => { if (!disposed) setLoading(false); });
     return () => { disposed = true; epoch.current++; };
   }, [refresh]);
+  useEffect(() => {
+    if (!settingsOpen || busy) return;
+    const onFocus = () => { void refresh().catch(error => setFailure(formatError(error))); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [settingsOpen, busy, refresh]);
   useEffect(() => {
     const matches = environment?.targets.filter(target => target.agent_ids.includes(agentId)) ?? [];
     setTargetId(current => matches.some(target => target.id === current) ? current : matches[0]?.id ?? '');
@@ -165,34 +175,48 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
     finally { setBusy(false); }
   };
   const openSettings = () => {
+    setSetupOnly(false);
     setSettingsOpen(true);
     void perform(async () => { await refresh(); });
   };
   const selectSession = async (id: string) => {
     const generation = ++epoch.current; revision.current = null; setFlowId(''); setFlow(null);
-    if (!id) { setSnapshot(null); setSettingsOpen(true); await refresh(); return; }
+    if (!id) { setSnapshot(null); await refresh(); return; }
     const current = await captureDelta(id);
     if (generation === epoch.current) {
       revision.current = { sessionId: id, value: current.revision };
       setSnapshot(mergeCaptureDelta(null, current));
     }
   };
-  const needsSystemCa = support?.ca_scope === 'system' && !environment?.certificate_trusted;
+  const needsSystemCa = Boolean(environment?.engine) && support?.ca_scope === 'system' && !environment?.certificate_trusted;
   const prerequisite = loading ? '正在检测抓包环境…' : !environment?.supported ? '当前仅支持 macOS 按进程抓包。'
-    : !environment.engine ? '请先安装官方 mitmproxy。'
-    : needsSystemCa ? '此客户端需要系统信任抓包证书后才能记录 HTTPS。'
+    : needsSystemCa ? '此客户端需要一次证书授权。在钥匙串访问中添加 mitmproxy 证书，并将 SSL 设为“始终信任”，完成后返回。'
     : launchMode === 'fresh' && !support ? '此 Agent 尚未支持自动启动，请选择运行中的进程。'
     : launchMode === 'fresh' && !support?.available ? '请先安装 Agent 或配置它的启动方式。'
     : launchMode === 'existing' && !targetId ? '未检测到运行中的进程，可切换为启动新进程。' : '';
   const canStart = !prerequisite && agentId && !active && !busy && (egress !== 'custom' || proxy.trim());
   const start = () => perform(async () => {
     const generation = ++epoch.current; revision.current = null; setFlowId(''); setFlow(null);
-    setAwaitingExtension(!environment?.extension_enabled);
+    setPreparing(true);
     try {
+      if (!environment?.engine) {
+        setInstalling(true);
+        await captureInstallEngine();
+        setInstalling(false);
+        const [next] = await refresh();
+        if (generation !== epoch.current) return;
+        if (support?.ca_scope === 'system' && !next.certificate_trusted) { setSetupOnly(true); setSettingsOpen(true); return; }
+      }
+      setAwaitingExtension(!processProxy && !environment?.extension_enabled);
       const current = await captureStart({ agent_id: agentId, target_id: targetId, egress, proxy_url: egress === 'custom' ? proxy : null }, { launch: launchMode === 'fresh', directory: directory.trim() || undefined });
       if (generation === epoch.current) { setSnapshot(current); setTargetId(current.session.target_id); setSettingsOpen(false); await refresh(); }
-    } finally { setAwaitingExtension(false); }
+    } finally { setAwaitingExtension(false); setPreparing(false); setInstalling(false); }
   });
+  const begin = () => {
+    if (needsSystemCa) { setSetupOnly(true); setSettingsOpen(true); }
+    else if (prerequisite) openSettings();
+    else void start();
+  };
   const message = tab === 'request' || tab === 'response' ? flow?.[tab] : undefined;
   const content = format === 'headers' ? message?.headers.map(([key, value]) => `${key}: ${value}`).join('\n') ?? '' : format === 'parameters' && flow ? address(flow.url, true).parameters.map(([key, value]) => `${key}: ${value}`).join('\n') : message?.body ?? '';
   const pending = flow && ['pending', 'receiving', 'streaming'].includes(phase(flow));
@@ -203,9 +227,9 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   return <div className="arca-capture" style={css}>
     <header className="capture-titlebar"><div><h1>网络抓包</h1><span className="capture-recording-state" data-live={Boolean(active)}>{status}</span>
       {selectedAgent && <span className="capture-agent-label"><AgentGlyph id={selectedAgent.id} size={18} />{selectedAgent.name}</span>}</div>
-      <div className="capture-title-actions"><button className="capture-button" disabled={busy || loading} onClick={openSettings}><SlidersIcon className="w-4 h-4" />设置</button>
-        <button className="capture-button capture-record" data-live={Boolean(active)} disabled={busy || loading} onClick={() => active && snapshot ? void perform(async () => { setSnapshot(await captureStop(snapshot.session.id)); await refresh(); }) : openSettings()}>
-          <span aria-hidden="true" />{active ? '停止记录' : '开始记录'}</button></div>
+      <div className="capture-title-actions"><button className="capture-button" disabled={busy || loading} onClick={openSettings}><SlidersIcon className="w-4 h-4" />记录选项</button>
+        <button className="capture-button capture-record" data-live={Boolean(active)} disabled={busy || loading} onClick={() => active && snapshot ? void perform(async () => { setSnapshot(await captureStop(snapshot.session.id)); await refresh(); }) : begin()}>
+          <span aria-hidden="true" />{preparing ? '正在准备…' : active ? '停止记录' : environment && !environment.engine ? '下载并开始' : '开始记录'}</button></div>
     </header>
     <div className="capture-toolbar"><select aria-label="抓包会话" value={snapshot?.session.id ?? ''} disabled={busy || Boolean(active)} onChange={event => void perform(() => selectSession(event.target.value))}>
       <option value="">新会话</option>{sessions.map(session => <option key={session.id} value={session.id}>{session.agent_name} · {new Date(session.started_at).toLocaleString()}</option>)}</select>
@@ -215,6 +239,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
       <button className="capture-button" title="导出脱敏会话 JSON" aria-label="导出会话" disabled={!snapshot || busy} onClick={() => void perform(async () => { if (snapshot && await captureExport(snapshot.session.id)) toast.show({ kind: 'success', msg: '会话已导出。' }); })}><DownloadIcon className="w-4 h-4" /></button>
     </div>
     <ToastNotice message={failure} />
+    <ToastNotice kind="info" noticeKey="capture-starting" persistent message={preparing && !awaitingExtension ? installing ? '正在下载并校验抓包组件，首次使用需要准备一次…' : '正在准备网络记录…' : null} />
     <ToastNotice kind="info" noticeKey="capture-extension-setup" persistent message={awaitingExtension
       ? environment?.extension_enabled ? '网络扩展已启用，正在准备记录…'
         : '正在安装并启用官方网络扩展。请按 macOS 提示允许 Mitmproxy Redirector；批准后会自动继续记录，无需刷新。'
@@ -238,7 +263,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
                 if (['ArrowUp', 'ArrowDown'].includes(event.key)) { event.preventDefault(); const next = Math.max(0, Math.min(flows.length - 1, index + (event.key === 'ArrowUp' ? -1 : 1))); setFlowId(flows[next].id); (event.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus(); }
               }}><td>{index + 1}</td><td className="capture-method">{item.method}</td><td data-error={Boolean(item.error || (item.status ?? 0) >= 400)}>{item.status ?? (phase(item) === 'failed' ? 'ERR' : '—')}</td>
               <td className="capture-address" title={item.url}><strong>{address(item.url).host}</strong><span>{address(item.url).path}</span></td><td>{size(item.response_bytes)}</td><td>{phase(item) === 'complete' ? elapsed(item.duration_ms) : phaseLabel[phase(item)] ?? '—'}</td></tr>)}</tbody>
-          </table>{!flows.length && <div className="capture-empty">{active ? '等待请求…在目标 Agent 中执行操作。' : '开始记录后，请求会显示在这里。'}</div>}</div>
+          </table>{!flows.length && <div className="capture-empty">{active ? '等待请求…在目标 Agent 中执行操作。' : query || filter !== 'all' ? '没有匹配的请求。' : <><strong>记录 {selectedAgent?.name ?? agentId} 的网络请求</strong><span>{processProxy ? '点击开始记录，Arca 会打开 Agent 并自动配置连接。' : '点击开始记录，Arca 会检查所需环境并连接 Agent。'}</span></>}</div>}</div>
         </section>
         <div className="capture-divider capture-divider-y" role="separator" tabIndex={0} aria-label="调整请求列表高度" aria-orientation="horizontal" aria-valuemin={100} aria-valuenow={listHeight}
           onPointerDown={event => { drag.current = { axis: 'y', id: event.pointerId }; event.currentTarget.setPointerCapture(event.pointerId); }}
@@ -262,18 +287,22 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
       </div>
     </div>
     <footer className="capture-statusbar"><span>{snapshot ? `${snapshot.session.target_name} · ${snapshot.session.pids.length} 个初始进程` : '仅记录当前 Agent 及其辅助进程'}{snapshot?.session.proxy_url ? ` · ${snapshot.session.proxy_url}` : snapshot ? ' · 直连' : ''}</span><span>{snapshot?.status.message || `${snapshot?.flows.length ?? 0} requests · 本机脱敏记录`}</span></footer>
-    {settingsOpen && <DialogShell kind="editor" size="wide" className="capture-settings" title="开始网络记录" subtitle="只记录当前 Agent 及其辅助进程" busy={busy} onClose={() => setSettingsOpen(false)}
-      footerStart={<span className="capture-setting-note">本机脱敏保存 · 单条正文 2 MiB</span>}
-      footerEnd={<><button className="btn-secondary" onClick={() => setSettingsOpen(false)} disabled={busy}>关闭</button><button className="btn-primary" disabled={!canStart} onClick={() => void start()}>{awaitingExtension && !environment?.extension_enabled ? '等待系统授权…' : busy ? '正在准备…' : launchMode === 'fresh' ? '启动并记录' : '开始记录'}</button></>}>
+    {settingsOpen && <DialogShell kind="editor" size={setupOnly ? 'md' : 'wide'} className="capture-settings" title={setupOnly ? '准备 HTTPS 记录' : '记录选项'} subtitle={selectedAgent?.name ?? agentId} busy={busy} onClose={() => setSettingsOpen(false)}
+      footerStart={setupOnly ? null : <span className="capture-setting-note">本机脱敏保存 · 单条正文 2 MiB</span>}
+      footerEnd={<><button className="btn-secondary" onClick={() => setSettingsOpen(false)} disabled={busy}>关闭</button><button className="btn-primary" disabled={!canStart} onClick={() => void start()}>{awaitingExtension && !environment?.extension_enabled ? '等待系统授权…' : busy ? '正在准备…' : environment && !environment.engine ? '下载并开始' : launchMode === 'fresh' ? '启动并记录' : '开始记录'}</button></>}>
       <div className="capture-setting-fields">
         <div className="capture-setup-heading"><AgentGlyph id={agentId} size={28} /><div className="capture-setup-agent"><span>Agent</span><strong title={selectedAgent?.name ?? agentId}>{selectedAgent?.name ?? agentId}</strong></div><button className="capture-button" aria-label="刷新抓包环境" disabled={busy || loading} onClick={() => void perform(async () => { await refresh(); })}><RefreshIcon className="w-4 h-4" />刷新</button></div>
-        <div className="capture-launch-modes" aria-label="记录方式"><button aria-pressed={launchMode === 'fresh'} disabled={busy || Boolean(active)} onClick={() => setLaunchMode('fresh')}><strong>启动新进程</strong><span>{support?.ca_scope === 'system' ? '打开独立客户端实例' : '自动追加抓包证书'}</span></button><button aria-pressed={launchMode === 'existing'} disabled={busy || Boolean(active)} onClick={() => setLaunchMode('existing')}><strong>运行中的进程</strong><span>选择已有实例</span></button></div>
+        {!setupOnly && <>
+        <div className="capture-launch-modes" aria-label="记录方式"><button aria-pressed={launchMode === 'fresh'} disabled={busy || Boolean(active) || !support?.available} onClick={() => setLaunchMode('fresh')}><strong>启动并记录</strong><span>{support?.explicit_proxy ? '自动配置，无需系统网络扩展' : '打开独立客户端实例'}</span></button><button aria-pressed={launchMode === 'existing'} disabled={busy || Boolean(active)} onClick={() => setLaunchMode('existing')}><strong>记录已有实例</strong><span>使用系统网络扩展</span></button></div>
         {launchMode === 'existing' ? <><label>目标进程<select value={targetId} disabled={Boolean(active) || busy} onChange={event => setTargetId(event.target.value)}><option value="">{targets.length ? '选择进程' : '未检测到运行进程'}</option>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · {target.pids.length} 个进程</option>)}</select></label>{!environment?.certificate_trusted && support?.ca_scope !== 'system' && <p className="capture-setting-note">已有进程需自行信任抓包证书；遇到 TLS 错误时，请使用“启动新进程”。</p>}</>
           : support?.kind === 'cli' && <label>工作目录<input value={directory} disabled={busy} onChange={event => setDirectory(event.target.value)} placeholder="留空使用 Agent 的默认目录" /></label>}
-        <div className="capture-setting-columns"><label>出口<select value={egress} disabled={Boolean(active) || busy} onChange={event => setEgress(event.target.value)}><option value="direct">直连</option><option value="arca" disabled={!arcaProxy}>Arca 代理</option><option value="custom">自定义 HTTP 代理</option></select></label>{egress === 'custom' ? <label>代理地址<input disabled={Boolean(active) || busy} value={proxy} onChange={event => setProxy(event.target.value)} placeholder="http://127.0.0.1:6789" /></label> : <div className="capture-egress-summary"><span>{egress === 'arca' ? arcaProxy : '使用引擎的直连出口'}</span><small>{egress === 'arca' ? '转发失败时保留错误，不回退直连' : '内部环回连接保持原有路由'}</small></div>}</div>
-        <div className="capture-setting-health" aria-label="抓包环境"><span data-ready={Boolean(environment?.engine)}>引擎 {loading ? '检测中' : environment?.engine ? '可用' : '未安装'}</span><span data-ready={Boolean(environment?.extension_enabled)}>网络扩展 {loading ? '检测中' : environment?.extension_enabled ? '已启用' : '待初始化或授权'}</span><span data-ready={!needsSystemCa && Boolean(environment)}>证书 {loading ? '检测中' : environment?.certificate_trusted ? '系统已信任' : support?.ca_scope === 'system' ? '需系统信任' : launchMode === 'fresh' ? '随新进程追加' : '需客户端信任'}</span></div>
-        {environment?.supported && environment.engine && !environment.extension_enabled && <p className="capture-setting-note">首次开始记录会自动安装并请求启用网络扩展，无需终端命令。按 macOS 提示批准后自动继续；需要时可从通知条打开授权设置。</p>}
-        {prerequisite && <p className="capture-setup-feedback" role="status">{prerequisite}</p>}
+        <div className="capture-setting-columns"><label>网络出口<select value={egress} disabled={Boolean(active) || busy} onChange={event => setEgress(event.target.value)}><option value="auto">自动沿用当前网络</option><option value="direct">直连</option><option value="arca" disabled={!arcaProxy}>Arca 代理</option><option value="custom">自定义 HTTP 代理</option></select></label>{egress === 'custom' ? <label>代理地址<input disabled={Boolean(active) || busy} value={proxy} onChange={event => setProxy(event.target.value)} placeholder="http://127.0.0.1:6789" /></label> : <div className="capture-egress-summary"><span>{egress === 'auto' ? '优先使用 Arca、环境或系统的代理' : egress === 'arca' ? arcaProxy : '直连'}</span><small>代理不可用时会提示，不自动绕过</small></div>}</div>
+        <div className="capture-setting-health" aria-label="抓包环境"><span data-ready={Boolean(environment?.engine)}>抓包组件 {loading ? '检测中' : environment?.engine ? '已就绪' : '待安装'}</span><span data-ready={processProxy || Boolean(environment?.extension_enabled)}>网络扩展 {loading ? '检测中' : processProxy ? '无需启用' : environment?.extension_enabled ? '已启用' : '待授权'}</span><span data-ready={!needsSystemCa && Boolean(environment)}>证书 {loading ? '检测中' : processProxy ? '自动配置' : environment?.certificate_trusted ? '已授权' : support?.ca_scope === 'system' ? '待授权' : launchMode === 'fresh' ? '随启动配置' : '需客户端信任'}</span></div>
+        {!processProxy && environment?.supported && environment.engine && !environment.extension_enabled && <p className="capture-setting-note">首次记录时，按 macOS 提示允许 Mitmproxy Redirector，Arca 会自动继续。</p>}
+        </>}
+        {setupOnly && !prerequisite && <p className="capture-setting-note">已准备就绪，可以开始记录。</p>}
+        {environment?.supported && !environment.engine && <p className="capture-setting-note">首次开始时，Arca 会下载并校验官方 mitmproxy 组件，仅安装到 Arca 私有目录。</p>}
+        {prerequisite && <div className="capture-setup-feedback" role="status"><p>{prerequisite}</p>{environment?.engine && needsSystemCa && <button className="btn-secondary" disabled={busy} onClick={() => void perform(captureOpenCertificate)}>打开证书设置</button>}</div>}
         {support?.ca_scope === 'mixed' && !environment?.certificate_trusted && <p className="capture-setting-note">浏览器网络栈仍需要系统信任抓包证书，追加证书仅覆盖支持它的运行时。</p>}
         {launchMode === 'existing' && environment?.other_extensions.length ? <p className="capture-setting-note">{environment.other_extensions.join('、')} 也在接管网络；请求为空时，检查目标应用的代理规则和实际发起进程。</p> : null}
       </div>

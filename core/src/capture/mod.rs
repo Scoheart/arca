@@ -1,4 +1,4 @@
-//! Local, opt-in Agent traffic capture. The engine is a separately installed mitmproxy.
+//! Local, opt-in Agent capture with a verified private or existing mitmproxy runtime.
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, OpenOptions};
@@ -13,7 +13,11 @@ mod index;
 mod targets;
 mod engine;
 mod launch;
+mod routing;
+mod install;
 pub use launch::launch_agent;
+pub use routing::prepare_certificate;
+pub use install::install_engine;
 use engine::Worker;
 pub use targets::{AgentCaptureSupport, CaptureCaScope};
 
@@ -53,14 +57,21 @@ pub struct CaptureEnvironment {
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct StartCapture { pub agent_id: String, pub target_id: String, pub egress: String, pub proxy_url: Option<String> }
+#[derive(Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CaptureTransport { #[default] Local, Proxy }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CaptureSession {
     pub id: String, pub agent_id: String, pub agent_name: String, pub target_id: String,
     pub target_name: String, pub pids: Vec<u32>, pub proxy_url: Option<String>, pub started_at: String,
     #[serde(default)] pub loopback_tls: Vec<(String, u16)>,
+    #[serde(default)] pub transport: CaptureTransport,
 }
 #[derive(Clone, Serialize, Deserialize)]
-pub struct CaptureState { pub state: String, pub message: String, pub pids: Vec<u32>, pub flow_count: usize }
+pub struct CaptureState {
+    pub state: String, pub message: String, pub pids: Vec<u32>, pub flow_count: usize,
+    #[serde(default)] pub listen_address: Option<String>,
+}
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CaptureSnapshot { pub session: CaptureSession, pub status: CaptureState, pub flows: Vec<FlowSummary> }
 #[derive(Clone, Serialize, Deserialize)]
@@ -115,6 +126,15 @@ fn private_write(path: &Path, content: &[u8]) -> Result<(), String> {
     #[cfg(unix)] { use std::os::unix::fs::OpenOptionsExt; options.mode(0o600); }
     options.open(path).and_then(|mut f| f.write_all(content)).map_err(|_| "无法保存抓包文件；目标可能已经存在。".into())
 }
+fn replace_session(path: &Path, session: &CaptureSession) -> Result<(), String> {
+    reject_symlink(path)?;
+    let temporary = path.with_file_name(format!(".session-{}.tmp", Uuid::new_v4()));
+    let bytes = serde_json::to_vec(session).map_err(|_| "无法保存抓包会话。")?;
+    private_write(&temporary, &bytes)?;
+    let result = fs::rename(&temporary, path).map_err(|_| "无法更新抓包会话。".to_owned());
+    if result.is_err() { let _ = fs::remove_file(temporary); }
+    result
+}
 fn read_json<T: for<'a> Deserialize<'a>>(path: &Path) -> Result<T, String> {
     serde_json::from_slice(&read_bytes(path, MAX_RECORD_BYTES)?).map_err(|_| "抓包记录尚未写完或已经损坏。".into())
 }
@@ -136,6 +156,7 @@ fn read_bytes(path: &Path, maximum: u64) -> Result<Vec<u8>, String> {
     Ok(bytes)
 }
 fn tool() -> Option<PathBuf> {
+    if let Some(path) = install::installed() { return Some(path); }
     let mut dirs: Vec<PathBuf> = std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()).collect();
     dirs.extend([PathBuf::from("/opt/homebrew/bin"), PathBuf::from("/usr/local/bin")]);
     if let Some(home) = dirs::home_dir() { dirs.push(home.join(".local/bin")); }
@@ -223,7 +244,7 @@ fn targets() -> Vec<CaptureTarget> {
 }
 
 fn certificate_trusted(ca: &Path) -> bool {
-    ca.is_file() && Command::new("/usr/bin/security").args(["verify-cert", "-c"]).arg(ca)
+    ca.is_file() && Command::new("/usr/bin/security").args(["verify-cert", "-p", "ssl", "-c"]).arg(ca)
         .stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok_and(|status| status.success())
 }
 
@@ -241,7 +262,7 @@ pub fn environment() -> CaptureEnvironment {
 
 
 fn proxy(request: &StartCapture) -> Result<Option<String>, String> {
-    let value = match request.egress.as_str() { "direct" => return Ok(None), "arca" | "mux" => crate::network::configured_proxy_url()?.ok_or("Arca 尚未配置代理出口。")?, "custom" => request.proxy_url.clone().ok_or("请填写代理地址。")?, _ => return Err("出口类型无效。".into()) };
+    let value = match request.egress.as_str() { "auto" => match routing::automatic_proxy()? { Some(value) => value, None => return Ok(None) }, "direct" => return Ok(None), "arca" | "mux" => crate::network::configured_proxy_url()?.ok_or("Arca 尚未配置代理出口。")?, "custom" => request.proxy_url.clone().ok_or("请填写代理地址。")?, _ => return Err("出口类型无效。".into()) };
     let url = url::Url::parse(value.trim()).map_err(|_| "请输入完整 HTTP 代理地址。".to_owned())?;
     if url.scheme() != "http" || url.host_str().is_none() || !url.username().is_empty() || url.password().is_some() || url.query().is_some() || url.fragment().is_some() || !matches!(url.path(), "" | "/") {
         return Err("第一版支持无认证 HTTP 上游代理，例如 http://127.0.0.1:6789。不会回退直连。".into());
@@ -262,11 +283,13 @@ pub fn start(request: StartCapture) -> Result<CaptureSnapshot, String> {
 pub fn start_fresh(request: StartCapture, directory: Option<&str>) -> Result<CaptureSnapshot, String> {
     start_session(request, TargetSelection::Fresh { directory })
 }
+#[derive(Clone, Copy)]
 enum TargetSelection<'a> { Existing, Fresh { directory: Option<&'a str> } }
 fn start_session(request: StartCapture, selection: TargetSelection<'_>) -> Result<CaptureSnapshot, String> {
     let _starting = STARTING.try_lock().map_err(|_| "capture_starting: 抓包引擎正在启动，请等待本次启动完成。".to_owned())?;
     {
         let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
+        retire_forwarder(&mut active)?;
         if let Some(worker) = active.as_mut() { if worker.alive()? { return Err("capture_busy: 请先停止当前抓包会话。".into()); } }
         active.take();
     }
@@ -274,17 +297,25 @@ fn start_session(request: StartCapture, selection: TargetSelection<'_>) -> Resul
     let lease = acquire_lease(".engine.lock")?;
     let env = environment();
     if !env.supported { return Err("按应用抓包仅支持 macOS。".into()); }
+    let agents = crate::agents::load_agents();
+    let agent = agents.get(&request.agent_id).ok_or("请选择有效的 Agent。")?;
+    if matches!(selection, TargetSelection::Fresh { .. })
+        && !env.agents.iter().any(|agent| agent.agent_id == request.agent_id && agent.available) {
+        return Err("请先安装该 Agent 或配置它的启动方式，再开始记录。".into());
+    }
+    let proxy_url = proxy(&request)?;
     // Official local capture installs and activates the Redirector on first
     // startup. Requiring it here prevents that installation from ever running.
     // Engine readiness remains mandatory before we report a running session.
-    let awaiting_extension_approval = !env.extension_enabled;
-    let engine = env.engine.ok_or("未找到 mitmdump，请先安装官方 mitmproxy。")?;
+    let transport = if matches!(selection, TargetSelection::Fresh { .. })
+        && env.agents.iter().any(|agent| agent.agent_id == request.agent_id && agent.explicit_proxy) {
+        CaptureTransport::Proxy
+    } else { CaptureTransport::Local };
+    let awaiting_extension_approval = transport == CaptureTransport::Local && !env.extension_enabled;
+    let engine = match env.engine { Some(engine) => PathBuf::from(engine), None => install_engine()? };
     if !env.certificate_trusted && env.agents.iter().any(|agent| agent.agent_id == request.agent_id && agent.ca_scope == CaptureCaScope::System) {
         return Err("capture_system_ca_required: 请先让系统信任抓包 CA，再记录此桌面客户端；否则会中断其 HTTPS 请求。".into());
     }
-    let agents = crate::agents::load_agents();
-    let agent = agents.get(&request.agent_id).ok_or("请选择有效的 Agent。")?;
-    let proxy_url = proxy(&request)?;
     // Only user-configured model endpoints may opt loopback TLS into MITM.
     // Agent-local HTTPS IPC retains its original certificate and routing.
     let settings = crate::settings::load_settings_strict().map_err(|_| "无法读取模型端点，未开始抓包。")?;
@@ -295,11 +326,15 @@ fn start_session(request: StartCapture, selection: TargetSelection<'_>) -> Resul
         (address.scheme() == "https" && local).then(|| (host.to_owned(), address.port_or_known_default().unwrap_or(443)))
     }).collect();
     let target = match selection {
+        TargetSelection::Fresh { .. } if transport == CaptureTransport::Proxy => {
+            prepare_certificate()?;
+            CaptureTarget { id: format!("pending:{}", Uuid::new_v4()), name: agent.name.clone().unwrap_or(request.agent_id.clone()), pids: vec![], agent_ids: vec![request.agent_id.clone()] }
+        },
         TargetSelection::Fresh { directory } => launch_agent(&request.agent_id, directory)?,
         TargetSelection::Existing => env.targets.into_iter().find(|t| t.id == request.target_id).ok_or("capture_target_exited: 目标进程已退出，请刷新进程列表。")?,
     };
     if !target.agent_ids.contains(&request.agent_id) { return Err("目标进程不属于所选 Agent，请刷新并重新选择。".into()); }
-    let session = CaptureSession { id: Uuid::new_v4().to_string(), agent_id: request.agent_id.clone(), agent_name: agent.name.clone().unwrap_or(request.agent_id.clone()), target_id: target.id, target_name: target.name, pids: target.pids, proxy_url, started_at: chrono::Utc::now().to_rfc3339(), loopback_tls };
+    let mut session = CaptureSession { id: Uuid::new_v4().to_string(), agent_id: request.agent_id.clone(), agent_name: agent.name.clone().unwrap_or(request.agent_id.clone()), target_id: target.id, target_name: target.name, pids: target.pids, proxy_url, started_at: chrono::Utc::now().to_rfc3339(), loopback_tls, transport };
     let directory = session_dir(&session.id)?;
     private_dir(&directory)?; private_dir(&directory.join("flows"))?; private_dir(&directory.join("summaries"))?;
     private_write(&directory.join("session.json"), &serde_json::to_vec(&session).map_err(|_| "无法保存会话。".to_owned())?)?;
@@ -307,10 +342,26 @@ fn start_session(request: StartCapture, selection: TargetSelection<'_>) -> Resul
     let owner = std::process::id().to_string();
     let owner_start = process_start(std::process::id()).ok_or("无法核验抓包所有者进程。")?;
     let mut command = Command::new(engine);
-    command.args(["-q", "--server", "--no-ssl-insecure", "--no-rawtcp", "--no-store-streamed-bodies", "--mode", &format!("local:{}", session.pids.iter().map(u32::to_string).collect::<Vec<_>>().join(",")), "--set", "connection_strategy=lazy", "--set", "upstream_cert=false", "-s"]).arg(directory.join("addon.py")).env("ARCA_CAPTURE_DIR", &directory).env("ARCA_CAPTURE_OWNER", owner).env("ARCA_CAPTURE_OWNER_START", &owner_start);
+    let mode = if transport == CaptureTransport::Proxy { "regular@127.0.0.1:0".to_owned() }
+        else { format!("local:{}", session.pids.iter().map(u32::to_string).collect::<Vec<_>>().join(",")) };
+    command.args(["-q", "--server", "--no-ssl-insecure", "--no-rawtcp", "--no-store-streamed-bodies", "--mode", &mode, "--set", "connection_strategy=lazy", "--set", "upstream_cert=false", "-s"]).arg(directory.join("addon.py")).env("ARCA_CAPTURE_DIR", &directory).env("ARCA_CAPTURE_OWNER", owner).env("ARCA_CAPTURE_OWNER_START", &owner_start);
     let worker: Result<Worker, String> = (|| {
         let mut worker = Worker::spawn(command, session.id.clone(), lease)?;
         worker.ready(&directory, awaiting_extension_approval)?;
+        if let TargetSelection::Fresh { directory: working_directory } = selection {
+            if transport == CaptureTransport::Proxy {
+                let state: CaptureState = read_json(&directory.join("status.json"))?;
+                let address: std::net::SocketAddr = state.listen_address.as_deref().ok_or("抓包代理未返回监听地址。")?
+                    .parse().map_err(|_| "抓包代理监听地址无效。")?;
+                if !address.ip().is_loopback() || address.port() == 0 { return Err("抓包代理必须仅监听本机。".into()); }
+                let target = launch::launch_with_proxy(&request.agent_id, working_directory, Some(&format!("http://{address}")))?;
+                session.target_id = target.id;
+                session.target_name = target.name;
+                session.pids = target.pids;
+                replace_session(&directory.join("session.json"), &session)?;
+                private_write(&directory.join("target.json"), &serde_json::to_vec(&session).map_err(|_| "无法绑定抓包进程。")?)?;
+            }
+        }
         Ok(worker)
     })();
     let worker = match worker {
@@ -328,15 +379,28 @@ fn acquire_lease(name: &str) -> Result<fs::File, String> {
     let lease = options.open(root().join(name)).map_err(|_| "无法安全打开抓包锁。")?;
     if !lease.metadata().is_ok_and(|metadata| metadata.is_file()) { return Err("抓包锁必须是普通文件。".into()); }
     fs2::FileExt::try_lock_exclusive(&lease).map_err(|error| if error.kind() == std::io::ErrorKind::WouldBlock {
-        "capture_busy: 抓包引擎仍被占用，请先停止已有记录；若刚才启动失败，请退出旧版 Arca 后重试。".to_owned()
+        match name {
+            ".install.lock" => "capture_installing: 正在准备抓包组件，请稍后重试。",
+            ".ca.lock" => "capture_certificate_preparing: 正在准备抓包证书，请稍后重试。",
+            _ => "capture_busy: 抓包引擎仍被占用，请先停止已有记录；若刚才启动失败，请退出旧版 Arca 后重试。",
+        }.to_owned()
     } else { "capture_lock_failed: 无法锁定抓包引擎。".to_owned() })?;
     Ok(lease)
 }
 
 
 fn record_failure(directory: &Path, session: &CaptureSession, error: &str) -> Result<(), String> {
-    let state = CaptureState { state: "failed".into(), message: error.into(), pids: session.pids.clone(), flow_count: 0 };
+    let state = CaptureState { state: "failed".into(), message: error.into(), pids: session.pids.clone(), flow_count: 0, listen_address: None };
     private_write(&directory.join("failure.json"), &serde_json::to_vec(&state).map_err(|_| "无法保存抓包失败原因。")?)
+}
+fn retire_forwarder(active: &mut Option<Worker>) -> Result<(), String> {
+    let Some(worker) = active.as_ref() else { return Ok(()); };
+    let directory = session_dir(&worker.session_id)?;
+    if read_json::<CaptureSession>(&directory.join("session.json")).is_ok_and(|session| session.transport == CaptureTransport::Proxy)
+        && read_json::<CaptureState>(&directory.join("status.json")).is_ok_and(|state| state.state == "stopped") {
+        if let Some(worker) = active.take() { worker.forward_until_exit()?; }
+    }
+    Ok(())
 }
 fn request_stop(directory: &Path) -> Result<(), String> {
     let path = directory.join("stop"); reject_symlink(&path)?;
@@ -360,9 +424,10 @@ fn session_status(id: &str) -> Result<(PathBuf, CaptureSession, CaptureState), S
     let session: CaptureSession = read_json(&directory.join("session.json"))?;
     if session.id != id { return Err("抓包会话记录与目录不一致。".into()); }
     let mut status: CaptureState = read_json(&directory.join("failure.json")).or_else(|_| read_json(&directory.join("status.json"))).unwrap_or(CaptureState {
-        state: "starting".into(), message: "正在启动抓包引擎…".into(), pids: session.pids.clone(), flow_count: 0,
+        state: "starting".into(), message: "正在启动抓包引擎…".into(), pids: session.pids.clone(), flow_count: 0, listen_address: None,
     });
     let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
+    retire_forwarder(&mut active)?;
     if let Some(worker) = active.as_mut() {
         if !worker.alive()? {
             let worker = active.take().unwrap();
@@ -430,17 +495,25 @@ pub fn detail(session_id: &str, flow_id: &str) -> Result<CapturedFlow, String> {
 }
 pub fn stop(id: &str) -> Result<CaptureSnapshot, String> {
     let directory = session_dir(id)?;
+    let session: CaptureSession = read_json(&directory.join("session.json"))?;
     let worker = {
         let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
         if active.as_ref().is_some_and(|worker| worker.session_id == id) { active.take() } else { None }
     };
     if let Some(mut worker) = worker {
-        worker.stop(&directory)?;
+        if session.transport == CaptureTransport::Proxy {
+            if let Err(error) = worker.pause_recording(&directory) {
+                *ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())? = Some(worker);
+                return Err(error);
+            }
+            worker.forward_until_exit()?;
+        } else { worker.stop(&directory)?; }
     } else {
         if runtime_alive(&directory) {
             request_stop(&directory)?;
             let until = Instant::now() + Duration::from_secs(6);
             while runtime_alive(&directory) {
+                if read_json::<CaptureState>(&directory.join("status.json")).is_ok_and(|state| state.state == "stopped") { break; }
                 if Instant::now() >= until { return Err("capture_stop_pending: 已请求停止，请稍后刷新；没有强制终止其他 Arca 进程。".into()); }
                 std::thread::sleep(Duration::from_millis(200));
             }

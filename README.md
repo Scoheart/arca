@@ -239,7 +239,7 @@ arca discover [mcp|model|skill]
 arca status --agent <id> [--agent <id>] [--capability mcp|model|skill]
 arca operation {apply,review} --file request.json
 arca trace {list,show}
-arca capture {environment,run,state,list,show}
+arca capture {prepare,environment,run,state,list,show}
 arca workspace
 arca upgrade
 ```
@@ -435,12 +435,16 @@ Agent 详情页的 **Instructions** 展示已确认的本机全局 Prompt / Rule
 
 ### Agent 抓包（macOS）
 
-从 Agent 详情页点击「抓包」进入该 Agent 的工作台。开始记录时直接沿用当前 Agent，弹窗只展示名称，不再重复选择；进程和历史会话也仅展示该 Agent 的记录。
-选择启动新进程或记录已有实例，再指定直连、Arca 已配置的代理或任意无认证 HTTP 上游地址。抓包出口独立于 Arca 自身联网设置，指定代理后失败不回退直连。
+从 Agent 详情页点击「抓包」，再点击「开始记录」即可使用默认方案；进入页面不再自动弹出配置表。进程与历史会话只展示当前 Agent。「记录选项」用于选择已有实例、工作目录或自定义出口。
+默认按 Arca 设置、继承的环境变量、macOS 系统 HTTP 代理顺序选择出口；没有代理时直连。遇到不可用或不支持的代理会明确提示，不自动绕过。仍可手动选择直连、Arca 代理或无认证 HTTP 上游。
 
-依赖本机官方 mitmproxy（`mitmdump`）。首次开始记录会由官方引擎安装并注册 Mitmproxy Redirector，无需运行终端命令；注册前，系统设置的网络扩展列表中可能没有该项。通知条提供「打开授权设置」入口，Arca 自动检测授权状态，批准后继续记录，无需手动刷新，最多等待 3 分钟。已就绪引擎仍使用 12 秒启动上限。Arca 不代替用户批准系统权限。启动失败、停止和引擎意外退出都会清理本次引擎的进程组并释放抓包锁，避免辅助进程继续占用；重复启动会提示等待当前操作结束。若旧版已遗留占用，可先退出旧版再重试；不会通过删除锁文件或结束 Agent 进程绕过占用。
+首次缺少引擎时，按钮显示「下载并开始」。Arca 从 mitmproxy 官方地址下载固定的 12.2.1 包，验证固定 SHA-256 与 macOS 代码签名，原子安装到 `~/.arca/captures/runtime/`。无需预装 Homebrew、Python 或修改 shell 配置；已有私有组件优先复用，也可使用已有 `mitmdump`。下载或校验失败不会发布半成品，也不会关闭 TLS 校验。
 
-HTTPS 记录还涉及 `~/.mitmproxy/mitmproxy-ca-cert.pem`。Arca 只检查系统信任，不自动安装系统证书。「启动新进程」给支持的运行时传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。设置会区分进程证书、Node / 浏览器混合网络栈和系统信任：Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端的启动和抓包均拒绝执行，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
+Codex CLI、Pi 的「启动并记录」自动使用本机临时代理：引擎先就绪并分配空闲端口，再带代理与额外公开 CA 启动 Agent，无需网络扩展或系统证书授权，也能接到启动阶段的请求。策略由 `data/capture-agent-profiles.json` 控制，其他客户端不会被未经验证地切换到此方式。只有经过该代理的请求可见；绕过代理的 SDK、原始 TCP/UDP 不在此路径覆盖范围内。
+
+桌面客户端和已有进程仍使用按进程的系统网络扩展。首次开始时由官方引擎安装并注册 Mitmproxy Redirector；通知条提供「打开授权设置」，批准后自动继续，最多等待 3 分钟。普通引擎启动上限为 12 秒。Arca 不代替用户批准系统权限。启动失败和引擎意外退出会清理本次引擎的进程组并释放抓包锁；不会通过删除锁文件或结束 Agent 进程绕过占用。
+
+HTTPS 记录涉及 `~/.mitmproxy/mitmproxy-ca-cert.pem`。「启动并记录」给支持的运行时传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。需要系统信任的客户端提供「打开证书设置」：Arca 自动生成证书并打开钥匙串访问，用户完成一次 SSL 信任授权后返回，环境状态自动刷新。Arca 不静默信任根证书。Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端仍拒绝开始，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
 
 按实际 launcher 和可执行文件识别 Cursor、Grok Build、Qoder IDE/Desktop、Codex CLI/Desktop、Pi、Qoder CLI、OpenCode CLI/Desktop、QwenWork、QwenWorkCN 与 QoderWork。桌面应用可选择整个应用或独立顶层 PID 实例；CLI 实例也使用 PID 与启动时间绑定，跟踪其后代。Node/Bun 按脚本路径、已核验的包入口或 Pi 的进程标题识别，不会捕获所有 Node 进程。适配记录和「可启动」不代表该产品已经完成真实请求验证；未安装的客户端没有可选择的进程。
 
@@ -448,9 +452,11 @@ OpenCode Desktop 的本地模型服务继承公开 CA 集合，辅助进程随�
 
 工作台提供 Structure 主机/路径树、Sequence 时序表和可调整的面板。Overview / Request / Response / Timing 显示状态、协议、Headers、Query、文本 Body、首字节耗时与流量大小。请求发出即记录，SSE 的完整事件会在结束前增量更新，选中详情自动刷新；支持分片 UTF-8、gzip、deflate 和多行 data。WebSocket 请求保持流式状态，Request / Response 分别展示客户端 / 服务端消息、序号和时间，完整文本分片重组后脱敏；最多保存 512 条 / 2 MiB 文本，二进制消息只记录长度与省略标记，原始传输不修改。复制与 JSON 导出只包含已脱敏内容。记录保存于 `~/.arca/captures/`（或 `ARCA_HOME/captures/`），目录 0700、文件 0600。常见认证头和令牌字段脱敏后才落盘；这不是任意正文的完整隐私审计。二进制、Multipart、无法安全解析的 JSON 和不支持的压缩正文不保存；正文最多 2 MiB，会话最多 5000 条 / 100 MiB。
 
-只保证已实际验证的 HTTP / HTTPS 路径；不支持认证上游或 SOCKS。代理出口下 DNS 通过同一代理访问 Cloudflare DoH；解析失败不回退直连 DNS。无法通过 HTTP 上游的连接会失败。每两秒刷新进程范围，长 SSE 不再阻塞新进程纳入；短生命周期子进程和切换间隙仍不能算作全量覆盖。停止会话、目标退出或 Arca 退出会结束它启动的抓包器，并收尾未完成记录，不停止已有代理服务。
+只保证已实际验证的 HTTP / HTTPS 路径；不支持认证上游、SOCKS 或自动代理脚本。网络扩展路径的 DNS 通过同一代理访问 Cloudflare DoH；解析失败不回退直连 DNS。无法通过 HTTP 上游的连接会失败。每两秒刷新进程范围，长 SSE 不再阻塞新进程纳入；短生命周期子进程和切换间隙仍不能算作全量覆盖。
+
+停止记录时收尾未完成记录并释放记录锁。系统网络扩展路径会退出引擎。由临时代理启动的 CLI 则保留仅转发、不保存请求的辅助进程，避免 Agent 断网；Arca 或 CLI 记录命令退出时也会停止保存并继续转发，直到绑定的 Agent 实例退出。它只监听本机随机端口，不修改全局网络设置。现有流上的记录到停止时截止，后续请求不再进入会话文件。
 
 
 网络扩展可能按系统顺序先接管连接。若已有 ProxyBridge 等目标应用代理规则，请在抓包期间只暂停目标规则并重建目标连接，完成后恢复原规则；Arca 不自动修改其他工具的规则。普通回环 HTTPS 不解密，避免破坏内部页面和 IPC；中央 Provider 明确配置的回环 HTTPS 模型端点会纳入解密范围，仍需客户端信任与引擎实际覆盖。Agent 自己配置的代理/网关（包括继承的 HTTP_PROXY 等环境变量）可能让最终请求由其他进程发出，必须核对来源进程，不能据此宣称全量覆盖。
 
-CLI 使用同一 core：`arca --json capture environment` 查询适配与实际进程；`arca --json capture run --agent pi --target "<target-id>" --seconds 60` 在前台限时记录；`capture state <session-id>` 查询已核验的实时状态；`capture list` / `capture show <session-id> --flow <flow-id>` 查看保存的脱敏记录。Desktop 可以查看同一中央目录中 CLI 发起的实时会话并请求停止。多实例共享抓包锁，所有者与引擎都以 PID 和启动时间核验；前台抓包依赖命令进程存活，不创建后台守护服务。引擎保留锁直到退出，异常退出或容量限制导致的未完成请求在观察视图中显示为已中断。
+CLI 使用同一 core：`arca --json capture prepare` 提前安装并验证私有组件；`capture environment` 查询适配与实际进程；`arca --json capture run --agent pi --launch --seconds 60` 自动准备并启动记录，默认出口为 `auto`；也可用 `--target "<target-id>"` 记录已有进程。`capture state <session-id>` 查询实时状态；`capture list` / `capture show <session-id> --flow <flow-id>` 查看脱敏记录。Desktop 可查看 CLI 发起的会话并请求停止。多实例共享记录锁，所有者与引擎以 PID 和启动时间核验；转发辅助进程不占用记录锁，不再写入请求。异常退出或容量限制导致的未完成请求显示为已中断。

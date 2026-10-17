@@ -30,6 +30,7 @@
     "ca_scope": "system"
   },
   "codex": {
+    "explicit_proxy": true,
     "ca_environment": [
       "CODEX_CA_CERTIFICATE",
       "SSL_CERT_FILE"
@@ -44,6 +45,7 @@
     "ca_scope": "system"
   },
   "pi": {
+    "explicit_proxy": true,
     "ca_environment": [
       "NODE_EXTRA_CA_CERTS",
       "SSL_CERT_FILE"
