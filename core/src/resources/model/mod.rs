@@ -568,6 +568,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.agnes-ai.cn",
             },
         ],
+        "meta" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiCompletions,
+                base_url: "https://api.meta.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.meta.ai",
+            },
+        ],
         "ant-ling" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.ant-ling.com/anthropic",
@@ -903,6 +913,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         name: "Agnes AI (China)",
         default_base_url: Some("https://api.agnes-ai.cn/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "meta",
+        name: "Meta Model API",
+        default_base_url: Some("https://api.meta.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
         category: "official",
     },
     ModelProviderView {
@@ -1782,6 +1799,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "inference.coralbricks.ai" => "coralbricks",
         "apihub.agnes-ai.com" => "agnes-ai",
         "api.agnes-ai.cn" => "agnes-ai-cn",
+        "api.meta.ai" => "meta",
         "cleanapis.com" => "clean-apis",
         "lighthouse.dphn.ai" => "dolphin",
         "api.iteracompute.com" => "iteracompute",
@@ -7104,6 +7122,16 @@ mod tests {
             ("https://api.agnes-ai.cn/v1/messages", "agnes-ai-cn"),
             ("https://platform.agnes-ai.cn/v1", "custom"),
             ("https://api.agnes-ai.cn.evil.test/v1", "custom"),
+            ("https://api.meta.ai/v1", "meta"),
+            ("https://api.meta.ai", "meta"),
+            ("https://api.meta.ai/v1/responses", "meta"),
+            ("https://api.meta.ai/v1/chat/completions", "meta"),
+            ("https://api.meta.ai/v1/messages", "meta"),
+            ("https://meta.ai/v1", "custom"),
+            ("https://dev.meta.ai/v1", "custom"),
+            ("https://www.meta.ai/v1", "custom"),
+            ("https://api.meta.ai.evil.test/v1", "custom"),
+            ("https://api.meta.com/v1", "custom"),
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
@@ -7232,7 +7260,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 128);
+        assert_eq!(list_providers().len(), 129);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

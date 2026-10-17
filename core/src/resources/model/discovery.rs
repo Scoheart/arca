@@ -184,6 +184,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "experiential-labs"
         | "runanywhere"
         | "coralbricks"
+        | "meta"
         | "clean-apis"
         | "dolphin"
         | "iteracompute"
@@ -830,6 +831,7 @@ mod tests {
         "experiential-labs",
         "runanywhere",
         "coralbricks",
+        "meta",
         "clean-apis",
         "dolphin",
         "iteracompute",
