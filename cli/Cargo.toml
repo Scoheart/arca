@@ -1,6 +1,6 @@
 [package]
 name = "arca-cli"
-version = "2.4.2"
+version = "2.4.3"
 edition = "2021"
 description = "CLI and TUI for the Arca central Agent resource manager"
 

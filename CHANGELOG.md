@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.3](https://github.com/Scoheart/arca/compare/v2.4.2...v2.4.3) (2026-10-17)
+
+### Changes
+
+* fix(desktop): simplify Instructions page copy ([4583a87](https://github.com/Scoheart/arca/commit/4583a8750d0e68e0249c0a37780001c50a327fc0))
+
 ## [2.4.2](https://github.com/Scoheart/arca/compare/v2.4.1...v2.4.2) (2026-10-17)
 
 ### Changes
