@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.6](https://github.com/Scoheart/arca/compare/v2.4.5...v2.4.6) (2026-10-17)
+
+### Changes
+
+* feat(models): add OrcaRouter gateway provider (#224) ([503bc73](https://github.com/Scoheart/arca/commit/503bc736577a79e9f04bcc20f561f1af321d0de8))
+
 ## [2.4.5](https://github.com/Scoheart/arca/compare/v2.4.4...v2.4.5) (2026-10-17)
 
 ### Changes
