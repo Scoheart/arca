@@ -195,6 +195,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "river"
         | "trustedrouter"
         | "unorouter"
+        | "orcarouter"
         | "unisound"
         | "mistral"
         | "deepseek"
@@ -279,6 +280,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "nous-portal"
             | "ppq"
             | "trustedrouter"
+            | "orcarouter"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -842,6 +844,7 @@ mod tests {
         "river",
         "trustedrouter",
         "unorouter",
+        "orcarouter",
         "unisound",
         "mistral",
         "deepseek",
@@ -1016,6 +1019,7 @@ mod tests {
             "nous-portal",
             "ppq",
             "trustedrouter",
+            "orcarouter",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),

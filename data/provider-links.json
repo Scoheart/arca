@@ -377,6 +377,13 @@
       "kind": "api-key"
     }
   },
+  "orcarouter": {
+    "docs_url": "https://docs.orcarouter.ai/getting-started/quickstart",
+    "portal": {
+      "url": "https://www.orcarouter.ai/console",
+      "kind": "console"
+    }
+  },
   "ant-ling": {
     "docs_url": "https://developer.ant-ling.com/en/docs/api-reference/openai/",
     "portal": {

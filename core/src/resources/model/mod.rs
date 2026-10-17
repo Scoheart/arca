@@ -538,6 +538,20 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.unorouter.com/v1beta",
             },
         ],
+        "orcarouter" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.orcarouter.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.orcarouter.ai",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://api.orcarouter.ai/v1beta",
+            },
+        ],
         "coralbricks" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -1080,6 +1094,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "unorouter",
         name: "UnoRouter",
         default_base_url: Some("https://api.unorouter.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "orcarouter",
+        name: "OrcaRouter",
+        default_base_url: Some("https://api.orcarouter.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -1810,6 +1831,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.river.ai" => "river",
         "api.trustedrouter.com" => "trustedrouter",
         "api.unorouter.com" => "unorouter",
+        "api.orcarouter.ai" => "orcarouter",
         "api.ant-ling.com" => "ant-ling",
         "maas-api.antdigital.com" => "antdigital-dtmaas",
         "maas-api.unisound.com" => "unisound",
@@ -7170,6 +7192,16 @@ mod tests {
             ("https://api.unorouter.com/v1beta/models/gemini-4-flash:generateContent", "unorouter"),
             ("https://unorouter.com/v1", "custom"),
             ("https://api.unorouter.com.evil.test/v1", "custom"),
+            ("https://api.orcarouter.ai/v1", "orcarouter"),
+            ("https://api.orcarouter.ai", "orcarouter"),
+            ("https://api.orcarouter.ai/v1/chat/completions", "orcarouter"),
+            ("https://api.orcarouter.ai/v1/responses", "orcarouter"),
+            ("https://api.orcarouter.ai/v1/messages", "orcarouter"),
+            ("https://api.orcarouter.ai/v1beta/models/google/gemini-2.5-flash:generateContent", "orcarouter"),
+            ("https://orcarouter.ai/v1", "custom"),
+            ("https://www.orcarouter.ai/v1", "custom"),
+            ("https://docs.orcarouter.ai/v1", "custom"),
+            ("https://api.orcarouter.ai.evil.test/v1", "custom"),
             ("https://api.ant-ling.com/v1/chat/completions", "ant-ling"),
             ("https://api.ant-ling.com/anthropic/v1/messages", "ant-ling"),
             ("https://maas-api.antdigital.com/v1/chat/completions", "antdigital-dtmaas"),
@@ -7260,7 +7292,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 129);
+        assert_eq!(list_providers().len(), 130);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
