@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.1](https://github.com/Scoheart/arca/compare/v2.4.0...v2.4.1) (2026-10-17)
+
+### Changes
+
+* feat(models): add Coral Bricks gateway provider (#221) ([24d26d7](https://github.com/Scoheart/arca/commit/24d26d77d5291781ce3831237dd9c385fab0b9c2))
+
 ## [2.4.0](https://github.com/Scoheart/arca/compare/v2.3.2...v2.4.0) (2026-10-16)
 
 ### Changes
