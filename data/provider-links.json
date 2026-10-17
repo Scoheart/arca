@@ -209,6 +209,13 @@
       "kind": "console"
     }
   },
+  "meta": {
+    "docs_url": "https://dev.meta.ai/docs/quickstart",
+    "portal": {
+      "url": "https://dev.meta.ai/",
+      "kind": "console"
+    }
+  },
   "ollama-cloud": {
     "docs_url": "https://docs.ollama.com/cloud",
     "portal": {
