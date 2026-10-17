@@ -538,6 +538,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.unorouter.com/v1beta",
             },
         ],
+        "coralbricks" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://inference.coralbricks.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://inference.coralbricks.ai",
+            },
+        ],
         "ant-ling" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.ant-ling.com/anthropic",
@@ -942,6 +952,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "runanywhere",
         name: "RunAnywhere",
         default_base_url: Some("https://inference.runanywhere.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "coralbricks",
+        name: "Coral Bricks",
+        default_base_url: Some("https://inference.coralbricks.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -1728,6 +1745,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.beatapi.io" => "beatapi",
         "api.experientiallabs.ai" => "experiential-labs",
         "inference.runanywhere.ai" => "runanywhere",
+        "inference.coralbricks.ai" => "coralbricks",
         "cleanapis.com" => "clean-apis",
         "lighthouse.dphn.ai" => "dolphin",
         "api.iteracompute.com" => "iteracompute",
@@ -7029,6 +7047,13 @@ mod tests {
             ("https://runanywhere.ai/v1", "custom"),
             ("https://console.runanywhere.ai/v1", "custom"),
             ("https://inference.runanywhere.ai.evil.test/v1", "custom"),
+            ("https://inference.coralbricks.ai/v1", "coralbricks"),
+            ("https://inference.coralbricks.ai/v1/chat/completions", "coralbricks"),
+            ("https://inference.coralbricks.ai/v1/responses", "coralbricks"),
+            ("https://inference.coralbricks.ai/v1/messages", "coralbricks"),
+            ("https://www.coralbricks.ai/v1", "custom"),
+            ("https://coralbricks.ai/v1", "custom"),
+            ("https://inference.coralbricks.ai.evil.test/v1", "custom"),
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
@@ -7157,7 +7182,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 125);
+        assert_eq!(list_providers().len(), 126);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

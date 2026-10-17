@@ -279,6 +279,13 @@
       "kind": "console"
     }
   },
+  "coralbricks": {
+    "docs_url": "https://www.coralbricks.ai/docs",
+    "portal": {
+      "url": "https://www.coralbricks.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
   "clean-apis": {
     "docs_url": "https://cleanapis.com/docs/getting-started",
     "portal": {
