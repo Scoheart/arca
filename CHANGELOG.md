@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.0](https://github.com/Scoheart/arca/compare/v2.4.6...v2.5.0) (2026-10-17)
+
+### Changes
+
+* feat(capture): prepare and launch agent recording automatically ([97bd959](https://github.com/Scoheart/arca/commit/97bd959d6c68643401f4532bc2daaef3d4d3b9ef))
+
 ## [2.4.6](https://github.com/Scoheart/arca/compare/v2.4.5...v2.4.6) (2026-10-17)
 
 ### Changes
