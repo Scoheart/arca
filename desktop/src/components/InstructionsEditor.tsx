@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openPath, openUrl } from '@tauri-apps/plugin-opener';
+import { openPath } from '@tauri-apps/plugin-opener';
 import { instructionCommit, instructionList, instructionPrepareCreate, instructionPrepareSave, instructionRead, type InstructionInventory, type InstructionSnapshot } from '../lib/instructions';
 import { formatError } from '../lib/format';
 import { ToastNotice, useToast } from './Toast';
 import { DialogShell } from './DialogShell';
+import { AgentResourceActions } from './AgentResourcePanel';
 import { TraceMarkdown } from './TraceMarkdown';
 import { preferredFileEditor } from './FileEditorSelect';
 import { DocumentIcon, ExternalLinkIcon, RefreshIcon } from './icons';
@@ -117,8 +118,9 @@ export function InstructionsEditor({ agentId }: { agentId: string }) {
   const path = creating ? inventory?.create?.path : snapshot?.file.path ?? inventory?.files.find(file => file.id === selected.current)?.path;
   const file = snapshot?.file;
   return <section className="arca-instructions" aria-label={t('instructions.title')}>
-    <header className="arca-instructions-heading"><div><h3>{t('instructions.title')}</h3><p>{t('instructions.subtitle')}</p></div>
-      <button type="button" className="btn-secondary" disabled={busy} onClick={() => guard(() => void refresh())}><RefreshIcon className="w-3.5 h-3.5" data-spinning={busy || undefined} />{t('instructions.refresh')}</button></header>
+    <AgentResourceActions>
+      <button type="button" className="btn-secondary" disabled={busy} onClick={() => guard(() => void refresh())}><RefreshIcon className="w-3.5 h-3.5" data-spinning={busy || undefined} />{t('instructions.refresh')}</button>
+    </AgentResourceActions>
     <ToastNotice message={error} action={<button type="button" className="btn-ghost" onClick={() => guard(() => void refresh())}>{t('instructions.refresh')}</button>} />
     <ToastNotice kind="warning" noticeKey={`instructions-scan:${agentId}`} message={inventory && !inventory.complete ? t('instructions.incomplete') : null} />
     <div className="arca-instructions-workspace" data-single={(inventory?.files.length ?? 0) <= 1}>
@@ -133,6 +135,7 @@ export function InstructionsEditor({ agentId }: { agentId: string }) {
           : snapshot || creating ? <>
             <div className="arca-instructions-file-heading"><div><strong>{creating ? path?.split('/').pop() : file?.name}</strong><code title={path}>{path}</code></div>
               <div className="arca-instructions-file-actions">{file && file.readers.length > 1 && <small title={file.readers.map(reader => reader.name).join(', ')}>{t('instructions.shared')}</small>}{dirty && <small>{t('instructions.dirty')}</small>}{file && !file.editable && <small>{t('instructions.readOnly')}</small>}
+                {file && path && <button type="button" className="arca-instructions-open" title={t('instructions.openEditor')} aria-label={t('instructions.openEditor')} onClick={() => void openPath(path, preferredFileEditor()).catch(e => toast.show({ kind: 'error', msg: formatError(e) }))}><ExternalLinkIcon className="w-3.5 h-3.5" /></button>}
                 <div className="arca-instructions-view-toggle" role="group" aria-label={t('instructions.preview')}><button type="button" aria-pressed={!preview} onClick={() => setPreview(false)}>{t('instructions.source')}</button><button type="button" aria-pressed={preview} onClick={() => setPreview(true)}>{t('instructions.preview')}</button></div>
               </div>
             </div>
@@ -140,23 +143,15 @@ export function InstructionsEditor({ agentId }: { agentId: string }) {
               : <textarea className="arca-instructions-text" aria-label={t('instructions.source')} value={text} readOnly={busy || !creating && !file?.editable} spellCheck={false} autoCapitalize="off" autoCorrect="off" maxLength={1024 * 1024}
                 onChange={event => { if (remember(event.target.value)) setText(event.target.value); }}
                 onKeyDown={event => { if ((event.metaKey || event.ctrlKey) && event.key === 's') { event.preventDefault(); if (dirty || creating) void save(); } }} />}
-            <footer className="arca-instructions-editor-footer"><span>{t(`instructions.reload.${inventory?.reload ?? 'unknown'}`)}</span>
+            <footer className="arca-instructions-editor-footer">
               <button type="button" className="btn-secondary" disabled={busy || !dirty && !creating} onClick={() => { drafts.delete(agentId); setText(snapshot?.text ?? ''); if (creating) { setCreating(false); setSnapshot(null); } }}>{t('instructions.cancel')}</button>
               <button type="button" className="btn-primary" disabled={busy || !creating && (!dirty || !file?.editable)} onClick={() => void save()}>{t(busy ? 'instructions.saving' : creating ? 'instructions.create' : 'instructions.save')}</button>
             </footer>
           </> : <div className="arca-instructions-empty"><DocumentIcon className="w-7 h-7" /><strong>{t(inventory?.files.length ? 'instructions.unreadable' : inventory?.supported ? 'instructions.empty' : 'instructions.unsupported')}</strong>
-            <p>{t(inventory?.files.length ? 'instructions.chooseFile' : inventory?.create ? 'instructions.createHint' : 'instructions.guided')}</p>
             {inventory?.create && <><code>{inventory.create.path}</code><button type="button" className="btn-secondary" disabled={busy} onClick={() => { setCreating(true); setText(inventory.create!.initial_text); remember(inventory.create!.initial_text, null, true); }}>{t('instructions.create')}</button></>}
           </div>}
       </div>
     </div>
-    <div className="arca-instructions-footnote"><span>{t('instructions.untouched')}</span>
-      {path && <button type="button" onClick={() => void openPath(path, preferredFileEditor()).catch(e => toast.show({ kind: 'error', msg: formatError(e) }))}><ExternalLinkIcon className="w-3 h-3" />{t('instructions.openEditor')}</button>}
-    </div>
-    {inventory && <details className="arca-instructions-details"><summary>{t('instructions.nativeDetails')}{file ? ` · ${t(`instructions.loadingState.${file.loading}`)} · ${t(`instructions.purpose.${file.purpose}`)}` : ''}</summary>
-      {file && file.readers.length > 1 && <p><strong>{t('instructions.shared')}: </strong>{file.readers.map(reader => reader.name).join(', ')}<br />{t('instructions.readers')}</p>}
-      <p>{inventory.native_notes}</p>{inventory.docs[0] && <button type="button" onClick={() => void openUrl(inventory.docs[0]).catch(e => toast.show({ kind: 'error', msg: formatError(e) }))}>{t('instructions.nativeDocs')} ↗</button>}
-    </details>}
     {discardAction && <DialogShell kind="review" title={t('instructions.discardTitle')} onClose={() => setDiscardAction(null)} footerEnd={<><button type="button" className="btn-secondary" onClick={() => setDiscardAction(null)}>{t('instructions.keep')}</button><button type="button" className="btn-primary" onClick={() => { const action = discardAction; setDiscardAction(null); drafts.delete(agentId); setText(snapshot?.text ?? ''); action(); }}>{t('instructions.discard')}</button></>}><p>{t('instructions.discardBody')}</p></DialogShell>}
   </section>;
 }
