@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.5](https://github.com/Scoheart/arca/compare/v2.4.4...v2.4.5) (2026-10-17)
+
+### Changes
+
+* feat(models): add Meta Model API provider (#223) ([e61d96b](https://github.com/Scoheart/arca/commit/e61d96b3babaade00c59a31b2745892f3b2478ed))
+
 ## [2.4.4](https://github.com/Scoheart/arca/compare/v2.4.3...v2.4.4) (2026-10-17)
 
 ### Changes
