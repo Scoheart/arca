@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.4](https://github.com/Scoheart/arca/compare/v2.4.3...v2.4.4) (2026-10-17)
+
+### Changes
+
+* feat(models): add Agnes AI provider (#222) ([28fd44c](https://github.com/Scoheart/arca/commit/28fd44c95fa7b8236bf9b58214b58657f7c4f801))
+
 ## [2.4.3](https://github.com/Scoheart/arca/compare/v2.4.2...v2.4.3) (2026-10-17)
 
 ### Changes
