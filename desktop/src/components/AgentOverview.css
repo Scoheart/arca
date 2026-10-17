@@ -79,7 +79,7 @@
   .arca-agent-tool, .arca-config-disclosure > summary, .arca-config-chevron { transition: none; }
 }
 
-/* A single Agent workspace: identity, resource toolbar, then cards. */
+/* Agent identity and actions above a sidebar/content workspace. */
 .arca-agent-workbench {
   padding: 18px 0 0;
   border: 0;
@@ -87,14 +87,13 @@
   background: transparent;
 }
 .arca-agent-workbench .arca-agent-overview-header {
-  min-height: 130px; padding: 0 0 28px; align-items: start;
-  grid-template-columns: minmax(0, 1fr);
-  row-gap: 18px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  min-height: 164px; padding: 0 0 28px; gap: 18px;
 }
 .arca-agent-workbench .arca-agent-header-identity { grid-column: 1; grid-row: 1; flex-direction: column; gap: 9px; }
 .arca-agent-workbench .arca-agent-header-copy > div { flex-direction: column; gap: 4px; }
-.arca-agent-workbench .arca-agent-header h2 { max-width: 100%; font-size: 16px; font-weight: 650; line-height: 1.4; }
-.arca-agent-workbench .arca-agent-overview-actions { grid-column: 1; grid-row: 2; width: 100%; margin: 0; gap: 8px; }
+.arca-agent-workbench .arca-agent-header h2 { max-width: 100%; font-size: 18px; font-weight: 650; line-height: 1.4; }
+.arca-agent-workbench .arca-agent-overview-actions { justify-content: center; width: 100%; margin: 0; gap: 8px; }
 .arca-agent-workbench .arca-agent-tool { display: inline-flex; flex-direction: row; align-items: center; justify-content: center; white-space: nowrap; width: auto; height: 30px; padding: 0 9px; gap: 6px; border-radius: 7px; font-size: 11px; }
 .arca-agent-workbench .arca-agent-credential-strategy .arca-form-select-trigger { height: 30px; min-height: 30px; padding: 0 9px; border-radius: 7px; }
 .arca-agent-workbench .arca-launch-action[data-labeled="true"] { height: 30px; border-radius: 7px; box-shadow: none; }
@@ -106,12 +105,18 @@
 .arca-agent-workbench .arca-launch-caption { font-size: 11px; font-weight: 600; }
 .arca-agent-workbench .arca-launch-more { width: 19px; border-radius: 0 6px 6px 0; border-left-color: #ffffff20; }
 .arca-agent-workbench .arca-launch-action[data-ready="true"] button:hover:not(:disabled) { background: #ffffff14; }
-.arca-agent-workbench .arca-agent-resource-panel { margin: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
-.arca-agent-workbench .arca-agent-resource-panel-head { min-height: 43px; margin: 0 0 16px; padding: 0; gap: 12px; align-items: center; flex-direction: row; flex-wrap: wrap; background: transparent; border-radius: 0; }
-.arca-agent-workbench .arca-agent-resource-tabs { flex: 0 0 auto; gap: 4px; padding: 4px; background: var(--surface-section); border-radius: 14px; overflow: visible; }
-.arca-agent-workbench .arca-agent-resource-tabs button { position: relative; height: 34px; padding: 0 12px; gap: 8px; font-size: 12px; font-weight: 500; background: transparent; color: var(--text-secondary); border-radius: 10px; flex: none; }
-.arca-agent-workbench .arca-agent-resource-tabs button > span:last-child { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--surface-control); color: var(--text-secondary); font-size: 9px; }
-.arca-agent-workbench .arca-agent-resource-tabs button[data-active="true"] { color: var(--color-blue); background: var(--surface-raised); box-shadow: var(--shadow-card); }
+.arca-agent-workbench .arca-agent-resource-panel { display: grid; grid-template-columns: 184px minmax(0, 1fr); align-items: start; gap: 28px; margin: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
+.arca-agent-resource-navigation { position: sticky; top: 16px; min-width: 0; }
+.arca-agent-resource-main { min-width: 0; }
+.arca-agent-workbench .arca-agent-resource-panel-head { min-height: 44px; margin: 0 0 16px; padding: 0 0 12px; gap: 12px; align-items: center; flex-direction: row; flex-wrap: wrap; background: transparent; border-radius: 0; border-bottom: 1px solid var(--border-hairline); }
+.arca-agent-workbench .arca-agent-resource-panel-head h3 { font-size: 13px; font-weight: 600; }
+.arca-agent-workbench .arca-agent-resource-tabs { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 6px; border: 1px solid var(--border-hairline); background: var(--surface-section); border-radius: 14px; overflow: visible; }
+.arca-agent-workbench .arca-agent-resource-tabs button { position: relative; justify-content: flex-start; width: 100%; min-width: 0; height: 44px; padding: 0 10px; gap: 9px; font-size: 12px; font-weight: 500; background: transparent; color: var(--text-secondary); border-radius: 9px; flex: none; }
+.arca-agent-workbench .arca-agent-resource-tabs button:hover { color: var(--text-primary); background: var(--surface-control); }
+.arca-agent-resource-tab-label { flex: 1; min-width: 0; text-align: left; }
+.arca-agent-workbench .arca-agent-resource-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; background: var(--surface-control); color: var(--text-tertiary); font-size: 10px; }
+.arca-agent-workbench .arca-agent-resource-tabs button[data-active="true"] { color: var(--color-blue); background: var(--surface-selected); }
+.arca-agent-workbench .arca-agent-resource-tabs button[data-active="true"] .arca-agent-resource-tab-count { color: var(--color-blue); background: color-mix(in srgb, var(--color-blue) 12%, transparent); }
 .arca-agent-resource-tab-icon { display: inline-flex; flex-shrink: 0; }
 .arca-agent-toolbar-actions { display: flex; align-items: center; gap: 7px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 .arca-agent-toolbar-target, .arca-agent-toolbar-target > .arca-agent-section-actions { display: contents; }
@@ -172,18 +177,19 @@
 .arca-consumption-card-menu-items > button:disabled { opacity: .45; cursor: default; }
 .arca-consumption-card-menu-items .arca-consumption-remove { opacity: 1; color: var(--color-red); }
 .arca-consumption-card-menu-items > button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -1px; }
-.arca-agent-workbench .arca-consumption-empty { min-height: 180px; background: transparent; }
+.arca-agent-workbench .arca-consumption-empty { min-height: 250px; background: transparent; }
 @media (max-width: 1020px) {
   .arca-agent-workbench .arca-consumption-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .arca-agent-workbench .arca-agent-overview-header { grid-template-columns: minmax(0, 1fr); min-height: 150px; gap: 12px; padding-bottom: 18px; }
-  .arca-agent-workbench .arca-agent-header-identity { grid-column: 1; }
-  .arca-agent-workbench .arca-agent-overview-actions { grid-column: 1; grid-row: 2; }
+  .arca-agent-workbench .arca-agent-resource-panel { grid-template-columns: 166px minmax(0, 1fr); gap: 20px; }
+  .arca-agent-workbench .arca-agent-overview-header { min-height: 148px; gap: 14px; padding-bottom: 22px; }
 }
 @media (max-width: 620px) {
   .arca-agent-workbench { padding: 12px 0 0; }
   .arca-agent-workbench .arca-consumption-list { grid-template-columns: minmax(0, 1fr); }
-  .arca-agent-workbench .arca-agent-resource-tabs { gap: 2px; }
-  .arca-agent-workbench .arca-agent-resource-tabs button { padding: 0 8px; gap: 6px; }
+  .arca-agent-workbench .arca-agent-resource-panel { grid-template-columns: 132px minmax(0, 1fr); gap: 12px; }
+  .arca-agent-workbench .arca-agent-resource-tabs { gap: 2px; padding: 4px; }
+  .arca-agent-workbench .arca-agent-resource-tabs button { padding: 0 7px; gap: 6px; font-size: 11px; }
+  .arca-agent-workbench .arca-agent-resource-tab-count { min-width: 16px; padding: 0 3px; font-size: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .arca-agent-workbench .arca-agent-resource-tabs button::after { transition: none; }

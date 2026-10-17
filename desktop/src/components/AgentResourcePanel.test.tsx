@@ -20,9 +20,10 @@ function Harness() {
 }
 
 describe("AgentResourcePanel", () => {
-  it("keeps MCPs, Models, Skills order with counts", () => {
+  it("keeps Models, MCPs, Skills in a vertical navigation with counts", () => {
     render(<Harness />);
-    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["MCPs2", "Models3", "Skills4"]);
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["Models3", "MCPs2", "Skills4"]);
+    expect(screen.getByRole("tablist")).toHaveAttribute("aria-orientation", "vertical");
     expect(screen.getByRole("tabpanel")).toHaveTextContent("MCP content");
   });
 
@@ -34,5 +35,10 @@ describe("AgentResourcePanel", () => {
     expect(tabs[2]).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tabpanel")).toHaveTextContent("Skill content");
     expect(tabs[2]).toHaveAttribute("aria-controls", screen.getByRole("tabpanel").id);
+    fireEvent.keyDown(tabs[2], { key: "ArrowUp" });
+    expect(tabs[1]).toHaveFocus();
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("MCP content");
+    fireEvent.keyDown(tabs[1], { key: "ArrowDown" });
+    expect(tabs[2]).toHaveFocus();
   });
 });

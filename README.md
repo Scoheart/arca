@@ -46,13 +46,14 @@ reads macOS app bundle metadata or checks an audited default CLI with a bounded
 `--version` call; custom CLI commands are not executed for version detection.
 `arca agent launch show <agent-id>` exposes the same version in the CLI.
 
-Agent details use one workspace with a centered identity, compact launch and
-credential controls, and a single MCPs / Models / Skills tab bar. **配置** expands
-the selected capability's paths and documentation inline. MCP resources use compact
-rows with controls on the right. Skill cards separate the title, three-line
-description, and footer so shared-state badges and controls stay readable. Their
-**…** menu exposes details and removal when supported. Narrow windows reduce the
-number of columns.
+Agent details center the Agent identity and its launch, Trace, capture, and edit
+actions above the workspace. A left sidebar lists Models, MCPs, Skills and, when
+supported, Instructions; asset counts stay beside each resource. Use Up/Down,
+Home or End to navigate with the keyboard. The right pane holds that resource's
+actions, search, cards or native Instructions editor. MCP resources use compact
+rows; Skill cards separate the title, description and controls. Their **…** menu
+exposes details and removal when supported. Narrow windows keep the sidebar and
+reduce the number of content columns.
 
 **编辑配置** includes application / CLI launch settings alongside the
 MCP, Model and Skills paths. Changing only the launcher saves directly; path edits

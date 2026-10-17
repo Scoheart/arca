@@ -2088,7 +2088,7 @@ body {
   display: inline-flex; height: 30px; align-items: center; gap: 6px; padding: 0 9px; border: 0; border-radius: 6px;
   background: transparent; color: var(--text-secondary); font: 620 10px/1 var(--font-sans); cursor: pointer;
 }
-.arca-agent-resource-tabs button > span:last-child { min-width: 15px; color: inherit; font-variant-numeric: tabular-nums; text-align: right; }
+.arca-agent-resource-tab-count { min-width: 15px; color: inherit; font-variant-numeric: tabular-nums; text-align: right; }
 .arca-agent-resource-tabs button[data-active="true"] { background: var(--surface-selected); color: var(--color-blue); }
 .arca-agent-resource-tabs button:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: 1px; }
 .arca-agent-resource-panel-body { min-height: 0; padding: 0 16px 16px; }

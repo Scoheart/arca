@@ -977,7 +977,7 @@ function AgentHeader({
   const { show } = useToast();
   const docsHome = (agentDocsHome as Record<string, string>)[agent.id] ?? agent.docs;
   const identity = <>
-    <span data-agent-entry-glyph className="inline-flex flex-shrink-0"><AgentGlyph id={agent.id} name={agent.name} size={44} /></span>
+    <span data-agent-entry-glyph className="inline-flex flex-shrink-0"><AgentGlyph id={agent.id} name={agent.name} size={tone === "reference" ? 44 : 52} /></span>
     <div className="arca-agent-header-copy">
       <div>
         <h2 data-agent-entry-name>{agent.name}</h2>
