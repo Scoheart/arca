@@ -548,6 +548,26 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://inference.coralbricks.ai",
             },
         ],
+        "agnes-ai" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://apihub.agnes-ai.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://apihub.agnes-ai.com",
+            },
+        ],
+        "agnes-ai-cn" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.agnes-ai.cn/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.agnes-ai.cn",
+            },
+        ],
         "ant-ling" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.ant-ling.com/anthropic",
@@ -868,6 +888,20 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "inception",
         name: "Inception",
         default_base_url: Some("https://api.inceptionlabs.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "agnes-ai",
+        name: "Agnes AI",
+        default_base_url: Some("https://apihub.agnes-ai.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "agnes-ai-cn",
+        name: "Agnes AI (China)",
+        default_base_url: Some("https://api.agnes-ai.cn/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
@@ -1746,6 +1780,8 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.experientiallabs.ai" => "experiential-labs",
         "inference.runanywhere.ai" => "runanywhere",
         "inference.coralbricks.ai" => "coralbricks",
+        "apihub.agnes-ai.com" => "agnes-ai",
+        "api.agnes-ai.cn" => "agnes-ai-cn",
         "cleanapis.com" => "clean-apis",
         "lighthouse.dphn.ai" => "dolphin",
         "api.iteracompute.com" => "iteracompute",
@@ -7054,6 +7090,20 @@ mod tests {
             ("https://www.coralbricks.ai/v1", "custom"),
             ("https://coralbricks.ai/v1", "custom"),
             ("https://inference.coralbricks.ai.evil.test/v1", "custom"),
+            ("https://apihub.agnes-ai.com/v1", "agnes-ai"),
+            ("https://apihub.agnes-ai.com/v1/chat/completions", "agnes-ai"),
+            ("https://apihub.agnes-ai.com/v1/responses", "agnes-ai"),
+            ("https://apihub.agnes-ai.com/v1/messages", "agnes-ai"),
+            ("https://agnes-ai.com/v1", "custom"),
+            ("https://platform.agnes-ai.com/v1", "custom"),
+            ("https://wiki.agnes-ai.com/v1", "custom"),
+            ("https://apihub.agnes-ai.com.evil.test/v1", "custom"),
+            ("https://apihub.agnes-ai.co/v1", "custom"),
+            ("https://api.agnes-ai.cn/v1", "agnes-ai-cn"),
+            ("https://api.agnes-ai.cn/v1/chat/completions", "agnes-ai-cn"),
+            ("https://api.agnes-ai.cn/v1/messages", "agnes-ai-cn"),
+            ("https://platform.agnes-ai.cn/v1", "custom"),
+            ("https://api.agnes-ai.cn.evil.test/v1", "custom"),
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
@@ -7182,7 +7232,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 126);
+        assert_eq!(list_providers().len(), 128);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

@@ -195,6 +195,20 @@
       "kind": "api-key"
     }
   },
+  "agnes-ai": {
+    "docs_url": "https://wiki.agnes-ai.com/en/docs/quickstart",
+    "portal": {
+      "url": "https://platform.agnes-ai.com/",
+      "kind": "console"
+    }
+  },
+  "agnes-ai-cn": {
+    "docs_url": "https://wiki.agnes-ai.cn/zh-Hans/docs/quickstart",
+    "portal": {
+      "url": "https://platform.agnes-ai.cn/",
+      "kind": "console"
+    }
+  },
   "ollama-cloud": {
     "docs_url": "https://docs.ollama.com/cloud",
     "portal": {
