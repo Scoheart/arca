@@ -196,6 +196,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "trustedrouter"
         | "unorouter"
         | "orcarouter"
+        | "fikra"
         | "unisound"
         | "bilibili-index-translate"
         | "sensenova"
@@ -283,6 +284,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "ppq"
             | "trustedrouter"
             | "orcarouter"
+            | "fikra"
             | "bilibili-index-translate"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
@@ -848,6 +850,7 @@ mod tests {
         "trustedrouter",
         "unorouter",
         "orcarouter",
+        "fikra",
         "unisound",
         "bilibili-index-translate",
         "sensenova",
@@ -1025,6 +1028,7 @@ mod tests {
             "ppq",
             "trustedrouter",
             "orcarouter",
+            "fikra",
             "bilibili-index-translate",
         ] {
             assert_eq!(
