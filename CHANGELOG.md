@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.3](https://github.com/Scoheart/arca/compare/v2.5.2...v2.5.3) (2026-10-18)
+
+### Changes
+
+* feat(models): add Fikra API provider (#227) ([e098f3c](https://github.com/Scoheart/arca/commit/e098f3c64e4cb2aaff5adf07cb6cd489f3ed72fb))
+
 ## [2.5.2](https://github.com/Scoheart/arca/compare/v2.5.1...v2.5.2) (2026-10-18)
 
 ### Changes
