@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.4](https://github.com/Scoheart/arca/compare/v2.5.3...v2.5.4) (2026-10-18)
+
+### Changes
+
+* test(capture): use absolute commands in isolated lease regression ([ed8d514](https://github.com/Scoheart/arca/commit/ed8d514947c497cdca1055dfd9facc6db0c06619))
+
 ## [2.5.3](https://github.com/Scoheart/arca/compare/v2.5.2...v2.5.3) (2026-10-18)
 
 ### Changes
