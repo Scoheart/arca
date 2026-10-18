@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.1](https://github.com/Scoheart/arca/compare/v2.5.0...v2.5.1) (2026-10-18)
+
+### Changes
+
+* feat(models): add Bilibili Index-Translate provider (#225) ([6c1a67e](https://github.com/Scoheart/arca/commit/6c1a67edea87e3fb2d89b013c79b8146f3defd39))
+
 ## [2.5.0](https://github.com/Scoheart/arca/compare/v2.4.6...v2.5.0) (2026-10-17)
 
 ### Changes
