@@ -412,6 +412,13 @@
       "kind": "setup"
     }
   },
+  "sensenova": {
+    "docs_url": "https://platform.sensenova.cn/docs",
+    "portal": {
+      "url": "https://platform.sensenova.cn/console/keys",
+      "kind": "api-key"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
