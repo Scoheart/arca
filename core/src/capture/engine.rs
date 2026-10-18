@@ -190,9 +190,10 @@ mod tests {
         let path = home.home.join("engine.lock");
         let lease = fs::OpenOptions::new().create(true).read(true).write(true).open(&path).unwrap();
         lease.try_lock_exclusive().unwrap();
-        let mut unrelated = Command::new("sleep").arg("30").process_group(0).spawn().unwrap();
-        let mut command = Command::new("sh");
-        command.args(["-c", "sleep 30 & exit 0"]);
+        // TestHome deliberately replaces PATH with an empty fixture directory.
+        let mut unrelated = Command::new("/bin/sleep").arg("30").process_group(0).spawn().unwrap();
+        let mut command = Command::new("/bin/sh");
+        command.args(["-c", "/bin/sleep 30 & exit 0"]);
         let mut worker = Worker::spawn(command, "fixture".into(), lease).unwrap();
         let deadline = Instant::now() + Duration::from_secs(3);
         while worker.alive().unwrap() {
