@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.2](https://github.com/Scoheart/arca/compare/v2.5.1...v2.5.2) (2026-10-18)
+
+### Changes
+
+* feat(models): add SenseNova Token Plan provider (#226) ([d4a389f](https://github.com/Scoheart/arca/commit/d4a389f43a2bbcfce7fec7386ce9e08b1b2d573d))
+
 ## [2.5.1](https://github.com/Scoheart/arca/compare/v2.5.0...v2.5.1) (2026-10-18)
 
 ### Changes
