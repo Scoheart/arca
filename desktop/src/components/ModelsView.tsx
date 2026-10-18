@@ -83,6 +83,8 @@ const DEFAULT_ENDPOINT_PATHS: Record<ModelProtocol, string> = {
   "gemini-generate-content": "/models/{model}:generateContent",
 };
 
+const KEYLESS_PROVIDER_TYPES = new Set(["ollama", "lm-studio", "vllm", "bilibili-index-translate"]);
+
 const emptyProfile = (): ModelProfile => ({
   id: "",
   name: "",
@@ -1389,8 +1391,14 @@ function ModelProviderDialog({
   const initialSource = initial?.api_key_source
     ?? (initial?.env_key ? { kind: "env", name: initial.env_key } satisfies ApiKeySource : undefined)
     ?? (initial?.credential_saved ? { kind: "arca-store" } satisfies ApiKeySource : undefined);
+  const authWithoutCredential: ModelProviderConfig["auth_requirement"] =
+    KEYLESS_PROVIDER_TYPES.has(initialProviderType)
+      ? "none"
+      : initialProviderType === "custom"
+        ? "optional"
+        : "required";
   const initialAuthRequirement: ModelProviderConfig["auth_requirement"] = initial?.auth_requirement
-    ?? (["ollama", "lm-studio", "vllm"].includes(initialProviderType) ? "none" : initialProviderType === "custom" ? "optional" : "required");
+    ?? authWithoutCredential;
   const [draft, setDraft] = useState<ModelProviderConfig>({
     id: initial?.id ?? "",
     name: initial?.name ?? providerTemplate?.name ?? "",
@@ -1470,12 +1478,6 @@ function ModelProviderDialog({
   // A pending/failed read must never look like an editable empty credential.
   const showSavedCredentialMask = Boolean(initial?.credential_saved && (credentialLoading || credentialReadError));
   const preservesLegacySource = Boolean(initialSource && initialSource.kind !== "arca-store");
-  const authWithoutCredential: ModelProviderConfig["auth_requirement"] =
-    ["ollama", "lm-studio", "vllm"].includes(initialProviderType)
-      ? "none"
-      : initialProviderType === "custom"
-        ? "optional"
-        : "required";
   const sourceValid = authWithoutCredential !== "required"
     || enteredCredential
     || preservedCredential

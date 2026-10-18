@@ -405,6 +405,13 @@
       "kind": "console"
     }
   },
+  "bilibili-index-translate": {
+    "docs_url": "https://github.com/bilibili/Index-Translate#option-1-free-online-api-zero-gpu-setup",
+    "portal": {
+      "url": "https://index-translate.bilibili.com/",
+      "kind": "setup"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {

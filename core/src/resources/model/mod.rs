@@ -620,6 +620,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://maas-api.unisound.com/anthropic",
             },
         ],
+        "bilibili-index-translate" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://index-translate.bilibili.com/v1",
+        }],
         "minimax" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.minimax.io/anthropic",
@@ -1122,6 +1126,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "unisound",
         name: "Unisound MaaS (云知声)",
         default_base_url: Some("https://maas-api.unisound.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "bilibili-index-translate",
+        name: "Bilibili Index-Translate (哔哩哔哩)",
+        default_base_url: Some("https://index-translate.bilibili.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
@@ -1835,6 +1846,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.ant-ling.com" => "ant-ling",
         "maas-api.antdigital.com" => "antdigital-dtmaas",
         "maas-api.unisound.com" => "unisound",
+        "index-translate.bilibili.com" => "bilibili-index-translate",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7210,6 +7222,12 @@ mod tests {
             ("https://maas-api.unisound.com/v1/responses", "unisound"),
             ("https://maas-api.unisound.com/anthropic/v1/messages", "unisound"),
             ("https://maas-api.unisound.com.evil.test/v1", "custom"),
+            ("https://index-translate.bilibili.com/v1", "bilibili-index-translate"),
+            ("https://index-translate.bilibili.com/v1/chat/completions", "bilibili-index-translate"),
+            ("https://index-translate.bilibili.com/v1/responses", "bilibili-index-translate"),
+            ("https://bilibili.com/v1", "custom"),
+            ("https://www.bilibili.com/v1", "custom"),
+            ("https://index-translate.bilibili.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7292,7 +7310,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 130);
+        assert_eq!(list_providers().len(), 131);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

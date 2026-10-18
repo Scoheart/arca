@@ -197,6 +197,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "unorouter"
         | "orcarouter"
         | "unisound"
+        | "bilibili-index-translate"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -281,6 +282,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "ppq"
             | "trustedrouter"
             | "orcarouter"
+            | "bilibili-index-translate"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -846,6 +848,7 @@ mod tests {
         "unorouter",
         "orcarouter",
         "unisound",
+        "bilibili-index-translate",
         "mistral",
         "deepseek",
         "groq",
@@ -1020,6 +1023,7 @@ mod tests {
             "ppq",
             "trustedrouter",
             "orcarouter",
+            "bilibili-index-translate",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
