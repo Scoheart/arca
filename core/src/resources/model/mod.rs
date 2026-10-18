@@ -624,6 +624,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: OpenaiResponses,
             base_url: "https://index-translate.bilibili.com/v1",
         }],
+        "sensenova" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://token.sensenova.cn/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://token.sensenova.cn",
+            },
+        ],
         "minimax" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.minimax.io/anthropic",
@@ -1133,6 +1143,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "bilibili-index-translate",
         name: "Bilibili Index-Translate (哔哩哔哩)",
         default_base_url: Some("https://index-translate.bilibili.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "sensenova",
+        name: "SenseNova Token Plan (商汤日日新)",
+        default_base_url: Some("https://token.sensenova.cn/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
@@ -1847,6 +1864,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "maas-api.antdigital.com" => "antdigital-dtmaas",
         "maas-api.unisound.com" => "unisound",
         "index-translate.bilibili.com" => "bilibili-index-translate",
+        "token.sensenova.cn" => "sensenova",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7228,6 +7246,15 @@ mod tests {
             ("https://bilibili.com/v1", "custom"),
             ("https://www.bilibili.com/v1", "custom"),
             ("https://index-translate.bilibili.com.evil.test/v1", "custom"),
+            ("https://token.sensenova.cn/v1", "sensenova"),
+            ("https://token.sensenova.cn", "sensenova"),
+            ("https://token.sensenova.cn/v1/chat/completions", "sensenova"),
+            ("https://token.sensenova.cn/v1/responses", "sensenova"),
+            ("https://token.sensenova.cn/v1/messages", "sensenova"),
+            ("https://sensenova.cn/v1", "custom"),
+            ("https://www.sensenova.cn/v1", "custom"),
+            ("https://platform.sensenova.cn/v1", "custom"),
+            ("https://token.sensenova.cn.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7310,7 +7337,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 131);
+        assert_eq!(list_providers().len(), 132);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

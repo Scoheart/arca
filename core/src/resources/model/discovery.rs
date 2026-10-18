@@ -198,6 +198,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "orcarouter"
         | "unisound"
         | "bilibili-index-translate"
+        | "sensenova"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -849,6 +850,7 @@ mod tests {
         "orcarouter",
         "unisound",
         "bilibili-index-translate",
+        "sensenova",
         "mistral",
         "deepseek",
         "groq",
