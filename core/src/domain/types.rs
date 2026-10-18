@@ -165,14 +165,16 @@ fn infer_auth_requirement(
     has_source: bool,
 ) -> AuthRequirement {
     let provider = provider.trim().to_ascii_lowercase();
-    let local_provider = matches!(provider.as_str(), "ollama" | "lm-studio" | "vllm")
-        || url::Url::parse(base_url).ok().is_some_and(|url| {
-            matches!(
-                url.host_str(),
-                Some("localhost" | "127.0.0.1" | "::1")
-            )
-        });
-    if local_provider {
+    let keyless_provider = matches!(
+        provider.as_str(),
+        "ollama" | "lm-studio" | "vllm" | "bilibili-index-translate"
+    ) || url::Url::parse(base_url).ok().is_some_and(|url| {
+        matches!(
+            url.host_str(),
+            Some("localhost" | "127.0.0.1" | "::1")
+        )
+    });
+    if keyless_provider {
         AuthRequirement::None
     } else if provider.is_empty() || provider == "custom" {
         AuthRequirement::Optional
@@ -675,5 +677,21 @@ mod tests {
         let persisted = serde_json::to_value(provider).unwrap();
         assert!(persisted.get("env_key").is_none());
         assert_eq!(persisted["api_key_source"]["kind"], "env");
+    }
+
+    #[test]
+    fn public_keyless_provider_infers_no_auth_requirement() {
+        let provider: ModelProviderConfig = serde_json::from_value(serde_json::json!({
+            "id": "index-translate",
+            "name": "Bilibili Index-Translate",
+            "provider": "bilibili-index-translate",
+            "base_url": "https://index-translate.bilibili.com/v1",
+            "protocols": {
+                "openai-completions": { "endpoint_path": "/chat/completions" }
+            }
+        }))
+        .unwrap();
+
+        assert_eq!(provider.auth_requirement, AuthRequirement::None);
     }
 }
