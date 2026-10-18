@@ -1119,6 +1119,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "fikra",
+        name: "Fikra API",
+        default_base_url: Some("https://api.fikraapi.co.ke/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "ant-ling",
         name: "Ant Ling (蚂蚁百灵)",
         default_base_url: Some("https://api.ant-ling.com/v1"),
@@ -1860,6 +1867,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.trustedrouter.com" => "trustedrouter",
         "api.unorouter.com" => "unorouter",
         "api.orcarouter.ai" => "orcarouter",
+        "api.fikraapi.co.ke" => "fikra",
         "api.ant-ling.com" => "ant-ling",
         "maas-api.antdigital.com" => "antdigital-dtmaas",
         "maas-api.unisound.com" => "unisound",
@@ -7232,6 +7240,14 @@ mod tests {
             ("https://www.orcarouter.ai/v1", "custom"),
             ("https://docs.orcarouter.ai/v1", "custom"),
             ("https://api.orcarouter.ai.evil.test/v1", "custom"),
+            ("https://api.fikraapi.co.ke/v1", "fikra"),
+            ("https://api.fikraapi.co.ke", "fikra"),
+            ("https://api.fikraapi.co.ke/v1/chat/completions", "fikra"),
+            ("https://api.fikraapi.co.ke/v1/models", "fikra"),
+            ("https://fikraapi.co.ke/v1", "custom"),
+            ("https://www.fikraapi.co.ke/v1", "custom"),
+            ("https://docs.fikraapi.co.ke/v1", "custom"),
+            ("https://api.fikraapi.co.ke.evil.test/v1", "custom"),
             ("https://api.ant-ling.com/v1/chat/completions", "ant-ling"),
             ("https://api.ant-ling.com/anthropic/v1/messages", "ant-ling"),
             ("https://maas-api.antdigital.com/v1/chat/completions", "antdigital-dtmaas"),
@@ -7337,7 +7353,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 132);
+        assert_eq!(list_providers().len(), 133);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

@@ -384,6 +384,13 @@
       "kind": "console"
     }
   },
+  "fikra": {
+    "docs_url": "https://docs.fikraapi.co.ke/",
+    "portal": {
+      "url": "https://fikraapi.co.ke/dashboard",
+      "kind": "api-key"
+    }
+  },
   "ant-ling": {
     "docs_url": "https://developer.ant-ling.com/en/docs/api-reference/openai/",
     "portal": {
