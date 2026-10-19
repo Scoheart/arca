@@ -552,6 +552,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.orcarouter.ai/v1beta",
             },
         ],
+        "constellation-gate" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://gateway.constellationgate.ai",
+        }],
         "coralbricks" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -1122,6 +1126,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "fikra",
         name: "Fikra API",
         default_base_url: Some("https://api.fikraapi.co.ke/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "constellation-gate",
+        name: "Constellation Gate",
+        default_base_url: Some("https://gateway.constellationgate.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -1868,6 +1879,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.unorouter.com" => "unorouter",
         "api.orcarouter.ai" => "orcarouter",
         "api.fikraapi.co.ke" => "fikra",
+        "gateway.constellationgate.ai" => "constellation-gate",
         "api.ant-ling.com" => "ant-ling",
         "maas-api.antdigital.com" => "antdigital-dtmaas",
         "maas-api.unisound.com" => "unisound",
@@ -7248,6 +7260,16 @@ mod tests {
             ("https://www.fikraapi.co.ke/v1", "custom"),
             ("https://docs.fikraapi.co.ke/v1", "custom"),
             ("https://api.fikraapi.co.ke.evil.test/v1", "custom"),
+            ("https://gateway.constellationgate.ai/v1", "constellation-gate"),
+            ("https://gateway.constellationgate.ai", "constellation-gate"),
+            ("https://gateway.constellationgate.ai/v1/chat/completions", "constellation-gate"),
+            ("https://gateway.constellationgate.ai/v1/messages", "constellation-gate"),
+            ("https://gateway.constellationgate.ai/v1/models", "constellation-gate"),
+            ("https://constellationgate.ai/v1", "custom"),
+            ("https://app.constellationgate.ai/v1", "custom"),
+            ("https://api.constellationgate.ai/v1", "custom"),
+            ("https://docs.constellationgate.ai/v1", "custom"),
+            ("https://gateway.constellationgate.ai.evil.test/v1", "custom"),
             ("https://api.ant-ling.com/v1/chat/completions", "ant-ling"),
             ("https://api.ant-ling.com/anthropic/v1/messages", "ant-ling"),
             ("https://maas-api.antdigital.com/v1/chat/completions", "antdigital-dtmaas"),
@@ -7353,7 +7375,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 133);
+        assert_eq!(list_providers().len(), 134);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
