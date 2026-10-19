@@ -391,6 +391,13 @@
       "kind": "api-key"
     }
   },
+  "constellation-gate": {
+    "docs_url": "https://docs.constellationgate.ai/getting-started/authentication/",
+    "portal": {
+      "url": "https://app.constellationgate.ai",
+      "kind": "console"
+    }
+  },
   "ant-ling": {
     "docs_url": "https://developer.ant-ling.com/en/docs/api-reference/openai/",
     "portal": {
