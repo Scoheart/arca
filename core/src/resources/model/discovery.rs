@@ -201,6 +201,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "unisound"
         | "bilibili-index-translate"
         | "sensenova"
+        | "akashml"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -857,6 +858,7 @@ mod tests {
         "unisound",
         "bilibili-index-translate",
         "sensenova",
+        "akashml",
         "mistral",
         "deepseek",
         "groq",
