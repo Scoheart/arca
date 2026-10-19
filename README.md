@@ -215,6 +215,34 @@ cargo build --release -p arca-cli   # → target/release/arca
 
 Everything runs against `~/.arca/`, shared with the desktop app.
 
+### Teach an Agent to use the CLI
+
+The portable [arca-cli Skill](skills/arca-cli/SKILL.md) teaches Agents to discover
+the installed CLI, configure launch paths/arguments/environment variables, manage
+MCPs, Models and Skills, and verify changes through structured output. It includes
+command recipes and guidance for shared targets, credentials and partial failures.
+
+From a local checkout, install it into Arca's central library, then assign it to
+an Agent (replace `codex` with the exact ID from `arca agent list --json`):
+
+```bash
+arca skill inspect-source --path ./skills/arca-cli --json
+arca skill install --path ./skills/arca-cli --name arca-cli --dry-run --json
+arca skill install --path ./skills/arca-cli --name arca-cli --yes --json
+arca skill assign arca-cli --agent codex --dry-run --json
+arca skill assign arca-cli --agent codex --yes --json
+arca skill status --agent codex --json
+```
+
+Review any reported risk findings before explicitly adding `--accept-risk`; a
+plain `--yes` does not accept those findings. Desktop users can import the
+`skills/arca-cli` folder through **Skills → Add**, then select it for their Agent.
+The Skill and its `references/` directory must stay together when using another
+Agent's supported Skill installation method. Start a new Agent session or use
+its supported reload mechanism after assignment.
+
+### Interactive and scripted commands
+
 Run `arca` with **no arguments** for the **interactive TUI** — an MCP-focused,
 keyboard-driven terminal workspace with three screens (Registry /
 Sources / Agents). Browse and search the MCP catalog, install to Agents, enable,
