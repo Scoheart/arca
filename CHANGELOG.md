@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.5](https://github.com/Scoheart/arca/compare/v2.5.4...v2.5.5) (2026-10-19)
+
+### Changes
+
+* docs(cli): add portable arca-cli skill for agents ([7ed8f9f](https://github.com/Scoheart/arca/commit/7ed8f9ff70d4c230b125f04740ca92743a303d0c))
+* feat(models): add AkashML provider (#228) ([1eee487](https://github.com/Scoheart/arca/commit/1eee487b29d3f7f8fd2ae13cfb8e5cd2d95f1535))
+* feat(models): add Constellation Gate gateway provider (#229) ([c78219b](https://github.com/Scoheart/arca/commit/c78219b68a8618a8ad1bdc339ab48cdbc958356a))
+
 ## [2.5.4](https://github.com/Scoheart/arca/compare/v2.5.3...v2.5.4) (2026-10-18)
 
 ### Changes
