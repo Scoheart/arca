@@ -634,6 +634,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://token.sensenova.cn",
             },
         ],
+        "akashml" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.akashml.com/anthropic",
+        }],
         "minimax" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.minimax.io/anthropic",
@@ -1159,6 +1163,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         default_base_url: Some("https://token.sensenova.cn/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
+    },
+    ModelProviderView {
+        id: "akashml",
+        name: "AkashML",
+        default_base_url: Some("https://api.akashml.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
     },
     ModelProviderView {
         id: "azure-openai",
@@ -1873,6 +1884,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "maas-api.unisound.com" => "unisound",
         "index-translate.bilibili.com" => "bilibili-index-translate",
         "token.sensenova.cn" => "sensenova",
+        "api.akashml.com" => "akashml",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7271,6 +7283,16 @@ mod tests {
             ("https://www.sensenova.cn/v1", "custom"),
             ("https://platform.sensenova.cn/v1", "custom"),
             ("https://token.sensenova.cn.evil.test/v1", "custom"),
+            ("https://api.akashml.com/v1", "akashml"),
+            ("https://api.akashml.com", "akashml"),
+            ("https://api.akashml.com/v1/chat/completions", "akashml"),
+            ("https://api.akashml.com/v1/models", "akashml"),
+            ("https://api.akashml.com/anthropic", "akashml"),
+            ("https://api.akashml.com/anthropic/v1/messages", "akashml"),
+            ("https://akashml.com/v1", "custom"),
+            ("https://www.akashml.com/v1", "custom"),
+            ("https://playground.akashml.com/v1", "custom"),
+            ("https://api.akashml.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7353,7 +7375,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 133);
+        assert_eq!(list_providers().len(), 134);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

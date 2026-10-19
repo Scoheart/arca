@@ -426,6 +426,13 @@
       "kind": "api-key"
     }
   },
+  "akashml": {
+    "docs_url": "https://akashml.com/docs/getting-started/introduction",
+    "portal": {
+      "url": "https://playground.akashml.com/settings",
+      "kind": "api-key"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
