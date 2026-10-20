@@ -1,7 +1,16 @@
 use crate::settings::{load_settings_strict, mutate_settings_checked, NetworkSettings};
 use url::Url;
 
+mod context;
+mod platform;
+pub use context::{config_proxy, environment_proxy, resolve_proxy, ProxyConfigFormat, ProxyConfigSource, ProxySource, ResolvedProxy, PROXY_ENVIRONMENT_KEYS};
+pub use platform::{shell_proxy, system_proxy};
+
 const MAX_PROXY_URL_BYTES: usize = 2048;
+
+pub fn canonical_proxy_url(value: &str) -> Result<String, String> {
+    normalize_proxy_url(Some(value.to_owned()))?.ok_or_else(|| "代理地址不能为空。".into())
+}
 
 pub fn get_proxy_settings() -> Result<NetworkSettings, String> {
     let settings = load_settings_strict().map_err(|error| error.to_string())?;

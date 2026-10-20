@@ -1,0 +1,11 @@
+{
+  "pi": [
+    {
+      "default_directory": "~/.pi/agent",
+      "directory_environment": "PI_CODING_AGENT_DIR",
+      "file": "settings.json",
+      "format": "json",
+      "pointer": "/httpProxy"
+    }
+  ]
+}

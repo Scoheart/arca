@@ -4,6 +4,7 @@
 
 ## 架构边界
 
+- 跨 Agent 行为使用共享 Core 机制；原生配置路径、字段和运行时能力通过声明或适配器接入。用户代理地址和端口来自运行上下文，验证覆盖多个客户端及可变参数，具体故障实例只作为复现场景。
 - Rust `core/` 是 Agent 发现、codec、MCP/Model/Skills 中央资产、消费关系与写入行为的唯一权威；CLI、TUI、Tauri command 和 React 只做薄适配。
 - `data/` 是 Agent 与精选资源的 source of truth。新增可写 Agent 时同步 codec、发现、fixture、round-trip、图标 alias 与完整性检查。
 - 当前只管理全局 Agent 配置和用户级 Skills；不得重新暴露项目级写入或在多个前端复制 core 编排。
