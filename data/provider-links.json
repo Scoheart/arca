@@ -216,6 +216,13 @@
       "kind": "console"
     }
   },
+  "maximo-ai": {
+    "docs_url": "https://maximoai.co/platform/docs",
+    "portal": {
+      "url": "https://maximoai.co/platform/keys",
+      "kind": "api-key"
+    }
+  },
   "ollama-cloud": {
     "docs_url": "https://docs.ollama.com/cloud",
     "portal": {
