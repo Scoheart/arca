@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.11](https://github.com/Scoheart/arca/compare/v2.5.10...v2.5.11) (2026-10-20)
+
+### Changes
+
+* feat(models): add Maximo AI provider (#231) ([f225146](https://github.com/Scoheart/arca/commit/f225146133597ff6cd744ad9ffaee15d7fc39013))
+
 ## [2.5.10](https://github.com/Scoheart/arca/compare/v2.5.9...v2.5.10) (2026-10-20)
 
 ### Changes
