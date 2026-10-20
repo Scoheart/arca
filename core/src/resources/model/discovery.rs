@@ -185,6 +185,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "runanywhere"
         | "coralbricks"
         | "meta"
+        | "maximo-ai"
         | "clean-apis"
         | "dolphin"
         | "iteracompute"
@@ -279,6 +280,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "io-net"
             | "inception"
             | "ollama-cloud"
+            | "maximo-ai"
             | "iteracompute"
             | "llmtr"
             | "munito"
@@ -842,6 +844,7 @@ mod tests {
         "runanywhere",
         "coralbricks",
         "meta",
+        "maximo-ai",
         "clean-apis",
         "dolphin",
         "iteracompute",
@@ -1026,6 +1029,7 @@ mod tests {
             "ollama",
             "lm-studio",
             "vllm",
+            "maximo-ai",
             "iteracompute",
             "llmtr",
             "munito",

@@ -596,6 +596,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.meta.ai",
             },
         ],
+        "maximo-ai" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.maximoai.co/v1",
+        }],
         "ant-ling" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.ant-ling.com/anthropic",
@@ -956,6 +960,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         name: "Meta Model API",
         default_base_url: Some("https://api.meta.ai/v1"),
         default_protocol: ModelProtocol::OpenaiResponses,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "maximo-ai",
+        name: "Maximo AI",
+        default_base_url: Some("https://api.maximoai.co/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
     ModelProviderView {
@@ -1885,6 +1896,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "apihub.agnes-ai.com" => "agnes-ai",
         "api.agnes-ai.cn" => "agnes-ai-cn",
         "api.meta.ai" => "meta",
+        "api.maximoai.co" => "maximo-ai",
         "cleanapis.com" => "clean-apis",
         "lighthouse.dphn.ai" => "dolphin",
         "api.iteracompute.com" => "iteracompute",
@@ -7224,6 +7236,13 @@ mod tests {
             ("https://www.meta.ai/v1", "custom"),
             ("https://api.meta.ai.evil.test/v1", "custom"),
             ("https://api.meta.com/v1", "custom"),
+            ("https://api.maximoai.co/v1", "maximo-ai"),
+            ("https://api.maximoai.co", "maximo-ai"),
+            ("https://api.maximoai.co/v1/chat/completions", "maximo-ai"),
+            ("https://api.maximoai.co/v1/responses", "maximo-ai"),
+            ("https://maximoai.co/v1", "custom"),
+            ("https://www.maximoai.co/v1", "custom"),
+            ("https://api.maximoai.co.evil.test/v1", "custom"),
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
@@ -7412,7 +7431,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 136);
+        assert_eq!(list_providers().len(), 137);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
