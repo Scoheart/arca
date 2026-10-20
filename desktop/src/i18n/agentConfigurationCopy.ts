@@ -1,4 +1,5 @@
 export const agentConfigurationZhCN = {
+  instructionsDirectory: "Instructions 目录 {{index}}",
   selectInstructionsDirectory: "选择 Instructions 目录", selectInstructionsDirectoryLabel: "选择 Instructions 目录 {{index}}", resetInstructionsDirectory: "恢复 Instructions 目录 {{index}} 默认值",
   instructionsPathHint: "只配置 Arca 读取与编辑的位置，不迁移文件，也不改变 Agent 的原生加载设置。",
   tabs: "配置分类", launch: "启动", paths: "配置文件", unsaved: "未保存",
@@ -25,6 +26,7 @@ export const agentConfigurationZhCN = {
 };
 
 export const agentConfigurationEnUS = {
+  instructionsDirectory: "Instructions directory {{index}}",
   selectInstructionsDirectory: "Choose Instructions directory", selectInstructionsDirectoryLabel: "Choose Instructions directory {{index}}", resetInstructionsDirectory: "Restore default Instructions directory {{index}}",
   instructionsPathHint: "Sets where Arca reads and edits files. Does not move files or change the Agent's native loading settings.",
   tabs: "Configuration sections", launch: "Launch", paths: "Configuration files", unsaved: "Unsaved",

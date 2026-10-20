@@ -73,7 +73,7 @@
 .arca-dialog-agent-config .arca-agent-config-fields { gap: 16px; }
 .arca-agent-config-mcp { display: grid; grid-template-columns: minmax(0, 1fr) 152px; gap: 12px; }
 .arca-agent-instruction-paths { display: grid; gap: 14px; min-width: 0; }
-.arca-agent-instruction-path { min-width: 0; }
+.arca-agent-instruction-path { display: grid; gap: 12px; min-width: 0; }
 .arca-agent-path-patterns { color: var(--text-tertiary); font: 10px var(--font-mono); overflow-wrap: anywhere; }
 .arca-agent-instruction-hint { margin: 0; color: var(--text-tertiary); font-size: 11px; line-height: 1.6; }
 .arca-dialog-agent-config .arca-agent-config-field { display: flex; flex-direction: column; align-items: stretch; gap: 7px; }

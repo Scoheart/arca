@@ -467,8 +467,8 @@ export function AgentConfigurationDialog({
             : instructionPaths?.sources.map((source, index) => {
               const value = source.id in instructionEdits ? instructionEdits[source.id] ?? source.default_path ?? "" : source.path;
               return <div key={source.id} className="arca-agent-instruction-path">
-                <ConfigField icon={<DocumentIcon className="w-4 h-4" />} label={index === 0 ? "Instructions" : `Instructions ${index + 1}`}
-                  value={value} openKind="folder" hint={`${source.kind === 'mode-rules' ? 'rules-*/ · ' : ''}${source.patterns.join(' · ')}`}
+                <ConfigField icon={<DocumentIcon className="w-4 h-4" />} label={t("agentConfiguration.instructionsDirectory", { index: index + 1 })}
+                  value={value} openKind="folder" hint={source.kind === "files" ? undefined : `${source.kind === 'mode-rules' ? 'rules-*/ · ' : ''}${source.patterns.join(' · ')}`}
                   onChange={path => updateInstructionPath(source.id, path)}
                   action={<>
                     <button type="button" className="arca-agent-config-remove" title={t("agentConfiguration.selectInstructionsDirectory")} aria-label={t("agentConfiguration.selectInstructionsDirectoryLabel", { index: index + 1 })}
@@ -476,6 +476,11 @@ export function AgentConfigurationDialog({
                     <button type="button" className="arca-agent-config-remove" title={t("agentConfiguration.restoreDefault")} aria-label={t("agentConfiguration.resetInstructionsDirectory", { index: index + 1 })}
                       disabled={!source.overridden && !(source.id in instructionEdits)} onClick={event => { event.preventDefault(); updateInstructionPath(source.id, null); }}><RefreshIcon className="w-4 h-4" /></button>
                   </>} />
+                {source.kind === "files" && source.patterns.map(filename => (
+                  <ConfigField key={filename} icon={<DocumentIcon className="w-4 h-4" />} label={filename}
+                    value={value.trim() ? `${value.trim().replace(/\/+$/, "")}/${filename}` : ""}
+                    readOnly openKind="file" />
+                ))}
               </div>;
             })}
           {instructionPaths && <p className="arca-agent-instruction-hint">{t("agentConfiguration.instructionsPathHint")}</p>}
@@ -512,6 +517,7 @@ function ConfigField({
   label,
   value,
   disabled = false,
+  readOnly = false,
   onChange,
   action,
   openKind,
@@ -521,6 +527,7 @@ function ConfigField({
   label: string;
   value: string;
   disabled?: boolean;
+  readOnly?: boolean;
   onChange?(value: string): void;
   action?: ReactNode;
   openKind?: "file" | "folder";
@@ -550,6 +557,7 @@ function ConfigField({
         aria-label={label}
         value={value}
         disabled={disabled}
+        readOnly={readOnly}
         spellCheck={false}
         aria-describedby={hint ? hintId : undefined}
         onChange={(event) => onChange?.(event.target.value)}
