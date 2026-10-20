@@ -646,6 +646,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://api.akashml.com/anthropic",
         }],
+        "0g-private-computer" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://router-api.0g.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://router-api.0g.ai",
+            },
+        ],
         "minimax" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.minimax.io/anthropic",
@@ -1197,6 +1207,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "indicstack",
         name: "IndicStack",
         default_base_url: Some("https://api.indicstack.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "0g-private-computer",
+        name: "0G Private Computer",
+        default_base_url: Some("https://router-api.0g.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -1917,6 +1934,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "token.sensenova.cn" => "sensenova",
         "api.akashml.com" => "akashml",
         "api.indicstack.ai" => "indicstack",
+        "router-api.0g.ai" => "0g-private-computer",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7349,6 +7367,16 @@ mod tests {
             ("https://www.indicstack.ai/v1", "custom"),
             ("https://console.indicstack.ai/v1", "custom"),
             ("https://api.indicstack.ai.evil.test/v1", "custom"),
+            ("https://router-api.0g.ai/v1", "0g-private-computer"),
+            ("https://router-api.0g.ai", "0g-private-computer"),
+            ("https://router-api.0g.ai/v1/chat/completions", "0g-private-computer"),
+            ("https://router-api.0g.ai/v1/responses", "0g-private-computer"),
+            ("https://router-api.0g.ai/v1/messages", "0g-private-computer"),
+            ("https://router-api.0g.ai/v1/models", "0g-private-computer"),
+            ("https://0g.ai/v1", "custom"),
+            ("https://pc.0g.ai/v1", "custom"),
+            ("https://router-api-testnet.integratenetwork.work/v1", "custom"),
+            ("https://router-api.0g.ai.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7431,7 +7459,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 137);
+        assert_eq!(list_providers().len(), 138);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
