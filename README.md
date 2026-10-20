@@ -440,6 +440,18 @@ ChatGPT (`codex-desktop`) opens ChatGPT.app and shares `~/.codex/config.toml` pl
 
 Agent labels use the actual application name, or the official CLI/plugin product name. Region, version, and surface are not added to the name. Existing IDs and bindings stay stable; see the [name audit](docs/agent-name-audit.md).
 
+右下角的形态角标用于区分共用品牌图标的不同产品，共 **5 种**：
+
+| 形态 | 符号 | 颜色 | 示例 |
+| --- | --- | --- | --- |
+| 命令行 | 终端提示符 `>_` | 石板灰 | Cursor CLI、Codex CLI |
+| 桌面应用 | 显示器 | 蓝色 | ChatGPT、Claude Desktop |
+| IDE 编辑器 | 代码括号 | 紫色 | Cursor、Qoder |
+| IDE 插件 | 插头 | 琥珀色 | Codex IDE、Cline |
+| Web 应用 | 地球 | 青绿色 | ChatGPT 网页版、Claude 网页版 |
+
+Cursor 与 Cursor CLI 共用 Cursor 品牌图标，分别显示 IDE 与命令行角标。固定栏、Agent 选择卡片、详情页和资源消费者共用同一个角标组件；尺寸随品牌图标调整，边框在浅色和深色背景下保持可见，悬停显示完整名称与形态。独有品牌图标、同形态的多个发行版和未知自定义 Agent 不会被自动添加形态角标。完整分类、显示条件与组件职责见 [Agent 形态角标](docs/agent-surface-badges.md)。
+
 
 ### 原生全局 Instructions / Rules
 

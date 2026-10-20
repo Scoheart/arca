@@ -458,21 +458,6 @@ body {
 .arca-agent-glyph-base {
   display: inline-flex; align-items: center; justify-content: center;
 }
-.arca-agent-surface-badge {
-  position: absolute; right: -2px; bottom: -2px; z-index: 2;
-  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
-  border-radius: 4px; color: #fff; box-shadow: 0 0 0 2px var(--surface-app);
-}
-.arca-agent-surface-badge[data-agent-surface="cli"] { background: #202733; }
-.arca-agent-surface-badge[data-agent-surface="desktop"] { background: var(--color-blue); }
-.arca-agent-surface-badge[data-agent-surface="ide"] { background: #7656d6; }
-.arca-agent-surface-badge[data-agent-surface="plugin"] { background: #c47b16; }
-.arca-agent-surface-badge[data-agent-surface="web"] { background: #16856b; }
-.arca-agent-surface-badge > svg { width: 78%; height: 78%; }
-.arca-agent-surface-badge :is(path, rect, circle) {
-  stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
 .arca-agent-navigation { display: flex; width: 100%; min-width: 0; flex: 1 1 auto; align-items: center; justify-content: flex-end; gap: 8px; }
 .arca-agent-picker-cluster { position: relative; display: flex; max-width: 100%; min-width: 0; flex: 0 1 auto; align-items: center; gap: 8px; }
 .arca-pinned-agent-bar {

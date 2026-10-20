@@ -13,6 +13,7 @@ export function systemLocale(): SupportedLocale {
 }
 
 const zhCN = {
+  agentSurfaces: { cli: "命令行", desktop: "桌面应用", ide: "IDE 编辑器", plugin: "IDE 插件", web: "Web 应用" },
   mcpEditor: mcpEditorZhCN,
   agentConfiguration: agentConfigurationZhCN,
   notifications: { close: "关闭通知", closeError: "关闭错误通知", closeSuccess: "关闭成功通知" },
@@ -417,6 +418,7 @@ type TranslationShape<T> = {
 };
 
 const enUS: TranslationShape<typeof zhCN> = {
+  agentSurfaces: { cli: "Command line", desktop: "Desktop app", ide: "IDE editor", plugin: "IDE extension", web: "Web app" },
   mcpEditor: mcpEditorEnUS,
   agentConfiguration: agentConfigurationEnUS,
   notifications: { close: "Dismiss notification", closeError: "Dismiss error notification", closeSuccess: "Dismiss success notification" },

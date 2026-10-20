@@ -1,4 +1,6 @@
 {
+  "cursor": "ide",
+  "cursor-cli": "cli",
   "codex": "cli",
   "capy": "desktop",
   "codex-desktop": "desktop",

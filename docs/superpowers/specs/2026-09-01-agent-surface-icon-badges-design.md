@@ -1,5 +1,7 @@
 # Agent Surface Icon Badges Design
 
+> Historical design proposal. The current five-surface taxonomy, component structure and size rules are documented in [Agent 形态角标](../../agent-surface-badges.md).
+
 **Date:** 2026-09-01  
 **Status:** Approved visual direction; pending implementation  
 **Visual direction:** B — device-symbol corner badges
