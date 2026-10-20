@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.6](https://github.com/Scoheart/arca/compare/v2.5.5...v2.5.6) (2026-10-20)
+
+### Changes
+
+* fix(desktop): show instruction files in separate rows ([1c9c245](https://github.com/Scoheart/arca/commit/1c9c2454dc35db3ff3e394fe4c302653d72e7aa6))
+* fix(desktop): clarify agent surface badges and cover Cursor ([f36571b](https://github.com/Scoheart/arca/commit/f36571b95e9093cc016a734b38944c49efce150b))
+
 ## [2.5.5](https://github.com/Scoheart/arca/compare/v2.5.4...v2.5.5) (2026-10-19)
 
 ### Changes
