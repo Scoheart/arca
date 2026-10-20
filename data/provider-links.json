@@ -440,6 +440,13 @@
       "kind": "api-key"
     }
   },
+  "indicstack": {
+    "docs_url": "https://indicstack.ai/blog/migrate-openai-to-india-hosted-api",
+    "portal": {
+      "url": "https://console.indicstack.ai/signup",
+      "kind": "console"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
