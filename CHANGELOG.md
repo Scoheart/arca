@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.7](https://github.com/Scoheart/arca/compare/v2.5.6...v2.5.7) (2026-10-20)
+
+### Changes
+
+* fix(capture): bind launched CLI instances and reconcile exited targets ([fe52d67](https://github.com/Scoheart/arca/commit/fe52d67e0fc75e3a05ad399a0508d9b5c3ede909))
+
 ## [2.5.6](https://github.com/Scoheart/arca/compare/v2.5.5...v2.5.6) (2026-10-20)
 
 ### Changes
