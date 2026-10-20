@@ -203,6 +203,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "bilibili-index-translate"
         | "sensenova"
         | "akashml"
+        | "0g-private-computer"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -290,6 +291,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "orcarouter"
             | "fikra"
             | "constellation-gate"
+            | "0g-private-computer"
             | "bilibili-index-translate"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
@@ -862,6 +864,7 @@ mod tests {
         "bilibili-index-translate",
         "sensenova",
         "akashml",
+        "0g-private-computer",
         "mistral",
         "deepseek",
         "groq",
@@ -1039,6 +1042,7 @@ mod tests {
             "orcarouter",
             "fikra",
             "constellation-gate",
+            "0g-private-computer",
             "bilibili-index-translate",
         ] {
             assert_eq!(

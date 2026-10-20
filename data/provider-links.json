@@ -454,6 +454,13 @@
       "kind": "console"
     }
   },
+  "0g-private-computer": {
+    "docs_url": "https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart",
+    "portal": {
+      "url": "https://pc.0g.ai/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
