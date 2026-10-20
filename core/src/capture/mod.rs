@@ -29,14 +29,39 @@ static STARTING: Mutex<()> = Mutex::new(());
 struct RuntimeIdentity { owner_pid: u32, owner_start: String, engine_pid: u32, engine_start: String }
 
 fn process_start(pid: u32) -> Option<String> {
-    output("/bin/ps", &["-p", &pid.to_string(), "-o", "lstart="])
-        .map(|value| value.split_whitespace().collect::<Vec<_>>().join(" "))
+    output("/bin/ps", &["-p", &pid.to_string(), "-o", "stat=,lstart="])
+        .and_then(|value| {
+            let mut fields = value.split_whitespace();
+            let state = fields.next()?;
+            if state.starts_with(['Z', 'X']) { return None; }
+            Some(fields.collect::<Vec<_>>().join(" "))
+        })
         .filter(|value| !value.is_empty())
 }
 fn runtime_alive(directory: &Path) -> bool {
     read_json::<RuntimeIdentity>(&directory.join("runtime.json")).is_ok_and(|identity|
         process_start(identity.owner_pid).as_deref() == Some(identity.owner_start.as_str())
             && process_start(identity.engine_pid).as_deref() == Some(identity.engine_start.as_str()))
+}
+fn target_exited(session: &CaptureSession) -> bool {
+    // App groups intentionally include all of their helpers. Only a selected
+    // instance has an immutable PID/birth identity we can check independently
+    // of the engine's background watcher.
+    let Some(identity) = session.target_id.strip_prefix("pid:") else { return false; };
+    let Some((pid, birth)) = identity.split_once(':') else { return false; };
+    let Ok(pid) = pid.parse() else { return false; };
+    !birth.is_empty() && process_start(pid).as_deref() != Some(birth)
+}
+fn retire_exited_target(active: &mut Option<Worker>) -> Result<(), String> {
+    let Some(worker) = active.as_ref() else { return Ok(()); };
+    let directory = session_dir(&worker.session_id)?;
+    let session: CaptureSession = read_json(&directory.join("session.json"))?;
+    if target_exited(&session) {
+        // Clean only our capture engine, never the Agent or a recycled PID.
+        // A stuck watcher must not leave capture_busy blocking the next run.
+        if let Some(mut worker) = active.take() { worker.stop(&directory)?; }
+    }
+    Ok(())
 }
 fn close_abandoned(flows: &mut [FlowSummary], status: &CaptureState) {
     if matches!(status.state.as_str(), "running" | "starting") { return; }
@@ -185,17 +210,18 @@ fn processes() -> Vec<Process> {
         let line = line.trim(); let split = line.find(char::is_whitespace)?;
         Some((line[..split].parse::<u32>().ok()?, line[split..].trim().to_owned()))
     }).collect::<BTreeMap<_, _>>();
-    output("/bin/ps", &["-axo", "pid=,ppid=,lstart=,comm="]).unwrap_or_default().lines().filter_map(|line| {
+    output("/bin/ps", &["-axo", "pid=,ppid=,stat=,lstart=,comm="]).unwrap_or_default().lines().filter_map(|line| {
         let mut rest = line.trim();
         let mut fields = Vec::new();
-        for _ in 0..7 {
+        for _ in 0..8 {
             let split = rest.find(char::is_whitespace)?;
             fields.push(&rest[..split]); rest = rest[split..].trim_start();
         }
+        if fields[2].starts_with(['Z', 'X']) { return None; }
         let pid = fields[0].parse().ok()?;
         let command = executable(pid, rest);
         let command = fs::canonicalize(&command).unwrap_or_else(|_| PathBuf::from(command)).to_string_lossy().into_owned();
-        Some(Process { pid, parent: fields[1].parse().ok()?, started_at: fields[2..7].join(" "),
+        Some(Process { pid, parent: fields[1].parse().ok()?, started_at: fields[3..8].join(" "),
             command, arguments: arguments.get(&pid).cloned().unwrap_or_default() })
     }).collect()
 }
@@ -289,6 +315,7 @@ fn start_session(request: StartCapture, selection: TargetSelection<'_>) -> Resul
     let _starting = STARTING.try_lock().map_err(|_| "capture_starting: 抓包引擎正在启动，请等待本次启动完成。".to_owned())?;
     {
         let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
+        retire_exited_target(&mut active)?;
         retire_forwarder(&mut active)?;
         if let Some(worker) = active.as_mut() { if worker.alive()? { return Err("capture_busy: 请先停止当前抓包会话。".into()); } }
         active.take();
@@ -427,6 +454,7 @@ fn session_status(id: &str) -> Result<(PathBuf, CaptureSession, CaptureState), S
         state: "starting".into(), message: "正在启动抓包引擎…".into(), pids: session.pids.clone(), flow_count: 0, listen_address: None,
     });
     let mut active = ACTIVE.lock().map_err(|_| "抓包会话锁失败。".to_owned())?;
+    retire_exited_target(&mut active)?;
     retire_forwarder(&mut active)?;
     if let Some(worker) = active.as_mut() {
         if !worker.alive()? {
@@ -444,12 +472,20 @@ fn session_status(id: &str) -> Result<(PathBuf, CaptureSession, CaptureState), S
     let live = if let Some(worker) = active.as_mut().filter(|worker| worker.session_id == id) {
         worker.alive()?
     } else { matches!(status.state.as_str(), "running" | "starting") && runtime_alive(&directory) };
-    if !live && matches!(status.state.as_str(), "running" | "starting") {
+    if live && status.state == "running" && target_exited(&session) {
+        // Sessions owned by another Arca process use the same safe stop
+        // marker; the persisted engine flag alone is not target liveness.
+        request_stop(&directory)?;
+        status.state = "stopped".into();
+        status.message = "目标进程已退出；记录已停止。".into();
+        status.pids.clear();
+    } else if !live && matches!(status.state.as_str(), "running" | "starting") {
         if status.state == "starting" {
             status.state = "failed".into(); status.message = "抓包引擎启动失败，请检查 mitmproxy 版本与网络扩展。".into();
         } else {
             status.state = "stopped".into(); status.message = "抓包进程已结束；记录仍可查看。".into();
         }
+        status.pids.clear();
     }
     Ok((directory, session, status))
 }

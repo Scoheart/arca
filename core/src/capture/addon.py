@@ -275,13 +275,13 @@ def process_path(pid, fallback):
 
 
 def processes():
-    result = subprocess.run(['/bin/ps', '-axo', 'pid=,ppid=,lstart=,comm='], capture_output=True, text=True, timeout=5, check=True)
+    result = subprocess.run(['/bin/ps', '-axo', 'pid=,ppid=,stat=,lstart=,comm='], capture_output=True, text=True, timeout=5, check=True)
     rows = []
     for line in result.stdout.splitlines():
-        fields = line.strip().split(None, 7)
-        if len(fields) == 8 and fields[0].isdigit() and fields[1].isdigit():
+        fields = line.strip().split(None, 8)
+        if len(fields) == 9 and fields[0].isdigit() and fields[1].isdigit() and not fields[2].startswith(('Z', 'X')):
             pid = int(fields[0])
-            rows.append((pid, int(fields[1]), process_path(pid, fields[7]), ' '.join(fields[2:7])))
+            rows.append((pid, int(fields[1]), process_path(pid, fields[8]), ' '.join(fields[3:8])))
     kind, target = CONFIG['target_id'].split(':', 1)
     root_pid, _, started_at = target.partition(':')
     ids = {pid for pid, _, command, birth in rows if (command.startswith(target + '/') if kind == 'app' else pid == int(root_pid) and birth == started_at if kind == 'pid' else command == target)}
@@ -306,8 +306,9 @@ def loopback(address):
 
 def process_alive(pid, started_at):
     try:
-        result = subprocess.run(['/bin/ps', '-p', str(pid), '-o', 'lstart='], capture_output=True, text=True, timeout=5)
-        return result.returncode == 0 and ' '.join(result.stdout.split()) == started_at
+        result = subprocess.run(['/bin/ps', '-p', str(pid), '-o', 'stat=,lstart='], capture_output=True, text=True, timeout=5)
+        fields = result.stdout.split()
+        return result.returncode == 0 and bool(fields) and not fields[0].startswith(('Z', 'X')) and ' '.join(fields[1:]) == started_at
     except (OSError, subprocess.TimeoutExpired):
         return False
 
@@ -460,7 +461,9 @@ class Capture:
         self.ending = False
         self.explicit_proxy = CONFIG.get('transport') == 'proxy'
         self.listen_address = None
-        self.binding_deadline = time.monotonic() + 20
+        # Terminal dispatch and the PID handoff each have a ten-second bound.
+        # Leave room for their combined duration and watcher scheduling.
+        self.binding_deadline = time.monotonic() + 30
 
     def configure(self, updated):
         # mitmproxy loads config.yaml after --set. Reassert the capture
@@ -528,7 +531,8 @@ class Capture:
                         raise RuntimeError('Agent launch did not complete')
                 ids = await asyncio.to_thread(processes)
                 if not ids:
-                    self.status('stopped', '目标进程已退出；请重新选择正在运行的应用。')
+                    self.pids = []
+                    self.end_recording('目标进程已退出；请重新选择正在运行的应用。')
                     ctx.master.shutdown()
                     return
                 if ids != self.pids:

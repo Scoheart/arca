@@ -44,6 +44,8 @@
 
 在本独立仓执行 status、commit、tag 和 push；父仓不得跟踪其内部文件。提交使用 `<type>(<scope>): <summary>` 并在 body 解释原因。不要提交 `target/`、`dist/`、临时 App、截图或本机配置。
 
+用户持续授权（2026-10-20）：每次完成本仓库的任务修改后，自动提交本次相关改动、推送到 `main`，并执行 Direct Stable 发布；无需再次确认。该授权覆盖后续任务，除非用户明确要求暂不发布或撤回授权。按实际改动范围选择 patch/minor/major，跟进构建与正式发布结果；不包含无关改动，也不改变下述不可变 tag、签名、资产完整性和安装验收要求。此持续授权优先于本文件中默认停在开发预览、等待逐次发布指令的规则。
+
 Arca 交付授权与默认链路以父仓根 [`AGENTS.md — Standing Authorization`](../../../AGENTS.md#standing-authorization) 为准；按已授权链路执行，不重复询问，不因脏工作树或分叉切换链路：
 
 - 本地 commit & push：父仓 `mux-local-push`

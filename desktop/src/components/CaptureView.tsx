@@ -90,7 +90,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
     return [nextEnvironment, agentSessions] as const;
   }, [agentId]);
   useEffect(() => {
-    if (!awaitingExtension) return;
+    if (!awaitingExtension && (!settingsOpen || busy)) return;
     let disposed = false;
     let timer: ReturnType<typeof setTimeout>;
     const poll = async () => {
@@ -98,13 +98,13 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
         const next = await captureEnvironment();
         if (disposed) return;
         setEnvironment(next);
-        if (next.extension_enabled) return;
+        if (awaitingExtension && next.extension_enabled && !settingsOpen) return;
       } catch { /* The capture request owns setup errors; background checks retry. */ }
       if (!disposed) timer = setTimeout(() => void poll(), 2000);
     };
     timer = setTimeout(() => void poll(), 2000);
     return () => { disposed = true; clearTimeout(timer); };
-  }, [awaitingExtension]);
+  }, [awaitingExtension, settingsOpen, busy, agentId]);
   useEffect(() => {
     let disposed = false; const generation = ++epoch.current;
     setLoading(true); setFailure(''); setFlowId(''); setFlow(null); revision.current = null;
