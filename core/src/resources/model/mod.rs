@@ -1183,6 +1183,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "indicstack",
+        name: "IndicStack",
+        default_base_url: Some("https://api.indicstack.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -1897,6 +1904,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "index-translate.bilibili.com" => "bilibili-index-translate",
         "token.sensenova.cn" => "sensenova",
         "api.akashml.com" => "akashml",
+        "api.indicstack.ai" => "indicstack",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7315,6 +7323,13 @@ mod tests {
             ("https://www.akashml.com/v1", "custom"),
             ("https://playground.akashml.com/v1", "custom"),
             ("https://api.akashml.com.evil.test/v1", "custom"),
+            ("https://api.indicstack.ai/v1", "indicstack"),
+            ("https://api.indicstack.ai", "indicstack"),
+            ("https://api.indicstack.ai/v1/chat/completions", "indicstack"),
+            ("https://indicstack.ai/v1", "custom"),
+            ("https://www.indicstack.ai/v1", "custom"),
+            ("https://console.indicstack.ai/v1", "custom"),
+            ("https://api.indicstack.ai.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7397,7 +7412,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 135);
+        assert_eq!(list_providers().len(), 136);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
