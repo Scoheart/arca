@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.9](https://github.com/Scoheart/arca/compare/v2.5.8...v2.5.9) (2026-10-20)
+
+### Changes
+
+* refactor(network): share proxy context across agents and capture ([45eb7eb](https://github.com/Scoheart/arca/commit/45eb7ebd8810154b25501bc10c5e6d10a8fb7000))
+
 ## [2.5.8](https://github.com/Scoheart/arca/compare/v2.5.7...v2.5.8) (2026-10-20)
 
 ### Changes
