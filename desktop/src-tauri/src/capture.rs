@@ -8,6 +8,8 @@ async fn worker<T: Send + 'static>(f: impl FnOnce() -> Result<T, String> + Send 
 #[tauri::command]
 pub async fn capture_environment() -> Result<core::CaptureEnvironment, String> { worker(|| Ok(core::environment())).await }
 #[tauri::command]
+pub async fn capture_proxy(agent_id: String) -> Result<core::CaptureProxy, String> { worker(move || core::capture_proxy(&agent_id)).await }
+#[tauri::command]
 pub async fn capture_install_engine() -> Result<(), String> { worker(|| core::install_engine().map(|_| ())).await }
 #[tauri::command]
 pub async fn capture_open_certificate(app: tauri::AppHandle) -> Result<(), String> {

@@ -4,6 +4,7 @@ export interface AgentCaptureSupport { agent_id: string; available: boolean; kin
 export interface CaptureEnvironment { supported: boolean; engine: string | null; extension_enabled: boolean; certificate_present: boolean; certificate_trusted: boolean; other_extensions: string[]; targets: CaptureTarget[]; agents: AgentCaptureSupport[] }
 export interface CaptureSession { id: string; agent_id: string; agent_name: string; target_id: string; target_name: string; pids: number[]; proxy_url: string | null; started_at: string; transport?: 'local' | 'proxy' }
 export interface CaptureStatus { state: string; message: string; pids: number[]; flow_count: number }
+export interface CaptureProxy { proxy_url: string | null; source: string }
 export interface FlowSummary { id: string; method: string; url: string; status: number | null; started_at: number; duration_ms: number | null; error: string | null;
   phase?: 'pending' | 'receiving' | 'streaming' | 'complete' | 'failed' | 'cancelled' | null;
   updated_at?: number | null; request_bytes?: number | null; response_bytes?: number | null;
@@ -29,6 +30,7 @@ export function mergeCaptureDelta(current: CaptureSnapshot | null, delta: Captur
     flows: [...flows.values()].sort((left, right) => right.started_at - left.started_at || left.id.localeCompare(right.id)) };
 }
 export const captureEnvironment = () => invoke<CaptureEnvironment>('capture_environment');
+export const captureProxy = (agentId: string) => invoke<CaptureProxy>('capture_proxy', { agentId });
 export const captureOpenCertificate = () => invoke<void>('capture_open_certificate');
 export const captureInstallEngine = () => invoke<void>('capture_install_engine');
 export const captureLaunchAgent = (agentId: string, directory?: string) => invoke<CaptureTarget>('capture_launch_agent', { agentId, directory: directory ?? null });

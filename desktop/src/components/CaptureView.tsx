@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import type { AgentInfo } from '../lib/types';
-import { captureDetail, captureEnvironment, captureExport, captureInstallEngine, captureOpenCertificate, captureSessions, captureDelta, mergeCaptureDelta, captureStart, captureStop, type CaptureEnvironment, type CaptureSession, type CaptureSnapshot, type CapturedFlow, type FlowSummary } from '../lib/capture';
+import { captureDetail, captureEnvironment, captureProxy, captureExport, captureInstallEngine, captureOpenCertificate, captureSessions, captureDelta, mergeCaptureDelta, captureStart, captureStop, type CaptureEnvironment, type CaptureProxy, type CaptureSession, type CaptureSnapshot, type CapturedFlow, type FlowSummary } from '../lib/capture';
 import { copyToClipboard } from '../lib/api';
 import { formatError } from '../lib/format';
 import { ToastNotice, useToast } from './Toast';
@@ -53,6 +53,8 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   const [targetId, setTargetId] = useState('');
   const [egress, setEgress] = useState('auto');
   const [proxy, setProxy] = useState('');
+  const [automaticProxy, setAutomaticProxy] = useState<CaptureProxy | null>(null);
+  const [proxyFailure, setProxyFailure] = useState('');
   const [directory, setDirectory] = useState('');
   const [launchMode, setLaunchMode] = useState<'fresh' | 'existing'>('fresh');
   const [query, setQuery] = useState('');
@@ -83,6 +85,16 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   const processProxy = launchMode === 'fresh' && Boolean(support?.explicit_proxy);
   const targets = environment?.targets.filter(target => target.agent_ids.includes(agentId)) ?? [];
   const selectedAgent = agents.find(agent => agent.id === agentId);
+  useEffect(() => {
+    if (egress !== 'auto' || !environment?.supported || active || busy) return;
+    let disposed = false;
+    setAutomaticProxy(null); setProxyFailure('');
+    const timer = setTimeout(() => {
+      void captureProxy(agentId).then(value => { if (!disposed) setAutomaticProxy(value); })
+        .catch(error => { if (!disposed) setProxyFailure(formatError(error)); });
+    }, 200);
+    return () => { disposed = true; clearTimeout(timer); };
+  }, [agentId, egress, settingsOpen, arcaProxy, Boolean(environment?.supported), active, busy]);
   const refresh = useCallback(async () => {
     const [nextEnvironment, allSessions] = await Promise.all([captureEnvironment(), captureSessions()]);
     const agentSessions = allSessions.filter(session => session.agent_id === agentId);
@@ -190,6 +202,8 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
   };
   const needsSystemCa = Boolean(environment?.engine) && support?.ca_scope === 'system' && !environment?.certificate_trusted;
   const prerequisite = loading ? '正在检测抓包环境…' : !environment?.supported ? '当前仅支持 macOS 按进程抓包。'
+    : egress === 'auto' && proxyFailure ? proxyFailure
+    : egress === 'auto' && !automaticProxy ? '正在检测上游代理…'
     : needsSystemCa ? '此客户端需要一次证书授权。在钥匙串访问中添加 mitmproxy 证书，并将 SSL 设为“始终信任”，完成后返回。'
     : launchMode === 'fresh' && !support ? '此 Agent 尚未支持自动启动，请选择运行中的进程。'
     : launchMode === 'fresh' && !support?.available ? '请先安装 Agent 或配置它的启动方式。'
@@ -296,7 +310,7 @@ export function CaptureView({ agents, agentId, arcaProxy }: { agents: AgentInfo[
         <div className="capture-launch-modes" aria-label="记录方式"><button aria-pressed={launchMode === 'fresh'} disabled={busy || Boolean(active) || !support?.available} onClick={() => setLaunchMode('fresh')}><strong>启动并记录</strong><span>{support?.explicit_proxy ? '自动配置，无需系统网络扩展' : '打开独立客户端实例'}</span></button><button aria-pressed={launchMode === 'existing'} disabled={busy || Boolean(active)} onClick={() => setLaunchMode('existing')}><strong>记录已有实例</strong><span>使用系统网络扩展</span></button></div>
         {launchMode === 'existing' ? <><label>目标进程<select value={targetId} disabled={Boolean(active) || busy} onChange={event => setTargetId(event.target.value)}><option value="">{targets.length ? '选择进程' : '未检测到运行进程'}</option>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · {target.pids.length} 个进程</option>)}</select></label>{!environment?.certificate_trusted && support?.ca_scope !== 'system' && <p className="capture-setting-note">已有进程需自行信任抓包证书；遇到 TLS 错误时，请使用“启动新进程”。</p>}</>
           : support?.kind === 'cli' && <label>工作目录<input value={directory} disabled={busy} onChange={event => setDirectory(event.target.value)} placeholder="留空使用 Agent 的默认目录" /></label>}
-        <div className="capture-setting-columns"><label>网络出口<select value={egress} disabled={Boolean(active) || busy} onChange={event => setEgress(event.target.value)}><option value="auto">自动沿用当前网络</option><option value="direct">直连</option><option value="arca" disabled={!arcaProxy}>Arca 代理</option><option value="custom">自定义 HTTP 代理</option></select></label>{egress === 'custom' ? <label>代理地址<input disabled={Boolean(active) || busy} value={proxy} onChange={event => setProxy(event.target.value)} placeholder="http://127.0.0.1:6789" /></label> : <div className="capture-egress-summary"><span>{egress === 'auto' ? '优先使用 Arca、环境或系统的代理' : egress === 'arca' ? arcaProxy : '直连'}</span><small>代理不可用时会提示，不自动绕过</small></div>}</div>
+        <div className="capture-setting-columns"><label>网络出口<select value={egress} disabled={Boolean(active) || busy} onChange={event => setEgress(event.target.value)}><option value="auto">自动沿用当前网络</option><option value="direct">直连</option><option value="arca" disabled={!arcaProxy}>Arca 代理</option><option value="custom">自定义 HTTP 代理</option></select></label>{egress === 'custom' ? <label>上游代理地址<input disabled={Boolean(active) || busy} value={proxy} onChange={event => setProxy(event.target.value)} placeholder="http://127.0.0.1:6789" /></label> : <div className="capture-egress-summary"><span>{egress === 'auto' ? automaticProxy?.proxy_url ?? automaticProxy?.source ?? (proxyFailure || '正在检测上游代理…') : egress === 'arca' ? arcaProxy : '直连'}</span><small>{egress === 'auto' && automaticProxy?.proxy_url ? `${automaticProxy.source} · 抓包后经此代理访问网络` : '需要 6789 等代理时，请确认此处显示上游地址；代理失败不会绕过'}</small></div>}</div>
         <div className="capture-setting-health" aria-label="抓包环境"><span data-ready={Boolean(environment?.engine)}>抓包组件 {loading ? '检测中' : environment?.engine ? '已就绪' : '待安装'}</span><span data-ready={processProxy || Boolean(environment?.extension_enabled)}>网络扩展 {loading ? '检测中' : processProxy ? '无需启用' : environment?.extension_enabled ? '已启用' : '待授权'}</span><span data-ready={!needsSystemCa && Boolean(environment)}>证书 {loading ? '检测中' : processProxy ? '自动配置' : environment?.certificate_trusted ? '已授权' : support?.ca_scope === 'system' ? '待授权' : launchMode === 'fresh' ? '随启动配置' : '需客户端信任'}</span></div>
         {!processProxy && environment?.supported && environment.engine && !environment.extension_enabled && <p className="capture-setting-note">首次记录时，按 macOS 提示允许 Mitmproxy Redirector，Arca 会自动继续。</p>}
         </>}

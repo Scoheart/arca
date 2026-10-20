@@ -16,7 +16,7 @@ mod launch;
 mod routing;
 mod install;
 pub use launch::launch_agent;
-pub use routing::prepare_certificate;
+pub use routing::{prepare_certificate, capture_proxy, CaptureProxy};
 pub use install::install_engine;
 use engine::Worker;
 pub use targets::{AgentCaptureSupport, CaptureCaScope};
@@ -288,11 +288,9 @@ pub fn environment() -> CaptureEnvironment {
 
 
 fn proxy(request: &StartCapture) -> Result<Option<String>, String> {
-    let value = match request.egress.as_str() { "auto" => match routing::automatic_proxy()? { Some(value) => value, None => return Ok(None) }, "direct" => return Ok(None), "arca" | "mux" => crate::network::configured_proxy_url()?.ok_or("Arca 尚未配置代理出口。")?, "custom" => request.proxy_url.clone().ok_or("请填写代理地址。")?, _ => return Err("出口类型无效。".into()) };
-    let url = url::Url::parse(value.trim()).map_err(|_| "请输入完整 HTTP 代理地址。".to_owned())?;
-    if url.scheme() != "http" || url.host_str().is_none() || !url.username().is_empty() || url.password().is_some() || url.query().is_some() || url.fragment().is_some() || !matches!(url.path(), "" | "/") {
-        return Err("第一版支持无认证 HTTP 上游代理，例如 http://127.0.0.1:6789。不会回退直连。".into());
-    }
+    let value = match request.egress.as_str() { "auto" => match capture_proxy(&request.agent_id)?.proxy_url { Some(value) => value, None => return Ok(None) }, "direct" => return Ok(None), "arca" | "mux" => crate::network::configured_proxy_url()?.ok_or("Arca 尚未配置代理出口。")?, "custom" => request.proxy_url.clone().ok_or("请填写代理地址。")?, _ => return Err("出口类型无效。".into()) };
+    let value = routing::normalize_proxy(&value)?;
+    let url = url::Url::parse(&value).map_err(|_| "请输入完整 HTTP 代理地址。")?;
     // Validate reachability without issuing a target request or exposing a credential.
     use std::net::ToSocketAddrs;
     let host = url.host_str().unwrap().trim_matches(|c| c == '[' || c == ']');

@@ -7,6 +7,8 @@ mod observation_watcher;
 mod file_editors;
 mod agent_launch;
 mod trackpad_gestures;
+#[cfg(target_os = "macos")]
+mod window_lifecycle;
 pub mod updater_guard;
 
 use tauri::Manager;
@@ -31,7 +33,20 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         // Needed to relaunch the app after an update is installed.
         .plugin(tauri_plugin_process::init())
+        .on_window_event(|window, event| {
+            #[cfg(target_os = "macos")]
+            if window.label() == "main" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
+            let _ = (window, event);
+        })
         .setup(move |app| {
+            #[cfg(target_os = "macos")]
+            window_lifecycle::install(app)?;
             // Catch native selections changed while Arca was closed.
             if let Err(error) = arca_core::application::models::reconcile_native_selection() {
                 eprintln!("Arca native model selection reconciliation: {error}");
@@ -158,6 +173,7 @@ pub fn run() {
             traces::trace_import,
             traces::trace_export,
             capture::capture_environment,
+            capture::capture_proxy,
             capture::capture_install_engine,
             capture::capture_open_certificate,
             capture::capture_launch_agent,
@@ -191,6 +207,7 @@ pub fn run() {
             {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
+                    let _ = window.unminimize();
                     let _ = window.set_focus();
                 }
             }
