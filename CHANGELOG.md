@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.10](https://github.com/Scoheart/arca/compare/v2.5.9...v2.5.10) (2026-10-20)
+
+### Changes
+
+* feat(models): add IndicStack provider (#230) ([5bbd863](https://github.com/Scoheart/arca/commit/5bbd863c0b621f447cdd1c6f01bbc0da643d1158))
+
 ## [2.5.9](https://github.com/Scoheart/arca/compare/v2.5.8...v2.5.9) (2026-10-20)
 
 ### Changes
