@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.8](https://github.com/Scoheart/arca/compare/v2.5.7...v2.5.8) (2026-10-20)
+
+### Changes
+
+* fix(desktop): preserve capture upstream and close window state ([bc69f18](https://github.com/Scoheart/arca/commit/bc69f18f009bd9c92a1e8d8530eda49600fc35cd))
+
 ## [2.5.7](https://github.com/Scoheart/arca/compare/v2.5.6...v2.5.7) (2026-10-20)
 
 ### Changes
