@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.12](https://github.com/Scoheart/arca/compare/v2.5.11...v2.5.12) (2026-10-20)
+
+### Changes
+
+* feat(models): add 0G Private Computer gateway provider (#232) ([db2366d](https://github.com/Scoheart/arca/commit/db2366dc1b6937eaac63598faa56d4105cbbd7f8))
+
 ## [2.5.11](https://github.com/Scoheart/arca/compare/v2.5.10...v2.5.11) (2026-10-20)
 
 ### Changes
