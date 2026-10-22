@@ -1,3 +1,4 @@
+import { ImeInput } from "./ImeInput";
 import { useState } from "react";
 import type { InstallState } from "../hooks/useInstallState";
 import { useToast } from "./Toast";
@@ -70,7 +71,7 @@ export function SubscribeDialog({
         </button>
         <label className="arca-dialog-field">
           <span><LinkIcon className="w-4 h-4" />配置 URL <i>*</i></span>
-          <input
+          <ImeInput
             autoFocus
             className="arca-dialog-input arca-dialog-input-mono"
             placeholder="https://example.com/mcp.json"
@@ -81,7 +82,7 @@ export function SubscribeDialog({
         </label>
         <label className="arca-dialog-field">
           <span>名称</span>
-          <input
+          <ImeInput
             className="arca-dialog-input"
             placeholder="留空则用 URL 主机名"
             value={name}

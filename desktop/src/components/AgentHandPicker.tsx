@@ -1,3 +1,4 @@
+import { ImeInput } from "./ImeInput";
 import { ToastNotice } from "./Toast";
 import { startTransition, useEffect, useLayoutEffect, useMemo, useId, useRef, useState, type CSSProperties, type RefObject } from "react";
 import type { AgentInfo } from "../lib/types";
@@ -448,9 +449,9 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
       <div className="arca-agent-hand-toolbar">
         <label className="arca-agent-hand-search" data-active={selectedAgent ? "true" : undefined}>
           <span className="arca-agent-hand-search-content"><SearchIcon className="w-4 h-4" />
-          <input ref={searchRef} data-modal-initial-focus type="search" autoComplete="off" spellCheck={false} placeholder="搜索名称或 ID" aria-label="搜索 Agent" aria-describedby={searchHintId}
+          <ImeInput ref={searchRef} data-modal-initial-focus type="search" autoComplete="off" spellCheck={false} placeholder="搜索名称或 ID" aria-label="搜索 Agent" aria-describedby={searchHintId}
             onKeyDown={(event) => {
-              if (event.nativeEvent.isComposing || event.altKey || event.metaKey || event.ctrlKey) return;
+              if (event.altKey || event.metaKey || event.ctrlKey) return;
               if (event.key === "ArrowDown" && visible.length) {
                 event.preventDefault();
                 cardRefs.current.get(visible[0].id)?.querySelector<HTMLButtonElement>(".arca-agent-hand-select")?.focus();

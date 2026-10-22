@@ -120,6 +120,19 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("SkillInstallDialog central asset intake", () => {
+  it("waits for a real Enter after IME confirmation before importing", async () => {
+    renderInstall();
+    const input = screen.getByLabelText("仓库地址");
+    fireEvent.change(input, { target: { value: "acme/skills" } });
+    fireEvent.compositionStart(input);
+    fireEvent.keyDown(input, { key: "Enter" });
+    fireEvent.compositionEnd(input);
+    fireEvent.keyDown(input, { key: "Enter", keyCode: 229 });
+    expect(api.resolveGithubSkillSource).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: "Enter", keyCode: 13 });
+    await waitFor(() => expect(api.resolveGithubSkillSource).toHaveBeenCalledTimes(1));
+  });
+
   it("keeps the source step compact without an empty single-action footer", async () => {
     const { props } = renderInstall();
     const dialog = screen.getByRole("dialog", { name: "添加 Skills" });

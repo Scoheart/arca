@@ -1,3 +1,4 @@
+import { isImeKey } from "./ImeInput";
 import { ToastNotice } from "./Toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AgentInfo } from "../lib/types";
@@ -26,7 +27,7 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
   const selected = available.find(({ id }) => id === selectedAgentId);
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
-      if (event.isComposing || event.repeat || event.altKey || !(event.metaKey || event.ctrlKey)
+      if (isImeKey(event) || event.repeat || event.altKey || !(event.metaKey || event.ctrlKey)
         || event.key.toLowerCase() !== "k") return;
       const modal = Array.from(document.querySelectorAll(MODAL_DIALOG_SELECTOR)).at(-1);
       if (modal && (!open || modal.getAttribute("data-modal-layer") !== "agent-hand")) return;

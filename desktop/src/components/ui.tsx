@@ -1,3 +1,4 @@
+import { ImeInput, isImeKey } from "./ImeInput";
 import { CSSProperties, ReactNode, type KeyboardEvent as ReactKeyboardEvent, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { SearchIcon, XIcon } from "./icons";
@@ -192,7 +193,7 @@ export function SearchBar({
       <SearchIcon
         className="arca-search-icon"
       />
-      <input
+      <ImeInput
         type="search"
         autoComplete="off"
         autoCorrect="off"
@@ -336,7 +337,7 @@ export function pickerOptionLabels(options: ReadonlyArray<{ id: string; name: st
 
 /** Arrow keys move between candidates; Enter/Space still select explicitly. */
 export function navigatePickerOptions(event: ReactKeyboardEvent<HTMLElement>): void {
-  if (event.nativeEvent.isComposing || event.altKey || event.metaKey || event.ctrlKey) return;
+  if (isImeKey(event.nativeEvent) || event.altKey || event.metaKey || event.ctrlKey) return;
   const search = event.target instanceof HTMLInputElement;
   if (search && !["ArrowDown", "ArrowUp"].includes(event.key)) return;
   if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
@@ -405,7 +406,7 @@ export function Modal({
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (handledLayerKeyboardEvents.has(event) || topmostModal() !== dialog) return;
+      if (isImeKey(event) || handledLayerKeyboardEvents.has(event) || topmostModal() !== dialog) return;
 
       if (event.key === "Escape") {
         claimLayerKeyboardEvent(event);

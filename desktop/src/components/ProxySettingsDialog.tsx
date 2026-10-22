@@ -1,3 +1,4 @@
+import { ImeInput } from "./ImeInput";
 import { ToastNotice } from "./Toast";
 import { FormEvent, useEffect, useState } from "react";
 import type { ProxySettings } from "../lib/types";
@@ -57,7 +58,7 @@ export function ProxySettingsDialog({
     >
       <form id="arca-proxy-settings-form" className="arca-proxy-form" onSubmit={submit}>
         <label htmlFor="arca-proxy-url">代理地址</label>
-        <input
+        <ImeInput
           id="arca-proxy-url"
           data-modal-initial-focus
           type="text"

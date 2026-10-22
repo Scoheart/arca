@@ -1,3 +1,4 @@
+import { isImeKey } from "./ImeInput";
 import { RESOURCE_CATEGORIES } from "./resourcePresentation";
 import { ReactNode, useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
@@ -80,7 +81,7 @@ export function Layout({
 
   useEffect(() => {
     const find = (event: KeyboardEvent) => {
-      if (event.isComposing || event.altKey || !(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "f") return;
+      if (isImeKey(event) || event.altKey || !(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "f") return;
       const modal = Array.from(document.querySelectorAll<HTMLElement>(MODAL_DIALOG_SELECTOR)).at(-1);
       const search = (modal ?? document.querySelector("main"))?.querySelector<HTMLInputElement>('input[type="search"]:not(:disabled)');
       if (!search || search.closest("[inert]")) return;

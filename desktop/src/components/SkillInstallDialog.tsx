@@ -1,3 +1,4 @@
+import { ImeInput } from "./ImeInput";
 import { ToastNotice } from "./Toast";
 import { ResourceIcon } from "./resourcePresentation";
 import {
@@ -428,7 +429,7 @@ export function SkillInstallDialog({
                 </div>
                 <label htmlFor="arca-skill-github-source">仓库地址</label>
                 <div className="arca-skill-source-input-row">
-                  <input
+                  <ImeInput
                     id="arca-skill-github-source"
                     data-modal-initial-focus
                     type="text"
@@ -510,7 +511,7 @@ export function SkillInstallDialog({
                 <div className="arca-skill-choice-list">
                   {resolution.candidates.map((candidate) => (
                     <label key={candidate.name}>
-                      <input
+                      <ImeInput
                         type="checkbox"
                         aria-label={candidate.name}
                         checked={wizard.selectedSkillNames.includes(candidate.name)}
