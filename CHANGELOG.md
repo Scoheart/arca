@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.13](https://github.com/Scoheart/arca/compare/v2.5.12...v2.5.13) (2026-10-22)
+
+### Changes
+
+* feat(models): add KRAFTON Raon provider ([7d7da78](https://github.com/Scoheart/arca/commit/7d7da788add12bc471f1c013712a4c27f4cc5774))
+
 ## [2.5.12](https://github.com/Scoheart/arca/compare/v2.5.11...v2.5.12) (2026-10-20)
 
 ### Changes

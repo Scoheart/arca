@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "2.5.12"
+version = "2.5.13"
 description = "Arca desktop adapter for the shared MCP, Model, Skill, and Agent core"
 authors = ["Scoheart"]
 edition = "2021"
