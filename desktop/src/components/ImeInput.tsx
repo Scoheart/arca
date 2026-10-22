@@ -16,8 +16,12 @@ export function ImeInput({ onKeyDown, onCompositionStart, onCompositionEnd, onBl
     onBlur={event => { composing.current = false; onBlur?.(event); }}
     onKeyDown={event => {
       if (isImeKey(event.nativeEvent, composing.current)) {
-        // Also block implicit form submission for this candidate-confirming key.
-        if (event.key === "Enter") event.preventDefault();
+        // Leave an active IME's native candidate confirmation untouched. In
+        // WebKit's ended-composition/229 case the candidate is already committed;
+        // cancel only the trailing Enter default (including implicit form submit).
+        if (!composing.current && !event.nativeEvent.isComposing && event.key === "Enter") {
+          event.preventDefault();
+        }
         event.stopPropagation();
         return;
       }

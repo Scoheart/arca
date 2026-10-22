@@ -48,12 +48,15 @@ describe("IME keyboard ownership", () => {
     expect(bubble).toHaveBeenCalledTimes(2);
   });
 
-  it("resets on blur and prevents implicit form submission only for an IME Enter", () => {
+  it("preserves native candidate confirmation, blocks trailing WebKit submit and resets on blur", () => {
     const action = vi.fn();
     render(<form><ImeInput onKeyDown={action} /><button>Save</button></form>);
     const input = screen.getByRole("textbox");
     fireEvent.compositionStart(input);
-    expect(fireEvent.keyDown(input, { key: "Enter" })).toBe(false);
+    expect(fireEvent.keyDown(input, { key: "Enter" })).toBe(true);
+    fireEvent.compositionEnd(input);
+    expect(fireEvent.keyDown(input, { key: "Enter", keyCode: 229 })).toBe(false);
+    fireEvent.compositionStart(input);
     fireEvent.blur(input);
     expect(fireEvent.keyDown(input, { key: "Enter" })).toBe(true);
     expect(action).toHaveBeenCalledTimes(1);
