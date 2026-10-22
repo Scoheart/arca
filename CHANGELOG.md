@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.16](https://github.com/Scoheart/arca/compare/v2.5.15...v2.5.16) (2026-10-22)
+
+### Changes
+
+* feat(models): add GonkaRouter gateway provider (#234) ([c399779](https://github.com/Scoheart/arca/commit/c399779e10c4fd403d01c09d359ef8c363c69f82))
+
 ## [2.5.15](https://github.com/Scoheart/arca/compare/v2.5.14...v2.5.15) (2026-10-22)
 
 ### Changes
