@@ -37,7 +37,8 @@ workspace, or right-click
 a pinned Agent icon. Desktop applications open through the system launcher; CLI
 Agents open in Terminal and ask for a working directory on first use. Arca remembers
 that directory per Agent. The run dropdown lets CLI Agents use another directory;
-**安装文档** is a separate toolbar button. Configure the application, executable
+**安装文档** is a separate toolbar button that opens the official installation
+steps for that Agent’s CLI or extension, or its desktop download page. Configure the application, executable
 with arguments through **编辑配置**. Extension entries name the host editor they open. Missing
 built-in runtimes offer their official installation page. On the first CLI launch,
 macOS may ask for permission to let Arca control Terminal.
