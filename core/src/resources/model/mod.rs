@@ -600,6 +600,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: OpenaiResponses,
             base_url: "https://api.maximoai.co/v1",
         }],
+        "krafton-raon" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://raon-api.krafton.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://raon-api.krafton.ai",
+            },
+        ],
         "ant-ling" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.ant-ling.com/anthropic",
@@ -976,6 +986,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "maximo-ai",
         name: "Maximo AI",
         default_base_url: Some("https://api.maximoai.co/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "krafton-raon",
+        name: "KRAFTON Raon",
+        default_base_url: Some("https://raon-api.krafton.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
@@ -1914,6 +1931,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.agnes-ai.cn" => "agnes-ai-cn",
         "api.meta.ai" => "meta",
         "api.maximoai.co" => "maximo-ai",
+        "raon-api.krafton.ai" => "krafton-raon",
         "cleanapis.com" => "clean-apis",
         "lighthouse.dphn.ai" => "dolphin",
         "api.iteracompute.com" => "iteracompute",
@@ -7261,6 +7279,16 @@ mod tests {
             ("https://maximoai.co/v1", "custom"),
             ("https://www.maximoai.co/v1", "custom"),
             ("https://api.maximoai.co.evil.test/v1", "custom"),
+            ("https://raon-api.krafton.ai/v1", "krafton-raon"),
+            ("https://raon-api.krafton.ai", "krafton-raon"),
+            ("https://raon-api.krafton.ai/v1/chat/completions", "krafton-raon"),
+            ("https://raon-api.krafton.ai/v1/responses", "krafton-raon"),
+            ("https://raon-api.krafton.ai/v1/messages", "krafton-raon"),
+            ("https://raon-api.krafton.ai/v1/models", "krafton-raon"),
+            ("https://krafton.ai/v1", "custom"),
+            ("https://raon-console.krafton.ai/v1", "custom"),
+            ("https://raon-mini.krafton.ai/v1", "custom"),
+            ("https://raon-api.krafton.ai.evil.test/v1", "custom"),
             ("https://api.sarashina.ai/v1", "sarashina"),
             ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
             ("https://api.sarashina.ai.evil.test/v1", "custom"),
@@ -7459,7 +7487,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 138);
+        assert_eq!(list_providers().len(), 139);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

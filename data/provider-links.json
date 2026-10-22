@@ -223,6 +223,13 @@
       "kind": "api-key"
     }
   },
+  "krafton-raon": {
+    "docs_url": "https://raon-mini.krafton.ai/en/docs",
+    "portal": {
+      "url": "https://raon-console.krafton.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
   "ollama-cloud": {
     "docs_url": "https://docs.ollama.com/cloud",
     "portal": {

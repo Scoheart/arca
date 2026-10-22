@@ -186,6 +186,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "coralbricks"
         | "meta"
         | "maximo-ai"
+        | "krafton-raon"
         | "clean-apis"
         | "dolphin"
         | "iteracompute"
@@ -847,6 +848,7 @@ mod tests {
         "coralbricks",
         "meta",
         "maximo-ai",
+        "krafton-raon",
         "clean-apis",
         "dolphin",
         "iteracompute",
