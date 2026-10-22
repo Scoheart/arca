@@ -468,6 +468,13 @@
       "kind": "api-key"
     }
   },
+  "gonkarouter": {
+    "docs_url": "https://gonkarouter.io/docs",
+    "portal": {
+      "url": "https://gonkarouter.io/dashboard",
+      "kind": "console"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {

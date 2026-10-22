@@ -205,6 +205,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "sensenova"
         | "akashml"
         | "0g-private-computer"
+        | "gonkarouter"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -867,6 +868,7 @@ mod tests {
         "sensenova",
         "akashml",
         "0g-private-computer",
+        "gonkarouter",
         "mistral",
         "deepseek",
         "groq",
