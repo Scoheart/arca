@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.15](https://github.com/Scoheart/arca/compare/v2.5.14...v2.5.15) (2026-10-22)
+
+### Changes
+
+* fix(desktop): preserve native IME candidate confirmation ([df1e17d](https://github.com/Scoheart/arca/commit/df1e17dbbce07f2675326cfeb93ca7300f1fc58a))
+
 ## [2.5.14](https://github.com/Scoheart/arca/compare/v2.5.13...v2.5.14) (2026-10-22)
 
 ### Changes
