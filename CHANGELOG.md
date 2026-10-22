@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.14](https://github.com/Scoheart/arca/compare/v2.5.13...v2.5.14) (2026-10-22)
+
+### Changes
+
+* fix(desktop): keep IME confirmation keys out of submit actions ([504e541](https://github.com/Scoheart/arca/commit/504e541e3b29ce02dfbd4ee98f690e669d3a7e82))
+* fix(agents): open precise official installation instructions ([7821fed](https://github.com/Scoheart/arca/commit/7821fed96fcc164f40478d2555291cd8e138e90a))
+
 ## [2.5.13](https://github.com/Scoheart/arca/compare/v2.5.12...v2.5.13) (2026-10-22)
 
 ### Changes
