@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.17](https://github.com/Scoheart/arca/compare/v2.5.16...v2.5.17) (2026-10-23)
+
+### Changes
+
+* feat(models): add RunInfra provider (#236) ([0cfe43f](https://github.com/Scoheart/arca/commit/0cfe43f5cf34e75981f5af78a3672539a0b64e98))
+
 ## [2.5.16](https://github.com/Scoheart/arca/compare/v2.5.15...v2.5.16) (2026-10-22)
 
 ### Changes
