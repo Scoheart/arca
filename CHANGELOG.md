@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.18](https://github.com/Scoheart/arca/compare/v2.5.17...v2.5.18) (2026-10-23)
+
+### Changes
+
+* feat(models): add NoMask provider (#237) ([382217b](https://github.com/Scoheart/arca/commit/382217b4a7846bf54b2044778c0c94ab203859b5))
+
 ## [2.5.17](https://github.com/Scoheart/arca/compare/v2.5.16...v2.5.17) (2026-10-23)
 
 ### Changes
