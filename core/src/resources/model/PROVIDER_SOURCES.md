@@ -1,5 +1,11 @@
 # Provider Catalog sources
 
+## RunInfra — 2026-10-23
+
+`runinfra` / `RunInfra` is a gateway Provider for [RunInfra](https://runinfra.ai), an OpenAI-compatible inference API. The provider base URL is `https://api.runinfra.ai/v1` for `POST /v1/chat/completions`, sent with `Authorization: Bearer` API keys created at [`/settings/api-keys`](https://runinfra.ai/settings/api-keys). Arca therefore uses Chat Completions as the default protocol on that Base URL. No Responses, Anthropic Messages, or Gemini format is documented, so no additional endpoints are stored.
+
+Model discovery uses the OpenAI catalog decoder with a required credential: `GET /v1/models` is expected to return an OpenAI-shaped `{data: [...]}` list on the same Base URL. No models are hard-coded. Only `api.runinfra.ai` is mapped for host inference; `runinfra.ai` and `www.runinfra.ai` resolve to `custom`.
+
 ## GonkaRouter — 2026-10-22
 
 `gonkarouter` / `GonkaRouter` is a gateway Provider for [GonkaRouter](https://gonkarouter.io), an AI model router on the Gonka network. The [Developer Documentation](https://gonkarouter.io/docs) gives the Base URL `https://api.gonkarouter.io` and accepts either `x-api-key` or `Authorization: Bearer` with keys created in the [Dashboard](https://gonkarouter.io/dashboard) (sign in with email or Google). It documents `POST /v1/messages` with the full Anthropic Messages surface (streaming and tool use), pointing Anthropic SDKs and Claude Code at the bare host, and `POST /v1/chat/completions` one-to-one with OpenAI, with OpenAI clients using `https://api.gonkarouter.io/v1`. Arca therefore uses `https://api.gonkarouter.io/v1` with Chat Completions as the default and stores Anthropic Messages at `https://api.gonkarouter.io`. Probes without a key: `POST /v1/chat/completions`, `POST /v1/messages`, and `GET /v1/models` return HTTP 401 `missing Authorization or x-api-key header` (a bogus Bearer key gets `invalid API key`), while `/v1/responses` and unknown paths such as `/v1/nonexistent` return 404, so no Responses endpoint is encoded and no Gemini format is documented.
