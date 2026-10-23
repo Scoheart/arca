@@ -1253,6 +1253,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "nomask",
+        name: "NoMask",
+        default_base_url: Some("https://nomask.ai/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -1973,6 +1980,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "router-api.0g.ai" => "0g-private-computer",
         "api.gonkarouter.io" => "gonkarouter",
         "api.runinfra.ai" => "runinfra",
+        "nomask.ai" => "nomask",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7440,6 +7448,12 @@ mod tests {
             ("https://runinfra.ai/v1", "custom"),
             ("https://www.runinfra.ai/v1", "custom"),
             ("https://api.runinfra.ai.evil.test/v1", "custom"),
+            ("https://nomask.ai/api/v1", "nomask"),
+            ("https://nomask.ai/api/v1/chat/completions", "nomask"),
+            ("https://nomask.ai/api/v1/models", "nomask"),
+            ("https://nomask.ai/v1", "custom"),
+            ("https://www.nomask.ai/v1", "custom"),
+            ("https://nomask.ai.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7522,7 +7536,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 141);
+        assert_eq!(list_providers().len(), 142);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()

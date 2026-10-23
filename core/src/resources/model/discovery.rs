@@ -207,6 +207,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "0g-private-computer"
         | "gonkarouter"
         | "runinfra"
+        | "nomask"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -871,6 +872,7 @@ mod tests {
         "0g-private-computer",
         "gonkarouter",
         "runinfra",
+        "nomask",
         "mistral",
         "deepseek",
         "groq",

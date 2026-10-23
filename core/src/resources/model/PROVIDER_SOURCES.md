@@ -1,5 +1,11 @@
 # Provider Catalog sources
 
+## NoMask — 2026-10-23
+
+`nomask` / `NoMask` is a gateway Provider for [NoMask](https://nomask.ai), an OpenAI-compatible inference API. The [Quickstart](https://nomask.ai/api/doc/quickstart) gives the Base URL `https://nomask.ai/api/v1` and sends `Authorization: Bearer` API keys prefixed `nmk_live_`, created after signing up at [`/register`](https://nomask.ai/register). The [Models](https://nomask.ai/api/doc/models) page documents `POST /v1/chat/completions`, so Arca uses Chat Completions as the default protocol on `https://nomask.ai/api/v1`. No Responses, Anthropic Messages, or Gemini format is documented, so no additional endpoints are stored.
+
+Model discovery uses the OpenAI catalog decoder with a required credential: `GET /v1/models` is expected to return an OpenAI-shaped `{data: [...]}` list on the same Base URL. No models are hard-coded. Only `nomask.ai` is mapped for host inference; `www.nomask.ai` resolves to `custom`.
+
 ## RunInfra — 2026-10-23
 
 `runinfra` / `RunInfra` is a gateway Provider for [RunInfra](https://runinfra.ai), an OpenAI-compatible inference API. The provider base URL is `https://api.runinfra.ai/v1` for `POST /v1/chat/completions`, sent with `Authorization: Bearer` API keys created at [`/settings/api-keys`](https://runinfra.ai/settings/api-keys). Arca therefore uses Chat Completions as the default protocol on that Base URL. No Responses, Anthropic Messages, or Gemini format is documented, so no additional endpoints are stored.
