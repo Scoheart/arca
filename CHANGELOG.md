@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.28](https://github.com/Scoheart/arca/compare/v2.5.27...v2.5.28) (2026-10-24)
+
+### Changes
+
+* feat(models): add LarpRouter gateway provider (#246) ([c34c39d](https://github.com/Scoheart/arca/commit/c34c39d18f69f278ef615b710ce1b720a19aad92))
+
 ## [2.5.27](https://github.com/Scoheart/arca/compare/v2.5.26...v2.5.27) (2026-10-24)
 
 ### Changes

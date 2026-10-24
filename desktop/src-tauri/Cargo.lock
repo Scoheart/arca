@@ -58,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "arca-core"
-version = "2.5.27"
+version = "2.5.28"
 dependencies = [
  "chrono",
  "core-foundation 0.10.1",
@@ -802,7 +802,7 @@ dependencies = [
 
 [[package]]
 name = "desktop"
-version = "2.5.27"
+version = "2.5.28"
 dependencies = [
  "arca-core",
  "block2",
