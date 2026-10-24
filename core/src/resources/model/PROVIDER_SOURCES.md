@@ -1,5 +1,13 @@
 # Provider Catalog sources
 
+## AnyRouter — 2026-10-24
+
+`anyrouter` / `AnyRouter` is a gateway Provider for [AnyRouter](https://anyrouter.dev), an OpenAI-compatible model router. The [Quickstart](https://docs.anyrouter.dev/getting-started/quickstart) gives the Base URL `https://anyrouter.dev/api/v1` for `POST /api/v1/chat/completions`, with `provider/model` ids such as `minimax/minimax-m3.1-flash` (optionally suffixed `:free`, per the [MiniMax M3.1 Flash post](https://anyrouter.dev/blog/minimax-m3-1-flash-free)). [Authentication](https://docs.anyrouter.dev/getting-started/authentication) sends `Authorization: Bearer` keys prefixed `sk-ar-`, created on the [API Keys dashboard](https://anyrouter.dev/dashboard/keys). Arca uses Chat Completions as the default protocol.
+
+The [Responses guide](https://docs.anyrouter.dev/guides/migrate-to-responses) documents `POST /api/v1/responses` on the same Base URL, and the [Anthropic guide](https://docs.anyrouter.dev/guides/migrate-from-anthropic) documents `POST /api/v1/messages` with SDK base URL `https://anyrouter.dev/api` (Anthropic SDKs append `/v1/messages`). Both are stored as additional endpoints.
+
+Model discovery uses the OpenAI catalog decoder with an optional credential: `GET /api/v1/models` returns an OpenAI-shaped `{data: [...]}` list without a key. No models are hard-coded. Only `anyrouter.dev` is mapped for host inference; `www.anyrouter.dev` resolves to `custom`.
+
 ## NoMask — 2026-10-23
 
 `nomask` / `NoMask` is a gateway Provider for [NoMask](https://nomask.ai), an OpenAI-compatible inference API. The [Quickstart](https://nomask.ai/api/doc/quickstart) gives the Base URL `https://nomask.ai/api/v1` and sends `Authorization: Bearer` API keys prefixed `nmk_live_`, created after signing up at [`/register`](https://nomask.ai/register). The [Models](https://nomask.ai/api/doc/models) page documents `POST /v1/chat/completions`, so Arca uses Chat Completions as the default protocol on `https://nomask.ai/api/v1`. No Responses, Anthropic Messages, or Gemini format is documented, so no additional endpoints are stored.
