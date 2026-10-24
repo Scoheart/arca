@@ -538,6 +538,13 @@
       "kind": "api-key"
     }
   },
+  "stark-relay": {
+    "docs_url": "https://app.notion.com/p/05-Start-using-your-API-key-3941472684838133afbfdbb70a0d82f4",
+    "portal": {
+      "url": "https://starkrelay.bond/api-keys",
+      "kind": "api-key"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
