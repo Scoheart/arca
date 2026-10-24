@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.23](https://github.com/Scoheart/arca/compare/v2.5.22...v2.5.23) (2026-10-24)
+
+### Changes
+
+* feat(models): add official Yeta provider icon ([c83092b](https://github.com/Scoheart/arca/commit/c83092bd42a6aaf06ba4a09dfbe7a2aeaee53748))
+
 ## [2.5.22](https://github.com/Scoheart/arca/compare/v2.5.21...v2.5.22) (2026-10-24)
 
 ### Changes
