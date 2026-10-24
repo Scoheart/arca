@@ -1,5 +1,11 @@
 # Provider Catalog sources
 
+## Yeta — 2026-10-24
+
+`yeta` / `Yeta` is a gateway Provider for [Yeta Platform](https://platform.yeta.ai), an OpenAI-compatible API for leading AI models. The platform's signed-in **Docs** page (`/docs`) gives the Base URL `https://platform.yeta.ai/v1` and documents `POST /v1/chat/completions` with `Authorization: Bearer` API keys, created on the **API keys** page at `/keys`. The example uses model `apex-flash-1`. Arca therefore uses Chat Completions as the default protocol on `https://platform.yeta.ai/v1`. The docs also document an asynchronous video-generation endpoint (`POST /v1/videos`), which is out of scope for Arca chat models; no Responses, Anthropic Messages, or Gemini format is documented, so no additional endpoints are stored.
+
+Model discovery uses the OpenAI catalog decoder with a required credential: `GET /v1/models` returns an OpenAI-shaped `{data: [...]}` list on the same Base URL, but an unauthenticated request returns HTTP 401 `Invalid token`, so the catalog needs a key. No models are hard-coded. Only `platform.yeta.ai` is mapped for host inference; `yeta.ai` and `www.yeta.ai` resolve to `custom`. The landing page mentions a trial promotion (top up \$1 and get \$10 of credit), but the catalog does not encode offers.
+
 ## AnyRouter — 2026-10-24
 
 `anyrouter` / `AnyRouter` is a gateway Provider for [AnyRouter](https://anyrouter.dev), an OpenAI-compatible model router. The [Quickstart](https://docs.anyrouter.dev/getting-started/quickstart) gives the Base URL `https://anyrouter.dev/api/v1` for `POST /api/v1/chat/completions`, with `provider/model` ids such as `minimax/minimax-m3.1-flash` (optionally suffixed `:free`, per the [MiniMax M3.1 Flash post](https://anyrouter.dev/blog/minimax-m3-1-flash-free)). [Authentication](https://docs.anyrouter.dev/getting-started/authentication) sends `Authorization: Bearer` keys prefixed `sk-ar-`, created on the [API Keys dashboard](https://anyrouter.dev/dashboard/keys). Arca uses Chat Completions as the default protocol.

@@ -209,6 +209,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "runinfra"
         | "nomask"
         | "anyrouter"
+        | "yeta"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -876,6 +877,7 @@ mod tests {
         "runinfra",
         "nomask",
         "anyrouter",
+        "yeta",
         "mistral",
         "deepseek",
         "groq",
@@ -1063,7 +1065,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
