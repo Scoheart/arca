@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.25](https://github.com/Scoheart/arca/compare/v2.5.24...v2.5.25) (2026-10-24)
+
+### Changes
+
+* feat(models): add Oxion AI OpenAI-compatible provider (#243) ([8d551de](https://github.com/Scoheart/arca/commit/8d551de06103ecdfa3186e6d210c281091145cd9))
+
 ## [2.5.24](https://github.com/Scoheart/arca/compare/v2.5.23...v2.5.24) (2026-10-24)
 
 ### Changes
