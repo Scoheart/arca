@@ -105,6 +105,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "inception",
   "indicstack",
   "inference-net",
+  "inferx",
   "infini-ai",
   "infron",
   "io-net",
