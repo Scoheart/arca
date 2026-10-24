@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.26](https://github.com/Scoheart/arca/compare/v2.5.25...v2.5.26) (2026-10-24)
+
+### Changes
+
+* feat(models): add InferX OpenAI-compatible provider (#244) ([7dae1b0](https://github.com/Scoheart/arca/commit/7dae1b08298aad5e9201e0f7c4b25899ef396b48))
+
 ## [2.5.25](https://github.com/Scoheart/arca/compare/v2.5.24...v2.5.25) (2026-10-24)
 
 ### Changes
