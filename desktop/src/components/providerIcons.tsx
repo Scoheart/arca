@@ -132,6 +132,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "openrouter",
   "orcarouter",
   "ovhcloud",
+  "oxion-ai",
   "perplexity",
   "poe",
   "portkey",

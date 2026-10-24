@@ -211,6 +211,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "anyrouter"
         | "yeta"
         | "scnet"
+        | "oxion-ai"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -827,6 +828,23 @@ mod tests {
     }
 
     #[test]
+    fn oxion_ai_discovers_openai_models_on_the_documented_catalog_path() {
+        let config = provider(
+            "oxion-ai",
+            "https://oxionai.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://oxionai.com/v1/models"
+        );
+    }
+
+    #[test]
     fn scnet_discovers_openai_models_on_the_documented_catalog_path() {
         let config = provider(
             "scnet",
@@ -897,6 +915,7 @@ mod tests {
         "anyrouter",
         "yeta",
         "scnet",
+        "oxion-ai",
         "mistral",
         "deepseek",
         "groq",
@@ -1084,7 +1103,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),

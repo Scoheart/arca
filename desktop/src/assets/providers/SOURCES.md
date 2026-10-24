@@ -146,6 +146,10 @@ Provider slot, not a third-party brand.
 
 - `yeta.svg`: official brand mark served by <https://platform.yeta.ai/yeta-mark.svg> (favicon of the Yeta platform, referenced from its homepage).
 
+## Oxion AI — 2026-10-24
+
+- `oxion-ai.png`: official square brand mark served as the site icon from <https://oxionai.com/storage/branding/mtLpl0lm90mTEG70Ova2vt8UMOPr75Gm8X5ak42k.png> (the `rel="icon"` and `apple-touch-icon` linked by <https://oxionai.com/>). The file is a 960×960 PNG.
+
 ## SCNet — 2026-10-24
 
 - `scnet.png`: official 48×48 site icon served as PNG bytes from <https://www.scnet.cn/acx/resource/sites/isclogo?logoType=ico> (the favicon linked by <https://www.scnet.cn/ui/mall/> and <https://www.scnet.cn/ui/console>). The extension matches the PNG bytes. The wide wordmark at `logoType=logo` is not used for the square glyph.
