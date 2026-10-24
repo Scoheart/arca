@@ -75,6 +75,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "baseten",
   "beatapi",
   "bilibili-index-translate",
+  "blazerail",
   "byteplus",
   "cerebras",
   "chutes",

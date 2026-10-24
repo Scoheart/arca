@@ -212,6 +212,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "yeta"
         | "scnet"
         | "oxion-ai"
+        | "blazerail"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -302,6 +303,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "0g-private-computer"
             | "bilibili-index-translate"
             | "anyrouter"
+            | "blazerail"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -846,6 +848,23 @@ mod tests {
     }
 
     #[test]
+    fn blazerail_discovers_the_public_openai_catalog() {
+        let config = provider(
+            "blazerail",
+            "https://api.blazerail.com/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.blazerail.com/v1/models"
+        );
+    }
+
+    #[test]
     fn oxion_ai_discovers_openai_models_on_the_documented_catalog_path() {
         let config = provider(
             "oxion-ai",
@@ -934,6 +953,7 @@ mod tests {
         "yeta",
         "scnet",
         "oxion-ai",
+        "blazerail",
         "mistral",
         "deepseek",
         "groq",
@@ -1114,6 +1134,7 @@ mod tests {
             "0g-private-computer",
             "bilibili-index-translate",
             "anyrouter",
+            "blazerail",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
