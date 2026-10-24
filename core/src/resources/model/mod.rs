@@ -7469,7 +7469,7 @@ mod tests {
             ("https://nomask.ai/api/v1", "nomask"),
             ("https://nomask.ai/api/v1/chat/completions", "nomask"),
             ("https://nomask.ai/api/v1/models", "nomask"),
-            ("https://nomask.ai/v1", "custom"),
+            ("https://nomask.ai/v1", "nomask"),
             ("https://www.nomask.ai/v1", "custom"),
             ("https://nomask.ai.evil.test/v1", "custom"),
             ("https://anyrouter.dev/api/v1", "anyrouter"),
