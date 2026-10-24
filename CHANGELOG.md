@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.22](https://github.com/Scoheart/arca/compare/v2.5.21...v2.5.22) (2026-10-24)
+
+### Changes
+
+* feat(models): add Yeta OpenAI-compatible provider (#240) ([98c80c0](https://github.com/Scoheart/arca/commit/98c80c0a0cdfa8ffed2fac286403ae45acc7bd2e))
+
 ## [2.5.21](https://github.com/Scoheart/arca/compare/v2.5.20...v2.5.21) (2026-10-24)
 
 ### Changes
