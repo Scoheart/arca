@@ -776,6 +776,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://api.scnet.cn/api/llm/anthropic",
         }],
+        "oxion-ai" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://oxionai.com",
+        }],
         _ => &[],
     }
 }
@@ -1291,6 +1295,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "scnet",
         name: "SCNet (超算互联网)",
         default_base_url: Some("https://api.scnet.cn/api/llm/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "oxion-ai",
+        name: "Oxion AI",
+        default_base_url: Some("https://oxionai.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2019,6 +2030,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "anyrouter.dev" => "anyrouter",
         "platform.yeta.ai" => "yeta",
         "api.scnet.cn" => "scnet",
+        "oxionai.com" => "oxion-ai",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7516,6 +7528,13 @@ mod tests {
             ("https://www.scnet.cn/ui/console", "custom"),
             ("https://scnet.cn/api/llm/v1", "custom"),
             ("https://api.scnet.cn.evil.test/api/llm/v1", "custom"),
+            ("https://oxionai.com/v1", "oxion-ai"),
+            ("https://oxionai.com/v1/chat/completions", "oxion-ai"),
+            ("https://oxionai.com/v1/models", "oxion-ai"),
+            ("https://oxionai.com", "oxion-ai"),
+            ("https://oxionai.com/v1/messages", "oxion-ai"),
+            ("https://www.oxionai.com/v1", "custom"),
+            ("https://oxionai.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7598,7 +7617,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 145);
+        assert_eq!(list_providers().len(), 146);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -7697,6 +7716,27 @@ mod tests {
         assert_eq!(
             serialized["additional_endpoints"][0]["base_url"],
             "https://api.scnet.cn/api/llm/anthropic"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        let oxion = list_providers()
+            .iter()
+            .find(|provider| provider.id == "oxion-ai")
+            .unwrap();
+        let serialized = serde_json::to_value(oxion).unwrap();
+        assert_eq!(oxion.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(oxion.default_base_url, Some("https://oxionai.com/v1"));
+        assert_eq!(serialized["base_url"], "https://oxionai.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://oxionai.com"
         );
         assert!(serialized["protocols"].get("openai-responses").is_none());
 
