@@ -208,6 +208,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "gonkarouter"
         | "runinfra"
         | "nomask"
+        | "anyrouter"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -297,6 +298,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "constellation-gate"
             | "0g-private-computer"
             | "bilibili-index-translate"
+            | "anyrouter"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -873,6 +875,7 @@ mod tests {
         "gonkarouter",
         "runinfra",
         "nomask",
+        "anyrouter",
         "mistral",
         "deepseek",
         "groq",
@@ -1052,6 +1055,7 @@ mod tests {
             "constellation-gate",
             "0g-private-computer",
             "bilibili-index-translate",
+            "anyrouter",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
