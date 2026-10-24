@@ -784,6 +784,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://larprouter.com",
         }],
+        "stark-relay" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://starkrelay.bond/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://starkrelay.bond",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1327,6 +1337,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "larprouter",
         name: "LarpRouter",
         default_base_url: Some("https://larprouter.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "stark-relay",
+        name: "Stark Relay",
+        default_base_url: Some("https://starkrelay.bond/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2059,6 +2076,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "model.inferx.net" => "inferx",
         "api.blazerail.com" => "blazerail",
         "larprouter.com" => "larprouter",
+        "starkrelay.bond" => "stark-relay",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7591,6 +7609,14 @@ mod tests {
             ("https://larprouter.com/v1/messages", "larprouter"),
             ("https://www.larprouter.com/v1", "custom"),
             ("https://larprouter.com.evil.test/v1", "custom"),
+            ("https://starkrelay.bond/v1", "stark-relay"),
+            ("https://starkrelay.bond/v1/chat/completions", "stark-relay"),
+            ("https://starkrelay.bond/v1/responses", "stark-relay"),
+            ("https://starkrelay.bond/v1/models", "stark-relay"),
+            ("https://starkrelay.bond", "stark-relay"),
+            ("https://starkrelay.bond/v1/messages", "stark-relay"),
+            ("https://www.starkrelay.bond/v1", "custom"),
+            ("https://starkrelay.bond.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7673,7 +7699,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 149);
+        assert_eq!(list_providers().len(), 150);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -7859,6 +7885,44 @@ mod tests {
             "https://larprouter.com"
         );
         assert!(serialized["protocols"].get("openai-responses").is_none());
+        let stark_relay = list_providers()
+            .iter()
+            .find(|provider| provider.id == "stark-relay")
+            .unwrap();
+        let serialized = serde_json::to_value(stark_relay).unwrap();
+        assert_eq!(stark_relay.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(stark_relay.category, "gateway");
+        assert_eq!(stark_relay.default_base_url, Some("https://starkrelay.bond/v1"));
+        assert_eq!(serialized["base_url"], "https://starkrelay.bond");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://starkrelay.bond/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-responses"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://starkrelay.bond"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(

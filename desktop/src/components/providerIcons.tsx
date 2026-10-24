@@ -153,6 +153,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "scnet",
   "sensenova",
   "siliconflow",
+  "stark-relay",
   "stepfun",
   "synthetic",
   "tencent",
