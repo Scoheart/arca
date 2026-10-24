@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.19](https://github.com/Scoheart/arca/compare/v2.5.18...v2.5.19) (2026-10-24)
+
+### Changes
+
+* feat(models): add AnyRouter provider (#238) ([6b6d236](https://github.com/Scoheart/arca/commit/6b6d236055de0327a95c3527bda12429324efb97))
+
 ## [2.5.18](https://github.com/Scoheart/arca/compare/v2.5.17...v2.5.18) (2026-10-23)
 
 ### Changes
