@@ -142,6 +142,10 @@ ICO assets keep the `.ico` extension reflecting actual bytes; artwork unchanged.
 `custom` intentionally keeps the letter fallback: it is the user-defined
 Provider slot, not a third-party brand.
 
+## LarpRouter — 2026-10-24
+
+- `larprouter.png`: official 800×800 site icon served from <https://larprouter.com/logo.png> (the `rel="icon"` linked by <https://larprouter.com/>, <https://larprouter.com/docs>, and <https://larprouter.com/models>).
+
 ## Yeta — 2026-10-24
 
 - `yeta.svg`: official brand mark served by <https://platform.yeta.ai/yeta-mark.svg> (favicon of the Yeta platform, referenced from its homepage).

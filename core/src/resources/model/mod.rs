@@ -780,6 +780,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://oxionai.com",
         }],
+        "larprouter" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://larprouter.com",
+        }],
         _ => &[],
     }
 }
@@ -1316,6 +1320,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "blazerail",
         name: "BlazeRail",
         default_base_url: Some("https://api.blazerail.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "larprouter",
+        name: "LarpRouter",
+        default_base_url: Some("https://larprouter.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2047,6 +2058,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "oxionai.com" => "oxion-ai",
         "model.inferx.net" => "inferx",
         "api.blazerail.com" => "blazerail",
+        "larprouter.com" => "larprouter",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7572,6 +7584,13 @@ mod tests {
             ("https://www.blazerail.com/v1", "custom"),
             ("https://blazerail.com/v1", "custom"),
             ("https://api.blazerail.com.evil.test/v1", "custom"),
+            ("https://larprouter.com/v1", "larprouter"),
+            ("https://larprouter.com/v1/chat/completions", "larprouter"),
+            ("https://larprouter.com/v1/models", "larprouter"),
+            ("https://larprouter.com", "larprouter"),
+            ("https://larprouter.com/v1/messages", "larprouter"),
+            ("https://www.larprouter.com/v1", "custom"),
+            ("https://larprouter.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7654,7 +7673,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 148);
+        assert_eq!(list_providers().len(), 149);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -7818,6 +7837,28 @@ mod tests {
             "https://www.blazerail.com/dashboard/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
+        let larprouter = list_providers()
+            .iter()
+            .find(|provider| provider.id == "larprouter")
+            .unwrap();
+        let serialized = serde_json::to_value(larprouter).unwrap();
+        assert_eq!(larprouter.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(larprouter.category, "gateway");
+        assert_eq!(larprouter.default_base_url, Some("https://larprouter.com/v1"));
+        assert_eq!(serialized["base_url"], "https://larprouter.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://larprouter.com"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(
