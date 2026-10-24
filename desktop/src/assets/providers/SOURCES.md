@@ -141,3 +141,7 @@ ICO assets keep the `.ico` extension reflecting actual bytes; artwork unchanged.
 
 `custom` intentionally keeps the letter fallback: it is the user-defined
 Provider slot, not a third-party brand.
+
+## Yeta — 2026-10-24
+
+- `yeta.svg`: official brand mark served by <https://platform.yeta.ai/yeta-mark.svg> (favicon of the Yeta platform, referenced from its homepage).

@@ -165,6 +165,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "wandb",
   "xai",
   "xiaomi",
+  "yeta",
   "zai",
   "zenmux",
 ] as const;
