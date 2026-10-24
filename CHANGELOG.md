@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.21](https://github.com/Scoheart/arca/compare/v2.5.20...v2.5.21) (2026-10-24)
+
+### Changes
+
+* feat(models): add official icons for all uncovered Providers ([b5203ba](https://github.com/Scoheart/arca/commit/b5203ba9d59b0f4f6cf4eaa838ed96362d8711a3))
+
 ## [2.5.20](https://github.com/Scoheart/arca/compare/v2.5.19...v2.5.20) (2026-10-24)
 
 ### Changes
