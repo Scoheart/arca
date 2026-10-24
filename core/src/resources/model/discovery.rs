@@ -210,6 +210,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "nomask"
         | "anyrouter"
         | "yeta"
+        | "scnet"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -826,6 +827,23 @@ mod tests {
     }
 
     #[test]
+    fn scnet_discovers_openai_models_on_the_documented_catalog_path() {
+        let config = provider(
+            "scnet",
+            "https://api.scnet.cn",
+            ModelProtocol::OpenaiCompletions,
+            "/api/llm/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.scnet.cn/api/llm/v1/models"
+        );
+    }
+
+    #[test]
     fn manual_catalogs_require_an_explicit_override_before_discovery() {
         for id in ["azure-openai", "perplexity", "baidu-qianfan-coding-plan"] {
             let mut config = provider(id, "https://tenant.example.test/openai/v1",
@@ -878,6 +896,7 @@ mod tests {
         "nomask",
         "anyrouter",
         "yeta",
+        "scnet",
         "mistral",
         "deepseek",
         "groq",
@@ -1065,7 +1084,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),

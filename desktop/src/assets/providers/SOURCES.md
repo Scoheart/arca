@@ -145,3 +145,7 @@ Provider slot, not a third-party brand.
 ## Yeta — 2026-10-24
 
 - `yeta.svg`: official brand mark served by <https://platform.yeta.ai/yeta-mark.svg> (favicon of the Yeta platform, referenced from its homepage).
+
+## SCNet — 2026-10-24
+
+- `scnet.png`: official 48×48 site icon served as PNG bytes from <https://www.scnet.cn/acx/resource/sites/isclogo?logoType=ico> (the favicon linked by <https://www.scnet.cn/ui/mall/> and <https://www.scnet.cn/ui/console>). The extension matches the PNG bytes. The wide wordmark at `logoType=logo` is not used for the square glyph.

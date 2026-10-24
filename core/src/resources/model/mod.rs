@@ -772,6 +772,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://tokenhub-intl.tencentcloudmaas.com/plan/anthropic",
         }],
+        "scnet" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.scnet.cn/api/llm/anthropic",
+        }],
         _ => &[],
     }
 }
@@ -1280,6 +1284,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "yeta",
         name: "Yeta",
         default_base_url: Some("https://platform.yeta.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "scnet",
+        name: "SCNet (超算互联网)",
+        default_base_url: Some("https://api.scnet.cn/api/llm/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2007,6 +2018,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "nomask.ai" => "nomask",
         "anyrouter.dev" => "anyrouter",
         "platform.yeta.ai" => "yeta",
+        "api.scnet.cn" => "scnet",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7494,6 +7506,16 @@ mod tests {
             ("https://yeta.ai/v1", "custom"),
             ("https://www.yeta.ai/v1", "custom"),
             ("https://platform.yeta.ai.evil.test/v1", "custom"),
+            ("https://api.scnet.cn/api/llm/v1", "scnet"),
+            ("https://api.scnet.cn/api/llm/v1/chat/completions", "scnet"),
+            ("https://api.scnet.cn/api/llm/v1/models", "scnet"),
+            ("https://api.scnet.cn/api/llm/anthropic", "scnet"),
+            ("https://api.scnet.cn/api/llm/anthropic/v1/messages", "scnet"),
+            ("https://api.scnet.cn", "scnet"),
+            ("https://www.scnet.cn/ui/mall", "custom"),
+            ("https://www.scnet.cn/ui/console", "custom"),
+            ("https://scnet.cn/api/llm/v1", "custom"),
+            ("https://api.scnet.cn.evil.test/api/llm/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7576,7 +7598,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 144);
+        assert_eq!(list_providers().len(), 145);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -7657,6 +7679,26 @@ mod tests {
             serialized["protocols"]["anthropic-messages"]["endpoint_path"],
             "/apps/anthropic/v1/messages"
         );
+        let scnet = list_providers()
+            .iter()
+            .find(|provider| provider.id == "scnet")
+            .unwrap();
+        let serialized = serde_json::to_value(scnet).unwrap();
+        assert_eq!(scnet.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(serialized["base_url"], "https://api.scnet.cn");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/api/llm/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/api/llm/anthropic/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.scnet.cn/api/llm/anthropic"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(
