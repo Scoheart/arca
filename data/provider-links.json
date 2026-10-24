@@ -517,6 +517,13 @@
       "kind": "api-key"
     }
   },
+  "inferx": {
+    "docs_url": "https://inferx.net/docs/quickstart",
+    "portal": {
+      "url": "https://model.inferx.net/login",
+      "kind": "console"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {

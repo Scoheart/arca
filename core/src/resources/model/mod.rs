@@ -1306,6 +1306,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "inferx",
+        name: "InferX",
+        default_base_url: Some("https://model.inferx.net/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2031,6 +2038,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "platform.yeta.ai" => "yeta",
         "api.scnet.cn" => "scnet",
         "oxionai.com" => "oxion-ai",
+        "model.inferx.net" => "inferx",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7535,6 +7543,20 @@ mod tests {
             ("https://oxionai.com/v1/messages", "oxion-ai"),
             ("https://www.oxionai.com/v1", "custom"),
             ("https://oxionai.com.evil.test/v1", "custom"),
+            ("https://model.inferx.net/v1", "inferx"),
+            ("https://model.inferx.net/v1/chat/completions", "inferx"),
+            ("https://model.inferx.net/v1/models", "inferx"),
+            ("https://model.inferx.net/endpoints/v1", "inferx"),
+            ("https://model.inferx.net/endpoints/v1/chat/completions", "inferx"),
+            ("https://model.inferx.net/endpoints/v1/models", "inferx"),
+            (
+                "https://model.inferx.net/funccall/example/endpoints/Agents-A1/v1/chat/completions",
+                "inferx",
+            ),
+            ("https://model.inferx.net", "inferx"),
+            ("https://inferx.net/v1", "custom"),
+            ("https://www.inferx.net/v1", "custom"),
+            ("https://model.inferx.net.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7617,7 +7639,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 146);
+        assert_eq!(list_providers().len(), 147);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -7738,6 +7760,24 @@ mod tests {
             serialized["additional_endpoints"][0]["base_url"],
             "https://oxionai.com"
         );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        let inferx = list_providers()
+            .iter()
+            .find(|provider| provider.id == "inferx")
+            .unwrap();
+        let serialized = serde_json::to_value(inferx).unwrap();
+        assert_eq!(inferx.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(inferx.category, "gateway");
+        assert_eq!(inferx.default_base_url, Some("https://model.inferx.net/v1"));
+        assert_eq!(serialized["base_url"], "https://model.inferx.net/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
         assert!(serialized["protocols"].get("openai-responses").is_none());
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {

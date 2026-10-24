@@ -146,6 +146,10 @@ Provider slot, not a third-party brand.
 
 - `yeta.svg`: official brand mark served by <https://platform.yeta.ai/yeta-mark.svg> (favicon of the Yeta platform, referenced from its homepage).
 
+## InferX — 2026-10-24
+
+- `inferx.png`: official 256×256 site icon served from <https://inferx.net/inferx-favicon-v11.png> (the `rel="icon"` linked by <https://inferx.net/> and <https://inferx.net/docs/quickstart>). The square catalog mark at <https://model.inferx.net/static/favicon.svg> is the same glyph; the PNG is the homepage icon.
+
 ## Oxion AI — 2026-10-24
 
 - `oxion-ai.png`: official square brand mark served as the site icon from <https://oxionai.com/storage/branding/mtLpl0lm90mTEG70Ova2vt8UMOPr75Gm8X5ak42k.png> (the `rel="icon"` and `apple-touch-icon` linked by <https://oxionai.com/>). The file is a 960×960 PNG.
