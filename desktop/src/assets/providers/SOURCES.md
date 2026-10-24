@@ -87,3 +87,57 @@ Official favicon assets served by vendor websites or linked by their documentati
 - `302-ai.ico` — <https://302.ai/favicon.ico>
 - `portkey.png` — <https://framerusercontent.com/images/pkFK3AGXHirogqiN67JGtlnMVM.png>
 - `helicone.ico` — <https://www.helicone.ai/favicon.ico>
+## 2026-10-24 provider icon completion batch
+
+Covered every Provider in `core/src/resources/model/mod.rs` that had no icon
+asset (42 brands). All bytes retrieved from each product's official site,
+official CDN, or the verified brand asset via Wikimedia Commons on 2026-10-24.
+ICO assets keep the `.ico` extension reflecting actual bytes; artwork unchanged.
+
+| Asset | Official source |
+|---|---|
+| `0g-private-computer.png` | <https://0g.ai/assets/69de313618847214109e4795_webclip.png> |
+| `agnes-ai.png` | <https://agnes-ai.com/images/biglogo.png> |
+| `akashml.png` | <https://akashml.com/apple-touch-icon.png> |
+| `ant-ling.ico` | <https://gw.alipayobjects.com/render/p/yuyan/180020010001289651/favicon.ico> (favicon linked by <https://ant-ling.com/>) |
+| `antdigital-dtmaas.ico` | <https://antdigital.com/favicon.ico> |
+| `apinex.png` | <https://apinex.bond/favicon.png> |
+| `atria.png` | <https://atria-asi.ai/releases/atria-dawn/atria-dawn-20261024-34b1af8-r24/assets/atria-logo.png> |
+| `beatapi.png` | <https://beatapi.io/apple-touch-icon.png> |
+| `bilibili-index-translate.png` | <https://i0.hdslb.com/bfs/static/jinkela/long/images/512.png> (official bilibili CDN) |
+| `clean-apis.png` | <https://cleanapis.com/storage/branding/6bM3jb3ZzA7suRSpWMlgPnjLu3JibzYmRjzPmvnu.png> |
+| `codecraft.png` | <https://codecraftapi.com/storage/branding/4FNYY6kXeIAwp9AIexKfZa1LzkF2RCxQfgm4VzVn.png> |
+| `constellation-gate.png` | <https://constellationgate.ai/apple-touch-icon.png> |
+| `coralbricks.svg` | <https://coralbricks.ai/favicon.svg> |
+| `dolphin.png` | <https://dphn.ai/favicon/apple-touch-icon.png> |
+| `experiential-labs.svg` | <https://experientiallabs.ai/icon.svg> |
+| `fikra.png` | <https://fikraapi.co.ke/static/logo.png> |
+| `flock.png` | <https://flock.io/light-mode-favicon.png> |
+| `gonkarouter.ico` | <https://gonkarouter.io/favicon.ico> |
+| `indicstack.png` | <https://indicstack.ai/apple-icon.png> |
+| `infron.png` | <https://framerusercontent.com/images/jYZGKXX6mcMkU1qAXZQeevZRY.png> (icon linked by <https://llm.onerouter.pro/>) |
+| `iteracompute.svg` | <https://iteracompute.com/img/iteracompute-logo.svg> |
+| `krafton-raon.png` | <https://raon.krafton.ai/brand/krafton-ai-favicon.png> |
+| `liquid-ai.png` | <https://liquid.ai/icon.png> |
+| `llmtr.png` | <https://llmtr.com/apple-touch-icon.png> |
+| `maximo-ai.png` | <https://maximoai.co/maximo-ai-icon-180.png> |
+| `meta.svg` | <https://commons.wikimedia.org/wiki/File:Meta_Platforms_Inc._logo_(cropped).svg> (official Meta infinity mark via Wikimedia Commons) |
+| `munito.png` | <https://munito.ai/apple-touch-icon.png> |
+| `nomask.png` | <https://nomask.ai/storage/app/public/favicon/icon.png?v=4> |
+| `nous-portal.png` | <https://nousresearch.com/assets/nous-web/favicon.png> |
+| `orcarouter.png` | <https://orcarouter.ai/apple-touch-icon.png> |
+| `ppq.png` | <https://ppq.ai/meta/apple-touch-icon.png> |
+| `river.png` | <https://river.ai/assets/favicon-192.png?v=2> |
+| `routeway.ico` | <https://routeway.ai/favicon.ico> |
+| `runanywhere.png` | <https://runanywhere.ai/apple-icon.png> |
+| `runinfra.png` | <https://runinfra.ai/apple-touch-icon.png> |
+| `sarashina.svg` | <https://sarashina.ai/favicon.svg> |
+| `sensenova.png` | <https://www.sensenova.cn/icon.png> |
+| `tencent.png` | <https://cloudcache.tencent-cloud.com/qcloud/favicon.ico> (official Tencent Cloud CDN; shared by the `tencent-*` aliases) |
+| `tokenharbor.png` | <https://tokenharbor.ai/apple-icon.png> |
+| `trustedrouter.png` | <https://trustedrouter.com/static/apple-touch-icon.png> |
+| `unisound.png` | <https://unisound.com/static/icons.png> |
+| `unorouter.png` | <https://unorouter.com/images/icons/icon-512.png> |
+
+`custom` intentionally keeps the letter fallback: it is the user-defined
+Provider slot, not a third-party brand.
