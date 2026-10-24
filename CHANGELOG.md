@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.27](https://github.com/Scoheart/arca/compare/v2.5.26...v2.5.27) (2026-10-24)
+
+### Changes
+
+* feat(models): add BlazeRail OpenAI-compatible provider (#245) ([ac9bdb0](https://github.com/Scoheart/arca/commit/ac9bdb0142a4f1324bcaaf4b5691812897f76b61))
+
 ## [2.5.26](https://github.com/Scoheart/arca/compare/v2.5.25...v2.5.26) (2026-10-24)
 
 ### Changes
