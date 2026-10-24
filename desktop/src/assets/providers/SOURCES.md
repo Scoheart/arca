@@ -157,3 +157,7 @@ Provider slot, not a third-party brand.
 ## SCNet — 2026-10-24
 
 - `scnet.png`: official 48×48 site icon served as PNG bytes from <https://www.scnet.cn/acx/resource/sites/isclogo?logoType=ico> (the favicon linked by <https://www.scnet.cn/ui/mall/> and <https://www.scnet.cn/ui/console>). The extension matches the PNG bytes. The wide wordmark at `logoType=logo` is not used for the square glyph.
+
+## BlazeRail — 2026-10-24
+
+- `blazerail.svg`: official site icon served from <https://www.blazerail.com/favicon.svg> (the `rel="icon"` linked by <https://www.blazerail.com/>, <https://www.blazerail.com/docs>, and <https://www.blazerail.com/free>).

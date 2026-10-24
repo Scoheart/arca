@@ -1313,6 +1313,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "blazerail",
+        name: "BlazeRail",
+        default_base_url: Some("https://api.blazerail.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2039,6 +2046,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.scnet.cn" => "scnet",
         "oxionai.com" => "oxion-ai",
         "model.inferx.net" => "inferx",
+        "api.blazerail.com" => "blazerail",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7557,6 +7565,13 @@ mod tests {
             ("https://inferx.net/v1", "custom"),
             ("https://www.inferx.net/v1", "custom"),
             ("https://model.inferx.net.evil.test/v1", "custom"),
+            ("https://api.blazerail.com/v1", "blazerail"),
+            ("https://api.blazerail.com/v1/chat/completions", "blazerail"),
+            ("https://api.blazerail.com/v1/models", "blazerail"),
+            ("https://api.blazerail.com", "blazerail"),
+            ("https://www.blazerail.com/v1", "custom"),
+            ("https://blazerail.com/v1", "custom"),
+            ("https://api.blazerail.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7639,7 +7654,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 147);
+        assert_eq!(list_providers().len(), 148);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -7779,6 +7794,30 @@ mod tests {
             .is_some_and(|endpoints| endpoints.is_empty()));
         assert!(serialized["protocols"].get("anthropic-messages").is_none());
         assert!(serialized["protocols"].get("openai-responses").is_none());
+        let blazerail = list_providers()
+            .iter()
+            .find(|provider| provider.id == "blazerail")
+            .unwrap();
+        let serialized = serde_json::to_value(blazerail).unwrap();
+        assert_eq!(blazerail.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(blazerail.category, "gateway");
+        assert_eq!(blazerail.default_base_url, Some("https://api.blazerail.com/v1"));
+        assert_eq!(serialized["base_url"], "https://api.blazerail.com/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert_eq!(serialized["docs_url"], "https://www.blazerail.com/docs");
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://www.blazerail.com/dashboard/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(
