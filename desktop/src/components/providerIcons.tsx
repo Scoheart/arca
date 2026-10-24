@@ -112,6 +112,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "io-net",
   "iteracompute",
   "krafton-raon",
+  "larprouter",
   "liquid-ai",
   "llmtr",
   "lm-studio",
