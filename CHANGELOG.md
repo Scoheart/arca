@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.5.20](https://github.com/Scoheart/arca/compare/v2.5.19...v2.5.20) (2026-10-24)
+
+### Changes
+
+* chore(deps): bump Swatinem/rust-cache ([1d5fa0c](https://github.com/Scoheart/arca/commit/1d5fa0c3b418b902ce46829879e7f9243b91cdeb))
+* chore(deps): bump actions/setup-node ([0f8007f](https://github.com/Scoheart/arca/commit/0f8007f20d8e2f008f44fb44160245a14b249d78))
+* chore(deps): bump yaml-edit from 0.2.3 to 0.3.1 (#169) ([4b104b1](https://github.com/Scoheart/arca/commit/4b104b1e0b24fe3995e025afeb1348f963ffd5df))
+* chore(deps): bump dirs from 5.0.1 to 7.0.0 (#168) ([6b3c923](https://github.com/Scoheart/arca/commit/6b3c9239af43c15fce8147d72c292d260df8731e))
+* chore(deps): bump the workspace-minor-patch group across 1 directory with 9 updates (#220) ([4a43cb0](https://github.com/Scoheart/arca/commit/4a43cb0ac1524d79c64faf16c88950dc7cb84634))
+* chore(deps): bump the tauri-minor-patch group across 1 directory with 12 updates (#214) ([d8c00a7](https://github.com/Scoheart/arca/commit/d8c00a76d8d97c7a406d085100b9a3d02326ca3b))
+* chore(deps): bump the desktop-minor-patch group across 1 directory with 16 updates (#202) ([214f093](https://github.com/Scoheart/arca/commit/214f093a1c5020ad1022e3d5a17259f723b0eff4))
+* chore(deps-dev): bump @testing-library/jest-dom from 6.9.1 to 7.0.1 in /desktop (#165) ([dad09c1](https://github.com/Scoheart/arca/commit/dad09c17b2c2def5cc529ba46b1f6e5c11ff3462))
+* \[ImgBot] Optimize images (#162) ([33fd7f8](https://github.com/Scoheart/arca/commit/33fd7f8a64270407b97c54887f7a58b7063ef82d))
+* chore(deps): bump Swatinem/rust-cache from e18b497 to f0d9c38 (#163) ([30b3fff](https://github.com/Scoheart/arca/commit/30b3fff4a453b1c66937de8999d8de399408370f))
+* chore(deps): bump actions/setup-node from 7.0.0 to 7.1.0 in the actions-minor-patch group (#206) ([d698839](https://github.com/Scoheart/arca/commit/d6988399aa3862970feffcd9d8317a9d3f2410ef))
+* chore(deps): bump yaml-edit from 0.3.1 to 0.3.2 in the workspace-minor-patch group across 1 directory (#239) ([0b6ba67](https://github.com/Scoheart/arca/commit/0b6ba67349f8565a1f4926bc2771542bf4890f5f))
+* chore(deps): sync dirs 7.0.0 into desktop tauri lockfile ([b8da55d](https://github.com/Scoheart/arca/commit/b8da55d12484bd6d92167336b7a6ac25ec03a9d8))
+* docs(agents): point wiki and delivery links at arca names ([37e7f83](https://github.com/Scoheart/arca/commit/37e7f83cc828da191bd68f96038f170e7ed0f096))
+
 ## [2.5.19](https://github.com/Scoheart/arca/compare/v2.5.18...v2.5.19) (2026-10-24)
 
 ### Changes
