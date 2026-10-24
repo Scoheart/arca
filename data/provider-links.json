@@ -503,6 +503,13 @@
       "kind": "api-key"
     }
   },
+  "scnet": {
+    "docs_url": "https://www.scnet.cn/help/docs/mainsite/mass/tutorial/quickstart.html",
+    "portal": {
+      "url": "https://www.scnet.cn/ui/console",
+      "kind": "console"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {

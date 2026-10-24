@@ -146,6 +146,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "sambanova",
   "sarashina",
   "scaleway",
+  "scnet",
   "sensenova",
   "siliconflow",
   "stepfun",
