@@ -36,9 +36,9 @@
 
 ## 按需路由
 
-- Registry、codec、Models、更新与发布：[`mux-registry-release.md`](../../../llm-wiki/wiki/knowledge/mux-registry-release.md)
-- 测试环境：[`mux-test-isolation.md`](../../../llm-wiki/wiki/knowledge/mux-test-isolation.md)
-- 正式安装版 UI：[`mux-ui-review.md`](../../../llm-wiki/wiki/knowledge/mux-ui-review.md)
+- Registry、codec、Models、更新与发布：[`arca-registry-release.md`](../../../llm-wiki/wiki/knowledge/arca-registry-release.md)
+- 测试环境：[`arca-test-isolation.md`](../../../llm-wiki/wiki/knowledge/arca-test-isolation.md)
+- 正式安装版 UI：[`arca-ui-review.md`](../../../llm-wiki/wiki/knowledge/arca-ui-review.md)
 - Git、记忆与跨仓交付：[`repository-delivery.md`](../../../llm-wiki/wiki/knowledge/repository-delivery.md)
 
 ## Git
@@ -49,9 +49,9 @@
 
 Arca 交付授权与默认链路以父仓根 [`AGENTS.md — Standing Authorization`](../../../AGENTS.md#standing-authorization) 为准；按已授权链路执行，不重复询问，不因脏工作树或分叉切换链路：
 
-- 本地 commit & push：父仓 `mux-local-push`
-- Remote PR：父仓 `mux-remote-pr-delivery`
-- 功能 SHA 落到 `main` 之后的 Stable 观察、复验、重试、安装：父仓 `mux-release`
+- 本地 commit & push：父仓 `arca-local-push`
+- Remote PR：父仓 `arca-remote-pr-delivery`
+- 功能 SHA 落到 `main` 之后的 Stable 观察、复验、重试、安装：父仓 `arca-release`
 
 本地链路要求当前在 `main`，且 local `main` 已包含最新 `origin/main`。不满足则停在该链路内处理，不得因为工作树脏或分叉就改走 Remote PR。Remote PR 链路只在用户明确要求远端 commit / PR / 不移动本地 HEAD 时使用；脏或分叉只约束「不要改用户 checkout」。
 
