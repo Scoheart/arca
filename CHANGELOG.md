@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.29](https://github.com/Scoheart/arca/compare/v2.5.28...v2.5.29) (2026-10-24)
+
+### Changes
+
+* feat(models): add Stark Relay OpenAI-compatible provider (#247) ([b488ffd](https://github.com/Scoheart/arca/commit/b488ffd1747c099c3f67926b90cb14a09eb01e20))
+
 ## [2.5.28](https://github.com/Scoheart/arca/compare/v2.5.27...v2.5.28) (2026-10-24)
 
 ### Changes
