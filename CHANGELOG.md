@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.24](https://github.com/Scoheart/arca/compare/v2.5.23...v2.5.24) (2026-10-24)
+
+### Changes
+
+* feat(models): add SCNet OpenAI-compatible provider (#242) ([4a81fbe](https://github.com/Scoheart/arca/commit/4a81fbe96f7615159c3089dc611272b8f715eb26))
+
 ## [2.5.23](https://github.com/Scoheart/arca/compare/v2.5.22...v2.5.23) (2026-10-24)
 
 ### Changes
