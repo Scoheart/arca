@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.0](https://github.com/Scoheart/arca/compare/v2.7.0...v2.8.0) (2026-10-25)
+
+### Changes
+
+* feat(models): streamline provider setup and request commands ([c53e893](https://github.com/Scoheart/arca/commit/c53e893d2285f8c57d25de4ae0bb7f179180c938))
+
 ## [2.7.0](https://github.com/Scoheart/arca/compare/v2.6.2...v2.7.0) (2026-10-25)
 
 ### Changes
