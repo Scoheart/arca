@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.6.0](https://github.com/Scoheart/arca/compare/v2.5.29...v2.6.0) (2026-10-25)
+
+### Changes
+
+* feat(launch): add named profiles with immutable empty default ([5dd44b9](https://github.com/Scoheart/arca/commit/5dd44b98799a7b28c5cec266c5f0aa68158fdcfe))
+
 ## [2.5.29](https://github.com/Scoheart/arca/compare/v2.5.28...v2.5.29) (2026-10-24)
 
 ### Changes
