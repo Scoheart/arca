@@ -16,8 +16,9 @@ Options:
   --wait               Wait for the Draft to become a complete published Release
   --timeout SECONDS    Maximum --wait duration (default: 900)
   --keep               Preserve the temporary verification evidence folder
+  --cache-dir PATH     Reuse digest-bound assets (default: ~/Library/Caches/Arca/release-assets)
 
-This verifier is read-only apart from downloading temporary evidence.
+This verifier only writes local verification evidence and the asset cache.
 EOF
 }
 
@@ -26,6 +27,7 @@ SOURCE_ROOT=""
 KEEP=0
 WAIT_FOR_RELEASE=0
 WAIT_TIMEOUT=900
+CACHE_DIR="${ARCA_RELEASE_CACHE_DIR:-$HOME/Library/Caches/Arca/release-assets}"
 TAG=""
 
 while [[ $# -gt 0 ]]; do
@@ -43,6 +45,11 @@ while [[ $# -gt 0 ]]; do
     --keep)
       KEEP=1
       shift
+      ;;
+    --cache-dir)
+      [[ $# -ge 2 ]] || { usage >&2; exit 2; }
+      CACHE_DIR=$2
+      shift 2
       ;;
     --wait)
       WAIT_FOR_RELEASE=1
@@ -85,7 +92,7 @@ done
   exit 1
 }
 
-for command in gh jq shasum tar hdiutil codesign lipo node; do
+for command in gh jq shasum tar hdiutil codesign lipo node python3; do
   command -v "$command" >/dev/null 2>&1 || {
     printf 'Missing required command: %s\n' "$command" >&2
     exit 1
@@ -209,17 +216,9 @@ verify_digest() {
 
 mkdir -p "$WORK/assets"
 DOWNLOAD_STARTED=$SECONDS
-download_pids=()
-for asset in "${EXPECTED_ASSETS[@]}"; do
-  asset_id=$(jq -er --arg name "$asset" '.assets[] | select(.name == $name) | .apiUrl | split("/") | last | tonumber' "$RELEASE_JSON")
-  gh api "repos/$REPOSITORY/releases/assets/$asset_id" -H 'Accept: application/octet-stream' >"$WORK/assets/$asset" &
-  download_pids+=("$!")
-done
-download_failed=0
-for pid in "${download_pids[@]}"; do
-  wait "$pid" || download_failed=1
-done
-[[ "$download_failed" -eq 0 ]] || { echo 'Release download failed.' >&2; exit 1; }
+python3 "$SOURCE_ROOT/.github/scripts/download-release-assets.py" \
+  --repo "$REPOSITORY" --tag "$TAG" --release-json "$RELEASE_JSON" \
+  --output "$WORK/assets" --cache "$CACHE_DIR" "${EXPECTED_ASSETS[@]}"
 DOWNLOAD_SECONDS=$((SECONDS - DOWNLOAD_STARTED))
 
 for asset in "${EXPECTED_ASSETS[@]}"; do

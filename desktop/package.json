@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:unit": "vitest run",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "node scripts/tauri.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

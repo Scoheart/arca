@@ -53,6 +53,9 @@ Arca 交付授权与默认链路以父仓根 [`AGENTS.md — Standing Authorizat
 - Remote PR：父仓 `arca-remote-pr-delivery`
 - 功能 SHA 落到 `main` 之后的 Stable 观察、复验、重试、安装：父仓 `arca-release`
 
+- Arca 正式发布必须交给一个专用 subagent。主 agent 完成已授权的提交/推送或 PR 合并后，交接准确功能/合并 SHA、授权终点、验证证据与用户约束；由 subagent 连续负责发布触发、构建观察、正式发布和独立验包。主 agent 等待并核对最终证据后向用户汇报，不另开重复发布、观察器或下载；没有可用的 subagent 工具时说明阻塞，不静默改为自行发布。
+- 接管已经启动的发布时，交接精确 run ID、当前阶段和既有验证器/日志/产物记录，从首个未完成阶段继续。已是发布 subagent 的执行者不递归委派；工具会话无法跨 agent 访问时复用共享日志与证据，由原持有者回收原会话的最终结果，不重启验证器。
+
 本地链路要求当前在 `main`，且 local `main` 已包含最新 `origin/main`。不满足则停在该链路内处理，不得因为工作树脏或分叉就改走 Remote PR。Remote PR 链路只在用户明确要求远端 commit / PR / 不移动本地 HEAD 时使用；脏或分叉只约束「不要改用户 checkout」。
 
 - 永久使用 Direct Stable：只有用户明确授权发布后，才从 `main` 显式派发 `direct-stable-release.yml` 并选择 `release_type=patch|minor|major`。普通 commit / push 不触发发布；workflow 只处理仍为当前 main head 的普通提交，由所选范围生成 release metadata、Draft 和不可变 Stable tag，拒绝从自动 release commit 再次升版。

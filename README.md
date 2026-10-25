@@ -216,7 +216,14 @@ The stable build uses a shared Cargo target directory for CLI and Desktop, with 
 bash .github/scripts/verify-stable-release.sh --source-root "$PWD" --wait vX.Y.Z
 ```
 
-The verifier downloads the five expected assets in parallel, checks SHA-256 digests, verifies updater payload and trusted-comment signatures, and inspects both the updater App and the mounted DMG. It also checks the standalone CLI and the existing upgrade bridge. Verification does not install or launch the app.
+The verifier downloads the five expected assets with bounded parallelism using
+the current command environment's proxy settings. It reuses completed assets
+only when repository, tag, asset ID, size and SHA-256 match, and limits stalled
+downloads. Its cache defaults to `~/Library/Caches/Arca/release-assets`; use
+`--cache-dir` to choose another location. Every run still checks SHA-256 digests,
+updater payload and trusted-comment signatures, both the updater App and the
+mounted DMG, the standalone CLI and the existing upgrade bridge. Verification
+does not install or launch the app.
 
 Build from source:
 
@@ -225,6 +232,11 @@ cd desktop
 npm ci
 npm run tauri build      # or: npm run tauri dev
 ```
+
+`npm run tauri dev` starts **Arca Dev** with its own application identifier and
+purple DEV icon. It shares your Arca data, while the installed **Arca** keeps its
+existing Dock entry. The Run script stops only this checkout's development
+processes and leaves the installed application running.
 
 ## CLI
 

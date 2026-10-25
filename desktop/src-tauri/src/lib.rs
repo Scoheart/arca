@@ -65,7 +65,7 @@ pub fn run() {
             // Always restore the configured main window on a fresh launch.
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(debug_assertions)]
-                window.set_title("Arca · 本地开发预览")?;
+                window.set_title("Arca Dev · 本地开发预览")?;
                 #[cfg(target_os = "macos")]
                 if let Err(error) = trackpad_gestures::install(window.clone()) {
                     eprintln!("Arca trackpad phase bridge unavailable: {error}");
