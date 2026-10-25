@@ -87,7 +87,6 @@ export function AgentLaunchProfiles({ info, draft, disabled, onChange, onBusyCha
       <label className="arca-launch-profile-name">{t("agentConfiguration.profileName")}
         <input className="arca-dialog-input" value={isDefault ? t("agentConfiguration.defaultProfile") : selected.name} disabled={disabled || isDefault} maxLength={80} onChange={event => update({ name: event.target.value })} />
       </label>
-      <p className="arca-launch-hint">{t(isDefault ? "agentConfiguration.defaultProfileHint" : "agentConfiguration.profileHint")}</p>
     </fieldset>
     <AgentLaunchFields info={selectedInfo} draft={selected.launch} disabled={disabled} readOnlyDefault={isDefault} onChange={launch => update({ launch })}
       onBusyChange={onBusyChange} onError={onError} />

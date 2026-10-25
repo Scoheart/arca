@@ -24,8 +24,6 @@ export const agentConfigurationZhCN = {
   newInstanceHint: "另开进程接收参数，需应用支持。",
   launchProfile: "启动配置", defaultProfile: "默认配置", unnamedProfile: "未命名配置",
   addProfile: "新增启动配置", addProfileShort: "新增", deleteProfile: "删除启动配置", profileName: "配置名称", profileNumber: "配置 {{number}}",
-  profileHint: "保存后使用所选配置启动；切换配置会保留各份未保存的修改。",
-  defaultProfileHint: "默认配置为空，使用 Agent 默认启动方式；不能编辑、重命名或删除。",
   environmentErrors: { assignment: "第 {{line}} 行需要 NAME=VALUE", limit: "环境变量最多 64 项", name: "请输入有效变量名，例如 NODE_USE_SYSTEM_CA", duplicate: "环境变量名不能重复", value: "环境变量值无效或过长" },
 };
 
@@ -55,7 +53,5 @@ export const agentConfigurationEnUS = {
   newInstanceHint: "Open a separate process to receive arguments, if supported by the application.",
   launchProfile: "Launch profile", defaultProfile: "Default profile", unnamedProfile: "Unnamed profile",
   addProfile: "Add launch profile", addProfileShort: "Add", deleteProfile: "Delete launch profile", profileName: "Profile name", profileNumber: "Profile {{number}}",
-  profileHint: "The selected profile is used after saving. Switching profiles keeps all unsaved edits.",
-  defaultProfileHint: "The default profile is empty and uses the Agent's default launcher. It cannot be edited, renamed or deleted.",
   environmentErrors: { assignment: "Line {{line}} requires NAME=VALUE", limit: "At most 64 environment variables are allowed", name: "Enter a valid variable name, such as NODE_USE_SYSTEM_CA", duplicate: "Environment variable names must be unique", value: "Environment variable value is invalid or too long" },
 };
