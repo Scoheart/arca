@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.6.1](https://github.com/Scoheart/arca/compare/v2.6.0...v2.6.1) (2026-10-25)
+
+### Changes
+
+* fix(launch): remove redundant profile hint and divider ([1843094](https://github.com/Scoheart/arca/commit/1843094308d4d428ca49ba1e7dac1b3c9258ced7))
+
 ## [2.6.0](https://github.com/Scoheart/arca/compare/v2.5.29...v2.6.0) (2026-10-25)
 
 ### Changes
