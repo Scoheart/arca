@@ -56,18 +56,33 @@ rows; Skill cards separate the title, description and controls. Their **…** me
 exposes details and removal when supported. Narrow windows keep the sidebar and
 reduce the number of content columns.
 
-**编辑配置** includes application / CLI launch settings alongside the
-MCP, Model and Skills paths. Changing only the launcher saves directly; path edits
-retain the impact review. Cancelling that review leaves launch preferences
-unchanged. Configurable Agents keep launch settings in this editor instead of
-duplicating the settings entry in the run dropdown.
+Click **运行** to open launch settings. **编辑配置** holds the MCP, Model,
+Skills and Instructions paths; path edits retain their impact review.
 
-In **编辑配置 → 启动**, use **新增** to copy the current launch configuration into
+In the launch dialog, use **新增** to copy the current launch configuration into
 a named profile. Each Agent can keep up to 32 profiles with separate arguments,
 environment variables and launch options. Switching profiles keeps every draft;
 **保存** saves them together and uses the selected profile for future launches.
+A vertical list switches profiles. The dialog keeps a fixed size, with scrolling
+inside the selected profile. Saving keeps the dialog open; running closes it
+after a successful launch. Arguments and environment variables use compact
+previews with separate multiline editing.
 A fixed, empty **默认配置** always remains available and cannot be edited, renamed or deleted.
 Existing custom launch settings are retained in a separate editable profile.
+
+For Codex CLI, **编辑配置 → 编辑配置文件** opens an in-app editor with common
+options and full TOML source. **原生配置** edits `$CODEX_HOME/config.toml`
+(`~/.codex/config.toml` by default). **Arca 专属配置** edits the separate
+`$CODEX_HOME/arca.config.toml`; files are created only when explicitly saved.
+Comments, unknown fields and line endings are retained. Existing files are
+updated in place, with revision checks and a private Keychain rollback snapshot.
+
+In an editable Codex launch profile, select **Arca 专属配置** under **配置来源**
+to add `--profile arca` to that profile's arguments. These overrides apply to
+that launch and do not rewrite the native file. Unset options still inherit the
+native configuration; project and explicit CLI overrides retain Codex's normal
+precedence. Authentication and session storage are shared. A profile-specific
+`CODEX_HOME` environment variable also determines which files this editor opens.
 
 Arca ships as **two front-ends that share the same data** (`~/.arca/`):
 

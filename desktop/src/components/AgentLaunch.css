@@ -49,7 +49,29 @@
 .arca-launch-instance-option p { margin: 4px 0 0; color: var(--text-tertiary); }
 .arca-launch-instance-option > button { flex-shrink: 0; }
 
-.arca-launch-environment-block { min-height: 132px; }
+.arca-launch-text-field { display: grid; gap: 7px; min-width: 0; }
+.arca-launch-text-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; }
+.arca-launch-text-label { display: inline-flex; align-items: center; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+.arca-launch-value-count { padding: 2px 5px; border-radius: 5px; background: var(--surface-section); color: var(--text-tertiary); font: 10px/1.2 var(--font-mono); }
+.arca-launch-text-edit { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; border: 0; border-radius: 6px; background: transparent; color: var(--color-blue); font: 11px/1.4 var(--font-sans); cursor: pointer; }
+.arca-launch-text-edit:hover:not(:disabled) { background: var(--surface-section); }
+.arca-launch-text-edit:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
+.arca-launch-text-edit:disabled { opacity: .5; cursor: default; }
+.arca-launch-text-editor { display: grid; gap: 6px; min-width: 0; }
+.arca-launch-text-editor > .arca-launch-hint { color: var(--text-tertiary); }
+.arca-launch-value-preview { min-width: 0; padding: 10px 12px; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-control); user-select: text; }
+.arca-launch-value-empty { color: var(--text-tertiary); font: 11px/1.6 var(--font-sans); }
+.arca-launch-argument-list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 160px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+.arca-launch-argument-list li { min-width: 0; max-width: 100%; padding: 4px 7px; border-radius: 5px; background: var(--surface-section); color: var(--text-primary); }
+.arca-launch-argument-list code, .arca-launch-environment-list code { font: 11px/1.6 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.arca-launch-environment-list { display: grid; max-height: 208px; overflow-y: auto; margin: -3px 0; }
+.arca-launch-environment-row { display: grid; grid-template-columns: minmax(0, 180px) minmax(0, 1fr); gap: 16px; padding: 8px 0; }
+.arca-launch-environment-row + .arca-launch-environment-row { border-top: 1px solid var(--border-hairline); }
+.arca-launch-environment-row dt { min-width: 0; color: var(--text-secondary); }
+.arca-launch-environment-row dd { min-width: 0; margin: 0; color: var(--text-primary); }
+@media (max-width: 520px) {
+  .arca-launch-environment-row { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+}
 
 /* Configuration and launch dialogs share compact, aligned fields. */
 :is(.arca-dialog-agent-config, .arca-dialog-agent-launch) .arca-dialog-shell-header { padding-top: 16px; padding-bottom: 14px; }
@@ -72,19 +94,40 @@
 .arca-dialog-agent-config .arca-agent-config-add { margin-left: 0; justify-self: start; padding: 0; }
 .arca-agent-config-credential { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
 .arca-agent-config-credential-row { display: grid; grid-template-columns: 1fr minmax(150px, 220px); align-items: center; gap: 12px; }
-.arca-dialog-agent-launch .arca-launch-settings { gap: 16px; }
-.arca-launch-label-line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.arca-launch-label-line .arca-launch-hint { color: var(--text-tertiary); }
+.arca-dialog-shell.arca-dialog-agent-launch { height: min(620px, calc(100dvh - 80px)); max-height: min(620px, calc(100dvh - 80px)); }
+.arca-dialog-agent-launch .arca-dialog-shell-header { padding-block: 12px; }
+.arca-dialog-agent-launch .arca-dialog-shell-body { display: flex; overflow: hidden; padding-block: 16px; }
+.arca-dialog-agent-launch .arca-launch-settings { gap: 12px; }
+.arca-dialog-agent-launch .arca-launch-value-preview { padding-block: 8px; }
+.arca-dialog-agent-launch .arca-launch-environment-list { max-height: 144px; }
+.arca-dialog-agent-launch .arca-launch-environment-row { padding-block: 6px; }
 .arca-dialog-agent-launch .arca-launch-arguments { min-height: 62px; max-height: 160px; }
 .arca-dialog-agent-launch .arca-launch-path-input { align-items: center; gap: 0; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-control); }
 .arca-dialog-agent-launch .arca-launch-path-input > input { min-width: 0; width: 0; border: 0; background: transparent; box-shadow: none; }
 .arca-dialog-agent-launch .arca-launch-path-input > button { flex-shrink: 0; border: 0; background: transparent; box-shadow: none; margin-right: 3px; padding: 7px; }
 @media (max-width: 520px) { .arca-agent-config-mcp { grid-template-columns: minmax(0, 1fr); } }
 
-.arca-launch-profiles { display: grid; gap: 16px; min-width: 0; }
+.arca-launch-profiles { display: grid; flex: 1; grid-template-columns: 144px minmax(0, 1fr); gap: 20px; min-width: 0; min-height: 0; }
+.arca-launch-profile-sidebar { display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 0; padding-right: 14px; border-right: 1px solid var(--border-hairline); }
+.arca-launch-profile-caption { padding: 3px 9px; color: var(--text-tertiary); font-size: 11px; font-weight: 500; }
+.arca-launch-profile-tabs { display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow-y: auto; padding: 2px; margin: -2px; }
+.arca-launch-profile-tabs > button { display: flex; align-items: center; flex-shrink: 0; min-width: 0; min-height: 34px; padding: 8px 9px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font: 12px/1.4 var(--font-sans); text-align: left; cursor: pointer; }
+.arca-launch-profile-tabs > button > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arca-launch-profile-tabs > button:hover:not(:disabled) { background: var(--surface-section); }
+.arca-launch-profile-tabs > button[aria-selected="true"] { background: color-mix(in srgb, var(--color-blue) 10%, var(--surface-control)); color: var(--color-blue); font-weight: 600; }
+.arca-launch-profile-tabs > button:focus-visible,
+.arca-launch-profile-panel:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -2px; }
+.arca-launch-profile-tabs > button:disabled { opacity: .5; cursor: default; }
+.arca-launch-profile-add { justify-content: center; flex-shrink: 0; width: 100%; margin-top: 2px; font-size: 11px; }
+.arca-launch-profile-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; overflow-y: auto; padding-right: 4px; overscroll-behavior: contain; border-radius: 3px; }
+.arca-launch-profile-panel > * { flex-shrink: 0; }
 .arca-launch-profile-editor { display: grid; gap: 12px; min-width: 0; margin: 0; padding: 0; border: 0; }
-.arca-launch-profile-toolbar { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.arca-launch-profile-toolbar .arca-form-select { flex: 1; min-width: 0; }
+.arca-launch-profile-toolbar { display: flex; align-items: flex-end; gap: 8px; min-width: 0; }
 .arca-launch-profile-toolbar > button { flex-shrink: 0; }
-.arca-launch-profile-name { display: grid; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+.arca-launch-profile-name { display: grid; flex: 1; min-width: 0; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
 .arca-launch-profile-name input { min-width: 0; font-size: 12px; }
+@media (max-width: 620px) {
+  .arca-launch-profiles { grid-template-columns: 112px minmax(0, 1fr); gap: 12px; }
+  .arca-launch-profile-sidebar { padding-right: 10px; }
+  .arca-dialog-agent-launch .arca-launch-environment-row { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+}

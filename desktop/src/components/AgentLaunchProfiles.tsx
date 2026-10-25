@@ -1,8 +1,11 @@
+import { useId, useRef, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { AgentLaunchInfo, LaunchProfile } from "../lib/agentLaunch";
 import { AgentLaunchFields, agentLaunchDraftTarget, agentLaunchDraftValid, createAgentLaunchDraft, type AgentLaunchDraft } from "./AgentLaunchFields";
-import { FormSelect } from "./FormSelect";
 import { PlusIcon, TrashIcon } from "./icons";
+import { CodexLaunchConfiguration } from "./CodexLaunchConfiguration";
+import { parseLaunchEnvironment } from "../lib/launchEnvironment";
+import type { CodexConfigurationSource } from "../lib/codexConfiguration";
 
 interface ProfileDraft { id: string; name: string; launch: AgentLaunchDraft }
 export interface LaunchProfilesDraft { profiles: ProfileDraft[]; activeProfileId: string }
@@ -50,15 +53,37 @@ export function launchProfilesChanged(info: AgentLaunchInfo, draft: LaunchProfil
   return JSON.stringify(launchProfilesPayload(info, draft)) !== JSON.stringify(launchProfilesPayload(info, createLaunchProfilesDraft(info)));
 }
 
-export function AgentLaunchProfiles({ info, draft, disabled, onChange, onBusyChange, onError }: {
+export function AgentLaunchProfiles({ info, draft, disabled, onChange, onBusyChange, onError, onEditConfiguration }: {
   info: AgentLaunchInfo; draft: LaunchProfilesDraft; disabled: boolean;
   onChange(draft: LaunchProfilesDraft): void; onBusyChange(busy: boolean): void; onError(message: string): void;
+  onEditConfiguration?(source: CodexConfigurationSource, codexHome?: string): void;
 }) {
   const { t } = useTranslation();
+  const id = useId();
+  const tabRefs = useRef(new Map<string, HTMLButtonElement>());
   const selected = draft.profiles.find(profile => profile.id === draft.activeProfileId) ?? draft.profiles[0];
   const isDefault = selected.id === "default";
   const original = savedProfiles(info).find(profile => profile.id === selected.id);
   const selectedInfo = profileInfo(info, original ?? { id: selected.id, name: selected.name, target: null, default_directory: null });
+  const profileLabel = (profile: ProfileDraft) => profile.id === "default" && profile.name === "默认配置"
+    ? t("agentConfiguration.defaultProfile") : profile.name || t("agentConfiguration.unnamedProfile");
+  const select = (activeProfileId: string) => {
+    if (!disabled) onChange({ ...draft, activeProfileId });
+  };
+  const navigate = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (disabled) return;
+    let next: number;
+    switch (event.key) {
+      case "ArrowUp": next = (index + draft.profiles.length - 1) % draft.profiles.length; break;
+      case "ArrowDown": next = (index + 1) % draft.profiles.length; break;
+      case "Home": next = 0; break;
+      case "End": next = draft.profiles.length - 1; break;
+      default: return;
+    }
+    event.preventDefault();
+    select(draft.profiles[next].id);
+    tabRefs.current.get(draft.profiles[next].id)?.focus();
+  };
   const update = (patch: Partial<ProfileDraft>) => { if (!isDefault) onChange({ ...draft, profiles: draft.profiles.map(profile => profile.id === selected.id ? { ...profile, ...patch } : profile) }); };
   const add = () => {
     const id = crypto.randomUUID();
@@ -71,24 +96,40 @@ export function AgentLaunchProfiles({ info, draft, disabled, onChange, onBusyCha
   const remove = () => {
     if (isDefault) return;
     const profiles = draft.profiles.filter(profile => profile.id !== selected.id);
-    if (profiles.length) onChange({ activeProfileId: profiles[0].id, profiles });
+    if (profiles.length) {
+      onChange({ activeProfileId: profiles[0].id, profiles });
+      tabRefs.current.get(profiles[0].id)?.focus();
+    }
   };
   return <div className="arca-launch-profiles">
-    <fieldset className="arca-launch-profile-editor" disabled={disabled}>
-      <div className="arca-launch-profile-toolbar">
-        <FormSelect ariaLabel={t("agentConfiguration.launchProfile")} value={selected.id} disabled={disabled}
-          options={draft.profiles.map(profile => ({ value: profile.id, label: profile.id === "default" && profile.name === "默认配置" ? t("agentConfiguration.defaultProfile") : profile.name || t("agentConfiguration.unnamedProfile") }))}
-          onChange={activeProfileId => onChange({ ...draft, activeProfileId })} />
-        <button type="button" className="btn-secondary" disabled={disabled || draft.profiles.length >= 32} onClick={add}
-          aria-label={t("agentConfiguration.addProfile")}><PlusIcon className="w-4 h-4" />{t("agentConfiguration.addProfileShort")}</button>
-        <button type="button" className="btn-ghost" disabled={disabled || isDefault} onClick={remove}
-          aria-label={t("agentConfiguration.deleteProfile")} title={t("agentConfiguration.deleteProfile")}><TrashIcon className="w-4 h-4" /></button>
+    <div className="arca-launch-profile-sidebar">
+      <span id={`${id}-label`} className="arca-launch-profile-caption">{t("agentConfiguration.launchProfile")}</span>
+      <div className="arca-launch-profile-tabs" role="tablist" aria-orientation="vertical" aria-labelledby={`${id}-label`}>
+        {draft.profiles.map((profile, index) => <button key={profile.id} type="button" role="tab" id={`${id}-tab-${profile.id}`}
+          ref={element => { if (element) tabRefs.current.set(profile.id, element); else tabRefs.current.delete(profile.id); }}
+          aria-controls={`${id}-panel`} aria-selected={selected.id === profile.id} tabIndex={selected.id === profile.id ? 0 : -1}
+          disabled={disabled} title={profileLabel(profile)} onClick={() => select(profile.id)} onKeyDown={event => navigate(event, index)}>
+          <span>{profileLabel(profile)}</span>
+        </button>)}
       </div>
-      <label className="arca-launch-profile-name">{t("agentConfiguration.profileName")}
-        <input className="arca-dialog-input" value={isDefault ? t("agentConfiguration.defaultProfile") : selected.name} disabled={disabled || isDefault} maxLength={80} onChange={event => update({ name: event.target.value })} />
-      </label>
-    </fieldset>
-    <AgentLaunchFields info={selectedInfo} draft={selected.launch} disabled={disabled} readOnlyDefault={isDefault} onChange={launch => update({ launch })}
-      onBusyChange={onBusyChange} onError={onError} />
+      <button type="button" className="arca-launch-profile-add btn-secondary" disabled={disabled || draft.profiles.length >= 32} onClick={add}
+        aria-label={t("agentConfiguration.addProfile")}><PlusIcon className="w-4 h-4" />{t("agentConfiguration.addProfileShort")}</button>
+    </div>
+    <div key={selected.id} className="arca-launch-profile-panel" role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-tab-${selected.id}`} tabIndex={0}>
+      <fieldset className="arca-launch-profile-editor" disabled={disabled}>
+        <div className="arca-launch-profile-toolbar">
+          <label className="arca-launch-profile-name">{t("agentConfiguration.profileName")}
+            <input className="arca-dialog-input" value={isDefault ? t("agentConfiguration.defaultProfile") : selected.name} disabled={disabled || isDefault} maxLength={80} onChange={event => update({ name: event.target.value })} />
+          </label>
+          <button type="button" className="btn-ghost" disabled={disabled || isDefault} onClick={remove}
+            aria-label={t("agentConfiguration.deleteProfile")} title={t("agentConfiguration.deleteProfile")}><TrashIcon className="w-4 h-4" /></button>
+        </div>
+      </fieldset>
+      {info.agent_id === "codex" && onEditConfiguration && <CodexLaunchConfiguration args={selected.launch.args} disabled={disabled || isDefault}
+        onChange={args => update({ launch: { ...selected.launch, args } })}
+        onEdit={source => onEditConfiguration(source, parseLaunchEnvironment(selected.launch.environment).env.CODEX_HOME)} />}
+      <AgentLaunchFields key={selected.id} info={selectedInfo} draft={selected.launch} disabled={disabled} readOnlyDefault={isDefault} onChange={launch => update({ launch })}
+        onBusyChange={onBusyChange} onError={onError} />
+    </div>
   </div>;
 }

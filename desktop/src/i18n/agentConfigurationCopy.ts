@@ -1,4 +1,13 @@
 export const agentConfigurationZhCN = {
+  codex: {
+    title: "Codex CLI 配置", editConfiguration: "编辑配置文件", source: "配置来源", native: "原生配置", arca: "Arca 专属配置",
+    nativeHint: "编辑 Codex 原生配置文件，保存后影响使用此文件的 Codex 客户端。",
+    arcaHint: "独立保存覆盖项，启动时通过 --profile arca 加载；未设置的选项继承原生配置，不修改原生文件。",
+    createOnSave: "文件尚不存在，保存时创建", editorMode: "编辑方式", formMode: "常用选项", sourceMode: "TOML 源码",
+    inherit: "使用默认或继承值", saved: "配置已保存，下次启动生效。", reload: "重新读取", discardReload: "放弃草稿并重新读取", editComplex: "在 TOML 源码中编辑",
+    customProfile: "自定义配置：{{name}}",
+    fields: { model: "模型", model_reasoning_effort: "推理强度", service_tier: "服务等级", approval_policy: "审批策略", sandbox_mode: "沙箱模式", web_search: "网页搜索" },
+  },
   instructionsDirectory: "Instructions 目录 {{index}}",
   selectInstructionsDirectory: "选择 Instructions 目录", selectInstructionsDirectoryLabel: "选择 Instructions 目录 {{index}}", resetInstructionsDirectory: "恢复 Instructions 目录 {{index}} 默认值",
   instructionsPathHint: "只配置 Arca 读取与编辑的位置，不迁移文件，也不改变 Agent 的原生加载设置。",
@@ -22,6 +31,8 @@ export const agentConfigurationZhCN = {
   commandPlaceholder: "命令名称或程序路径", selectFile: "选择文件", lastDirectory: "留空沿用上次目录",
   selectDefaultDirectory: "选择默认工作目录", selectFolder: "选择文件夹", arguments: "启动参数", onePerLine: "每行一个参数",
   environment: "环境变量", environmentHint: "每行 NAME=VALUE，可直接粘贴", newInstance: "新实例启动",
+  editField: "编辑{{field}}", finishEditingField: "完成编辑{{field}}", doneEditing: "完成",
+  noArguments: "未设置启动参数", noEnvironment: "未设置环境变量", emptyValue: "空值",
   newInstanceHint: "另开进程接收参数，需应用支持。",
   launchProfile: "启动配置", defaultProfile: "默认配置", unnamedProfile: "未命名配置",
   addProfile: "新增启动配置", addProfileShort: "新增", deleteProfile: "删除启动配置", profileName: "配置名称", profileNumber: "配置 {{number}}",
@@ -29,6 +40,15 @@ export const agentConfigurationZhCN = {
 };
 
 export const agentConfigurationEnUS = {
+  codex: {
+    title: "Codex CLI configuration", editConfiguration: "Edit configuration", source: "Configuration source", native: "Native configuration", arca: "Arca configuration",
+    nativeHint: "Edit the native Codex file. Saved changes affect Codex clients that load this file.",
+    arcaHint: "Keep overrides in a separate file and load them with --profile arca. Unset options inherit the native configuration; the native file is unchanged.",
+    createOnSave: "This file will be created when you save", editorMode: "Editor mode", formMode: "Common options", sourceMode: "TOML source",
+    inherit: "Use default or inherited value", saved: "Configuration saved. Applies on the next launch.", reload: "Reload", discardReload: "Discard draft and reload", editComplex: "Edit in TOML source",
+    customProfile: "Custom profile: {{name}}",
+    fields: { model: "Model", model_reasoning_effort: "Reasoning effort", service_tier: "Service tier", approval_policy: "Approval policy", sandbox_mode: "Sandbox mode", web_search: "Web search" },
+  },
   instructionsDirectory: "Instructions directory {{index}}",
   selectInstructionsDirectory: "Choose Instructions directory", selectInstructionsDirectoryLabel: "Choose Instructions directory {{index}}", resetInstructionsDirectory: "Restore default Instructions directory {{index}}",
   instructionsPathHint: "Sets where Arca reads and edits files. Does not move files or change the Agent's native loading settings.",
@@ -52,6 +72,8 @@ export const agentConfigurationEnUS = {
   commandPlaceholder: "Command name or executable path", selectFile: "Choose file", lastDirectory: "Leave empty to use the last directory",
   selectDefaultDirectory: "Choose default working directory", selectFolder: "Choose folder", arguments: "Launch arguments", onePerLine: "One argument per line",
   environment: "Environment variables", environmentHint: "One NAME=VALUE per line; paste supported", newInstance: "Launch new instance",
+  editField: "Edit {{field}}", finishEditingField: "Finish editing {{field}}", doneEditing: "Done",
+  noArguments: "No launch arguments", noEnvironment: "No environment variables", emptyValue: "Empty value",
   newInstanceHint: "Open a separate process to receive arguments, if supported by the application.",
   launchProfile: "Launch profile", defaultProfile: "Default profile", unnamedProfile: "Unnamed profile",
   addProfile: "Add launch profile", addProfileShort: "Add", deleteProfile: "Delete launch profile", profileName: "Profile name", profileNumber: "Profile {{number}}",

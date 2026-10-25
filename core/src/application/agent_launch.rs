@@ -544,6 +544,7 @@ pub struct LaunchReceipt { pub directory_saved: bool }
 pub fn launch(agent_id: &str, directory: Option<String>) -> Result<LaunchReceipt, String> {
     let info = info(agent_id)?;
     let target = info.resolved_target.ok_or("未找到可启动的 Agent，请安装或设置启动方式")?;
+    super::codex_configuration::validate_launch(agent_id, &target)?;
     let chosen = if matches!(target, LaunchTarget::Cli { .. }) {
         let path = expand(&directory.or(info.directory).ok_or("请先选择工作目录")?);
         if !path.is_absolute() || !path.is_dir() { return Err("工作目录不存在，请重新选择".into()); }

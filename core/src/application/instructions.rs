@@ -388,7 +388,7 @@ pub fn read(agent_id: &str, file_id: &str) -> CoreResult<InstructionSnapshot> { 
 
 /// Textareas normalize line breaks. Keep original endings on unchanged lines,
 /// retain the original BOM, and use the document's first ending on edited lines.
-fn preserve_text(original: &str, edited: &str) -> String {
+pub(super) fn preserve_text(original: &str, edited: &str) -> String {
     let original_bom = original.starts_with('\u{feff}');
     let old = original.trim_start_matches('\u{feff}'); let new = edited.trim_start_matches('\u{feff}').replace("\r\n", "\n");
     let normalized = old.replace("\r\n", "\n");

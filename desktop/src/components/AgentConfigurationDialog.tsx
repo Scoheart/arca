@@ -27,6 +27,7 @@ import { openPath } from "@tauri-apps/plugin-opener";
 import { preferredFileEditor } from "./FileEditorSelect";
 import { open as choosePath } from "@tauri-apps/plugin-dialog";
 import { instructionGetPaths, instructionSetPaths, type InstructionPathConfiguration } from "../lib/instructions";
+import { CodexConfigurationEditor } from "./CodexConfigurationEditor";
 
 function deliveryLabel(value: ApiKeyDelivery) {
   if (value === "env") return "agentConfiguration.deliveryEnv";
@@ -58,6 +59,7 @@ export function AgentConfigurationDialog({
   onInstructionPathsSaved?(): void;
 }) {
   const { t } = useTranslation();
+  const [editingCodex, setEditingCodex] = useState(false);
   const initialModelPaths = modelAgent?.config_paths?.length
     ? modelAgent.config_paths
     : modelAgent?.config_path
@@ -262,6 +264,8 @@ export function AgentConfigurationDialog({
     finally { setBrowsing(false); }
   };
 
+  if (editingCodex) return <CodexConfigurationEditor onClose={() => setEditingCodex(false)} />;
+
   if (confirmingPlaintext) {
     return (
       <DialogShell kind="review" size="sm" className="arca-plaintext-confirmation"
@@ -319,6 +323,10 @@ export function AgentConfigurationDialog({
         </>
       )}
     >
+      {agent.id === "codex" && <div className="arca-codex-config-entry">
+        <span>{t("agentConfiguration.codex.title")}</span>
+        <button type="button" className="btn-secondary" disabled={busy || browsing} onClick={() => setEditingCodex(true)}>{t("agentConfiguration.codex.editConfiguration")}</button>
+      </div>}
       <fieldset className="arca-agent-config-form arca-agent-config-fields" disabled={busy || browsing}>
         {RESOURCE_CATEGORIES.map((resource) => <Fragment key={resource.id}>
           {resource.id === "models" && <>

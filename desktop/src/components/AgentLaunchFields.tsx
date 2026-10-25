@@ -1,3 +1,4 @@
+import { useId, useState, type ReactNode } from "react";
 import { ToastNotice } from "./Toast";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -5,7 +6,7 @@ import type { AgentLaunchInfo, LaunchTarget } from "../lib/agentLaunch";
 import { formatError } from "../lib/format";
 import { formatLaunchEnvironment, parseLaunchEnvironment } from "../lib/launchEnvironment";
 import { Switch } from "./ui";
-import { FolderIcon } from "./icons";
+import { CheckIcon, EditIcon, FolderIcon } from "./icons";
 
 export interface AgentLaunchDraft {
   kind: LaunchTarget["kind"];
@@ -50,12 +51,46 @@ export function agentLaunchDraftValid(draft: AgentLaunchDraft) {
   return Boolean(draft.kind === "app" ? draft.app.trim() : draft.command.trim());
 }
 
+function LaunchTextField({ label, hint, value, count, rows, placeholder, invalid = false, disabled, readOnly, onChange, children }: {
+  label: string; hint: string; value: string; count: number; rows: number; placeholder?: string;
+  invalid?: boolean; disabled: boolean; readOnly: boolean; onChange(value: string): void; children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const id = useId();
+  const [isEditing, setEditing] = useState(false);
+  // Keep invalid text visible instead of presenting a partially parsed preview.
+  const editing = isEditing || invalid;
+  return <section className="arca-launch-text-field" aria-labelledby={`${id}-label`}>
+    <div className="arca-launch-text-heading">
+      <span id={`${id}-label`} className="arca-launch-text-label">{label}
+        {!editing && count > 0 && <span className="arca-launch-value-count">{count}</span>}
+      </span>
+      {!readOnly && <button type="button" className="arca-launch-text-edit" disabled={disabled || (editing && invalid)}
+        aria-label={t(editing ? "agentConfiguration.finishEditingField" : "agentConfiguration.editField", { field: label })}
+        aria-expanded={editing} aria-controls={id} onClick={() => setEditing(!editing)}>
+        {editing ? <CheckIcon className="w-3.5 h-3.5" /> : <EditIcon className="w-3.5 h-3.5" />}
+        {t(editing ? "agentConfiguration.doneEditing" : "common.edit")}
+      </button>}
+    </div>
+    {editing ? <div className="arca-launch-text-editor" id={id}>
+      <textarea className="arca-dialog-input arca-launch-arguments" rows={rows} spellCheck={false} autoFocus
+        aria-labelledby={`${id}-label`} aria-describedby={`${id}-hint`} aria-invalid={invalid || undefined}
+        autoCapitalize="off" autoCorrect="off" value={value} placeholder={placeholder}
+        onChange={event => onChange(event.target.value)} />
+      <span id={`${id}-hint`} className="arca-launch-hint">{hint}</span>
+    </div> : <div className="arca-launch-value-preview" id={id}>{children}</div>}
+  </section>;
+}
+
 export function AgentLaunchFields({ info, draft, disabled, readOnlyDefault = false, onChange, onBusyChange, onError }: {
   info: AgentLaunchInfo; draft: AgentLaunchDraft; disabled: boolean; readOnlyDefault?: boolean;
   onChange(draft: AgentLaunchDraft): void; onBusyChange(busy: boolean): void; onError(message: string): void;
 }) {
   const { t } = useTranslation();
   const validation = parseLaunchEnvironment(draft.environment);
+  const argumentsText = draft.kind === "app" ? draft.appArgs : draft.args;
+  const argumentsList = argumentsText.split(draft.kind === "app" ? /\r?\n/ : "\n").filter(Boolean);
+  const environmentEntries = Object.entries(validation.env);
   const change = (patch: Partial<AgentLaunchDraft>) => { if (!readOnlyDefault) onChange({ ...draft, ...patch }); };
   const browse = async () => {
     if (disabled || readOnlyDefault) return;
@@ -88,16 +123,24 @@ export function AgentLaunchFields({ info, draft, disabled, readOnlyDefault = fal
         <input className="arca-dialog-input" value={draft.directory} placeholder={readOnlyDefault ? "" : t("agentConfiguration.lastDirectory")} onChange={(event) => change({ directory: event.target.value })} />
         <button type="button" className="btn-secondary" aria-label={t("agentConfiguration.selectDefaultDirectory")} title={t("agentConfiguration.selectFolder")} onClick={() => void browseDirectory()}><FolderIcon className="w-4 h-4" /></button>
       </div></label>}
-      <label><span className="arca-launch-label-line">{t("agentConfiguration.arguments")}<span className="arca-launch-hint">{t("agentConfiguration.onePerLine")}</span></span>
-        <textarea className="arca-dialog-input arca-launch-arguments" rows={2} value={draft.kind === "app" ? draft.appArgs : draft.args}
-          onChange={(event) => change(draft.kind === "app" ? { appArgs: event.target.value } : { args: event.target.value })} />
-      </label>
-      <label><span className="arca-launch-label-line">{t("agentConfiguration.environment")}<span className="arca-launch-hint">{t("agentConfiguration.environmentHint")}</span></span>
-        <textarea className="arca-dialog-input arca-launch-arguments arca-launch-environment-block" rows={6} spellCheck={false} aria-label={t("agentConfiguration.environment")}
-          placeholder={readOnlyDefault ? "" : "HTTP_PROXY=http://127.0.0.1:6789\nNO_PROXY=localhost,127.0.0.1"} value={draft.environment}
-          onChange={(event) => change({ environment: event.target.value })} />
-        {validation?.errorCode && <ToastNotice kind="warning" delay={500} message={t(`agentConfiguration.environmentErrors.${validation.errorCode}`, { line: validation.line })} />}
-      </label>
+      <LaunchTextField label={t("agentConfiguration.arguments")} hint={t("agentConfiguration.onePerLine")}
+        value={argumentsText} count={argumentsList.length} rows={3} disabled={disabled} readOnly={readOnlyDefault}
+        onChange={value => change(draft.kind === "app" ? { appArgs: value } : { args: value })}>
+        {argumentsList.length ? <ol className="arca-launch-argument-list">
+          {argumentsList.map((argument, index) => <li key={index}><code>{argument}</code></li>)}
+        </ol> : <span className="arca-launch-value-empty">{t("agentConfiguration.noArguments")}</span>}
+      </LaunchTextField>
+      <LaunchTextField label={t("agentConfiguration.environment")} hint={t("agentConfiguration.environmentHint")}
+        value={draft.environment} count={environmentEntries.length} rows={6} disabled={disabled} readOnly={readOnlyDefault}
+        invalid={Boolean(validation.errorCode)} placeholder={"HTTP_PROXY=http://127.0.0.1:6789\nNO_PROXY=localhost,127.0.0.1"}
+        onChange={environment => change({ environment })}>
+        {environmentEntries.length ? <dl className="arca-launch-environment-list">
+          {environmentEntries.map(([name, value]) => <div className="arca-launch-environment-row" key={name}>
+            <dt><code>{name}</code></dt><dd><code>{value || <span className="arca-launch-value-empty">{t("agentConfiguration.emptyValue")}</span>}</code></dd>
+          </div>)}
+        </dl> : <span className="arca-launch-value-empty">{t("agentConfiguration.noEnvironment")}</span>}
+      </LaunchTextField>
+      {validation.errorCode && <ToastNotice kind="warning" delay={500} message={t(`agentConfiguration.environmentErrors.${validation.errorCode}`, { line: validation.line })} />}
       {draft.kind === "app" && <div className="arca-launch-instance-option">
         <div><span>{t("agentConfiguration.newInstance")}</span><p className="arca-launch-hint">{t("agentConfiguration.newInstanceHint")}</p></div>
         <Switch ariaLabel={t("agentConfiguration.newInstance")} checked={draft.newInstance} disabled={disabled || readOnlyDefault} onChange={(value) => change({ newInstance: value })} />

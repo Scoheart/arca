@@ -3,6 +3,7 @@ pub mod commands;
 mod capture;
 mod traces;
 mod instructions;
+mod codex_configuration;
 mod observation_watcher;
 mod file_editors;
 mod agent_launch;
@@ -169,6 +170,9 @@ pub fn run() {
             instructions::instruction_prepare_save,
             instructions::instruction_prepare_create,
             instructions::instruction_commit,
+            codex_configuration::codex_configuration_read,
+            codex_configuration::codex_configuration_render,
+            codex_configuration::codex_configuration_save,
             traces::trace_page,
             traces::trace_detail,
             traces::trace_import,
