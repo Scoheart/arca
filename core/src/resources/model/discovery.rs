@@ -1,4 +1,4 @@
-use super::{full_request_url, provider_credential_subject, read_credential_checked};
+use super::full_request_url;
 use crate::domain::types::{ApiKeySource, AuthRequirement, ModelProtocol, ModelProviderConfig};
 use serde::Serialize;
 use serde_json::Value;
@@ -70,7 +70,6 @@ pub(super) fn provider_model_discovery_supported(provider: &ModelProviderConfig)
 /// credential helpers and HTTP run only after that gate has been released.
 pub(crate) struct ModelDiscoveryInput {
     provider: ModelProviderConfig,
-    stored_credential: Option<Zeroizing<Vec<u8>>>,
 }
 
 pub(crate) fn prepare_provider_discovery(provider_id: &str) -> Result<ModelDiscoveryInput, String> {
@@ -78,11 +77,7 @@ pub(crate) fn prepare_provider_discovery(provider_id: &str) -> Result<ModelDisco
     let provider = settings.model_providers.as_ref()
         .and_then(|providers| providers.get(provider_id)).cloned()
         .ok_or_else(|| format!("model_provider_not_found: Provider '{provider_id}' does not exist"))?;
-    let stored_credential = if provider.auth_requirement != AuthRequirement::None
-        && matches!(provider.api_key_source, None | Some(ApiKeySource::ArcaStore)) {
-        read_credential_checked(&provider_credential_subject(provider_id))?.map(Zeroizing::new)
-    } else { None };
-    Ok(ModelDiscoveryInput { provider, stored_credential })
+    Ok(ModelDiscoveryInput { provider })
 }
 
 pub fn discover_provider_models(provider_id: &str) -> Result<Vec<ProviderModelSummary>, String> {
@@ -92,16 +87,20 @@ pub fn discover_provider_models(provider_id: &str) -> Result<Vec<ProviderModelSu
 pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<Vec<ProviderModelSummary>, String> {
     let provider = &input.provider;
     let spec = discovery_spec_for_provider(provider)?;
+    let stored_credential = if provider.auth_requirement != AuthRequirement::None
+        && matches!(provider.api_key_source, None | Some(ApiKeySource::ArcaStore)) {
+        super::read_runtime_provider_credential(&provider.id)?.map(Zeroizing::new)
+    } else { None };
     let source = provider.api_key_source.clone().or_else(||
-        input.stored_credential.is_some().then_some(ApiKeySource::ArcaStore));
+        stored_credential.is_some().then_some(ApiKeySource::ArcaStore));
     let credential = if provider.auth_requirement == AuthRequirement::None {
         None
     } else if matches!(source, Some(ApiKeySource::ArcaStore))
-        && input.stored_credential.is_none() && provider.auth_requirement == AuthRequirement::Optional {
+        && stored_credential.is_none() && provider.auth_requirement == AuthRequirement::Optional {
         None
     } else if let Some(source) = source.as_ref() {
         let resolved = super::credential::resolve_source(source,
-            input.stored_credential.as_ref().map(|bytes| bytes.to_vec()))?;
+            stored_credential.as_ref().map(|bytes| bytes.to_vec()))?;
         Some(Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
             .map_err(|_| "model_provider_credential_invalid: API Key is not UTF-8".to_string())?))
     } else if provider.auth_requirement == AuthRequirement::Required {
@@ -1466,7 +1465,7 @@ mod tests {
             let mut config = provider("openai", url.as_str(), ModelProtocol::OpenaiResponses, "/responses");
             config.auth_requirement = requirement.clone();
             config.api_key_source = Some(ApiKeySource::File { path: path.to_string_lossy().into_owned() });
-            execute_provider_discovery(ModelDiscoveryInput { provider: config, stored_credential: None }).unwrap();
+            execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
             let request = request.recv().unwrap().to_ascii_lowercase();
             handle.join().unwrap();
             assert_eq!(request.contains("authorization: bearer fixture-file-key"), requirement == AuthRequirement::Required);

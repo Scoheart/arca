@@ -20,8 +20,9 @@ fn main() {
     let fixture = TestHome::new("parity");
     let bin = fixture.home.join("bin");
     fs::write(bin.join("curl"), "#!/bin/sh\nprintf '%s\\0' \"$@\"\n").unwrap();
+    fs::write(bin.join("jq"), "#!/bin/sh\n[ \"$#\" -eq 1 ] && [ \"$1\" = '-r' ] || exit 1\ncat\n").unwrap();
     fs::write(bin.join("fixture-agent"), "#!/bin/sh\nexit 0\n").unwrap();
-    for name in ["curl", "fixture-agent"] {
+    for name in ["curl", "jq", "fixture-agent"] {
         #[cfg(unix)] fs::set_permissions(bin.join(name), fs::Permissions::from_mode(0o700)).unwrap();
     }
     let terminal = fixture.home.join("System/Applications/Utilities/Terminal.app/Contents");

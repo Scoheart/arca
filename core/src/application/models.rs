@@ -46,7 +46,8 @@ pub fn discover_provider_models(provider_id: &str) -> Result<Vec<ProviderModelSu
 }
 
 pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
-    super::gate::read(|| crate::resources::model::reveal_provider_credential(provider_id))
+    let provider = super::gate::read(|| crate::resources::model::prepare_provider_credential_reveal(provider_id))?;
+    crate::resources::model::execute_provider_credential_reveal(&provider)
 }
 
 pub fn infer_provider(base_url: &str) -> String {

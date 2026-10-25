@@ -927,7 +927,7 @@ it("rejects absolute, fragmented, and traversal Endpoint Paths in the Provider f
   }
 });
 
-it("loads a saved Provider API key masked and preserves it when unchanged", async () => {
+it("reads a saved Provider API key only on explicit reveal and preserves it when unchanged", async () => {
   vi.mocked(api.listModelProviderInstances).mockResolvedValue([{
     id: "openrouter-team",
     name: "OpenRouter Team",
@@ -956,18 +956,18 @@ it("loads a saved Provider API key masked and preserves it when unchanged", asyn
   const credential = screen.getByRole("region", { name: "API Key" });
   const apiKey = within(credential).getByLabelText("API Key");
   expect(apiKey).toHaveAttribute("type", "password");
-  await waitFor(() =>
-    expect(api.revealModelProviderCredential).toHaveBeenCalledWith("openrouter-team")
-  );
-  await waitFor(() => expect(apiKey).toHaveValue("saved-test-value"));
-  expect(apiKey).toHaveAttribute("type", "password");
+  expect(apiKey).toHaveValue("");
+  expect(apiKey).toHaveAttribute("placeholder", "••••••••");
+  expect(api.revealModelProviderCredential).not.toHaveBeenCalled();
   await user.click(within(credential).getByRole("button", { name: "显示 API Key" }));
+  await waitFor(() => expect(apiKey).toHaveValue("saved-test-value"));
+  expect(api.revealModelProviderCredential).toHaveBeenCalledWith("openrouter-team");
   expect(apiKey).toHaveAttribute("type", "text");
   expect(apiKey).toHaveValue("saved-test-value");
 
   await user.click(within(credential).getByRole("button", { name: "隐藏 API Key" }));
   expect(apiKey).toHaveAttribute("type", "password");
-  expect(apiKey).toHaveValue("saved-test-value");
+  expect(apiKey).toHaveValue("");
 
   await user.click(screen.getByRole("button", { name: "保存" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
@@ -996,13 +996,14 @@ async function openSavedProviderEditor(user: ReturnType<typeof userEvent.setup>)
   return { planUpdate, commit, input: within(credentialSection).getByLabelText("API Key") };
 }
 
-it.each(["", "   ", "replacement-test-key"])("saves the edited API key value %j without a clear checkbox", async (value) => {
+it.each(["", "   ", "replacement-test-key"])("replaces or explicitly deletes a saved API key without revealing it: %j", async (value) => {
   vi.mocked(api.revealModelProviderCredential).mockResolvedValue("saved-test-key");
   const user = userEvent.setup();
   const { input, planUpdate, commit } = await openSavedProviderEditor(user);
-  await waitFor(() => expect(input).toHaveValue("saved-test-key"));
+  expect(input).toHaveValue("");
+  expect(api.revealModelProviderCredential).not.toHaveBeenCalled();
   expect(screen.queryByRole("checkbox", { name: "清除已存密钥" })).not.toBeInTheDocument();
-  await user.clear(input);
+  if (!value.trim()) await user.click(screen.getByRole("button", { name: "删除已保存的 API Key" }));
   if (value) await user.type(input, value);
   expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
   await user.click(screen.getByRole("button", { name: "保存" }));
@@ -1017,15 +1018,16 @@ it.each(["", "   ", "replacement-test-key"])("saves the edited API key value %j 
   await waitFor(() => expect(commit).toHaveBeenCalled());
 });
 
-it("blocks saving after a failed key read and allows retry without clearing the stored key", async () => {
+it("allows preserving a saved key after a denied explicit read and supports manual retry", async () => {
   vi.mocked(api.revealModelProviderCredential)
     .mockRejectedValueOnce(new Error("Keychain unavailable"))
     .mockResolvedValueOnce("saved-test-key");
   const user = userEvent.setup();
   const { input, planUpdate } = await openSavedProviderEditor(user);
+  await user.click(screen.getByRole("button", { name: "显示 API Key" }));
   await screen.findByRole("alert");
-  expect(input).toBeDisabled();
-  expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
+  expect(input).toBeEnabled();
+  expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
   expect(planUpdate).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "重试" }));
   await waitFor(() => expect(input).toHaveValue("saved-test-key"));

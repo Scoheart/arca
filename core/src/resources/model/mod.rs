@@ -9,6 +9,8 @@
 pub(crate) mod adapters;
 mod claude_desktop;
 pub(crate) mod credential;
+#[cfg(any(target_os = "macos", test))]
+mod credential_cache;
 mod discovery;
 mod open_code_auth;
 
@@ -3152,32 +3154,7 @@ fn read_credential_service_checked(service: &str) -> Result<Option<Vec<u8>>, Str
                 .cloned());
         }
     }
-    let output = Command::new("/usr/bin/security")
-        .args([
-            "find-generic-password",
-            "-w",
-            "-s",
-            service,
-            "-a",
-            KEYCHAIN_ACCOUNT,
-        ])
-        .stderr(Stdio::null())
-        .output()
-        .map_err(|_| "credential_read_failed: could not start the Keychain helper".to_string())?;
-    if output.status.code() == Some(44) {
-        return Ok(None);
-    }
-    if !output.status.success() {
-        return Err("credential_read_failed: Keychain did not authorize a reliable credential read".into());
-    }
-    let mut value = output.stdout;
-    while value
-        .last()
-        .is_some_and(|byte| matches!(byte, b'\n' | b'\r'))
-    {
-        value.pop();
-    }
-    Ok(Some(value))
+    keychain::password(service, KEYCHAIN_ACCOUNT)
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -3216,21 +3193,7 @@ fn credential_service_exists_checked(service: &str) -> Result<bool, String> {
     }
     #[cfg(target_os = "macos")]
     {
-        let status = Command::new("/usr/bin/security")
-            .args([
-                "find-generic-password",
-                "-s",
-                service,
-                "-a",
-                KEYCHAIN_ACCOUNT,
-            ])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-            .map_err(|_| "credential_read_failed: could not start the Keychain helper".to_string())?;
-        if status.success() { Ok(true) }
-        else if status.code() == Some(44) { Ok(false) }
-        else { Err("credential_read_failed: Keychain credential presence could not be determined".into()) }
+        keychain::revision(service, KEYCHAIN_ACCOUNT).map(|revision| revision.is_some())
     }
     #[cfg(not(target_os = "macos"))]
     Ok(false)
@@ -3243,6 +3206,7 @@ fn credential_service_exists(service: &str) -> bool {
 
 #[cfg(target_os = "macos")]
 fn set_credential_service(service: &str, credential: &[u8]) -> Result<(), String> {
+    invalidate_runtime_credential(service);
     #[cfg(any(test, debug_assertions))]
     {
         if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
@@ -3256,7 +3220,9 @@ fn set_credential_service(service: &str, credential: &[u8]) -> Result<(), String
     if credential.contains(&b'\n') || credential.contains(&b'\r') {
         return Err("API key cannot contain a newline".into());
     }
-    keychain::set_password(service, KEYCHAIN_ACCOUNT, credential)
+    let result = keychain::set_password(service, KEYCHAIN_ACCOUNT, credential);
+    invalidate_runtime_credential(service);
+    result
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -3285,6 +3251,7 @@ enum CredentialDeleteOutcome {
 fn delete_credential_service_authoritative(
     service: &str,
 ) -> Result<CredentialDeleteOutcome, String> {
+    invalidate_runtime_credential(service);
     #[cfg(any(test, debug_assertions))]
     {
         if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
@@ -3316,6 +3283,7 @@ fn delete_credential_service_authoritative(
         .stderr(Stdio::piped())
         .output()
         .map_err(|error| format!("failed to start macOS Keychain helper: {error}"))?;
+    invalidate_runtime_credential(service);
     if output.status.success() {
         Ok(CredentialDeleteOutcome::Deleted)
     } else if output.status.code() == Some(44) {
@@ -3368,6 +3336,35 @@ fn read_credential_checked(profile_id: &str) -> Result<Option<Vec<u8>>, String> 
     }
     let legacy = legacy_keychain_service(profile_id);
     if legacy != service { read_credential_service_checked(&legacy) } else { Ok(None) }
+}
+
+#[cfg(target_os = "macos")]
+static RUNTIME_CREDENTIALS: std::sync::OnceLock<credential_cache::CredentialReadCache> = std::sync::OnceLock::new();
+
+#[cfg(target_os = "macos")]
+fn invalidate_runtime_credential(service: &str) {
+    if let Some(cache) = RUNTIME_CREDENTIALS.get() { cache.invalidate(service); }
+}
+
+/// Runtime lookups may share a short-lived result. Transaction snapshots and
+/// migration continue to call the authoritative, uncached reader above.
+fn read_runtime_credential_service(service: &str) -> Result<Option<Vec<u8>>, String> {
+    #[cfg(any(test, debug_assertions))]
+    if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
+        return read_credential_service_checked(service);
+    }
+    #[cfg(target_os = "macos")]
+    {
+        RUNTIME_CREDENTIALS.get_or_init(credential_cache::CredentialReadCache::new)
+            .read(service, || keychain::revision(service, KEYCHAIN_ACCOUNT),
+                || read_credential_service_checked(service))
+    }
+    #[cfg(not(target_os = "macos"))]
+    read_credential_service_checked(service)
+}
+
+fn read_runtime_provider_credential(provider_id: &str) -> Result<Option<Vec<u8>>, String> {
+    read_runtime_credential_service(&provider_keychain_service(provider_id))
 }
 
 fn credential_exists(profile_id: &str) -> bool {
@@ -4073,6 +4070,11 @@ pub(crate) fn provider_credential_present(provider_id: &str) -> bool {
 ///
 /// Callers must keep the returned value ephemeral and must not serialize or log it.
 pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
+    let provider_id = prepare_provider_credential_reveal(provider_id)?;
+    execute_provider_credential_reveal(&provider_id)
+}
+
+pub(crate) fn prepare_provider_credential_reveal(provider_id: &str) -> Result<String, String> {
     let settings = load_settings();
     if !settings
         .model_providers
@@ -4084,7 +4086,15 @@ pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
         ));
     }
 
-    let credential = read_credential_service_checked(&provider_keychain_service(provider_id))?
+    Ok(provider_id.into())
+}
+
+pub(crate) fn execute_provider_credential_reveal(provider_id: &str) -> Result<String, String> {
+    // A user's explicit reveal/retry may request authorization again; an
+    // automatic catalog refresh still shares the short failure cooldown.
+    #[cfg(target_os = "macos")]
+    if let Some(cache) = RUNTIME_CREDENTIALS.get() { cache.retry(&provider_keychain_service(provider_id)); }
+    let credential = read_runtime_provider_credential(provider_id)?
         .ok_or_else(|| {
             format!(
                 "model_provider_credential_missing: Provider '{provider_id}' has no API Key in Keychain"

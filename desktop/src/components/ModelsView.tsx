@@ -23,6 +23,7 @@ import type {
   ResourceNavigationIntent,
 } from "../lib/types";
 import { formatError } from "../lib/format";
+import { readLocalSetting, writeLocalSetting } from "../lib/localSettings";
 import { requiresAgentReview } from "../lib/agentOperation";
 import { ManualModelCard, ProviderModelCatalog } from "./ProviderModelCatalog";
 import {
@@ -1069,6 +1070,9 @@ function ModelInspector({
   );
 }
 
+type ProviderCatalogSort = "default" | "name-asc" | "name-desc";
+const PROVIDER_CATALOG_SORT_KEY = "arca.providerCatalog.sort";
+
 function ProviderCatalogDialog({
   providers,
   onClose,
@@ -1078,17 +1082,30 @@ function ProviderCatalogDialog({
   onClose: () => void;
   onUse: (provider: ModelProviderView) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<ProviderCatalogSort>(() => {
+    const saved = readLocalSetting(PROVIDER_CATALOG_SORT_KEY);
+    return saved === "name-asc" || saved === "name-desc" ? saved : "default";
+  });
   const [selectedId, setSelectedId] = useState(
     providers.find((provider) => provider.id === "custom")?.id ?? providers[0]?.id ?? "",
   );
-  const orderedProviders = [
-    ...providers.filter((provider) => provider.id === "custom"),
-    ...providers.filter((provider) => provider.id !== "custom"),
-  ];
+  const orderedProviders = useMemo(() => {
+    if (sort === "default") {
+      return [
+        ...providers.filter((provider) => provider.id === "custom"),
+        ...providers.filter((provider) => provider.id !== "custom"),
+      ];
+    }
+    const collator = new Intl.Collator(i18n.resolvedLanguage, { numeric: true, sensitivity: "base" });
+    const direction = sort === "name-asc" ? 1 : -1;
+    return [...providers].sort((left, right) => direction * (
+      collator.compare(left.name, right.name) || collator.compare(left.id, right.id)
+    ));
+  }, [providers, sort, i18n.resolvedLanguage]);
+  const needle = query.trim().toLocaleLowerCase();
   const visibleProviders = orderedProviders.filter((provider) => {
-    const needle = query.trim().toLocaleLowerCase();
     return !needle || [
       provider.name,
       provider.id,
@@ -1135,18 +1152,37 @@ function ProviderCatalogDialog({
       )}
     >
       <div className="arca-provider-catalog">
-        <label className="arca-provider-catalog-search">
-          <SearchIcon className="w-4 h-4" />
-          <input
-            autoFocus
-            type="search"
-            className="arca-model-field"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("models.searchProviders")}
-            aria-label={t("models.searchProviders")}
-          />
-        </label>
+        <div className="arca-provider-catalog-toolbar">
+          <label className="arca-provider-catalog-search">
+            <SearchIcon className="w-4 h-4" />
+            <input
+              autoFocus
+              type="search"
+              className="arca-model-field"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("models.searchProviders")}
+              aria-label={t("models.searchProviders")}
+            />
+          </label>
+          <div className="arca-provider-catalog-sort">
+            <span>{t("models.providerSort")}</span>
+            <FormSelect
+              ariaLabel={t("models.providerSort")}
+              value={sort}
+              options={[
+                { value: "default", label: t("models.providerSortDefault") },
+                { value: "name-asc", label: t("models.providerSortNameAsc") },
+                { value: "name-desc", label: t("models.providerSortNameDesc") },
+              ]}
+              onChange={(value) => {
+                if (value !== "default" && value !== "name-asc" && value !== "name-desc") return;
+                setSort(value);
+                writeLocalSetting(PROVIDER_CATALOG_SORT_KEY, value);
+              }}
+            />
+          </div>
+        </div>
         <div className="arca-provider-catalog-grid" role="radiogroup" aria-label={t("models.providerCatalogTitle")}>
           {visibleProviders.map((provider) => (
             <button
@@ -1425,34 +1461,20 @@ function ModelProviderDialog({
   );
   const [credential, setCredential] = useState("");
   const [credentialDirty, setCredentialDirty] = useState(false);
-  const [credentialLoading, setCredentialLoading] = useState(Boolean(initial?.credential_saved));
+  const [credentialLoading, setCredentialLoading] = useState(false);
   const [credentialReadError, setCredentialReadError] = useState<string | null>(null);
-  const [credentialLoadAttempt, setCredentialLoadAttempt] = useState(0);
+  const credentialReadGeneration = useRef(0);
   const [credentialVisible, setCredentialVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    let cancelled = false;
+    credentialReadGeneration.current += 1;
     setCredential("");
     setCredentialDirty(false);
     setCredentialVisible(false);
     setCredentialReadError(null);
-    if (!initial?.credential_saved) {
-      setCredentialLoading(false);
-      return;
-    }
-    setCredentialLoading(true);
-    void revealModelProviderCredential(initial.id)
-      .then((savedCredential) => {
-        if (!cancelled) setCredential(savedCredential);
-      })
-      .catch((error) => {
-        if (!cancelled) setCredentialReadError(formatError(error));
-      })
-      .finally(() => {
-        if (!cancelled) setCredentialLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [initial?.id, initial?.credential_saved, credentialLoadAttempt]);
+    setCredentialLoading(false);
+    return () => { credentialReadGeneration.current += 1; };
+  }, [initial?.id, initial?.credential_saved]);
   const enabledProtocols = PROTOCOLS.filter(({ id }) => Boolean(draft.protocols[id]));
   const selectedProtocolInfo = PROTOCOLS.find(({ id }) => id === selectedProtocol) ?? PROTOCOLS[0];
   const selectedProtocolPath = protocolPaths[selectedProtocol];
@@ -1475,8 +1497,8 @@ function ModelProviderDialog({
   const enteredCredential = Boolean(credential.trim());
   const clearCredential = credentialDirty && !enteredCredential;
   const preservedCredential = Boolean(initial?.credential_saved && !credentialDirty);
-  // A pending/failed read must never look like an editable empty credential.
-  const showSavedCredentialMask = Boolean(initial?.credential_saved && (credentialLoading || credentialReadError));
+  // Empty, untouched drafts preserve the existing Keychain item without reading it.
+  const showSavedCredentialMask = preservedCredential && !credential;
   const preservesLegacySource = Boolean(initialSource && initialSource.kind !== "arca-store");
   const sourceValid = authWithoutCredential !== "required"
     || enteredCredential
@@ -1492,9 +1514,34 @@ function ModelProviderDialog({
       && protocolsValid
       && sourceValid
       && !busy
-      && !credentialLoading
-      && !credentialReadError,
+      && !credentialLoading,
   );
+
+  const toggleCredentialVisibility = async () => {
+    if (credentialVisible) {
+      setCredentialVisible(false);
+      // Revealed saved values need not remain in the WebView after hiding them.
+      if (!credentialDirty) setCredential("");
+      return;
+    }
+    if (!preservedCredential || credential) {
+      setCredentialVisible(true);
+      return;
+    }
+    const generation = ++credentialReadGeneration.current;
+    setCredentialLoading(true);
+    setCredentialReadError(null);
+    try {
+      const value = await revealModelProviderCredential(initial!.id);
+      if (credentialReadGeneration.current !== generation) return;
+      setCredential(value);
+      setCredentialVisible(true);
+    } catch (error) {
+      if (credentialReadGeneration.current === generation) setCredentialReadError(formatError(error));
+    } finally {
+      if (credentialReadGeneration.current === generation) setCredentialLoading(false);
+    }
+  };
 
   const save = async () => {
     if (!valid) return;
@@ -1598,7 +1645,7 @@ function ModelProviderDialog({
         <section className="arca-provider-form-section arca-provider-credential" aria-label={t("models.apiKey")}>
           <div className="arca-provider-section-head">
             <strong>{t("models.apiKey")}</strong>
-            <small>{t("models.credentialHelp")}</small>
+            <small>{t(preservedCredential ? "models.savedCredentialPreserved" : "models.credentialHelp")}</small>
           </div>
 
           <div className="arca-model-form-field arca-provider-credential-field">
@@ -1608,10 +1655,11 @@ function ModelProviderDialog({
                   autoComplete="new-password"
                   aria-label={t("models.apiKey")}
                   value={credential}
-                  disabled={busy || credentialLoading || Boolean(credentialReadError)}
+                  disabled={busy || credentialLoading}
                   onChange={(event) => {
                     setCredential(event.target.value);
                     setCredentialDirty(true);
+                    setCredentialReadError(null);
                   }}
                   placeholder={showSavedCredentialMask
                     ? "••••••••"
@@ -1624,19 +1672,33 @@ function ModelProviderDialog({
                     className="arca-provider-icon-button"
                     aria-label={credentialVisible ? t("models.hideApiKey") : t("models.showApiKey")}
                     title={credentialVisible ? t("models.hideApiKey") : t("models.showApiKey")}
-                    disabled={busy || credentialLoading || Boolean(credentialReadError)}
+                    disabled={busy || credentialLoading}
                     aria-busy={credentialLoading}
-                    onClick={() => setCredentialVisible((visible) => !visible)}
+                    onClick={() => void toggleCredentialVisibility()}
                   >
                     {credentialVisible
                       ? <EyeOffIcon className="w-4 h-4" />
                       : <EyeIcon className="w-4 h-4" />}
                   </button>
+                  {initial?.credential_saved && !clearCredential && <button
+                    type="button"
+                    className="arca-provider-icon-button"
+                    aria-label={t("models.deleteSavedApiKey")}
+                    title={t("models.deleteSavedApiKey")}
+                    disabled={busy || credentialLoading}
+                    onClick={() => {
+                      credentialReadGeneration.current += 1;
+                      setCredential("");
+                      setCredentialDirty(true);
+                      setCredentialVisible(false);
+                      setCredentialReadError(null);
+                    }}
+                  ><TrashIcon className="w-4 h-4" /></button>}
             </div>
           </div>
 
           {credentialReadError && <ToastNotice message={t("models.revealApiKeyFailed", { error: credentialReadError })}
-            action={<button type="button" className="btn-ghost" onClick={() => setCredentialLoadAttempt((attempt) => attempt + 1)}>
+            action={<button type="button" className="btn-ghost" disabled={credentialLoading} onClick={() => void toggleCredentialVisibility()}>
               <RefreshIcon className="w-4 h-4" />{t("common.retry")}
             </button>} />}
         </section>

@@ -96,7 +96,7 @@ async function runRefreshes(
 
 function App() {
   const { t } = useTranslation();
-  const [view, setView] = useState<View>({ kind: "registry" });
+  const [view, setView] = useState<View>({ kind: "models" });
   const [addAgentOpen, setAddAgentOpen] = useState(false);
   const [mcpEditorOpen, setMcpEditorOpen] = useState(false);
   const [externalModelCandidates, setExternalModelCandidates] = useState<ModelAdoptionCandidate[]>([]);

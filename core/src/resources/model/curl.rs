@@ -1,4 +1,4 @@
-//! One cURL representation for Desktop copy and explicit CLI export.
+//! One cURL pipeline for Desktop copy and explicit CLI export.
 use super::{credential, normalize_endpoint_path, normalize_provider_base_url};
 use crate::domain::types::{ApiKeySource, AuthRequirement, ModelProtocol};
 use crate::settings::load_settings_strict;
@@ -48,7 +48,7 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
         ModelProtocol::OpenaiCompletions => json!({"model": model, "messages": [{"role": "user", "content": "Hello"}]}),
     };
     lines.push(format!("  --data-raw {}", quote(&serde_json::to_string_pretty(&body).map_err(|_| "curl_serialization_failed")?)));
-    Ok(lines.join(" \\\n"))
+    Ok(format!("{} | jq -r", lines.join(" \\\n")))
 }
 
 /// The returned command may contain a secret only on explicit export. Never log,

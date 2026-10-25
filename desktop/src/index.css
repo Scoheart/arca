@@ -1937,7 +1937,11 @@ body {
 
 /* Models */
 .arca-provider-catalog { display: grid; min-height: 0; padding: 0 2px 14px; overflow-y: auto; gap: 10px; }
-.arca-provider-catalog-search { position: relative; display: block; flex: 0 0 auto; }
+.arca-provider-catalog-toolbar { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 10px; }
+.arca-provider-catalog-search { position: relative; display: block; min-width: 0; flex: 1 1 220px; }
+.arca-provider-catalog-sort { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
+.arca-provider-catalog-sort .arca-form-select { width: 150px; }
+.arca-provider-catalog-sort .arca-form-select-trigger { height: 40px; border-radius: 10px; font-size: 11px; }
 .arca-provider-catalog-search > svg {
   position: absolute; z-index: 1; top: 50%; left: 12px; color: var(--text-tertiary); pointer-events: none;
   transform: translateY(-50%);
@@ -1951,7 +1955,7 @@ body {
   background: var(--surface-raised); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-blue) 9%, transparent);
 }
 .arca-provider-catalog-grid {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px;
+  display: grid; min-height: 128px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 7px;
 }
 .arca-provider-catalog-item {
   display: grid; min-width: 0; min-height: 54px;
