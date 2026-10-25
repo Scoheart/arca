@@ -19,8 +19,6 @@ import { DialogShell } from "./DialogShell";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
 import { DocumentIcon, ExternalLinkIcon, FolderIcon, KeyIcon, PlusIcon, RefreshIcon, TrashIcon } from "./icons";
 import { ToastNotice, useToast } from "./Toast";
-import { configureAgentLaunchProfiles, getAgentLaunchInfo, type AgentLaunchInfo } from "../lib/agentLaunch";
-import { AgentLaunchProfiles, launchProfilesChanged, launchProfilesPayload, launchProfilesValid, createLaunchProfilesDraft, type LaunchProfilesDraft } from "./AgentLaunchProfiles";
 import { AgentGlyph } from "./brandIcons";
 import { FormSelect } from "./FormSelect";
 import "./AgentLaunch.css";
@@ -51,22 +49,15 @@ export function AgentConfigurationDialog({
   modelAgent,
   onClose,
   onSaved,
-  onLaunchSaved,
   onInstructionPathsSaved,
-  initialSection = "paths",
 }: {
   agent: AgentInfo;
   modelAgent: ModelAgentView | null;
   onClose(): void;
   onSaved(): Promise<unknown> | unknown;
-  onLaunchSaved?(): void;
   onInstructionPathsSaved?(): void;
-  initialSection?: "paths" | "launch";
 }) {
   const { t } = useTranslation();
-  const [section, setSection] = useState<"launch" | "paths">(initialSection);
-  const sectionId = useId();
-  const sectionButtons = useRef<Array<HTMLButtonElement | null>>([]);
   const initialModelPaths = modelAgent?.config_paths?.length
     ? modelAgent.config_paths
     : modelAgent?.config_path
@@ -89,11 +80,6 @@ export function AgentConfigurationDialog({
   const [busy, setBusy] = useState(false);
   const [plan, setPlan] = useState<AssetOperationPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [launchInfo, setLaunchInfo] = useState<AgentLaunchInfo | null>(null);
-  const [launchDraft, setLaunchDraft] = useState<LaunchProfilesDraft | null>(null);
-  const [launchLoading, setLaunchLoading] = useState(true);
-  const [launchError, setLaunchError] = useState("");
-  const [launchRequest, setLaunchRequest] = useState(0);
   const [browsing, setBrowsing] = useState(false);
   const [instructionPaths, setInstructionPaths] = useState<InstructionPathConfiguration | null>(null);
   const [instructionEdits, setInstructionEdits] = useState<Record<string, string | null>>({});
@@ -101,8 +87,6 @@ export function AgentConfigurationDialog({
   const [instructionError, setInstructionError] = useState("");
   const [instructionRequest, setInstructionRequest] = useState(0);
   const reviewedConfiguration = useRef<string | null>(null);
-  const launchSection = useRef<HTMLElement>(null);
-  const didFocusLaunch = useRef(false);
   const toast = useToast();
   const hasMcp = agent.has_global;
   const hasModel = modelAgent !== null;
@@ -115,7 +99,6 @@ export function AgentConfigurationDialog({
   });
   const [savedConfiguration, setSavedConfiguration] = useState(() => JSON.stringify(configurationPatch()));
   const configurationChanged = JSON.stringify(configurationPatch()) !== savedConfiguration;
-  const launchChanged = Boolean(launchInfo && launchDraft && launchProfilesChanged(launchInfo, launchDraft));
   const instructionsChanged = Object.keys(instructionEdits).length > 0;
   const instructionsValid = Object.values(instructionEdits).every(path => path === null || path.trim().length > 0);
   const configurationValid = (!hasMcp || (mcpPath.trim().length > 0 && mcpKey.trim().length > 0))
@@ -123,8 +106,8 @@ export function AgentConfigurationDialog({
       && modelPaths.every((path) => path.trim().length > 0)))
     && (!hasSkills || (skillsPaths.length > 0
       && skillsPaths.every((path) => path.trim().length > 0)));
-  const canSubmit = !busy && !browsing && !launchLoading && !instructionLoading && instructionsValid && (configurationChanged || launchChanged || deliveryChanged || instructionsChanged)
-    && (!configurationChanged || configurationValid) && (!launchChanged || launchDraft && launchProfilesValid(launchDraft));
+  const canSubmit = !busy && !browsing && !instructionLoading && instructionsValid && (configurationChanged || deliveryChanged || instructionsChanged)
+    && (!configurationChanged || configurationValid);
 
   useEffect(() => {
     if (!agent.has_instructions) return;
@@ -136,32 +119,6 @@ export function AgentConfigurationDialog({
       .finally(() => { if (active) setInstructionLoading(false); });
     return () => { active = false; };
   }, [agent.id, agent.has_instructions, instructionRequest]);
-
-  useEffect(() => {
-    let active = true;
-    setLaunchLoading(true); setLaunchError("");
-    void getAgentLaunchInfo(agent.id).then((info) => {
-      if (!active) return;
-      setLaunchInfo(info); setLaunchDraft(createLaunchProfilesDraft(info));
-    }).catch((failure) => { if (active) setLaunchError(formatError(failure)); })
-      .finally(() => { if (active) setLaunchLoading(false); });
-    return () => { active = false; };
-  }, [agent.id, launchRequest]);
-
-  useEffect(() => {
-    if (initialSection !== "launch" || section !== "launch" || launchLoading || didFocusLaunch.current) return;
-    didFocusLaunch.current = true;
-    launchSection.current?.scrollIntoView({ block: "nearest" });
-    launchSection.current?.querySelector<HTMLInputElement>("input:not(:disabled)")?.focus({ preventScroll: true });
-  }, [initialSection, section, launchLoading]);
-
-  const saveLaunch = async () => {
-    if (!launchChanged || !launchDraft || !launchInfo) return;
-    const payload = launchProfilesPayload(launchInfo, launchDraft);
-    const info = await configureAgentLaunchProfiles(agent.id, payload.profiles, payload.activeProfileId, launchInfo.profiles_revision ?? "");
-    setLaunchInfo(info); setLaunchDraft(createLaunchProfilesDraft(info));
-    onLaunchSaved?.();
-  };
 
   const savePreferences = async () => {
     if (instructionsChanged && instructionPaths) {
@@ -176,7 +133,6 @@ export function AgentConfigurationDialog({
       await setAgentCredentialDelivery(agent.id, delivery, plaintextApproved.current);
       setSavedDelivery(delivery);
     }
-    await saveLaunch();
   };
 
   const save = async () => {
@@ -219,7 +175,7 @@ export function AgentConfigurationDialog({
     setBusy(true);
     setError(null);
     let configurationCommitted = false;
-    let launchCommitted = false;
+    let preferencesCommitted = false;
     try {
       const result = await commitOperation({
         domain: "asset",
@@ -239,15 +195,15 @@ export function AgentConfigurationDialog({
       setSavedConfiguration(reviewedConfiguration.current ?? JSON.stringify(configurationPatch()));
       setPlan(null);
       await savePreferences();
-      launchCommitted = true;
+      preferencesCommitted = true;
       await onSaved();
       toast.show({ kind: "success", msg: t("agentConfiguration.updated", { name: agent.name }) });
       onClose();
     } catch (commitError) {
       setError(configurationCommitted
-        ? t(launchCommitted ? "agentConfiguration.refreshFailed" : "agentConfiguration.preferencesIncomplete", { error: formatError(commitError) })
+        ? t(preferencesCommitted ? "agentConfiguration.refreshFailed" : "agentConfiguration.preferencesIncomplete", { error: formatError(commitError) })
         : formatError(commitError));
-      if (configurationCommitted && !launchCommitted) {
+      if (configurationCommitted && !preferencesCommitted) {
         // Keep unsaved preferences so retry does not repeat committed changes.
         try { await onSaved(); } catch { /* The original save error stays visible. */ }
       }
@@ -349,21 +305,8 @@ export function AgentConfigurationDialog({
       kind="editor"
       size="wide"
       title={agent.name}
+      subtitle={t("agentConfiguration.paths")}
       leading={<AgentGlyph id={agent.id} name={agent.name} size={32} />}
-      status={<div className="arca-agent-config-tabs" role="tablist" aria-label={t("agentConfiguration.tabs")}>
-        {([['launch', t('agentConfiguration.launch')], ['paths', t('agentConfiguration.paths')]] as const).map(([value, label], index) => <button
-          key={value} ref={(node) => { sectionButtons.current[index] = node; }} type="button" role="tab"
-          id={`${sectionId}-${value}-tab`} aria-controls={`${sectionId}-${value}-panel`} aria-selected={section === value}
-          tabIndex={section === value ? 0 : -1} disabled={busy || browsing} onClick={() => setSection(value)}
-          onKeyDown={(event) => {
-            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-            event.preventDefault();
-            const next = event.key === "Home" ? 0 : event.key === "End" ? 1 : 1 - index;
-            setSection(next === 0 ? "launch" : "paths"); sectionButtons.current[next]?.focus();
-          }}>
-          {label}{(value === "launch" ? launchChanged : configurationChanged || deliveryChanged || instructionsChanged) && <i aria-label={t("agentConfiguration.unsaved")} />}
-        </button>)}
-      </div>}
       busy={busy || browsing}
       onClose={onClose}
       footerStart={configurationChanged ? <span className="arca-agent-config-hint">{t("agentConfiguration.pathChangeHint")}</span> : null}
@@ -376,7 +319,6 @@ export function AgentConfigurationDialog({
         </>
       )}
     >
-      <div hidden={section !== "paths"} role="tabpanel" id={`${sectionId}-paths-panel`} aria-labelledby={`${sectionId}-paths-tab`}>
       <fieldset className="arca-agent-config-form arca-agent-config-fields" disabled={busy || browsing}>
         {RESOURCE_CATEGORIES.map((resource) => <Fragment key={resource.id}>
           {resource.id === "models" && <>
@@ -498,16 +440,6 @@ export function AgentConfigurationDialog({
           </div>
         </section>
       )}
-      </div>
-      <div hidden={section !== "launch"} role="tabpanel" id={`${sectionId}-launch-panel`} aria-labelledby={`${sectionId}-launch-tab`}>
-      <section ref={launchSection} className="arca-agent-config-launch" aria-label={t("agentConfiguration.launchSettings")}>
-        {launchLoading ? <p className="arca-launch-hint" role="status">{t("agentConfiguration.reading")}</p>
-          : launchInfo && launchDraft ? <AgentLaunchProfiles info={launchInfo} draft={launchDraft} disabled={busy || browsing}
-            onChange={setLaunchDraft} onBusyChange={setBrowsing} onError={setLaunchError} /> : null}
-        {launchError && <ToastNotice message={launchError} action={!launchInfo
-          ? <button type="button" className="btn-ghost" onClick={() => setLaunchRequest((value) => value + 1)}>{t("common.retry")}</button> : undefined} />}
-      </section>
-      </div>
       {error && <ToastNotice message={t("agentConfiguration.saveFailed", { error })} />}
     </DialogShell>
   );

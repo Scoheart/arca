@@ -9,7 +9,7 @@ import installLinks from "../../../data/agent-install-links.json";
 import agentDocsHome from "../../../data/agent-docs-home.json";
 import { useTranslation } from "react-i18next";
 
-export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = false, onChosen, onConfigure }: { agentId: string; contextMenu?: boolean; showLabel?: boolean; onChosen?(): void; onConfigure?(): void }) {
+export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = false, onChosen }: { agentId: string; contextMenu?: boolean; showLabel?: boolean; onChosen?(): void }) {
   const launcher = useAgentLauncher();
   const { t } = useTranslation();
   const [info, setInfo] = useState<AgentLaunchInfo | null>(null);
@@ -63,15 +63,11 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
   const canChooseDirectory = info?.kind === "cli" && info.available;
   const installedPath = info?.resolved_target?.kind === "app" ? info.resolved_target.path
     : info?.resolved_target?.kind === "cli" ? info.resolved_target.command : null;
-  const showSetup = contextMenu || !onConfigure;
-  const hasMenu = Boolean(canChooseDirectory || showSetup);
+  const hasMenu = Boolean(info?.kind);
   const shortLabel = pending ? "稍候" : !info && error ? "重试" : info?.supported === false ? "不支持" : ready ? info?.host_name ?? "运行" : missing ? "安装" : "设置";
   const choose = (action: () => void) => { setExpanded(false); onChosen?.(); action(); };
-  const configure = () => { if (onConfigure) onConfigure(); else void launcher.configure(agentId); };
-  const launch = () => choose(() => {
-    if (info && !info.available && !missing && info.supported && onConfigure) onConfigure();
-    else void launcher.launch(agentId);
-  });
+  const configure = () => { void launcher.configure(agentId); };
+  const launch = () => choose(() => { void launcher.launch(agentId); });
   const openInstallation = () => {
     if (installUrl) void openUrl(installUrl).catch((failure) => show({ kind: "error", msg: formatError(failure) }));
   };
@@ -92,8 +88,8 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
       onClick={() => choose(() => { void launcher.launch(agentId, true); })}><FolderIcon className="w-4 h-4" />在其他目录打开…</button>}
     {contextMenu && installUrl && !missing && <button type="button" role="menuitem" disabled={busy} onClick={() => choose(openInstallation)}>
       <DownloadIcon className="w-4 h-4" />安装文档</button>}
-    {showSetup && <button type="button" role="menuitem" disabled={busy} onClick={() => choose(configure)}>
-      <EditIcon className="w-4 h-4" />启动设置…</button>}
+    <button type="button" role="menuitem" disabled={busy} onClick={() => choose(configure)}>
+      <EditIcon className="w-4 h-4" />启动设置…</button>
   </>;
   return <>
     {!contextMenu && version && info?.available && info.supported && <span className="arca-launch-version" role="status"

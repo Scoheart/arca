@@ -1,32 +1,54 @@
 import { ToastNotice } from "./Toast";
-import { useState } from "react";
-import { configureAgentLaunchProfiles, type AgentLaunchInfo } from "../lib/agentLaunch";
+import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { configureAgentLaunchProfiles, getAgentLaunchInfo, type AgentLaunchInfo } from "../lib/agentLaunch";
 import { formatError } from "../lib/format";
 import { DialogShell } from "./DialogShell";
 import { AgentGlyph } from "./brandIcons";
-import { AgentLaunchProfiles, launchProfilesPayload, launchProfilesValid, createLaunchProfilesDraft } from "./AgentLaunchProfiles";
+import { AgentLaunchProfiles, launchProfilesChanged, launchProfilesPayload, launchProfilesValid, createLaunchProfilesDraft } from "./AgentLaunchProfiles";
 
-export function AgentLaunchSettings({ info, onClose, onSaved }: {
-  info: AgentLaunchInfo; onClose(): void; onSaved(): void;
+export function AgentLaunchSettings({ info, onClose, onSaved, onLaunch }: {
+  info: AgentLaunchInfo; onClose(): void; onSaved(): void; onLaunch(info: AgentLaunchInfo): Promise<boolean>;
 }) {
+  const { t } = useTranslation();
+  const [savedInfo, setSavedInfo] = useState(info);
   const [draft, setDraft] = useState(() => createLaunchProfilesDraft(info));
-  const [busy, setBusy] = useState(false);
+  const [action, setAction] = useState<"save" | "run" | null>(null);
+  const [browsing, setBrowsing] = useState(false);
   const [error, setError] = useState("");
-  const save = async () => {
-    if (busy || !launchProfilesValid(draft)) return;
-    setBusy(true); setError("");
+  const submitting = useRef(false);
+  const busy = action !== null || browsing;
+  const valid = launchProfilesValid(draft);
+  const changed = launchProfilesChanged(savedInfo, draft);
+  const canRun = info.supported && Boolean(info.kind) && valid
+    && (draft.activeProfileId !== "default" || Boolean(savedInfo.default_target));
+  const submit = async (run: boolean) => {
+    if (submitting.current || busy || !valid || run && !canRun) return;
+    submitting.current = true;
+    setAction(run ? "run" : "save"); setError("");
     try {
-      const payload = launchProfilesPayload(info, draft);
-      await configureAgentLaunchProfiles(info.agent_id, payload.profiles, payload.activeProfileId, info.profiles_revision ?? "");
-      onSaved(); onClose();
+      let current = savedInfo;
+      if (changed) {
+        const payload = launchProfilesPayload(savedInfo, draft);
+        current = await configureAgentLaunchProfiles(info.agent_id, payload.profiles, payload.activeProfileId, savedInfo.profiles_revision ?? "");
+        setSavedInfo(current); setDraft(createLaunchProfilesDraft(current));
+        onSaved();
+      } else if (run) {
+        current = await getAgentLaunchInfo(info.agent_id);
+        if (current.profiles_revision !== savedInfo.profiles_revision) throw new Error(t("agentConfiguration.launchChanged"));
+      }
+      if (!run || await onLaunch(current)) onClose();
     } catch (failure) { setError(formatError(failure)); }
-    finally { setBusy(false); }
+    finally { submitting.current = false; setAction(null); }
   };
-  return <DialogShell kind="editor" size="md" title="启动设置" subtitle={info.name} busy={busy} onClose={onClose}
-    leading={<AgentGlyph id={info.agent_id} name={info.name} size={28} />}
-    footerEnd={<><button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>取消</button>
-      <button type="button" className="btn-primary" disabled={busy || !launchProfilesValid(draft)} onClick={() => void save()}>保存</button></>}>
-    <AgentLaunchProfiles info={info} draft={draft} disabled={busy} onChange={setDraft} onBusyChange={setBusy} onError={setError} />
+  return <DialogShell className="arca-dialog-agent-launch" kind="editor" size="wide" title={info.name} subtitle={t("agentConfiguration.launchSettings")} busy={busy} onClose={onClose}
+    leading={<AgentGlyph id={info.agent_id} name={info.name} size={32} />}
+    footerEnd={<><button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>{t("common.cancel")}</button>
+      <button type="button" className="btn-secondary" disabled={busy || !valid || !changed} onClick={() => void submit(false)}>{action === "save" ? t("common.saving") : t("common.save")}</button>
+      <button type="button" className="btn-primary" disabled={busy || !canRun} onClick={() => void submit(true)}>
+        {action === "run" ? t("agentConfiguration.running") : t(changed ? "agentConfiguration.saveAndRun" : "agentConfiguration.run")}
+      </button></>}>
+    <AgentLaunchProfiles info={savedInfo} draft={draft} disabled={busy} onChange={setDraft} onBusyChange={setBrowsing} onError={setError} />
     <ToastNotice message={error} />
   </DialogShell>;
 }

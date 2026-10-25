@@ -1,7 +1,6 @@
 import { RESOURCE_CATEGORIES, RESOURCE_PRESENTATION } from "./resourcePresentation";
 import capabilityGuides from "../../../data/agent-capability-guides.json";
 import { AgentLaunchAction } from "./AgentLaunchAction";
-import { useAgentLauncher } from "../lib/agentLauncherContext";
 import "./AgentOverview.css";
 import "./CaptureView.css";
 import agentDocsHome from "../../../data/agent-docs-home.json";
@@ -141,10 +140,8 @@ export function AgentView({
   const { t } = useTranslation();
   const { entries, refreshAgents } = state;
   const { show: showToast } = useToast();
-  const agentLauncher = useAgentLauncher();
   const [editingAgent, setEditingAgent] = useState(false);
   const [instructionsRevision, setInstructionsRevision] = useState(0);
-  const [editLaunchFirst, setEditLaunchFirst] = useState(false);
   const [pickerDomain, setPickerDomain] = useState<PickerDomain | null>(null);
   const [modelProfiles, setModelProfiles] = useState<ModelProfileView[]>([]);
   const [modelAgents, setModelAgents] = useState<ModelAgentView[]>([]);
@@ -653,12 +650,11 @@ export function AgentView({
             <button className="arca-agent-tool" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button>
             <button className="arca-agent-tool" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button>
             {canEditConfiguration && (
-              <button type="button" className="arca-agent-tool" title="编辑配置" aria-label="编辑配置" onClick={() => { setEditLaunchFirst(false); setEditingAgent(true); }}>
+              <button type="button" className="arca-agent-tool" title="编辑配置" aria-label="编辑配置" onClick={() => setEditingAgent(true)}>
                 <EditIcon className="w-3.5 h-3.5" /><span>编辑</span>
               </button>
             )}
-            <AgentLaunchAction key={agent.id} agentId={agent.id} showLabel
-              onConfigure={canEditConfiguration ? () => { setEditLaunchFirst(true); setEditingAgent(true); } : undefined} />
+            <AgentLaunchAction key={agent.id} agentId={agent.id} showLabel />
           </>} />
 
         <AgentResourcePanel
@@ -940,8 +936,6 @@ export function AgentView({
         <AgentConfigurationDialog
           agent={agent}
           modelAgent={modelAgent}
-          initialSection={editLaunchFirst ? "launch" : "paths"}
-          onLaunchSaved={agentLauncher.refresh}
           onInstructionPathsSaved={() => setInstructionsRevision(value => value + 1)}
           onClose={() => setEditingAgent(false)}
           onSaved={async () => {
