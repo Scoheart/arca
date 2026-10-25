@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.0](https://github.com/Scoheart/arca/compare/v2.8.0...v2.9.0) (2026-10-25)
+
+### Changes
+
+* fix(delivery): isolate Arca Dev and reuse verified downloads ([dc8f97c](https://github.com/Scoheart/arca/commit/dc8f97cde008c471a34353a1571b13f6d2fa4505))
+* feat(credentials): share application authorization session ([5f9b322](https://github.com/Scoheart/arca/commit/5f9b322c9f8f9846e1e3ef319d3ad5288d1d4906))
+
 ## [2.8.0](https://github.com/Scoheart/arca/compare/v2.7.0...v2.8.0) (2026-10-25)
 
 ### Changes
