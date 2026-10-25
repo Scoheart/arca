@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.0](https://github.com/Scoheart/arca/compare/v2.6.2...v2.7.0) (2026-10-25)
+
+### Changes
+
+* feat(codex): edit native and Arca launch configuration ([8fa39b2](https://github.com/Scoheart/arca/commit/8fa39b258db6bb6e9df3d06ae387f7a2581e3023))
+
 ## [2.6.2](https://github.com/Scoheart/arca/compare/v2.6.1...v2.6.2) (2026-10-25)
 
 ### Changes
