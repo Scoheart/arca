@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.6.2](https://github.com/Scoheart/arca/compare/v2.6.1...v2.6.2) (2026-10-25)
+
+### Changes
+
+* fix(launch): review launch settings before running agents ([533ff03](https://github.com/Scoheart/arca/commit/533ff0367d307cb4b4418f253d02cd2ccce48dfa))
+
 ## [2.6.1](https://github.com/Scoheart/arca/compare/v2.6.0...v2.6.1) (2026-10-25)
 
 ### Changes
