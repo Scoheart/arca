@@ -147,6 +147,18 @@ pub async fn get_backend_status() -> Result<BackendStatus, String> {
     }).await
 }
 
+#[tauri::command]
+pub async fn unlock_model_credentials(retry: bool) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        arca_core::application::models::unlock_credential_session(retry)
+    }).await.map_err(|_| "credential_session_unavailable: Credential session worker failed".to_string())?
+}
+
+#[tauri::command]
+pub fn get_model_credential_session_status() -> serde_json::Value {
+    arca_core::application::models::credential_session_status()
+}
+
 /// Write user-requested text to the native clipboard. macOS WebViews can
 /// reject `navigator.clipboard` for a dev origin, while `pbcopy` uses the
 /// system clipboard service directly. The text is never logged or persisted.

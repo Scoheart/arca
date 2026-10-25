@@ -10,7 +10,9 @@ pub(crate) mod adapters;
 mod claude_desktop;
 pub(crate) mod credential;
 #[cfg(any(target_os = "macos", test))]
-mod credential_cache;
+mod credential_session;
+#[cfg(target_os = "macos")]
+mod credential_session_native;
 mod discovery;
 mod open_code_auth;
 
@@ -3154,7 +3156,11 @@ fn read_credential_service_checked(service: &str) -> Result<Option<Vec<u8>>, Str
                 .cloned());
         }
     }
-    keychain::password(service, KEYCHAIN_ACCOUNT)
+    if credential_session::managed(service) {
+        credential_session_native::password(service)
+    } else {
+        keychain::password(service, KEYCHAIN_ACCOUNT)
+    }
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -3206,7 +3212,6 @@ fn credential_service_exists(service: &str) -> bool {
 
 #[cfg(target_os = "macos")]
 fn set_credential_service(service: &str, credential: &[u8]) -> Result<(), String> {
-    invalidate_runtime_credential(service);
     #[cfg(any(test, debug_assertions))]
     {
         if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
@@ -3220,9 +3225,11 @@ fn set_credential_service(service: &str, credential: &[u8]) -> Result<(), String
     if credential.contains(&b'\n') || credential.contains(&b'\r') {
         return Err("API key cannot contain a newline".into());
     }
-    let result = keychain::set_password(service, KEYCHAIN_ACCOUNT, credential);
-    invalidate_runtime_credential(service);
-    result
+    if credential_session::managed(service) {
+        credential_session_native::set_password(service, credential)
+    } else {
+        keychain::set_password(service, KEYCHAIN_ACCOUNT, credential)
+    }
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -3251,7 +3258,6 @@ enum CredentialDeleteOutcome {
 fn delete_credential_service_authoritative(
     service: &str,
 ) -> Result<CredentialDeleteOutcome, String> {
-    invalidate_runtime_credential(service);
     #[cfg(any(test, debug_assertions))]
     {
         if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
@@ -3271,6 +3277,13 @@ fn delete_credential_service_authoritative(
             });
         }
     }
+    if credential_session::managed(service) {
+        credential_session_native::remove(service, || delete_native_credential_service(service))
+    } else { delete_native_credential_service(service) }
+}
+
+#[cfg(target_os = "macos")]
+fn delete_native_credential_service(service: &str) -> Result<CredentialDeleteOutcome, String> {
     let output = Command::new("/usr/bin/security")
         .args([
             "delete-generic-password",
@@ -3283,7 +3296,6 @@ fn delete_credential_service_authoritative(
         .stderr(Stdio::piped())
         .output()
         .map_err(|error| format!("failed to start macOS Keychain helper: {error}"))?;
-    invalidate_runtime_credential(service);
     if output.status.success() {
         Ok(CredentialDeleteOutcome::Deleted)
     } else if output.status.code() == Some(44) {
@@ -3338,29 +3350,33 @@ fn read_credential_checked(profile_id: &str) -> Result<Option<Vec<u8>>, String> 
     if legacy != service { read_credential_service_checked(&legacy) } else { Ok(None) }
 }
 
-#[cfg(target_os = "macos")]
-static RUNTIME_CREDENTIALS: std::sync::OnceLock<credential_cache::CredentialReadCache> = std::sync::OnceLock::new();
-
-#[cfg(target_os = "macos")]
-fn invalidate_runtime_credential(service: &str) {
-    if let Some(cache) = RUNTIME_CREDENTIALS.get() { cache.invalidate(service); }
+/// Runtime and transaction reads share the application authorization session;
+/// each lookup still verifies the authoritative source item's metadata revision.
+fn read_runtime_credential_service(service: &str) -> Result<Option<Vec<u8>>, String> {
+    read_credential_service_checked(service)
 }
 
-/// Runtime lookups may share a short-lived result. Transaction snapshots and
-/// migration continue to call the authoritative, uncached reader above.
-fn read_runtime_credential_service(service: &str) -> Result<Option<Vec<u8>>, String> {
+pub(crate) fn unlock_credential_session(retry: bool) -> Result<serde_json::Value, String> {
     #[cfg(any(test, debug_assertions))]
     if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
-        return read_credential_service_checked(service);
+        return Ok(serde_json::json!({"unlocked": true, "expires_in_seconds": 28800, "sync_deferred": false}));
     }
     #[cfg(target_os = "macos")]
-    {
-        RUNTIME_CREDENTIALS.get_or_init(credential_cache::CredentialReadCache::new)
-            .read(service, || keychain::revision(service, KEYCHAIN_ACCOUNT),
-                || read_credential_service_checked(service))
-    }
+    { serde_json::to_value(credential_session_native::unlock(retry)?).map_err(|_| "credential_session_unavailable".into()) }
     #[cfg(not(target_os = "macos"))]
-    read_credential_service_checked(service)
+    { let _ = retry; Ok(serde_json::json!({"unlocked": true, "expires_in_seconds": 0, "sync_deferred": false})) }
+}
+
+pub(crate) fn clear_credential_session() {
+    #[cfg(target_os = "macos")]
+    credential_session_native::clear();
+}
+
+pub(crate) fn credential_session_status() -> serde_json::Value {
+    #[cfg(target_os = "macos")]
+    { serde_json::to_value(credential_session_native::status()).unwrap_or(serde_json::Value::Null) }
+    #[cfg(not(target_os = "macos"))]
+    { serde_json::json!({"unlocked": true, "expires_in_seconds": 0, "sync_deferred": false}) }
 }
 
 fn read_runtime_provider_credential(provider_id: &str) -> Result<Option<Vec<u8>>, String> {
@@ -4090,10 +4106,8 @@ pub(crate) fn prepare_provider_credential_reveal(provider_id: &str) -> Result<St
 }
 
 pub(crate) fn execute_provider_credential_reveal(provider_id: &str) -> Result<String, String> {
-    // A user's explicit reveal/retry may request authorization again; an
-    // automatic catalog refresh still shares the short failure cooldown.
-    #[cfg(target_os = "macos")]
-    if let Some(cache) = RUNTIME_CREDENTIALS.get() { cache.retry(&provider_keychain_service(provider_id)); }
+    // Revealing another Provider reuses the same application authorization.
+    unlock_credential_session(false)?;
     let credential = read_runtime_provider_credential(provider_id)?
         .ok_or_else(|| {
             format!(

@@ -50,6 +50,19 @@ pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
     crate::resources::model::execute_provider_credential_reveal(&provider)
 }
 
+/// Explicit startup/user retry; metadata-only queries never call this.
+pub fn unlock_credential_session(retry: bool) -> Result<serde_json::Value, String> {
+    crate::resources::model::unlock_credential_session(retry)
+}
+
+pub fn clear_credential_session() {
+    crate::resources::model::clear_credential_session();
+}
+
+pub fn credential_session_status() -> serde_json::Value {
+    crate::resources::model::credential_session_status()
+}
+
 pub fn infer_provider(base_url: &str) -> String {
     crate::resources::model::infer_provider(base_url)
 }

@@ -87,6 +87,8 @@ pub fn run() {
             file_editors::list_file_editors,
             file_editors::detect_agent_installation,
             commands::get_backend_status,
+            commands::unlock_model_credentials,
+            commands::get_model_credential_session_status,
             commands::copy_to_clipboard,
             commands::get_workspace_snapshot,
             commands::list_agent_capabilities,
@@ -202,7 +204,10 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app, event| {
-            if matches!(&event, tauri::RunEvent::Exit) { arca_core::capture::shutdown(); }
+            if matches!(&event, tauri::RunEvent::Exit) {
+                arca_core::application::models::clear_credential_session();
+                arca_core::capture::shutdown();
+            }
             #[cfg(target_os = "macos")]
             if matches!(&event, tauri::RunEvent::Exit) { trackpad_gestures::stop(); }
             if let tauri::RunEvent::Reopen {

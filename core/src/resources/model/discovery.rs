@@ -372,10 +372,16 @@ fn discovery_url(provider: &ModelProviderConfig, adapter: DiscoveryAdapter) -> R
     }
     match adapter {
         DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra => [
-            ModelProtocol::OpenaiResponses,
-            ModelProtocol::OpenaiCompletions,
+            // Prefer the Provider's reviewed OpenAI protocol. An additional
+            // generic Responses path must not discard a plan/tenant prefix.
+            super::list_providers().iter().find(|template| template.id == provider.provider)
+                .map(|template| template.default_protocol.clone())
+                .filter(|protocol| matches!(protocol, ModelProtocol::OpenaiResponses | ModelProtocol::OpenaiCompletions)),
+            Some(ModelProtocol::OpenaiResponses),
+            Some(ModelProtocol::OpenaiCompletions),
         ]
         .into_iter()
+        .flatten()
         .find_map(|protocol| {
             provider
                 .protocols
@@ -943,6 +949,22 @@ mod tests {
             assert!(provider_model_discovery_supported(&config));
             let spec = discovery_spec_for_provider(&config).unwrap();
             assert_eq!(discovery_url(&config, spec.adapter).unwrap().path(), "/deployment-models");
+        }
+    }
+
+    #[test]
+    fn step_plan_catalog_uses_the_reviewed_chat_prefix_before_generic_responses() {
+        for (id, origin) in [("stepfun-step-plan", "https://api.stepfun.com"),
+            ("stepfun-ai-step-plan", "https://api.stepfun.ai")] {
+            let mut config = provider(id, origin, ModelProtocol::OpenaiResponses, "/responses");
+            config.protocols.insert(ModelProtocol::OpenaiCompletions,
+                crate::domain::types::ModelProviderProtocolConfig { endpoint_path: "/step_plan/v1/chat/completions".into() });
+            let spec = discovery_spec_for_provider(&config).unwrap();
+            assert_eq!(discovery_url(&config, spec.adapter).unwrap().as_str(),
+                format!("{origin}/step_plan/v1/models"));
+            config.model_catalog_url = Some(format!("{origin}/custom-catalog"));
+            assert_eq!(discovery_url(&config, spec.adapter).unwrap().as_str(),
+                format!("{origin}/custom-catalog"));
         }
     }
 

@@ -119,6 +119,36 @@ The rename does not copy secrets, rewrite Agent documents, or claim their
 external settings. Legacy `mux-store` metadata is accepted, while new API
 responses use `arca-store`.
 
+Keychain labels and permission prompts use `Arca · Model Provider · <id>` (or
+`Model Profile` for legacy items). Existing items keep their service lookup key
+so Agent credential commands continue working. After a successful save,
+Core attempts a metadata-only name update without another authorization
+dialog; trusted apps and access rules are preserved. An already-open prompt
+still shows its original name, and a denied metadata update leaves it unchanged.
+
+Desktop opens one application credential session at startup, shared by all
+Arca-managed Providers. Its Keychain-only aggregate is labelled
+`Arca · Credentials`; unlike the individual compatibility items, this vault
+trusts only the creating application, not `/usr/bin/security`. After the first
+additive import (which may require authorizing the existing items), ordinary
+Provider reads share the unlocked vault until Arca completely quits or eight
+hours elapse. Closing the macOS window merely hides Arca and keeps this session.
+Sleep time counts toward the limit; both wall-clock and process timers are checked.
+No API keys are written to files or browser storage. Transaction rollback items
+remain separate and are not retained in the application session.
+
+Each read checks the original item's metadata revision without a password
+dialog. External replacement requires the global **Unlock credentials** action;
+external deletion immediately invalidates that cached key. Cancelling an unlock
+is shared across pages until explicit retry. Existing Agent helper commands
+continue to read their original items and follow those items' access controls.
+Completing an old source item's write-permission migration can still require a
+system confirmation when explicitly saving or deleting that key; reopening the
+aggregate cannot grant a different item's write permissions. Ordinary navigation
+never triggers this source-item recovery path.
+If an aggregate refresh cannot be saved, the source key remains authoritative
+and the app reports that the next startup may need authorization again.
+
 Existing desktop updaters keep the same signature trust key and follow the
 canonical [Scoheart/arca](https://github.com/Scoheart/arca) repository. GitHub
 redirects former repository URLs so older clients can still reach releases.
@@ -429,6 +459,12 @@ data/           # audited agent definitions + discovery catalog + curated MCP co
 ```
 
 The desktop app is a separate build (`exclude`d from the workspace) so its Tauri bundle output path stays put.
+
+`tauri dev` rebuilds the desktop app, not the standalone CLI. If your `arca`
+command points to a debug binary, rebuild it with
+`cargo build -p arca-cli --target-dir desktop/src-tauri/target` and check
+`arca --version` before writing live configuration. A stale CLI can discard
+newer launch-profile fields when it saves shared settings.
 
 ```bash
 cargo test                            # arca-core + arca-cli
