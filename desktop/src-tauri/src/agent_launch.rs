@@ -1,4 +1,4 @@
-use arca_core::application::agent_launch::{self, LaunchInfo, LaunchReceipt, LaunchTarget};
+use arca_core::application::agent_launch::{self, LaunchInfo, LaunchProfile, LaunchReceipt, LaunchTarget};
 
 #[tauri::command]
 pub async fn get_agent_launch_info(agent_id: String) -> Result<LaunchInfo, String> {
@@ -13,6 +13,11 @@ pub async fn get_agent_runtime_version(agent_id: String) -> Result<Option<String
 #[tauri::command]
 pub async fn configure_agent_launch(agent_id: String, target: Option<LaunchTarget>, default_directory: Option<String>) -> Result<LaunchInfo, String> {
     tauri::async_runtime::spawn_blocking(move || agent_launch::configure_with_directory(&agent_id, target, default_directory)).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn configure_agent_launch_profiles(agent_id: String, profiles: Vec<LaunchProfile>, active_profile_id: String, expected_revision: String) -> Result<LaunchInfo, String> {
+    tauri::async_runtime::spawn_blocking(move || agent_launch::configure_profiles(&agent_id, profiles, active_profile_id, &expected_revision)).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]

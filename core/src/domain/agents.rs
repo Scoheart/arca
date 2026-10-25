@@ -146,6 +146,16 @@ pub enum LaunchTarget {
     Web { url: String },
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LaunchProfile {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub target: Option<LaunchTarget>,
+    #[serde(default)]
+    pub default_directory: Option<String>,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct LaunchPreferences {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -154,4 +164,34 @@ pub struct LaunchPreferences {
     pub directory: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub default_directory: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub profiles: Vec<LaunchProfile>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_profile_id: Option<String>,
+}
+
+impl LaunchPreferences {
+    pub fn has_valid_profile_selection(&self) -> bool {
+        self.profiles.is_empty() || (self.profiles.len() <= 32
+            && self.active_profile_id.as_ref().is_some_and(|id| self.profiles.iter().any(|profile| &profile.id == id))
+            && self.profiles.iter().map(|profile| &profile.id).collect::<std::collections::BTreeSet<_>>().len() == self.profiles.len())
+    }
+
+    pub fn active_profile(&self) -> Option<&LaunchProfile> {
+        self.profiles.iter().find(|profile| Some(&profile.id) == self.active_profile_id.as_ref())
+    }
+
+    pub fn configured_target(&self) -> Option<&LaunchTarget> {
+        match self.active_profile() {
+            Some(profile) => profile.target.as_ref(),
+            None => self.target.as_ref(),
+        }
+    }
+
+    pub fn configured_directory(&self) -> Option<&String> {
+        match self.active_profile() {
+            Some(profile) => profile.default_directory.as_ref(),
+            None => self.default_directory.as_ref(),
+        }
+    }
 }

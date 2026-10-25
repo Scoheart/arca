@@ -19,8 +19,8 @@ import { DialogShell } from "./DialogShell";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
 import { DocumentIcon, ExternalLinkIcon, FolderIcon, KeyIcon, PlusIcon, RefreshIcon, TrashIcon } from "./icons";
 import { ToastNotice, useToast } from "./Toast";
-import { configureAgentLaunch, getAgentLaunchInfo, type AgentLaunchInfo } from "../lib/agentLaunch";
-import { AgentLaunchFields, agentLaunchDraftChanged, agentLaunchDraftTarget, agentLaunchDraftValid, createAgentLaunchDraft, type AgentLaunchDraft } from "./AgentLaunchFields";
+import { configureAgentLaunchProfiles, getAgentLaunchInfo, type AgentLaunchInfo } from "../lib/agentLaunch";
+import { AgentLaunchProfiles, launchProfilesChanged, launchProfilesPayload, launchProfilesValid, createLaunchProfilesDraft, type LaunchProfilesDraft } from "./AgentLaunchProfiles";
 import { AgentGlyph } from "./brandIcons";
 import { FormSelect } from "./FormSelect";
 import "./AgentLaunch.css";
@@ -90,7 +90,7 @@ export function AgentConfigurationDialog({
   const [plan, setPlan] = useState<AssetOperationPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [launchInfo, setLaunchInfo] = useState<AgentLaunchInfo | null>(null);
-  const [launchDraft, setLaunchDraft] = useState<AgentLaunchDraft | null>(null);
+  const [launchDraft, setLaunchDraft] = useState<LaunchProfilesDraft | null>(null);
   const [launchLoading, setLaunchLoading] = useState(true);
   const [launchError, setLaunchError] = useState("");
   const [launchRequest, setLaunchRequest] = useState(0);
@@ -115,7 +115,7 @@ export function AgentConfigurationDialog({
   });
   const [savedConfiguration, setSavedConfiguration] = useState(() => JSON.stringify(configurationPatch()));
   const configurationChanged = JSON.stringify(configurationPatch()) !== savedConfiguration;
-  const launchChanged = Boolean(launchInfo && launchDraft && agentLaunchDraftChanged(launchInfo, launchDraft));
+  const launchChanged = Boolean(launchInfo && launchDraft && launchProfilesChanged(launchInfo, launchDraft));
   const instructionsChanged = Object.keys(instructionEdits).length > 0;
   const instructionsValid = Object.values(instructionEdits).every(path => path === null || path.trim().length > 0);
   const configurationValid = (!hasMcp || (mcpPath.trim().length > 0 && mcpKey.trim().length > 0))
@@ -124,7 +124,7 @@ export function AgentConfigurationDialog({
     && (!hasSkills || (skillsPaths.length > 0
       && skillsPaths.every((path) => path.trim().length > 0)));
   const canSubmit = !busy && !browsing && !launchLoading && !instructionLoading && instructionsValid && (configurationChanged || launchChanged || deliveryChanged || instructionsChanged)
-    && (!configurationChanged || configurationValid) && (!launchChanged || launchDraft && agentLaunchDraftValid(launchDraft));
+    && (!configurationChanged || configurationValid) && (!launchChanged || launchDraft && launchProfilesValid(launchDraft));
 
   useEffect(() => {
     if (!agent.has_instructions) return;
@@ -142,7 +142,7 @@ export function AgentConfigurationDialog({
     setLaunchLoading(true); setLaunchError("");
     void getAgentLaunchInfo(agent.id).then((info) => {
       if (!active) return;
-      setLaunchInfo(info); setLaunchDraft(createAgentLaunchDraft(info));
+      setLaunchInfo(info); setLaunchDraft(createLaunchProfilesDraft(info));
     }).catch((failure) => { if (active) setLaunchError(formatError(failure)); })
       .finally(() => { if (active) setLaunchLoading(false); });
     return () => { active = false; };
@@ -156,9 +156,10 @@ export function AgentConfigurationDialog({
   }, [initialSection, section, launchLoading]);
 
   const saveLaunch = async () => {
-    if (!launchChanged || !launchDraft) return;
-    const info = await configureAgentLaunch(agent.id, agentLaunchDraftTarget(launchDraft, launchInfo ?? undefined), launchDraft.directory.trim());
-    setLaunchInfo(info); setLaunchDraft(createAgentLaunchDraft(info));
+    if (!launchChanged || !launchDraft || !launchInfo) return;
+    const payload = launchProfilesPayload(launchInfo, launchDraft);
+    const info = await configureAgentLaunchProfiles(agent.id, payload.profiles, payload.activeProfileId, launchInfo.profiles_revision ?? "");
+    setLaunchInfo(info); setLaunchDraft(createLaunchProfilesDraft(info));
     onLaunchSaved?.();
   };
 
@@ -501,7 +502,7 @@ export function AgentConfigurationDialog({
       <div hidden={section !== "launch"} role="tabpanel" id={`${sectionId}-launch-panel`} aria-labelledby={`${sectionId}-launch-tab`}>
       <section ref={launchSection} className="arca-agent-config-launch" aria-label={t("agentConfiguration.launchSettings")}>
         {launchLoading ? <p className="arca-launch-hint" role="status">{t("agentConfiguration.reading")}</p>
-          : launchInfo && launchDraft ? <AgentLaunchFields info={launchInfo} draft={launchDraft} disabled={busy || browsing}
+          : launchInfo && launchDraft ? <AgentLaunchProfiles info={launchInfo} draft={launchDraft} disabled={busy || browsing}
             onChange={setLaunchDraft} onBusyChange={setBrowsing} onError={setLaunchError} /> : null}
         {launchError && <ToastNotice message={launchError} action={!launchInfo
           ? <button type="button" className="btn-ghost" onClick={() => setLaunchRequest((value) => value + 1)}>{t("common.retry")}</button> : undefined} />}

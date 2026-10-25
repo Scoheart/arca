@@ -3,7 +3,7 @@ use crate::settings::{load_settings_strict, mutate_settings_checked};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs, io::Read, path::{Path, PathBuf}, process::{Command, Stdio}, sync::{Arc, LazyLock, Mutex}, time::{Duration, Instant, SystemTime}};
 
-pub use crate::domain::agents::{LaunchPreferences, LaunchTarget};
+pub use crate::domain::agents::{LaunchPreferences, LaunchProfile, LaunchTarget};
 
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
@@ -30,6 +30,10 @@ pub struct LaunchInfo {
     pub directory_exists: bool,
     pub configured_target: Option<LaunchTarget>,
     pub resolved_target: Option<LaunchTarget>,
+    pub default_target: Option<LaunchTarget>,
+    pub profiles: Vec<LaunchProfile>,
+    pub active_profile_id: String,
+    pub profiles_revision: String,
 }
 
 static LAUNCH_CATALOG: LazyLock<BTreeMap<String, CatalogTarget>> = LazyLock::new(|| {
@@ -200,16 +204,16 @@ pub(crate) fn info_unlocked(agent_id: &str) -> Result<LaunchInfo, String> {
         let category = definition.category.clone().unwrap_or_else(|| "cli".into());
         let prefs = settings.agent_launch
             .and_then(|mut values| values.remove(agent_id)).unwrap_or_default();
+        if !prefs.has_valid_profile_selection() { return Err("启动配置损坏：当前配置不存在或 ID 重复，请检查启动偏好".into()); }
+        let prefs = effective_preferences(&prefs);
         let links: BTreeMap<String, serde_json::Value> = serde_json::from_str(include_str!("../../../data/agent-install-links.json")).map_err(|e| e.to_string())?;
         let mut host_name = None;
         let required = required_launch_kind(&category);
-        let configured_target = prefs.target.as_ref().and_then(|target| compatible_target(&category, target)).cloned();
-        let resolved_target = if let Some(target) = &configured_target {
-            resolve(target)
-        } else {
+        let configured_target = prefs.configured_target().and_then(|target| compatible_target(&category, target)).cloned();
+        let default_target = {
             match LAUNCH_CATALOG.get(agent_id) {
                 Some(CatalogTarget::App { candidates, host_name: host, bundle_ids }) if required != Some("cli") => {
-                    host_name = host.clone();
+                    if configured_target.is_none() { host_name = host.clone(); }
                     application_matching(candidates, bundle_ids).map(|path| LaunchTarget::App { path: path.to_string_lossy().into_owned(), args: Vec::new(), new_instance: false, env: BTreeMap::new() })
                 }
                 Some(CatalogTarget::Cli { candidates, args }) if required != Some("app") => {
@@ -218,16 +222,25 @@ pub(crate) fn info_unlocked(agent_id: &str) -> Result<LaunchInfo, String> {
                 _ => None,
             }
         };
+        let resolved_target = match &configured_target {
+            Some(target) => resolve(target),
+            None => default_target.clone(),
+        };
         let kind = required.map(str::to_string).or_else(|| resolved_target.as_ref().map(|target| target_kind(target).into()));
         let supported = cfg!(target_os = "macos");
-        let directory = prefs.default_directory.clone().or(prefs.directory);
+        let default_directory = prefs.configured_directory().cloned();
+        let directory = default_directory.clone().or(prefs.directory.clone());
+        let profiles = prefs.profiles.clone();
+        let active_profile_id = prefs.active_profile().map(|profile| profile.id.clone()).unwrap_or_else(|| "default".into());
+        let profiles_revision = profiles_revision(&prefs);
         let installed = official_runtime_detected(agent_id, &category,
             definition.skills.as_ref().map(|capability| capability.probes.as_slice()).unwrap_or_default());
         Ok(LaunchInfo { agent_id: agent_id.into(), name, category, kind, supported, host_name, installed,
             available: supported && resolved_target.is_some(),
             install_url: links.get(agent_id).and_then(|v| v.get("url")).and_then(|v| v.as_str()).map(str::to_owned),
             directory_exists: directory.as_ref().is_some_and(|p| expand(p).is_dir()),
-            directory, default_directory: prefs.default_directory, configured_target, resolved_target,
+            directory, default_directory, configured_target, resolved_target, default_target,
+            profiles, active_profile_id, profiles_revision,
         })
 }
 
@@ -333,14 +346,110 @@ pub fn configure(agent_id: &str, target: Option<LaunchTarget>) -> Result<LaunchI
     configure_with_directory(agent_id, target, None)
 }
 
+fn default_profile() -> LaunchProfile {
+    LaunchProfile { id: "default".into(), name: "默认配置".into(), target: None, default_directory: None }
+}
+
+fn custom_profile_id(profiles: &[LaunchProfile]) -> String {
+    let mut id = "custom".to_string();
+    let mut number = 2;
+    while profiles.iter().any(|profile| profile.id == id) {
+        id = format!("custom-{number}");
+        number += 1;
+    }
+    id
+}
+
+/// Present legacy launch settings as an editable profile beside the immutable default.
+/// Discovery does not persist this normalization.
+fn effective_preferences(preferences: &LaunchPreferences) -> LaunchPreferences {
+    let mut result = LaunchPreferences { profiles: vec![default_profile()], active_profile_id: Some("default".into()),
+        directory: preferences.directory.clone(), ..Default::default() };
+    if preferences.profiles.is_empty() {
+        if preferences.target.is_some() || preferences.default_directory.is_some() {
+            result.profiles.push(LaunchProfile { id: "custom".into(), name: "配置 1".into(), target: preferences.target.clone(),
+                default_directory: preferences.default_directory.clone() });
+            result.active_profile_id = Some("custom".into());
+        }
+        return result;
+    }
+    let migrated_id = custom_profile_id(&preferences.profiles);
+    for original in &preferences.profiles {
+        if original == &default_profile() { continue; }
+        let mut profile = original.clone();
+        if profile.id == "default" {
+            profile.id = migrated_id.clone();
+            if profile.name == "默认配置" { profile.name = "配置 1".into(); }
+        }
+        if preferences.active_profile_id.as_ref() == Some(&original.id) { result.active_profile_id = Some(profile.id.clone()); }
+        result.profiles.push(profile);
+    }
+    result
+}
+
+fn profiles_revision(preferences: &LaunchPreferences) -> String {
+    use sha2::{Digest, Sha256};
+    // The last-used working directory can change without invalidating an editor.
+    let preferences = effective_preferences(preferences);
+    hex::encode(Sha256::digest(serde_json::to_vec(&(preferences.profiles, preferences.active_profile_id)).expect("launch preferences serialize")))
+}
+
+fn validate_directory(value: Option<String>) -> Result<Option<String>, String> {
+    let Some(value) = value else { return Ok(None); };
+    let value = value.trim();
+    if value.is_empty() { return Ok(None); }
+    let path = expand(value);
+    if !path.is_absolute() || !path.is_dir() { return Err("默认工作目录不存在，请选择有效文件夹".into()); }
+    Ok(Some(path.to_string_lossy().into_owned()))
+}
+
+/// Persist the complete editor draft in one private settings transaction.
+pub fn configure_profiles(agent_id: &str, mut profiles: Vec<LaunchProfile>, active_profile_id: String, expected_revision: &str) -> Result<LaunchInfo, String> {
+    super::gate::write_independent(|| {
+        require_agent(agent_id)?;
+        if profiles.is_empty() || profiles.len() > 32 { return Err("启动配置数量需为 1 到 32 份".into()); }
+        let previous = load_settings_strict().map_err(|e| e.to_string())?.agent_launch
+            .and_then(|mut values| values.remove(agent_id)).unwrap_or_default();
+        let previous_profiles = effective_preferences(&previous).profiles;
+        if profiles.first() != Some(&default_profile()) { return Err("默认配置必须保留为空，不能编辑、重命名或删除".into()); }
+        let category = crate::agents::load_agents().get(agent_id).and_then(|agent| agent.category.clone()).unwrap_or_else(|| "cli".into());
+        let mut ids = std::collections::BTreeSet::new();
+        for profile in &mut profiles {
+            let original = previous_profiles.iter().find(|original| original.id == profile.id);
+            if profile.id.is_empty() || profile.id.len() > 128 || !profile.id.bytes().all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, b'-' | b'_')) || !ids.insert(profile.id.clone()) {
+                return Err("启动配置 ID 无效或重复".into());
+            }
+            profile.name = profile.name.trim().to_owned();
+            if profile.name.is_empty() || profile.name.chars().count() > 80 || profile.name.chars().any(char::is_control) {
+                return Err("请输入 1 到 80 个字符的启动配置名称".into());
+            }
+            if let Some(target) = &profile.target {
+                // A temporarily missing runtime must not block edits to another profile.
+                if original.is_none_or(|original| original.target.as_ref() != Some(target)) { validate_target(target)?; }
+                if compatible_target(&category, target).is_none() { return Err("启动方式由添加 Agent 时的类型决定".into()); }
+            }
+            if original.is_none_or(|original| original.default_directory != profile.default_directory) {
+                profile.default_directory = validate_directory(profile.default_directory.take())?;
+            }
+        }
+        if !ids.contains(&active_profile_id) { return Err("请选择有效的启动配置".into()); }
+        mutate_settings_checked(|settings| {
+            let preferences = settings.agent_launch.get_or_insert_default().entry(agent_id.into()).or_default();
+            if profiles_revision(preferences) != expected_revision {
+                return Err(std::io::Error::other("启动配置已被其他窗口修改，请重新打开后编辑"));
+            }
+            preferences.profiles = profiles;
+            preferences.active_profile_id = Some(active_profile_id);
+            preferences.target = None;
+            preferences.default_directory = None;
+            Ok(())
+        }).map_err(|e| e.to_string())
+    })?;
+    info(agent_id)
+}
+
 pub fn configure_with_directory(agent_id: &str, target: Option<LaunchTarget>, default_directory: Option<String>) -> Result<LaunchInfo, String> {
-    let directory = default_directory.map(|value| {
-        let value = value.trim();
-        if value.is_empty() { return Ok(None); }
-        let path = expand(value);
-        if !path.is_absolute() || !path.is_dir() { return Err("默认工作目录不存在，请选择有效文件夹".to_string()); }
-        Ok(Some(path.to_string_lossy().into_owned()))
-    }).transpose()?;
+    let directory = default_directory.map(|value| validate_directory(Some(value))).transpose()?;
     super::gate::write_independent(|| {
         require_agent(agent_id)?;
         if let Some(target) = &target {
@@ -352,8 +461,26 @@ pub fn configure_with_directory(agent_id: &str, target: Option<LaunchTarget>, de
         }
         mutate_settings_checked(|settings| {
             let preferences = settings.agent_launch.get_or_insert_default().entry(agent_id.into()).or_default();
-            preferences.target = target;
-            if let Some(directory) = directory { preferences.default_directory = directory; }
+            if !preferences.has_valid_profile_selection() { return Err(std::io::Error::other("启动配置损坏，请检查启动偏好")); }
+            let mut updated = effective_preferences(preferences);
+            if target.is_none() && directory.is_none() {
+                updated.active_profile_id = Some("default".into());
+            } else if updated.active_profile_id.as_deref() == Some("default") {
+                if target.is_some() || directory.as_ref().is_some_and(Option::is_some) {
+                    if updated.profiles.len() >= 32 { return Err(std::io::Error::other("启动配置最多 32 份，请编辑现有配置")); }
+                    let id = custom_profile_id(&updated.profiles);
+                    updated.profiles.push(LaunchProfile { id: id.clone(), name: format!("配置 {}", updated.profiles.len()),
+                        target, default_directory: directory.flatten() });
+                    updated.active_profile_id = Some(id);
+                }
+            } else {
+                let id = updated.active_profile_id.clone().expect("active launch profile exists");
+                let profile = updated.profiles.iter_mut().find(|profile| profile.id == id).expect("active launch profile exists");
+                profile.target = target;
+                if let Some(directory) = directory { profile.default_directory = directory; }
+            }
+            if updated.profiles.len() > 32 { return Err(std::io::Error::other("启动配置最多 32 份，请先移除多余配置")); }
+            *preferences = updated;
             Ok(())
         }).map_err(|e| e.to_string())
     })?;
@@ -437,6 +564,108 @@ pub fn launch(agent_id: &str, directory: Option<String>) -> Result<LaunchReceipt
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn launch_profiles_preserve_legacy_settings_and_select_independent_environments() {
+        let home = crate::testenv::TestHome::new("launch-profiles");
+        let app = home.home.join("Applications/Profiles.app");
+        fs::create_dir_all(app.join("Contents")).unwrap();
+        fs::write(app.join("Contents/Info.plist"), "fixture").unwrap();
+        let target = LaunchTarget::App { path: app.to_string_lossy().into_owned(), args: vec!["--original".into()], new_instance: true,
+            env: BTreeMap::from([("HTTP_PROXY".into(), "http://127.0.0.1:7890".into())]) };
+        mutate_settings_checked(|settings| {
+            settings.agent_launch.get_or_insert_default().entry("codex-desktop".into()).or_default().target = Some(target.clone());
+            Ok(())
+        }).unwrap();
+        let legacy = info("codex-desktop").unwrap();
+        assert_eq!(legacy.profiles.len(), 2);
+        assert_eq!(legacy.profiles[0], default_profile());
+        assert_eq!(legacy.profiles[1].target, Some(target.clone()));
+        let mut profiles = legacy.profiles.clone();
+        profiles.push(LaunchProfile { id: "direct".into(), name: "Direct".into(), target: Some(LaunchTarget::App {
+            path: app.to_string_lossy().into_owned(), args: vec![], new_instance: false, env: BTreeMap::new(),
+        }), default_directory: None });
+        let saved = configure_profiles("codex-desktop", profiles.clone(), "direct".into(), &legacy.profiles_revision).unwrap();
+        assert_eq!(saved.configured_target, profiles[2].target);
+        assert_eq!(saved.profiles[1].target, Some(target.clone()));
+        assert!(configure_profiles("codex-desktop", legacy.profiles, "default".into(), &legacy.profiles_revision).is_err());
+        let switched = configure_profiles("codex-desktop", profiles.clone(), legacy.active_profile_id, &saved.profiles_revision).unwrap();
+        assert_eq!(switched.resolved_target, Some(target));
+        configure("codex-desktop", None).unwrap();
+        let reset = info("codex-desktop").unwrap();
+        assert_eq!(reset.active_profile_id, "default");
+        assert_eq!(reset.profiles[0], default_profile());
+        assert_eq!(reset.profiles[1].target, profiles[1].target);
+        let remaining = configure_profiles("codex-desktop", vec![default_profile(), profiles[2].clone()], "direct".into(), &reset.profiles_revision).unwrap();
+        assert_eq!(remaining.profiles.len(), 2);
+        assert_eq!(info("codex-desktop").unwrap().active_profile_id, "direct");
+    }
+
+    #[test]
+    fn invalid_launch_profile_lists_do_not_replace_saved_preferences() {
+        let _home = crate::testenv::TestHome::new("invalid-launch-profiles");
+        let original = info("codex-desktop").unwrap();
+        assert!(configure_profiles("codex-desktop", vec![], "default".into(), &original.profiles_revision).is_err());
+        let mut duplicate = original.profiles.clone();
+        duplicate.push(duplicate[0].clone());
+        assert!(configure_profiles("codex-desktop", duplicate, "default".into(), &original.profiles_revision).is_err());
+        assert!(configure_profiles("codex-desktop", original.profiles.clone(), "missing".into(), &original.profiles_revision).is_err());
+        let mut unnamed = original.profiles.clone();
+        unnamed[0].name = " ".into();
+        assert!(configure_profiles("codex-desktop", unnamed, "default".into(), &original.profiles_revision).is_err());
+        assert_eq!(info("codex-desktop").unwrap().profiles_revision, original.profiles_revision);
+    }
+
+    #[test]
+    fn launch_profiles_use_independent_cli_directories_and_legacy_configure_edits_only_active() {
+        let home = crate::testenv::TestHome::new("cli-launch-profiles");
+        let first = home.home.join("first");
+        let second = home.home.join("second");
+        fs::create_dir_all(&first).unwrap();
+        fs::create_dir_all(&second).unwrap();
+        let initial = info("codex").unwrap();
+        let profiles = vec![
+            default_profile(),
+            LaunchProfile { id: "first".into(), name: "First".into(), target: None, default_directory: Some(first.to_string_lossy().into_owned()) },
+            LaunchProfile { id: "second".into(), name: "Second".into(), target: None, default_directory: Some(second.to_string_lossy().into_owned()) },
+        ];
+        let saved = configure_profiles("codex", profiles.clone(), "second".into(), &initial.profiles_revision).unwrap();
+        assert_eq!(saved.directory.as_deref(), second.to_str());
+        let cleared = configure_with_directory("codex", None, Some(String::new())).unwrap();
+        assert!(cleared.profiles[2].default_directory.is_none());
+        assert_eq!(cleared.profiles[1], profiles[1]);
+        fs::remove_dir(&first).unwrap();
+        let renamed = configure_profiles("codex", cleared.profiles, "second".into(), &cleared.profiles_revision).unwrap();
+        assert_eq!(renamed.profiles[1].default_directory.as_deref(), first.to_str());
+    }
+
+    #[test]
+    fn default_launch_profile_cannot_be_modified_renamed_or_removed() {
+        let _home = crate::testenv::TestHome::new("immutable-default-launch");
+        let original = info("codex-desktop").unwrap();
+        let mut changed = original.profiles.clone();
+        changed[0].name = "Changed".into();
+        assert!(configure_profiles("codex-desktop", changed, "default".into(), &original.profiles_revision).is_err());
+        let mut changed = original.profiles.clone();
+        changed[0].target = Some(LaunchTarget::Cli { command: "invalid".into(), args: vec![], env: BTreeMap::new() });
+        assert!(configure_profiles("codex-desktop", changed, "default".into(), &original.profiles_revision).is_err());
+        assert!(configure_profiles("codex-desktop", vec![], "default".into(), &original.profiles_revision).is_err());
+        let configured = configure_with_directory("codex-desktop", None, Some("~".into())).unwrap();
+        assert_eq!(configured.profiles[0], default_profile());
+        assert_ne!(configured.active_profile_id, "default");
+    }
+
+    #[test]
+    fn a_missing_active_profile_fails_closed_instead_of_using_another_launcher() {
+        let _home = crate::testenv::TestHome::new("corrupt-launch-profiles");
+        mutate_settings_checked(|settings| {
+            let preferences = settings.agent_launch.get_or_insert_default().entry("codex-desktop".into()).or_default();
+            preferences.profiles = vec![LaunchProfile { id: "one".into(), name: "One".into(), target: None, default_directory: None }];
+            preferences.active_profile_id = Some("missing".into());
+            Ok(())
+        }).unwrap();
+        assert!(info("codex-desktop").is_err());
+    }
 
     #[test]
     fn version_cache_shares_probes_and_invalidates_changed_files() {

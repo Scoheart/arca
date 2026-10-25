@@ -79,6 +79,7 @@ pub fn run() {
             agent_launch::get_agent_launch_info,
             agent_launch::get_agent_runtime_version,
             agent_launch::configure_agent_launch,
+            agent_launch::configure_agent_launch_profiles,
             agent_launch::launch_agent,
             agent_launch::get_terminal_settings,
             agent_launch::set_terminal_preference,

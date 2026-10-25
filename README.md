@@ -62,6 +62,13 @@ retain the impact review. Cancelling that review leaves launch preferences
 unchanged. Configurable Agents keep launch settings in this editor instead of
 duplicating the settings entry in the run dropdown.
 
+In **编辑配置 → 启动**, use **新增** to copy the current launch configuration into
+a named profile. Each Agent can keep up to 32 profiles with separate arguments,
+environment variables and launch options. Switching profiles keeps every draft;
+**保存** saves them together and uses the selected profile for future launches.
+A fixed, empty **默认配置** always remains available and cannot be edited, renamed or deleted.
+Existing custom launch settings are retained in a separate editable profile.
+
 Arca ships as **two front-ends that share the same data** (`~/.arca/`):
 
 - 🖥️ a **macOS desktop app** (Tauri + React) — a visual manager, and

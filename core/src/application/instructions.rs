@@ -292,9 +292,10 @@ fn discover(agent_id: &str) -> CoreResult<Discovery> {
     let context_readable = launch_context.is_ok();
     let settings = launch_context.unwrap_or_default();
     let configured_paths = overrides(&settings, agent_id);
-    let mut custom_launch = false;
+    let mut custom_launch = settings.agent_launch.as_ref().and_then(|all| all.get(agent_id))
+        .is_some_and(|preferences| !preferences.has_valid_profile_selection());
     {
-        if let Some(target) = settings.agent_launch.as_ref().and_then(|all| all.get(agent_id)).and_then(|p| p.target.as_ref()) {
+        if let Some(target) = settings.agent_launch.as_ref().and_then(|all| all.get(agent_id)).and_then(|p| p.configured_target()) {
             use crate::domain::agents::LaunchTarget;
             let custom = match target {
                 LaunchTarget::Cli { args, env, .. } | LaunchTarget::App { args, env, .. } => {
@@ -305,7 +306,7 @@ fn discover(agent_id: &str) -> CoreResult<Discovery> {
                 }
                 LaunchTarget::Web { .. } => true,
             };
-            custom_launch = custom;
+            custom_launch |= custom;
         }
     }
     let mut located = vec![]; let mut issues = BTreeSet::new(); let mut seen = BTreeSet::new(); let mut context = vec![]; let mut roots = vec![]; let mut visited = 0;
