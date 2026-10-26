@@ -166,14 +166,6 @@ jobs:
           OUT="arca_${RELEASE_TAG}_${TRIPLE}.tar.gz"
           tar -C target/release -czf "$OUT" arca
           echo "path=$OUT" >>"$GITHUB_OUTPUT"
-          # Old standalone clients request a fixed asset/member name. This is a
-          # compatibility transport only; the executable identifies as Arca.
-          LEGACY_OUT="mux_${RELEASE_TAG}_${TRIPLE}.tar.gz"
-          LEGACY_DIR=$(mktemp -d)
-          cp "$CLI" "$LEGACY_DIR/mux"
-          tar -C "$LEGACY_DIR" -czf "$LEGACY_OUT" mux
-          rm -rf "$LEGACY_DIR"
-          echo "legacy_path=$LEGACY_OUT" >>"$GITHUB_OUTPUT"
 
       - name: Name desktop installer
         id: installer
@@ -229,7 +221,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INSTALLER: ${{ steps.installer.outputs.path }}
           CLI_ARCHIVE: ${{ steps.cli.outputs.path }}
-          LEGACY_CLI_ARCHIVE: ${{ steps.cli.outputs.legacy_path }}
           UPDATER: ${{ steps.updater.outputs.asset }}
         run: |
           PUBLISHER=.github/scripts/publish-release-assets.sh
@@ -237,4 +228,4 @@ jobs:
             PUBLISHER=.delivery/.github/scripts/publish-release-assets.sh
           fi
           bash "$PUBLISHER" \
-            "$RELEASE_TAG" "$INSTALLER" "$CLI_ARCHIVE" "$UPDATER" latest.json "$LEGACY_CLI_ARCHIVE"
+            "$RELEASE_TAG" "$INSTALLER" "$CLI_ARCHIVE" "$UPDATER" latest.json

@@ -116,8 +116,7 @@ UPDATER="Arca-Desktop-AutoUpdate-${TAG}-macOS-${ARCH_LABEL}.app.tar.gz"
 INSTALLER="Arca-Desktop-Installer-${TAG}-macOS-${ARCH_LABEL}.dmg"
 CLI="arca_${TAG}_aarch64-apple-darwin.tar.gz"
 LATEST="latest.json"
-LEGACY_CLI="mux_${TAG}_aarch64-apple-darwin.tar.gz"
-EXPECTED_ASSETS=("$LATEST" "$UPDATER" "$INSTALLER" "$CLI" "$LEGACY_CLI")
+EXPECTED_ASSETS=("$LATEST" "$UPDATER" "$INSTALLER" "$CLI")
 
 SCRIPT_STARTED=$SECONDS
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/arca-${TAG}-verify.XXXXXX")
@@ -148,7 +147,7 @@ if [[ "$WAIT_FOR_RELEASE" -eq 1 ]]; then
         .isDraft == false and
         .isPrerelease == false and
         (.publishedAt | type == "string" and length > 0) and
-        (.assets | length == 5)
+        (.assets | length == 4)
       ' "$CANDIDATE" >/dev/null; then
       mv "$CANDIDATE" "$RELEASE_JSON"
       break
@@ -185,7 +184,7 @@ TAG_SHA=$(jq -r .object.sha "$WORK/tag.json")
 }
 
 [[ $(jq '.assets | length' "$RELEASE_JSON") -eq ${#EXPECTED_ASSETS[@]} ]] || {
-  printf '%s\n' 'Stable Release does not contain the expected five assets:' >&2
+  printf '%s\n' 'Stable Release does not contain the expected four assets:' >&2
   jq -r '.assets[].name' "$RELEASE_JSON" >&2
   exit 1
 }
@@ -296,11 +295,6 @@ CLI_ARCHS=$(lipo -archs "$CLI_BIN")
 [[ " $CLI_ARCHS " == *" arm64 "* ]] || { printf 'CLI lacks arm64: %s\n' "$CLI_ARCHS" >&2; exit 1; }
 [[ $("$CLI_BIN" --version) == "arca $VERSION" ]] || { printf '%s\n' 'Standalone CLI version mismatch.' >&2; exit 1; }
 
-# The transport bridge must contain the same executable bytes, not a stale CLI.
-mkdir -p "$WORK/legacy-cli"
-tar -xzf "$WORK/assets/$LEGACY_CLI" -C "$WORK/legacy-cli"
-test -x "$WORK/legacy-cli/mux"
-cmp "$CLI_BIN" "$WORK/legacy-cli/mux"
 latest_tag=$(gh api "repos/$REPOSITORY/releases/latest" --jq .tag_name)
 [[ "$latest_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
 expected_latest=$(gh api --paginate --slurp "repos/$REPOSITORY/releases?per_page=100" | jq -er '[.[][] | select(.draft == false and .prerelease == false and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")))] | sort_by(.tag_name | ltrimstr("v") | split(".") | map(tonumber)) | last.tag_name')
