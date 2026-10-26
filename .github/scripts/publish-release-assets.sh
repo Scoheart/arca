@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 5 && $# -ne 6 ]]; then
-  echo "usage: publish-release-assets.sh <vX.Y.Z> <installer> <cli> <updater> <latest.json> [legacy-cli-bridge]" >&2
+if [[ $# -ne 5 ]]; then
+  echo "usage: publish-release-assets.sh <vX.Y.Z> <installer> <cli> <updater> <latest.json>" >&2
   exit 64
 fi
 
@@ -55,9 +55,6 @@ for path in "${assets[@]}"; do
       ;;
     Arca-Desktop-AutoUpdate-"$tag"-macOS-Intel.app.tar.gz)
       label="Desktop auto-update payload · no manual download"
-      ;;
-    mux_"$tag"_aarch64-apple-darwin.tar.gz|mux_"$tag"_x86_64-apple-darwin.tar.gz)
-      label="Legacy standalone CLI upgrade bridge · use Arca for new installs"
       ;;
     latest.json)
       label="Auto-update manifest · no manual download"
