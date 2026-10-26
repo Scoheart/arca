@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.11.0](https://github.com/Scoheart/arca/compare/v2.10.0...v2.11.0) (2026-10-26)
+
+### Changes
+
+* feat(models): support six request protocols ([3ba77ef](https://github.com/Scoheart/arca/commit/3ba77ef13e9b10fcc35f86ccceed73d199963e1d))
+
 ## [2.10.0](https://github.com/Scoheart/arca/compare/v2.9.1...v2.10.0) (2026-10-26)
 
 ### Changes
