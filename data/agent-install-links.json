@@ -470,5 +470,9 @@
   "fx": {
     "url": "https://fx.sh/docs/getting-started/authentication",
     "label": "安装文档"
+  },
+  "xgoose": {
+    "url": "https://xgoose.org/chrome/",
+    "label": "产品首页"
   }
 }
