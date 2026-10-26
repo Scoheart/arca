@@ -1,4 +1,4 @@
-# MUX 桌面图形化配置 — 设计文档
+# Arca 桌面图形化配置 — 设计文档
 
 - 日期：2026-06-16
 - 状态：已确认，待生成实现计划
@@ -6,7 +6,7 @@
 
 ## 1. 背景与目标
 
-MUX 目前是一个基于 Ink/React 的终端 TUI（`@scoheart/mux`），用于跨多个 AI
+Arca 目前是一个基于 Ink/React 的终端 TUI（`@scoheart/arca`），用于跨多个 AI
 编码工具统一管理 MCP 服务器配置。本设计将其能力扩展为一个**桌面图形化配置应用**。
 
 用户的核心诉求（原话）：
@@ -27,7 +27,7 @@ MUX 目前是一个基于 Ink/React 的终端 TUI（`@scoheart/mux`），用于�
 | agent 配置差异 | **方案 B：自动翻译 + 逐 agent 覆写**（同一服务器可对不同 agent 用不同 args/env/url） |
 | 主界面信息架构 | **仓库为主视图（App Store 式）+ 矩阵总览为切换视图** |
 | 代码位置 | 本仓库 `desktop/` 子目录 |
-| 状态存储 | 与 CLI 共用 `~/.mux/`，数据互通 |
+| 状态存储 | 与 CLI 共用 `~/.arca/`，数据互通 |
 
 ## 2. 整体架构
 
@@ -48,7 +48,7 @@ MUX 目前是一个基于 Ink/React 的终端 TUI（`@scoheart/mux`），用于�
    ┌────────┴─────────┐          ┌─────────┴──────────┐
    │ 共享数据文件       │          │ 现有 npm 包 (CLI)   │
    │ registry.json     │          │ TS core 不变        │
-   │ agents.json       │          │ mux mcp assign/status… │
+   │ agents.json       │          │ arca mcp assign/status… │
    └───────────────────┘          └────────────────────┘
 ```
 
@@ -60,19 +60,19 @@ MUX 目前是一个基于 Ink/React 的终端 TUI（`@scoheart/mux`），用于�
     对应现有 `read/write/remove` 三方法。
   - `scanner`：扫描各 agent 的 global/project 配置文件，返回已存在的 MCP。
   - `differ`：对比「期望状态」与「实际扫描」，产出 add/remove/change 差异。
-  - `applier`：按差异写入目标文件，写前自动备份到 `~/.mux/backups/`。
+  - `applier`：按差异写入目标文件，写前自动备份到 `~/.arca/backups/`。
   - `registry`：读取内置 + 用户自定义服务器，合并（用户同名覆盖内置）。
 - **共享数据文件**（抽离自现有代码，TS 与 Rust 共读）：
   - `registry.json` ← 抽离自 `src/builtin-registry.ts`（40+ 内置服务器）。
   - `agents.json` ← 抽离自 `src/constants.ts` 的 `DEFAULT_AGENTS`（18 个 agent）。
   - 抽离后，现有 TS core 改为读取该 JSON（保持 CLI 行为不变）。
-- **CLI 不动**：`@scoheart/mux` 的 TS core / TUI / 命令保持原样继续发布。
-- **状态存储**：App 与 CLI 共用 `~/.mux/`（`registry/` 自定义条目、`state.json`
+- **CLI 不动**：`@scoheart/arca` 的 TS core / TUI / 命令保持原样继续发布。
+- **状态存储**：App 与 CLI 共用 `~/.arca/`（`registry/` 自定义条目、`state.json`
   安装状态、`backups/`、新增 `overrides.json`、`projects.json`）。
 
 ## 3. 数据模型
 
-所有实体持久化在 `~/.mux/`，CLI 与 GUI 共用。
+所有实体持久化在 `~/.arca/`，CLI 与 GUI 共用。
 
 ```
 RegistryServer  规范化服务器定义（仓库的一条记录）
@@ -110,7 +110,7 @@ Override        逐 (server, agent, scope, project) 的可选覆写
   `Installation` 记录。不一致标记 `drifted`，让用户选择「以 App 为准覆盖」或
   「导入实际值」。
 - **密钥/令牌**（env、headers 中的 token）：v1 沿用现有做法——明文存于
-  `~/.mux/` 并写入各 agent 配置（与 CLI 当前行为一致）。OS keychain 加密留待
+  `~/.arca/` 并写入各 agent 配置（与 CLI 当前行为一致）。OS keychain 加密留待
   v2，数据模型预留接口。
 - **桌面端 project 概念**：CLI 用 cwd 作 project；桌面 App 无 cwd 语境，故引入
   显式 `Project`（用户添加文件夹）。安装到 project scope 时需先选定一个
@@ -148,7 +148,7 @@ Override        逐 (server, agent, scope, project) 的可选覆写
 ## 5. 错误处理
 
 - **写入失败/权限不足**：applier 单条目标失败不影响其它目标；汇总报告失败项。
-- **备份**：任何写入前对目标文件备份到 `~/.mux/backups/`，文件名带时间戳。
+- **备份**：任何写入前对目标文件备份到 `~/.arca/backups/`，文件名带时间戳。
 - **drift 冲突**：检测到外部改动时不静默覆盖，弹出二选一（覆盖 / 导入）。
 - **格式解析失败**：目标文件已损坏无法解析时，跳过并提示用户手动检查，不破坏
   原文件。
@@ -182,6 +182,6 @@ Override        逐 (server, agent, scope, project) 的可选覆写
 
 ## 8. 未决/默认事项
 
-- 桌面 App 与 CLI 共用 `~/.mux/`：若 schema 需要演进，以向后兼容方式增量添加
+- 桌面 App 与 CLI 共用 `~/.arca/`：若 schema 需要演进，以向后兼容方式增量添加
   字段（`overrides.json`、`projects.json` 为新增文件，不影响 CLI 既有读取）。
 - 打包分发（macOS/Windows/Linux 三平台、签名公证）在实现计划阶段细化。

@@ -19,7 +19,7 @@ asset_json() {
       {id:2,name:$n2,label:"Command-line tool · Apple Silicon"},
       {id:3,name:$n3,label:"Desktop auto-update payload · no manual download"},
       {id:4,name:$n4,label:"Auto-update manifest · no manual download"}
-    ]'
+    ]' | jq --arg scenario "$FAKE_SCENARIO" 'if $scenario == "publish-label-failure" then map(if .id == 2 then .label = "" else . end) else . end'
 }
 
 release_json() {
@@ -96,8 +96,8 @@ elif [[ "$1" == release && "$2" == upload ]]; then
   : >"$FAKE_STATE/uploaded"
   shift 3
   while [[ $# -gt 0 && "$1" != --repo ]]; do
-    basename "$1" >>"$FAKE_STATE/uploaded"
-    echo "upload:$(basename "$1")" >>"$FAKE_STATE/log"
+    basename "${1%%#*}" >>"$FAKE_STATE/uploaded"
+    echo "upload:$(basename "${1%%#*}")" >>"$FAKE_STATE/log"
     shift
   done
 else
@@ -109,7 +109,7 @@ chmod +x "$TMP/bin/gh"
 
 export PATH="$TMP/bin:$PATH"
 export FAKE_STATE="$TMP/state"
-export GITHUB_REPOSITORY="Scoheart/mux"
+export GITHUB_REPOSITORY="Scoheart/arca"
 mkdir -p "$FAKE_STATE"
 
 expect_failure() {
@@ -120,9 +120,9 @@ expect_failure() {
 }
 
 TAG=v1.2.18
-FAKE_ASSET_1="MUX-Desktop-Installer-$TAG-macOS-Apple-Silicon.dmg"
-FAKE_ASSET_2="mux_${TAG}_aarch64-apple-darwin.tar.gz"
-FAKE_ASSET_3="MUX-Desktop-AutoUpdate-$TAG-macOS-Apple-Silicon.app.tar.gz"
+FAKE_ASSET_1="Arca-Desktop-Installer-$TAG-macOS-Apple-Silicon.dmg"
+FAKE_ASSET_2="arca_${TAG}_aarch64-apple-darwin.tar.gz"
+FAKE_ASSET_3="Arca-Desktop-AutoUpdate-$TAG-macOS-Apple-Silicon.app.tar.gz"
 FAKE_ASSET_4=latest.json
 export FAKE_ASSET_1 FAKE_ASSET_2 FAKE_ASSET_3 FAKE_ASSET_4
 
@@ -145,7 +145,7 @@ rm -f "$FAKE_STATE/published"
 FAKE_SCENARIO=publish-missing \
   bash "$ROOT/.github/scripts/publish-release-assets.sh" "$TAG" "${assets[@]}"
 [[ $(grep -c '^upload:' "$FAKE_STATE/log") -eq 4 ]]
-[[ $(grep -c '^label:' "$FAKE_STATE/log") -eq 4 ]]
+! grep -q '^label:' "$FAKE_STATE/log"
 [[ $(tail -n 1 "$FAKE_STATE/log") == publish ]]
 
 : >"$FAKE_STATE/log"

@@ -1,15 +1,15 @@
 [package]
-name = "mux-cli"
-version = "1.13.0"
+name = "arca-cli"
+version = "2.9.0"
 edition = "2021"
-description = "CLI and TUI for the MUX central Agent resource manager"
+description = "CLI and TUI for the Arca central Agent resource manager"
 
 [[bin]]
-name = "mux"
+name = "arca"
 path = "src/main.rs"
 
 [dependencies]
-mux-core = { path = "../core" }
+arca-core = { path = "../core" }
 clap = { version = "4", features = ["derive"] }
 ratatui = { version = "0.30.2", default-features = false, features = ["crossterm", "underline-color"] }
 crossterm = "0.29"

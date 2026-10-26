@@ -1,3 +1,4 @@
+import { instructionsEnUS, instructionsZhCN } from '../lib/instructionCopy';
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { traceEnUS, traceZhCN } from "../lib/traceCopy";
@@ -12,14 +13,18 @@ export function systemLocale(): SupportedLocale {
 }
 
 const zhCN = {
+  agentSurfaces: { cli: "命令行", desktop: "桌面应用", ide: "IDE 编辑器", plugin: "IDE 插件", web: "Web 应用" },
   mcpEditor: mcpEditorZhCN,
   agentConfiguration: agentConfigurationZhCN,
   notifications: { close: "关闭通知", closeError: "关闭错误通知", closeSuccess: "关闭成功通知" },
+  credentialSession: { locked: "Arca 凭据尚未解锁，使用已保存的 API Key 前需要授权。", retry: "解锁凭据", unlocking: "正在解锁…", deferred: "密钥已保存，但统一保管库尚未更新；下次启动可能需要重新授权。" },
   agentRuntime: { installed: "已安装", hostAvailable: "宿主可用", entryAvailable: "启动入口可用", customEntry: "自定义启动入口", status: "{{name}} {{status}}，{{version}}", version: "版本 {{version}}", unknownVersion: "版本未知" },
   trace: traceZhCN,
+  instructions: instructionsZhCN,
+  textSegments: { label: "正文分段", position: "第 {{current}} / {{total}} 段 · 全文可复制或导出", previous: "上一段", next: "下一段" },
   syncReview: {
     title: "重新同步 MCPs", confirm: "重新同步", busy: "同步中…",
-    destination: "同步到", description: "将用 MUX 中的配置覆盖所选 Agent 中的这份 MCP 配置。",
+    destination: "同步到", description: "将用 Arca 中的配置覆盖所选 Agent 中的这份 MCP 配置。",
     details: "详情", files: "{{count}} 个文件", unknownWarning: "还有额外提醒，请查看详情。",
     blocked: "当前配置存在冲突，暂时无法同步。",
     plaintext: "此操作会将 API Key 写入 Agent 配置文件。",
@@ -43,8 +48,11 @@ const zhCN = {
     description: "按来源整理工作流与参考资料", searchSource: "搜索当前来源的 Skills…",
     unassigned: "尚未分配", agents: "使用此 Skill 的 Agent", allAgents: "全部 Agent",
     openAgent: "打开 {{name}} 的 Skills", moreAgents: "查看另外 {{count}} 个 Agent",
+    recoveryTitle: "上次 Skill 操作未完成",
+    recoveryMessage: "请重新打开 Arca，程序会自动重试恢复。",
   },
   centralAssets: {
+    noContent: "暂无可显示的内容",
     mcpList: "MCP 资产",
     skillList: "Skill 资产",
     mcpIdentity: "名称与连接",
@@ -72,7 +80,7 @@ const zhCN = {
   mcpIcons: {
     action: "图标",
     title: "选择 MCP 图标",
-    subtitle: "选择内置图标、上传本地图片，或恢复 MUX 自动推荐。",
+    subtitle: "选择内置图标、上传本地图片，或恢复 Arca 自动推荐。",
     recommended: "推荐：{{name}}",
     monogramFallback: "双字母缩写",
     allIcons: "全部图标",
@@ -80,7 +88,7 @@ const zhCN = {
     chooseBuiltin: "选择内置图标：{{name}}",
     upload: "上传图片",
     restoreAutomatic: "恢复自动",
-    uploadHint: "支持 PNG、JPEG、WebP，最大 1 MiB。图片只保存在本机 MUX 目录。",
+    uploadHint: "支持 PNG、JPEG、WebP，最大 1 MiB。图片只保存在本机 Arca 目录。",
     options: {
       mcp: "通用 MCP",
       search: "搜索",
@@ -158,9 +166,9 @@ const zhCN = {
   },
   migration: {
     recoveryTitle: "启动恢复需要处理",
-    recoveryMessage: "{{stage}} 阶段未完成。MUX 已保持只读，请保留当前配置并查看诊断信息。",
+    recoveryMessage: "{{stage}} 阶段未完成。Arca 已保持只读，请保留当前配置并查看诊断信息。",
     capabilityTitle: "Model 能力暂不可用",
-    capabilityMessage: "{{stage}} 阶段的 Model 启动维护未能安全完成。请检查受影响 Agent 或 Provider 配置后重启 MUX；MCP 与 Skill 仍可正常使用。",
+    capabilityMessage: "{{stage}} 阶段的 Model 启动维护未能安全完成。请检查受影响 Agent 或 Provider 配置后重启 Arca；MCP 与 Skill 仍可正常使用。",
   },
   observations: {
     statuses: {
@@ -173,13 +181,13 @@ const zhCN = {
       unsupported: "不兼容",
     },
     actions: {
-      adopt: "收录 MUX",
-      restore: "恢复 MUX",
+      adopt: "收录 Arca",
+      restore: "恢复 Arca",
       detach: "解除管理",
       more: "更多处理方式",
     },
     convergencePrepareFailed: "无法准备收敛操作：{{error}}",
-    convergencePending: "MUX 已保存期望配置，但 Agent 文件尚未完成收敛；请在当前配置位置重试。",
+    convergencePending: "Arca 已保存期望配置，但 Agent 文件尚未完成收敛；请在当前配置位置重试。",
     revisionUnavailable: "观测版本不可用，请刷新后重试",
     capabilityUnavailable: "{{capability}} 暂不可用",
     skillInventoryUnavailable: "Skill 资产扫描失败；MCP 与 Model 不受影响。",
@@ -188,7 +196,7 @@ const zhCN = {
   },
   agents: {
     addTitle: "添加 Agent",
-    addSubtitle: "定义 Agent 身份与 MUX 可安全写入的配置位置。",
+    addSubtitle: "定义 Agent 身份与 Arca 可安全写入的配置位置。",
     newAgent: "新 Agent",
     identityTitle: "Agent 身份",
     identityHelp: "名称用于界面识别；ID 是配置与消费关系中的稳定标识。",
@@ -216,7 +224,7 @@ const zhCN = {
       configured: "已配置",
     },
     mcpConfigTitle: "MCP 写入位置",
-    mcpConfigHelp: "MUX 只管理指定文件中的配置 Key，不接管其他字段。",
+    mcpConfigHelp: "Arca 只管理指定文件中的配置 Key，不接管其他字段。",
     mcpPathLabel: "配置文件",
     mcpPathPlaceholder: "~/.my-agent/mcp.json",
     formatLabel: "配置格式",
@@ -284,6 +292,10 @@ const zhCN = {
     providerCatalogTitle: "添加 Provider",
     useProviderTemplate: "创建",
     searchProviders: "搜索 Provider",
+    providerSort: "排序",
+    providerSortDefault: "默认顺序",
+    providerSortNameAsc: "名称 A–Z",
+    providerSortNameDesc: "名称 Z–A",
     providerEndpointRequired: "创建时填写 Base URL",
     providerSetup: {
       azure: "填写 Azure 资源的 /openai/v1 地址，使用资源 API Key；Model ID 填部署名称。",
@@ -348,6 +360,8 @@ const zhCN = {
     apiKey: "API Key",
     showApiKey: "显示 API Key",
     hideApiKey: "隐藏 API Key",
+    deleteSavedApiKey: "删除已保存的 API Key",
+    savedCredentialPreserved: "密钥已保存，不修改即可保留。",
     revealApiKeyFailed: "读取已存 API Key 失败：{{error}}",
     credentialHelp: "API Key 安全保存到系统 Keychain。",
     legacyCredentialPreserved: "当前外部凭据将继续使用；填写 API Key 后改存 Keychain。",
@@ -411,14 +425,18 @@ type TranslationShape<T> = {
 };
 
 const enUS: TranslationShape<typeof zhCN> = {
+  agentSurfaces: { cli: "Command line", desktop: "Desktop app", ide: "IDE editor", plugin: "IDE extension", web: "Web app" },
   mcpEditor: mcpEditorEnUS,
   agentConfiguration: agentConfigurationEnUS,
   notifications: { close: "Dismiss notification", closeError: "Dismiss error notification", closeSuccess: "Dismiss success notification" },
+  credentialSession: { locked: "Arca credentials are locked. Authorize access before using saved API keys.", retry: "Unlock credentials", unlocking: "Unlocking…", deferred: "The key was saved, but the shared vault could not be updated. The next launch may require authorization again." },
   agentRuntime: { installed: "Installed", hostAvailable: "Host available", entryAvailable: "Launcher available", customEntry: "Custom launcher", status: "{{name}} {{status}}, {{version}}", version: "version {{version}}", unknownVersion: "version unknown" },
   trace: traceEnUS,
+  instructions: instructionsEnUS,
+  textSegments: { label: "Text sections", position: "Section {{current}} / {{total}} · Copy or export the full text", previous: "Previous", next: "Next" },
   syncReview: {
     title: "Resync MCPs", confirm: "Resync", busy: "Syncing…",
-    destination: "Sync to", description: "Replace this MCP configuration in the selected Agents with the MUX configuration.",
+    destination: "Sync to", description: "Replace this MCP configuration in the selected Agents with the Arca configuration.",
     details: "Details", files: "{{count}} files", unknownWarning: "Additional notice — see details.",
     blocked: "Configuration conflicts prevent syncing.",
     plaintext: "This operation writes the API key to the Agent configuration file.",
@@ -442,8 +460,11 @@ const enUS: TranslationShape<typeof zhCN> = {
     description: "Workflows and references organized by source", searchSource: "Search Skills in this source…",
     unassigned: "Not assigned", agents: "Agents using this Skill", allAgents: "All Agents",
     openAgent: "Open Skills for {{name}}", moreAgents: "View {{count}} more Agents",
+    recoveryTitle: "The last Skill operation needs recovery",
+    recoveryMessage: "Reopen Arca to retry recovery automatically.",
   },
   centralAssets: {
+    noContent: "No content to display",
     mcpList: "MCP assets",
     skillList: "Skill assets",
     mcpIdentity: "Name and connection",
@@ -471,7 +492,7 @@ const enUS: TranslationShape<typeof zhCN> = {
   mcpIcons: {
     action: "Icon",
     title: "Choose MCP icon",
-    subtitle: "Choose a built-in icon, upload a local image, or restore MUX automatic matching.",
+    subtitle: "Choose a built-in icon, upload a local image, or restore Arca automatic matching.",
     recommended: "Recommended: {{name}}",
     monogramFallback: "two-letter monogram",
     allIcons: "All icons",
@@ -479,7 +500,7 @@ const enUS: TranslationShape<typeof zhCN> = {
     chooseBuiltin: "Choose built-in icon: {{name}}",
     upload: "Upload image",
     restoreAutomatic: "Restore automatic",
-    uploadHint: "Supports PNG, JPEG, and WebP up to 1 MiB. Images stay in the local MUX directory.",
+    uploadHint: "Supports PNG, JPEG, and WebP up to 1 MiB. Images stay in the local Arca directory.",
     options: {
       mcp: "General MCP",
       search: "Search",
@@ -516,7 +537,7 @@ const enUS: TranslationShape<typeof zhCN> = {
     languageSaveFailed: "Could not save language preference: {{error}}",
     scanning: "Scanning…",
     rescan: "Rescan",
-    latest: "MUX is up to date",
+    latest: "Arca is up to date",
     currentVersion: "Current version v{{version}}; click to check for updates",
     checkUpdate: "Check for updates",
     checkUpdateVersion: "Check for updates; current version v{{version}}",
@@ -557,9 +578,9 @@ const enUS: TranslationShape<typeof zhCN> = {
   },
   migration: {
     recoveryTitle: "Startup recovery needs attention",
-    recoveryMessage: "The {{stage}} stage did not complete. MUX is read-only; keep the current configuration and inspect diagnostics.",
+    recoveryMessage: "The {{stage}} stage did not complete. Arca is read-only; keep the current configuration and inspect diagnostics.",
     capabilityTitle: "Model capability is unavailable",
-    capabilityMessage: "Model startup maintenance did not complete safely during {{stage}}. Inspect the affected Agent or Provider configuration and restart MUX; MCP and Skills remain available.",
+    capabilityMessage: "Model startup maintenance did not complete safely during {{stage}}. Inspect the affected Agent or Provider configuration and restart Arca; MCP and Skills remain available.",
   },
   observations: {
     statuses: {
@@ -572,13 +593,13 @@ const enUS: TranslationShape<typeof zhCN> = {
       unsupported: "Incompatible",
     },
     actions: {
-      adopt: "Add to MUX",
-      restore: "Restore MUX",
+      adopt: "Add to Arca",
+      restore: "Restore Arca",
       detach: "Detach",
       more: "More options",
     },
     convergencePrepareFailed: "Could not prepare convergence: {{error}}",
-    convergencePending: "MUX saved the desired configuration, but the Agent file has not converged. Retry this configuration target.",
+    convergencePending: "Arca saved the desired configuration, but the Agent file has not converged. Retry this configuration target.",
     revisionUnavailable: "The observation revision is unavailable. Refresh and try again.",
     capabilityUnavailable: "{{capability}} is unavailable",
     skillInventoryUnavailable: "Skill asset scanning failed. MCP and Model are unaffected.",
@@ -587,7 +608,7 @@ const enUS: TranslationShape<typeof zhCN> = {
   },
   agents: {
     addTitle: "Add Agent",
-    addSubtitle: "Define the Agent and the configuration locations MUX may safely write.",
+    addSubtitle: "Define the Agent and the configuration locations Arca may safely write.",
     newAgent: "New Agent",
     identityTitle: "Agent identity",
     identityHelp: "The name identifies it in the UI; the ID is its stable configuration and relationship key.",
@@ -615,7 +636,7 @@ const enUS: TranslationShape<typeof zhCN> = {
       configured: "Configured",
     },
     mcpConfigTitle: "MCP write location",
-    mcpConfigHelp: "MUX manages only the selected configuration key and preserves every other field.",
+    mcpConfigHelp: "Arca manages only the selected configuration key and preserves every other field.",
     mcpPathLabel: "Configuration file",
     mcpPathPlaceholder: "~/.my-agent/mcp.json",
     formatLabel: "Configuration format",
@@ -683,6 +704,10 @@ const enUS: TranslationShape<typeof zhCN> = {
     providerCatalogTitle: "Add Provider",
     useProviderTemplate: "Create",
     searchProviders: "Search Providers",
+    providerSort: "Sort",
+    providerSortDefault: "Default order",
+    providerSortNameAsc: "Name A–Z",
+    providerSortNameDesc: "Name Z–A",
     providerEndpointRequired: "Enter a Base URL when creating",
     providerSetup: {
       azure: "Use your Azure resource /openai/v1 URL and resource API key. Model ID is your deployment name.",
@@ -747,6 +772,8 @@ const enUS: TranslationShape<typeof zhCN> = {
     apiKey: "API Key",
     showApiKey: "Show API Key",
     hideApiKey: "Hide API Key",
+    deleteSavedApiKey: "Delete saved API key",
+    savedCredentialPreserved: "The saved key is preserved unless you change it.",
     revealApiKeyFailed: "Could not read the saved API Key: {{error}}",
     credentialHelp: "The API Key is stored securely in the system Keychain.",
     legacyCredentialPreserved: "The current external credential remains active; enter an API Key to move it to Keychain.",
@@ -788,7 +815,7 @@ const enUS: TranslationShape<typeof zhCN> = {
     copyCurlHint: "Copy a ready-to-run request command",
     curlCopied: "Copied cURL request with API Key.",
     curlCopyFailed: "Could not copy cURL: {{error}}",
-    curlCredentialUnavailable: "The Provider has no readable API Key in MUX Keychain",
+    curlCredentialUnavailable: "The Provider has no readable API Key in Arca Keychain",
     optionalCredential: "Leave blank for local endpoints without authentication",
     emptyCredentialDeletes: "Save empty to delete the API key",
     apiKeyEnv: "API Key environment variable",

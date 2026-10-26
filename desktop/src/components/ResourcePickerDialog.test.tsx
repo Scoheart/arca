@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ResourcePickerDialog } from "./ResourcePickerDialog";
 

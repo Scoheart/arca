@@ -1,0 +1,29 @@
+.arca-instructions { color:var(--text-primary); min-width:0; }
+.arca-instructions-workspace { display:grid; grid-template-columns:210px minmax(0,1fr); border:1px solid var(--border-hairline); border-radius:10px; overflow:hidden; background:var(--surface-asset); min-width:0; }
+.arca-instructions-workspace[data-single=true] { grid-template-columns:minmax(0,1fr); }
+.arca-instructions-files { background:var(--surface-workspace); border-right:1px solid var(--border-hairline); padding:8px; overflow:auto; max-height:540px; }
+.arca-instructions-files button { display:flex; align-items:flex-start; gap:8px; width:100%; padding:10px 8px; border:1px solid transparent; border-radius:7px; background:transparent; text-align:left; color:var(--text-secondary); cursor:pointer; }
+.arca-instructions-files button[aria-current=true] { background:var(--surface-control); border-color:var(--border-hairline); color:var(--text-primary); }
+.arca-instructions-files button:hover { background:var(--surface-item); }.arca-instructions-files svg { flex-shrink:0; margin-top:2px; }
+.arca-instructions-files span { min-width:0; }.arca-instructions-files strong { display:block; font-size:11px; font-weight:550; overflow-wrap:anywhere; }
+.arca-instructions-files small { display:block; margin-top:5px; font:9px/1.6 var(--font-mono); color:var(--text-tertiary); overflow-wrap:anywhere; }
+.arca-instructions-document { display:flex; flex-direction:column; min-width:0; }
+.arca-instructions-file-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; border-bottom:1px solid var(--border-hairline); }
+.arca-instructions-file-heading>div:first-child { min-width:0; }.arca-instructions-file-heading strong { display:block; font-size:12px; font-weight:600; }
+.arca-instructions-file-heading code { display:block; font:10px/1.5 var(--font-mono); color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:4px; }
+.arca-instructions-file-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }.arca-instructions-file-actions small { font-size:10px; color:var(--text-secondary); }
+.arca-instructions-open { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:0; border-radius:5px; background:transparent; color:var(--text-secondary); cursor:pointer; }
+.arca-instructions-open:hover { background:var(--surface-control); color:var(--text-primary); }
+.arca-instructions-view-toggle { display:flex; border:1px solid var(--border-hairline); border-radius:6px; padding:2px; gap:2px; background:var(--surface-workspace); }
+.arca-instructions-view-toggle button { font-size:10px; padding:4px 7px; border:0; border-radius:4px; background:transparent; color:var(--text-secondary); cursor:pointer; }.arca-instructions-view-toggle button[aria-pressed=true] { background:var(--surface-control); color:var(--text-primary); }
+.arca-instructions-text { display:block; width:100%; height:clamp(240px,42vh,480px); resize:vertical; min-height:220px; max-height:70vh; border:0; border-radius:0; padding:18px; background:var(--surface-asset); color:var(--text-primary); font:12px/1.85 var(--font-mono); tab-size:2; overflow:auto; outline-offset:-2px; }
+.arca-instructions-text:read-only { color:var(--text-secondary); }
+.arca-instructions-preview { height:clamp(240px,42vh,480px); min-height:220px; overflow:auto; padding:18px; }
+.arca-instructions-editor-footer { display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:10px 14px; border-top:1px solid var(--border-hairline); }
+.arca-instructions-editor-footer>button { height:30px; min-height:30px; font-size:11px; }
+.arca-instructions-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:270px; padding:24px; gap:12px; text-align:center; color:var(--text-secondary); font-size:12px; }
+.arca-instructions-empty strong { color:var(--text-primary); font-weight:550; }
+.arca-instructions-empty code { font:10px/1.7 var(--font-mono); overflow-wrap:anywhere; }.arca-instructions-empty button { margin-top:6px; font-size:11px; }
+.arca-instructions :focus-visible { outline:2px solid var(--color-blue); outline-offset:2px; }.arca-instructions textarea:focus-visible { outline-offset:-2px; }
+@media(max-width:1000px) { .arca-instructions-workspace { grid-template-columns:170px minmax(0,1fr); }.arca-instructions-file-heading { flex-wrap:wrap; gap:8px; padding:12px; }.arca-instructions-text { padding:14px; font-size:11px; }.arca-instructions-file-actions { margin-left:auto; } }
+@media(max-width:650px) { .arca-instructions-workspace { grid-template-columns:minmax(0,1fr); }.arca-instructions-files { display:flex; border-right:0; border-bottom:1px solid var(--border-hairline); max-height:120px; }.arca-instructions-files button { flex:0 0 155px; }.arca-instructions-files small { display:none; }.arca-instructions-editor-footer { flex-wrap:wrap; } }

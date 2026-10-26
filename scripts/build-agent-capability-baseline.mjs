@@ -121,7 +121,7 @@ await writeFile(outputJson, `${JSON.stringify({ schemaVersion: 1, sourceSnapshot
 const lines = [
   "# Agent capability coverage baseline",
   "",
-  "> Generated from current MUX sources. This is an implementation baseline, not research proof.",
+  "> Generated from current Arca sources. This is an implementation baseline, not research proof.",
   ...(sourceSnapshotDate ? [`> Source snapshot date: ${sourceSnapshotDate}.`] : []),
   "",
   ...Object.entries(summary).map(([key, value]) => `- ${key}: ${value}`),

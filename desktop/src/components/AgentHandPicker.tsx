@@ -1,3 +1,5 @@
+import { ImeInput } from "./ImeInput";
+import { ToastNotice } from "./Toast";
 import { startTransition, useEffect, useLayoutEffect, useMemo, useId, useRef, useState, type CSSProperties, type RefObject } from "react";
 import type { AgentInfo } from "../lib/types";
 import { MAX_PINNED_AGENTS } from "../lib/pinnedAgents";
@@ -16,7 +18,7 @@ type CardPose = { transform: string; opacity: string; tileTransform: string };
 type PageTurn = { direction: -1 | 1; origins: Map<string, CardPose> };
 const snapshotCard = (card: HTMLElement): CardPose => {
   const style = getComputedStyle(card);
-  const tile = card.querySelector<HTMLElement>(".mux-agent-hand-tile");
+  const tile = card.querySelector<HTMLElement>(".arca-agent-hand-tile");
   return { transform: style.transform, opacity: style.opacity,
     tileTransform: tile ? getComputedStyle(tile).transform : "none" };
 };
@@ -24,7 +26,7 @@ const removeGhost = (ghost: HTMLElement) => {
   ghost.getAnimations({ subtree: true }).forEach((motion) => motion.cancel());
   ghost.remove();
 };
-const ADD_ID = "__mux_add_agent__";
+const ADD_ID = "__arca_add_agent__";
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const pose = (x: number, y: number, angle = 0, scale = 1) => `translate3d(${x}px,${y}px,0) rotate(${angle}deg) scale(${scale})`;
 
@@ -151,7 +153,7 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
         ghost.style.willChange = "transform, opacity";
         ghost.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
         ghost.querySelectorAll<HTMLElement>("button").forEach((node) => { node.tabIndex = -1; });
-        const tile = ghost.querySelector<HTMLElement>(".mux-agent-hand-tile");
+        const tile = ghost.querySelector<HTMLElement>(".arca-agent-hand-tile");
         if (tile) tile.style.transform = origin.tileTransform;
         fragment.append(ghost);
         return [{ ghost, index, ...origin }];
@@ -200,7 +202,7 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
       if (boardRef.current) setWidth(boardRef.current.clientWidth);
       setViewportWidth(window.innerWidth);
       const bounds = anchorRef.current?.getBoundingClientRect();
-      const sourceDock = anchorRef.current?.querySelector<HTMLElement>(".mux-pinned-agent-bar");
+      const sourceDock = anchorRef.current?.querySelector<HTMLElement>(".arca-pinned-agent-bar");
       const dockWidth = sourceDock?.getBoundingClientRect().width ?? 0;
       const left = bounds?.left ?? 24;
       // Borrow the actual toolbar geometry, including responsive pin slots.
@@ -274,7 +276,7 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
       });
       deals.push(motion); motions.current.add(motion);
       if (direction) pageMotions.current.add(motion);
-      const tile = card.querySelector<HTMLElement>(".mux-agent-hand-tile");
+      const tile = card.querySelector<HTMLElement>(".arca-agent-hand-tile");
       if (tile && origin && origin.tileTransform !== "none") {
         const lift = tile.animate([{ transform: origin.tileTransform }, { transform: "none" }],
           { duration: 280, easing: "cubic-bezier(.22,1,.36,1)" });
@@ -346,7 +348,7 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
     const cards = freezeCards();
     const current = cards.find(({ card }) => card.dataset.handId === id);
     const agent = agents.find((agent) => agent.id === id);
-    const tile = current?.card.querySelector<HTMLElement>(".mux-agent-hand-tile");
+    const tile = current?.card.querySelector<HTMLElement>(".arca-agent-hand-tile");
     if (!current || !tile || !agent || reducedMotion()) {
       onSelect(id); onClose(); return;
     }
@@ -404,7 +406,7 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
       focusFrame.current = requestAnimationFrame(() => {
         focusFrame.current = null;
         if (!mounted.current) return;
-        (card?.isConnected ? card.querySelector<HTMLButtonElement>(".mux-agent-hand-pin") : searchRef.current)?.focus();
+        (card?.isConnected ? card.querySelector<HTMLButtonElement>(".arca-agent-hand-pin") : searchRef.current)?.focus();
       });
     }
   };
@@ -429,9 +431,9 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
   const shownTopbarLeft = replacement ? Math.min(dockPosition.left, viewportWidth - shownTopbarWidth - 16) : dockPosition.left;
 
   return <Modal width="min(calc(60vw + 96px), calc(100vw - 144px))" maxHeight="calc(100dvh - 120px)" ariaLabel="选择和置顶 Agent" layer="agent-hand" onClose={() => void close()}>
-    <div className="mux-agent-hand-picker" data-busy={busy || saving || undefined} data-playing={playing || undefined} data-entering={entryTransition ? "true" : undefined} data-closing={closing || undefined}>
-      <div className="mux-agent-hand-topbar" style={{ left: shownTopbarLeft, top: dockPosition.top, width: shownTopbarWidth }}>
-      <div ref={dockRef} className="mux-agent-hand-pinned" style={{ width: shownDockWidth, display: shownDockWidth ? undefined : "none" }}>
+    <div className="arca-agent-hand-picker" data-busy={busy || saving || undefined} data-playing={playing || undefined} data-entering={entryTransition ? "true" : undefined} data-closing={closing || undefined}>
+      <div className="arca-agent-hand-topbar" style={{ left: shownTopbarLeft, top: dockPosition.top, width: shownTopbarWidth }}>
+      <div ref={dockRef} className="arca-agent-hand-pinned" style={{ width: shownDockWidth, display: shownDockWidth ? undefined : "none" }}>
         <PinnedAgentDock expanded agents={agents} ids={pinnedIds} selectedId={selectedAgentId} disabled={!ready || saving || busy}
           replacementName={replacement?.name} onReplace={(index) => {
             if (!replacement) return;
@@ -444,15 +446,15 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
             if (agent) void savePins(next, agent);
           }} />
       </div>
-      <div className="mux-agent-hand-toolbar">
-        <label className="mux-agent-hand-search" data-active={selectedAgent ? "true" : undefined}>
-          <span className="mux-agent-hand-search-content"><SearchIcon className="w-4 h-4" />
-          <input ref={searchRef} data-modal-initial-focus type="search" autoComplete="off" spellCheck={false} placeholder="搜索名称或 ID" aria-label="搜索 Agent" aria-describedby={searchHintId}
+      <div className="arca-agent-hand-toolbar">
+        <label className="arca-agent-hand-search" data-active={selectedAgent ? "true" : undefined}>
+          <span className="arca-agent-hand-search-content"><SearchIcon className="w-4 h-4" />
+          <ImeInput ref={searchRef} data-modal-initial-focus type="search" autoComplete="off" spellCheck={false} placeholder="搜索名称或 ID" aria-label="搜索 Agent" aria-describedby={searchHintId}
             onKeyDown={(event) => {
-              if (event.nativeEvent.isComposing || event.altKey || event.metaKey || event.ctrlKey) return;
+              if (event.altKey || event.metaKey || event.ctrlKey) return;
               if (event.key === "ArrowDown" && visible.length) {
                 event.preventDefault();
-                cardRefs.current.get(visible[0].id)?.querySelector<HTMLButtonElement>(".mux-agent-hand-select")?.focus();
+                cardRefs.current.get(visible[0].id)?.querySelector<HTMLButtonElement>(".arca-agent-hand-select")?.focus();
               }
               if (event.key !== "Enter" || !query.trim()) return;
               event.preventDefault();
@@ -465,29 +467,29 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
             }}
             value={query} disabled={busy || saving} onChange={(event) => { setQuery(event.target.value); setPage(0); setReplacement(null); setAnnouncement(""); }} />
           </span>
-          <span className="mux-agent-hand-return" aria-hidden="true">
+          <span className="arca-agent-hand-return" aria-hidden="true">
             {selectedAgent ? <AgentGlyph id={selectedAgent.id} name={selectedAgent.name} size={24} /> : <PackageIcon className="w-5 h-5 flex-shrink-0" />}
-            <span className="mux-agent-picker-trigger-name">{selectedAgent?.name ?? "选择 Agent"}</span>
-            <ChevronDownIcon className="mux-agent-picker-chevron" />
+            <span className="arca-agent-picker-trigger-name">{selectedAgent?.name ?? "选择 Agent"}</span>
+            <ChevronDownIcon className="arca-agent-picker-chevron" />
           </span>
         </label>
       </div>
       </div>
       <p id={searchHintId} className="sr-only">输入完整名称或 ID，按 Enter 直接进入；向下键选择卡片。{query.trim() ? `找到 ${rows.length} 个 Agent。` : ""}</p>
-      <div ref={stageRef} className="mux-agent-hand-stage">
-      {pageCount > 1 && <button type="button" className="mux-agent-hand-page mux-agent-hand-page-prev" aria-label="上一手 Agent" title="上一页"
+      <div ref={stageRef} className="arca-agent-hand-stage">
+      {pageCount > 1 && <button type="button" className="arca-agent-hand-page arca-agent-hand-page-prev" aria-label="上一手 Agent" title="上一页"
         disabled={actualPage === 0 || busy || saving || Boolean(replacement)} onClick={() => turnPage(actualPage - 1)}><ArrowLeftIcon className="w-5 h-5" /></button>}
-      <div ref={boardRef} className="mux-agent-hand-board" style={{ height: Math.max(234, cardHeight + metrics.rise + 76) }} onPointerLeave={() => { if (!keyboard.current) setHighlighted(null); }}
+      <div ref={boardRef} className="arca-agent-hand-board" style={{ height: Math.max(234, cardHeight + metrics.rise + 76) }} onPointerLeave={() => { if (!keyboard.current) setHighlighted(null); }}
         onPointerMove={(event) => {
           if (busy || replacement || pageMotions.current.size > 0 || event.buttons !== 0 || (!event.movementX && !event.movementY)) return;
           keyboard.current = false;
           // The raised, rotated card can extend into its neighbour's horizontal
           // lane. Keep its actual hit area (especially the pin) interactive.
           const target = event.target instanceof Element ? event.target : null;
-          const hitCard = target?.closest<HTMLElement>(".mux-agent-hand-card");
+          const hitCard = target?.closest<HTMLElement>(".arca-agent-hand-card");
           const hitId = hitCard?.dataset.handId;
           if (hitCard && hitId && event.currentTarget.contains(hitCard) &&
-              (hitId === highlighted || target?.closest(".mux-agent-hand-pin"))) {
+              (hitId === highlighted || target?.closest(".arca-agent-hand-pin"))) {
             setHighlighted(hitId);
             return;
           }
@@ -498,12 +500,12 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
           const point = positions[nearest];
           setHighlighted(point && distance < cardWidth * .65 && y > point.y - 32 && y < point.y + cardHeight + 5 ? visible[nearest].id : null);
         }}>
-        <div ref={pageGhostsRef} className="mux-agent-hand-outgoing" aria-hidden="true" />
+        <div ref={pageGhostsRef} className="arca-agent-hand-outgoing" aria-hidden="true" />
         {visible.map(({ id, agent }, index) => <article key={`hand-slot-${index}`} ref={(node) => { if (node) cardRefs.current.set(id, node); else cardRefs.current.delete(id); }}
-          data-hand-id={id} className="mux-agent-hand-card" data-highlighted={highlighted === id || undefined} data-playing={playing === id || undefined}
+          data-hand-id={id} className="arca-agent-hand-card" data-highlighted={highlighted === id || undefined} data-playing={playing === id || undefined}
           data-new={!agent || undefined} style={{ width: cardWidth, height: cardHeight, transform: pose(positions[index].x, positions[index].y, positions[index].angle), "--hand-order": index } as CSSProperties}>
-          <div className="mux-agent-hand-tile">
-            <button type="button" className="mux-agent-hand-select" disabled={busy || Boolean(replacement)}
+          <div className="arca-agent-hand-tile">
+            <button type="button" className="arca-agent-hand-select" disabled={busy || Boolean(replacement)}
               title={agent?.name ?? "添加自定义 Agent"} aria-label={agent ? `进入 ${agent.name}（${id}）` : "添加自定义 Agent"}
               onFocus={(event) => { if (event.currentTarget.matches(":focus-visible")) { keyboard.current = true; setHighlighted(id); } }}
               onBlur={() => { if (keyboard.current) setHighlighted(null); }}
@@ -511,38 +513,39 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
                 if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key) || event.altKey) return;
                 event.preventDefault(); keyboard.current = true;
                 const next = event.key === "Home" ? 0 : event.key === "End" ? visible.length - 1 : (index + (event.key === "ArrowLeft" ? -1 : 1) + visible.length) % visible.length;
-                cardRefs.current.get(visible[next].id)?.querySelector<HTMLButtonElement>(".mux-agent-hand-select")?.focus();
+                cardRefs.current.get(visible[next].id)?.querySelector<HTMLButtonElement>(".arca-agent-hand-select")?.focus();
               }}
               onClick={(event) => agent ? void select(id, event.detail === 0) : void add()}>
               {agent ? <AgentGlyph id={id} name={agent.name} size={30} /> : <PlusIcon className="w-7 h-7" />}
               <span><strong>{agent?.name ?? "添加 Agent"}</strong></span>
             </button>
-            {agent && <button type="button" className="mux-agent-hand-pin" title={pinnedIds.includes(id) ? "取消置顶" : "置顶"}
+            {agent && <button type="button" className="arca-agent-hand-pin" title={pinnedIds.includes(id) ? "取消置顶" : "置顶"}
               aria-label={`${pinnedIds.includes(id) ? "取消置顶" : "置顶"} ${agent.name}`} aria-pressed={pinnedIds.includes(id)} disabled={!ready || busy || saving || Boolean(replacement)}
               onFocus={(event) => { if (event.currentTarget.matches(":focus-visible")) { keyboard.current = true; setHighlighted(id); } }} onBlur={() => { if (keyboard.current) setHighlighted(null); }}
               onClick={() => togglePin(agent)}>{pinnedIds.includes(id) ? <PinOffIcon className="w-3.5 h-3.5" /> : <PinIcon className="w-3.5 h-3.5" />}</button>}
           </div>
         </article>)}
-        {!visible.length && <p className="mux-agent-hand-empty">{query ? "未找到匹配的 Agent" : "点击卡片上的图钉，将常用 Agent 放到这里"}</p>}
+        {!visible.length && <p className="arca-agent-hand-empty">{query ? "未找到匹配的 Agent" : "点击卡片上的图钉，将常用 Agent 放到这里"}</p>}
       </div>
-      {pageCount > 1 && <button type="button" className="mux-agent-hand-page mux-agent-hand-page-next" aria-label="下一手 Agent" title="下一页"
+      {pageCount > 1 && <button type="button" className="arca-agent-hand-page arca-agent-hand-page-next" aria-label="下一手 Agent" title="下一页"
         disabled={actualPage + 1 === pageCount || busy || saving || Boolean(replacement)} onClick={() => turnPage(actualPage + 1)}><ArrowLeftIcon className="w-5 h-5 rotate-180" /></button>}
       </div>
-      <div className="mux-agent-hand-pagination">
+      <div className="arca-agent-hand-pagination">
         {pageCount > 1 && <nav aria-label="Agent 分页">
           {Array.from({ length: pageCount }, (_, index) => <button key={index} type="button"
-            className="mux-agent-hand-dot" aria-label={`第 ${index + 1} 页，共 ${pageCount} 页${actualPage === index ? "，当前页" : ""}`}
+            className="arca-agent-hand-dot" aria-label={`第 ${index + 1} 页，共 ${pageCount} 页${actualPage === index ? "，当前页" : ""}`}
             aria-current={actualPage === index ? "page" : undefined} title={`第 ${index + 1} 页`}
             disabled={busy || saving || Boolean(replacement)}
             onClick={() => turnPage(index)} />)}
         </nav>}
       </div>
-      <div className="mux-agent-hand-footer">
-      <div className="mux-agent-hand-filters" role="group" aria-label="Agent 分类">
+      <div className="arca-agent-hand-footer">
+      <div className="arca-agent-hand-filters" role="group" aria-label="Agent 分类">
         {([['pinned', '常用'], ['builtin', '内置'], ['custom', '自定义']] as const).map(([id, label]) => <button type="button" key={id}
           aria-pressed={group === id && !query.trim()} disabled={busy || saving} onClick={() => changeGroup(id)}>{label}</button>)}
       </div>
-      <p className="mux-agent-hand-announcement" aria-live="polite">{replacement ? `选择上方牌槽，替换为 ${replacement.name} · Esc 取消` : announcement}</p>
+      {replacement && <p className="arca-agent-hand-announcement">{`选择上方牌槽，替换为 ${replacement.name} · Esc 取消`}</p>}
+      <ToastNotice kind={announcement.includes("未保存") ? "error" : "success"} message={announcement} />
       </div>
     </div>
     {entryTransition && <AgentEntryTransition {...entryTransition} onDone={onClose} />}

@@ -2,7 +2,7 @@
 
 Verified on 2026-09-17 against the official Desktop 1.0.1 macOS arm64 distribution.
 `kimi-code-desktop` is independent from the existing `kimi-code` CLI identity.
-Both use the shared Rust capability graph, so CLI and Desktop MUX expose the same integration.
+Both use the shared Rust capability graph, so CLI and Desktop Arca expose the same integration.
 
 | Surface | Contract |
 | --- | --- |
@@ -44,7 +44,7 @@ servers from effective scans and refuses overwriting them as active entries.
 Existing guarded, lossless writes retain unrelated entries. New MCP servers are
 registered in new Kimi sessions; existing sessions do not automatically gain them.
 
-If `KIMI_CODE_HOME` is customized, configure matching MCP and Skills paths in MUX.
+If `KIMI_CODE_HOME` is customized, configure matching MCP and Skills paths in Arca.
 The default integration does not infer another application's shell environment.
 Project overlays, plugin-owned MCP/Skills, browser control and OAuth credentials
 remain managed by Kimi itself.

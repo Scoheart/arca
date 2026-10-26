@@ -2,17 +2,17 @@
 
 use std::fs;
 
-use mux_core::consumption::{
+use arca_core::consumption::{
     commit_asset_operation, plan_reapply_model, plan_remove_agent_consumption,
     plan_set_active_model, plan_set_agent_consumption, plan_set_model_enabled,
     AgentConsumptionSelection, AssetCommitRequest, AssetRef, ConsumptionStatus,
     PlanReapplyModelRequest, PlanRemoveAgentConsumptionRequest, PlanSetActiveModelRequest,
     PlanSetAgentConsumptionRequest, PlanSetModelEnabledRequest, RelationshipAction,
 };
-use mux_core::models::save_profile;
-use mux_core::settings::{load_settings, mutate_settings};
-use mux_core::testenv::TestHome;
-use mux_core::types::{ModelProfile, ModelProtocol};
+use arca_core::models::save_profile;
+use arca_core::settings::{load_settings, mutate_settings};
+use arca_core::testenv::TestHome;
+use arca_core::types::{ModelProfile, ModelProtocol};
 
 fn profile(id: &str, model: &str) -> ModelProfile {
     ModelProfile {
@@ -33,7 +33,7 @@ fn profile(id: &str, model: &str) -> ModelProfile {
     }
 }
 
-fn commit(plan: mux_core::consumption::AssetOperationPlan) {
+fn commit(plan: arca_core::consumption::AssetOperationPlan) {
     commit_asset_operation(AssetCommitRequest {
         operation_id: plan.operation_id,
         candidate_hash: plan.candidate_hash,
@@ -41,9 +41,9 @@ fn commit(plan: mux_core::consumption::AssetOperationPlan) {
     .unwrap();
 }
 
-fn mux_profile_id(profile_id: &str) -> String {
+fn arca_profile_id(profile_id: &str) -> String {
     format!(
-        "mux_{}",
+        "arca_{}",
         profile_id
             .bytes()
             .map(|byte| format!("{byte:02x}"))
@@ -100,7 +100,7 @@ fn setup_unsupported_releasable_profile(test_name: &str) -> (TestHome, String) {
     );
 
     // Keep a Keychain secret while removing the environment reference from
-    // the assigned Profile. The final payload is still the exact one MUX
+    // the assigned Profile. The final payload is still the exact one Arca
     // originally wrote, but compatibility now reports model_env_key_required.
     releasable.env_key = Some("RELEASABLE_API_KEY".into());
     save_profile(releasable, Some("test-secret".into())).unwrap();
@@ -113,15 +113,15 @@ fn setup_unsupported_releasable_profile(test_name: &str) -> (TestHome, String) {
             .unwrap()
             .env_key = None;
         let mut selection = settings.model_selection("opencode");
-        selection.default_delivery = mux_core::domain::assets::ApiKeyDelivery::Env;
+        selection.default_delivery = arca_core::domain::assets::ApiKeyDelivery::Env;
         if let Some(record) = selection.profiles.get_mut("releasable") {
-            record.credential.delivery = mux_core::domain::assets::ApiKeyDelivery::Env;
+            record.credential.delivery = arca_core::domain::assets::ApiKeyDelivery::Env;
         }
         settings.set_model_selection("opencode", selection);
     })
     .unwrap();
 
-    let inventory = mux_core::consumption::list_consumption_inventory().unwrap();
+    let inventory = arca_core::consumption::list_consumption_inventory().unwrap();
     let row = inventory
         .consumptions
         .iter()
@@ -191,8 +191,8 @@ fn targeted_reapply_repairs_only_the_requested_profile_and_clean_retry_is_a_noop
 fn reapply_rejects_an_observed_but_not_desired_current_profile_without_writing() {
     let (home, desired, observed) = setup_two_profiles("model-reapply-active-direction");
     let target = home.home.join(".grok/config.toml");
-    let desired_marker = format!("default = \"{}\"", mux_profile_id(&desired));
-    let observed_marker = format!("default = \"{}\"", mux_profile_id(&observed));
+    let desired_marker = format!("default = \"{}\"", arca_profile_id(&desired));
+    let observed_marker = format!("default = \"{}\"", arca_profile_id(&observed));
     let before = fs::read_to_string(&target).unwrap();
     assert!(before.contains(&desired_marker));
     let drifted = before.replace(&desired_marker, &observed_marker);
@@ -246,7 +246,7 @@ fn reapply_materializes_the_desired_disabled_state_only_for_an_exact_managed_ent
     commit(repair);
     let cleared = fs::read_to_string(&target).unwrap();
     assert!(!cleared.contains(&inactive_model));
-    let inventory = mux_core::consumption::list_consumption_inventory().unwrap();
+    let inventory = arca_core::consumption::list_consumption_inventory().unwrap();
     assert!(inventory.consumptions.iter().any(|row| {
         row.agent_id == "grok-build"
             && row.asset
@@ -418,7 +418,7 @@ fn model_reapply_rejects_a_disabled_agent_without_writing() {
         .unwrap()
         .replace(&format!("{active}-model"), "disabled-agent-drift");
     fs::write(&target, &drifted).unwrap();
-    mux_core::agents::set_enabled("grok-build", false).unwrap();
+    arca_core::agents::set_enabled("grok-build", false).unwrap();
 
     let error = plan_reapply_model(PlanReapplyModelRequest {
         agent_id: "grok-build".into(),
@@ -443,16 +443,16 @@ fn model_reapply_binds_the_reviewed_credential_presence() {
     })
     .unwrap();
 
-    let saved = std::env::var_os("MUX_TEST_MODEL_CREDENTIAL_PROFILES");
-    std::env::set_var("MUX_TEST_MODEL_CREDENTIAL_PROFILES", &active);
+    let saved = std::env::var_os("ARCA_TEST_MODEL_CREDENTIAL_PROFILES");
+    std::env::set_var("ARCA_TEST_MODEL_CREDENTIAL_PROFILES", &active);
     let error = commit_asset_operation(AssetCommitRequest {
         operation_id: plan.operation_id,
         candidate_hash: plan.candidate_hash,
     })
     .unwrap_err();
     match saved {
-        Some(value) => std::env::set_var("MUX_TEST_MODEL_CREDENTIAL_PROFILES", value),
-        None => std::env::remove_var("MUX_TEST_MODEL_CREDENTIAL_PROFILES"),
+        Some(value) => std::env::set_var("ARCA_TEST_MODEL_CREDENTIAL_PROFILES", value),
+        None => std::env::remove_var("ARCA_TEST_MODEL_CREDENTIAL_PROFILES"),
     }
 
     assert!(

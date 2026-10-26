@@ -2,7 +2,7 @@
 
 mod support;
 
-use mux_core::consumption::{
+use arca_core::consumption::{
     commit_asset_operation, plan_delete_central_asset, plan_reapply_mcp, plan_set_active_model,
     plan_set_agent_consumption, plan_set_mcp_enabled, plan_set_model_enabled,
     plan_set_skill_enabled, plan_update_central_asset, AgentConsumptionSelection,
@@ -11,17 +11,17 @@ use mux_core::consumption::{
     PlanSetAgentConsumptionRequest, PlanSetMcpEnabledRequest, PlanSetModelEnabledRequest,
     PlanSetSkillEnabledRequest, PlanUpdateCentralAssetRequest,
 };
-use mux_core::models::{apply_profile, list_profiles, reconcile_active_models, save_profile};
-use mux_core::registry::{read_registry, write_manual_entry};
-use mux_core::settings::{load_settings, mutate_settings, UiSettings};
-use mux_core::testenv::TestHome;
-use mux_core::types::{
+use arca_core::models::{apply_profile, list_profiles, reconcile_active_models, save_profile};
+use arca_core::registry::{read_registry, write_manual_entry};
+use arca_core::settings::{load_settings, mutate_settings, UiSettings};
+use arca_core::testenv::TestHome;
+use arca_core::types::{
     HttpConfig, ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig,
 };
 use std::fs;
 use support::skills::SkillsFixture;
 
-fn commit(plan: mux_core::consumption::AssetOperationPlan) {
+fn commit(plan: arca_core::consumption::AssetOperationPlan) {
     commit_asset_operation(AssetCommitRequest {
         operation_id: plan.operation_id,
         candidate_hash: plan.candidate_hash,
@@ -29,9 +29,9 @@ fn commit(plan: mux_core::consumption::AssetOperationPlan) {
     .unwrap();
 }
 
-fn mux_profile_id(profile_id: &str) -> String {
+fn arca_profile_id(profile_id: &str) -> String {
     format!(
-        "mux_{}",
+        "arca_{}",
         profile_id
             .bytes()
             .map(|byte| format!("{byte:02x}"))
@@ -80,7 +80,7 @@ fn workbuddy_pause_survives_central_update_and_unassign_removes_the_entry() {
     let value: serde_json::Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
     assert_eq!(value["mcpServers"]["local"]["command"], "new-server");
     assert_eq!(value["mcpServers"]["local"]["disabled"], true);
-    assert!(!mux_core::disabled::load_disabled().contains_key("workbuddy"));
+    assert!(!arca_core::disabled::load_disabled().contains_key("workbuddy"));
     commit(plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
         agent_id: "workbuddy".into(),
         selection: AgentConsumptionSelection::Mcp { asset_keys: vec![] },
@@ -741,7 +741,7 @@ fn mcp_reapply_rejects_disabled_agents_in_exact_and_all_scopes_without_writing()
         .unwrap()
         .replace("managed-server", "disabled-agent-drift");
     fs::write(&target, &drifted).unwrap();
-    mux_core::agents::set_enabled("claude-code", false).unwrap();
+    arca_core::agents::set_enabled("claude-code", false).unwrap();
 
     for scope in [
         McpReapplyScope::Agent {
@@ -1072,7 +1072,7 @@ fn grok_build_delete_preserves_an_unmanaged_model_without_failing_verification()
     let cleared = fs::read_to_string(target).unwrap();
     assert!(cleared.contains("model.private"));
     assert!(cleared.contains("model = \"keep\""));
-    assert!(!cleared.contains(&mux_profile_id(&profile.id)));
+    assert!(!cleared.contains(&arca_profile_id(&profile.id)));
     assert!(list_profiles().is_empty());
 }
 
@@ -1173,8 +1173,8 @@ fn grok_build_keeps_multiple_profiles_and_falls_back_when_current_is_disabled() 
     assert!(reenabled_config.contains("SECOND_API_KEY"));
 
     let native = fs::read_to_string(&target).unwrap();
-    let switched_marker = format!("default = \"{}\"", mux_profile_id(&switched));
-    let initial_marker = format!("default = \"{}\"", mux_profile_id(&initial_active));
+    let switched_marker = format!("default = \"{}\"", arca_profile_id(&switched));
+    let initial_marker = format!("default = \"{}\"", arca_profile_id(&initial_active));
     assert!(native.contains(&switched_marker));
     fs::write(&target, native.replace(&switched_marker, &initial_marker)).unwrap();
     reconcile_active_models().unwrap();
@@ -1279,8 +1279,8 @@ fn shared_skill_target_expands_agent_intent_and_rejects_partial_asset_selection(
         std::collections::BTreeSet::from(["agents-user".into()])
     );
 
-    let error = mux_core::consumption::plan_set_asset_consumers(
-        mux_core::consumption::PlanSetAssetConsumersRequest {
+    let error = arca_core::consumption::plan_set_asset_consumers(
+        arca_core::consumption::PlanSetAssetConsumersRequest {
             asset: AssetRef::Skill {
                 name: "review-changes".into(),
             },
@@ -1341,7 +1341,7 @@ fn shared_skill_toggle_preserves_assignment_and_changes_the_physical_target_once
         !settings.skill_consumptions.as_ref().unwrap()["review-changes"]["agents-user"].enabled
     );
     assert!(!target.exists());
-    let disabled = mux_core::consumption::list_consumption_inventory().unwrap();
+    let disabled = arca_core::consumption::list_consumption_inventory().unwrap();
     let rows: Vec<_> = disabled
         .consumptions
         .iter()
@@ -1357,18 +1357,18 @@ fn shared_skill_toggle_preserves_assignment_and_changes_the_physical_target_once
         item.desired
             && !item.observed
             && item.enabled == Some(false)
-            && item.status == mux_core::consumption::ConsumptionStatus::Synced
+            && item.status == arca_core::consumption::ConsumptionStatus::Synced
     }));
-    let repair = mux_core::skills::plan_repair(mux_core::skills::PlanRepairRequest {
+    let repair = arca_core::skills::plan_repair(arca_core::skills::PlanRepairRequest {
         skill_name: "review-changes".into(),
-        repair: mux_core::skills::RepairKind::Target {
+        repair: arca_core::skills::RepairKind::Target {
             target_id: "agents-user".into(),
         },
     })
     .unwrap_err();
     assert!(matches!(
         repair,
-        mux_core::skills::SkillError::Conflict { .. }
+        arca_core::skills::SkillError::Conflict { .. }
     ));
 
     commit(
@@ -1384,7 +1384,7 @@ fn shared_skill_toggle_preserves_assignment_and_changes_the_physical_target_once
     assert!(settings.skill_assignments.as_ref().unwrap()["review-changes"].contains("agents-user"));
     assert!(settings.skill_consumptions.as_ref().unwrap()["review-changes"]["agents-user"].enabled);
     assert!(target.is_symlink());
-    let enabled = mux_core::consumption::list_consumption_inventory().unwrap();
+    let enabled = arca_core::consumption::list_consumption_inventory().unwrap();
     assert!(enabled
         .consumptions
         .iter()
@@ -1395,7 +1395,7 @@ fn shared_skill_toggle_preserves_assignment_and_changes_the_physical_target_once
         .all(|item| {
             item.observed
                 && item.enabled == Some(true)
-                && item.status == mux_core::consumption::ConsumptionStatus::Synced
+                && item.status == arca_core::consumption::ConsumptionStatus::Synced
         }));
 }
 

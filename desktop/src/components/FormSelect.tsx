@@ -69,7 +69,7 @@ export function FormSelect({
   };
 
   return (
-    <div className="mux-form-select" data-open={open ? "true" : undefined} ref={rootRef}>
+    <div className="arca-form-select" data-open={open ? "true" : undefined} ref={rootRef}>
       <button
         ref={triggerRef}
         type="button"
@@ -82,7 +82,7 @@ export function FormSelect({
         aria-haspopup="listbox"
         aria-activedescendant={open ? `${listboxId}-option-${activeIndex}` : undefined}
         autoFocus={autoFocus}
-        className="mux-model-field mux-form-select-trigger"
+        className="arca-model-field arca-form-select-trigger"
         data-open={open ? "true" : undefined}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={(event) => {
@@ -130,12 +130,12 @@ export function FormSelect({
           }
         }}
       >
-        <span className="mux-form-select-value">{triggerContent ?? selected?.label ?? placeholder ?? ""}</span>
-        <ChevronDownIcon className="mux-form-select-chevron" />
+        <span className="arca-form-select-value">{triggerContent ?? selected?.label ?? placeholder ?? ""}</span>
+        <ChevronDownIcon className="arca-form-select-chevron" />
       </button>
 
       {open && (
-        <div id={listboxId} className="mux-form-select-menu" role="listbox" aria-label={ariaLabel}>
+        <div id={listboxId} className="arca-form-select-menu" role="listbox" aria-label={ariaLabel}>
           {options.map((option, index) => (
             <button
               id={`${listboxId}-option-${index}`}
@@ -144,14 +144,14 @@ export function FormSelect({
               disabled={disabled}
               role="option"
               aria-selected={option.value === value}
-              className="mux-form-select-option"
+              className="arca-form-select-option"
               data-active={index === activeIndex ? "true" : undefined}
               data-selected={option.value === value ? "true" : undefined}
               onPointerMove={() => setActiveIndex(index)}
               onClick={() => choose(index)}
             >
-              <span className="mux-form-select-option-content">{option.icon}{option.label}</span>
-              <span className="mux-form-select-option-mark" aria-hidden="true">
+              <span className="arca-form-select-option-content">{option.icon}{option.label}</span>
+              <span className="arca-form-select-option-mark" aria-hidden="true">
                 {option.value === value ? "✓" : ""}
               </span>
             </button>

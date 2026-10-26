@@ -1,4 +1,4 @@
-//! MUX CLI — a thin clap/TUI front-end over `mux-core`.
+//! Arca CLI — a thin clap/TUI front-end over `arca-core`.
 
 use std::ffi::OsString;
 
@@ -95,7 +95,7 @@ fn parse(args: Vec<OsString>, json_mode: bool) -> Result<ParseOutcome, CliError>
             let (command, data) = if kind == clap::error::ErrorKind::DisplayVersion {
                 (
                     "version",
-                    json!({"name": "mux", "version": env!("CARGO_PKG_VERSION")}),
+                    json!({"name": "arca", "version": env!("CARGO_PKG_VERSION")}),
                 )
             } else {
                 ("help", json!({"text": error.to_string()}))
@@ -119,7 +119,7 @@ fn run(cli: Cli) -> Result<(), CliError> {
                 "global flags require an explicit command",
             ));
         }
-        if std::env::var_os("MUX_NO_TUI").is_some() {
+        if arca_core::brand::env_os("ARCA_NO_TUI").is_some() {
             Cli::command()
                 .print_help()
                 .map_err(|error| CliError::private("help_output_failed", error.to_string()))?;
@@ -140,7 +140,7 @@ fn run(cli: Cli) -> Result<(), CliError> {
 
     if !cli.json && !is_upgrade {
         if let Some(notice) =
-            mux_core::application::update::passive_check_notice(env!("CARGO_PKG_VERSION"))
+            arca_core::application::update::passive_check_notice(env!("CARGO_PKG_VERSION"))
         {
             eprintln!("\n{notice}");
         }
@@ -148,11 +148,11 @@ fn run(cli: Cli) -> Result<(), CliError> {
     Ok(())
 }
 
-fn bootstrap(json_mode: bool) -> mux_core::application::bootstrap::BootstrapReport {
-    let outcome = mux_core::application::MuxCore::bootstrap();
+fn bootstrap(json_mode: bool) -> arca_core::application::bootstrap::BootstrapReport {
+    let outcome = arca_core::application::ArcaCore::bootstrap();
     if !json_mode {
         for warning in &outcome.warnings {
-            eprintln!("MUX startup warning: {}", warning.message);
+            eprintln!("Arca startup warning: {}", warning.message);
         }
     }
     outcome
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn json_parse_error_becomes_structured_cli_error() {
-        let error = parse(vec!["mux".into(), "--json".into(), "list".into()], true).unwrap_err();
+        let error = parse(vec!["arca".into(), "--json".into(), "list".into()], true).unwrap_err();
         assert_eq!(error.code, "invalid_arguments");
     }
 
@@ -172,7 +172,7 @@ mod tests {
     fn json_looking_server_arg_does_not_select_json_output() {
         let ParseOutcome::Run(cli) = parse(
             vec![
-                "mux".into(),
+                "arca".into(),
                 "mcp".into(),
                 "add".into(),
                 "edge::stdio".into(),
@@ -192,7 +192,7 @@ mod tests {
     #[test]
     fn option_aware_json_detection_skips_server_argument_values() {
         let args = vec![
-            "mux".into(),
+            "arca".into(),
             "mcp".into(),
             "add".into(),
             "invalid".into(),
@@ -201,7 +201,7 @@ mod tests {
         ];
         assert!(!requested_json_mode(&args));
         assert!(requested_json_mode(&[
-            "mux".into(),
+            "arca".into(),
             "--json".into(),
             "mcp".into(),
             "list".into(),

@@ -12,11 +12,18 @@ import type { AgentInfo } from "../lib/types";
 vi.mock("../hooks/usePinnedAgents", () => ({ usePinnedAgents: () => ({ agentIds: [], ready: true, saving: false, commit: vi.fn() }) }));
 vi.mock("./AgentView", () => ({ AgentView: () => null }));
 
+const originalGetAnimations = Object.getOwnPropertyDescriptor(Element.prototype, "getAnimations");
+
 beforeEach(() => {
   vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+  Object.defineProperty(Element.prototype, "getAnimations", { configurable: true, value: () => [] });
 });
-afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
+afterEach(() => {
+  cleanup(); vi.useRealTimers(); vi.unstubAllGlobals();
+  if (originalGetAnimations) Object.defineProperty(Element.prototype, "getAnimations", originalGetAnimations);
+  else Reflect.deleteProperty(Element.prototype, "getAnimations");
+});
 
 function Dialogs() {
   const [child, setChild] = useState(false);
@@ -72,21 +79,26 @@ describe("Computer Use interaction contract", () => {
 
   it("opens by shortcut and accepts an exact Agent ID, but rejects ambiguous names and IME Enter", async () => {
     const onSelect = vi.fn();
-    const base: AgentInfo = { id: "demo-cli", name: "Demo", format: "json", key: "mcpServers", has_global: true,
+    const base: AgentInfo = { id: "codex", name: "Demo", format: "json", key: "mcpServers", has_global: true,
       has_project: false, enabled: true, supported_transports: ["stdio"], global: "~/.demo/config.json", project: null,
       skills_global_dir: null, docs: null, note: null, category: "cli", evidence: "official", verified_at: null, builtin: true };
-    render(<AgentNavigation agents={[base, { ...base, id: "demo-desktop", category: "desktop" }]} selectedAgentId={null} onSelectAgent={onSelect} />);
+    render(<AgentNavigation agents={[base, { ...base, id: "cursor", category: "desktop" }]} selectedAgentId={null} onSelectAgent={onSelect} />);
     fireEvent.keyDown(document, { key: "k", metaKey: true });
     const search = screen.getByRole("searchbox", { name: "搜索 Agent" });
     await waitFor(() => expect(search).toHaveFocus());
     fireEvent.change(search, { target: { value: "Demo" } });
     fireEvent.keyDown(search, { key: "Enter" });
     expect(onSelect).not.toHaveBeenCalled();
-    fireEvent.change(search, { target: { value: "demo-desktop" } });
+    fireEvent.change(search, { target: { value: "cursor" } });
     fireEvent.keyDown(search, { key: "Enter", isComposing: true });
+    fireEvent.compositionStart(search);
+    fireEvent.keyDown(search, { key: "Enter", isComposing: false });
+    expect(onSelect).not.toHaveBeenCalled();
+    fireEvent.compositionEnd(search, { data: "cursor" });
+    fireEvent.keyDown(search, { key: "Enter", keyCode: 229, isComposing: false });
     expect(onSelect).not.toHaveBeenCalled();
     fireEvent.keyDown(search, { key: "Enter" });
-    expect(onSelect).toHaveBeenCalledWith("demo-desktop");
+    expect(onSelect).toHaveBeenCalledWith("cursor");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

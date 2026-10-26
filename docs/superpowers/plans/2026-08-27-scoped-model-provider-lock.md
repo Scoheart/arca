@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19, TypeScript, Vitest, Testing Library.
 
-**Delivery constraint:** Work only in the isolated worktree, create the commit through the GitHub Git Data API, merge via PR, and verify the Direct Stable release without updating the local MUX app. MUX fast-delivery policy skips local tests/build unless the user explicitly requests them.
+**Delivery constraint:** Work only in the isolated worktree, create the commit through the GitHub Git Data API, merge via PR, and verify the Direct Stable release without updating the local Arca app. Arca fast-delivery policy skips local tests/build unless the user explicitly requests them.
 
 ---
 
@@ -72,7 +72,7 @@ When `providerSelectionLocked && providerInstance`, render:
 ```tsx
 <input
   aria-label={t("models.provider")}
-  className="mux-model-field"
+  className="arca-model-field"
   readOnly
   value={providerInstance.name}
 />

@@ -2,20 +2,20 @@
 
 mod support;
 
-use mux_core::consumption::{
+use arca_core::consumption::{
     commit_asset_operation, list_consumption_inventory, plan_reapply_model,
     plan_set_agent_consumption, plan_set_asset_consumers, plan_update_asset_consumers,
     AgentConsumptionSelection, AssetCommitRequest, AssetRef, ConsumptionStatus,
     McpConsumptionRecord, PlanReapplyModelRequest, PlanSetAgentConsumptionRequest,
     PlanSetAssetConsumersRequest, PlanUpdateAssetConsumersRequest,
 };
-use mux_core::models::{apply_profile, save_profile};
-use mux_core::ops::install;
-use mux_core::r#override::OverridePatch;
-use mux_core::registry::write_manual_entry;
-use mux_core::settings::{mutate_settings, AgentConfigPathOverride};
-use mux_core::testenv::TestHome;
-use mux_core::types::{ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::models::{apply_profile, save_profile};
+use arca_core::ops::install;
+use arca_core::r#override::OverridePatch;
+use arca_core::registry::write_manual_entry;
+use arca_core::settings::{mutate_settings, AgentConfigPathOverride};
+use arca_core::testenv::TestHome;
+use arca_core::types::{ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fs;
 use support::skills::SkillsFixture;
@@ -67,7 +67,7 @@ fn mcp_inventory_reconciles_desired_and_external_without_writes() {
         )]));
     })
     .unwrap();
-    let settings_path = home.home.join(".mux/settings.json");
+    let settings_path = home.home.join(".arca/settings.json");
     let claude_path = home.home.join(".claude.json");
     let codex_path = home.home.join(".codex/config.toml");
     let before = [
@@ -258,7 +258,7 @@ fn multiple_external_models_keep_distinct_candidate_identities() {
         rows.iter()
             .filter(|item| item
                 .available_actions
-                .contains(&mux_core::consumption::ConvergenceAction::AdoptObserved))
+                .contains(&arca_core::consumption::ConvergenceAction::AdoptObserved))
             .count(),
         1
     );
@@ -376,7 +376,7 @@ fn idempotent_asset_consumer_edits_never_repair_unrelated_model_drift() {
     fs::write(&target, drifted.as_bytes()).unwrap();
     let reviewed_bytes = fs::read(&target).unwrap();
 
-    let assert_noop = |plan: mux_core::consumption::AssetOperationPlan| {
+    let assert_noop = |plan: arca_core::consumption::AssetOperationPlan| {
         assert!(plan.can_commit);
         assert!(plan.relationship_changes.is_empty());
         assert!(plan.model_state_changes.is_empty());

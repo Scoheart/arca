@@ -1,3 +1,6 @@
+import { InstructionDraftGuard } from './components/InstructionDraftGuard';
+import { ToastNotice } from "./components/Toast";
+import { CredentialSession } from "./components/CredentialSession";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invalidateModelObservation } from "./lib/modelObservation";
 import { invalidatePreferences } from "./lib/preferenceObservation";
@@ -63,7 +66,7 @@ const TraceView = lazy(() => import("./components/TraceView").then(module => ({ 
 
 function ViewLoading() {
   return (
-    <div className="mux-view-loading" role="status">
+    <div className="arca-view-loading" role="status">
       <RefreshIcon data-spinning="true" />
       正在打开视图…
     </div>
@@ -94,7 +97,7 @@ async function runRefreshes(
 
 function App() {
   const { t } = useTranslation();
-  const [view, setView] = useState<View>({ kind: "registry" });
+  const [view, setView] = useState<View>({ kind: "models" });
   const [addAgentOpen, setAddAgentOpen] = useState(false);
   const [mcpEditorOpen, setMcpEditorOpen] = useState(false);
   const [externalModelCandidates, setExternalModelCandidates] = useState<ModelAdoptionCandidate[]>([]);
@@ -297,8 +300,9 @@ function App() {
       onRescan={() => refreshObservedTasks(ALL_OBSERVATION_TASK_IDS)}
       startupSync={startupSync}
     >
+      <InstructionDraftGuard />
       <Suspense fallback={<ViewLoading />}>
-        {view.kind === "traces" ? (<TraceView initialAgentId={view.agentId} />) : view.kind === "capture" ? (<CaptureView agents={agents} initialAgentId={view.agentId} muxProxy={networkSettings.settings.proxy_url} />) : view.kind === "skills" ? (
+        {view.kind === "traces" ? (<TraceView initialAgentId={view.agentId} />) : view.kind === "capture" ? (<CaptureView key={view.agentId} agents={agents} agentId={view.agentId} arcaProxy={networkSettings.settings.proxy_url} />) : view.kind === "skills" ? (
           <SkillsView
             state={skillsState}
             onOpenAgent={(id) => setView({ kind: "agent", id, tab: "skills" })}
@@ -313,6 +317,7 @@ function App() {
           />
         ) : view.kind === "agent" ? (
           <AgentView
+            key={view.id}
             state={state}
             skillsState={skillsState}
             consumptionState={consumptionState}
@@ -359,41 +364,21 @@ function App() {
         />
       )}
 
-      {backendStatus?.state === "read_only" && (
-        <div className="mux-asset-recovery-banner" role="alert">
-          <strong>{t("migration.recoveryTitle")}</strong>
-          <span>{t("migration.recoveryMessage", {
-            stage: backendStatus.stage,
-          })}</span>
-        </div>
-      )}
-
-      {backendStatus?.state === "capability_unavailable" && (
-        <div className="mux-asset-recovery-banner mux-capability-warning-banner" role="alert">
-          <strong>{t("migration.capabilityTitle")}</strong>
-          <span>{t("migration.capabilityMessage", { stage: backendStatus.stage })}</span>
-        </div>
-      )}
-
+      <ToastNotice kind="warning" noticeKey="backend-recovery" message={backendStatus?.state === "read_only"
+        ? `${t("migration.recoveryTitle")} · ${t("migration.recoveryMessage", { stage: backendStatus.stage })}` : null} />
+      <ToastNotice kind="warning" noticeKey="backend-capability" message={backendStatus?.state === "capability_unavailable"
+        ? `${t("migration.capabilityTitle")} · ${t("migration.capabilityMessage", { stage: backendStatus.stage })}` : null} />
       {backendStatus?.state !== "capability_unavailable"
-        && (consumptionState.inventory?.capability_errors ?? []).map((diagnostic) => (
-          <div
-            className="mux-asset-recovery-banner mux-capability-warning-banner"
-            role="status"
-            key={`${diagnostic.capability}:${diagnostic.code}`}
-          >
-            <strong>{t("observations.capabilityUnavailable", {
-              capability: capabilityLabel(diagnostic.capability),
-            })}</strong>
-            <span>{diagnostic.code === "skill_inventory_unavailable"
-              ? t("observations.skillInventoryUnavailable")
-              : diagnostic.code === "skill_recovery_required"
-                ? t("observations.skillRecoveryRequired")
-                : t("observations.capabilityFallback")}</span>
-          </div>
-        ))}
+        && (consumptionState.inventory?.capability_errors ?? [])
+          .filter((diagnostic) => diagnostic.capability !== "skill" || view.kind !== "skills")
+          .map((diagnostic) => <ToastNotice kind="warning" key={`${diagnostic.capability}:${diagnostic.code}`}
+            message={`${t("observations.capabilityUnavailable", { capability: capabilityLabel(diagnostic.capability) })} · ${
+              diagnostic.code === "skill_inventory_unavailable" ? t("observations.skillInventoryUnavailable")
+              : diagnostic.code === "skill_recovery_required" ? t("observations.skillRecoveryRequired")
+              : t("observations.capabilityFallback")}`} />)}
 
       <UpdateBanner updater={updater} />
+      <CredentialSession />
     </Layout>
   );
 }

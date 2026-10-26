@@ -1,6 +1,6 @@
 # User-level Skills
 
-A Skill is an instruction directory containing `SKILL.md`. MUX keeps one central copy and assigns links into verified user-level Agent directories. It manages global Skills.
+A Skill is an instruction directory containing `SKILL.md`. Arca keeps one central copy and assigns links into verified user-level Agent directories. It manages global Skills.
 
 ## Get a Skill
 
@@ -17,7 +17,6 @@ Submitting a source directly imports every discovered Skill without a second ins
 
 ## Source navigation and cards
 
-![Skill cards with source navigation](/media/mux-1.10.0-skills.jpg)
 
 The left sidebar shows concrete sources. Subdirectories of one GitHub repository group together; same-named folders in different locations remain separate. Search applies to the current scope.
 
@@ -28,7 +27,7 @@ Cards show a name, up to three description lines, and readable-target Agent icon
 Select a central Skill in the Agent's Skills tab. Its user-level link points to:
 
 ```text
-~/.mux/assets/skills/items/<skill-name>/
+~/.arca/assets/skills/items/<skill-name>/
 ```
 
 Several Agents can read one physical directory; reviews list everyone affected. Disabling keeps the relationship and central content. Removing use keeps the central asset and removes only a provably managed link.
@@ -41,11 +40,11 @@ Checking updates reads version or content state without changing the Skill. Ordi
 
 Reinstalling, importing the same central name, and updating preserve existing consumers and disabled state. An upstream revision change with identical content updates version metadata only. Adoption rereads and audits the current content, binding its hash; edits after review invalidate the old plan.
 
-A managed link exposes the central copy, so editing through it changes central content too. MUX detects that change rather than treating it as an independent external copy.
+A managed link exposes the central copy, so editing through it changes central content too. Arca detects that change rather than treating it as an independent external copy.
 
 ## Risk and recovery
 
-MUX checks paths, links, archives, structure, and content hashes without running candidate scripts. `SKILL.md` renders as text, without executing embedded HTML or remote resources.
+Arca checks paths, links, archives, structure, and content hashes without running candidate scripts. `SKILL.md` renders as text, without executing embedded HTML or remote resources.
 
 High-risk approval binds the exact content hash. Assigning or enabling that approved central version does not repeat the same findings confirmation; changed content is audited again. Authority-reducing actions are not blocked by the risk gate.
 
@@ -53,6 +52,6 @@ Central state persists first and each physical target converges independently. F
 
 ## Current limits
 
-Project-level Skill writes, authenticated private Git sources, and creating or editing `SKILL.md` inside MUX are not supported. See [Supported Agents](/en/guide/agents#skills) for directory contracts.
+Project-level Skill writes, authenticated private Git sources, and creating or editing `SKILL.md` inside Arca are not supported. See [Supported Agents](/en/guide/agents#skills) for directory contracts.
 
 [CLI Skill commands](/en/guide/cli#skill) · [Watch the demo](/en/guide/demo)

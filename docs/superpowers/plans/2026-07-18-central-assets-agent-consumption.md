@@ -1,13 +1,13 @@
-# MUX 中央资产与 Agent 消费模型实施计划
+# Arca 中央资产与 Agent 消费模型实施计划
 
 > 状态（2026-07-18）：核心、Desktop、文档与自动门禁均已完成；正式安装版 UI 验收仍需用户当次明确授权，commit/push/PR/release 均未执行。下方任务清单保留为实施追踪记录，最终交付证据以测试结果和实际 diff 为准。
 
-**目标：** 将 MCP、Model、Skill 统一为“中央资产入库与维护 → Agent 建立消费关系 → MUX 对账实际状态”的产品模型，消除 Agent 页面重新安装 Skill、MCP 只靠扫描反推关系以及 Model 编辑清空 assignment 的错误逻辑。
+**目标：** 将 MCP、Model、Skill 统一为“中央资产入库与维护 → Agent 建立消费关系 → Arca 对账实际状态”的产品模型，消除 Agent 页面重新安装 Skill、MCP 只靠扫描反推关系以及 Model 编辑清空 assignment 的错误逻辑。
 
 **设计权威：**
 `docs/superpowers/specs/2026-07-18-central-assets-agent-consumption-design.md`
 
-**基线：** 分支 `codex/central-asset-consumption-design`，设计提交 `0734329`，基于 MUX `main` 的 `c81a6da`。
+**基线：** 分支 `codex/central-asset-consumption-design`，设计提交 `0734329`，基于 Arca `main` 的 `c81a6da`。
 
 **架构：** Rust `core::consumption` 统一 desired relationship、observed inventory、compatibility、plan、commit、rollback 和 migration。MCP、Model、Skill adapter 保留各自类型和安全写入。Tauri 只做 tagged wire 转换，React 只展示 core 状态并提交用户意图。
 
@@ -24,9 +24,9 @@
 - 保留未知字段、注释、格式、非目标策略、权限、备份和 fail-closed 行为。
 - Model secrets 只存在系统 Keychain；不得进入 settings、plan、journal、日志、fixture、DOM 或截图。
 - Skill 继续使用中央副本、物理 target 归一化、plan/commit hash、风险确认和 recovery journal。
-- 所有测试隔离 `HOME` 和 `MUX_HOME`，不得读取真实 Agent 配置、`~/.mux` 或 Keychain。
+- 所有测试隔离 `HOME` 和 `ARCA_HOME`，不得读取真实 Agent 配置、`~/.arca` 或 Keychain。
 - 每个阶段必须可构建、可测试、可审查；切换领域写入口后立即移除对应 Desktop 旧调用。
-- 不修改 release-owned version、tag、Release、签名、公证或 `/Applications/MUX.app`。
+- 不修改 release-owned version、tag、Release、签名、公证或 `/Applications/Arca.app`。
 - 实施提交使用 `<type>(<scope>): <summary>`，body 解释为什么；只暂存当前任务文件。
 
 ## 共同验证命令
@@ -35,10 +35,10 @@
 
 ```bash
 cargo fmt --check
-cargo test -p mux-core consumption
-cargo test -p mux-core --test consumption_inventory
-cargo test -p mux-core --test consumption_lifecycle
-cargo test -p mux-core --test consumption_recovery
+cargo test -p arca-core consumption
+cargo test -p arca-core --test consumption_inventory
+cargo test -p arca-core --test consumption_lifecycle
+cargo test -p arca-core --test consumption_recovery
 ```
 
 Rust phase gate：
@@ -99,8 +99,8 @@ npm run build
 **聚焦命令：**
 
 ```bash
-cargo test -p mux-core settings::tests
-cargo test -p mux-core consumption::types::tests
+cargo test -p arca-core settings::tests
+cargo test -p arca-core consumption::types::tests
 ```
 
 **提交：** `feat(consumption): define desired state contract`
@@ -220,7 +220,7 @@ cd desktop && npm test && npm run build
 - [ ] 写失败测试：plan serialization 不包含 secrets、绝对私有目录和未脱敏配置预览。
 - [ ] 写失败测试：operation id、settings hash、target hashes 和 candidate hash 与 plan 绑定；旧 plan 在并发变化后失效。
 - [ ] 定义 typed `DomainPlan`，Skill 通过适配现有 `OperationPlan` 接入，不复制其风险和 hash 规则。
-- [ ] 将 plan 持久化到 MUX 私有 staging/journal 路径，权限沿用 Skills `0600/0700` 门禁。
+- [ ] 将 plan 持久化到 Arca 私有 staging/journal 路径，权限沿用 Skills `0600/0700` 门禁。
 - [ ] transaction coordinator 只负责 envelope、lock、dispatch 和 lifecycle；领域 adapter 负责自己的 mutation spec 与 rollback。
 - [ ] cancel 等待进行中的 commit，且对同 operation id 幂等。
 - [ ] recovery 不持久化 Keychain secret；需要秘密时返回 `credential_required` 并要求重新计划。
@@ -343,7 +343,7 @@ cd desktop && npm test && npm run build
 - [ ] Model Profile metadata/credential 更新走统一计划，不直接 save 后再补写 Agent。
 - [ ] Skill update 复用 existing candidate/risk diff，并把所有 affected targets 纳入统一 review projection。
 - [ ] 中央删除计划包含全部 relationship removals、Agent writes、Skill shared impacts、backups 和 central deletion。
-- [ ] unresolved target 阻止 delete；禁止只删中央 metadata 留下 MUX-managed orphan。
+- [ ] unresolved target 阻止 delete；禁止只删中央 metadata 留下 Arca-managed orphan。
 - [ ] post-verify 证明资产不存在、关系不存在、Agent owned fields/links 已清理。
 
 **提交：** `feat(consumption): transact central asset lifecycle`
@@ -716,7 +716,7 @@ npm run build
 - [ ] 不复制可从 catalog 或代码发现的 Agent 清单。
 - [ ] 运行 Website build 和 link/static checks。
 
-**提交：** `docs(mux): explain central asset consumption`
+**提交：** `docs(arca): explain central asset consumption`
 
 ### Task 6.3：全量门禁与正式安装版 UI 验收
 
@@ -740,7 +740,7 @@ node ../scripts/release-version.mjs check
 
 **正式安装版手工验收：**
 
-- [ ] 在获得当次明确授权后构建、签名或替换 `/Applications/MUX.app`；没有授权则只报告自动门禁，不能用 dev/mock 冒充。
+- [ ] 在获得当次明确授权后构建、签名或替换 `/Applications/Arca.app`；没有授权则只报告自动门禁，不能用 dev/mock 冒充。
 - [ ] `1200x820` 与 `900x600`，浅色和深色各验证一次。
 - [ ] 顶层 Skills 安装不出现 Agent 选择。
 - [ ] Agent Skills 不出现 GitHub URL、本地目录或“安装 Skill”。
@@ -762,4 +762,4 @@ node ../scripts/release-version.mjs check
 - Model Profile 编辑传播 consumers，不清除 assignment。
 - Skills 中央 install 与 Agent assignment 在 core、wire 和 UI 三层均已拆开。
 - legacy Desktop mutation surface 已删除或仅作为非 Desktop 兼容 wrapper 保留。
-- MUX 工作树干净；提交、push、PR、Pre-release、Stable Release 和安装版替换分别按用户当次授权交付。
+- Arca 工作树干净；提交、push、PR、Pre-release、Stable Release 和安装版替换分别按用户当次授权交付。

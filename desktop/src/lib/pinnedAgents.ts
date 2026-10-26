@@ -21,7 +21,7 @@ export function buildAgentPickerSections(
   const agents = allAgents.filter(isAgentEntryVisible);
   // This is an Agent directory, not an installed/configurable resource list.
   // Read-only catalog entries (for example desktop apps whose config contract
-  // is not managed by MUX) still need to be discoverable here; their launch
+  // is not managed by Arca) still need to be discoverable here; their launch
   // and configuration state is shown on the Agent page instead.
   const byId = new Map(agents.map((agent) => [agent.id, agent]));
   const seen = new Set<string>();

@@ -1,7 +1,7 @@
 # ZCode Models Implementation Plan
 
 **Goal:** Native ZCode model discovery and multi-model consumption with explicitly selected private plaintext delivery.
-**Architecture:** Rust core adapter owns the JSON registry; shared consumption and credential routes serve every frontend. External imports create new MUX provider identities.
+**Architecture:** Rust core adapter owns the JSON registry; shared consumption and credential routes serve every frontend. External imports create new Arca provider identities.
 **Tech Stack:** Rust, jsonc-parser CST, existing private transaction ledger, React capability-driven views.
 
 - [x] Audit installed ZCode conversion and registry; obtain narrowly scoped credential export authorization.

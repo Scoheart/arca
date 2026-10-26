@@ -17,16 +17,17 @@ import {
 import { formatError } from "../lib/format";
 import { DialogShell } from "./DialogShell";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
-import { ExternalLinkIcon, KeyIcon, PlusIcon, TrashIcon } from "./icons";
-import { useToast } from "./Toast";
-import { configureAgentLaunch, getAgentLaunchInfo, type AgentLaunchInfo } from "../lib/agentLaunch";
-import { AgentLaunchFields, agentLaunchDraftChanged, agentLaunchDraftTarget, agentLaunchDraftValid, createAgentLaunchDraft, type AgentLaunchDraft } from "./AgentLaunchFields";
+import { DocumentIcon, ExternalLinkIcon, FolderIcon, KeyIcon, PlusIcon, RefreshIcon, TrashIcon } from "./icons";
+import { ToastNotice, useToast } from "./Toast";
 import { AgentGlyph } from "./brandIcons";
 import { FormSelect } from "./FormSelect";
 import "./AgentLaunch.css";
 import { homeDir } from "@tauri-apps/api/path";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { preferredFileEditor } from "./FileEditorSelect";
+import { open as choosePath } from "@tauri-apps/plugin-dialog";
+import { instructionGetPaths, instructionSetPaths, type InstructionPathConfiguration } from "../lib/instructions";
+import { CodexConfigurationEditor } from "./CodexConfigurationEditor";
 
 function deliveryLabel(value: ApiKeyDelivery) {
   if (value === "env") return "agentConfiguration.deliveryEnv";
@@ -49,20 +50,16 @@ export function AgentConfigurationDialog({
   modelAgent,
   onClose,
   onSaved,
-  onLaunchSaved,
-  initialSection = "paths",
+  onInstructionPathsSaved,
 }: {
   agent: AgentInfo;
   modelAgent: ModelAgentView | null;
   onClose(): void;
   onSaved(): Promise<unknown> | unknown;
-  onLaunchSaved?(): void;
-  initialSection?: "paths" | "launch";
+  onInstructionPathsSaved?(): void;
 }) {
   const { t } = useTranslation();
-  const [section, setSection] = useState<"launch" | "paths">(initialSection);
-  const sectionId = useId();
-  const sectionButtons = useRef<Array<HTMLButtonElement | null>>([]);
+  const [editingCodex, setEditingCodex] = useState(false);
   const initialModelPaths = modelAgent?.config_paths?.length
     ? modelAgent.config_paths
     : modelAgent?.config_path
@@ -85,15 +82,13 @@ export function AgentConfigurationDialog({
   const [busy, setBusy] = useState(false);
   const [plan, setPlan] = useState<AssetOperationPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [launchInfo, setLaunchInfo] = useState<AgentLaunchInfo | null>(null);
-  const [launchDraft, setLaunchDraft] = useState<AgentLaunchDraft | null>(null);
-  const [launchLoading, setLaunchLoading] = useState(true);
-  const [launchError, setLaunchError] = useState("");
-  const [launchRequest, setLaunchRequest] = useState(0);
   const [browsing, setBrowsing] = useState(false);
+  const [instructionPaths, setInstructionPaths] = useState<InstructionPathConfiguration | null>(null);
+  const [instructionEdits, setInstructionEdits] = useState<Record<string, string | null>>({});
+  const [instructionLoading, setInstructionLoading] = useState(Boolean(agent.has_instructions));
+  const [instructionError, setInstructionError] = useState("");
+  const [instructionRequest, setInstructionRequest] = useState(0);
   const reviewedConfiguration = useRef<string | null>(null);
-  const launchSection = useRef<HTMLElement>(null);
-  const didFocusLaunch = useRef(false);
   const toast = useToast();
   const hasMcp = agent.has_global;
   const hasModel = modelAgent !== null;
@@ -106,46 +101,40 @@ export function AgentConfigurationDialog({
   });
   const [savedConfiguration, setSavedConfiguration] = useState(() => JSON.stringify(configurationPatch()));
   const configurationChanged = JSON.stringify(configurationPatch()) !== savedConfiguration;
-  const launchChanged = Boolean(launchInfo && launchDraft && agentLaunchDraftChanged(launchInfo, launchDraft));
+  const instructionsChanged = Object.keys(instructionEdits).length > 0;
+  const instructionsValid = Object.values(instructionEdits).every(path => path === null || path.trim().length > 0);
   const configurationValid = (!hasMcp || (mcpPath.trim().length > 0 && mcpKey.trim().length > 0))
     && (!hasModel || (modelPaths.length > 0
       && modelPaths.every((path) => path.trim().length > 0)))
     && (!hasSkills || (skillsPaths.length > 0
       && skillsPaths.every((path) => path.trim().length > 0)));
-  const canSubmit = !busy && !browsing && !launchLoading && (configurationChanged || launchChanged || deliveryChanged)
-    && (!configurationChanged || configurationValid) && (!launchChanged || launchDraft && agentLaunchDraftValid(launchDraft));
+  const canSubmit = !busy && !browsing && !instructionLoading && instructionsValid && (configurationChanged || deliveryChanged || instructionsChanged)
+    && (!configurationChanged || configurationValid);
 
   useEffect(() => {
+    if (!agent.has_instructions) return;
     let active = true;
-    setLaunchLoading(true); setLaunchError("");
-    void getAgentLaunchInfo(agent.id).then((info) => {
-      if (!active) return;
-      setLaunchInfo(info); setLaunchDraft(createAgentLaunchDraft(info));
-    }).catch((failure) => { if (active) setLaunchError(formatError(failure)); })
-      .finally(() => { if (active) setLaunchLoading(false); });
+    setInstructionLoading(true); setInstructionError("");
+    void instructionGetPaths(agent.id).then(value => {
+      if (active) { setInstructionPaths(value); setInstructionEdits({}); }
+    }).catch(failure => { if (active) setInstructionError(formatError(failure)); })
+      .finally(() => { if (active) setInstructionLoading(false); });
     return () => { active = false; };
-  }, [agent.id, launchRequest]);
-
-  useEffect(() => {
-    if (initialSection !== "launch" || section !== "launch" || launchLoading || didFocusLaunch.current) return;
-    didFocusLaunch.current = true;
-    launchSection.current?.scrollIntoView({ block: "nearest" });
-    launchSection.current?.querySelector<HTMLInputElement>("input:not(:disabled)")?.focus({ preventScroll: true });
-  }, [initialSection, section, launchLoading]);
-
-  const saveLaunch = async () => {
-    if (!launchChanged || !launchDraft) return;
-    const info = await configureAgentLaunch(agent.id, agentLaunchDraftTarget(launchDraft, launchInfo ?? undefined), launchDraft.directory.trim());
-    setLaunchInfo(info); setLaunchDraft(createAgentLaunchDraft(info));
-    onLaunchSaved?.();
-  };
+  }, [agent.id, agent.has_instructions, instructionRequest]);
 
   const savePreferences = async () => {
+    if (instructionsChanged && instructionPaths) {
+      const paths = Object.entries(instructionEdits).map(([id, path]) => ({ id,
+        path: path === null || path.trim() === instructionPaths.sources.find(source => source.id === id)?.default_path ? null : path.trim(),
+      }));
+      const saved = await instructionSetPaths(agent.id, instructionPaths.revision, paths);
+      setInstructionPaths(saved); setInstructionEdits({});
+      onInstructionPathsSaved?.();
+    }
     if (deliveryChanged) {
       await setAgentCredentialDelivery(agent.id, delivery, plaintextApproved.current);
       setSavedDelivery(delivery);
     }
-    await saveLaunch();
   };
 
   const save = async () => {
@@ -188,7 +177,7 @@ export function AgentConfigurationDialog({
     setBusy(true);
     setError(null);
     let configurationCommitted = false;
-    let launchCommitted = false;
+    let preferencesCommitted = false;
     try {
       const result = await commitOperation({
         domain: "asset",
@@ -208,15 +197,15 @@ export function AgentConfigurationDialog({
       setSavedConfiguration(reviewedConfiguration.current ?? JSON.stringify(configurationPatch()));
       setPlan(null);
       await savePreferences();
-      launchCommitted = true;
+      preferencesCommitted = true;
       await onSaved();
       toast.show({ kind: "success", msg: t("agentConfiguration.updated", { name: agent.name }) });
       onClose();
     } catch (commitError) {
       setError(configurationCommitted
-        ? t(launchCommitted ? "agentConfiguration.refreshFailed" : "agentConfiguration.preferencesIncomplete", { error: formatError(commitError) })
+        ? t(preferencesCommitted ? "agentConfiguration.refreshFailed" : "agentConfiguration.preferencesIncomplete", { error: formatError(commitError) })
         : formatError(commitError));
-      if (configurationCommitted && !launchCommitted) {
+      if (configurationCommitted && !preferencesCommitted) {
         // Keep unsaved preferences so retry does not repeat committed changes.
         try { await onSaved(); } catch { /* The original save error stays visible. */ }
       }
@@ -255,9 +244,31 @@ export function AgentConfigurationDialog({
     )));
   };
 
+  const updateInstructionPath = (id: string, value: string | null) => {
+    const source = instructionPaths?.sources.find(source => source.id === id);
+    setInstructionEdits(current => {
+      const next = { ...current };
+      if (value === source?.path || value === null && !source?.overridden) delete next[id];
+      else next[id] = value;
+      return next;
+    });
+  };
+  const browseInstructionPath = async (id: string, value: string) => {
+    setBrowsing(true);
+    try {
+      const home = (await homeDir()).replace(/\/$/, "");
+      const defaultPath = value === "~" ? home : value.startsWith("~/") ? `${home}/${value.slice(2)}` : value || undefined;
+      const selected = await choosePath({ directory: true, multiple: false, defaultPath, title: t("agentConfiguration.selectInstructionsDirectory") });
+      if (typeof selected === "string") updateInstructionPath(id, selected);
+    } catch (failure) { toast.show({ kind: "error", msg: formatError(failure) }); }
+    finally { setBrowsing(false); }
+  };
+
+  if (editingCodex) return <CodexConfigurationEditor onClose={() => setEditingCodex(false)} />;
+
   if (confirmingPlaintext) {
     return (
-      <DialogShell kind="review" size="sm" className="mux-plaintext-confirmation"
+      <DialogShell kind="review" size="sm" className="arca-plaintext-confirmation"
         title={t("agentConfiguration.plaintextTitle")} subtitle={agent.name}
         onClose={() => setConfirmingPlaintext(false)}
         footerEnd={<>
@@ -269,7 +280,7 @@ export function AgentConfigurationDialog({
           }}>{t("agentConfiguration.confirmPlaintext")}</button>
         </>}
       >
-        <div className="mux-plaintext-confirmation-body">
+        <div className="arca-plaintext-confirmation-body">
           <strong>{t("agentConfiguration.plaintextDescription", { name: agent.name })}</strong>
           <code>{modelPaths[0]?.trim() || modelAgent?.config_path}</code>
           <span>{t("agentConfiguration.plaintextScope")}</span>
@@ -294,28 +305,15 @@ export function AgentConfigurationDialog({
 
   return (
     <DialogShell
-      className="mux-dialog-agent-config"
+      className="arca-dialog-agent-config"
       kind="editor"
       size="wide"
       title={agent.name}
+      subtitle={t("agentConfiguration.paths")}
       leading={<AgentGlyph id={agent.id} name={agent.name} size={32} />}
-      status={<div className="mux-agent-config-tabs" role="tablist" aria-label={t("agentConfiguration.tabs")}>
-        {([['launch', t('agentConfiguration.launch')], ['paths', t('agentConfiguration.paths')]] as const).map(([value, label], index) => <button
-          key={value} ref={(node) => { sectionButtons.current[index] = node; }} type="button" role="tab"
-          id={`${sectionId}-${value}-tab`} aria-controls={`${sectionId}-${value}-panel`} aria-selected={section === value}
-          tabIndex={section === value ? 0 : -1} disabled={busy || browsing} onClick={() => setSection(value)}
-          onKeyDown={(event) => {
-            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-            event.preventDefault();
-            const next = event.key === "Home" ? 0 : event.key === "End" ? 1 : 1 - index;
-            setSection(next === 0 ? "launch" : "paths"); sectionButtons.current[next]?.focus();
-          }}>
-          {label}{(value === "launch" ? launchChanged : configurationChanged || deliveryChanged) && <i aria-label={t("agentConfiguration.unsaved")} />}
-        </button>)}
-      </div>}
       busy={busy || browsing}
       onClose={onClose}
-      footerStart={configurationChanged ? <span className="mux-agent-config-hint">{t("agentConfiguration.pathChangeHint")}</span> : null}
+      footerStart={configurationChanged ? <span className="arca-agent-config-hint">{t("agentConfiguration.pathChangeHint")}</span> : null}
       footerEnd={(
         <>
           <button type="button" className="btn-ghost" disabled={busy || browsing} onClick={onClose}>{t("common.cancel")}</button>
@@ -325,8 +323,11 @@ export function AgentConfigurationDialog({
         </>
       )}
     >
-      <div hidden={section !== "paths"} role="tabpanel" id={`${sectionId}-paths-panel`} aria-labelledby={`${sectionId}-paths-tab`}>
-      <fieldset className="mux-agent-config-form mux-agent-config-fields" disabled={busy || browsing}>
+      {agent.id === "codex" && <div className="arca-codex-config-entry">
+        <span>{t("agentConfiguration.codex.title")}</span>
+        <button type="button" className="btn-secondary" disabled={busy || browsing} onClick={() => setEditingCodex(true)}>{t("agentConfiguration.codex.editConfiguration")}</button>
+      </div>}
+      <fieldset className="arca-agent-config-form arca-agent-config-fields" disabled={busy || browsing}>
         {RESOURCE_CATEGORIES.map((resource) => <Fragment key={resource.id}>
           {resource.id === "models" && <>
         {modelPaths.length > 0 ? modelPaths.map((path, index) => (
@@ -349,7 +350,7 @@ export function AgentConfigurationDialog({
           </>}
           {resource.id === "mcps" && <>
         {hasMcp ? (
-          <div className="mux-agent-config-mcp">
+          <div className="arca-agent-config-mcp">
             <ConfigField
               icon={<ResourceIcon domain="mcp" />}
               label={resource.label}
@@ -385,7 +386,7 @@ export function AgentConfigurationDialog({
             action={index > 0 ? (
               <button
                 type="button"
-                className="mux-agent-config-remove"
+                className="arca-agent-config-remove"
                 aria-label={t("agentConfiguration.removeSkillsDirectory", { index: index + 1 })}
                 onClick={() => setSkillsPaths((current) => current.filter((_, candidate) => candidate !== index))}
               >
@@ -404,7 +405,7 @@ export function AgentConfigurationDialog({
         {skillsPaths.length > 0 && skillsPaths.length < 16 && (
           <button
             type="button"
-            className="mux-agent-config-add"
+            className="arca-agent-config-add"
             onClick={() => setSkillsPaths((current) => [...current, ""])}
           >
             <PlusIcon className="w-3.5 h-3.5" />{t("agentConfiguration.addSkillsDirectory")}
@@ -412,29 +413,42 @@ export function AgentConfigurationDialog({
         )}
           </>}
         </Fragment>)}
+        {agent.has_instructions && <section className="arca-agent-instruction-paths" aria-label="Instructions">
+          {instructionLoading ? <p className="arca-launch-hint" role="status">{t("agentConfiguration.reading")}</p>
+            : instructionPaths?.sources.map((source, index) => {
+              const value = source.id in instructionEdits ? instructionEdits[source.id] ?? source.default_path ?? "" : source.path;
+              return <div key={source.id} className="arca-agent-instruction-path">
+                <ConfigField icon={<DocumentIcon className="w-4 h-4" />} label={t("agentConfiguration.instructionsDirectory", { index: index + 1 })}
+                  value={value} openKind="folder" hint={source.kind === "files" ? undefined : `${source.kind === 'mode-rules' ? 'rules-*/ · ' : ''}${source.patterns.join(' · ')}`}
+                  onChange={path => updateInstructionPath(source.id, path)}
+                  action={<>
+                    <button type="button" className="arca-agent-config-remove" title={t("agentConfiguration.selectInstructionsDirectory")} aria-label={t("agentConfiguration.selectInstructionsDirectoryLabel", { index: index + 1 })}
+                      onClick={event => { event.preventDefault(); void browseInstructionPath(source.id, value); }}><FolderIcon className="w-4 h-4" /></button>
+                    <button type="button" className="arca-agent-config-remove" title={t("agentConfiguration.restoreDefault")} aria-label={t("agentConfiguration.resetInstructionsDirectory", { index: index + 1 })}
+                      disabled={!source.overridden && !(source.id in instructionEdits)} onClick={event => { event.preventDefault(); updateInstructionPath(source.id, null); }}><RefreshIcon className="w-4 h-4" /></button>
+                  </>} />
+                {source.kind === "files" && source.patterns.map(filename => (
+                  <ConfigField key={filename} icon={<DocumentIcon className="w-4 h-4" />} label={filename}
+                    value={value.trim() ? `${value.trim().replace(/\/+$/, "")}/${filename}` : ""}
+                    readOnly openKind="file" />
+                ))}
+              </div>;
+            })}
+          {instructionPaths && <p className="arca-agent-instruction-hint">{t("agentConfiguration.instructionsPathHint")}</p>}
+          {instructionError && <ToastNotice message={instructionError} action={<button type="button" className="btn-ghost" onClick={() => setInstructionRequest(value => value + 1)}>{t("common.retry")}</button>} />}
+        </section>}
       </fieldset>
       {hasDelivery && (
-        <section className="mux-agent-config-credential" aria-label={t("agentConfiguration.credentials")}>
-          <div className="mux-agent-config-credential-row">
-            <span className="mux-agent-field-caption"><KeyIcon className="w-4 h-4" />{t("agentConfiguration.delivery")}</span>
+        <section className="arca-agent-config-credential" aria-label={t("agentConfiguration.credentials")}>
+          <div className="arca-agent-config-credential-row">
+            <span className="arca-agent-field-caption"><KeyIcon className="w-4 h-4" />{t("agentConfiguration.delivery")}</span>
             <FormSelect ariaLabel={t("agentConfiguration.delivery")} value={delivery} disabled={busy || browsing}
               options={(modelAgent?.available_deliveries ?? []).map((value) => ({ value, label: t(deliveryLabel(value)) }))}
               onChange={(value) => { setDelivery(value as ApiKeyDelivery); plaintextApproved.current = false; }} />
           </div>
         </section>
       )}
-      </div>
-      <div hidden={section !== "launch"} role="tabpanel" id={`${sectionId}-launch-panel`} aria-labelledby={`${sectionId}-launch-tab`}>
-      <section ref={launchSection} className="mux-agent-config-launch" aria-label={t("agentConfiguration.launchSettings")}>
-        {launchLoading ? <p className="mux-launch-hint" role="status">{t("agentConfiguration.reading")}</p>
-          : launchInfo && launchDraft ? <AgentLaunchFields info={launchInfo} draft={launchDraft} disabled={busy || browsing}
-            onChange={setLaunchDraft} onBusyChange={setBrowsing} onError={setLaunchError} /> : null}
-        {launchError && <div className="mux-launch-error" role="alert">{launchError}
-          {!launchInfo && <button type="button" className="btn-ghost" disabled={busy || browsing || launchLoading} onClick={() => setLaunchRequest((value) => value + 1)}>{t("common.retry")}</button>}
-        </div>}
-      </section>
-      </div>
-      {error && <p className="mux-launch-error" role="alert">{error}</p>}
+      {error && <ToastNotice message={t("agentConfiguration.saveFailed", { error })} />}
     </DialogShell>
   );
 }
@@ -444,20 +458,25 @@ function ConfigField({
   label,
   value,
   disabled = false,
+  readOnly = false,
   onChange,
   action,
   openKind,
+  hint,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
   disabled?: boolean;
+  readOnly?: boolean;
   onChange?(value: string): void;
   action?: ReactNode;
   openKind?: "file" | "folder";
+  hint?: string;
 }) {
   const toast = useToast();
   const { t } = useTranslation();
+  const hintId = useId();
   const openLocation = async () => {
     try {
       const home = (await homeDir()).replace(/\/$/, "");
@@ -467,27 +486,31 @@ function ConfigField({
       if (editor) await openPath(absolute, editor); else await openPath(absolute);
     } catch (error) { toast.show({ kind: "error", msg: t("agentConfiguration.openFailed", { error: formatError(error) }) }); }
   };
-  if (disabled) return <div className="mux-agent-config-unavailable">
-    <span className="mux-agent-field-caption">{icon}{label}</span><span>{t("agentConfiguration.unavailable")}</span>
+  if (disabled) return <div className="arca-agent-config-unavailable">
+    <span className="arca-agent-field-caption">{icon}{label}</span><span>{t("agentConfiguration.unavailable")}</span>
   </div>;
   return (
-    <label data-path-field={openKind || undefined} className="mux-agent-config-field" data-disabled={disabled || undefined}>
-      <span className="mux-agent-field-caption">{icon}{label}</span>
-      <span className="mux-agent-field-control">
+    <label data-path-field={openKind || undefined} className="arca-agent-config-field" data-disabled={disabled || undefined}>
+      <span className="arca-agent-field-caption">{icon}{label}</span>
+      <span className="arca-agent-field-control">
       <input
-        className="mux-model-field"
+        className="arca-model-field"
+        aria-label={label}
         value={value}
         disabled={disabled}
+        readOnly={readOnly}
         spellCheck={false}
+        aria-describedby={hint ? hintId : undefined}
         onChange={(event) => onChange?.(event.target.value)}
       />
-      {(openKind || action) && <span className="mux-agent-config-field-actions">
-        {openKind && <button type="button" className="mux-agent-config-remove" disabled={disabled || !value.trim()}
+      {(openKind || action) && <span className="arca-agent-config-field-actions">
+        {openKind && <button type="button" className="arca-agent-config-remove" disabled={disabled || !value.trim()}
           title={t(openKind === "file" ? "agentConfiguration.openEditor" : "agentConfiguration.openFolder")} aria-label={t("agentConfiguration.openLabel", { label })}
           onClick={(event) => { event.preventDefault(); void openLocation(); }}><ExternalLinkIcon className="w-4 h-4" /></button>}
         {action}
       </span>}
       </span>
+      {hint && <small className="arca-agent-path-patterns" id={hintId}>{hint}</small>}
     </label>
   );
 }

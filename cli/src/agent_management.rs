@@ -3,11 +3,11 @@
 use std::path::PathBuf;
 
 use clap::Subcommand;
-use mux_core::application::agents::{self, AgentConfigurationPatch, AgentDefinition};
-use mux_core::application::assets::PlanUpdateAgentCapabilitiesRequest;
-use mux_core::application::operations::PlanOperationRequest;
-use mux_core::application::MuxCore;
-use mux_core::application::agent_launch::{self, LaunchInfo, LaunchTarget};
+use arca_core::application::agents::{self, AgentConfigurationPatch, AgentDefinition};
+use arca_core::application::assets::PlanUpdateAgentCapabilitiesRequest;
+use arca_core::application::operations::PlanOperationRequest;
+use arca_core::application::ArcaCore;
+use arca_core::application::agent_launch::{self, LaunchInfo, LaunchTarget};
 use serde_json::json;
 
 use crate::command::{parse_identity, Cli};
@@ -122,7 +122,7 @@ pub fn dispatch(cli: &Cli, command: &AgentManagementCommand) -> Result<CommandOu
             let mut directory_saved = true;
             let mut output = execute_direct_mutation("agent.run", options,
                 json!({"agent_id": agent, "kind": info.kind, "directory": directory.as_deref().or(info.directory.as_deref()).map(safe_path)}),
-                &format!("Open {} using its shared MUX launcher.", info.name), false,
+                &format!("Open {} using its shared Arca launcher.", info.name), false,
                 || {
                     directory_saved = agent_launch::launch(agent, directory.clone()).map_err(CliError::from_legacy)?.directory_saved;
                     Ok(())
@@ -146,7 +146,7 @@ pub fn dispatch(cli: &Cli, command: &AgentManagementCommand) -> Result<CommandOu
         AgentManagementCommand::Configure { agent, file } => {
             let patch: AgentConfigurationPatch = serde_json::from_value(json_file(file)?)
                 .map_err(|error| CliError::private("invalid_agent_configuration", error.to_string()))?;
-            let plan = MuxCore::plan(PlanOperationRequest::UpdateAgentCapabilities(PlanUpdateAgentCapabilitiesRequest {
+            let plan = ArcaCore::plan(PlanOperationRequest::UpdateAgentCapabilities(PlanUpdateAgentCapabilitiesRequest {
                 agent_id: agent.clone(), patch,
             })).map_err(CliError::from_core)?;
             execute_operation("agent.configure", plan, options)

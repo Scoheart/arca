@@ -69,7 +69,7 @@ pub(super) fn prepare(path: &Path, profile: &ModelProfile, literal_key: Option<&
     }
     // External registry entries are never adopted in place, including credentials.
     if profile.native_ids.contains_key(AGENT) {
-        return Err("zcode_external_provider_read_only: import into a new MUX provider".into());
+        return Err("zcode_external_provider_read_only: import into a new Arca provider".into());
     }
     let (root, original) = load(path)?;
     let top = root_object(&root, path)?;
@@ -159,7 +159,7 @@ mod tests {
     struct Temp(PathBuf);
     impl Temp {
         fn new() -> Self {
-            let path = std::env::temp_dir().join(format!("mux-zcode-{}", uuid::Uuid::new_v4()));
+            let path = std::env::temp_dir().join(format!("arca-zcode-{}", uuid::Uuid::new_v4()));
             fs::create_dir_all(&path).unwrap(); Self(path)
         }
     }

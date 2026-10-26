@@ -15,7 +15,7 @@ it("has no central external-configuration migration surface or entry point", asy
   const combined = sources.join("\n");
 
   expect(combined).not.toMatch(
-    /MigrationDialog|MigrationBanner|onOpenMigration|migrationCount|让 MUX 管理|已识别的外部配置/,
+    /MigrationDialog|MigrationBanner|onOpenMigration|migrationCount|让 Arca 管理|已识别的外部配置/,
   );
   expect(sources[1]).toMatch(/onClick=\{\(\) => void handleRescan\(\)\}/);
 });

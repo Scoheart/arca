@@ -1,0 +1,20 @@
+.arca-agent-surface-badge {
+  position: absolute; z-index: 2;
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / .85);
+  color: #fff; background: var(--agent-surface-color);
+  box-shadow: 0 0 0 2px var(--surface-app), 0 2px 4px rgb(0 0 0 / .28);
+  pointer-events: none;
+}
+.arca-agent-surface-badge[data-agent-surface="cli"] { --agent-surface-color: #334155; }
+.arca-agent-surface-badge[data-agent-surface="desktop"] { --agent-surface-color: #2563eb; }
+.arca-agent-surface-badge[data-agent-surface="ide"] { --agent-surface-color: #7c3aed; }
+.arca-agent-surface-badge[data-agent-surface="plugin"] { --agent-surface-color: #a4510a; }
+.arca-agent-surface-badge[data-agent-surface="web"] { --agent-surface-color: #0f766e; }
+.arca-agent-surface-badge > svg {
+  width: 88%; height: 88%; overflow: visible;
+  stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+@media (forced-colors: active) {
+  .arca-agent-surface-badge { background: Canvas; color: CanvasText; border-color: CanvasText; box-shadow: 0 0 0 2px Canvas; }
+}

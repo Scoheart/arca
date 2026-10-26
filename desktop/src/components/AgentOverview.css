@@ -1,187 +1,196 @@
-.mux-agent-overview-header {
+.arca-agent-overview-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 18px;
   gap: 12px;
   min-height: 56px;
 }
-.mux-agent-overview-header .mux-agent-header-identity,
-.mux-agent-overview-header .mux-agent-header-copy > div { justify-content: center; }
-.mux-agent-overview-header .mux-agent-header-identity { grid-column: 2; grid-row: 1; justify-self: center; max-width: 100%; }
-.mux-agent-overview-header .mux-agent-header-copy .badge { flex-shrink: 0; }
-.mux-agent-overview-actions { grid-column: 3; grid-row: 1; justify-self: end; display: flex; flex-wrap: wrap; justify-content: flex-end; min-width: 0; max-width: 100%; align-items: center; gap: 6px; }
-.mux-agent-overview-actions > * { flex-shrink: 0; }
-.mux-agent-overview-actions svg { flex-shrink: 0; }
-.mux-agent-tool {
+.arca-agent-overview-header .arca-agent-header-identity,
+.arca-agent-overview-header .arca-agent-header-copy > div { justify-content: center; }
+.arca-agent-overview-header .arca-agent-header-identity { grid-column: 2; grid-row: 1; justify-self: center; max-width: 100%; }
+.arca-agent-overview-header .arca-agent-header-copy .badge { flex-shrink: 0; }
+.arca-agent-overview-actions { grid-column: 3; grid-row: 1; justify-self: end; display: flex; flex-wrap: wrap; justify-content: flex-end; min-width: 0; max-width: 100%; align-items: center; gap: 6px; }
+.arca-agent-overview-actions > * { flex-shrink: 0; }
+.arca-agent-overview-actions svg { flex-shrink: 0; }
+.arca-agent-overview-header[data-tone="reference"] { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.arca-agent-overview-header[data-tone="reference"] .arca-agent-header-identity,
+.arca-agent-overview-header[data-tone="reference"] .arca-agent-header-copy > div { justify-content: flex-start; }
+.arca-agent-overview-header[data-tone="reference"] .arca-agent-overview-actions { margin-left: auto; }
+.arca-agent-tool {
   display: inline-flex; flex: 0 0 auto; width: auto; height: 36px; align-items: center; justify-content: center; white-space: nowrap;
   padding: 0; border: 1px solid var(--border-hairline); border-radius: 10px;
   background: var(--surface-control); color: var(--text-secondary); cursor: pointer;
   transition: background .16s ease, color .16s ease;
 }
-.mux-agent-tool:hover { color: var(--text-primary); background: var(--surface-section); }
-.mux-agent-tool:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
-.mux-agent-tool-divider { width: 1px; height: 18px; margin: 0 3px; background: var(--border-hairline); }
-.mux-agent-overview-actions .mux-agent-credential-strategy .mux-form-select { flex: 0 0 auto; width: auto; }
-.mux-agent-overview-actions .mux-agent-credential-strategy .mux-form-select-trigger {
+.arca-agent-tool:hover { color: var(--text-primary); background: var(--surface-section); }
+.arca-agent-tool:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+.arca-agent-tool-divider { width: 1px; height: 18px; margin: 0 3px; background: var(--border-hairline); }
+.arca-agent-overview-actions .arca-agent-credential-strategy .arca-form-select { flex: 0 0 auto; width: auto; }
+.arca-agent-overview-actions .arca-agent-credential-strategy .arca-form-select-trigger {
   height: 36px; min-height: 36px; gap: 10px; padding: 0 10px; border-radius: 10px; background: var(--surface-control);
 }
-.mux-agent-overview-actions .mux-form-select-value { display: inline-flex; align-items: center; gap: 7px; }
-.mux-agent-overview-actions .mux-form-select-value > span { font-size: 11px; line-height: 1; }
-.mux-agent-overview-actions .mux-form-select-value > svg { flex-shrink: 0; color: var(--text-secondary); }
-.mux-agent-overview-actions .mux-form-select-chevron { width: 12px; height: 12px; flex-basis: 12px; }
-.mux-agent-overview-actions .mux-form-select-menu { left: auto; min-width: 172px; }
-.mux-agent-overview-actions button:disabled { opacity: .5; cursor: default; }
-.mux-agent-context .mux-agent-config-locations { margin-top: 16px; }
-.mux-agent-context .mux-agent-file-map { align-items: start; }
+.arca-agent-overview-actions .arca-form-select-value { display: inline-flex; align-items: center; gap: 7px; }
+.arca-agent-overview-actions .arca-form-select-value > span { font-size: 11px; line-height: 1; }
+.arca-agent-overview-actions .arca-form-select-value > svg { flex-shrink: 0; color: var(--text-secondary); }
+.arca-agent-overview-actions .arca-form-select-chevron { width: 12px; height: 12px; flex-basis: 12px; }
+.arca-agent-overview-actions .arca-form-select-menu { left: auto; min-width: 172px; }
+.arca-agent-overview-actions button:disabled { opacity: .5; cursor: default; }
+.arca-agent-context .arca-agent-config-locations { margin-top: 16px; }
+.arca-agent-context .arca-agent-file-map { align-items: start; }
 
-.mux-config-disclosure {
+.arca-config-disclosure {
   min-width: 0; border: 1px solid var(--border-hairline); border-radius: 12px;
   background: var(--surface-control); overflow: hidden;
 }
-.mux-config-disclosure > summary {
+.arca-config-disclosure > summary {
   display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 12px;
   list-style: none; color: var(--text-primary); cursor: pointer; user-select: none;
   transition: background .16s ease;
 }
-.mux-config-disclosure > summary::-webkit-details-marker { display: none; }
-.mux-config-disclosure > summary:hover { background: var(--surface-section); }
-.mux-config-disclosure > summary:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -3px; border-radius: 11px; }
-.mux-config-symbol { display: inline-flex; flex: 0 0 28px; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 8px; background: var(--surface-section); color: var(--text-secondary); }
-.mux-config-disclosure > summary > strong { min-width: 0; flex: 1; font-size: 12px; font-weight: 650; }
-.mux-config-indicator { display: inline-flex; align-items: center; gap: 5px; color: var(--text-tertiary); font-size: 11px; font-variant-numeric: tabular-nums; }
-.mux-config-indicator svg { width: 13px; height: 13px; }
-.mux-config-chevron { flex: 0 0 12px; width: 12px; height: 12px; color: var(--text-tertiary); transition: transform .2s ease; }
-.mux-config-disclosure[open] .mux-config-chevron { transform: rotate(180deg); }
-.mux-config-disclosure[data-state="error"] .mux-config-indicator { color: var(--text-danger); font-weight: 700; }
-.mux-config-disclosure[data-state="unavailable"] .mux-config-symbol { opacity: .55; }
-.mux-config-body { padding: 2px 12px 12px; border-top: 1px solid var(--border-hairline); }
-.mux-config-description { display: flex; min-height: 32px; align-items: center; justify-content: space-between; gap: 8px; color: var(--text-tertiary); font-size: var(--font-size-caption); }
-.mux-config-docs { display: inline-flex; flex: 0 0 28px; width: 28px; height: 28px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer; }
-.mux-config-docs:hover { background: var(--surface-section); color: var(--text-primary); }
-.mux-config-docs:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
-.mux-config-body .mux-agent-file-paths { margin-top: 0; gap: 4px; }
-.mux-config-body .mux-agent-file-path { padding: 7px; border-radius: 7px; background: var(--surface-workspace); }
-.mux-config-body .mux-agent-file-path code { overflow-wrap: anywhere; white-space: normal; font-size: var(--font-size-caption); }
-.mux-config-body .mux-agent-file-path:hover { background: var(--surface-section); }
-.mux-config-loading { animation: mux-config-spin 1s linear infinite; }
-@keyframes mux-config-spin { to { transform: rotate(360deg); } }
+.arca-config-disclosure > summary::-webkit-details-marker { display: none; }
+.arca-config-disclosure > summary:hover { background: var(--surface-section); }
+.arca-config-disclosure > summary:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -3px; border-radius: 11px; }
+.arca-config-symbol { display: inline-flex; flex: 0 0 28px; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 8px; background: var(--surface-section); color: var(--text-secondary); }
+.arca-config-disclosure > summary > strong { min-width: 0; flex: 1; font-size: 12px; font-weight: 650; }
+.arca-config-indicator { display: inline-flex; align-items: center; gap: 5px; color: var(--text-tertiary); font-size: 11px; font-variant-numeric: tabular-nums; }
+.arca-config-indicator svg { width: 13px; height: 13px; }
+.arca-config-chevron { flex: 0 0 12px; width: 12px; height: 12px; color: var(--text-tertiary); transition: transform .2s ease; }
+.arca-config-disclosure[open] .arca-config-chevron { transform: rotate(180deg); }
+.arca-config-disclosure[data-state="error"] .arca-config-indicator { color: var(--color-red); font-weight: 700; }
+.arca-config-disclosure[data-state="unavailable"] .arca-config-symbol { opacity: .55; }
+.arca-config-body { padding: 2px 12px 12px; border-top: 1px solid var(--border-hairline); }
+.arca-config-description { display: flex; min-height: 32px; align-items: center; justify-content: space-between; gap: 8px; color: var(--text-tertiary); font-size: 10px; }
+.arca-config-docs { display: inline-flex; flex: 0 0 28px; width: 28px; height: 28px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.arca-config-docs:hover { background: var(--surface-section); color: var(--text-primary); }
+.arca-config-docs:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
+.arca-config-body .arca-agent-file-paths { margin-top: 0; gap: 4px; }
+.arca-config-body .arca-agent-file-path { padding: 7px; border-radius: 7px; background: var(--surface-workspace); }
+.arca-config-body .arca-agent-file-path code { overflow-wrap: anywhere; white-space: normal; font-size: 10px; }
+.arca-config-body .arca-agent-file-path:hover { background: var(--surface-section); }
+.arca-config-loading { animation: arca-config-spin 1s linear infinite; }
+@keyframes arca-config-spin { to { transform: rotate(360deg); } }
 @media (max-width: 980px) {
-  .mux-agent-overview-header { grid-template-columns: minmax(0, 1fr); }
-  .mux-agent-overview-header .mux-agent-header-identity { grid-column: 1; }
-  .mux-agent-overview-actions { grid-column: 1; grid-row: 2; }
+  .arca-agent-overview-header { grid-template-columns: minmax(0, 1fr); }
+  .arca-agent-overview-header .arca-agent-header-identity { grid-column: 1; }
+  .arca-agent-overview-actions { grid-column: 1; grid-row: 2; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mux-config-loading { animation: none; }
-  .mux-agent-tool, .mux-config-disclosure > summary, .mux-config-chevron { transition: none; }
+  .arca-config-loading { animation: none; }
+  .arca-agent-tool, .arca-config-disclosure > summary, .arca-config-chevron { transition: none; }
 }
 
-/* A single Agent workspace: identity, resource toolbar, then cards. */
-.mux-agent-workbench {
+/* Agent identity and actions above a sidebar/content workspace. */
+.arca-agent-workbench {
   padding: 18px 0 0;
   border: 0;
   border-radius: 0;
   background: transparent;
 }
-.mux-agent-workbench .mux-agent-overview-header {
-  min-height: 130px; padding: 0 0 28px; align-items: start;
-  /* The identity sizes to its content so the action column gets the rest and
-     launch, docs and capture tools stay on one row at 1200px. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, max-content) minmax(0, 1fr);
+.arca-agent-workbench .arca-agent-overview-header {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  min-height: 164px; padding: 0 0 28px; gap: 18px;
 }
-.mux-agent-workbench .mux-agent-header-identity { flex-direction: column; gap: 9px; }
-.mux-agent-workbench .mux-agent-header-copy > div { flex-direction: column; gap: 4px; }
-.mux-agent-workbench .mux-agent-header h2 { max-width: 100%; font-size: 16px; font-weight: 650; line-height: 1.4; }
-.mux-agent-workbench .mux-agent-overview-actions { grid-column: 3; grid-row: 1; margin: 0; gap: 6px; }
-.mux-agent-workbench .mux-agent-tool { width: auto; height: 30px; padding: 0 9px; gap: 6px; border-radius: 7px; font-size: 11px; }
-.mux-agent-workbench .mux-agent-overview-actions > .mux-capture-button { height: 30px; min-height: 30px; padding: 0 9px; border-radius: 7px; font-size: 11px; }
-.mux-agent-workbench .mux-agent-credential-strategy .mux-form-select-trigger { height: 30px; min-height: 30px; padding: 0 9px; border-radius: 7px; }
-.mux-agent-workbench .mux-launch-action[data-labeled="true"] { height: 30px; border-radius: 7px; box-shadow: none; }
-.mux-agent-workbench .mux-launch-action[data-ready="true"] { background: var(--color-blue); border-color: transparent; }
-.mux-agent-workbench .mux-launch-action[data-ready="true"] .mux-launch-primary,
-.mux-agent-workbench .mux-launch-action[data-ready="true"] .mux-launch-more { color: #fff; }
-.mux-agent-workbench .mux-launch-primary { width: auto; padding: 0 9px; gap: 6px; border-radius: 6px 0 0 6px; }
-.mux-agent-workbench .mux-launch-symbol { width: 14px; height: 14px; }
-.mux-agent-workbench .mux-launch-caption { font-size: 11px; font-weight: 600; }
-.mux-agent-workbench .mux-launch-more { width: 19px; border-radius: 0 6px 6px 0; border-left-color: #ffffff20; }
-.mux-agent-workbench .mux-launch-action[data-ready="true"] button:hover:not(:disabled) { background: #ffffff14; }
-.mux-agent-workbench .mux-agent-resource-panel { margin: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
-.mux-agent-workbench .mux-agent-resource-panel-head { min-height: 43px; margin: 0 0 16px; padding: 0; gap: 12px; align-items: center; flex-direction: row; flex-wrap: wrap; background: transparent; border-radius: 0; }
-.mux-agent-workbench .mux-agent-resource-tabs { flex: 0 0 auto; gap: 4px; padding: 4px; background: var(--surface-section); border-radius: 14px; overflow: visible; }
-.mux-agent-workbench .mux-agent-resource-tabs button { position: relative; height: 34px; padding: 0 12px; gap: 8px; font-size: 12px; font-weight: 500; background: transparent; color: var(--text-secondary); border-radius: 10px; flex: none; }
-.mux-agent-workbench .mux-agent-resource-tabs button > span:last-child { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--surface-control); color: var(--text-secondary); font-size: var(--font-size-label); }
-.mux-agent-workbench .mux-agent-resource-tabs button[data-active="true"] { color: var(--text-accent); background: var(--surface-raised); box-shadow: var(--shadow-card); }
-.mux-agent-resource-tab-icon { display: inline-flex; flex-shrink: 0; }
-.mux-agent-toolbar-actions { display: flex; align-items: center; gap: 7px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
-.mux-agent-toolbar-target, .mux-agent-toolbar-target > .mux-agent-section-actions { display: contents; }
-.mux-agent-toolbar-actions > .mux-agent-config-toggle { order: 3; }
-.mux-agent-toolbar-actions .mux-agent-bulk-toggle { order: 1; padding: 0 2px; gap: 6px; background: transparent; }
-.mux-agent-toolbar-actions .btn-danger { order: 2; width: 27px; height: 30px; padding: 0; color: var(--text-tertiary); }
-.mux-agent-toolbar-actions .btn-danger:hover { color: var(--text-danger); }
-.mux-agent-toolbar-actions .btn-primary { order: 4; }
-.mux-agent-workbench .mux-agent-toolbar-actions .btn-primary,
-.mux-agent-workbench .mux-agent-toolbar-actions .btn-secondary { min-height: 30px; height: 30px; padding: 0 9px; border-radius: 7px; gap: 5px; font-size: 11px; }
-.mux-consumption-manage-short { display: none; }
-.mux-agent-workbench .mux-consumption-manage-short { display: inline; }
-.mux-agent-workbench .mux-consumption-manage-label,
-.mux-agent-workbench .mux-consumption-bulk-label { display: none; }
-.mux-agent-workbench .mux-agent-config-toggle[aria-expanded="true"] { border-color: var(--color-blue); }
-.mux-agent-active-config { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--border-hairline); }
-.mux-agent-active-config[hidden] { display: none; }
-.mux-agent-active-config .mux-config-disclosure { border: 0; border-radius: 0; background: transparent; }
-.mux-agent-active-config .mux-config-disclosure > summary { display: none; }
-.mux-agent-active-config .mux-config-body { padding: 0; border: 0; }
-.mux-agent-active-config .mux-agent-file-paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
-.mux-agent-active-config .mux-agent-file-path { background: var(--surface-control); }
-.mux-agent-workbench .mux-agent-resource-panel-body { padding: 0; }
-.mux-agent-workbench .mux-consumption-panel > .mux-agent-section-head { display: none; }
-.mux-consumption-model-note { margin: 0 0 12px; color: var(--text-secondary); font-size: 11px; }
-.mux-agent-workbench .mux-consumption-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; background: transparent; border-radius: 0; }
-.mux-agent-workbench .mux-consumption-list > li {
+.arca-agent-workbench .arca-agent-header-identity { grid-column: 1; grid-row: 1; flex-direction: column; gap: 9px; }
+.arca-agent-workbench .arca-agent-header-copy > div { flex-direction: column; gap: 4px; }
+.arca-agent-workbench .arca-agent-header h2 { max-width: 100%; font-size: 18px; font-weight: 650; line-height: 1.4; }
+.arca-agent-workbench .arca-agent-overview-actions { justify-content: center; width: 100%; margin: 0; gap: 8px; }
+.arca-agent-workbench .arca-agent-tool { display: inline-flex; flex-direction: row; align-items: center; justify-content: center; white-space: nowrap; width: auto; height: 30px; padding: 0 9px; gap: 6px; border-radius: 7px; font-size: 11px; }
+.arca-agent-workbench .arca-agent-credential-strategy .arca-form-select-trigger { height: 30px; min-height: 30px; padding: 0 9px; border-radius: 7px; }
+.arca-agent-workbench .arca-launch-action[data-labeled="true"] { height: 30px; border-radius: 7px; box-shadow: none; }
+.arca-agent-workbench .arca-launch-action[data-ready="true"] { background: var(--color-blue); border-color: transparent; }
+.arca-agent-workbench .arca-launch-action[data-ready="true"] .arca-launch-primary,
+.arca-agent-workbench .arca-launch-action[data-ready="true"] .arca-launch-more { color: #fff; }
+.arca-agent-workbench .arca-launch-primary { width: auto; padding: 0 9px; gap: 6px; border-radius: 6px 0 0 6px; }
+.arca-agent-workbench .arca-launch-symbol { width: 14px; height: 14px; }
+.arca-agent-workbench .arca-launch-caption { font-size: 11px; font-weight: 600; }
+.arca-agent-workbench .arca-launch-more { width: 19px; border-radius: 0 6px 6px 0; border-left-color: #ffffff20; }
+.arca-agent-workbench .arca-launch-action[data-ready="true"] button:hover:not(:disabled) { background: #ffffff14; }
+.arca-agent-workbench .arca-agent-resource-panel { display: grid; grid-template-columns: 184px minmax(0, 1fr); align-items: start; gap: 28px; margin: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
+.arca-agent-resource-navigation { position: sticky; top: 16px; min-width: 0; }
+.arca-agent-resource-main { min-width: 0; }
+.arca-agent-workbench .arca-agent-resource-panel-head { min-height: 44px; margin: 0 0 16px; padding: 0 0 12px; gap: 12px; align-items: center; flex-direction: row; flex-wrap: wrap; background: transparent; border-radius: 0; border-bottom: 1px solid var(--border-hairline); }
+.arca-agent-workbench .arca-agent-resource-panel-head h3 { font-size: 13px; font-weight: 600; }
+.arca-agent-workbench .arca-agent-resource-tabs { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 6px; border: 1px solid var(--border-hairline); background: var(--surface-section); border-radius: 14px; overflow: visible; }
+.arca-agent-workbench .arca-agent-resource-tabs button { position: relative; justify-content: flex-start; width: 100%; min-width: 0; height: 44px; padding: 0 10px; gap: 9px; font-size: 12px; font-weight: 500; background: transparent; color: var(--text-secondary); border-radius: 9px; flex: none; }
+.arca-agent-workbench .arca-agent-resource-tabs button:hover { color: var(--text-primary); background: var(--surface-control); }
+.arca-agent-resource-tab-label { flex: 1; min-width: 0; text-align: left; }
+.arca-agent-workbench .arca-agent-resource-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; background: var(--surface-control); color: var(--text-tertiary); font-size: 10px; }
+.arca-agent-workbench .arca-agent-resource-tabs button[data-active="true"] { color: var(--color-blue); background: var(--surface-selected); }
+.arca-agent-workbench .arca-agent-resource-tabs button[data-active="true"] .arca-agent-resource-tab-count { color: var(--color-blue); background: color-mix(in srgb, var(--color-blue) 12%, transparent); }
+.arca-agent-resource-tab-icon { display: inline-flex; flex-shrink: 0; }
+.arca-agent-toolbar-actions { display: flex; align-items: center; gap: 7px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.arca-agent-toolbar-target, .arca-agent-toolbar-target > .arca-agent-section-actions { display: contents; }
+.arca-agent-toolbar-actions > .arca-agent-config-toggle { order: 3; }
+.arca-agent-toolbar-actions .arca-agent-bulk-toggle { order: 1; padding: 0 2px; gap: 6px; background: transparent; }
+.arca-agent-toolbar-actions .btn-danger { order: 2; width: 27px; height: 30px; padding: 0; color: var(--text-tertiary); }
+.arca-agent-toolbar-actions .btn-danger:hover { color: var(--color-red); }
+.arca-agent-toolbar-actions .btn-primary { order: 4; }
+.arca-agent-workbench .arca-agent-toolbar-actions .btn-primary,
+.arca-agent-workbench .arca-agent-toolbar-actions .btn-secondary { min-height: 30px; height: 30px; padding: 0 9px; border-radius: 7px; gap: 5px; font-size: 11px; }
+.arca-consumption-manage-short { display: none; }
+.arca-agent-workbench .arca-consumption-manage-short { display: inline; }
+.arca-agent-workbench .arca-consumption-manage-label,
+.arca-agent-workbench .arca-consumption-bulk-label { display: none; }
+.arca-agent-workbench .arca-agent-config-toggle[aria-expanded="true"] { border-color: var(--color-blue); }
+.arca-agent-active-config { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--border-hairline); }
+.arca-agent-active-config[hidden] { display: none; }
+.arca-agent-active-config .arca-config-disclosure { border: 0; border-radius: 0; background: transparent; }
+.arca-agent-active-config .arca-config-disclosure > summary { display: none; }
+.arca-agent-active-config .arca-config-body { padding: 0; border: 0; }
+.arca-agent-active-config .arca-agent-file-paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+.arca-agent-active-config .arca-agent-file-path { background: var(--surface-control); }
+.arca-agent-workbench .arca-agent-resource-panel-body { padding: 0; }
+.arca-agent-workbench .arca-consumption-panel > .arca-agent-section-head { display: none; }
+.arca-consumption-model-note { margin: 0 0 12px; color: var(--text-secondary); font-size: 11px; }
+.arca-agent-workbench .arca-consumption-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; background: transparent; border-radius: 0; }
+.arca-agent-workbench .arca-consumption-list > li {
   position: relative; grid-template-columns: 30px minmax(0, 1fr) 24px;
   grid-template-rows: 30px minmax(32px, 1fr) auto;
   align-items: center; column-gap: 8px; row-gap: 10px;
   min-height: 132px; padding: 12px; border: 1px solid var(--border-hairline); border-radius: 9px;
 }
-.mux-agent-workbench .mux-consumption-list > li:has(.mux-consumption-card-menu[data-open="true"]),
-.mux-agent-workbench .mux-consumption-list > li:has(.mux-convergence-menu) { z-index: 5; }
-.mux-agent-workbench .mux-consumption-icon { grid-column: 1; grid-row: 1; }
-.mux-agent-workbench .mux-consumption-copy { grid-column: 2; grid-row: 1; }
-.mux-agent-workbench .mux-consumption-copy strong { font-size: 12px; font-weight: 500; }
-.mux-consumption-card-description { grid-column: 1 / -1; grid-row: 2; min-width: 0; margin: 0; align-self: start; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 11px; line-height: 1.5; }
-.mux-consumption-card-footer { display: grid; grid-column: 1 / -1; grid-row: 3; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; min-width: 0; }
-.mux-consumption-card-footer > .mux-consumption-controls { grid-column: 2; min-width: max-content; justify-self: end; }
-.mux-consumption-card-summary { display: flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; }
-.mux-consumption-card-summary .mux-consumption-status { flex: 0 0 7px; }
-.mux-consumption-card-summary .mux-consumption-meta { max-width: 100%; }
-.mux-consumption-card-summary .mux-consumption-meta { flex: 0 1 auto; min-width: 0; overflow: hidden; }
-.mux-consumption-secondary { display: flex; min-width: 0; align-items: center; gap: 5px; margin-top: 4px; }
-.mux-consumption-secondary .mux-consumption-status { flex: 0 0 7px; height: 12px; }
-.mux-consumption-secondary small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-tertiary); font-size: var(--font-size-label); }
-.mux-agent-workbench .mux-consumption-list > li[data-domain="mcp"] { min-height: 65px; grid-template-columns: 30px minmax(0, 1fr) auto 24px; grid-template-rows: auto; row-gap: 0; padding: 10px 12px; }
-.mux-agent-workbench li[data-domain="mcp"] .mux-consumption-card-footer { display: flex; grid-column: 3; grid-row: 1; gap: 0; }
-.mux-agent-workbench li[data-domain="mcp"] .mux-consumption-controls { flex: 0 0 auto; }
-.mux-agent-workbench li[data-domain="mcp"] .mux-consumption-card-menu { grid-column: 4; }
-.mux-agent-workbench li[data-domain="mcp"]:not(:has(.mux-consumption-card-menu)) .mux-consumption-card-footer { grid-column: 3 / -1; justify-self: end; }
-.mux-agent-workbench .mux-consumption-meta .mux-transport-mark { font-weight: 400; font-size: var(--font-size-label); }
-.mux-consumption-card-menu { position: relative; grid-column: 3; grid-row: 1; justify-self: end; }
-.mux-consumption-card-menu-items { position: absolute; right: 0; top: calc(100% + 5px); z-index: 8; min-width: 145px; padding: 4px; background: var(--surface-popover); border: 1px solid var(--border-hairline); border-radius: 9px; box-shadow: var(--shadow-sheet); }
-.mux-consumption-card-menu-items > button { display: flex; align-items: center; width: 100%; min-height: 32px; padding: 6px 9px; gap: 7px; border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); text-align: left; font-size: 11px; cursor: pointer; }
-.mux-consumption-card-menu-items > button:hover { background: var(--surface-section); }
-.mux-consumption-card-menu-items > button:disabled { opacity: .45; cursor: default; }
-.mux-consumption-card-menu-items .mux-consumption-remove { opacity: 1; color: var(--text-danger); }
-.mux-consumption-card-menu-items > button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -1px; }
-.mux-agent-workbench .mux-consumption-empty { min-height: 180px; background: transparent; }
+.arca-agent-workbench .arca-consumption-list > li:has(.arca-consumption-card-menu[data-open="true"]),
+.arca-agent-workbench .arca-consumption-list > li:has(.arca-convergence-menu) { z-index: 5; }
+.arca-agent-workbench .arca-consumption-icon { grid-column: 1; grid-row: 1; }
+.arca-agent-workbench .arca-consumption-copy { grid-column: 2; grid-row: 1; }
+.arca-agent-workbench .arca-consumption-copy strong { font-size: 12px; font-weight: 500; }
+.arca-consumption-card-description { grid-column: 1 / -1; grid-row: 2; min-width: 0; margin: 0; align-self: start; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 11px; line-height: 1.5; }
+.arca-consumption-card-footer { display: grid; grid-column: 1 / -1; grid-row: 3; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; min-width: 0; }
+.arca-consumption-card-footer > .arca-consumption-controls { grid-column: 2; min-width: max-content; justify-self: end; }
+.arca-consumption-card-summary { display: flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; }
+.arca-consumption-card-summary .arca-consumption-status { flex: 0 0 7px; }
+.arca-consumption-card-summary .arca-consumption-meta { max-width: 100%; }
+.arca-consumption-card-summary .arca-consumption-meta { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+.arca-consumption-secondary { display: flex; min-width: 0; align-items: center; gap: 5px; margin-top: 4px; }
+.arca-consumption-secondary .arca-consumption-status { flex: 0 0 7px; height: 12px; }
+.arca-consumption-secondary small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-tertiary); font-size: 9px; }
+.arca-agent-workbench .arca-consumption-list > li[data-domain="mcp"] { min-height: 65px; grid-template-columns: 30px minmax(0, 1fr) auto 24px; grid-template-rows: auto; row-gap: 0; padding: 10px 12px; }
+.arca-agent-workbench li[data-domain="mcp"] .arca-consumption-card-footer { display: flex; grid-column: 3; grid-row: 1; gap: 0; }
+.arca-agent-workbench li[data-domain="mcp"] .arca-consumption-controls { flex: 0 0 auto; }
+.arca-agent-workbench li[data-domain="mcp"] .arca-consumption-card-menu { grid-column: 4; }
+.arca-agent-workbench li[data-domain="mcp"]:not(:has(.arca-consumption-card-menu)) .arca-consumption-card-footer { grid-column: 3 / -1; justify-self: end; }
+.arca-agent-workbench .arca-consumption-meta .arca-transport-mark { font-weight: 400; font-size: 8px; }
+.arca-consumption-card-menu { position: relative; grid-column: 3; grid-row: 1; justify-self: end; }
+.arca-consumption-card-menu-items { position: absolute; right: 0; top: calc(100% + 5px); z-index: 8; min-width: 145px; padding: 4px; background: var(--surface-popover); border: 1px solid var(--border-hairline); border-radius: 9px; box-shadow: var(--shadow-sheet); }
+.arca-consumption-card-menu-items > button { display: flex; align-items: center; width: 100%; min-height: 32px; padding: 6px 9px; gap: 7px; border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); text-align: left; font-size: 11px; cursor: pointer; }
+.arca-consumption-card-menu-items > button:hover { background: var(--surface-section); }
+.arca-consumption-card-menu-items > button:disabled { opacity: .45; cursor: default; }
+.arca-consumption-card-menu-items .arca-consumption-remove { opacity: 1; color: var(--color-red); }
+.arca-consumption-card-menu-items > button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -1px; }
+.arca-agent-workbench .arca-consumption-empty { min-height: 250px; background: transparent; }
 @media (max-width: 1020px) {
-  .mux-agent-workbench .mux-consumption-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .mux-agent-workbench .mux-agent-overview-header { grid-template-columns: minmax(0, 1fr); min-height: 150px; gap: 12px; padding-bottom: 18px; }
-  .mux-agent-workbench .mux-agent-header-identity { grid-column: 1; }
-  .mux-agent-workbench .mux-agent-overview-actions { grid-column: 1; grid-row: 2; }
+  .arca-agent-workbench .arca-consumption-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .arca-agent-workbench .arca-agent-resource-panel { grid-template-columns: 166px minmax(0, 1fr); gap: 20px; }
+  .arca-agent-workbench .arca-agent-overview-header { min-height: 148px; gap: 14px; padding-bottom: 22px; }
 }
 @media (max-width: 620px) {
-  .mux-agent-workbench { padding: 12px 0 0; }
-  .mux-agent-workbench .mux-consumption-list { grid-template-columns: minmax(0, 1fr); }
-  .mux-agent-workbench .mux-agent-resource-tabs { gap: 2px; }
-  .mux-agent-workbench .mux-agent-resource-tabs button { padding: 0 8px; gap: 6px; }
+  .arca-agent-workbench { padding: 12px 0 0; }
+  .arca-agent-workbench .arca-consumption-list { grid-template-columns: minmax(0, 1fr); }
+  .arca-agent-workbench .arca-agent-resource-panel { grid-template-columns: 132px minmax(0, 1fr); gap: 12px; }
+  .arca-agent-workbench .arca-agent-resource-tabs { gap: 2px; padding: 4px; }
+  .arca-agent-workbench .arca-agent-resource-tabs button { padding: 0 7px; gap: 6px; font-size: 11px; }
+  .arca-agent-workbench .arca-agent-resource-tab-count { min-width: 16px; padding: 0 3px; font-size: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mux-agent-workbench .mux-agent-resource-tabs button::after { transition: none; }
+  .arca-agent-workbench .arca-agent-resource-tabs button::after { transition: none; }
 }

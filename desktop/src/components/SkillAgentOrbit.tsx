@@ -96,7 +96,7 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
     const layer = cardsLayerRef.current;
     if (!layer) return;
     const bounds = layer.getBoundingClientRect();
-    const sources = Array.from(sourceRef.current?.querySelectorAll<HTMLElement>(".mux-skill-agent-card") ?? []);
+    const sources = Array.from(sourceRef.current?.querySelectorAll<HTMLElement>(".arca-skill-agent-card") ?? []);
     const sourceRects = sources.map((source) => source.getBoundingClientRect());
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const first = !positioned.current;
@@ -179,7 +179,7 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
     navigating.current = true;
     setPlaying(id);
     const card = cardRefs.current.get(id);
-    const tile = card?.querySelector<HTMLElement>(".mux-skill-agent-orbit-tile");
+    const tile = card?.querySelector<HTMLElement>(".arca-skill-agent-orbit-tile");
     if (!tile || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       exitRef.current(id);
       return;
@@ -198,7 +198,7 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
   useLayoutEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    const opener = sourceRef.current?.querySelector<HTMLElement>(".mux-skill-agent-more");
+    const opener = sourceRef.current?.querySelector<HTMLElement>(".arca-skill-agent-more");
     const releaseRootInert = acquireRootInert();
     const frame = requestAnimationFrame(() => {
       // Focus the modal, not a card: opening the hand has no selected Agent.
@@ -235,7 +235,7 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
   }, [sourceRef, ids]);
 
   return createPortal(
-    <div ref={stageRef} className="mux-skill-agent-orbit" role="dialog" aria-modal="true" tabIndex={-1}
+    <div ref={stageRef} className="arca-skill-agent-orbit" role="dialog" aria-modal="true" tabIndex={-1}
       aria-label={[skillName, t("skillLibrary.allAgents")].filter(Boolean).join(" · ")}
       data-closing={closing || undefined}
       data-playing={playing ? "true" : undefined}
@@ -263,11 +263,11 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
         event.stopPropagation();
         if (!(event.target instanceof Element) || !event.target.closest("button")) close();
       }}>
-      <div className="mux-skill-agent-orbit-scroll">
-        <div ref={cardsLayerRef} className="mux-skill-agent-orbit-cards" style={{ height: layout.contentHeight }}>
+      <div className="arca-skill-agent-orbit-scroll">
+        <div ref={cardsLayerRef} className="arca-skill-agent-orbit-cards" style={{ height: layout.contentHeight }}>
           {ids.map((id, index) => {
             const name = agentName(id, names.get(id));
-            return <button key={id} type="button" className="mux-skill-agent-orbit-card"
+            return <button key={id} type="button" className="arca-skill-agent-orbit-card"
               ref={(node) => { if (node) cardRefs.current.set(id, node); else cardRefs.current.delete(id); }}
               style={{ width: cardWidth, "--fan-angle": `${layout.points[index].rotation}deg`, "--hand-index": index } as CSSProperties}
               data-playing={playing === id ? "true" : undefined}
@@ -276,9 +276,9 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
               onBlur={() => setHighlighted((current) => current === id ? null : current)}
               disabled={closing || playing !== null} title={name} aria-label={t("skillLibrary.openAgent", { name })}
               onClick={(event) => openAgent(event.detail > 0 ? highlighted ?? id : id)}>
-              <span className="mux-skill-agent-orbit-tile">
+              <span className="arca-skill-agent-orbit-tile">
                 <AgentGlyph id={id} name={name} size={28} />
-                <span className="mux-skill-agent-orbit-name">{name}</span>
+                <span className="arca-skill-agent-orbit-name">{name}</span>
               </span>
             </button>;
           })}

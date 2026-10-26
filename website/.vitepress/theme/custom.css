@@ -1,5 +1,5 @@
 /**
- * MUX docs — brand, micro-interactions, and Buzzy-inspired home layout.
+ * Arca docs — brand, micro-interactions, and Buzzy-inspired home layout.
  */
 
 :root {
@@ -28,56 +28,56 @@
   --vp-button-brand-active-text: #fff;
 
   /* Motion — Josh micro + Buzzy reveal */
-  --mux-ease-out: cubic-bezier(0.41, 0.1, 0.13, 1);
-  --mux-ease-soft: cubic-bezier(0.06, 0.63, 0.43, 1);
-  --mux-ease-press: cubic-bezier(0, 0.67, 0.6, 1.24);
-  --mux-ease-reveal: cubic-bezier(0.16, 1, 0.3, 1); /* Buzzy seo-feature */
-  --mux-duration-fast: 0.2s;
-  --mux-duration: 0.3s;
-  --mux-duration-enter: 0.55s;
-  --mux-duration-reveal: 0.8s;
-  --mux-color-swap: 0.35s;
+  --arca-ease-out: cubic-bezier(0.41, 0.1, 0.13, 1);
+  --arca-ease-soft: cubic-bezier(0.06, 0.63, 0.43, 1);
+  --arca-ease-press: cubic-bezier(0, 0.67, 0.6, 1.24);
+  --arca-ease-reveal: cubic-bezier(0.16, 1, 0.3, 1); /* Buzzy seo-feature */
+  --arca-duration-fast: 0.2s;
+  --arca-duration: 0.3s;
+  --arca-duration-enter: 0.55s;
+  --arca-duration-reveal: 0.8s;
+  --arca-color-swap: 0.35s;
 }
 
 /* Released product media and searchable references. */
-.mux-product-demo { max-width: 1152px; margin: 0 auto; padding: 16px 24px 72px; }
-.mux-product-demo h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.2; letter-spacing: -.035em; font-weight: 650; margin: 26px 0 12px; }
-.mux-product-demo > p { color: var(--vp-c-text-2); margin-bottom: 26px; line-height: 1.7; }
-.mux-product-demo__meta { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; color: var(--vp-c-text-2); font-size: 13px; }
-.mux-product-demo__meta > span { padding: 6px 12px; border: 1px solid var(--vp-c-divider); border-radius: 100px; }
-.mux-product-demo__meta > a { color: var(--vp-c-brand-1); }
-.mux-demo video { display: block; width: 100%; height: auto; border: 1px solid var(--vp-c-divider); border-radius: 16px; background: #eef1f5; box-shadow: 0 14px 50px -24px rgba(25, 35, 55, .24); }
-.mux-demo__chapters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.mux-demo__chapters button { display: inline-flex; gap: 8px; border: 1px solid var(--vp-c-divider); border-radius: 8px; padding: 8px 12px; font-size: 13px; background: var(--vp-c-bg-soft); color: var(--vp-c-text-1); }
-.mux-demo__chapters button:hover { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); }
-.mux-demo__chapters button span { font-family: var(--vp-font-family-mono); color: var(--vp-c-text-3); }
-.mux-demo__caption { color: var(--vp-c-text-2); font-size: 12px; line-height: 1.8; margin: 12px 0 0; }
-.mux-demo__caption a { color: var(--vp-c-brand-1); margin-left: 8px; text-decoration: underline; }
-.mux-row__visual--screenshot { background: transparent !important; min-height: 0 !important; }
-.mux-row__visual--screenshot img { width: 100%; height: auto; border: 1px solid var(--vp-c-divider); border-radius: 12px; }
-.mux-automation { max-width: 1104px; margin: 24px auto 72px; padding: 32px; border: 1px solid var(--vp-c-divider); border-radius: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
-.mux-automation h2 { font-size: 28px; font-weight: 650; line-height: 1.4; margin: 10px 0; letter-spacing: -.025em; }
-.mux-automation p { color: var(--vp-c-text-2); line-height: 1.8; margin-bottom: 18px; }
-.mux-automation pre { font-size: 12px; line-height: 1.8; padding: 24px; margin: 0; border-radius: 10px; background: var(--vp-c-bg-soft); overflow-x: auto; align-self: center; }
-.mux-eyebrow { font-size: 11px; font-weight: 650; letter-spacing: .12em; color: var(--vp-c-brand-1); }
-.mux-reference { margin: 24px 0 32px; }
-.mux-reference__toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
-.mux-reference__toolbar input { flex: 1; min-width: 180px; padding: 10px 12px; border: 1px solid var(--vp-c-divider); border-radius: 8px; background: var(--vp-c-bg-soft); }
-.mux-reference__toolbar select { border: 1px solid var(--vp-c-divider); border-radius: 8px; padding: 10px; background: var(--vp-c-bg-soft); }
-.mux-reference__toolbar > span { color: var(--vp-c-text-2); font-size: 12px; }
-.mux-reference__scroll { overflow-x: auto; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
-.mux-reference__scroll table { display: table; margin: 0; width: 100%; min-width: 680px; font-size: 12px; }
-.mux-reference__scroll th, .mux-reference__scroll td { border-width: 0 0 1px; vertical-align: top; padding: 12px; }
-.mux-reference__scroll tr:last-child td { border-bottom: 0; }
-.mux-reference small { display: block; color: var(--vp-c-text-2); margin-top: 6px; line-height: 1.6; }
-.mux-reference__id { display: block; margin-top: 6px; font-size: 11px; white-space: nowrap; }
-.mux-reference td > a + a { margin-left: 10px; }
-.mux-reference input:focus-visible, .mux-reference select:focus-visible, .mux-demo button:focus-visible, .mux-reference__scroll:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
+.arca-product-demo { max-width: 1152px; margin: 0 auto; padding: 16px 24px 72px; }
+.arca-product-demo h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.2; letter-spacing: -.035em; font-weight: 650; margin: 26px 0 12px; }
+.arca-product-demo > p { color: var(--vp-c-text-2); margin-bottom: 26px; line-height: 1.7; }
+.arca-product-demo__meta { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; color: var(--vp-c-text-2); font-size: 13px; }
+.arca-product-demo__meta > span { padding: 6px 12px; border: 1px solid var(--vp-c-divider); border-radius: 100px; }
+.arca-product-demo__meta > a { color: var(--vp-c-brand-1); }
+.arca-demo video { display: block; width: 100%; height: auto; border: 1px solid var(--vp-c-divider); border-radius: 16px; background: #eef1f5; box-shadow: 0 14px 50px -24px rgba(25, 35, 55, .24); }
+.arca-demo__chapters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.arca-demo__chapters button { display: inline-flex; gap: 8px; border: 1px solid var(--vp-c-divider); border-radius: 8px; padding: 8px 12px; font-size: 13px; background: var(--vp-c-bg-soft); color: var(--vp-c-text-1); }
+.arca-demo__chapters button:hover { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); }
+.arca-demo__chapters button span { font-family: var(--vp-font-family-mono); color: var(--vp-c-text-3); }
+.arca-demo__caption { color: var(--vp-c-text-2); font-size: 12px; line-height: 1.8; margin: 12px 0 0; }
+.arca-demo__caption a { color: var(--vp-c-brand-1); margin-left: 8px; text-decoration: underline; }
+.arca-row__visual--screenshot { background: transparent !important; min-height: 0 !important; }
+.arca-row__visual--screenshot img { width: 100%; height: auto; border: 1px solid var(--vp-c-divider); border-radius: 12px; }
+.arca-automation { max-width: 1104px; margin: 24px auto 72px; padding: 32px; border: 1px solid var(--vp-c-divider); border-radius: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.arca-automation h2 { font-size: 28px; font-weight: 650; line-height: 1.4; margin: 10px 0; letter-spacing: -.025em; }
+.arca-automation p { color: var(--vp-c-text-2); line-height: 1.8; margin-bottom: 18px; }
+.arca-automation pre { font-size: 12px; line-height: 1.8; padding: 24px; margin: 0; border-radius: 10px; background: var(--vp-c-bg-soft); overflow-x: auto; align-self: center; }
+.arca-eyebrow { font-size: 11px; font-weight: 650; letter-spacing: .12em; color: var(--vp-c-brand-1); }
+.arca-reference { margin: 24px 0 32px; }
+.arca-reference__toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.arca-reference__toolbar input { flex: 1; min-width: 180px; padding: 10px 12px; border: 1px solid var(--vp-c-divider); border-radius: 8px; background: var(--vp-c-bg-soft); }
+.arca-reference__toolbar select { border: 1px solid var(--vp-c-divider); border-radius: 8px; padding: 10px; background: var(--vp-c-bg-soft); }
+.arca-reference__toolbar > span { color: var(--vp-c-text-2); font-size: 12px; }
+.arca-reference__scroll { overflow-x: auto; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
+.arca-reference__scroll table { display: table; margin: 0; width: 100%; min-width: 680px; font-size: 12px; }
+.arca-reference__scroll th, .arca-reference__scroll td { border-width: 0 0 1px; vertical-align: top; padding: 12px; }
+.arca-reference__scroll tr:last-child td { border-bottom: 0; }
+.arca-reference small { display: block; color: var(--vp-c-text-2); margin-top: 6px; line-height: 1.6; }
+.arca-reference__id { display: block; margin-top: 6px; font-size: 11px; white-space: nowrap; }
+.arca-reference td > a + a { margin-left: 10px; }
+.arca-reference input:focus-visible, .arca-reference select:focus-visible, .arca-demo button:focus-visible, .arca-reference__scroll:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
 @media (max-width: 768px) {
-  .mux-product-demo { padding: 16px 24px 48px; }
-  .mux-automation { margin: 16px 24px 48px; grid-template-columns: 1fr; padding: 24px; gap: 24px; }
-  .mux-automation pre { font-size: 11px; padding: 16px; }
-  .mux-demo__chapters button { padding: 7px 10px; }
+  .arca-product-demo { padding: 16px 24px 48px; }
+  .arca-automation { margin: 16px 24px 48px; grid-template-columns: 1fr; padding: 24px; gap: 24px; }
+  .arca-automation pre { font-size: 11px; padding: 16px; }
+  .arca-demo__chapters button { padding: 7px 10px; }
 }
 
 .dark {
@@ -98,7 +98,7 @@
 /* Keyframes                                                                  */
 /* -------------------------------------------------------------------------- */
 
-@keyframes mux-fade-up {
+@keyframes arca-fade-up {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -117,8 +117,8 @@
   opacity: 0;
   transform: translateY(48px);
   transition:
-    opacity var(--mux-duration-reveal) ease,
-    transform var(--mux-duration-reveal) var(--mux-ease-reveal);
+    opacity var(--arca-duration-reveal) ease,
+    transform var(--arca-duration-reveal) var(--arca-ease-reveal);
   will-change: opacity, transform;
 }
 
@@ -164,19 +164,19 @@
 }
 
 .VPHero .name {
-  animation: mux-fade-up var(--mux-duration-enter) var(--mux-ease-out) both;
+  animation: arca-fade-up var(--arca-duration-enter) var(--arca-ease-out) both;
   animation-delay: 0.05s;
 }
 
 .VPHero .text {
-  animation: mux-fade-up var(--mux-duration-enter) var(--mux-ease-out) both;
+  animation: arca-fade-up var(--arca-duration-enter) var(--arca-ease-out) both;
   animation-delay: 0.14s;
   letter-spacing: -0.02em;
   max-width: 18ch;
 }
 
 .VPHero .tagline {
-  animation: mux-fade-up var(--mux-duration-enter) var(--mux-ease-out) both;
+  animation: arca-fade-up var(--arca-duration-enter) var(--arca-ease-out) both;
   animation-delay: 0.24s;
   max-width: 36rem;
 }
@@ -184,7 +184,7 @@
 .VPHero .actions {
   display: flex;
   justify-content: center;
-  animation: mux-fade-up var(--mux-duration-enter) var(--mux-ease-out) both;
+  animation: arca-fade-up var(--arca-duration-enter) var(--arca-ease-out) both;
   animation-delay: 0.34s;
 }
 
@@ -199,7 +199,7 @@
 .VPHero .VPButton.brand::after {
   content: "→";
   font-weight: 600;
-  transition: transform var(--mux-duration) var(--mux-ease-soft);
+  transition: transform var(--arca-duration) var(--arca-ease-soft);
 }
 
 .VPHero .VPButton.brand:hover::after {
@@ -218,12 +218,12 @@
 
 .VPButton {
   transition:
-    color var(--mux-duration-fast),
-    border-color var(--mux-duration-fast),
-    background-color var(--mux-duration-fast),
-    transform var(--mux-duration) var(--mux-ease-soft),
-    filter var(--mux-duration-fast),
-    box-shadow var(--mux-duration-fast) !important;
+    color var(--arca-duration-fast),
+    border-color var(--arca-duration-fast),
+    background-color var(--arca-duration-fast),
+    transform var(--arca-duration) var(--arca-ease-soft),
+    filter var(--arca-duration-fast),
+    box-shadow var(--arca-duration-fast) !important;
   will-change: transform;
 }
 
@@ -249,14 +249,14 @@
 /* Custom home sections                                                       */
 /* -------------------------------------------------------------------------- */
 
-.mux-home {
+.arca-home {
   width: 100%;
   margin: 0 auto;
   padding: 0 0 96px;
   overflow: hidden;
 }
 
-.mux-kicker {
+.arca-kicker {
   margin: 0 0 12px;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -266,21 +266,21 @@
 }
 
 /* Screenshot band — beat .vp-doc h2 (border-top + left margin) */
-.mux-shot {
+.arca-shot {
   max-width: 1100px;
   margin: 24px auto 0;
   padding: 0 24px;
   text-align: center;
 }
 
-.mux-shot__inner {
+.arca-shot__inner {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.vp-doc h2.mux-shot__title,
-.mux-shot__title {
+.vp-doc h2.arca-shot__title,
+.arca-shot__title {
   margin: 0 auto 16px;
   padding-top: 0;
   border-top: none;
@@ -299,16 +299,16 @@
   -webkit-text-fill-color: transparent;
 }
 
-:root:not(.dark) .vp-doc h2.mux-shot__title,
-:root:not(.dark) .mux-shot__title {
+:root:not(.dark) .vp-doc h2.arca-shot__title,
+:root:not(.dark) .arca-shot__title {
   background: linear-gradient(120deg, #a78bfa 0%, #7c5cfc 45%, #6346e8 100%);
   -webkit-background-clip: text;
   background-clip: text;
 }
 
 @media (max-width: 768px) {
-  .vp-doc h2.mux-shot__title,
-  .mux-shot__title {
+  .vp-doc h2.arca-shot__title,
+  .arca-shot__title {
     white-space: normal;
     width: auto;
     max-width: 100%;
@@ -316,8 +316,8 @@
   }
 }
 
-.vp-doc p.mux-shot__desc,
-.mux-shot__desc {
+.vp-doc p.arca-shot__desc,
+.arca-shot__desc {
   margin: 0 auto 56px;
   max-width: 40rem;
   font-size: 1.0625rem;
@@ -326,7 +326,7 @@
   color: var(--vp-c-text-2);
 }
 
-.mux-shot__frame {
+.arca-shot__frame {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
@@ -337,14 +337,14 @@
   background: var(--vp-c-bg-soft);
 }
 
-.dark .mux-shot__frame {
+.dark .arca-shot__frame {
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.45),
     0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.mux-shot__img {
+.arca-shot__img {
   display: block;
   width: 100%;
   height: auto;
@@ -352,19 +352,19 @@
 }
 
 /* Story section */
-.mux-story {
+.arca-story {
   max-width: 1100px;
   margin: 96px auto 0;
   padding: 0 24px;
 }
 
-.mux-story__header {
+.arca-story__header {
   margin-bottom: 64px;
   text-align: center;
 }
 
-.vp-doc h2.mux-story__heading,
-.mux-story__heading {
+.vp-doc h2.arca-story__heading,
+.arca-story__heading {
   margin: 0 auto;
   padding-top: 0;
   border-top: none;
@@ -381,31 +381,31 @@
   -webkit-text-fill-color: transparent;
 }
 
-:root:not(.dark) .vp-doc h2.mux-story__heading,
-:root:not(.dark) .mux-story__heading {
+:root:not(.dark) .vp-doc h2.arca-story__heading,
+:root:not(.dark) .arca-story__heading {
   background: linear-gradient(120deg, #a78bfa 0%, #7c5cfc 45%, #6346e8 100%);
   -webkit-background-clip: text;
   background-clip: text;
 }
 
-.mux-row {
+.arca-row {
   display: flex;
   align-items: center;
   gap: clamp(32px, 6vw, 72px);
   margin-bottom: 80px;
 }
 
-.mux-row.is-reverse {
+.arca-row.is-reverse {
   flex-direction: row-reverse;
 }
 
-.mux-row__visual,
-.mux-row__text {
+.arca-row__visual,
+.arca-row__text {
   flex: 1;
   min-width: 0;
 }
 
-.mux-row__title {
+.arca-row__title {
   margin: 0 0 14px;
   font-size: clamp(1.25rem, 2.4vw, 1.75rem);
   font-weight: 700;
@@ -414,15 +414,15 @@
   color: var(--vp-c-text-1);
 }
 
-.mux-row__desc {
+.arca-row__desc {
   margin: 0 0 20px;
   font-size: 1rem;
   line-height: 1.7;
   color: var(--vp-c-text-2);
 }
 
-.vp-doc a.mux-try,
-.mux-try {
+.vp-doc a.arca-try,
+.arca-try {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -436,15 +436,15 @@
   font-weight: 600;
   text-decoration: none;
   transition:
-    background var(--mux-duration-fast),
-    border-color var(--mux-duration-fast),
-    box-shadow var(--mux-duration-fast),
-    transform 0.15s var(--mux-ease-soft),
-    color var(--mux-duration-fast);
+    background var(--arca-duration-fast),
+    border-color var(--arca-duration-fast),
+    box-shadow var(--arca-duration-fast),
+    transform 0.15s var(--arca-ease-soft),
+    color var(--arca-duration-fast);
 }
 
-.vp-doc a.mux-try:hover,
-.mux-try:hover {
+.vp-doc a.arca-try:hover,
+.arca-try:hover {
   background: var(--vp-c-brand-soft);
   border-color: var(--vp-c-brand-1);
   box-shadow: 0 0 16px rgba(124, 92, 252, 0.22);
@@ -453,13 +453,13 @@
   filter: none;
 }
 
-.vp-doc a.mux-try:active,
-.mux-try:active {
+.vp-doc a.arca-try:active,
+.arca-try:active {
   transform: scale(0.97);
 }
 
 /* Visual panels (lightweight, not decorative noise) */
-.mux-panel {
+.arca-panel {
   position: relative;
   display: flex;
   align-items: center;
@@ -478,7 +478,7 @@
   overflow: hidden;
 }
 
-.dark .mux-panel {
+.dark .arca-panel {
   border-color: rgba(255, 255, 255, 0.08);
   background:
     radial-gradient(
@@ -489,7 +489,7 @@
     #16181d;
 }
 
-.mux-panel__sources {
+.arca-panel__sources {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -497,7 +497,7 @@
   max-width: 280px;
 }
 
-.mux-panel__sources span {
+.arca-panel__sources span {
   padding: 8px 14px;
   border-radius: 999px;
   font-size: 0.8125rem;
@@ -508,7 +508,7 @@
   border: 1px solid var(--vp-c-divider);
 }
 
-.mux-panel__dual {
+.arca-panel__dual {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -517,7 +517,7 @@
   max-width: 240px;
 }
 
-.mux-panel__chip {
+.arca-panel__chip {
   width: 100%;
   text-align: center;
   padding: 12px 16px;
@@ -529,14 +529,14 @@
   color: var(--vp-c-text-1);
 }
 
-.mux-panel__chip--accent {
+.arca-panel__chip--accent {
   background: var(--vp-c-brand-1);
   border-color: transparent;
   color: #fff;
   box-shadow: 0 8px 24px rgba(124, 92, 252, 0.3);
 }
 
-.mux-panel__safe code {
+.arca-panel__safe code {
   display: inline-block;
   padding: 14px 18px;
   border-radius: 12px;
@@ -547,15 +547,15 @@
 }
 
 /* CTA band */
-.mux-cta {
+.arca-cta {
   max-width: 720px;
   margin: 48px auto 0;
   padding: 48px 24px;
   text-align: center;
 }
 
-.vp-doc h2.mux-cta__title,
-.mux-cta__title {
+.vp-doc h2.arca-cta__title,
+.arca-cta__title {
   margin: 0 auto 12px;
   padding-top: 0;
   border-top: none;
@@ -570,15 +570,15 @@
   -webkit-text-fill-color: transparent;
 }
 
-:root:not(.dark) .vp-doc h2.mux-cta__title,
-:root:not(.dark) .mux-cta__title {
+:root:not(.dark) .vp-doc h2.arca-cta__title,
+:root:not(.dark) .arca-cta__title {
   background: linear-gradient(120deg, #a78bfa 0%, #7c5cfc 45%, #6346e8 100%);
   -webkit-background-clip: text;
   background-clip: text;
 }
 
-.vp-doc p.mux-cta__desc,
-.mux-cta__desc {
+.vp-doc p.arca-cta__desc,
+.arca-cta__desc {
   margin: 0 auto 28px;
   max-width: 36rem;
   font-size: 1.0625rem;
@@ -587,15 +587,15 @@
   color: var(--vp-c-text-2);
 }
 
-.mux-cta__actions {
+.arca-cta__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
 }
 
-.vp-doc a.mux-btn,
-.mux-btn {
+.vp-doc a.arca-btn,
+.arca-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -607,21 +607,21 @@
   font-weight: 600;
   text-decoration: none;
   transition:
-    transform var(--mux-duration) var(--mux-ease-soft),
-    filter var(--mux-duration-fast),
-    background var(--mux-duration-fast),
-    border-color var(--mux-duration-fast),
-    box-shadow var(--mux-duration-fast),
-    color var(--mux-duration-fast);
+    transform var(--arca-duration) var(--arca-ease-soft),
+    filter var(--arca-duration-fast),
+    background var(--arca-duration-fast),
+    border-color var(--arca-duration-fast),
+    box-shadow var(--arca-duration-fast),
+    color var(--arca-duration-fast);
 }
 
-.mux-btn--brand {
+.arca-btn--brand {
   background: var(--vp-button-brand-bg);
   color: #fff !important;
   border: 1px solid transparent;
 }
 
-.mux-btn--brand:hover {
+.arca-btn--brand:hover {
   background: var(--vp-button-brand-hover-bg);
   filter: none;
   transform: translateY(-1px);
@@ -629,14 +629,14 @@
   color: #fff !important;
 }
 
-.mux-btn--alt {
+.arca-btn--alt {
   background: transparent;
   color: var(--vp-c-text-1);
   border: 1px solid color-mix(in srgb, var(--vp-c-brand-1) 55%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--vp-c-brand-1) 12%, transparent);
 }
 
-.mux-btn--alt:hover {
+.arca-btn--alt:hover {
   background: var(--vp-c-brand-soft);
   border-color: var(--vp-c-brand-1);
   box-shadow: 0 0 16px rgba(124, 92, 252, 0.22);
@@ -645,27 +645,27 @@
   filter: none;
 }
 
-.mux-btn:active {
+.arca-btn:active {
   transform: scale(0.97);
 }
 
 @media (max-width: 768px) {
-  .mux-row,
-  .mux-row.is-reverse {
+  .arca-row,
+  .arca-row.is-reverse {
     flex-direction: column;
     gap: 28px;
     margin-bottom: 64px;
   }
 
-  .mux-story {
+  .arca-story {
     margin-top: 64px;
   }
 
-  .mux-story__header {
+  .arca-story__header {
     margin-bottom: 40px;
   }
 
-  .mux-panel {
+  .arca-panel {
     min-height: 180px;
   }
 
@@ -678,28 +678,28 @@
 /* Doc links + chrome polish                                                  */
 /* -------------------------------------------------------------------------- */
 
-.vp-doc :not(h1, h2, h3, h4, h5, h6) > a:not(.header-anchor):not(.VPButton):not(.mux-btn):not(.mux-try) {
+.vp-doc :not(h1, h2, h3, h4, h5, h6) > a:not(.header-anchor):not(.VPButton):not(.arca-btn):not(.arca-try) {
   text-decoration: none;
   box-shadow: 0 1.5px 0 var(--vp-c-brand-1);
   transition:
-    box-shadow var(--mux-duration-fast) var(--mux-ease-out),
-    color var(--mux-duration-fast);
+    box-shadow var(--arca-duration-fast) var(--arca-ease-out),
+    color var(--arca-duration-fast);
 }
 
-.vp-doc :not(h1, h2, h3, h4, h5, h6) > a:not(.header-anchor):not(.VPButton):not(.mux-btn):not(.mux-try):hover {
+.vp-doc :not(h1, h2, h3, h4, h5, h6) > a:not(.header-anchor):not(.VPButton):not(.arca-btn):not(.arca-try):hover {
   box-shadow: 0 0 0 transparent;
   color: var(--vp-c-brand-1);
 }
 
 .VPNavBarMenuLink,
 .VPLink.link {
-  transition: color var(--mux-duration-fast) var(--mux-ease-out) !important;
+  transition: color var(--arca-duration-fast) var(--arca-ease-out) !important;
 }
 
 .VPSidebarItem .link {
   transition:
-    color var(--mux-duration-fast),
-    background-color var(--mux-duration-fast) !important;
+    color var(--arca-duration-fast),
+    background-color var(--arca-duration-fast) !important;
 }
 
 .VPSidebarItem.link:hover .text,
@@ -711,10 +711,10 @@
 .VPNavBarExtra .button,
 .VPSwitch {
   transition:
-    color var(--mux-duration-fast),
-    background-color var(--mux-duration-fast),
-    opacity var(--mux-duration-fast),
-    transform var(--mux-duration) var(--mux-ease-soft) !important;
+    color var(--arca-duration-fast),
+    background-color var(--arca-duration-fast),
+    opacity var(--arca-duration-fast),
+    transform var(--arca-duration) var(--arca-ease-soft) !important;
 }
 
 .VPSocialLink:hover,
@@ -724,8 +724,8 @@
 
 html {
   transition:
-    color var(--mux-color-swap) var(--mux-ease-out),
-    background-color var(--mux-color-swap) var(--mux-ease-out);
+    color var(--arca-color-swap) var(--arca-ease-out),
+    background-color var(--arca-color-swap) var(--arca-ease-out);
 }
 
 .VPNavBar,
@@ -734,13 +734,13 @@ html {
 .VPLocalNav,
 .VPDocAside {
   transition:
-    background-color var(--mux-color-swap) var(--mux-ease-out),
-    border-color var(--mux-color-swap) var(--mux-ease-out),
-    box-shadow var(--mux-color-swap) var(--mux-ease-out);
+    background-color var(--arca-color-swap) var(--arca-ease-out),
+    border-color var(--arca-color-swap) var(--arca-ease-out),
+    box-shadow var(--arca-color-swap) var(--arca-ease-out);
 }
 
 .VPDocOutlineItem a {
-  transition: color var(--mux-duration-fast) !important;
+  transition: color var(--arca-duration-fast) !important;
 }
 
 .VPDocOutlineItem.is-active > a {
@@ -754,25 +754,25 @@ html {
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.38s;
-  animation-timing-function: var(--mux-ease-reveal);
+  animation-timing-function: var(--arca-ease-reveal);
 }
 
 ::view-transition-old(root) {
-  animation-name: mux-page-leave;
+  animation-name: arca-page-leave;
 }
 
 ::view-transition-new(root) {
-  animation-name: mux-page-enter;
+  animation-name: arca-page-enter;
 }
 
-@keyframes mux-page-leave {
+@keyframes arca-page-leave {
   to {
     opacity: 0;
     transform: translateY(-8px);
   }
 }
 
-@keyframes mux-page-enter {
+@keyframes arca-page-enter {
   from {
     opacity: 0;
     transform: translateY(14px);
@@ -780,8 +780,8 @@ html {
 }
 
 /* Appearance toggle uses a custom clip-path; disable default VT animations */
-html.mux-appearance-pending::view-transition-old(root),
-html.mux-appearance-pending::view-transition-new(root) {
+html.arca-appearance-pending::view-transition-old(root),
+html.arca-appearance-pending::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
@@ -808,8 +808,8 @@ html.mux-appearance-pending::view-transition-new(root) {
   .VPButton:hover,
   .VPButton:active,
   .VPSocialLink:hover,
-  .mux-btn:hover,
-  .mux-try:hover {
+  .arca-btn:hover,
+  .arca-try:hover {
     transform: none !important;
     filter: none !important;
     box-shadow: none !important;

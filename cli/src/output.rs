@@ -61,7 +61,7 @@ impl CliError {
         Self::private(code, message)
     }
 
-    pub fn from_core(error: mux_core::domain::error::CoreError) -> Self {
+    pub fn from_core(error: arca_core::domain::error::CoreError) -> Self {
         let safe_recovery = error.automation_details().into_iter().collect();
         let mut details = Map::new();
         details.extend(error.details);
@@ -136,7 +136,7 @@ impl CommandOutput {
         envelope
     }
 
-    pub fn with_backend(mut self, report: &mux_core::application::bootstrap::BootstrapReport) -> Self {
+    pub fn with_backend(mut self, report: &arca_core::application::bootstrap::BootstrapReport) -> Self {
         self.backend = Some(backend_projection(report));
         self
     }
@@ -144,9 +144,9 @@ impl CommandOutput {
 
 /// Bootstrap messages can contain parser input or local paths. Expose only
 /// state, typed stages and capability, never raw startup diagnostics.
-pub fn backend_projection(report: &mux_core::application::bootstrap::BootstrapReport) -> Value {
-    use mux_core::application::BackendStatus;
-    let status = match mux_core::application::MuxCore::backend_status() {
+pub fn backend_projection(report: &arca_core::application::bootstrap::BootstrapReport) -> Value {
+    use arca_core::application::BackendStatus;
+    let status = match arca_core::application::ArcaCore::backend_status() {
         BackendStatus::Starting => json!({"state": "starting"}),
         BackendStatus::Ready => json!({"state": "ready"}),
         BackendStatus::CapabilityUnavailable { capability, stage, code, .. } =>
@@ -322,10 +322,10 @@ mod tests {
 
     #[test]
     fn core_recovery_metadata_survives_without_private_details() {
-        let mut error = mux_core::domain::error::CoreError::new("rate_limited", "PRIVATE_MESSAGE")
+        let mut error = arca_core::domain::error::CoreError::new("rate_limited", "PRIVATE_MESSAGE")
             .with_detail("raw", "PRIVATE_DETAIL");
         error.retry_at = Some("2026-10-05T12:30:00Z".into());
-        error.confirmation = Some(Box::new(mux_core::domain::error::CoreConfirmation {
+        error.confirmation = Some(Box::new(arca_core::domain::error::CoreConfirmation {
             kind: "skill_findings".into(), token: "a".repeat(64),
         }));
         let value = error_envelope(&CliError::from_core(error));
@@ -336,9 +336,9 @@ mod tests {
 
     #[test]
     fn malformed_recovery_fields_are_not_exported() {
-        let mut error = mux_core::domain::error::CoreError::new("internal", "PRIVATE_MESSAGE");
+        let mut error = arca_core::domain::error::CoreError::new("internal", "PRIVATE_MESSAGE");
         error.retry_at = Some("PRIVATE_RETRY_VALUE".into());
-        error.confirmation = Some(Box::new(mux_core::domain::error::CoreConfirmation {
+        error.confirmation = Some(Box::new(arca_core::domain::error::CoreConfirmation {
             kind: "credential".into(), token: "PRIVATE_TOKEN".into(),
         }));
         assert!(!error_envelope(&CliError::from_core(error)).to_string().contains("PRIVATE"));

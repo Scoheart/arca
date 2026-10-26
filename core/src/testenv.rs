@@ -1,4 +1,4 @@
-//! Test-only environment isolation for `~/.mux` and agent-config paths.
+//! Test-only environment isolation for `~/.arca` and agent-config paths.
 //!
 //! Historically every integration test hand-rolled `set_var("HOME", tmp)` +
 //! `remove_var("HOME")`. That pattern had two real failure modes:
@@ -9,10 +9,10 @@
 //! 2. **Parallel tests race** — env vars are process-global; two tests in one
 //!    binary interleave `set_var`/`remove_var` and one of them ends up writing
 //!    through the other's (or the real) HOME. This corrupted the real
-//!    `~/.mux/sources/remote/*` cache on 2026-07-08.
+//!    `~/.arca/sources/remote/*` cache on 2026-07-08.
 //!
 //! [`TestHome`] fixes both: a process-wide mutex serializes every user of the
-//! env, `HOME`, `MUX_HOME`, command lookup, and install-probe roots point into
+//! env, `HOME`, `ARCA_HOME`, command lookup, and install-probe roots point into
 //! a fresh temp dir, and `Drop` restores (not removes) the previous values.
 //! Multiple tests per file are safe with this guard.
 //!
@@ -26,12 +26,12 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 static SEQ: AtomicU32 = AtomicU32::new(0);
 
-/// RAII guard: fake `$HOME` + `$MUX_HOME` in a temp dir, serialized process-wide.
+/// RAII guard: fake `$HOME` + `$ARCA_HOME` in a temp dir, serialized process-wide.
 pub struct TestHome {
-    /// The fake home directory (agent configs live under here, `.mux` inside it).
+    /// The fake home directory (agent configs live under here, `.arca` inside it).
     pub home: PathBuf,
     saved_home: Option<OsString>,
-    saved_mux_home: Option<OsString>,
+    saved_arca_home: Option<OsString>,
     saved_path: Option<OsString>,
     saved_test_probe_root: Option<OsString>,
     readiness: Option<crate::application::gate::TestReadyGuard>,
@@ -40,7 +40,7 @@ pub struct TestHome {
 
 impl TestHome {
     /// Acquire the env lock, create a unique temp home, and point both
-    /// `HOME` and `MUX_HOME` (→ `<home>/.mux`) at it.
+    /// `HOME` and `ARCA_HOME` (→ `<home>/.arca`) at it.
     pub fn new(tag: &str) -> Self {
         let guard = ENV_LOCK
             .get_or_init(|| Mutex::new(()))
@@ -63,18 +63,18 @@ impl TestHome {
         let bin = home.join("bin");
         std::fs::create_dir_all(&bin).expect("create test bin dir");
         let saved_home = std::env::var_os("HOME");
-        let saved_mux_home = std::env::var_os("MUX_HOME");
+        let saved_arca_home = std::env::var_os("ARCA_HOME");
         let saved_path = std::env::var_os("PATH");
-        let saved_test_probe_root = std::env::var_os("MUX_TEST_PROBE_ROOT");
+        let saved_test_probe_root = std::env::var_os("ARCA_TEST_PROBE_ROOT");
         std::env::set_var("HOME", &home);
-        std::env::set_var("MUX_HOME", home.join(".mux"));
+        std::env::set_var("ARCA_HOME", home.join(".arca"));
         std::env::set_var("PATH", &bin);
-        std::env::set_var("MUX_TEST_PROBE_ROOT", &home);
+        std::env::set_var("ARCA_TEST_PROBE_ROOT", &home);
         let readiness = Some(crate::application::gate::TestReadyGuard::enter());
         TestHome {
             home,
             saved_home,
-            saved_mux_home,
+            saved_arca_home,
             saved_path,
             saved_test_probe_root,
             readiness,
@@ -86,7 +86,7 @@ impl TestHome {
 impl Drop for TestHome {
     fn drop(&mut self) {
         // Restore lifecycle state while the same process-wide guard still owns
-        // HOME/MUX_HOME, so another isolated test cannot observe a mismatched
+        // HOME/ARCA_HOME, so another isolated test cannot observe a mismatched
         // workspace and backend readiness pair.
         if let Some(readiness) = self.readiness.take() {
             readiness.restore();
@@ -96,17 +96,17 @@ impl Drop for TestHome {
             Some(v) => std::env::set_var("HOME", v),
             None => std::env::remove_var("HOME"),
         }
-        match &self.saved_mux_home {
-            Some(v) => std::env::set_var("MUX_HOME", v),
-            None => std::env::remove_var("MUX_HOME"),
+        match &self.saved_arca_home {
+            Some(v) => std::env::set_var("ARCA_HOME", v),
+            None => std::env::remove_var("ARCA_HOME"),
         }
         match &self.saved_path {
             Some(v) => std::env::set_var("PATH", v),
             None => std::env::remove_var("PATH"),
         }
         match &self.saved_test_probe_root {
-            Some(v) => std::env::set_var("MUX_TEST_PROBE_ROOT", v),
-            None => std::env::remove_var("MUX_TEST_PROBE_ROOT"),
+            Some(v) => std::env::set_var("ARCA_TEST_PROBE_ROOT", v),
+            None => std::env::remove_var("ARCA_TEST_PROBE_ROOT"),
         }
         let _ = std::fs::remove_dir_all(&self.home);
         // _guard releases after this body — env is consistent before the next
@@ -126,7 +126,7 @@ mod tests {
         // temporary HOME even though both mutations themselves are serialized.
         let th = TestHome::new("selftest");
         let before_home = th.saved_home.clone();
-        let before_mux = th.saved_mux_home.clone();
+        let before_arca = th.saved_arca_home.clone();
         let before_path = th.saved_path.clone();
         let before_probe_root = th.saved_test_probe_root.clone();
         assert_eq!(std::env::var_os("HOME"), Some(th.home.clone().into()));
@@ -136,25 +136,25 @@ mod tests {
             "PATH redirected into the disposable home"
         );
         assert_eq!(
-            std::env::var_os("MUX_TEST_PROBE_ROOT"),
+            std::env::var_os("ARCA_TEST_PROBE_ROOT"),
             Some(th.home.clone().into()),
             "probe roots redirected into the disposable home"
         );
         assert_eq!(
-            crate::paths::mux_dir(),
-            th.home.join(".mux"),
-            "mux_dir must resolve into the fake home"
+            crate::paths::arca_dir(),
+            th.home.join(".arca"),
+            "arca_dir must resolve into the fake home"
         );
         drop(th);
         assert_eq!(std::env::var_os("HOME"), before_home, "HOME restored");
         assert_eq!(
-            std::env::var_os("MUX_HOME"),
-            before_mux,
-            "MUX_HOME restored"
+            std::env::var_os("ARCA_HOME"),
+            before_arca,
+            "ARCA_HOME restored"
         );
         assert_eq!(std::env::var_os("PATH"), before_path, "PATH restored");
         assert_eq!(
-            std::env::var_os("MUX_TEST_PROBE_ROOT"),
+            std::env::var_os("ARCA_TEST_PROBE_ROOT"),
             before_probe_root,
             "probe root restored"
         );
@@ -174,7 +174,7 @@ mod tests {
             let th = TestHome::new("panic-unwind");
             *captured.lock().unwrap() = Some((
                 th.saved_home.clone(),
-                th.saved_mux_home.clone(),
+                th.saved_arca_home.clone(),
                 th.saved_path.clone(),
                 th.saved_test_probe_root.clone(),
             ));
@@ -186,10 +186,10 @@ mod tests {
             .get_or_init(|| Mutex::new(()))
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        let (home, mux_home, path, probe_root) = saved.lock().unwrap().clone().unwrap();
+        let (home, arca_home, path, probe_root) = saved.lock().unwrap().clone().unwrap();
         assert_eq!(std::env::var_os("HOME"), home);
-        assert_eq!(std::env::var_os("MUX_HOME"), mux_home);
+        assert_eq!(std::env::var_os("ARCA_HOME"), arca_home);
         assert_eq!(std::env::var_os("PATH"), path);
-        assert_eq!(std::env::var_os("MUX_TEST_PROBE_ROOT"), probe_root);
+        assert_eq!(std::env::var_os("ARCA_TEST_PROBE_ROOT"), probe_root);
     }
 }

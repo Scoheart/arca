@@ -53,18 +53,16 @@ pub(super) fn dispatch(line: &str) -> Result<(), String> {
         "ghostty" => "on run argv\ntell application id \"com.mitchellh.ghostty\"\nactivate\nset cfg to new surface configuration\nset initial input of cfg to (item 1 of argv) & linefeed\nnew window with configuration cfg\nend tell\nend run",
         _ => return Err("不支持的默认终端，请重新选择".into()),
     };
-    let result = Command::new("/usr/bin/osascript").args(["-e", script, "--", line]).output()
-        .map_err(|_| "无法调用终端启动器")?;
-    if result.status.success() { Ok(()) } else {
-        Err("终端未能启动 Agent，请检查自动化权限；Ghostty 需要 1.3 或更新版本且开启 AppleScript".into())
-    }
+    let mut command = Command::new("/usr/bin/osascript");
+    command.args(["-e", script, "--", line]);
+    super::agent_launch::dispatch_command(command)
 }
 
 fn dispatch_command_file(app: &std::path::Path, line: &str) -> Result<(), String> {
     use std::io::Write;
     #[cfg(unix)] use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
     let cache = dirs::cache_dir().ok_or("找不到用户缓存目录")?;
-    let directory = cache.join(format!("mux-launch-{}", uuid::Uuid::new_v4()));
+    let directory = cache.join(format!("arca-launch-{}", uuid::Uuid::new_v4()));
     let mut builder = fs::DirBuilder::new();
     #[cfg(unix)] builder.mode(0o700);
     builder.create(&directory).map_err(|_| "无法创建终端启动文件夹")?;
@@ -78,8 +76,9 @@ fn dispatch_command_file(app: &std::path::Path, line: &str) -> Result<(), String
         write!(output, "#!/bin/zsh -l\n/bin/rm -- \"$0\"\n/bin/rmdir -- \"${{0:h}}\"\n{line}\n")
             .map_err(|_| "无法写入终端启动文件")?;
         drop(output);
-        let result = Command::new("/usr/bin/open").arg("-a").arg(app).arg(&file).output().map_err(|_| "无法打开 Warp")?;
-        if result.status.success() { Ok(()) } else { Err("Warp 未能打开启动文件".into()) }
+        let mut command = Command::new("/usr/bin/open");
+        command.arg("-a").arg(app).arg(&file);
+        super::agent_launch::dispatch_command(command)
     })();
     if result.is_err() { let _ = fs::remove_file(&file); let _ = fs::remove_dir(&directory); }
     result

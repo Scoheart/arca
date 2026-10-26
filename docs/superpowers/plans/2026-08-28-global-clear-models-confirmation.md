@@ -6,7 +6,7 @@
 
 **Architecture:** Reuse the existing `ReviewDialog` and `DialogShell` modal stack instead of adding another modal primitive. `AgentView` special-cases only `clear-models`: it keeps the resource panel rendered, portals the compact dialog above the application, and commits the already prepared plan. The generic operation review explicitly rejects both clear-all kinds so it cannot regress into the Models layout.
 
-**Tech Stack:** React 19, TypeScript, Vitest, Testing Library, existing MUX `ReviewDialog`/`DialogShell`/`Modal` primitives.
+**Tech Stack:** React 19, TypeScript, Vitest, Testing Library, existing Arca `ReviewDialog`/`DialogShell`/`Modal` primitives.
 
 ---
 
@@ -100,7 +100,7 @@ it.each(["clear-mcp", "clear-models"] as const)(
 
 - [ ] **Step 3: Record the project validation gate**
 
-MUX fast mode forbids local Vitest/build execution unless the current user explicitly requests it. Keep the tests as executable regression coverage but do not run them locally. The red evidence is the current installed v1.8.146 screenshot and source behavior: an active `clear-models` plan selects the inline review branch and suppresses the Models content.
+Arca fast mode forbids local Vitest/build execution unless the current user explicitly requests it. Keep the tests as executable regression coverage but do not run them locally. The red evidence is the current installed v1.8.146 screenshot and source behavior: an active `clear-models` plan selects the inline review branch and suppresses the Models content.
 
 ### Task 2: Route clear Models to the global modal stack
 
@@ -216,15 +216,15 @@ Compare `main...codex/global-clear-models-confirmation`, verify every remote blo
 Track the exact `Direct stable release` run for the merge SHA and the dispatched `Build desktop` run. Run:
 
 ```bash
-RELEASE_TAG=$(gh release list --repo Scoheart/mux --limit 1 --json tagName --jq '.[0].tagName')
-RELEASE_SHA=$(gh api "repos/Scoheart/mux/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')
-VERIFY_WORKTREE="/Users/scoheart/.config/superpowers/worktrees/mux/verify-${RELEASE_TAG}"
+RELEASE_TAG=$(gh release list --repo Scoheart/arca --limit 1 --json tagName --jq '.[0].tagName')
+RELEASE_SHA=$(gh api "repos/Scoheart/arca/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')
+VERIFY_WORKTREE="/Users/scoheart/.config/superpowers/worktrees/arca/verify-${RELEASE_TAG}"
 git worktree add --detach "$VERIFY_WORKTREE" "$RELEASE_SHA"
-bash .agents/skills/mux-release/scripts/verify-release.sh \
-  --repo Scoheart/mux \
+bash .agents/skills/arca-release/scripts/verify-release.sh \
+  --repo Scoheart/arca \
   --source-root "$VERIFY_WORKTREE" \
   --wait \
   "$RELEASE_TAG"
 ```
 
-Expected: published non-prerelease Stable; immutable tag/release/main identity; exactly four verified assets; signed arm64 App/DMG/CLI/updater; no local installation because the user updates MUX independently.
+Expected: published non-prerelease Stable; immutable tag/release/main identity; exactly four verified assets; signed arm64 App/DMG/CLI/updater; no local installation because the user updates Arca independently.

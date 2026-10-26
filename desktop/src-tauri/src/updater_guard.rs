@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn blocks_apps_running_from_a_read_only_disk_image() {
-        let env = environment_for_path(Path::new("/Volumes/MUX/MUX.app/Contents/MacOS/mux"), true);
+        let env = environment_for_path(Path::new("/Volumes/Arca/Arca.app/Contents/MacOS/arca"), true);
         assert!(!env.can_self_update);
         assert_eq!(env.reason, Some("disk-image"));
     }
@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn blocks_macos_app_translocation() {
         let env = environment_for_path(
-            Path::new("/private/var/folders/xy/AppTranslocation/ABC/d/MUX.app/Contents/MacOS/mux"),
+            Path::new("/private/var/folders/xy/AppTranslocation/ABC/d/Arca.app/Contents/MacOS/arca"),
             true,
         );
         assert!(!env.can_self_update);
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn allows_an_installed_application() {
         let env =
-            environment_for_path(Path::new("/Applications/MUX.app/Contents/MacOS/mux"), false);
+            environment_for_path(Path::new("/Applications/Arca.app/Contents/MacOS/arca"), false);
         assert!(env.can_self_update);
         assert_eq!(env.reason, None);
     }
@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn does_not_block_a_writable_external_volume() {
         let env = environment_for_path(
-            Path::new("/Volumes/External/Applications/MUX.app/Contents/MacOS/mux"),
+            Path::new("/Volumes/External/Applications/Arca.app/Contents/MacOS/arca"),
             false,
         );
         assert!(env.can_self_update);

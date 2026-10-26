@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Headless launcher / driver for the MUX Tauri desktop app.
+# Headless launcher / driver for the Arca Tauri desktop app.
 # Runs the GUI on a virtual X display (Xvfb), captures screenshots (scrot),
 # and simulates mouse/keyboard input (xdotool) — so the app can be driven and
 # visually verified in a headless container with no real display.
@@ -23,7 +23,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # repo root = three levels up from .claude/skills/run-desktop/
 REPO_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 DESKTOP_DIR="$REPO_DIR/desktop"
-LOG="${MUX_GUI_LOG:-/tmp/mux-gui.log}"
+LOG="${ARCA_GUI_LOG:-/tmp/arca-gui.log}"
 
 export DISPLAY="$DISPLAY_NUM"
 
@@ -32,7 +32,7 @@ log() { printf '[gui] %s\n' "$*" >&2; }
 ensure_xvfb() {
   if pgrep -af "Xvfb $DISPLAY_NUM" >/dev/null 2>&1; then return 0; fi
   log "starting Xvfb on $DISPLAY_NUM ($SCREEN)"
-  setsid bash -c "Xvfb $DISPLAY_NUM -screen 0 $SCREEN >/tmp/mux-xvfb.log 2>&1" </dev/null &
+  setsid bash -c "Xvfb $DISPLAY_NUM -screen 0 $SCREEN >/tmp/arca-xvfb.log 2>&1" </dev/null &
   disown
   for _ in $(seq 1 20); do
     xdotool getdisplaygeometry >/dev/null 2>&1 && return 0
@@ -67,7 +67,7 @@ cmd_start() {
 }
 
 cmd_shot() {
-  local out="${1:-/tmp/mux-shot-$(date +%H%M%S).png}"
+  local out="${1:-/tmp/arca-shot-$(date +%H%M%S).png}"
   scrot -o "$out" && echo "$out"
 }
 

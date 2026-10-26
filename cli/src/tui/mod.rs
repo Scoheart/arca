@@ -1,5 +1,5 @@
-//! Interactive TUI — the no-arg `mux` experience. Built on The Elm Architecture
-//! (model/message/update/view) over `mux-core`. See `docs/tui-architecture.md`.
+//! Interactive TUI — the no-arg `arca` experience. Built on The Elm Architecture
+//! (model/message/update/view) over `arca-core`. See `docs/tui-architecture.md`.
 
 mod effect;
 mod message;

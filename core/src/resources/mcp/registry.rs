@@ -28,7 +28,7 @@ pub fn builtin_registry() -> Vec<RegistryEntry> {
 
 /// Ids of the two **managed** local sources. Manually-created and auto-discovered
 /// entries are stored as ordinary local-source files under
-/// `~/.mux/assets/mcps/sources/local/<id>.json`, exactly like an added local file — not in
+/// `~/.arca/assets/mcps/sources/local/<id>.json`, exactly like an added local file — not in
 /// `settings.registry`. They appear in the Sources list like any other source.
 pub const MANUAL_ID: &str = "manual";
 pub const DISCOVERED_ID: &str = "discovered";
@@ -249,7 +249,7 @@ pub(crate) fn read_registry_all_for_settings(settings: &Settings) -> Vec<Catalog
 
 /// Flag each entry with whether it's the last (highest-precedence) copy of its
 /// composite key in `ordered` — the copy `read_registry`'s dedup would keep.
-/// Pure over its input, so it's unit-testable without touching `~/.mux`.
+/// Pure over its input, so it's unit-testable without touching `~/.arca`.
 fn flag_in_effect(ordered: Vec<RegistryEntry>) -> Vec<CatalogItem> {
     use std::collections::HashMap;
     let mut last_idx: HashMap<String, usize> = HashMap::new();

@@ -157,7 +157,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn isolated_file() -> PathBuf {
-        let root = std::env::temp_dir().join(format!("mux-opencode-auth-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!("arca-opencode-auth-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&root).unwrap();
         root.join("auth.json")
     }
@@ -178,17 +178,17 @@ mod tests {
             &path,
             r#"{
   "unrelated": { "type": "oauth", "access": "opaque" },
-  "mux_existing": { "type": "api", "key": "old", "futureField": "preserved" }
+  "arca_existing": { "type": "api", "key": "old", "futureField": "preserved" }
 }"#,
         );
 
-        let prepared = prepare_auth(&path, "mux_existing", b"new-secret").unwrap();
+        let prepared = prepare_auth(&path, "arca_existing", b"new-secret").unwrap();
         assert!(prepared.sensitive);
         let value: serde_json::Value =
             serde_json::from_str(prepared.content.as_deref().unwrap()).unwrap();
-        assert_eq!(value["mux_existing"]["type"], "api");
-        assert_eq!(value["mux_existing"]["key"], "new-secret");
-        assert_eq!(value["mux_existing"]["futureField"], "preserved");
+        assert_eq!(value["arca_existing"]["type"], "api");
+        assert_eq!(value["arca_existing"]["key"], "new-secret");
+        assert_eq!(value["arca_existing"]["futureField"], "preserved");
         assert_eq!(value["unrelated"]["access"], "opaque");
         assert!(!format!("{prepared:?}").contains("new-secret"));
     }
@@ -196,8 +196,8 @@ mod tests {
     #[test]
     fn refuses_to_replace_an_existing_non_api_auth_entry() {
         let path = isolated_file();
-        write_private(&path, r#"{"mux_work":{"type":"oauth","access":"opaque"}}"#);
-        let error = prepare_auth(&path, "mux_work", b"new-secret").unwrap_err();
+        write_private(&path, r#"{"arca_work":{"type":"oauth","access":"opaque"}}"#);
+        let error = prepare_auth(&path, "arca_work", b"new-secret").unwrap_err();
         assert!(error.starts_with("agent_store_conflicted:"));
         assert!(!error.contains("new-secret"));
     }

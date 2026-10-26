@@ -8,7 +8,8 @@ use std::sync::{LazyLock, Mutex};
 use std::time::SystemTime;
 use uuid::Uuid;
 
-const MAX_SESSIONS: usize = 4;
+const MAX_SESSIONS: usize = 2;
+const MAX_CACHE_BYTES: u64 = 16 * 1024 * 1024;
 const MAX_FLOWS: usize = 5_000;
 const MAX_REMOVALS: usize = 5_000;
 const MAX_SUMMARY_BYTES: u64 = 100 * 1024 * 1024;
@@ -86,6 +87,7 @@ struct SessionIndex {
     entries: BTreeMap<String, CachedSummary>,
     removals: VecDeque<(u64, String)>,
     used_at: u64,
+    retained_bytes: u64,
 }
 
 #[derive(Default)]
@@ -127,7 +129,7 @@ pub(super) fn query(directory: &Path, revision: Option<&str>) -> Result<SummaryD
     if replace {
         cache.sessions.insert(directory.to_owned(), SessionIndex {
             identity, session_stamp, generation: Uuid::new_v4().to_string(), sequence: 0,
-            oldest_cursor: 0, entries: BTreeMap::new(), removals: VecDeque::new(), used_at,
+            oldest_cursor: 0, entries: BTreeMap::new(), removals: VecDeque::new(), used_at, retained_bytes: 0,
         });
     }
     let index = cache.sessions.get_mut(directory).expect("capture index was inserted");
@@ -145,10 +147,17 @@ pub(super) fn query(directory: &Path, revision: Option<&str>) -> Result<SummaryD
         .filter(|(changed_at, _)| *changed_at > sequence)
         .map(|(_, id)| id.clone()).collect::<BTreeSet<_>>().into_iter().collect())
         .unwrap_or_default();
-    Ok(SummaryDelta {
+    let result = SummaryDelta {
         revision: format!("{}:{}", index.generation, index.sequence), reset: since.is_none(),
         upserts, removed, count: index.entries.values().filter(|entry| entry.value.is_some()).count(),
-    })
+    };
+    // Session count alone does not bound large URLs/headers in summaries.
+    // Eviction only discards a read cache: a later cursor safely gets a reset.
+    while cache.sessions.values().map(|index| index.retained_bytes).sum::<u64>() > MAX_CACHE_BYTES {
+        let oldest = cache.sessions.iter().min_by_key(|(_, index)| index.used_at).map(|(path, _)| path.clone());
+        if let Some(path) = oldest { cache.sessions.remove(&path); } else { break; }
+    }
+    Ok(result)
 }
 
 fn refresh(index: &mut SessionIndex, directory: &Path) -> Result<(), String> {
@@ -210,6 +219,10 @@ fn refresh(index: &mut SessionIndex, directory: &Path) -> Result<(), String> {
     while index.removals.len() > MAX_REMOVALS {
         if let Some((sequence, _)) = index.removals.pop_front() { index.oldest_cursor = sequence; }
     }
+    // JSON lengths plus conservative node/stamp/key overhead; no additional
+    // copy of the cached strings is allocated to calculate the budget.
+    index.retained_bytes = bytes.saturating_add(index.entries.len() as u64 * 384)
+        .saturating_add(index.removals.len() as u64 * 96);
     Ok(())
 }
 
@@ -224,18 +237,20 @@ mod tests {
 
     fn session(home: &TestHome) -> PathBuf {
         let id = Uuid::new_v4().to_string();
-        let directory = home.home.join(".mux/captures").join(&id);
+        let directory = home.home.join(".arca/captures").join(&id);
         fs::create_dir_all(directory.join("summaries")).unwrap();
         fs::write(directory.join("session.json"), serde_json::to_vec(&super::super::CaptureSession {
             id, agent_id: "codex".into(), agent_name: "Codex".into(), target_id: "fixture".into(),
-            target_name: "Fixture".into(), pids: vec![], proxy_url: None, started_at: "2026-10-05T00:00:00Z".into(),
+            target_name: "Fixture".into(), pids: vec![], proxy_url: None, started_at: "2026-10-05T00:00:00Z".into(), loopback_tls: vec![], transport: super::super::CaptureTransport::Local,
         }).unwrap()).unwrap();
         directory
     }
 
     fn flow(directory: &Path, id: &str, status: u16) {
         let data = FlowSummary { id: id.into(), method: "GET".into(), url: "https://example.invalid/test".into(),
-            status: Some(status), started_at: 1.0, duration_ms: Some(3), error: None };
+            status: Some(status), started_at: 1.0, duration_ms: Some(3), error: None,
+            phase: Some("complete".into()), updated_at: None, request_bytes: None,
+            response_bytes: None, time_to_first_byte_ms: None, content_type: None, stream_type: None };
         fs::write(directory.join("summaries").join(format!("{id}.json")), serde_json::to_vec(&data).unwrap()).unwrap();
     }
 

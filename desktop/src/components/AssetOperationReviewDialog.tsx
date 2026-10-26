@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { RESOURCE_PRESENTATION } from "./resourcePresentation";
 import type { AssetCommandError, AssetOperationPlan, AssetRef, ConvergenceAction } from "../lib/types";
 import { assetIdentity } from "../lib/consumption";
@@ -137,11 +138,11 @@ function warningCopy(warning: string) {
   const agent = warning.slice(0, separator).split(" / ")[0];
   const reason = warning.slice(separator + 1).trim();
   const labels: Record<string, string> = {
-    mcp_config_drift: "MCP 配置与 MUX 不一致",
-    mcp_enabled_state_drift: "MCP 启用状态与 MUX 不一致",
+    mcp_config_drift: "MCP 配置与 Arca 不一致",
+    mcp_enabled_state_drift: "MCP 启用状态与 Arca 不一致",
     mcp_target_missing: "Agent 中缺少这份 MCP 配置",
-    model_active_state_drift: "当前 Model 与 MUX 记录不一致，请先刷新或重新选择当前 Model",
-    model_external_current: "当前 Model 由 Agent 外部配置管理，切换前需要先让 MUX 接管",
+    model_active_state_drift: "当前 Model 与 Arca 记录不一致，请先刷新或重新选择当前 Model",
+    model_external_current: "当前 Model 由 Agent 外部配置管理，切换前需要先让 Arca 接管",
     model_active_conflicted: "当前 Model 配置存在歧义，请先修复配置",
     model_owned_fields_drift: "该 Model 的托管字段已被外部修改",
     model_target_missing: "该 Model 的 Agent 配置缺失",
@@ -348,9 +349,9 @@ export function AssetOperationReviewDialog({
       <DialogShell
         kind="review"
         size="sm"
-        className="mux-mcp-delete-dialog"
+        className="arca-mcp-delete-dialog"
         title="删除 MCPs"
-        leading={<span className="mux-dialog-shell-glyph" aria-hidden="true"><TrashIcon /></span>}
+        leading={<span className="arca-dialog-shell-glyph" aria-hidden="true"><TrashIcon /></span>}
         busy={busy}
         onClose={() => void onCancel()}
         footerEnd={<>
@@ -360,17 +361,17 @@ export function AssetOperationReviewDialog({
           </button>
         </>}
       >
-        <div className="mux-mcp-delete-content">
+        <div className="arca-mcp-delete-content">
           {deletedAssets.map((change) => (
-            <strong className="mux-mcp-delete-name" key={assetKey(change.asset)}>
+            <strong className="arca-mcp-delete-name" key={assetKey(change.asset)}>
               {displayAssetName(change.asset, assetDisplayNames)}
             </strong>
           ))}
-          <p className="mux-mcp-delete-caption">
+          <p className="arca-mcp-delete-caption">
             {deletedAssets.flatMap((change) => change.summary.slice(1, 2)).join("；")
               || (affectedAgents.length ? `更新 ${affectedAgents.length} 个 Agent 的 MCP 配置` : "删除这份 MCP 配置")}
           </p>
-          {affectedAgents.length > 0 && <div className="mux-provider-update-agents">
+          {affectedAgents.length > 0 && <div className="arca-provider-update-agents">
             {affectedAgents.map((id) => {
               const label = displayAgentName(id, agentId, agentName, agentDisplayNames);
               return <span key={id} title={label} role="img" aria-label={label} tabIndex={0}>
@@ -378,9 +379,9 @@ export function AssetOperationReviewDialog({
               </span>;
             })}
           </div>}
-          {reviewError && <p role="alert" className="mux-review-error">{reviewError}</p>}
-          {!plan.can_commit && <p role="alert" className="mux-review-error">暂时无法删除，请查看原因。</p>}
-          {plan.warnings.length > 0 && <section className="mux-provider-update-issues">
+          <ToastNotice message={reviewError} />
+          {!plan.can_commit && <ToastNotice kind="warning" message="暂时无法删除，请查看原因。" />}
+          {plan.warnings.length > 0 && <section className="arca-provider-update-issues">
             {plan.warnings.map((warning) => <p key={warning}>{warningCopy(warning)}</p>)}
           </section>}
         </div>
@@ -394,8 +395,8 @@ export function AssetOperationReviewDialog({
       busy={busy} onClose={() => void onCancel()}
       footerEnd={<><button type="button" className="btn-secondary" disabled={busy} onClick={() => void onCancel()}>取消</button>
         <button type="button" className="btn-primary" disabled={busy || !plan.can_commit} onClick={() => void onCommit()}>{busy ? "更新中…" : "保存并同步"}</button></>}>
-      <div className="mux-provider-update-summary">
-        {plan.affected_agent_ids.length > 0 && <div className="mux-provider-update-agents">
+      <div className="arca-provider-update-summary">
+        {plan.affected_agent_ids.length > 0 && <div className="arca-provider-update-agents">
           {plan.affected_agent_ids.map((id) => {
             const label = displayAgentName(id, agentId, agentName, agentDisplayNames);
             return <span key={id} title={label} role="img" aria-label={label} tabIndex={0}>
@@ -403,9 +404,9 @@ export function AssetOperationReviewDialog({
             </span>;
           })}
         </div>}
-        {reviewError && <p role="alert" className="mux-review-error">{reviewError}</p>}
-        {!plan.can_commit && <p role="alert" className="mux-review-error">部分配置暂时无法更新，请查看原因。</p>}
-        {plan.warnings.length > 0 && <section className="mux-provider-update-issues">
+        <ToastNotice message={reviewError} />
+        {!plan.can_commit && <ToastNotice kind="warning" message="部分配置暂时无法更新，请查看原因。" />}
+        {plan.warnings.length > 0 && <section className="arca-provider-update-issues">
           {plan.warnings.map((warning) => <p key={warning}>{warningCopy(warning)}</p>)}
         </section>}
       </div>
@@ -420,12 +421,9 @@ export function AssetOperationReviewDialog({
       busy={busy}
       onClose={() => void onCancel()}
       status={!plan.can_commit ? (
-        <div className="mux-review-error" role="alert">存在冲突，暂不可继续。</div>
+        <ToastNotice kind="warning" message="存在冲突，暂不可继续。" />
       ) : reviewError ? (
-        <div className="mux-asset-review-error" role="alert">
-          <strong>操作未完成</strong>
-          <span>{reviewError}</span>
-        </div>
+        <ToastNotice message={`操作未完成 · ${reviewError}`} />
       ) : undefined}
       footerEnd={(
         <>
@@ -448,9 +446,9 @@ export function AssetOperationReviewDialog({
         </>
       )}
     >
-      <div className="mux-review-content mux-asset-review">
+      <div className="arca-review-content arca-asset-review">
         {isRemoveOnly && (
-          <section className="mux-asset-review-summary">
+          <section className="arca-asset-review-summary">
             <h3>影响摘要</h3>
             {plan.relationship_changes
               .filter((change) => change.action === "remove")
@@ -488,7 +486,7 @@ export function AssetOperationReviewDialog({
           </section>
         )}
         {isConfiguration && configChanges.length > 0 && (
-          <section className="mux-config-review">
+          <section className="arca-config-review">
             <h3>配置位置</h3>
             <ul>
               {configChanges.map((change) => (
@@ -501,13 +499,13 @@ export function AssetOperationReviewDialog({
               ))}
             </ul>
             {mcpLocationChanged && (
-              <p className="mux-asset-review-note">
-                只更新 MUX 后续使用的 MCP 配置位置；旧文件不会删除，现有 MCP 配置不会复制到新位置。
+              <p className="arca-asset-review-note">
+                只更新 Arca 后续使用的 MCP 配置位置；旧文件不会删除，现有 MCP 配置不会复制到新位置。
               </p>
             )}
             {modelLocationChanged && (
-              <p className="mux-asset-review-note">
-                只更新 MUX 后续使用的 Model 配置位置；旧文件不会删除，现有 Model 配置不会复制到新位置。
+              <p className="arca-asset-review-note">
+                只更新 Arca 后续使用的 Model 配置位置；旧文件不会删除，现有 Model 配置不会复制到新位置。
               </p>
             )}
           </section>
@@ -523,7 +521,7 @@ export function AssetOperationReviewDialog({
                   </span>
                   <code>{assetLabel(change.asset, assetDisplayNames)}</code>
                   {change.summary.length > 0 && (
-                    <span className="mux-central-change-summary">
+                    <span className="arca-central-change-summary">
                       {change.summary.map((item, index) => (
                         <small key={`${index}:${item}`}>{item}</small>
                       ))}
@@ -568,13 +566,13 @@ export function AssetOperationReviewDialog({
                   : [change.agent_id];
                 return (
                   <li
-                    className="mux-asset-review-relationship"
+                    className="arca-asset-review-relationship"
                     key={`${change.agent_id}:${assetIdentity(change.asset)}:${index}`}
                   >
                     <span data-action={change.after_enabled ? "enable" : "disable"}>
                       {change.after_enabled ? "启用" : "停用"}
                     </span>
-                    <span className="mux-asset-review-relationship-copy">
+                    <span className="arca-asset-review-relationship-copy">
                       <strong>{assetLabel(change.asset, assetDisplayNames)}</strong>
                       <small>
                         {displayAgentName(
@@ -605,12 +603,12 @@ export function AssetOperationReviewDialog({
         {plan.relationship_changes.length > 0 && <section>
           <h3>{isConfiguration ? "Skills 影响" : isAgentSkillPlan ? "生效范围" : agentName ? "Agent 变更" : "关系变化"}</h3>
           {isAgentSkillPlan && compatibleAgentCount > 0 && (
-            <p className="mux-asset-review-note">
+            <p className="arca-asset-review-note">
               只写入一个目录；兼容 Agent 会读取同一份 Skill，不会重复安装。
             </p>
           )}
           {(
-            <ul className={isAgentSkillPlan ? "mux-skill-impact-list" : undefined}>
+            <ul className={isAgentSkillPlan ? "arca-skill-impact-list" : undefined}>
               {plan.relationship_changes.map((change, index) => {
                 const isDirect = !isAgentSkillPlan || change.agent_id === agentId;
                 const action = change.action === "add"
@@ -618,13 +616,13 @@ export function AssetOperationReviewDialog({
                   : isDirect ? "直接移除" : "同步不可见";
                 return (
                 <li
-                  className="mux-asset-review-relationship"
+                  className="arca-asset-review-relationship"
                   key={`${change.agent_id}:${assetIdentity(change.asset)}:${index}`}
                 >
                   <span data-action={change.action} data-impact={isDirect ? "direct" : "compatible"}>
                     {isAgentSkillPlan ? action : change.action === "add" ? "添加" : "移除"}
                   </span>
-                  <span className="mux-asset-review-relationship-copy">
+                  <span className="arca-asset-review-relationship-copy">
                     <strong>
                       {displayAgentName(change.agent_id, agentId, agentName, agentDisplayNames)}
                     </strong>
@@ -649,7 +647,7 @@ export function AssetOperationReviewDialog({
           </DialogDisclosure>
         )}
         {plan.warnings.length > 0 && (
-          <section className="mux-asset-review-warnings">
+          <section className="arca-asset-review-warnings">
             <h3>需要处理</h3>
             <ul>{plan.warnings.map((warning) => <li key={warning}>{warningCopy(warning)}</li>)}</ul>
           </section>

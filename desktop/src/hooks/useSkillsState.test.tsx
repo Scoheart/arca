@@ -320,7 +320,7 @@ describe("useSkillsState", () => {
 
   it("normalizes unknown rejection values without leaking their contents", async () => {
     vi.mocked(api.commitOperation).mockRejectedValueOnce(
-      new Error("private path: /Users/example/.mux/skills"),
+      new Error("private path: /Users/example/.arca/skills"),
     );
     const { result } = renderHook(() => useSkillsState());
     await waitFor(() => expect(result.current.inventory).not.toBeNull());

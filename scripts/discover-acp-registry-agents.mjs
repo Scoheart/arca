@@ -31,7 +31,7 @@ async function github(path) {
   const response = await fetch(`https://api.github.com/repos/${repository}${suffix}`, {
     headers: {
       accept: "application/vnd.github+json",
-      "user-agent": "MUX-Agent-Capability-Audit/1.0",
+      "user-agent": "Arca-Agent-Capability-Audit/1.0",
       "x-github-api-version": "2022-11-28",
     },
   });
@@ -81,7 +81,7 @@ const manifests = tree.tree
 const records = await mapWithConcurrency(manifests, 6, async (entry) => {
   const manifestRawUrl = `https://raw.githubusercontent.com/${repository}/${commitSha}/${entry.path}`;
   const response = await fetch(manifestRawUrl, {
-    headers: { "user-agent": "MUX-Agent-Capability-Audit/1.0" },
+    headers: { "user-agent": "Arca-Agent-Capability-Audit/1.0" },
   });
   if (!response.ok) throw new Error(`${entry.path}: HTTP ${response.status}`);
   const manifest = await response.json();

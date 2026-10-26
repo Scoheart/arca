@@ -6,10 +6,10 @@ use std::time::Duration;
 
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
-use mux_core::application::agents::AgentInfo;
-use mux_core::application::mcp::operations::InstalledMcp;
-use mux_core::application::mcp::sources::SourceView;
-use mux_core::domain::types::{HttpConfig, RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::application::agents::AgentInfo;
+use arca_core::application::mcp::operations::InstalledMcp;
+use arca_core::application::mcp::sources::SourceView;
+use arca_core::domain::types::{HttpConfig, RegistryConfig, RegistryEntry, StdioConfig};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Screen {
@@ -289,7 +289,7 @@ impl AgentForm {
 
     /// Build (id, AgentDefinition). Core's `agents::put` does the real validation
     /// (id/key/global path non-empty); this just assembles the fields.
-    pub fn to_def(&self) -> (String, mux_core::domain::types::AgentDefinition) {
+    pub fn to_def(&self) -> (String, arca_core::domain::types::AgentDefinition) {
         let opt = |s: &str| {
             let t = s.trim();
             if t.is_empty() {
@@ -300,7 +300,7 @@ impl AgentForm {
         };
         (
             self.id.trim().to_string(),
-            mux_core::domain::types::AgentDefinition {
+            arca_core::domain::types::AgentDefinition {
                 global: opt(&self.global),
                 project: self.legacy_project.clone(),
                 format: self.format.clone(),
@@ -488,7 +488,7 @@ impl EditorState {
     /// Validate the form and build a `RegistryEntry`, preserving `origin`.
     pub fn to_entry(
         &self,
-        origin: Option<mux_core::domain::types::RegistryOrigin>,
+        origin: Option<arca_core::domain::types::RegistryOrigin>,
     ) -> Result<RegistryEntry, String> {
         let name = self.name.trim();
         if name.is_empty() {

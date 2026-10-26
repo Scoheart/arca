@@ -1,7 +1,7 @@
 mod support;
 
-use mux_core::settings::{load_settings, mutate_settings};
-use mux_core::skills::{
+use arca_core::settings::{load_settings, mutate_settings};
+use arca_core::skills::{
     commit_remove, commit_repair, hash_tree, plan_remove, plan_repair, FileChangeKind,
     PlanRemoveRequest, PlanRepairRequest, RepairKind, SkillCommitRequest, SkillError, SkillSource,
     SkillsPaths,
@@ -60,7 +60,7 @@ fn remove_keeps_imported_provenance_backup_separate_from_removal_backup() {
     let imported_backup = fixture
         .home
         .home
-        .join(".mux/backups/skills/import-original/safe");
+        .join(".arca/backups/skills/import-original/safe");
     write_skill(&imported_backup, "safe", "Managed fixture");
     assert_eq!(hash_tree(&imported_backup).unwrap(), central_hash);
     mutate_settings(|settings| {
@@ -72,7 +72,7 @@ fn remove_keeps_imported_provenance_backup_separate_from_removal_backup() {
             .unwrap()
             .source = SkillSource::Imported {
             original_path: "~/.cursor/skills/safe".into(),
-            backup_path: "~/.mux/backups/skills/import-original/safe".into(),
+            backup_path: "~/.arca/backups/skills/import-original/safe".into(),
         };
     })
     .unwrap();
@@ -175,7 +175,7 @@ fn remove_missing_central_cleans_relative_managed_link_and_preserves_foreign_bro
     let fixture = SkillsFixture::managed_on_targets(name, &["claude-user"]);
     let owned = fixture.target("claude-user", name);
     fs::remove_file(&owned).unwrap();
-    symlink(format!("../../.mux/assets/skills/items/{name}"), &owned).unwrap();
+    symlink(format!("../../.arca/assets/skills/items/{name}"), &owned).unwrap();
     let foreign = fixture.target("cursor-user", name);
     fs::create_dir_all(foreign.parent().unwrap()).unwrap();
     let foreign_destination = std::path::PathBuf::from(format!("../../foreign-missing/{name}"));
@@ -366,7 +366,7 @@ fn central_repair_restores_missing_local_copy_and_updates_changed_source() {
 #[test]
 fn central_repair_uses_imported_backup_only_when_hash_matches() {
     let fixture = SkillsFixture::managed("safe");
-    let backup = fixture.home.home.join(".mux/backups/skills/imported/safe");
+    let backup = fixture.home.home.join(".arca/backups/skills/imported/safe");
     write_skill(&backup, "safe", "Managed fixture");
     assert_eq!(
         hash_tree(&backup).unwrap(),
@@ -381,7 +381,7 @@ fn central_repair_uses_imported_backup_only_when_hash_matches() {
             .unwrap()
             .source = SkillSource::Imported {
             original_path: "~/.cursor/skills/safe".into(),
-            backup_path: "~/.mux/backups/skills/imported/safe".into(),
+            backup_path: "~/.arca/backups/skills/imported/safe".into(),
         };
     })
     .unwrap();
@@ -409,7 +409,7 @@ fn central_repair_uses_imported_backup_only_when_hash_matches() {
 }
 
 #[test]
-fn central_repair_rejects_imported_backup_outside_mux_backup_root() {
+fn central_repair_rejects_imported_backup_outside_arca_backup_root() {
     let fixture = SkillsFixture::managed("safe");
     let outside = fixture.home.home.join("outside-backup/safe");
     write_skill(&outside, "safe", "Managed fixture");
@@ -459,7 +459,7 @@ fn central_repair_backs_up_reappeared_content_before_restoring_reviewed_candidat
     let backup_path = private_plan["input"]["backup_path"]
         .as_str()
         .expect("central repair must bind its private backup path");
-    assert!(backup_path.starts_with("~/.mux/backups/skills/repair-"));
+    assert!(backup_path.starts_with("~/.arca/backups/skills/repair-"));
     assert!(backup_path.ends_with("/safe"));
 
     write_skill(&fixture.central("safe"), "safe", "Reappeared fixture");

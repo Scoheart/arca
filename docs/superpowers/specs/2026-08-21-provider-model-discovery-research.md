@@ -4,7 +4,7 @@
 
 ## 调研口径
 
-本调研以 MUX 当前内置的 51 个 Provider 类型为全集，先查 Provider 官方 API 文档，再对 MUX 默认连接的候选列表地址做一次无 API Key 的只读 `GET` 路由探测。探测不携带用户凭据、不调用推理、不修改任何 Provider 侧状态。
+本调研以 Arca 当前内置的 51 个 Provider 类型为全集，先查 Provider 官方 API 文档，再对 Arca 默认连接的候选列表地址做一次无 API Key 的只读 `GET` 路由探测。探测不携带用户凭据、不调用推理、不修改任何 Provider 侧状态。
 
 HTTP `200` 可确认公开目录；`401` 可确认路由存在且要求鉴权。单独的 `403` 不作为充分证据，因为当前网络出口也会拦截部分域名；这类 Provider 必须同时有官方文档、OpenAI-compatible 契约或同产品已验证路由作为依据。
 
@@ -111,7 +111,7 @@ vllm
 | Provider | 原因 |
 |---|---|
 | `github-models` | GitHub 已宣布并于 2026-07-30 完全关闭 GitHub Models；模型目录和推理 API 均不再可用。当前目录请求返回 retirement 错误。保留现有 Provider 记录属于另一个兼容性清理任务，本功能不扩大到删除它。 |
-| `wandb` | 官方 `/v1/models` 除 Bearer Key 外还要求 `OpenAI-Project: <team>/<project>`。MUX 当前 Provider schema 没有该非敏感租户字段；在没有可靠参数来源时不应发送一个注定不完整的请求。 |
+| `wandb` | 官方 `/v1/models` 除 Bearer Key 外还要求 `OpenAI-Project: <team>/<project>`。Arca 当前 Provider schema 没有该非敏感租户字段；在没有可靠参数来源时不应发送一个注定不完整的请求。 |
 | `custom` | 任意 Custom Provider 是否实现 `/models` 无法从现有 schema 确认。为了避免携带 Key 对任意地址盲探测，本期只保留手工 Model ID；后续可增加用户显式配置的 discovery path。 |
 
 ## 代表性官方依据

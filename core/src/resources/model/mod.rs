@@ -2,13 +2,17 @@
 //! configuration writers.
 //!
 //! Managed Agents are written only through verified user-level configuration
-//! surfaces. Multi-model Agents keep MUX provider entries independently from
+//! surfaces. Multi-model Agents keep Arca provider entries independently from
 //! their one active primary pointer; unsupported or insecure surfaces remain
 //! guidance-only.
 
 pub(crate) mod adapters;
 mod claude_desktop;
 pub(crate) mod credential;
+#[cfg(any(target_os = "macos", test))]
+mod credential_session;
+#[cfg(target_os = "macos")]
+mod credential_session_native;
 mod discovery;
 mod open_code_auth;
 
@@ -53,6 +57,8 @@ use toml_edit::{Array, Document, Item, Table};
 use uuid::Uuid;
 use zeroize::{Zeroize, Zeroizing};
 
+// Persisted credential and native ownership identifiers intentionally remain stable.
+// See analysis/18-arca-brand-transition.md; these strings must not be brand-replaced.
 const KEYCHAIN_ACCOUNT: &str = "api-key";
 const CREDENTIAL_ROLLBACK_PREFIX: &str = "__asset-operation-rollback__";
 const PRIVATE_FILE_SNAPSHOT_SERVICE_PREFIX: &str = "com.scoheart.mux.private-file-snapshot";
@@ -122,7 +128,7 @@ pub(crate) fn set_test_credential_delete_error(
 fn test_credential_key(service: &str) -> String {
     format!(
         "{}::{service}",
-        std::env::var("MUX_TEST_PROBE_ROOT").unwrap_or_default()
+        crate::brand::env("ARCA_TEST_PROBE_ROOT").unwrap_or_default()
     )
 }
 
@@ -484,6 +490,200 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://tokenharbor.ai",
             },
         ],
+        "iteracompute" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.iteracompute.com/v1",
+        }],
+        "munito" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiCompletions,
+                base_url: "https://api.munito.ai/inference/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.munito.ai/inference",
+            },
+        ],
+        "ppq" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiCompletions,
+                base_url: "https://api.ppq.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.ppq.ai",
+            },
+        ],
+        "river" => &[ModelProviderEndpointView {
+            protocol: OpenaiCompletions,
+            base_url: "https://api.river.ai/v1",
+        }],
+        "trustedrouter" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiCompletions,
+                base_url: "https://api.trustedrouter.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.trustedrouter.com",
+            },
+        ],
+        "unorouter" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.unorouter.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.unorouter.com",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://api.unorouter.com/v1beta",
+            },
+        ],
+        "orcarouter" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.orcarouter.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.orcarouter.ai",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://api.orcarouter.ai/v1beta",
+            },
+        ],
+        "constellation-gate" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://gateway.constellationgate.ai",
+        }],
+        "coralbricks" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://inference.coralbricks.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://inference.coralbricks.ai",
+            },
+        ],
+        "agnes-ai" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://apihub.agnes-ai.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://apihub.agnes-ai.com",
+            },
+        ],
+        "agnes-ai-cn" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.agnes-ai.cn/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.agnes-ai.cn",
+            },
+        ],
+        "meta" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiCompletions,
+                base_url: "https://api.meta.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.meta.ai",
+            },
+        ],
+        "maximo-ai" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.maximoai.co/v1",
+        }],
+        "krafton-raon" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://raon-api.krafton.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://raon-api.krafton.ai",
+            },
+        ],
+        "ant-ling" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.ant-ling.com/anthropic",
+        }],
+        "antdigital-dtmaas" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://maas-api.antdigital.com/v1",
+        }],
+        "atria" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiCompletions,
+                base_url: "https://api.atria-asi.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.atria-asi.ai",
+            },
+        ],
+        "unisound" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://maas-api.unisound.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://maas-api.unisound.com/anthropic",
+            },
+        ],
+        "bilibili-index-translate" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://index-translate.bilibili.com/v1",
+        }],
+        "sensenova" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://token.sensenova.cn/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://token.sensenova.cn",
+            },
+        ],
+        "akashml" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.akashml.com/anthropic",
+        }],
+        "0g-private-computer" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://router-api.0g.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://router-api.0g.ai",
+            },
+        ],
+        "gonkarouter" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.gonkarouter.io",
+        }],
+        "anyrouter" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://anyrouter.dev/api/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://anyrouter.dev/api",
+            },
+        ],
         "minimax" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.minimax.io/anthropic",
@@ -576,6 +776,28 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://tokenhub-intl.tencentcloudmaas.com/plan/anthropic",
         }],
+        "scnet" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.scnet.cn/api/llm/anthropic",
+        }],
+        "oxion-ai" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://oxionai.com",
+        }],
+        "larprouter" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://larprouter.com",
+        }],
+        "stark-relay" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://starkrelay.bond/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://starkrelay.bond",
+            },
+        ],
         _ => &[],
     }
 }
@@ -780,6 +1002,41 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "agnes-ai",
+        name: "Agnes AI",
+        default_base_url: Some("https://apihub.agnes-ai.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "agnes-ai-cn",
+        name: "Agnes AI (China)",
+        default_base_url: Some("https://api.agnes-ai.cn/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "meta",
+        name: "Meta Model API",
+        default_base_url: Some("https://api.meta.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "maximo-ai",
+        name: "Maximo AI",
+        default_base_url: Some("https://api.maximoai.co/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "krafton-raon",
+        name: "KRAFTON Raon",
+        default_base_url: Some("https://raon-api.krafton.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "ollama-cloud",
         name: "Ollama Cloud",
         default_base_url: Some("https://ollama.com/v1"),
@@ -826,6 +1083,272 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         name: "Token Harbor",
         default_base_url: Some("https://tokenharbor.ai/v1"),
         default_protocol: ModelProtocol::OpenaiResponses,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "flock",
+        name: "FLock API Platform",
+        default_base_url: Some("https://api.flock.io/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "codecraft",
+        name: "CodeCraft API",
+        default_base_url: Some("https://codecraftapi.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "beatapi",
+        name: "BeatAPI",
+        default_base_url: Some("https://api.beatapi.io/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "experiential-labs",
+        name: "Experiential Labs",
+        default_base_url: Some("https://api.experientiallabs.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "runanywhere",
+        name: "RunAnywhere",
+        default_base_url: Some("https://inference.runanywhere.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "coralbricks",
+        name: "Coral Bricks",
+        default_base_url: Some("https://inference.coralbricks.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "clean-apis",
+        name: "Clean APIs",
+        default_base_url: Some("https://cleanapis.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "dolphin",
+        name: "Dolphin AI",
+        default_base_url: Some("https://lighthouse.dphn.ai/run/text-v/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "iteracompute",
+        name: "IteraCompute",
+        default_base_url: Some("https://api.iteracompute.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "llmtr",
+        name: "LLMTR",
+        default_base_url: Some("https://llmtr.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "munito",
+        name: "Munito",
+        default_base_url: Some("https://api.munito.ai/inference/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "nous-portal",
+        name: "Nous Portal",
+        default_base_url: Some("https://inference-api.nousresearch.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "ppq",
+        name: "PayPerQ",
+        default_base_url: Some("https://api.ppq.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "river",
+        name: "River AI",
+        default_base_url: Some("https://api.river.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "trustedrouter",
+        name: "TrustedRouter",
+        default_base_url: Some("https://api.trustedrouter.com/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "unorouter",
+        name: "UnoRouter",
+        default_base_url: Some("https://api.unorouter.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "orcarouter",
+        name: "OrcaRouter",
+        default_base_url: Some("https://api.orcarouter.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "fikra",
+        name: "Fikra API",
+        default_base_url: Some("https://api.fikraapi.co.ke/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "constellation-gate",
+        name: "Constellation Gate",
+        default_base_url: Some("https://gateway.constellationgate.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "ant-ling",
+        name: "Ant Ling (蚂蚁百灵)",
+        default_base_url: Some("https://api.ant-ling.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "antdigital-dtmaas",
+        name: "Ant Digital DTMaaS (蚂蚁数科)",
+        default_base_url: Some("https://maas-api.antdigital.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "unisound",
+        name: "Unisound MaaS (云知声)",
+        default_base_url: Some("https://maas-api.unisound.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "bilibili-index-translate",
+        name: "Bilibili Index-Translate (哔哩哔哩)",
+        default_base_url: Some("https://index-translate.bilibili.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "sensenova",
+        name: "SenseNova Token Plan (商汤日日新)",
+        default_base_url: Some("https://token.sensenova.cn/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "akashml",
+        name: "AkashML",
+        default_base_url: Some("https://api.akashml.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "indicstack",
+        name: "IndicStack",
+        default_base_url: Some("https://api.indicstack.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "0g-private-computer",
+        name: "0G Private Computer",
+        default_base_url: Some("https://router-api.0g.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "gonkarouter",
+        name: "GonkaRouter",
+        default_base_url: Some("https://api.gonkarouter.io/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "runinfra",
+        name: "RunInfra",
+        default_base_url: Some("https://api.runinfra.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "nomask",
+        name: "NoMask",
+        default_base_url: Some("https://nomask.ai/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "anyrouter",
+        name: "AnyRouter",
+        default_base_url: Some("https://anyrouter.dev/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "yeta",
+        name: "Yeta",
+        default_base_url: Some("https://platform.yeta.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "scnet",
+        name: "SCNet (超算互联网)",
+        default_base_url: Some("https://api.scnet.cn/api/llm/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "oxion-ai",
+        name: "Oxion AI",
+        default_base_url: Some("https://oxionai.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "inferx",
+        name: "InferX",
+        default_base_url: Some("https://model.inferx.net/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "blazerail",
+        name: "BlazeRail",
+        default_base_url: Some("https://api.blazerail.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "larprouter",
+        name: "LarpRouter",
+        default_base_url: Some("https://larprouter.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "stark-relay",
+        name: "Stark Relay",
+        default_base_url: Some("https://starkrelay.bond/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
     ModelProviderView {
@@ -1001,6 +1524,27 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         name: "Mistral AI",
         default_base_url: Some("https://api.mistral.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "sarashina",
+        name: "Sarashina",
+        default_base_url: Some("https://api.sarashina.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "liquid-ai",
+        name: "Liquid AI",
+        default_base_url: Some("https://inference.liquid.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "atria",
+        name: "Atria",
+        default_base_url: Some("https://api.atria-asi.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
         category: "official",
     },
     ModelProviderView {
@@ -1468,6 +2012,9 @@ pub fn infer_provider(base_url: &str) -> String {
         "generativelanguage.googleapis.com" => "google",
         "api.x.ai" => "xai",
         "api.mistral.ai" => "mistral",
+        "api.sarashina.ai" => "sarashina",
+        "inference.liquid.ai" => "liquid-ai",
+        "api.atria-asi.ai" => "atria",
         "api.cohere.ai" => "cohere",
         "api.deepseek.com" => "deepseek",
         "api.groq.com" => "groq",
@@ -1491,6 +2038,49 @@ pub fn infer_provider(base_url: &str) -> String {
         "llm.onerouter.pro" => "infron",
         "api.apinex.bond" => "apinex",
         "tokenharbor.ai" => "tokenharbor",
+        "api.flock.io" => "flock",
+        "codecraftapi.com" => "codecraft",
+        "api.beatapi.io" => "beatapi",
+        "api.experientiallabs.ai" => "experiential-labs",
+        "inference.runanywhere.ai" => "runanywhere",
+        "inference.coralbricks.ai" => "coralbricks",
+        "apihub.agnes-ai.com" => "agnes-ai",
+        "api.agnes-ai.cn" => "agnes-ai-cn",
+        "api.meta.ai" => "meta",
+        "api.maximoai.co" => "maximo-ai",
+        "raon-api.krafton.ai" => "krafton-raon",
+        "cleanapis.com" => "clean-apis",
+        "lighthouse.dphn.ai" => "dolphin",
+        "api.iteracompute.com" => "iteracompute",
+        "llmtr.com" => "llmtr",
+        "api.munito.ai" | "api.eu.munito.ai" | "api.us.munito.ai" => "munito",
+        "inference-api.nousresearch.com" => "nous-portal",
+        "api.ppq.ai" => "ppq",
+        "api.river.ai" => "river",
+        "api.trustedrouter.com" => "trustedrouter",
+        "api.unorouter.com" => "unorouter",
+        "api.orcarouter.ai" => "orcarouter",
+        "api.fikraapi.co.ke" => "fikra",
+        "gateway.constellationgate.ai" => "constellation-gate",
+        "api.ant-ling.com" => "ant-ling",
+        "maas-api.antdigital.com" => "antdigital-dtmaas",
+        "maas-api.unisound.com" => "unisound",
+        "index-translate.bilibili.com" => "bilibili-index-translate",
+        "token.sensenova.cn" => "sensenova",
+        "api.akashml.com" => "akashml",
+        "api.indicstack.ai" => "indicstack",
+        "router-api.0g.ai" => "0g-private-computer",
+        "api.gonkarouter.io" => "gonkarouter",
+        "api.runinfra.ai" => "runinfra",
+        "nomask.ai" => "nomask",
+        "anyrouter.dev" => "anyrouter",
+        "platform.yeta.ai" => "yeta",
+        "api.scnet.cn" => "scnet",
+        "oxionai.com" => "oxion-ai",
+        "model.inferx.net" => "inferx",
+        "api.blazerail.com" => "blazerail",
+        "larprouter.com" => "larprouter",
+        "starkrelay.bond" => "stark-relay",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -1807,7 +2397,7 @@ fn materialize_profile_for_agent(
             materialized.native_ids.insert("__mux_provider_name".into(), provider.name.clone());
         }
         if materialized.native_ids.get("opencode")
-            .is_none_or(|id| id == &mux_profile_id(&profile.id)) {
+            .is_none_or(|id| id == &arca_profile_id(&profile.id)) {
             let id = generated_open_code_provider_id(&settings, profile);
             materialized.native_ids.insert("opencode".into(), id.clone());
             materialized.native_ids.insert("__mux_generated_opencode_provider".into(), id);
@@ -2059,7 +2649,7 @@ fn consolidate_provider_credentials() -> Result<bool, String> {
             }
         }
         // Keep per-Profile credentials. Existing Agent helpers may still
-        // reference them until the user explicitly restores MUX desired state.
+        // reference them until the user explicitly restores Arca desired state.
     }
     Ok(changed)
 }
@@ -2198,7 +2788,7 @@ pub(crate) fn prepare_profile_draft(
         }
         None => {
             if !profile.id.is_empty() {
-                return Err("invalid_asset: Model Profile id is generated by MUX".into());
+                return Err("invalid_asset: Model Profile id is generated by Arca".into());
             }
             if !profile.native_ids.is_empty() {
                 return Err(
@@ -2554,7 +3144,7 @@ fn profile_credential_shell_command(profile: &ModelProfile) -> String {
 fn read_credential_service_checked(service: &str) -> Result<Option<Vec<u8>>, String> {
     #[cfg(any(test, debug_assertions))]
     {
-        if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
+        if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
             #[cfg(test)]
             if let Some(error) = TEST_CREDENTIAL_READ_ERROR.with(|slot| slot.borrow().clone()) {
                 return Err(error);
@@ -2566,39 +3156,18 @@ fn read_credential_service_checked(service: &str) -> Result<Option<Vec<u8>>, Str
                 .cloned());
         }
     }
-    let output = Command::new("/usr/bin/security")
-        .args([
-            "find-generic-password",
-            "-w",
-            "-s",
-            service,
-            "-a",
-            KEYCHAIN_ACCOUNT,
-        ])
-        .stderr(Stdio::null())
-        .output()
-        .map_err(|_| "credential_read_failed: could not start the Keychain helper".to_string())?;
-    if output.status.code() == Some(44) {
-        return Ok(None);
+    if credential_session::managed(service) {
+        credential_session_native::password(service)
+    } else {
+        keychain::password(service, KEYCHAIN_ACCOUNT)
     }
-    if !output.status.success() {
-        return Err("credential_read_failed: Keychain did not authorize a reliable credential read".into());
-    }
-    let mut value = output.stdout;
-    while value
-        .last()
-        .is_some_and(|byte| matches!(byte, b'\n' | b'\r'))
-    {
-        value.pop();
-    }
-    Ok(Some(value))
 }
 
 #[cfg(not(target_os = "macos"))]
 fn read_credential_service_checked(service: &str) -> Result<Option<Vec<u8>>, String> {
     #[cfg(any(test, debug_assertions))]
     {
-        if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
+        if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
             #[cfg(test)]
             if let Some(error) = TEST_CREDENTIAL_READ_ERROR.with(|slot| slot.borrow().clone()) {
                 return Err(error);
@@ -2621,7 +3190,7 @@ fn credential_service_exists_checked(service: &str) -> Result<bool, String> {
     // machine. Never consult the user's Keychain from a test process.
     #[cfg(any(test, debug_assertions))]
     {
-        if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
+        if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
             return Ok(TEST_CREDENTIALS
                 .lock()
                 .unwrap_or_else(|error| error.into_inner())
@@ -2630,21 +3199,7 @@ fn credential_service_exists_checked(service: &str) -> Result<bool, String> {
     }
     #[cfg(target_os = "macos")]
     {
-        let status = Command::new("/usr/bin/security")
-            .args([
-                "find-generic-password",
-                "-s",
-                service,
-                "-a",
-                KEYCHAIN_ACCOUNT,
-            ])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-            .map_err(|_| "credential_read_failed: could not start the Keychain helper".to_string())?;
-        if status.success() { Ok(true) }
-        else if status.code() == Some(44) { Ok(false) }
-        else { Err("credential_read_failed: Keychain credential presence could not be determined".into()) }
+        keychain::revision(service, KEYCHAIN_ACCOUNT).map(|revision| revision.is_some())
     }
     #[cfg(not(target_os = "macos"))]
     Ok(false)
@@ -2659,7 +3214,7 @@ fn credential_service_exists(service: &str) -> bool {
 fn set_credential_service(service: &str, credential: &[u8]) -> Result<(), String> {
     #[cfg(any(test, debug_assertions))]
     {
-        if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
+        if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
             TEST_CREDENTIALS
                 .lock()
                 .unwrap_or_else(|error| error.into_inner())
@@ -2670,14 +3225,18 @@ fn set_credential_service(service: &str, credential: &[u8]) -> Result<(), String
     if credential.contains(&b'\n') || credential.contains(&b'\r') {
         return Err("API key cannot contain a newline".into());
     }
-    keychain::set_password(service, KEYCHAIN_ACCOUNT, credential)
+    if credential_session::managed(service) {
+        credential_session_native::set_password(service, credential)
+    } else {
+        keychain::set_password(service, KEYCHAIN_ACCOUNT, credential)
+    }
 }
 
 #[cfg(not(target_os = "macos"))]
 fn set_credential_service(service: &str, credential: &[u8]) -> Result<(), String> {
     #[cfg(any(test, debug_assertions))]
     {
-        if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
+        if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
             TEST_CREDENTIALS
                 .lock()
                 .unwrap_or_else(|error| error.into_inner())
@@ -2701,7 +3260,7 @@ fn delete_credential_service_authoritative(
 ) -> Result<CredentialDeleteOutcome, String> {
     #[cfg(any(test, debug_assertions))]
     {
-        if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
+        if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
             #[cfg(test)]
             if let Some(error) = test_credential_delete_error() {
                 return Err(error);
@@ -2718,6 +3277,13 @@ fn delete_credential_service_authoritative(
             });
         }
     }
+    if credential_session::managed(service) {
+        credential_session_native::remove(service, || delete_native_credential_service(service))
+    } else { delete_native_credential_service(service) }
+}
+
+#[cfg(target_os = "macos")]
+fn delete_native_credential_service(service: &str) -> Result<CredentialDeleteOutcome, String> {
     let output = Command::new("/usr/bin/security")
         .args([
             "delete-generic-password",
@@ -2750,7 +3316,7 @@ fn delete_credential_service_authoritative(
 ) -> Result<CredentialDeleteOutcome, String> {
     #[cfg(any(test, debug_assertions))]
     {
-        if std::env::var_os("MUX_TEST_PROBE_ROOT").is_some() {
+        if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
             #[cfg(test)]
             if let Some(error) = test_credential_delete_error() {
                 return Err(error);
@@ -2784,6 +3350,39 @@ fn read_credential_checked(profile_id: &str) -> Result<Option<Vec<u8>>, String> 
     if legacy != service { read_credential_service_checked(&legacy) } else { Ok(None) }
 }
 
+/// Runtime and transaction reads share the application authorization session;
+/// each lookup still verifies the authoritative source item's metadata revision.
+fn read_runtime_credential_service(service: &str) -> Result<Option<Vec<u8>>, String> {
+    read_credential_service_checked(service)
+}
+
+pub(crate) fn unlock_credential_session(retry: bool) -> Result<serde_json::Value, String> {
+    #[cfg(any(test, debug_assertions))]
+    if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
+        return Ok(serde_json::json!({"unlocked": true, "expires_in_seconds": 28800, "sync_deferred": false}));
+    }
+    #[cfg(target_os = "macos")]
+    { serde_json::to_value(credential_session_native::unlock(retry)?).map_err(|_| "credential_session_unavailable".into()) }
+    #[cfg(not(target_os = "macos"))]
+    { let _ = retry; Ok(serde_json::json!({"unlocked": true, "expires_in_seconds": 0, "sync_deferred": false})) }
+}
+
+pub(crate) fn clear_credential_session() {
+    #[cfg(target_os = "macos")]
+    credential_session_native::clear();
+}
+
+pub(crate) fn credential_session_status() -> serde_json::Value {
+    #[cfg(target_os = "macos")]
+    { serde_json::to_value(credential_session_native::status()).unwrap_or(serde_json::Value::Null) }
+    #[cfg(not(target_os = "macos"))]
+    { serde_json::json!({"unlocked": true, "expires_in_seconds": 0, "sync_deferred": false}) }
+}
+
+fn read_runtime_provider_credential(provider_id: &str) -> Result<Option<Vec<u8>>, String> {
+    read_runtime_credential_service(&provider_keychain_service(provider_id))
+}
+
 fn credential_exists(profile_id: &str) -> bool {
     let service = keychain_service(profile_id);
     credential_exists_for_service(profile_id, &service, credential_service_exists)
@@ -2799,7 +3398,7 @@ fn credential_exists_for_service(
     #[cfg(any(test, debug_assertions))]
     {
         keychain_exists
-            || std::env::var("MUX_TEST_MODEL_CREDENTIAL_PROFILES")
+            || crate::brand::env("ARCA_TEST_MODEL_CREDENTIAL_PROFILES")
                 .ok()
                 .is_some_and(|profiles| profiles.split(',').any(|item| item == profile_id))
     }
@@ -2979,7 +3578,7 @@ pub(crate) fn prepare_provider_draft(
             .map(|name| ApiKeySource::Env { name });
     }
     provider.api_key_source = match provider.api_key_source {
-        Some(ApiKeySource::MuxStore) => Some(ApiKeySource::MuxStore),
+        Some(ApiKeySource::ArcaStore) => Some(ApiKeySource::ArcaStore),
         Some(ApiKeySource::Env { name }) => Some(ApiKeySource::Env {
             name: name.trim().to_string(),
         }),
@@ -3029,7 +3628,7 @@ pub(crate) fn prepare_provider_draft(
         }
         None => {
             if !provider.id.is_empty() {
-                return Err("invalid_asset: Model Provider id is generated by MUX".into());
+                return Err("invalid_asset: Model Provider id is generated by Arca".into());
             }
             let existing_ids = settings
                 .model_providers
@@ -3487,6 +4086,11 @@ pub(crate) fn provider_credential_present(provider_id: &str) -> bool {
 ///
 /// Callers must keep the returned value ephemeral and must not serialize or log it.
 pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
+    let provider_id = prepare_provider_credential_reveal(provider_id)?;
+    execute_provider_credential_reveal(&provider_id)
+}
+
+pub(crate) fn prepare_provider_credential_reveal(provider_id: &str) -> Result<String, String> {
     let settings = load_settings();
     if !settings
         .model_providers
@@ -3498,7 +4102,13 @@ pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
         ));
     }
 
-    let credential = read_credential_service_checked(&provider_keychain_service(provider_id))?
+    Ok(provider_id.into())
+}
+
+pub(crate) fn execute_provider_credential_reveal(provider_id: &str) -> Result<String, String> {
+    // Revealing another Provider reuses the same application authorization.
+    unlock_credential_session(false)?;
+    let credential = read_runtime_provider_credential(provider_id)?
         .ok_or_else(|| {
             format!(
                 "model_provider_credential_missing: Provider '{provider_id}' has no API Key in Keychain"
@@ -3525,7 +4135,7 @@ pub(crate) fn profile_credential_issue(
         .env_key
         .clone()
         .map(|name| ApiKeySource::Env { name })
-        .or_else(|| has_credential.then_some(ApiKeySource::MuxStore));
+        .or_else(|| has_credential.then_some(ApiKeySource::ArcaStore));
     let Some(source) = source else {
         return None;
     };
@@ -3571,7 +4181,7 @@ fn env_key_required_issue(agent_id: &str) -> Option<(&'static str, &'static str)
         } else {
             "model_env_key_required"
         },
-        "This Agent cannot read the API Key stored in MUX Keychain; set an external environment variable name on this Profile before switching.",
+        "This Agent cannot read the API Key stored in Arca Keychain; set an external environment variable name on this Profile before switching.",
     ))
 }
 
@@ -3662,7 +4272,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             id: "claude-code".into(),
             name: String::new(),
             mode: "managed".into(),
-            storage_authority: ModelStorageAuthority::MuxMapping,
+            storage_authority: ModelStorageAuthority::ArcaMapping,
             installed: agent_installed(&["claude"], &[".claude"], &[]),
             config_path: claude_config_path,
             config_paths: claude_config_paths,
@@ -3684,7 +4294,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             id: claude_desktop::AGENT_ID.into(),
             name: String::new(),
             mode: "managed".into(),
-            storage_authority: ModelStorageAuthority::MuxMapping,
+            storage_authority: ModelStorageAuthority::ArcaMapping,
             installed: agent_installed(&[], &[], &["/Applications/Claude.app"]),
             config_path: claude_desktop_config_path,
             config_paths: claude_desktop_config_paths,
@@ -3706,7 +4316,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             id: "codex".into(),
             name: String::new(),
             mode: "managed".into(),
-            storage_authority: ModelStorageAuthority::MuxMapping,
+            storage_authority: ModelStorageAuthority::ArcaMapping,
             installed: agent_installed(&["codex"], &[".codex"], &["/Applications/Codex.app"]),
             config_path: codex_config_path,
             config_paths: codex_config_paths,
@@ -3748,7 +4358,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
                 ModelProtocol::OpenaiResponses,
                 ModelProtocol::OpenaiCompletions,
             ],
-            note: "MUX manages custom model entries and [models].default only; fork_secondary_model remains independent. Authenticated Profiles use an external environment variable reference.".into(),
+            note: "Arca manages custom model entries and [models].default only; fork_secondary_model remains independent. Authenticated Profiles use an external environment variable reference.".into(),
         },
         ModelAgentView {
             id: "pi".into(),
@@ -3774,7 +4384,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
                 ModelProtocol::OpenaiResponses,
                 ModelProtocol::OpenaiCompletions,
             ],
-            note: "MUX updates the custom provider and default model as one transaction.".into(),
+            note: "Arca updates the custom provider and default model as one transaction.".into(),
         },
         ModelAgentView {
             id: "minimax-code".into(),
@@ -3804,7 +4414,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
                 ModelProtocol::OpenaiResponses,
                 ModelProtocol::OpenaiCompletions,
             ],
-            note: "MiniMax Code supports custom providers, but its current config flow stores options.apiKey as plaintext YAML; use its own model configuration flow rather than exporting a MUX Keychain secret.".into(),
+            note: "MiniMax Code supports custom providers, but its current config flow stores options.apiKey as plaintext YAML; use its own model configuration flow rather than exporting a Arca Keychain secret.".into(),
         },
         ModelAgentView {
             id: "qoder".into(),
@@ -3830,7 +4440,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             default_delivery: Default::default(),
             available_deliveries: Vec::new(),
             supported_protocols: Vec::new(),
-            note: "请在 Qoder Settings → Models 中添加和切换自定义模型。MUX 当前提供配置引导，不自动写入模型。".into(),
+            note: "请在 Qoder Settings → Models 中添加和切换自定义模型。Arca 当前提供配置引导，不自动写入模型。".into(),
         },
         {
             let mut view = managed_agent_view(
@@ -3870,7 +4480,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             let mut view = managed_agent_view(
                 &settings, "opencode-desktop", &[], &[],
                 "https://opencode.ai/docs/models/",
-                "与 OpenCode CLI 共用本机全局配置和默认模型；桌面端使用独立的 MUX 模型条目。重启本地服务后生效，远程服务需在对应主机配置。",
+                "与 OpenCode CLI 共用本机全局配置和默认模型；桌面端使用独立的 Arca 模型条目。重启本地服务后生效，远程服务需在对应主机配置。",
             );
             view.installed = crate::paths::system_probe_path("/Applications/OpenCode.app/Contents/Info.plist").is_file()
                 || home().join("Applications/OpenCode.app/Contents/Info.plist").is_file();
@@ -3928,13 +4538,13 @@ pub fn list_agents() -> Vec<ModelAgentView> {
         (
             "kimi-code", vec!["kimi"], vec![],
             "https://www.kimi.com/code/docs/en/kimi-code-cli/configuration/providers.html",
-            "请在 Kimi /provider 中配置模型。providers.env 保存的是凭据值，不是系统环境变量引用；MUX 不向此文件导出 Keychain 密钥。",
+            "请在 Kimi /provider 中配置模型。providers.env 保存的是凭据值，不是系统环境变量引用；Arca 不向此文件导出 Keychain 密钥。",
         ),
         (
             "kimi-code-desktop", vec![],
             vec!["/Applications/Kimi Code.app", "~/Applications/Kimi Code.app"],
             "https://www.kimi.com/code/docs/en/kimi-code-desktop/getting-started.html",
-            "请在 Kimi Settings → Providers 中配置模型，再从会话选择。与 CLI 共用 config.toml；当前凭据字段要求明文值，MUX 不自动写入。",
+            "请在 Kimi Settings → Providers 中配置模型，再从会话选择。与 CLI 共用 config.toml；当前凭据字段要求明文值，Arca 不自动写入。",
         ),
     ] {
         let (config_path, config_paths) = path_view(&settings, id);
@@ -4141,8 +4751,8 @@ pub(crate) fn observe_active_model_for_settings(
 }
 
 /// Adopt an Agent-native `/model` switch only when it points at an enabled
-/// MUX-managed Profile. External/built-in selections remain read-only and do
-/// not overwrite MUX relationships.
+/// Arca-managed Profile. External/built-in selections remain read-only and do
+/// not overwrite Arca relationships.
 pub fn reconcile_active_models() -> Result<(), String> {
     let _settings_guard = mutation_lock()?;
     let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
@@ -4512,7 +5122,7 @@ fn ensure_supported(agent_id: &str, protocol: &ModelProtocol) -> Result<(), Stri
         Ok(())
     } else {
         Err(format!(
-            "{} does not support the '{}' profile protocol in this MUX release",
+            "{} does not support the '{}' profile protocol in this Arca release",
             agent_id,
             protocol_name(protocol)
         ))
@@ -4647,7 +5257,7 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
                 })?;
             let credential = credential::resolve_source(
                 source,
-                matches!(source, ApiKeySource::MuxStore)
+                matches!(source, ApiKeySource::ArcaStore)
                     .then(|| read_credential_checked(&profile.id))
                     .transpose()?.flatten(),
             )?;
@@ -4676,7 +5286,7 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
                 {
                     let resolved = credential::resolve_source(
                         source,
-                        matches!(source, ApiKeySource::MuxStore)
+                        matches!(source, ApiKeySource::ArcaStore)
                             .then(|| read_credential_checked(&profile.id))
                             .transpose()?.flatten(),
                     )?;
@@ -4694,7 +5304,7 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
                 Some((source, credential::PreparedCredentialRoute::Plaintext)) => {
                     let resolved = credential::resolve_source(
                         source,
-                        matches!(source, ApiKeySource::MuxStore)
+                        matches!(source, ApiKeySource::ArcaStore)
                             .then(|| read_credential_checked(&profile.id))
                             .transpose()?.flatten(),
                     )?;
@@ -4745,7 +5355,7 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
         })
         .map_err(|error| {
             let message = format!(
-                "model config was applied, but MUX could not record the assignment: {error}"
+                "model config was applied, but Arca could not record the assignment: {error}"
             );
             if agent_id == claude_desktop::AGENT_ID {
                 ModelTargetError::RecoveryRequired(message)
@@ -4760,7 +5370,7 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
 fn credential_route_for(
     agent_id: &str,
     profile: &ModelProfile,
-    has_mux_credential: bool,
+    has_arca_credential: bool,
 ) -> Result<Option<(ApiKeySource, credential::PreparedCredentialRoute)>, String> {
     let settings = load_settings();
     let requested = settings.model_selection(agent_id).delivery_for(&profile.id);
@@ -4782,7 +5392,7 @@ fn credential_route_for(
                 .clone()
                 .map(|name| ApiKeySource::Env { name })
         })
-        .or_else(|| has_mux_credential.then_some(ApiKeySource::MuxStore));
+        .or_else(|| has_arca_credential.then_some(ApiKeySource::ArcaStore));
     let Some(source) = source else {
         return if requirement == AuthRequirement::Required {
             Err("credential_missing: this Provider requires an API Key before it can be added to the Agent".into())
@@ -4790,9 +5400,9 @@ fn credential_route_for(
             Ok(None)
         };
     };
-    if matches!(source, ApiKeySource::MuxStore) && !has_mux_credential {
+    if matches!(source, ApiKeySource::ArcaStore) && !has_arca_credential {
         return if requirement == AuthRequirement::Required {
-            Err("credential_missing: MUX secure storage has no API Key for this Provider".into())
+            Err("credential_missing: Arca secure storage has no API Key for this Provider".into())
         } else {
             Ok(None)
         };
@@ -4801,7 +5411,7 @@ fn credential_route_for(
         Ok(route) => Ok(Some((source, route))),
         Err(error) => {
             if let Some((code, message)) =
-                profile_credential_issue(agent_id, profile, has_mux_credential, &delivery)
+                profile_credential_issue(agent_id, profile, has_arca_credential, &delivery)
             {
                 Err(format!("{code}: {message}"))
             } else {
@@ -4811,7 +5421,7 @@ fn credential_route_for(
     }
 }
 
-/// Remove only the fields owned by a previously assigned MUX Profile, then
+/// Remove only the fields owned by a previously assigned Arca Profile, then
 /// clear the desired assignment. The caller must identify the exact Profile so
 /// unrelated providers and Agent policy remain untouched.
 pub fn clear_profile(agent_id: &str, profile_id: &str) -> Result<(), String> {
@@ -5457,7 +6067,7 @@ fn prepare_claude(
         path,
         "env",
     )?;
-    // These have higher precedence than apiKeyHelper. Applying a MUX profile is
+    // These have higher precedence than apiKeyHelper. Applying a Arca profile is
     // an explicit connection takeover, so remove only these conflicting fields.
     set_json_property(&env, "ANTHROPIC_AUTH_TOKEN", None, path, "env")?;
     set_json_property(&env, "ANTHROPIC_API_KEY", None, path, "env")?;
@@ -5526,7 +6136,7 @@ fn prepare_codex(
     let provider = providers
         .get_mut(&provider_id)
         .and_then(Item::as_table_mut)
-        .ok_or_else(|| format!("MUX provider '{provider_id}' is not a TOML table"))?;
+        .ok_or_else(|| format!("Arca provider '{provider_id}' is not a TOML table"))?;
     provider.insert("name", toml_edit::value(&profile.name));
     provider.insert("base_url", toml_edit::value(&profile.base_url));
     provider.insert("wire_api", toml_edit::value("responses"));
@@ -5578,10 +6188,10 @@ fn native_profile_id(profile: &ModelProfile, agent_id: &str, fallback: String) -
 }
 
 fn codex_provider_id(profile: &ModelProfile) -> String {
-    native_profile_id(profile, "codex", mux_profile_id(&profile.id))
+    native_profile_id(profile, "codex", arca_profile_id(&profile.id))
 }
 
-fn mux_profile_id(profile_id: &str) -> String {
+fn arca_profile_id(profile_id: &str) -> String {
     let mut encoded = String::from("mux_");
     for byte in profile_id.bytes() {
         encoded.push_str(&format!("{byte:02x}"));
@@ -5590,7 +6200,7 @@ fn mux_profile_id(profile_id: &str) -> String {
 }
 
 fn grok_model_id(profile: &ModelProfile) -> String {
-    native_profile_id(profile, "grok-build", mux_profile_id(&profile.id))
+    native_profile_id(profile, "grok-build", arca_profile_id(&profile.id))
 }
 
 fn pi_provider_id(profile: &ModelProfile) -> String {
@@ -5660,14 +6270,14 @@ pub(crate) fn generated_open_code_provider_id(
 ) -> String {
     let Some(provider) = profile.provider_id.as_ref()
         .and_then(|id| settings.model_providers.as_ref()?.get(id)) else {
-        return mux_profile_id(&profile.id);
+        return arca_profile_id(&profile.id);
     };
     let mut id = generated_pi_provider_id(settings, profile);
     if !id.is_ascii() {
         id = pi_provider_slug(&provider.id);
     }
     // OpenCode has one SDK/base URL per provider. Different protocols cannot
-    // share that object even when they originate from the same MUX Provider.
+    // share that object even when they originate from the same Arca Provider.
     if settings.model_profiles.as_ref().is_some_and(|profiles| profiles.values().any(|other| {
         other.provider_id == profile.provider_id && other.protocol != profile.protocol
     })) {
@@ -5680,7 +6290,7 @@ pub(crate) fn generated_open_code_provider_id(
         id = format!("{id}-{protocol}");
     }
     if id.is_empty() || id.len() > 128 || !id.is_ascii() {
-        return mux_profile_id(&profile.id);
+        return arca_profile_id(&profile.id);
     }
     id
 }
@@ -5774,7 +6384,7 @@ fn upsert_grok_model(
     let model = models
         .get_mut(&model_id)
         .and_then(Item::as_table_mut)
-        .ok_or_else(|| format!("MUX model '{model_id}' is not a TOML table"))?;
+        .ok_or_else(|| format!("Arca model '{model_id}' is not a TOML table"))?;
     model.insert("model", toml_edit::value(&profile.model));
     model.insert("base_url", toml_edit::value(&profile.base_url));
     model.insert("name", toml_edit::value(&profile.name));
@@ -6155,7 +6765,7 @@ fn pi_api_key_value(
         Some((source, credential::PreparedCredentialRoute::Plaintext)) => {
             let resolved = credential::resolve_source(
                 &source,
-                matches!(source, ApiKeySource::MuxStore)
+                matches!(source, ApiKeySource::ArcaStore)
                     .then(|| read_credential_checked(&profile.id))
                     .transpose()?.flatten(),
             )?;
@@ -6184,7 +6794,7 @@ fn prepare_observed_native_files(
         {
             let resolved = credential::resolve_source(
                 &source,
-                matches!(source, ApiKeySource::MuxStore)
+                matches!(source, ApiKeySource::ArcaStore)
                     .then(|| read_credential_checked(&profile.id))
                     .transpose()?.flatten(),
             )?;
@@ -6762,6 +7372,275 @@ mod tests {
             ("https://tokenharbor.ai/v1/responses", "tokenharbor"),
             ("https://tokenharbor.ai/v1/chat/completions", "tokenharbor"),
             ("https://tokenharbor.ai/v1/messages", "tokenharbor"),
+            ("https://api.flock.io/v1", "flock"),
+            ("https://api.flock.io/v1/chat/completions", "flock"),
+            ("https://api.flock.io.evil.test/v1", "custom"),
+            ("https://codecraftapi.com/v1", "codecraft"),
+            ("https://codecraftapi.com/v1/chat/completions", "codecraft"),
+            ("https://codecraftapi.com.evil.test/v1", "custom"),
+            ("https://api.beatapi.io/v1", "beatapi"),
+            ("https://api.beatapi.io/v1/chat/completions", "beatapi"),
+            ("https://api.beatapi.io.evil.test/v1", "custom"),
+            ("https://api.experientiallabs.ai/v1", "experiential-labs"),
+            ("https://api.experientiallabs.ai/v1/chat/completions", "experiential-labs"),
+            ("https://api.experientiallabs.ai.evil.test/v1", "custom"),
+            ("https://inference.runanywhere.ai/v1", "runanywhere"),
+            ("https://inference.runanywhere.ai/v1/chat/completions", "runanywhere"),
+            ("https://runanywhere.ai/v1", "custom"),
+            ("https://console.runanywhere.ai/v1", "custom"),
+            ("https://inference.runanywhere.ai.evil.test/v1", "custom"),
+            ("https://inference.coralbricks.ai/v1", "coralbricks"),
+            ("https://inference.coralbricks.ai/v1/chat/completions", "coralbricks"),
+            ("https://inference.coralbricks.ai/v1/responses", "coralbricks"),
+            ("https://inference.coralbricks.ai/v1/messages", "coralbricks"),
+            ("https://www.coralbricks.ai/v1", "custom"),
+            ("https://coralbricks.ai/v1", "custom"),
+            ("https://inference.coralbricks.ai.evil.test/v1", "custom"),
+            ("https://apihub.agnes-ai.com/v1", "agnes-ai"),
+            ("https://apihub.agnes-ai.com/v1/chat/completions", "agnes-ai"),
+            ("https://apihub.agnes-ai.com/v1/responses", "agnes-ai"),
+            ("https://apihub.agnes-ai.com/v1/messages", "agnes-ai"),
+            ("https://agnes-ai.com/v1", "custom"),
+            ("https://platform.agnes-ai.com/v1", "custom"),
+            ("https://wiki.agnes-ai.com/v1", "custom"),
+            ("https://apihub.agnes-ai.com.evil.test/v1", "custom"),
+            ("https://apihub.agnes-ai.co/v1", "custom"),
+            ("https://api.agnes-ai.cn/v1", "agnes-ai-cn"),
+            ("https://api.agnes-ai.cn/v1/chat/completions", "agnes-ai-cn"),
+            ("https://api.agnes-ai.cn/v1/messages", "agnes-ai-cn"),
+            ("https://platform.agnes-ai.cn/v1", "custom"),
+            ("https://api.agnes-ai.cn.evil.test/v1", "custom"),
+            ("https://api.meta.ai/v1", "meta"),
+            ("https://api.meta.ai", "meta"),
+            ("https://api.meta.ai/v1/responses", "meta"),
+            ("https://api.meta.ai/v1/chat/completions", "meta"),
+            ("https://api.meta.ai/v1/messages", "meta"),
+            ("https://meta.ai/v1", "custom"),
+            ("https://dev.meta.ai/v1", "custom"),
+            ("https://www.meta.ai/v1", "custom"),
+            ("https://api.meta.ai.evil.test/v1", "custom"),
+            ("https://api.meta.com/v1", "custom"),
+            ("https://api.maximoai.co/v1", "maximo-ai"),
+            ("https://api.maximoai.co", "maximo-ai"),
+            ("https://api.maximoai.co/v1/chat/completions", "maximo-ai"),
+            ("https://api.maximoai.co/v1/responses", "maximo-ai"),
+            ("https://maximoai.co/v1", "custom"),
+            ("https://www.maximoai.co/v1", "custom"),
+            ("https://api.maximoai.co.evil.test/v1", "custom"),
+            ("https://raon-api.krafton.ai/v1", "krafton-raon"),
+            ("https://raon-api.krafton.ai", "krafton-raon"),
+            ("https://raon-api.krafton.ai/v1/chat/completions", "krafton-raon"),
+            ("https://raon-api.krafton.ai/v1/responses", "krafton-raon"),
+            ("https://raon-api.krafton.ai/v1/messages", "krafton-raon"),
+            ("https://raon-api.krafton.ai/v1/models", "krafton-raon"),
+            ("https://krafton.ai/v1", "custom"),
+            ("https://raon-console.krafton.ai/v1", "custom"),
+            ("https://raon-mini.krafton.ai/v1", "custom"),
+            ("https://raon-api.krafton.ai.evil.test/v1", "custom"),
+            ("https://api.sarashina.ai/v1", "sarashina"),
+            ("https://api.sarashina.ai/v1/chat/completions", "sarashina"),
+            ("https://api.sarashina.ai.evil.test/v1", "custom"),
+            ("https://inference.liquid.ai/v1", "liquid-ai"),
+            ("https://inference.liquid.ai/v1/chat/completions", "liquid-ai"),
+            ("https://inference.liquid.ai.evil.test/v1", "custom"),
+            ("https://api.atria-asi.ai/v1", "atria"),
+            ("https://api.atria-asi.ai/v1/responses", "atria"),
+            ("https://api.atria-asi.ai/v1/chat/completions", "atria"),
+            ("https://api.atria-asi.ai/v1/messages", "atria"),
+            ("https://atria-asi.ai/v1", "custom"),
+            ("https://api.atria-asi.ai.evil.test/v1", "custom"),
+            ("https://cleanapis.com/v1/chat/completions", "clean-apis"),
+            ("https://lighthouse.dphn.ai/run/text-v/v1/chat/completions", "dolphin"),
+            ("https://api.iteracompute.com/v1/responses", "iteracompute"),
+            ("https://api.iteracompute.com/v1/chat/completions", "iteracompute"),
+            ("https://llmtr.com/v1/chat/completions", "llmtr"),
+            ("https://api.munito.ai/inference/v1/responses", "munito"),
+            ("https://api.munito.ai/inference/v1/chat/completions", "munito"),
+            ("https://api.munito.ai/inference/v1/messages", "munito"),
+            ("https://api.eu.munito.ai/inference/v1", "munito"),
+            ("https://api.us.munito.ai/inference/v1", "munito"),
+            ("https://inference-api.nousresearch.com/v1/chat/completions", "nous-portal"),
+            ("https://api.ppq.ai/v1/responses", "ppq"),
+            ("https://api.ppq.ai/v1/chat/completions", "ppq"),
+            ("https://api.ppq.ai/v1/messages", "ppq"),
+            ("https://api.river.ai/v1/responses", "river"),
+            ("https://api.river.ai/v1/chat/completions", "river"),
+            ("https://api.trustedrouter.com/v1/responses", "trustedrouter"),
+            ("https://api.trustedrouter.com/v1/chat/completions", "trustedrouter"),
+            ("https://api.trustedrouter.com/v1/messages", "trustedrouter"),
+            ("https://trustedrouter.com/v1", "custom"),
+            ("https://api.unorouter.com/v1/chat/completions", "unorouter"),
+            ("https://api.unorouter.com/v1/responses", "unorouter"),
+            ("https://api.unorouter.com/v1/messages", "unorouter"),
+            ("https://api.unorouter.com/v1beta/models/gemini-4-flash:generateContent", "unorouter"),
+            ("https://unorouter.com/v1", "custom"),
+            ("https://api.unorouter.com.evil.test/v1", "custom"),
+            ("https://api.orcarouter.ai/v1", "orcarouter"),
+            ("https://api.orcarouter.ai", "orcarouter"),
+            ("https://api.orcarouter.ai/v1/chat/completions", "orcarouter"),
+            ("https://api.orcarouter.ai/v1/responses", "orcarouter"),
+            ("https://api.orcarouter.ai/v1/messages", "orcarouter"),
+            ("https://api.orcarouter.ai/v1beta/models/google/gemini-2.5-flash:generateContent", "orcarouter"),
+            ("https://orcarouter.ai/v1", "custom"),
+            ("https://www.orcarouter.ai/v1", "custom"),
+            ("https://docs.orcarouter.ai/v1", "custom"),
+            ("https://api.orcarouter.ai.evil.test/v1", "custom"),
+            ("https://api.fikraapi.co.ke/v1", "fikra"),
+            ("https://api.fikraapi.co.ke", "fikra"),
+            ("https://api.fikraapi.co.ke/v1/chat/completions", "fikra"),
+            ("https://api.fikraapi.co.ke/v1/models", "fikra"),
+            ("https://fikraapi.co.ke/v1", "custom"),
+            ("https://www.fikraapi.co.ke/v1", "custom"),
+            ("https://docs.fikraapi.co.ke/v1", "custom"),
+            ("https://api.fikraapi.co.ke.evil.test/v1", "custom"),
+            ("https://gateway.constellationgate.ai/v1", "constellation-gate"),
+            ("https://gateway.constellationgate.ai", "constellation-gate"),
+            ("https://gateway.constellationgate.ai/v1/chat/completions", "constellation-gate"),
+            ("https://gateway.constellationgate.ai/v1/messages", "constellation-gate"),
+            ("https://gateway.constellationgate.ai/v1/models", "constellation-gate"),
+            ("https://constellationgate.ai/v1", "custom"),
+            ("https://app.constellationgate.ai/v1", "custom"),
+            ("https://api.constellationgate.ai/v1", "custom"),
+            ("https://docs.constellationgate.ai/v1", "custom"),
+            ("https://gateway.constellationgate.ai.evil.test/v1", "custom"),
+            ("https://api.ant-ling.com/v1/chat/completions", "ant-ling"),
+            ("https://api.ant-ling.com/anthropic/v1/messages", "ant-ling"),
+            ("https://maas-api.antdigital.com/v1/chat/completions", "antdigital-dtmaas"),
+            ("https://maas-api.antdigital.com/v1/responses", "antdigital-dtmaas"),
+            ("https://maas-api.unisound.com/v1/chat/completions", "unisound"),
+            ("https://maas-api.unisound.com/v1/responses", "unisound"),
+            ("https://maas-api.unisound.com/anthropic/v1/messages", "unisound"),
+            ("https://maas-api.unisound.com.evil.test/v1", "custom"),
+            ("https://index-translate.bilibili.com/v1", "bilibili-index-translate"),
+            ("https://index-translate.bilibili.com/v1/chat/completions", "bilibili-index-translate"),
+            ("https://index-translate.bilibili.com/v1/responses", "bilibili-index-translate"),
+            ("https://bilibili.com/v1", "custom"),
+            ("https://www.bilibili.com/v1", "custom"),
+            ("https://index-translate.bilibili.com.evil.test/v1", "custom"),
+            ("https://token.sensenova.cn/v1", "sensenova"),
+            ("https://token.sensenova.cn", "sensenova"),
+            ("https://token.sensenova.cn/v1/chat/completions", "sensenova"),
+            ("https://token.sensenova.cn/v1/responses", "sensenova"),
+            ("https://token.sensenova.cn/v1/messages", "sensenova"),
+            ("https://sensenova.cn/v1", "custom"),
+            ("https://www.sensenova.cn/v1", "custom"),
+            ("https://platform.sensenova.cn/v1", "custom"),
+            ("https://token.sensenova.cn.evil.test/v1", "custom"),
+            ("https://api.akashml.com/v1", "akashml"),
+            ("https://api.akashml.com", "akashml"),
+            ("https://api.akashml.com/v1/chat/completions", "akashml"),
+            ("https://api.akashml.com/v1/models", "akashml"),
+            ("https://api.akashml.com/anthropic", "akashml"),
+            ("https://api.akashml.com/anthropic/v1/messages", "akashml"),
+            ("https://akashml.com/v1", "custom"),
+            ("https://www.akashml.com/v1", "custom"),
+            ("https://playground.akashml.com/v1", "custom"),
+            ("https://api.akashml.com.evil.test/v1", "custom"),
+            ("https://api.indicstack.ai/v1", "indicstack"),
+            ("https://api.indicstack.ai", "indicstack"),
+            ("https://api.indicstack.ai/v1/chat/completions", "indicstack"),
+            ("https://indicstack.ai/v1", "custom"),
+            ("https://www.indicstack.ai/v1", "custom"),
+            ("https://console.indicstack.ai/v1", "custom"),
+            ("https://api.indicstack.ai.evil.test/v1", "custom"),
+            ("https://router-api.0g.ai/v1", "0g-private-computer"),
+            ("https://router-api.0g.ai", "0g-private-computer"),
+            ("https://router-api.0g.ai/v1/chat/completions", "0g-private-computer"),
+            ("https://router-api.0g.ai/v1/responses", "0g-private-computer"),
+            ("https://router-api.0g.ai/v1/messages", "0g-private-computer"),
+            ("https://router-api.0g.ai/v1/models", "0g-private-computer"),
+            ("https://0g.ai/v1", "custom"),
+            ("https://pc.0g.ai/v1", "custom"),
+            ("https://router-api-testnet.integratenetwork.work/v1", "custom"),
+            ("https://router-api.0g.ai.evil.test/v1", "custom"),
+            ("https://api.gonkarouter.io/v1", "gonkarouter"),
+            ("https://api.gonkarouter.io", "gonkarouter"),
+            ("https://api.gonkarouter.io/v1/chat/completions", "gonkarouter"),
+            ("https://api.gonkarouter.io/v1/messages", "gonkarouter"),
+            ("https://api.gonkarouter.io/v1/models", "gonkarouter"),
+            ("https://gonkarouter.io/v1", "custom"),
+            ("https://www.gonkarouter.io/v1", "custom"),
+            ("https://api.gonkarouter.io.evil.test/v1", "custom"),
+            ("https://api.runinfra.ai/v1", "runinfra"),
+            ("https://api.runinfra.ai", "runinfra"),
+            ("https://api.runinfra.ai/v1/chat/completions", "runinfra"),
+            ("https://api.runinfra.ai/v1/models", "runinfra"),
+            ("https://runinfra.ai/v1", "custom"),
+            ("https://www.runinfra.ai/v1", "custom"),
+            ("https://api.runinfra.ai.evil.test/v1", "custom"),
+            ("https://nomask.ai/api/v1", "nomask"),
+            ("https://nomask.ai/api/v1/chat/completions", "nomask"),
+            ("https://nomask.ai/api/v1/models", "nomask"),
+            ("https://nomask.ai/v1", "nomask"),
+            ("https://www.nomask.ai/v1", "custom"),
+            ("https://nomask.ai.evil.test/v1", "custom"),
+            ("https://anyrouter.dev/api/v1", "anyrouter"),
+            ("https://anyrouter.dev/api/v1/chat/completions", "anyrouter"),
+            ("https://anyrouter.dev/api/v1/responses", "anyrouter"),
+            ("https://anyrouter.dev/api/v1/models", "anyrouter"),
+            ("https://anyrouter.dev/api", "anyrouter"),
+            ("https://anyrouter.dev/api/v1/messages", "anyrouter"),
+            ("https://www.anyrouter.dev/api/v1", "custom"),
+            ("https://anyrouter.dev.evil.test/api/v1", "custom"),
+            ("https://platform.yeta.ai/v1", "yeta"),
+            ("https://platform.yeta.ai/v1/chat/completions", "yeta"),
+            ("https://platform.yeta.ai/v1/models", "yeta"),
+            ("https://yeta.ai/v1", "custom"),
+            ("https://www.yeta.ai/v1", "custom"),
+            ("https://platform.yeta.ai.evil.test/v1", "custom"),
+            ("https://api.scnet.cn/api/llm/v1", "scnet"),
+            ("https://api.scnet.cn/api/llm/v1/chat/completions", "scnet"),
+            ("https://api.scnet.cn/api/llm/v1/models", "scnet"),
+            ("https://api.scnet.cn/api/llm/anthropic", "scnet"),
+            ("https://api.scnet.cn/api/llm/anthropic/v1/messages", "scnet"),
+            ("https://api.scnet.cn", "scnet"),
+            ("https://www.scnet.cn/ui/mall", "custom"),
+            ("https://www.scnet.cn/ui/console", "custom"),
+            ("https://scnet.cn/api/llm/v1", "custom"),
+            ("https://api.scnet.cn.evil.test/api/llm/v1", "custom"),
+            ("https://oxionai.com/v1", "oxion-ai"),
+            ("https://oxionai.com/v1/chat/completions", "oxion-ai"),
+            ("https://oxionai.com/v1/models", "oxion-ai"),
+            ("https://oxionai.com", "oxion-ai"),
+            ("https://oxionai.com/v1/messages", "oxion-ai"),
+            ("https://www.oxionai.com/v1", "custom"),
+            ("https://oxionai.com.evil.test/v1", "custom"),
+            ("https://model.inferx.net/v1", "inferx"),
+            ("https://model.inferx.net/v1/chat/completions", "inferx"),
+            ("https://model.inferx.net/v1/models", "inferx"),
+            ("https://model.inferx.net/endpoints/v1", "inferx"),
+            ("https://model.inferx.net/endpoints/v1/chat/completions", "inferx"),
+            ("https://model.inferx.net/endpoints/v1/models", "inferx"),
+            (
+                "https://model.inferx.net/funccall/example/endpoints/Agents-A1/v1/chat/completions",
+                "inferx",
+            ),
+            ("https://model.inferx.net", "inferx"),
+            ("https://inferx.net/v1", "custom"),
+            ("https://www.inferx.net/v1", "custom"),
+            ("https://model.inferx.net.evil.test/v1", "custom"),
+            ("https://api.blazerail.com/v1", "blazerail"),
+            ("https://api.blazerail.com/v1/chat/completions", "blazerail"),
+            ("https://api.blazerail.com/v1/models", "blazerail"),
+            ("https://api.blazerail.com", "blazerail"),
+            ("https://www.blazerail.com/v1", "custom"),
+            ("https://blazerail.com/v1", "custom"),
+            ("https://api.blazerail.com.evil.test/v1", "custom"),
+            ("https://larprouter.com/v1", "larprouter"),
+            ("https://larprouter.com/v1/chat/completions", "larprouter"),
+            ("https://larprouter.com/v1/models", "larprouter"),
+            ("https://larprouter.com", "larprouter"),
+            ("https://larprouter.com/v1/messages", "larprouter"),
+            ("https://www.larprouter.com/v1", "custom"),
+            ("https://larprouter.com.evil.test/v1", "custom"),
+            ("https://starkrelay.bond/v1", "stark-relay"),
+            ("https://starkrelay.bond/v1/chat/completions", "stark-relay"),
+            ("https://starkrelay.bond/v1/responses", "stark-relay"),
+            ("https://starkrelay.bond/v1/models", "stark-relay"),
+            ("https://starkrelay.bond", "stark-relay"),
+            ("https://starkrelay.bond/v1/messages", "stark-relay"),
+            ("https://www.starkrelay.bond/v1", "custom"),
+            ("https://starkrelay.bond.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -6844,7 +7723,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 104);
+        assert_eq!(list_providers().len(), 150);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -6925,6 +7804,149 @@ mod tests {
             serialized["protocols"]["anthropic-messages"]["endpoint_path"],
             "/apps/anthropic/v1/messages"
         );
+        let scnet = list_providers()
+            .iter()
+            .find(|provider| provider.id == "scnet")
+            .unwrap();
+        let serialized = serde_json::to_value(scnet).unwrap();
+        assert_eq!(scnet.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(serialized["base_url"], "https://api.scnet.cn");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/api/llm/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/api/llm/anthropic/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.scnet.cn/api/llm/anthropic"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        let oxion = list_providers()
+            .iter()
+            .find(|provider| provider.id == "oxion-ai")
+            .unwrap();
+        let serialized = serde_json::to_value(oxion).unwrap();
+        assert_eq!(oxion.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(oxion.default_base_url, Some("https://oxionai.com/v1"));
+        assert_eq!(serialized["base_url"], "https://oxionai.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://oxionai.com"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        let inferx = list_providers()
+            .iter()
+            .find(|provider| provider.id == "inferx")
+            .unwrap();
+        let serialized = serde_json::to_value(inferx).unwrap();
+        assert_eq!(inferx.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(inferx.category, "gateway");
+        assert_eq!(inferx.default_base_url, Some("https://model.inferx.net/v1"));
+        assert_eq!(serialized["base_url"], "https://model.inferx.net/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        let blazerail = list_providers()
+            .iter()
+            .find(|provider| provider.id == "blazerail")
+            .unwrap();
+        let serialized = serde_json::to_value(blazerail).unwrap();
+        assert_eq!(blazerail.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(blazerail.category, "gateway");
+        assert_eq!(blazerail.default_base_url, Some("https://api.blazerail.com/v1"));
+        assert_eq!(serialized["base_url"], "https://api.blazerail.com/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert_eq!(serialized["docs_url"], "https://www.blazerail.com/docs");
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://www.blazerail.com/dashboard/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        let larprouter = list_providers()
+            .iter()
+            .find(|provider| provider.id == "larprouter")
+            .unwrap();
+        let serialized = serde_json::to_value(larprouter).unwrap();
+        assert_eq!(larprouter.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(larprouter.category, "gateway");
+        assert_eq!(larprouter.default_base_url, Some("https://larprouter.com/v1"));
+        assert_eq!(serialized["base_url"], "https://larprouter.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://larprouter.com"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        let stark_relay = list_providers()
+            .iter()
+            .find(|provider| provider.id == "stark-relay")
+            .unwrap();
+        let serialized = serde_json::to_value(stark_relay).unwrap();
+        assert_eq!(stark_relay.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(stark_relay.category, "gateway");
+        assert_eq!(stark_relay.default_base_url, Some("https://starkrelay.bond/v1"));
+        assert_eq!(serialized["base_url"], "https://starkrelay.bond");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://starkrelay.bond/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-responses"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://starkrelay.bond"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(
@@ -7039,13 +8061,13 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn opencode_mux_store_delivery_updates_model_and_private_agent_store() {
+    fn opencode_arca_store_delivery_updates_model_and_private_agent_store() {
         use std::os::unix::fs::PermissionsExt;
 
         let _home = TestHome::new("opencode-agent-store");
         let mut provider = openrouter_provider("max-ai", "Max AI");
         provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::MuxStore);
+        provider.api_key_source = Some(ApiKeySource::ArcaStore);
         let mut profile = responses_profile();
         profile.id = "max-ai-model".into();
         profile.provider_id = Some(provider.id.clone());
@@ -7085,7 +8107,7 @@ mod tests {
             0o600
         );
 
-        let backups = home().join(".mux/backups");
+        let backups = home().join(".arca/backups");
         if backups.exists() {
             for entry in fs::read_dir(backups).unwrap().flatten() {
                 if entry.path().is_file() {
@@ -7108,7 +8130,7 @@ mod tests {
         let _home = TestHome::new("provider-owned-credential");
         let mut provider = openrouter_provider("provider-owned", "Provider Owned");
         provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::MuxStore);
+        provider.api_key_source = Some(ApiKeySource::ArcaStore);
         let mut profile = responses_profile();
         profile.id = "provider-owned-model".into();
         profile.provider_id = Some(provider.id.clone());
@@ -7172,7 +8194,7 @@ mod tests {
         let _home = TestHome::new("provider-owned-materialization");
         let mut provider = openrouter_provider("provider-materialized", "Provider Materialized");
         provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::MuxStore);
+        provider.api_key_source = Some(ApiKeySource::ArcaStore);
         let mut profile = responses_profile();
         profile.id = "provider-materialized-model".into();
         profile.provider_id = Some(provider.id.clone());
@@ -7320,11 +8342,11 @@ mod tests {
     }
 
     #[test]
-    fn required_mux_store_without_a_key_blocks_agent_configuration() {
+    fn required_arca_store_without_a_key_blocks_agent_configuration() {
         let _home = TestHome::new("required-missing-key");
         let mut provider = openrouter_provider("missing-provider", "Missing Provider");
         provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::MuxStore);
+        provider.api_key_source = Some(ApiKeySource::ArcaStore);
         let mut profile = responses_profile();
         profile.id = "missing-key-model".into();
         profile.provider_id = Some(provider.id.clone());
@@ -7948,7 +8970,7 @@ mod tests {
         fs::create_dir_all(models_path.parent().unwrap()).unwrap();
         fs::write(
             &models_path,
-            r#"{"providers":{"mux-team-openai":{"baseUrl":"https://gateway.example.test/v1","api":"openai-responses","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
+            r#"{"providers":{"arca-team-openai":{"baseUrl":"https://gateway.example.test/v1","api":"openai-responses","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
         )
         .unwrap();
 
@@ -7978,7 +9000,7 @@ mod tests {
             r#"{
   "keep": { "theme": "dark" },
   "providers": {
-    "mux-owned": { "models": [{ "id": "owned" }] },
+    "arca-owned": { "models": [{ "id": "owned" }] },
     "manual": { "models": [{ "id": "external" }] }
   }
 }"#,
@@ -8068,7 +9090,7 @@ wire_api = "responses"
         assert!(content.contains("keep this comment"));
         assert!(content.contains("mcp_servers.github"));
         assert!(content.contains("model_providers.existing"));
-        assert!(content.contains("model_providers.mux_7465616d2d6f70656e6169"));
+        assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
         assert!(content.contains("find-generic-password"));
     }
 
@@ -8097,7 +9119,7 @@ wire_api = "responses"
     }
 
     #[test]
-    fn pi_generated_provider_id_uses_mux_provider_name_and_disambiguates_collisions() {
+    fn pi_generated_provider_id_uses_arca_provider_name_and_disambiguates_collisions() {
         let mut profile = responses_profile();
         profile.provider_id = Some("openrouter-provider".into());
         let settings = crate::settings::Settings {
@@ -8245,20 +9267,20 @@ wire_api = "responses"
     }
 
     #[test]
-    fn pi_write_migrates_the_matching_legacy_mux_profile_provider() {
+    fn pi_write_migrates_the_matching_legacy_arca_profile_provider() {
         let th = TestHome::new("model-pi-legacy-provider");
         let path = th.home.join(".pi/agent/models.json");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(
             &path,
-            r#"{"providers":{"mux-team-openai":{"baseUrl":"https://gateway.example.test/v1","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
+            r#"{"providers":{"arca-team-openai":{"baseUrl":"https://gateway.example.test/v1","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
         )
         .unwrap();
 
         let profile = pi_profile("team-openai", "gpt-custom", "Team OpenAI");
         let (_, content) = prepare_pi_models(&path, &profile, false).unwrap();
         let models: Value = serde_json::from_str(&content).unwrap();
-        assert!(models["providers"].get("mux-team-openai").is_none());
+        assert!(models["providers"].get("arca-team-openai").is_none());
         assert_eq!(
             models["providers"]["openrouter"]["models"][0]["id"],
             "gpt-custom"
@@ -8320,7 +9342,7 @@ wire_api = "responses"
         assert!(cli.supports_multiple && cli.supports_global_selection);
         assert_eq!(cli.credential_capabilities.native_sources, vec!["env"]);
         assert!(!cli.credential_capabilities.plaintext);
-        assert!(credential::select_delivery("qoder-cli", &ApiKeySource::MuxStore, &crate::domain::assets::ApiKeyDelivery::Auto).is_err());
+        assert!(credential::select_delivery("qoder-cli", &ApiKeySource::ArcaStore, &crate::domain::assets::ApiKeyDelivery::Auto).is_err());
         assert!(credential::select_delivery("qoder-cli", &ApiKeySource::Env { name: "QODER_FIXTURE_KEY".into() }, &crate::domain::assets::ApiKeyDelivery::Auto).is_ok());
         for protocol in [ModelProtocol::OpenaiCompletions, ModelProtocol::OpenaiResponses, ModelProtocol::AnthropicMessages] {
             assert!(ensure_supported("qoder-cli", &protocol).is_ok());
@@ -8418,8 +9440,8 @@ fork_secondary_model = "private-fork"
         assert!(content.contains("model.private"));
         assert!(content.contains("mcp_servers.keep"));
         assert!(content.contains("permission"));
-        assert!(content.contains("default = \"mux_7465616d2d6f70656e6169\""));
-        assert!(content.contains("model.mux_7465616d2d6f70656e6169"));
+        assert!(content.contains("default = \"arca_7465616d2d6f70656e6169\""));
+        assert!(content.contains("model.arca_7465616d2d6f70656e6169"));
         assert!(content.contains("api_backend = \"responses\""));
         assert!(content.contains("env_key = \"TEAM_OPENAI_API_KEY\""));
         assert!(content.contains("fork_secondary_model = \"private-fork\""));
@@ -8430,7 +9452,7 @@ fork_secondary_model = "private-fork"
     }
 
     #[test]
-    fn grok_build_apply_and_clear_manage_only_the_mux_model() {
+    fn grok_build_apply_and_clear_manage_only_the_arca_model() {
         let th = TestHome::new("model-grok-build-apply");
         let path = th.home.join(".grok/config.toml");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -8518,7 +9540,7 @@ fork_secondary_model = "private-fork"
             assert!(agent.assigned_profiles.is_empty());
             assert!(agent.credential_capabilities.native_sources.is_empty());
             assert!(!agent.credential_capabilities.plaintext);
-            assert!(!agent.credential_capabilities.mux_keychain_helper);
+            assert!(!agent.credential_capabilities.arca_keychain_helper);
             for protocol in &agent.supported_protocols {
                 assert!(ensure_supported(id, protocol).is_err());
             }
@@ -8561,7 +9583,7 @@ url = "https://example.test/mcp"
         assert_eq!(result.files, vec![path.display().to_string()]);
         let content = fs::read_to_string(&path).unwrap();
         assert!(content.contains("mcp_servers.keep"));
-        assert!(content.contains("model_providers.mux_7465616d2d6f70656e6169"));
+        assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
         assert!(!content.contains("find-generic-password"));
         assert_eq!(
             load_settings()
@@ -8571,7 +9593,7 @@ url = "https://example.test/mcp"
                 .map(String::as_str),
             Some("team-openai")
         );
-        assert!(fs::read_dir(th.home.join(".mux/backups"))
+        assert!(fs::read_dir(th.home.join(".arca/backups"))
             .unwrap()
             .next()
             .is_some());
@@ -8588,10 +9610,10 @@ url = "https://example.test/mcp"
         let error = write_pi_transaction(
             &models,
             Some("models-old"),
-            "models-mux",
+            "models-arca",
             &settings,
             Some("settings-old"),
-            "settings-mux",
+            "settings-arca",
         )
         .unwrap_err();
 
@@ -8602,8 +9624,8 @@ url = "https://example.test/mcp"
 
     #[test]
     fn codex_provider_ids_do_not_collapse_profile_punctuation() {
-        assert_ne!(mux_profile_id("a-b"), mux_profile_id("a_b"));
-        assert_ne!(mux_profile_id("a.b"), mux_profile_id("a_b"));
+        assert_ne!(arca_profile_id("a-b"), arca_profile_id("a_b"));
+        assert_ne!(arca_profile_id("a.b"), arca_profile_id("a_b"));
     }
 
     #[test]
@@ -8648,7 +9670,7 @@ url = "https://example.test/mcp"
             "a production-selectable Cargo feature must not enable the fake credential backend"
         );
         let presence_override = source
-            .find("MUX_TEST_MODEL_CREDENTIAL_PROFILES")
+            .find("ARCA_TEST_MODEL_CREDENTIAL_PROFILES")
             .expect("test credential-presence override");
         let cfg_prefix = &source[presence_override.saturating_sub(220)..presence_override];
         assert!(
@@ -8692,20 +9714,20 @@ url = "https://example.test/mcp"
     #[test]
     #[ignore = "touches the current user's macOS Keychain"]
     fn macos_keychain_helper_round_trip() {
-        let profile_id = format!("mux-smoke-{}", std::process::id());
+        let profile_id = format!("arca-smoke-{}", std::process::id());
         let _ = delete_credential(&profile_id);
-        set_credential(&profile_id, b"mux-smoke-value").unwrap();
+        set_credential(&profile_id, b"arca-smoke-value").unwrap();
         let actual = read_credential_checked(&profile_id).unwrap();
         let helper = std::process::Command::new("/usr/bin/security")
             .args(&security_command(&profile_id)[1..])
             .output()
             .unwrap();
         let cleanup = delete_credential(&profile_id);
-        assert_eq!(actual.as_deref(), Some(b"mux-smoke-value".as_slice()));
+        assert_eq!(actual.as_deref(), Some(b"arca-smoke-value".as_slice()));
         assert!(helper.status.success());
         assert_eq!(
             String::from_utf8(helper.stdout).unwrap().trim(),
-            "mux-smoke-value"
+            "arca-smoke-value"
         );
         cleanup.unwrap();
         assert!(!credential_exists(&profile_id));
@@ -8719,7 +9741,7 @@ url = "https://example.test/mcp"
         assert!(desktop.supports_multiple && desktop.supports_global_selection);
         assert_eq!(desktop.config_paths, vec!["~/.config/opencode/opencode.json"]);
         assert_eq!(desktop.supported_protocols.len(), 4);
-        assert_eq!(credential::select_delivery("opencode-desktop", &ApiKeySource::MuxStore,
+        assert_eq!(credential::select_delivery("opencode-desktop", &ApiKeySource::ArcaStore,
             &crate::domain::assets::ApiKeyDelivery::Auto).unwrap(), credential::PreparedCredentialRoute::OpenCodeAuthStore);
         for (agent, sibling) in [("opencode", "opencode-desktop"), ("opencode-desktop", "opencode")] {
             let mut settings = crate::settings::Settings::default();

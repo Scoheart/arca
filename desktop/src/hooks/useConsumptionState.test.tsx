@@ -175,7 +175,7 @@ it("loads the Agent capability projection independently from relationships", asy
       capabilities: {
         model: {
           mode: "managed",
-          storage_authority: "mux-mapping",
+          storage_authority: "arca-mapping",
           installed: true,
           config_paths: ["~/.model-only/config.json"],
           assigned_profiles: [],

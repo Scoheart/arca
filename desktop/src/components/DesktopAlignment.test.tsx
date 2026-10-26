@@ -44,7 +44,7 @@ it("makes a pending form inert without disabling the error/review shell", () => 
   render(<DialogShell kind="editor" busy title="保存中" onClose={() => undefined}>
     <input aria-label="名称" />
   </DialogShell>);
-  expect(screen.getByLabelText("名称").closest(".mux-dialog-shell-body")).toHaveAttribute("inert");
+  expect(screen.getByLabelText("名称").closest(".arca-dialog-shell-body")).toHaveAttribute("inert");
   expect(screen.getByRole("button", { name: "关闭" })).toBeDisabled();
 });
 

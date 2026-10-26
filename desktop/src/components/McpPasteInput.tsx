@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useTranslation } from "react-i18next";
 import type { PastedMcpSummary } from "../lib/api";
 
@@ -28,10 +29,10 @@ export function McpPasteInput({ value, onChange, disabled, preview, error, pendi
   existingKeys: Set<string>;
 }) {
   const { t } = useTranslation();
-  return <div className="mux-mcp-paste-fields">
+  return <div className="arca-mcp-paste-fields">
     <p>{t("mcpEditor.pasteHint")}</p>
-    <div className="mux-mcp-code-editor">
-    <div className="mux-mcp-code-toolbar">
+    <div className="arca-mcp-code-editor">
+    <div className="arca-mcp-code-toolbar">
       <span>JSON <i>·</i> TOML <i>·</i> YAML</span>
       <div>
         <button type="button" disabled={disabled || !!value.trim()} title={value.trim() ? t("mcpEditor.exampleHint") : undefined} onClick={() => onChange(EXAMPLE)}>{t("mcpEditor.localExample")}</button>
@@ -43,7 +44,7 @@ export function McpPasteInput({ value, onChange, disabled, preview, error, pendi
       data-modal-initial-focus
       aria-label={t("mcpEditor.pasteLabel")}
       aria-invalid={!!error || undefined}
-      className="mux-paste-config-input"
+      className="arca-paste-config-input"
       placeholder={EXAMPLE}
       value={value}
       onChange={(event) => onChange(event.target.value)}
@@ -53,17 +54,17 @@ export function McpPasteInput({ value, onChange, disabled, preview, error, pendi
       autoCorrect="off"
     />
     </div>
-    {value.trim() && <div className="mux-mcp-paste-result" aria-live="polite">
-      {pending ? <p>{t("mcpEditor.detecting")}</p> : error ? <p className="mux-mcp-field-error">{error}</p> : preview && <>
+    {value.trim() && <div className="arca-mcp-paste-result" aria-live="polite">
+      {pending ? <p>{t("mcpEditor.detecting")}</p> : error ? <ToastNotice kind="warning" delay={500} message={error} /> : preview && <>
         <strong>{t("mcpEditor.detected", { count: preview.length })}</strong>
         <ul aria-label={t("mcpEditor.previewLabel")}>
           {preview.map((entry) => {
             const key = `${entry.name}::${entry.transport}`;
             const updatesExisting = existingKeys.has(key);
             return <li key={key}>
-              <span className="mux-mcp-import-name">{entry.name}</span>
+              <span className="arca-mcp-import-name">{entry.name}</span>
               <code>{entry.transport}</code>
-              <span className="mux-mcp-import-action" data-update={updatesExisting || undefined}>{t(updatesExisting ? "mcpEditor.updateEntry" : "mcpEditor.newEntry")}</span>
+              <span className="arca-mcp-import-action" data-update={updatesExisting || undefined}>{t(updatesExisting ? "mcpEditor.updateEntry" : "mcpEditor.newEntry")}</span>
             </li>;
           })}
         </ul>

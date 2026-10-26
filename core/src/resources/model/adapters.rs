@@ -1,6 +1,6 @@
 //! Lossless native Model configuration adapters for multi-model Agents.
 //!
-//! Each adapter owns only MUX-prefixed provider entries plus the documented
+//! Each adapter owns only stable owned provider entries plus the documented
 //! primary/current pointer. Unknown fields remain untouched and credentials are
 //! use native references unless the selected delivery policy explicitly exports
 //! to a private plaintext target.
@@ -30,7 +30,7 @@ const CREDENTIAL_FILE_NATIVE_ID: &str = "__mux_credential_file";
 pub struct PreparedModelFile {
     pub path: PathBuf,
     pub original: Option<String>,
-    /// `None` means the MUX-owned file should be removed.
+    /// `None` means the Arca-owned file should be removed.
     pub content: Option<String>,
 }
 
@@ -858,7 +858,7 @@ fn qwen_provider_models(
     path: &Path,
 ) -> Result<Vec<Value>, String> {
     // Qwen Code 0.20.0 still consumes `modelProviders.<auth>` as
-    // `ModelConfig[]` and skips non-arrays. Older MUX builds followed a newer
+    // `ModelConfig[]` and skips non-arrays. Older Arca builds followed a newer
     // docs draft and wrote `{ protocol, models }`, so migrate only that exact
     // wrapper and fail closed when it contains any Agent-owned extension.
     match value {
@@ -872,7 +872,7 @@ fn qwen_provider_models(
                 || !matches!(models, Some(Value::Array(_)))
             {
                 return Err(format!(
-                    "refusing to modify {}: Qwen modelProviders.{auth} is neither the stable array shape nor the exact legacy MUX wrapper",
+                    "refusing to modify {}: Qwen modelProviders.{auth} is neither the stable array shape nor the exact legacy Arca wrapper",
                     path.display()
                 ));
             }
@@ -1351,7 +1351,7 @@ fn prepare_goose(
     let context = profile.context_window.unwrap_or(128_000);
     let mut provider = json!({
         "name": provider_id_for("goose", profile), "engine": engine, "display_name": profile.name,
-        "description": format!("MUX managed {} provider", profile.name),
+        "description": format!("Arca managed {} provider", profile.name),
         "api_key_env": profile.env_key.clone().unwrap_or_default(), "base_url": profile.base_url,
         "models": [{"name": profile.model, "context_limit": context, "input_token_cost": null,
             "output_token_cost": null, "currency": null, "supports_cache_control": null}],
@@ -1541,7 +1541,7 @@ fn prepare_yaml_model(
                         .as_deref()
                         == Some(profile.base_url.as_str())
                     {
-                        // Older MUX builds wrote this field. A named provider
+                        // Older Arca builds wrote this field. A named provider
                         // must own endpoint/auth resolution or Hermes bypasses
                         // the provider's `key_env` credential path.
                         model.remove("base_url");
@@ -2163,7 +2163,7 @@ mod tests {
 
     fn temp_path(name: &str, extension: &str) -> PathBuf {
         std::env::temp_dir().join(format!(
-            "mux-model-adapter-{name}-{}.{}",
+            "arca-model-adapter-{name}-{}.{}",
             uuid::Uuid::new_v4(),
             extension
         ))
@@ -2307,7 +2307,7 @@ mod tests {
     }
 
     #[test]
-    fn qwen_migrates_the_exact_legacy_mux_wrapper_to_the_stable_array_shape() {
+    fn qwen_migrates_the_exact_legacy_arca_wrapper_to_the_stable_array_shape() {
         let path = temp_path("qwen-legacy", "json");
         fs::write(
             &path,
@@ -2344,7 +2344,7 @@ mod tests {
             false,
         )
         .unwrap_err();
-        assert!(error.contains("neither the stable array shape nor the exact legacy MUX wrapper"));
+        assert!(error.contains("neither the stable array shape nor the exact legacy Arca wrapper"));
         assert_eq!(fs::read_to_string(&path).unwrap(), original);
         fs::remove_file(path).unwrap();
     }

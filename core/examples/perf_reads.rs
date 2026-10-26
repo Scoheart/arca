@@ -1,6 +1,6 @@
 //! Isolated read-path benchmark. Never reads real Agent files or credentials.
-//! cargo run -p mux-core --example perf_reads
-use mux_core::{agents, application, registry, settings, sources, testenv::TestHome};
+//! cargo run -p arca-core --example perf_reads
+use arca_core::{agents, application, registry, settings, sources, testenv::TestHome};
 use serde_json::json;
 use std::{fs, hint::black_box, time::Instant};
 

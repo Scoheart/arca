@@ -4,11 +4,11 @@
 
 **Goal:** Let users fetch a Provider's current model catalog while adding a Model, search it, choose an ID, refresh it, or keep typing any valid ID manually.
 
-**Architecture:** MUX Core remains the authority for Provider capability, credentials, URL construction, HTTP policy, and response parsing. The Tauri command accepts only a persisted Provider instance ID and performs discovery off the UI thread. React receives a small normalized model summary and renders an optional combobox without persisting catalog data or weakening the existing free-text workflow.
+**Architecture:** Arca Core remains the authority for Provider capability, credentials, URL construction, HTTP policy, and response parsing. The Tauri command accepts only a persisted Provider instance ID and performs discovery off the UI thread. React receives a small normalized model summary and renders an optional combobox without persisting catalog data or weakening the existing free-text workflow.
 
-**Tech stack:** Rust (`mux-core`, `ureq`, `url`, `zeroize`, `serde_json`), Tauri 2, React 19, TypeScript, Vitest/Testing Library.
+**Tech stack:** Rust (`arca-core`, `ureq`, `url`, `zeroize`, `serde_json`), Tauri 2, React 19, TypeScript, Vitest/Testing Library.
 
-**Delivery constraint:** Never edit and push from the user's local `workspace/apps/mux` checkout. Stage and verify in a disposable `/private/tmp` clone, then create every commit directly on `Scoheart/mux:codex/provider-model-discovery` through the GitHub API. Keep PR #128 as the delivery surface.
+**Delivery constraint:** Never edit and push from the user's local `workspace/apps/arca` checkout. Stage and verify in a disposable `/private/tmp` clone, then create every commit directly on `Scoheart/arca:codex/provider-model-discovery` through the GitHub API. Keep PR #128 as the delivery surface.
 
 ---
 
@@ -49,8 +49,8 @@ Add tests proving that:
 Run:
 
 ```bash
-cargo test -p mux-core resources::model::discovery::tests -- --test-threads=1
-NODE_OPTIONS=--localstorage-file=/private/tmp/mux-provider-model-discovery-localstorage npm test -- ModelsView.test.tsx -t "discovers provider models"
+cargo test -p arca-core resources::model::discovery::tests -- --test-threads=1
+NODE_OPTIONS=--localstorage-file=/private/tmp/arca-provider-model-discovery-localstorage npm test -- ModelsView.test.tsx -t "discovers provider models"
 ```
 
 Expected: failure caused by the missing discovery implementation/API/UI, not by unrelated baseline tests.
@@ -98,8 +98,8 @@ Run:
 
 ```bash
 cargo fmt --all -- --check
-cargo test -p mux-core resources::model::discovery::tests -- --test-threads=1
-cargo test -p mux-core resources::model::tests -- --test-threads=1
+cargo test -p arca-core resources::model::discovery::tests -- --test-threads=1
+cargo test -p arca-core resources::model::tests -- --test-threads=1
 ```
 
 Expected: all targeted Core tests pass.
@@ -159,7 +159,7 @@ For a new Model, fetch once after the initial supported Provider is selected. Fo
 
 **Step 3: Render the control**
 
-Keep the existing text input as the canonical editable value. Add a compact refresh/status action and an accessible searchable listbox under the field when results are available. Match MUX's restrained utility styling, keyboard behavior, dark theme, and existing dialog density. Selecting an option sets only the Model ID.
+Keep the existing text input as the canonical editable value. Add a compact refresh/status action and an accessible searchable listbox under the field when results are available. Match Arca's restrained utility styling, keyboard behavior, dark theme, and existing dialog density. Selecting an option sets only the Model ID.
 
 **Step 4: Cover localized states**
 
@@ -171,7 +171,7 @@ Run:
 
 ```bash
 cd desktop
-NODE_OPTIONS=--localstorage-file=/private/tmp/mux-provider-model-discovery-localstorage npm test -- ModelsView.test.tsx -t "discovers provider models"
+NODE_OPTIONS=--localstorage-file=/private/tmp/arca-provider-model-discovery-localstorage npm test -- ModelsView.test.tsx -t "discovers provider models"
 npm run build
 ```
 
@@ -193,11 +193,11 @@ Run:
 
 ```bash
 cargo fmt --all -- --check
-cargo test -p mux-core resources::model::discovery::tests -- --test-threads=1
-cargo test -p mux-core resources::model::tests -- --test-threads=1
+cargo test -p arca-core resources::model::discovery::tests -- --test-threads=1
+cargo test -p arca-core resources::model::tests -- --test-threads=1
 cargo check --manifest-path desktop/src-tauri/Cargo.toml
 cd desktop && npm run build
-NODE_OPTIONS=--localstorage-file=/private/tmp/mux-provider-model-discovery-localstorage npm test -- ModelsView.test.tsx -t "discovers provider models"
+NODE_OPTIONS=--localstorage-file=/private/tmp/arca-provider-model-discovery-localstorage npm test -- ModelsView.test.tsx -t "discovers provider models"
 ```
 
 **Step 2: Audit the final diff**
@@ -206,8 +206,8 @@ Confirm:
 
 - no credentials, response bodies, generated output, schema migration, changelog, or version bump entered the diff;
 - React passes only Provider instance IDs;
-- the Core owns URL/auth/pagination and uses the configured MUX proxy;
-- all changes exist only on the remote PR branch and the user's local MUX checkout is unchanged.
+- the Core owns URL/auth/pagination and uses the configured Arca proxy;
+- all changes exist only on the remote PR branch and the user's local Arca checkout is unchanged.
 
 **Step 3: Update PR #128**
 

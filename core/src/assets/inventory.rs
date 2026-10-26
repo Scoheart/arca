@@ -775,7 +775,7 @@ fn project_skills(
                         Some("skill_disabled_state_drift".into())
                     } else {
                         // A disabled relation does not turn an independent
-                        // directory or foreign link into a removable MUX link.
+                        // directory or foreign link into a removable Arca link.
                         physical_reason
                     },
                 )

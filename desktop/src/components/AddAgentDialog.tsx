@@ -11,7 +11,7 @@ import { formatError } from "../lib/format";
 import { AgentGlyph } from "./brandIcons";
 import { DialogShell } from "./DialogShell";
 import { DialogDisclosure } from "./DialogDisclosure";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 
 const FORMATS = [
   { value: "json", label: "JSON" },
@@ -34,7 +34,7 @@ function isSkillsDirectory(value: string) {
   if (!value.startsWith("~/") || !value.endsWith("/skills")) return false;
   const parts = value.slice(2).split("/");
   return !parts.some((part) => !part || part === "." || part === "..")
-    && parts[0] !== ".mux";
+    && parts[0] !== ".arca";
 }
 
 function isHttpUrl(value: string) {
@@ -46,7 +46,7 @@ function isHttpUrl(value: string) {
   }
 }
 
-/** Create an Agent identity first, then declare the resource writers MUX may
+/** Create an Agent identity first, then declare the resource writers Arca may
  * manage for it. A completed location includes that writer; an empty location
  * omits it. Custom Model writers require a dedicated safe adapter and are not
  * represented as a generic path-only capability. */
@@ -163,7 +163,7 @@ export function AddAgentDialog({
 
   return (
     <DialogShell
-      className="mux-dialog-agent-editor"
+      className="arca-dialog-agent-editor"
       kind="editor"
       size="md"
       title={t("agents.addTitle")}
@@ -171,7 +171,7 @@ export function AddAgentDialog({
       onClose={onClose}
       footerStart={(
         <span
-          className="mux-agent-create-summary"
+          className="arca-agent-create-summary"
           data-state={incompleteCapabilities
             ? "incomplete"
             : hasCapability ? "ready" : "empty"}
@@ -203,32 +203,32 @@ export function AddAgentDialog({
         </>
       )}
     >
-      <div className="mux-agent-create">
-        <section className="mux-agent-create-section" aria-labelledby="agent-identity-title">
-          <div className="mux-agent-create-section-head">
+      <div className="arca-agent-create">
+        <section className="arca-agent-create-section" aria-labelledby="agent-identity-title">
+          <div className="arca-agent-create-section-head">
             <h3 id="agent-identity-title">{t("agents.identityTitle")}</h3>
           </div>
 
-          <div className="mux-agent-identity-card">
-            <div className="mux-agent-identity-preview" aria-label={t("agents.identityPreview")}>
+          <div className="arca-agent-identity-card">
+            <div className="arca-agent-identity-preview" aria-label={t("agents.identityPreview")}>
               <AgentGlyph id={trimmedId || "new-agent"} name={displayName} size={42} />
             </div>
 
-            <div className="mux-agent-identity-fields">
-              <label className="mux-agent-create-field">
+            <div className="arca-agent-identity-fields">
+              <label className="arca-agent-create-field">
                 <span>{t("agents.nameLabel")} <i>*</i></span>
                 <input
                   autoFocus
-                  className="mux-model-field"
+                  className="arca-model-field"
                   value={name}
                   placeholder={t("agents.namePlaceholder")}
                   onChange={(event) => setName(event.target.value)}
                 />
               </label>
-              <label className="mux-agent-create-field">
+              <label className="arca-agent-create-field">
                 <span>{t("agents.idLabel")} <i>*</i></span>
                 <input
-                  className="mux-model-field"
+                  className="arca-model-field"
                   value={id}
                   spellCheck={false}
                   aria-invalid={id.length > 0 && !idValid}
@@ -236,16 +236,14 @@ export function AddAgentDialog({
                   onChange={(event) => setId(event.target.value)}
                 />
                 {id.length > 0 && !idValid && (
-                  <small data-error="true">
-                    {t(skillsStarted ? "agents.idInvalidWithSkills" : "agents.idInvalid")}
-                  </small>
+                  <ToastNotice kind="warning" delay={500} message={t(skillsStarted ? "agents.idInvalidWithSkills" : "agents.idInvalid")} />
                 )}
               </label>
               <DialogDisclosure title={t("common.advancedSettings")}>
-              <label className="mux-agent-create-field" data-wide>
+              <label className="arca-agent-create-field" data-wide>
                 <span>{t("agents.categoryLabel")}</span>
                 <select
-                  className="mux-model-field"
+                  className="arca-model-field"
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
                 >
@@ -261,13 +259,13 @@ export function AddAgentDialog({
           </div>
         </section>
 
-        <section className="mux-agent-create-section" aria-labelledby="agent-capabilities-title">
-          <div className="mux-agent-create-section-head">
+        <section className="arca-agent-create-section" aria-labelledby="agent-capabilities-title">
+          <div className="arca-agent-create-section-head">
             <h3 id="agent-capabilities-title">{t("agents.capabilitiesTitle")}</h3>
           </div>
 
           <div
-            className="mux-agent-capability-tabs"
+            className="arca-agent-capability-tabs"
             role="tablist"
             aria-label={t("agents.capabilitiesTitle")}
             onKeyDown={handleCapabilityTabKeyDown}
@@ -280,15 +278,15 @@ export function AddAgentDialog({
               aria-selected={activeCapability === "mcp"}
               aria-controls="agent-capability-panel-mcp"
               tabIndex={activeCapability === "mcp" ? 0 : -1}
-              className="mux-agent-capability-tab"
+              className="arca-agent-capability-tab"
               data-active={activeCapability === "mcp" || undefined}
               data-state={mcpState}
               onClick={() => setActiveCapability("mcp")}
             >
-              <span className="mux-agent-capability-tab-icon">
+              <span className="arca-agent-capability-tab-icon">
                 <ResourceIcon domain="mcp" />
               </span>
-              <span className="mux-agent-capability-tab-copy">
+              <span className="arca-agent-capability-tab-copy">
                 <strong>{RESOURCE_PRESENTATION.mcp.label}</strong>
                 <small>{t(`agents.capabilityState.${mcpState}`)}</small>
               </span>
@@ -302,15 +300,15 @@ export function AddAgentDialog({
               aria-selected={activeCapability === "skills"}
               aria-controls="agent-capability-panel-skills"
               tabIndex={activeCapability === "skills" ? 0 : -1}
-              className="mux-agent-capability-tab"
+              className="arca-agent-capability-tab"
               data-active={activeCapability === "skills" || undefined}
               data-state={skillsState}
               onClick={() => setActiveCapability("skills")}
             >
-              <span className="mux-agent-capability-tab-icon">
+              <span className="arca-agent-capability-tab-icon">
                 <ResourceIcon domain="skill" />
               </span>
-              <span className="mux-agent-capability-tab-copy">
+              <span className="arca-agent-capability-tab-copy">
                 <strong>{RESOURCE_PRESENTATION.skill.label}</strong>
                 <small>{t(`agents.capabilityState.${skillsState}`)}</small>
               </span>
@@ -323,13 +321,13 @@ export function AddAgentDialog({
               id="agent-capability-panel-mcp"
               role="tabpanel"
               aria-labelledby="agent-capability-tab-mcp"
-              className="mux-agent-capability-detail"
+              className="arca-agent-capability-detail"
             >
-              <div className="mux-agent-detail-fields">
-                <label className="mux-agent-create-field" data-wide>
+              <div className="arca-agent-detail-fields">
+                <label className="arca-agent-create-field" data-wide>
                   <span>{t("agents.mcpPathLabel")} <i>*</i></span>
                   <input
-                    className="mux-model-field"
+                    className="arca-model-field"
                     value={global}
                     spellCheck={false}
                     placeholder={trimmedId
@@ -339,9 +337,9 @@ export function AddAgentDialog({
                   />
                 </label>
                 <DialogDisclosure title={t("common.advancedSettings")} summary={`${format.toUpperCase()} · ${key}`}>
-                <div className="mux-agent-create-field">
+                <div className="arca-agent-create-field">
                   <span>{t("agents.formatLabel")}</span>
-                  <div className="mux-agent-format-picker" role="group" aria-label={t("agents.formatLabel")}>
+                  <div className="arca-agent-format-picker" role="group" aria-label={t("agents.formatLabel")}>
                     {FORMATS.map((candidate) => (
                       <button
                         type="button"
@@ -354,10 +352,10 @@ export function AddAgentDialog({
                     ))}
                   </div>
                 </div>
-                <label className="mux-agent-create-field">
+                <label className="arca-agent-create-field">
                   <span>{t("agents.mcpKeyLabel")} <i>*</i></span>
                   <input
-                    className="mux-model-field"
+                    className="arca-model-field"
                     value={key}
                     spellCheck={false}
                     placeholder="mcpServers"
@@ -372,13 +370,13 @@ export function AddAgentDialog({
               id="agent-capability-panel-skills"
               role="tabpanel"
               aria-labelledby="agent-capability-tab-skills"
-              className="mux-agent-capability-detail"
+              className="arca-agent-capability-detail"
             >
-              <div className="mux-agent-detail-fields">
-                <label className="mux-agent-create-field">
+              <div className="arca-agent-detail-fields">
+                <label className="arca-agent-create-field">
                   <span>{t("agents.skillsPathLabel")} <i>*</i></span>
                   <input
-                    className="mux-model-field"
+                    className="arca-model-field"
                     value={skillsDir}
                     spellCheck={false}
                     aria-invalid={skillsDir.length > 0 && !skillsDirValid}
@@ -388,13 +386,13 @@ export function AddAgentDialog({
                     onChange={(event) => setSkillsDir(event.target.value)}
                   />
                   {skillsDir.length > 0 && !skillsDirValid && (
-                    <small data-error="true">{t("agents.skillsPathInvalid")}</small>
+                    <ToastNotice kind="warning" delay={500} message={t("agents.skillsPathInvalid")} />
                   )}
                 </label>
-                <label className="mux-agent-create-field">
+                <label className="arca-agent-create-field">
                   <span>{t("agents.skillsDocsLabel")} <i>*</i></span>
                   <input
-                    className="mux-model-field"
+                    className="arca-model-field"
                     value={skillsDocs}
                     type="url"
                     spellCheck={false}
@@ -403,7 +401,7 @@ export function AddAgentDialog({
                     onChange={(event) => setSkillsDocs(event.target.value)}
                   />
                   {skillsDocs.length > 0 && !skillsDocsValid && (
-                    <small data-error="true">{t("agents.skillsDocsInvalid")}</small>
+                    <ToastNotice kind="warning" delay={500} message={t("agents.skillsDocsInvalid")} />
                   )}
                 </label>
               </div>

@@ -1,12 +1,12 @@
 //! Central Skill lifecycle commands over the shared Core plan/commit API.
 
 use clap::{Args, Subcommand};
-use mux_core::application::operations::PlanOperationRequest;
-use mux_core::application::skills::{
+use arca_core::application::operations::PlanOperationRequest;
+use arca_core::application::skills::{
     self, GithubEndpoints, PlanRemoveRequest, PlanRepairRequest, PlanSkillAssetImportRequest,
     PlanSkillAssetInstallRequest, PlanUpdateRequest, RepairKind, SkillSourceInput,
 };
-use mux_core::application::MuxCore;
+use arca_core::application::ArcaCore;
 use serde_json::json;
 
 use crate::command::{parse_identity, skill_error, Cli};
@@ -55,7 +55,7 @@ pub enum SkillManagementCommand {
         #[arg(long)]
         replace_conflicts: bool,
     },
-    /// Import an external Skill identity from `mux discover skill` into the central library.
+    /// Import an external Skill identity from `arca discover skill` into the central library.
     Import {
         #[arg(value_parser = parse_identity)]
         identity: String,
@@ -81,7 +81,7 @@ pub enum SkillManagementCommand {
         #[arg(long, value_parser = parse_identity)]
         target: Option<String>,
     },
-    /// Check upstream revisions and refresh MUX's update cache; does not install updates.
+    /// Check upstream revisions and refresh Arca's update cache; does not install updates.
     CheckUpdates,
 }
 
@@ -104,7 +104,7 @@ pub fn dispatch(cli: &Cli, command: &SkillManagementCommand) -> Result<CommandOu
         SkillManagementCommand::Install { source, names, replace_conflicts } => {
             let resolution = skills::resolve_source(source.input()?, GithubEndpoints::production())
                 .map_err(skill_error)?;
-            let plan = MuxCore::plan(PlanOperationRequest::InstallSkill(PlanSkillAssetInstallRequest {
+            let plan = ArcaCore::plan(PlanOperationRequest::InstallSkill(PlanSkillAssetInstallRequest {
                 resolution_id: resolution.operation_id.clone(), skill_names: names.clone(),
                 replace_conflicts: *replace_conflicts,
             }));
@@ -163,6 +163,6 @@ pub fn dispatch(cli: &Cli, command: &SkillManagementCommand) -> Result<CommandOu
         }
         SkillManagementCommand::InspectSource { .. } => unreachable!(),
     };
-    let plan = MuxCore::plan(request).map_err(CliError::from_core)?;
+    let plan = ArcaCore::plan(request).map_err(CliError::from_core)?;
     execute_operation(name, plan, options)
 }

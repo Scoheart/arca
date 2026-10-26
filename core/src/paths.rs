@@ -4,35 +4,29 @@ use std::path::PathBuf;
 /// builds always inspect the actual system paths.
 pub(crate) fn system_probe_path(path: &str) -> PathBuf {
     #[cfg(any(test, debug_assertions))]
-    if let Some(root) = std::env::var_os("MUX_TEST_PROBE_ROOT") {
+    if let Some(root) = crate::brand::env_os("ARCA_TEST_PROBE_ROOT") {
         return PathBuf::from(root).join(path.trim_start_matches('/'));
     }
     PathBuf::from(path)
 }
 
-/// `~/.mux` —— 与 CLI 共用的数据目录。
+/// `~/.arca` —— 与 CLI 共用的数据目录。
 ///
-/// `MUX_HOME` 环境变量可整体重定向该目录（值即数据目录本身，类似
+/// `ARCA_HOME` 环境变量可整体重定向该目录（值即数据目录本身，类似
 /// `CARGO_HOME`）。除了给用户/CI 挪数据目录，它也是测试隔离的关键防线：
-/// 即使测试对 `HOME` 的操纵发生竞态，只要 `MUX_HOME` 指向临时目录，
-/// 真实 `~/.mux` 就不会被写脏（2026-07-08 曾因 HOME 竞态污染真实缓存）。
-pub fn mux_dir() -> PathBuf {
-    if let Some(p) = std::env::var_os("MUX_HOME") {
-        if !p.is_empty() {
-            return PathBuf::from(p);
-        }
-    }
-    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-    home.join(".mux")
+/// 即使测试对 `HOME` 的操纵发生竞态，只要 `ARCA_HOME` 指向临时目录，
+/// 真实 `~/.arca` 就不会被写脏（2026-07-08 曾因 HOME 竞态污染真实缓存）。
+pub fn arca_dir() -> PathBuf {
+    crate::brand::data_directory()
 }
 
 pub fn backups_dir() -> PathBuf {
-    mux_dir().join("backups")
+    arca_dir().join("backups")
 }
 
-/// `~/.mux/assets` —— MCP、Model 与 Skill 中央资产的统一物理根目录。
+/// `~/.arca/assets` —— MCP、Model 与 Skill 中央资产的统一物理根目录。
 pub fn assets_dir() -> PathBuf {
-    mux_dir().join("assets")
+    arca_dir().join("assets")
 }
 
 pub fn mcp_assets_dir() -> PathBuf {
@@ -72,11 +66,11 @@ pub fn skill_catalog_file() -> PathBuf {
 }
 
 pub(crate) fn legacy_sources_dir() -> PathBuf {
-    mux_dir().join("sources")
+    arca_dir().join("sources")
 }
 
 /// MCP source payload root. Before the startup migration completes, readers
-/// transparently resolve the legacy `~/.mux/sources` location so recovery and
+/// transparently resolve the legacy `~/.arca/sources` location so recovery and
 /// upgrades never observe an empty catalog merely because the binary changed.
 pub fn sources_dir() -> PathBuf {
     let current = mcp_sources_dir();
@@ -88,28 +82,28 @@ pub fn sources_dir() -> PathBuf {
     }
 }
 
-/// `~/.mux/sources/remote` —— 订阅(远程 URL)抓取后的缓存副本
+/// `~/.arca/sources/remote` —— 订阅(远程 URL)抓取后的缓存副本
 pub fn remote_sources_dir() -> PathBuf {
     sources_dir().join("remote")
 }
 
-/// `~/.mux/sources/local` —— 本地添加的配置文件副本
+/// `~/.arca/sources/local` —— 本地添加的配置文件副本
 pub fn local_sources_dir() -> PathBuf {
     sources_dir().join("local")
 }
 
-/// `~/.mux/settings.json` —— 所有用户数据(registry/agents/disabled/state…)的单一文件
+/// `~/.arca/settings.json` —— 所有用户数据(registry/agents/disabled/state…)的单一文件
 pub fn settings_file() -> PathBuf {
-    mux_dir().join("settings.json")
+    arca_dir().join("settings.json")
 }
 
-/// `~/.mux/registry` —— legacy 自定义条目目录(仅迁移时读取)
+/// `~/.arca/registry` —— legacy 自定义条目目录(仅迁移时读取)
 pub fn registry_dir() -> PathBuf {
-    mux_dir().join("registry")
+    arca_dir().join("registry")
 }
 
 pub fn user_agents_file() -> PathBuf {
-    mux_dir().join("agents.json")
+    arca_dir().join("agents.json")
 }
 
 fn migrate_directory(legacy: &std::path::Path, current: &std::path::Path) -> std::io::Result<bool> {
@@ -133,7 +127,7 @@ fn migrate_directory(legacy: &std::path::Path, current: &std::path::Path) -> std
     }
 }
 
-/// Move the legacy MCP source directory under `~/.mux/assets`.
+/// Move the legacy MCP source directory under `~/.arca/assets`.
 /// The settings lock must be held by the caller.
 pub(crate) fn migrate_legacy_mcp_sources() -> std::io::Result<bool> {
     migrate_directory(&legacy_sources_dir(), &mcp_sources_dir())
@@ -150,14 +144,14 @@ mod tests {
     use crate::testenv::TestHome;
 
     #[test]
-    fn mux_dir_ends_with_dot_mux() {
-        let _home = TestHome::new("paths-mux-dir");
-        assert!(mux_dir().ends_with(".mux"));
+    fn arca_dir_ends_with_dot_arca() {
+        let _home = TestHome::new("paths-arca-dir");
+        assert!(arca_dir().ends_with(".arca"));
     }
 
     #[test]
-    fn backups_under_mux_dir() {
+    fn backups_under_arca_dir() {
         let _home = TestHome::new("paths-backups");
-        assert!(backups_dir().starts_with(mux_dir()));
+        assert!(backups_dir().starts_with(arca_dir()));
     }
 }

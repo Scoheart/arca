@@ -57,7 +57,7 @@ export function DialogShell({
     if (!busy) onClose();
   };
   const effectiveLeading = leading ?? (
-    <span className="mux-dialog-shell-glyph" aria-hidden="true">
+    <span className="arca-dialog-shell-glyph" aria-hidden="true">
       {DEFAULT_LEADING[kind]}
     </span>
   );
@@ -73,20 +73,20 @@ export function DialogShell({
       onClose={requestClose}
     >
       <section
-        className={["mux-dialog-shell", className].filter(Boolean).join(" ")}
+        className={["arca-dialog-shell", className].filter(Boolean).join(" ")}
         data-dialog-kind={kind}
         data-dialog-size={size}
         aria-busy={busy || undefined}
       >
-        <header className="mux-dialog-shell-header">
-          <div className="mux-dialog-shell-leading">{effectiveLeading}</div>
-          <div className="mux-dialog-shell-heading">
+        <header className="arca-dialog-shell-header">
+          <div className="arca-dialog-shell-leading">{effectiveLeading}</div>
+          <div className="arca-dialog-shell-heading">
             <h2 data-modal-title tabIndex={-1}>{title}</h2>
-            {subtitle != null && <div className="mux-dialog-shell-subtitle">{subtitle}</div>}
+            {subtitle != null && <div className="arca-dialog-shell-subtitle">{subtitle}</div>}
           </div>
           <button
             type="button"
-            className="mux-dialog-shell-close"
+            className="arca-dialog-shell-close"
             onClick={requestClose}
             disabled={busy}
             aria-label={closeLabel ?? t("common.close")}
@@ -95,12 +95,12 @@ export function DialogShell({
             <XIcon className="w-4 h-4" />
           </button>
         </header>
-        {status != null && <div className="mux-dialog-shell-status">{status}</div>}
-        <div className="mux-dialog-shell-body" inert={busy || undefined}>{children}</div>
+        {status != null && <div className="arca-dialog-shell-status">{status}</div>}
+        <div className="arca-dialog-shell-body" inert={busy || undefined}>{children}</div>
         {(footerStart != null || footerEnd != null) && (
-          <footer className="mux-dialog-shell-footer">
-            <div className="mux-dialog-shell-footer-start">{footerStart}</div>
-            <div className="mux-dialog-shell-footer-end">{footerEnd}</div>
+          <footer className="arca-dialog-shell-footer">
+            <div className="arca-dialog-shell-footer-start">{footerStart}</div>
+            <div className="arca-dialog-shell-footer-end">{footerEnd}</div>
           </footer>
         )}
       </section>

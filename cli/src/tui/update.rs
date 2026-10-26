@@ -13,7 +13,7 @@ use super::model::{
     EDITOR_FIELDS,
 };
 /// The GitHub raw URL of the curated collection, offered as a remote subscribe.
-const OFFICIAL_URL: &str = "https://raw.githubusercontent.com/Scoheart/mux/main/data/registry.json";
+const OFFICIAL_URL: &str = "https://raw.githubusercontent.com/Scoheart/arca/main/data/registry.json";
 
 pub fn update(model: &mut Model, msg: Msg) -> Vec<Effect> {
     match msg {
@@ -336,7 +336,7 @@ fn sources_key(model: &mut Model, k: KeyEvent) -> Vec<Effect> {
         KeyCode::Char('o') => {
             model.modal = Some(Modal::Subscribe(SubscribeForm {
                 url: OFFICIAL_URL.into(),
-                name: "Mux 精选".into(),
+                name: "Arca 精选".into(),
                 field: 0,
             }))
         }
@@ -346,7 +346,7 @@ fn sources_key(model: &mut Model, k: KeyEvent) -> Vec<Effect> {
 }
 
 /// The source row under the cursor.
-fn current_source(model: &Model) -> Option<&mux_core::application::mcp::sources::SourceView> {
+fn current_source(model: &Model) -> Option<&arca_core::application::mcp::sources::SourceView> {
     model.data.sources.get(model.sources_ui.cursor)
 }
 
@@ -382,7 +382,7 @@ fn open_remove_source_confirm(model: &mut Model) {
         return;
     };
     if s.managed {
-        model.status = Some("MUX 维护的来源不可删除".into());
+        model.status = Some("Arca 维护的来源不可删除".into());
         return;
     }
     let (id, name) = (s.id.clone(), s.name.clone());
@@ -824,7 +824,7 @@ fn add_mcp_key(model: &mut Model, mut st: AddMcpState, k: KeyEvent) -> Vec<Effec
 mod tests {
     use super::*;
     use crate::tui::message::LoadedData;
-    use mux_core::domain::types::{
+    use arca_core::domain::types::{
         HttpConfig, RegistryConfig, RegistryEntry, RegistryOrigin, StdioConfig,
     };
 
@@ -960,8 +960,8 @@ mod tests {
         assert!(m2.should_quit);
     }
 
-    fn agent(id: &str, has_global: bool) -> mux_core::application::agents::AgentInfo {
-        mux_core::application::agents::AgentInfo {
+    fn agent(id: &str, has_global: bool) -> arca_core::application::agents::AgentInfo {
+        arca_core::application::agents::AgentInfo {
             id: id.into(),
             name: id.into(),
             format: "json".into(),
@@ -985,7 +985,7 @@ mod tests {
 
     fn loaded_full(
         entries: Vec<RegistryEntry>,
-        agents: Vec<mux_core::application::agents::AgentInfo>,
+        agents: Vec<arca_core::application::agents::AgentInfo>,
     ) -> Msg {
         Msg::Loaded(Box::new(LoadedData {
             registry: entries,
@@ -1223,7 +1223,7 @@ mod tests {
         use crate::tui::model::EditorState;
         let mut e = entry("structured-http", "manual");
         e.config.stdio = None;
-        e.config.http = Some(mux_core::domain::types::HttpConfig {
+        e.config.http = Some(arca_core::domain::types::HttpConfig {
             kind: "http".into(),
             url: "https://example.invalid/mcp".into(),
             headers: Some(std::collections::HashMap::from([
@@ -1273,8 +1273,8 @@ mod tests {
         id: &str,
         enabled: bool,
         managed: bool,
-    ) -> mux_core::application::mcp::sources::SourceView {
-        mux_core::application::mcp::sources::SourceView {
+    ) -> arca_core::application::mcp::sources::SourceView {
+        arca_core::application::mcp::sources::SourceView {
             id: id.into(),
             kind: "remote".into(),
             name: id.into(),
@@ -1290,7 +1290,7 @@ mod tests {
         }
     }
 
-    fn loaded_sources(srcs: Vec<mux_core::application::mcp::sources::SourceView>) -> Msg {
+    fn loaded_sources(srcs: Vec<arca_core::application::mcp::sources::SourceView>) -> Msg {
         Msg::Loaded(Box::new(LoadedData {
             registry: vec![],
             custom_keys: vec![],

@@ -17,10 +17,10 @@ pub struct ScannedMcp {
 pub fn expand_tilde(p: &str) -> PathBuf {
     if let Some(rest) = p.strip_prefix("~/") {
         if let Some(home) = std::env::var_os("HOME") {
-            return Path::new(&home).join(rest);
+            return crate::brand::translate_legacy_path(Path::new(&home).join(rest));
         }
     }
-    PathBuf::from(p)
+    crate::brand::translate_legacy_path(PathBuf::from(p))
 }
 
 /// Collapse an absolute path under the user's home directory back to `~/…` so
@@ -101,7 +101,7 @@ mod tests {
     #[test]
     fn scans_project_json_config() {
         let mut base = std::env::temp_dir();
-        base.push(format!("mux-scan-project-{}", std::process::id()));
+        base.push(format!("arca-scan-project-{}", std::process::id()));
         std::fs::create_dir_all(&base).unwrap();
         std::fs::write(
             base.join("mcp.json"),

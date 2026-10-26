@@ -12,7 +12,7 @@ import { DialogShell } from "./DialogShell";
 import { FormSelect } from "./FormSelect";
 import { ResourceInspector } from "./ResourceWorkspace";
 import { LayersIcon, NetworkIcon, SaveIcon, TerminalIcon } from "./icons";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import { McpAvatar } from "./McpIcon";
 import { McpPasteInput } from "./McpPasteInput";
 import { formatError } from "../lib/format";
@@ -221,9 +221,9 @@ export function RegistryEditPage({
   };
 
   const form = (
-    <fieldset className="mux-mcp-form mux-mcp-editor-form" disabled={saving || consumptionState.committing}>
+    <fieldset className="arca-mcp-form arca-mcp-editor-form" disabled={saving || consumptionState.committing}>
       {createsLocalOverride && (
-        <div className="mux-mcp-override-note" role="note">
+        <div className="arca-mcp-override-note" role="note">
           <LayersIcon className="w-4 h-4 flex-shrink-0" />
           <div>
             <strong>{t("mcpEditor.override")}</strong>
@@ -231,7 +231,7 @@ export function RegistryEditPage({
           </div>
         </div>
       )}
-      <div className="mux-mcp-connection-picker" role="radiogroup" aria-label={t("mcpEditor.connection")}>
+      <div className="arca-mcp-connection-picker" role="radiogroup" aria-label={t("mcpEditor.connection")}>
         {(["stdio", "http"] as const).map((value) => (
           <label key={value} data-selected={transport === value || undefined} data-disabled={!isNew || undefined}>
             <input type="radio" name={connectionId} value={value} checked={transport === value}
@@ -245,58 +245,58 @@ export function RegistryEditPage({
           </label>
         ))}
       </div>
-      <div className="mux-mcp-field-grid">
-        <label className="mux-mcp-field">
+      <div className="arca-mcp-field-grid">
+        <label className="arca-mcp-field">
           <span>{t("mcpEditor.name")}</span>
-          <input aria-label={t("mcpEditor.name")} className="mux-dialog-input" value={serverName}
+          <input aria-label={t("mcpEditor.name")} className="arca-dialog-input" value={serverName}
             readOnly={!!createsLocalOverride} onChange={(event) => setServerName(event.target.value)}
             placeholder={t("mcpEditor.namePlaceholder")} aria-invalid={!!duplicateName || undefined} spellCheck={false} />
-          {duplicateName && <small className="mux-mcp-field-error">{t("mcpEditor.duplicateKey")}</small>}
+          {duplicateName && <ToastNotice kind="warning" delay={500} message={t("mcpEditor.duplicateKey")} />}
         </label>
-        <label className="mux-mcp-field">
+        <label className="arca-mcp-field">
           <span>{t("mcpEditor.description")} <small>{t("mcpEditor.optional")}</small></span>
-          <input className="mux-dialog-input" value={description} onChange={(event) => setDescription(event.target.value)}
+          <input className="arca-dialog-input" value={description} onChange={(event) => setDescription(event.target.value)}
             placeholder={t("mcpEditor.descriptionPlaceholder")} />
         </label>
       </div>
       <div hidden={transport !== "stdio"}>
-        <div className="mux-mcp-connection-fields">
-          <div className="mux-mcp-field-grid">
-            <label className="mux-mcp-field">
+        <div className="arca-mcp-connection-fields">
+          <div className="arca-mcp-field-grid">
+            <label className="arca-mcp-field">
               <span>{t("mcpEditor.command")}</span>
-              <input className="mux-dialog-input mux-dialog-input-mono" value={command}
+              <input className="arca-dialog-input arca-dialog-input-mono" value={command}
                 onChange={(event) => setCommand(event.target.value)} placeholder="npx / uvx / node" spellCheck={false} autoCapitalize="off" autoCorrect="off" />
             </label>
-            <label className="mux-mcp-field">
+            <label className="arca-mcp-field">
               <span>{t("mcpEditor.directory")} <small>{t("mcpEditor.optional")}</small></span>
-              <input className="mux-dialog-input mux-dialog-input-mono" value={cwd}
+              <input className="arca-dialog-input arca-dialog-input-mono" value={cwd}
                 onChange={(event) => setCwd(event.target.value)} placeholder={t("mcpEditor.directoryPlaceholder")}
                 spellCheck={false} autoCapitalize="off" autoCorrect="off" />
             </label>
           </div>
-          <label className="mux-mcp-field">
+          <label className="arca-mcp-field">
             <span>{t("mcpEditor.args")} <small>{t("mcpEditor.argsHint")}</small></span>
-            <textarea aria-label={t("mcpEditor.args")} className="mux-dialog-input mux-mcp-args" rows={3}
+            <textarea aria-label={t("mcpEditor.args")} className="arca-dialog-input arca-mcp-args" rows={3}
               value={argsText} onChange={(event) => { setArgsText(event.target.value); setArgsEdited(true); }}
               placeholder={"-y\n@playwright/mcp@latest"} spellCheck={false} autoCapitalize="off" autoCorrect="off" />
           </label>
-          <section className="mux-mcp-field mux-mcp-field-section" aria-label={t("mcpEditor.environment")}>
+          <section className="arca-mcp-field arca-mcp-field-section" aria-label={t("mcpEditor.environment")}>
             <span>{t("mcpEditor.environment")} <small>{t("mcpEditor.optional")}</small></span>
             <EnvEditor value={env} onChange={setEnv} onValidityChange={setEnvValid} disabled={saving} />
           </section>
         </div>
       </div>
       <div hidden={transport !== "http"}>
-        <div className="mux-mcp-connection-fields">
-          <div className="mux-mcp-remote-fields">
-            <label className="mux-mcp-field">
+        <div className="arca-mcp-connection-fields">
+          <div className="arca-mcp-remote-fields">
+            <label className="arca-mcp-field">
               <span>{t("mcpEditor.url")}</span>
-              <input className="mux-dialog-input mux-dialog-input-mono" value={url}
+              <input className="arca-dialog-input arca-dialog-input-mono" value={url}
                 onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com/mcp"
                 aria-invalid={urlInvalid || undefined} spellCheck={false} autoCapitalize="off" autoCorrect="off" />
-              {urlInvalid && <small className="mux-mcp-field-error">{t("mcpEditor.invalidUrl")}</small>}
+              {urlInvalid && <ToastNotice kind="warning" delay={500} message={t("mcpEditor.invalidUrl")} />}
             </label>
-            <div className="mux-mcp-field">
+            <div className="arca-mcp-field">
               <span>{t("mcpEditor.protocol")}</span>
               <FormSelect ariaLabel={t("mcpEditor.protocol")} value={HTTP_TYPES.includes(httpType) ? httpType : "custom"}
                 options={[
@@ -307,20 +307,20 @@ export function RegistryEditPage({
                 ]} onChange={(value) => setHttpType(value === "custom" ? "" : value)} disabled={saving} />
             </div>
           </div>
-          {!HTTP_TYPES.includes(httpType) && <label className="mux-mcp-field">
+          {!HTTP_TYPES.includes(httpType) && <label className="arca-mcp-field">
             <span>{t("mcpEditor.customType")}</span>
-            <input className="mux-dialog-input mux-dialog-input-mono" value={httpType}
+            <input className="arca-dialog-input arca-dialog-input-mono" value={httpType}
               onChange={(event) => setHttpType(event.target.value)} placeholder="type" spellCheck={false} />
           </label>}
-          <section className="mux-mcp-field mux-mcp-field-section" aria-label={t("mcpEditor.headers")}>
+          <section className="arca-mcp-field arca-mcp-field-section" aria-label={t("mcpEditor.headers")}>
             <span>{t("mcpEditor.headers")} <small>{t("mcpEditor.optional")}</small></span>
             <EnvEditor kind="headers" value={headers} onChange={setHeaders} onValidityChange={setHeadersValid} disabled={saving} />
           </section>
         </div>
       </div>
-      <label className="mux-mcp-field">
+      <label className="arca-mcp-field">
         <span>{t("mcpEditor.repo")} <small>{t("mcpEditor.optional")}</small></span>
-        <input className="mux-dialog-input mux-dialog-input-mono" value={repo}
+        <input className="arca-dialog-input arca-dialog-input-mono" value={repo}
           onChange={(event) => setRepo(event.target.value)} placeholder="https://github.com/owner/repo"
           spellCheck={false} autoCapitalize="off" autoCorrect="off" />
       </label>
@@ -389,8 +389,8 @@ export function RegistryEditPage({
 
   return (
     <DialogShell
-      leading={<span className="mux-dialog-shell-glyph"><ResourceIcon domain="mcp" /></span>}
-      className="mux-dialog-mcp-editor"
+      leading={<span className="arca-dialog-shell-glyph"><ResourceIcon domain="mcp" /></span>}
+      className="arca-dialog-mcp-editor"
       kind="editor"
       size="wide"
       title={t(isNew ? "mcpEditor.addTitle" : "mcpEditor.editTitle")}
@@ -400,10 +400,10 @@ export function RegistryEditPage({
       footerStart={footerStart ?? (isNew ? t("mcpEditor.pasteScope") : null)}
       footerEnd={footerEnd}
     >
-      {isNew && <div className="mux-seg mux-mcp-add-modes" role="group" aria-label={t("mcpEditor.addMode")}>
-        <button type="button" className="mux-seg-item" aria-pressed={addMode === "paste"}
+      {isNew && <div className="arca-seg arca-mcp-add-modes" role="group" aria-label={t("mcpEditor.addMode")}>
+        <button type="button" className="arca-seg-item" aria-pressed={addMode === "paste"}
           disabled={saving} onClick={() => setAddMode("paste")}>{t("mcpEditor.paste")}</button>
-        <button type="button" className="mux-seg-item" aria-pressed={addMode === "manual"}
+        <button type="button" className="arca-seg-item" aria-pressed={addMode === "manual"}
           disabled={saving} onClick={() => setAddMode("manual")}>{t("mcpEditor.manual")}</button>
       </div>}
       {isNew && <div hidden={!isPaste}>

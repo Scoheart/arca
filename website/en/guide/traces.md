@@ -14,23 +14,33 @@ Native formats depend on the current adapters; a launchable Agent does not autom
 
 ## Network records and proxy
 
-The **Network** menu exposes proxy configuration and records. MUX's proxy covers its own remote sources, GitHub Skills, and updates; it does not rewrite every Agent's system proxy.
+The **Network** menu exposes proxy configuration and records. Arca's proxy covers its own remote sources, GitHub Skills, and updates; it does not rewrite every Agent's system proxy.
 
-Inspect saved requests, responses, and individual flows. CLI Capture commands read saved content without starting capture or treating the current CLI process as desktop capture-state authority. Actual capture follows the desktop environment setup.
+Open **Capture** from an Agent page. The workbench uses that Agent directly, with no second Agent selector, and shows only its processes and saved sessions. Choose a fresh instance or an existing process. A fresh supported runtime receives additional capture CA roots and capture binds to that instance. Select direct egress, the Arca proxy, or a custom HTTP proxy. Clients using the system certificate store still require system trust for the capture CA.
+
+Desktop and CLI share Core's discovery, launch, forwarding, redaction, and stop workflow. `capture list/show` read saved records, `capture environment` inspects prerequisites, and `capture state` verifies process identities. `capture run` records in the foreground for a bounded duration and stops afterward; losing its owner also ends capture.
 
 ## Read from another Agent
 
 ```bash
-mux trace list --agent codex --limit 20 --json
-mux trace show SESSION_ID --json
-mux trace show SESSION_ID --event EVENT_ID --revision PAGE_REVISION --json
-mux trace show --file /path/to/session.jsonl --json
-mux capture list --agent codex --json
-mux capture show SESSION_ID --limit 100 --json
-mux capture show SESSION_ID --flow FLOW_ID --json
+arca trace list --agent codex --limit 20 --json
+arca trace show SESSION_ID --json
+arca trace show SESSION_ID --event EVENT_ID --revision PAGE_REVISION --json
+arca trace show --file /path/to/session.jsonl --json
+arca capture list --agent codex --json
+arca capture show SESSION_ID --limit 100 --json
+arca capture show SESSION_ID --flow FLOW_ID --json
+arca capture environment --json
+arca capture run --agent pi --target TARGET_ID --seconds 60 --json
+arca capture run --agent pi --launch --directory /path/to/project --seconds 60 --json
+arca capture state SESSION_ID --json
 ```
 
 Continue with the returned cursor and use that page's revision for details. Capture's incremental cache avoids reparsing unchanged history.
+
+On first capture, official mitmproxy installs and registers Mitmproxy Redirector without terminal commands. It may be absent from System Settings before registration. The notification provides an **Open authorization settings** action. Approve the macOS prompts; Arca detects the change and continues automatically without a manual refresh, waiting up to three minutes.
+
+Existing processes cannot receive new CA roots at runtime, and proxy settings or existing connections may bypass capture. Prefer a fresh process after a TLS failure. An unresponsive launcher returns an error after 10 seconds; ordinary engine startup with an initialized extension retains its 12-second limit and preserves a redacted diagnosis on failure. Process capture currently requires macOS and official mitmproxy. System permissions still require user approval.
 
 ## Content and redaction
 

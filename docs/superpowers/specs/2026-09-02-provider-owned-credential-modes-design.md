@@ -2,13 +2,13 @@
 
 ## Decision
 
-Providers own one API Key. MUX stores newly entered keys in the system Keychain. Agents own the delivery decision: core selects the best verified route automatically, and an Agent shows a dedicated selector only when it has more than one reliable route.
+Providers own one API Key. Arca stores newly entered keys in the system Keychain. Agents own the delivery decision: core selects the best verified route automatically, and an Agent shows a dedicated selector only when it has more than one reliable route.
 
 ## Provider form
 
 - The form exposes one optional or required API Key field, according to the Provider template.
 - It exposes no authentication-requirement selector and no generic source-method selector.
-- A newly entered key persists as `mux-store`, with bytes only in Keychain.
+- A newly entered key persists as `arca-store`, with bytes only in Keychain.
 - Known local Providers remain unauthenticated. Custom Providers may remain keyless.
 - Existing `env`, `file`, and `helper` records remain readable and operational. Leaving the API Key blank preserves them; entering a key migrates that Provider to Keychain.
 

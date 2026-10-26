@@ -16,6 +16,8 @@ use std::time::UNIX_EPOCH;
 const MAX_RECORD: u64 = 8 * 1024 * 1024;
 const MAX_DOCUMENT: u64 = 32 * 1024 * 1024;
 const PAGE_RECORDS: usize = 60;
+const INLINE_MESSAGE_BYTES: usize = 32 * 1024;
+const INLINE_PAGE_BYTES: usize = 512 * 1024;
 const MAX_FILES: usize = 5000;
 const MAX_SCAN: usize = 25000;
 const MAX_REDACTION_BYTES: u64 = 32 * 1024 * 1024;
@@ -69,6 +71,10 @@ pub struct TraceEvent {
     pub preview: String,
     pub call_id: Option<String>,
     pub is_error: bool,
+    /// Bounded, redacted conversation text. Tool bodies stay on demand.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    pub text_truncated: bool,
 }
 #[derive(Serialize)]
 pub struct TracePage {
@@ -82,6 +88,7 @@ pub struct TracePage {
 pub struct TraceRaw {
     pub label: String,
     pub raw: Value,
+    pub text: String,
 }
 #[derive(Serialize)]
 pub struct TraceDetail {
@@ -437,11 +444,21 @@ fn string(value: &Value, key: &str) -> Option<String> { value.get(key).and_then(
 fn emit(items: &mut Vec<Parsed>, offset: u64, kind: &str, timestamp: Option<String>, title: String, call_id: Option<String>, text: String, raw: Value, is_error: bool, _redactor: &Redactor) {
     // Keep complete originals inside this read until the final redaction
     // context is known. Early prefix replacement/truncation can expose suffixes.
-    items.push(Parsed { event: TraceEvent { id: format!("{offset}.{}", items.len()), kind: kind.into(), timestamp, title, preview: text.clone(), call_id, is_error }, raw, text });
+    items.push(Parsed { event: TraceEvent { id: format!("{offset}.{}", items.len()), kind: kind.into(), timestamp, title, preview: text.clone(), call_id, is_error, text: None, text_truncated: false }, raw, text });
 }
-fn redact_event(event: &mut TraceEvent, redactor: &Redactor) {
+fn redact_event(event: &mut TraceEvent, redactor: &Redactor, inline_budget: Option<&mut usize>) {
     event.title = redactor.text(&event.title);
-    event.preview = bounded_preview(&redactor.text(&event.preview));
+    let text = redactor.text(&event.preview);
+    event.preview = bounded_preview(&text);
+    if let Some(budget) = inline_budget.filter(|_| matches!(event.kind.as_str(), "user" | "assistant")) {
+        // Redact complete values before taking any prefix, so a secret crossing
+        // the display boundary cannot leak its suffix in another representation.
+        let mut end = text.len().min(INLINE_MESSAGE_BYTES).min(*budget);
+        while !text.is_char_boundary(end) { end -= 1; }
+        event.text = Some(text[..end].to_owned());
+        event.text_truncated = end < text.len();
+        *budget -= end;
+    }
     event.timestamp = event.timestamp.as_deref().map(|s| redactor.text(s));
     event.call_id = event.call_id.as_deref().map(|s| redactor.text(s));
 }
@@ -517,15 +534,13 @@ fn normalize(value: &Value, format: &str, offset: u64, redactor: &Redactor) -> V
     }
     items
 }
-fn document_items(document: &Value, locator: &Locator, redactor: &Redactor) -> Vec<Parsed> {
+fn document_items<'a>(document: &'a Value, locator: &'a Locator, redactor: &'a Redactor) -> impl Iterator<Item = Parsed> + 'a {
     let values = document.as_array().or_else(|| document.get("messages").and_then(Value::as_array));
-    let mut items = Vec::new();
-    for value in values.map(|v| v.as_slice()).unwrap_or(std::slice::from_ref(document)) {
-        let mut next = normalize(value, &locator.source.format, 0, redactor);
-        for item in &mut next { item.event.id = format!("0.{}", items.len()); items.push(Parsed { event: item.event.clone(), raw: item.raw.clone(), text: item.text.clone() }); }
-    }
-    items
+    values.map(|v| v.as_slice()).unwrap_or(std::slice::from_ref(document)).iter()
+        .flat_map(move |value| normalize(value, &locator.source.format, 0, redactor))
+        .enumerate().map(|(index, mut item)| { item.event.id = format!("0.{index}"); item })
 }
+
 #[derive(Serialize, Deserialize)]
 struct Cursor { offset: u64, index: usize, revision: String }
 fn encode(cursor: &Cursor) -> Result<String, String> { serde_json::to_vec(cursor).map(hex::encode).map_err(|_| "无法生成分页游标。".into()) }
@@ -541,14 +556,28 @@ pub fn page(session_id: &str, cursor: Option<&str>) -> Result<TracePage, String>
     let cursor = decode(cursor, &rev)?;
     let mut redactor = Redactor::default();
     let warnings = Vec::new();
-    let (mut events, next_cursor): (Vec<TraceEvent>, Option<String>) = if document_mode(&locator) {
+    let document_mode = document_mode(&locator);
+    let mut inline_budget = INLINE_PAGE_BYTES;
+    let (mut events, next_cursor): (Vec<TraceEvent>, Option<String>) = if document_mode {
         let document = read_document(&locator, file)?;
         redactor.learn(&document)?;
-        let items = document_items(&document, &locator, &redactor);
-        if cursor.index > items.len() { return Err("分页位置无效。".into()); }
-        let end = (cursor.index + PAGE_RECORDS).min(items.len());
-        let events = items[cursor.index..end].iter().map(|i| i.event.clone()).collect();
-        let next = if end < items.len() { Some(encode(&Cursor { offset: 0, index: end, revision: rev.clone() })?) } else { None };
+        // Normalize one source record at a time, never retain a second full
+        // document of raw bodies just to return a page of small summaries.
+        let mut events = Vec::new();
+        let mut total = 0;
+        for item in document_items(&document, &locator, &redactor) {
+            if total >= cursor.index && events.len() < PAGE_RECORDS {
+                let mut event = item.event;
+                // The complete document has already supplied the redaction
+                // context, so no unbounded preview needs to survive this loop.
+                redact_event(&mut event, &redactor, Some(&mut inline_budget));
+                events.push(event);
+            }
+            total += 1;
+        }
+        if cursor.index > total { return Err("分页位置无效。".into()); }
+        let end = cursor.index + events.len();
+        let next = if end < total { Some(encode(&Cursor { offset: 0, index: end, revision: rev.clone() })?) } else { None };
         (events, next)
     } else {
         let (mut reader, mut budget) = context_reader(file, cursor.offset, &mut redactor)?;
@@ -565,7 +594,9 @@ pub fn page(session_id: &str, cursor: Option<&str>) -> Result<TracePage, String>
         let next = if complete { None } else { Some(encode(&Cursor { offset, index: 0, revision: rev.clone() })?) };
         (events, next)
     };
-    for event in &mut events { redact_event(event, &redactor); }
+    if !document_mode {
+        for event in &mut events { redact_event(event, &redactor, Some(&mut inline_budget)); }
+    }
     let session = summary_with_context(&locator, session_id.into(), &redactor)?;
     if revision(&open(&locator)?)? != rev { return Err("记录在读取期间发生变化，请刷新；未返回混合快照。".into()); }
     Ok(TracePage { session, events, next_cursor, revision: rev, warnings })
@@ -584,11 +615,14 @@ pub fn detail(session_id: &str, event_id: &str, expected_revision: &str) -> Resu
         if offset != 0 { return Err("记录 ID 无效。".into()); }
         let document = read_document(&locator, file)?;
         redactor.learn(&document)?;
-        let mut items = document_items(&document, &locator, &redactor);
-        if index >= items.len() { return Err("记录不存在。".into()); }
-        let selected = items.remove(index);
+        let selected = document_items(&document, &locator, &redactor).nth(index).ok_or("记录不存在。")?;
         if selected.event.kind == "tool_call" {
-            if let Some(id) = &selected.event.call_id { for result in items.iter().filter(|i| i.event.kind == "tool_result" && i.event.call_id.as_ref() == Some(id)) { related.push(TraceRaw { label: "tool_result".into(), raw: result.raw.clone() }); } }
+            if let Some(id) = &selected.event.call_id {
+                for result in document_items(&document, &locator, &redactor)
+                    .filter(|i| i.event.kind == "tool_result" && i.event.call_id.as_ref() == Some(id)) {
+                    related.push(TraceRaw { label: "tool_result".into(), raw: result.raw, text: result.text });
+                }
+            }
         }
         selected
     } else {
@@ -601,7 +635,7 @@ pub fn detail(session_id: &str, event_id: &str, expected_revision: &str) -> Resu
         let selected = items.remove(index);
         let call_id = (selected.event.kind == "tool_call").then_some(selected.event.call_id.as_ref()).flatten();
         if let Some(id) = call_id {
-            for item in &items { if item.event.kind == "tool_result" && item.event.call_id.as_ref() == Some(id) { related.push(TraceRaw { label: "tool_result".into(), raw: item.raw.clone() }); } }
+            for item in &items { if item.event.kind == "tool_result" && item.event.call_id.as_ref() == Some(id) { related.push(TraceRaw { label: "tool_result".into(), raw: item.raw.clone(), text: item.text.clone() }); } }
         }
         // Any page containing this record can learn from up to 59 following
         // records. Detail must learn at least that same context before output,
@@ -613,7 +647,7 @@ pub fn detail(session_id: &str, event_id: &str, expected_revision: &str) -> Resu
             if related.is_empty() {
                 if let Some(id) = call_id {
                     for result in normalize(&record.1, &locator.source.format, record.0, &redactor) {
-                        if result.event.kind == "tool_result" && result.event.call_id.as_ref() == Some(id) { related.push(TraceRaw { label: "tool_result".into(), raw: result.raw }); }
+                        if result.event.kind == "tool_result" && result.event.call_id.as_ref() == Some(id) { related.push(TraceRaw { label: "tool_result".into(), raw: result.raw, text: result.text }); }
                     }
                 }
             }
@@ -622,8 +656,8 @@ pub fn detail(session_id: &str, event_id: &str, expected_revision: &str) -> Resu
     };
     if selected.event.kind == "tool_call" && related.is_empty() { pairing_note = Some("在当前文件的配对范围内未找到返回（最多后续 1000 条 / 32 MiB）；可能仍在执行、返回被省略或在另一条分支。".into()); }
     if revision(&open(&locator)?)? != expected_revision { return Err("记录在读取期间发生变化，请刷新。".into()); }
-    redact_event(&mut selected.event, &redactor);
-    for item in &mut related { item.raw = redactor.value(&item.raw); }
+    redact_event(&mut selected.event, &redactor, None);
+    for item in &mut related { item.raw = redactor.value(&item.raw); item.text = redactor.text(&item.text); }
     Ok(TraceDetail { event: selected.event, raw: redactor.value(&selected.raw), text: redactor.text(&selected.text), related, pairing_note, redacted: true })
 }
 pub fn export_detail(session_id: &str, event_id: &str, revision: &str, destination: &Path) -> Result<(), String> {

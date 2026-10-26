@@ -1,4 +1,5 @@
 import { ResourceIcon } from "./resourcePresentation";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   type ReactNode,
   useCallback,
@@ -41,7 +42,7 @@ import {
   type SkillLifecycleIntent,
 } from "./SkillInspector";
 import { SkillReviewDialog } from "./SkillReviewDialog";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import {
   ResourceWorkspace,
   ResourceOverview,
@@ -151,6 +152,13 @@ export function SkillsView({
     recoveryRequired ??
     state.inventory?.recovery_error ??
     (state.error?.code === "recovery_required" ? state.error.message : null);
+  useEffect(() => {
+    // A fresh Core inventory supersedes a recovery message from an older
+    // operation. Keep the lock while the current inventory still has a journal.
+    if (state.inventory && state.inventory.recovery_error === null) {
+      setRecoveryRequired(null);
+    }
+  }, [state.inventory]);
   const checkDisabled =
     checking ||
     removingGroup ||
@@ -546,31 +554,12 @@ export function SkillsView({
     void state.refresh().catch(() => undefined);
   };
 
-  const stateNotice = recoveryError ? (
-    <div className="mux-skill-notice" data-tone="recovery" role="status">
-      <strong>Skills 已进入只读恢复状态</strong>
-      <span>{recoveryError}</span>
-    </div>
-  ) : state.error && state.inventory ? (
-    <div className="mux-skill-notice" data-tone="error" role="status">
-      <strong>最近一次操作未完成</strong>
-      <span>{state.error.message}</span>
-      {state.error.retry_at && <code>可重试时间：{state.error.retry_at}</code>}
-    </div>
-  ) : null;
-  const inventoryNotice = navigationNotice || stateNotice ? (
-    <>
-      {navigationNotice && (
-        <div className="mux-skill-notice" data-tone="error" role="status">
-          <strong>{navigationNotice}</strong>
-        </div>
-      )}
-      {stateNotice}
-    </>
-  ) : null;
-
   return (
-    <div className="mux-skill-workspace">
+    <div className="arca-skill-workspace">
+      <ToastNotice kind="warning" noticeKey="skill-recovery" message={recoveryError && state.inventory
+        ? `${t("skillLibrary.recoveryTitle")} · ${t("skillLibrary.recoveryMessage")}` : null} />
+      <ToastNotice message={!recoveryError && state.inventory && !installOpen && !lifecycleReview ? state.error?.message : null} />
+      <ToastNotice message={navigationNotice} />
       <ResourceWorkspace
         overview={
           <ResourceOverview
@@ -587,10 +576,18 @@ export function SkillsView({
               </button>
             ) : undefined}
           >
-            {sourceLocation && <dl className="mux-resource-overview-facts">
+            {sourceLocation && <dl className="arca-resource-overview-facts">
               <div>
                 <dt>{selectedSource?.category === "github" ? "GitHub" : t("skillLibrary.sources")}</dt>
-                <dd><code title={sourceLocation}>{sourceLocation}</code></dd>
+                <dd>{selectedSource?.category === "github" ? (
+                  <a href={sourceLocation} className="arca-inline-link" title="在浏览器中打开 GitHub"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      void openUrl(sourceLocation).catch(() => toast.show({ kind: "error", msg: "无法打开 GitHub，请稍后重试。" }));
+                    }}>
+                    <code>{sourceLocation}</code>
+                  </a>
+                ) : <code title={sourceLocation}>{sourceLocation}</code>}</dd>
               </div>
             </dl>}
           </ResourceOverview>
@@ -616,7 +613,7 @@ export function SkillsView({
                 onClick={() => void checkUpdates()}
               >
                 <span
-                  className="mux-skill-check-icon"
+                  className="arca-skill-check-icon"
                   data-busy={checking ? "true" : undefined}
                   aria-hidden="true"
                 >
@@ -676,8 +673,8 @@ export function SkillsView({
           <ResourceState
             kind="recovery"
             icon={<ResourceIcon domain="skill" className="w-6 h-6" />}
-            title="Skills 已进入只读恢复状态"
-            detail={recoveryError}
+            title={t("skillLibrary.recoveryTitle")}
+            detail={t("skillLibrary.recoveryMessage")}
           />
         ) : !state.inventory && state.error ? (
           <ResourceState
@@ -693,7 +690,7 @@ export function SkillsView({
           />
         ) : filtered.length === 0 ? (
           <>
-            {inventoryNotice}
+
             <ResourceState
               kind={items.length === 0 ? "empty" : "no-match"}
               icon={<ResourceIcon domain="skill" className="w-6 h-6" />}
@@ -709,9 +706,9 @@ export function SkillsView({
           </>
         ) : (
           <>
-            {inventoryNotice}
+
             <div
-              className="mux-skill-card-grid"
+              className="arca-skill-card-grid"
               role="list"
               aria-label={t("centralAssets.skillList")}
             >

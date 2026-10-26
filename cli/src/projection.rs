@@ -1,9 +1,9 @@
-use mux_core::application::assets::{ConsumptionInventory, ConsumptionView};
-use mux_core::application::skills::{SkillInventoryItem, SkillLocation, SkillsInventory};
-use mux_core::domain::skill::SkillSource;
+use arca_core::application::assets::{ConsumptionInventory, ConsumptionView};
+use arca_core::application::skills::{SkillInventoryItem, SkillLocation, SkillsInventory};
+use arca_core::domain::skill::SkillSource;
 use serde_json::{json, Value};
 
-pub fn safe_agent_view(agent: &mux_core::application::agents::AgentCapabilityView) -> Value {
+pub fn safe_agent_view(agent: &arca_core::application::agents::AgentCapabilityView) -> Value {
     json!({
         "identity": {
             "id": agent.identity.id,
@@ -49,7 +49,7 @@ pub fn safe_agent_view(agent: &mux_core::application::agents::AgentCapabilityVie
 }
 
 pub fn safe_model_candidate(
-    candidate: &mux_core::application::assets::ModelAdoptionCandidate,
+    candidate: &arca_core::application::assets::ModelAdoptionCandidate,
 ) -> Value {
     json!({
         "candidate_id": candidate.candidate_id,
@@ -78,9 +78,9 @@ pub fn safe_model_candidate(
 }
 
 fn safe_model_reason(
-    status: &mux_core::application::assets::ModelAdoptionStatus,
+    status: &arca_core::application::assets::ModelAdoptionStatus,
 ) -> Option<&'static str> {
-    use mux_core::application::assets::ModelAdoptionStatus;
+    use arca_core::application::assets::ModelAdoptionStatus;
 
     match status {
         ModelAdoptionStatus::Adoptable => None,
@@ -104,7 +104,7 @@ pub fn safe_consumption_inventory(inventory: &ConsumptionInventory) -> Value {
     })
 }
 
-pub fn safe_target_incident(incident: &mux_core::application::assets::TargetIncident) -> Value {
+pub fn safe_target_incident(incident: &arca_core::application::assets::TargetIncident) -> Value {
     json!({
         "id": incident.id,
         "operation_id": incident.operation_id,
@@ -291,7 +291,7 @@ mod tests {
 
     #[test]
     fn model_discovery_reason_is_status_derived_and_cannot_echo_parser_input() {
-        use mux_core::application::assets::ModelAdoptionStatus;
+        use arca_core::application::assets::ModelAdoptionStatus;
 
         let parser_sentinel = "token = SECRET_SENTINEL";
         let rendered = safe_model_reason(&ModelAdoptionStatus::Unsupported).unwrap();
@@ -314,10 +314,10 @@ mod tests {
     #[test]
     fn target_incidents_redact_paths_in_json() {
         let inventory = ConsumptionInventory {
-            target_incidents: vec![mux_core::application::assets::TargetIncident {
+            target_incidents: vec![arca_core::application::assets::TargetIncident {
                 id: "target-1".into(),
                 operation_id: "operation-1".into(),
-                capability: mux_core::application::assets::AssetCapability::Mcp,
+                capability: arca_core::application::assets::AssetCapability::Mcp,
                 target_id: "target-1".into(),
                 target_path: "/private/user/.qoder/mcp.json".into(),
                 affected_agent_ids: vec!["qoder".into()],
@@ -340,7 +340,7 @@ mod tests {
             capabilities: Vec::new(),
             targets: Vec::new(),
             recovery_error: Some(
-                "failed near SECRET_SENTINEL at /private/user/.mux/skills-staging".into(),
+                "failed near SECRET_SENTINEL at /private/user/.arca/skills-staging".into(),
             ),
         };
         let encoded = safe_skill_inventory(&inventory).to_string();
@@ -354,7 +354,7 @@ mod tests {
         let docs = "https://user:token@example.com/private?secret=DOCS_SENTINEL";
         let inventory = SkillsInventory {
             items: Vec::new(),
-            agents: vec![mux_core::application::skills::SkillAgentView {
+            agents: vec![arca_core::application::skills::SkillAgentView {
                 id: "custom".into(),
                 name: "Custom".into(),
                 target_id: "custom-user".into(),

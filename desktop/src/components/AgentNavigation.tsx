@@ -1,3 +1,5 @@
+import { isImeKey } from "./ImeInput";
+import { ToastNotice } from "./Toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AgentInfo } from "../lib/types";
 import { buildAgentPickerSections, MAX_PINNED_AGENTS } from "../lib/pinnedAgents";
@@ -25,7 +27,7 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
   const selected = available.find(({ id }) => id === selectedAgentId);
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
-      if (event.isComposing || event.repeat || event.altKey || !(event.metaKey || event.ctrlKey)
+      if (isImeKey(event) || event.repeat || event.altKey || !(event.metaKey || event.ctrlKey)
         || event.key.toLowerCase() !== "k") return;
       const modal = Array.from(document.querySelectorAll(MODAL_DIALOG_SELECTOR)).at(-1);
       if (modal && (!open || modal.getAttribute("data-modal-layer") !== "agent-hand")) return;
@@ -58,18 +60,18 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
     }
   };
 
-  return <div className="mux-agent-navigation">
-    <span className="sr-only" aria-live="polite">{announcement}</span>
-    <div className="mux-agent-picker-cluster" ref={anchorRef}>
+  return <div className="arca-agent-navigation">
+    <ToastNotice kind={announcement.includes("已满") ? "warning" : "success"} message={announcement} />
+    <div className="arca-agent-picker-cluster" ref={anchorRef}>
       {pinnedIds.length > 0 && <PinnedAgentDock agents={agents} ids={pinnedIds} selectedId={selectedAgentId}
         disabled={!pinned.ready || pinned.saving} onSelect={onSelectAgent} onReorder={(ids, id) => void saveOrder(ids, id)} />}
-      <div className="mux-agent-picker-anchor">
-        <button ref={triggerRef} type="button" className="mux-agent-picker-trigger" data-active={selected ? "true" : undefined}
+      <div className="arca-agent-picker-anchor">
+        <button ref={triggerRef} type="button" className="arca-agent-picker-trigger" data-active={selected ? "true" : undefined}
           data-open={open ? "true" : undefined} aria-haspopup="dialog" aria-expanded={open}
           aria-label={selected ? `选择 Agent，当前：${selected.name}` : "选择 Agent"} aria-keyshortcuts="Meta+K Control+K" title="选择 Agent · ⌘K / Ctrl+K" onClick={() => setOpen(true)}>
           {selected ? <AgentGlyph id={selected.id} name={selected.name} size={24} /> : <PackageIcon className="w-5 h-5 flex-shrink-0" />}
-          <span className="mux-agent-picker-trigger-name">{selected?.name ?? "选择 Agent"}</span>
-          <ChevronDownIcon className="mux-agent-picker-chevron" />
+          <span className="arca-agent-picker-trigger-name">{selected?.name ?? "选择 Agent"}</span>
+          <ChevronDownIcon className="arca-agent-picker-chevron" />
         </button>
       </div>
     </div>

@@ -1,7 +1,16 @@
 use crate::settings::{load_settings_strict, mutate_settings_checked, NetworkSettings};
 use url::Url;
 
+mod context;
+mod platform;
+pub use context::{config_proxy, environment_proxy, resolve_proxy, ProxyConfigFormat, ProxyConfigSource, ProxySource, ResolvedProxy, PROXY_ENVIRONMENT_KEYS};
+pub use platform::{shell_proxy, system_proxy};
+
 const MAX_PROXY_URL_BYTES: usize = 2048;
+
+pub fn canonical_proxy_url(value: &str) -> Result<String, String> {
+    normalize_proxy_url(Some(value.to_owned()))?.ok_or_else(|| "代理地址不能为空。".into())
+}
 
 pub fn get_proxy_settings() -> Result<NetworkSettings, String> {
     let settings = load_settings_strict().map_err(|error| error.to_string())?;
@@ -48,7 +57,7 @@ pub fn build_ureq_agent(builder: UreqAgentBuilder) -> Result<ureq::Agent, String
     let Some(proxy_url) = configured_proxy_url()? else {
         return Ok(builder.build().new_agent());
     };
-    // ureq 3 resolves `socks5://` targets locally by default. MUX historically
+    // ureq 3 resolves `socks5://` targets locally by default. Arca historically
     // delegated DNS to the configured SOCKS5 proxy, so use ureq's equivalent
     // runtime scheme without changing the persisted user-facing URL.
     let runtime_proxy_url = proxy_url
@@ -111,7 +120,7 @@ mod tests {
         let disabled = set_proxy_url(Some("   ".into())).unwrap();
         assert_eq!(disabled.proxy_url, None);
         let value: Value = serde_json::from_str(
-            &fs::read_to_string(home.home.join(".mux/settings.json")).unwrap(),
+            &fs::read_to_string(home.home.join(".arca/settings.json")).unwrap(),
         )
         .unwrap();
         assert!(value.get("network").is_none());
@@ -132,7 +141,7 @@ mod tests {
     #[test]
     fn disabling_proxy_preserves_future_network_fields() {
         let home = TestHome::new("network-proxy-passthrough");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(
             &path,
@@ -159,7 +168,7 @@ mod tests {
     #[test]
     fn invalid_persisted_proxy_fails_closed() {
         let home = TestHome::new("network-proxy-invalid-persisted");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(
             &path,
@@ -319,7 +328,7 @@ mod tests {
     #[test]
     fn mutation_refuses_to_replace_corrupt_settings() {
         let home = TestHome::new("network-proxy-corrupt-settings");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         let original = r#"{"network": ["#;
         fs::write(&path, original).unwrap();

@@ -2,16 +2,16 @@
 
 ## Summary
 
-MUX will model API-key handling as two separate decisions:
+Arca will model API-key handling as two separate decisions:
 
-1. **Where MUX resolves the credential**: MUX secure storage, environment variable, an existing private file, or a structured helper command.
-2. **How MUX delivers the resolved credential to an Agent**: the safest supported automatic route, a verified Agent-owned credential store, or an explicitly approved private plaintext target.
+1. **Where Arca resolves the credential**: Arca secure storage, environment variable, an existing private file, or a structured helper command.
+2. **How Arca delivers the resolved credential to an Agent**: the safest supported automatic route, a verified Agent-owned credential store, or an explicitly approved private plaintext target.
 
-This split gives MUX six concise user-facing ways without pretending that every Agent supports every way natively. Provider records own the default source. Each Agent consumption may override the source and chooses a delivery. No secret value is stored in the catalog, consumption record, plan, log, ordinary backup, or repository.
+This split gives Arca six concise user-facing ways without pretending that every Agent supports every way natively. Provider records own the default source. Each Agent consumption may override the source and chooses a delivery. No secret value is stored in the catalog, consumption record, plan, log, ordinary backup, or repository.
 
 ## Goals
 
-- Implement all six user-facing API-key ways end to end: `mux-store`, `env`, `file`, `helper`, `agent-store`, and `plaintext`.
+- Implement all six user-facing API-key ways end to end: `arca-store`, `env`, `file`, `helper`, `agent-store`, and `plaintext`.
 - Fix the current OpenCode failure in which a model can be added without any usable API key.
 - Keep Provider credentials reusable while allowing per-Agent delivery differences.
 - Use verified native Agent mechanisms when they exist and fail closed when they do not.
@@ -24,7 +24,7 @@ This split gives MUX six concise user-facing ways without pretending that every 
 - Creating or editing user-managed API-key files.
 - Executing shell snippets, pipelines, redirection, command substitution, or `sh -c` helpers.
 - Silently falling back to plaintext.
-- Putting secrets in MUX catalog JSON, plan JSON, telemetry, error messages, backups, screenshots, fixtures, or Git.
+- Putting secrets in Arca catalog JSON, plan JSON, telemetry, error messages, backups, screenshots, fixtures, or Git.
 - Making every Agent expose all six UI choices.
 
 ## Terminology and Data Model
@@ -33,18 +33,18 @@ The UI presents six concise labels:
 
 | Identifier | Chinese label | Meaning |
 |---|---|---|
-| `mux-store` | MUX 安全存储 | Secret bytes live in the operating-system Keychain. |
-| `env` | 环境变量 | MUX stores only an environment-variable name. |
-| `file` | 密钥文件 | MUX stores only a path to an existing private regular file. |
-| `helper` | 凭据助手 | MUX stores a structured executable and argument list. |
-| `agent-store` | Agent 凭据存储 | MUX writes to a verified Agent-owned private credential store. |
-| `plaintext` | 明文配置 | MUX writes to a verified private Agent configuration target after explicit danger confirmation. |
+| `arca-store` | Arca 安全存储 | Secret bytes live in the operating-system Keychain. |
+| `env` | 环境变量 | Arca stores only an environment-variable name. |
+| `file` | 密钥文件 | Arca stores only a path to an existing private regular file. |
+| `helper` | 凭据助手 | Arca stores a structured executable and argument list. |
+| `agent-store` | Agent 凭据存储 | Arca writes to a verified Agent-owned private credential store. |
+| `plaintext` | 明文配置 | Arca writes to a verified private Agent configuration target after explicit danger confirmation. |
 
 Internally, source and delivery remain separate:
 
 ```ts
 type ApiKeySource =
-  | { kind: "mux-store" }
+  | { kind: "arca-store" }
   | { kind: "env"; name: string }
   | { kind: "file"; path: string }
   | { kind: "helper"; command: string; args: string[]; ttl_ms?: number };
@@ -90,9 +90,9 @@ No secret value appears in either record.
 
 ## Source Resolution
 
-### MUX secure storage
+### Arca secure storage
 
-The Provider record contains `{ "kind": "mux-store" }`. Secret bytes remain in the existing system Keychain entry for that Provider. Planning and preview may report whether a credential exists but never return its value. Commit resolves the Keychain value again and compares a cryptographic digest with the planned digest.
+The Provider record contains `{ "kind": "arca-store" }`. Secret bytes remain in the existing system Keychain entry for that Provider. Planning and preview may report whether a credential exists but never return its value. Commit resolves the Keychain value again and compares a cryptographic digest with the planned digest.
 
 ### Environment variable
 
@@ -100,7 +100,7 @@ The Provider record contains `{ "kind": "env", "name": "MAX_AI_API_KEY" }`. Name
 
 ### Key file
 
-The Provider record contains `{ "kind": "file", "path": "/absolute/path" }`. MUX does not create or modify the file. Resolution rejects relative paths, symlinks, non-regular files, group/world permissions, empty content, and multiline content. The required mode is `0600`. Planning records non-secret identity evidence such as canonical path, file identity, mode, size, modification identity, and a secret digest; commit reopens the file without following symlinks and verifies the evidence and digest.
+The Provider record contains `{ "kind": "file", "path": "/absolute/path" }`. Arca does not create or modify the file. Resolution rejects relative paths, symlinks, non-regular files, group/world permissions, empty content, and multiline content. The required mode is `0600`. Planning records non-secret identity evidence such as canonical path, file identity, mode, size, modification identity, and a secret digest; commit reopens the file without following symlinks and verifies the evidence and digest.
 
 ### Credential helper
 
@@ -115,14 +115,14 @@ The Provider record contains a structured command:
 }
 ```
 
-`command` names one executable; it is not a shell program string. MUX passes `args` directly to the process API. It never invokes a shell. The command must be absolute or a specifically trusted system executable, must exit successfully within the bounded timeout, and must emit exactly one non-empty line on stdout. Stderr may be reduced to a non-secret diagnostic category but is never copied verbatim when it may contain credential material. Resolved bytes are zeroized after use. `ttl_ms` is bounded and optional; it controls only an in-memory secret cache.
+`command` names one executable; it is not a shell program string. Arca passes `args` directly to the process API. It never invokes a shell. The command must be absolute or a specifically trusted system executable, must exit successfully within the bounded timeout, and must emit exactly one non-empty line on stdout. Stderr may be reduced to a non-secret diagnostic category but is never copied verbatim when it may contain credential material. Resolved bytes are zeroized after use. `ttl_ms` is bounded and optional; it controls only an in-memory secret cache.
 
 ## Delivery Selection
 
 `auto` selects the safest compatible route in this order:
 
 1. Native environment, file, or structured helper reference supported by the Agent.
-2. A MUX Keychain helper that lets the Agent resolve the Provider Keychain entry without writing secret bytes.
+2. A Arca Keychain helper that lets the Agent resolve the Provider Keychain entry without writing secret bytes.
 3. A verified Agent-owned credential store.
 4. `credential_delivery_unsupported`.
 
@@ -157,14 +157,14 @@ The matrix is declarative and is the only source used by core and UI availabilit
 | Qoder | guided | guided | guided | no | no |
 | MiniMax Agent | guided | guided | guided | no | no |
 
-Unsupported choices remain disabled with a precise reason. MUX does not infer support from similar products.
+Unsupported choices remain disabled with a precise reason. Arca does not infer support from similar products.
 The first plaintext adapter is intentionally OpenCode-only: its private JSON target, precedence, rollback, and `0600` behavior are verified end to end. Additional plaintext adapters require the same evidence before their capability flag can be enabled.
 
 ## OpenCode Agent Store
 
-For `agent-store`, MUX maps the Provider to the OpenCode authentication key expected by `~/.local/share/opencode/auth.json`, merges only the owned Provider entry, preserves unrelated providers and unknown fields, writes through the private transaction layer, and enforces `0600`. The model projection and auth-store projection are one logical Agent target: both pass compare-and-swap checks and either both commit or both roll back.
+For `agent-store`, Arca maps the Provider to the OpenCode authentication key expected by `~/.local/share/opencode/auth.json`, merges only the owned Provider entry, preserves unrelated providers and unknown fields, writes through the private transaction layer, and enforces `0600`. The model projection and auth-store projection are one logical Agent target: both pass compare-and-swap checks and either both commit or both roll back.
 
-When a Provider requires authentication and neither its default source nor the consumption override resolves, planning fails with `credential_missing`. MUX must not add a usable-looking OpenCode model without a corresponding credential path.
+When a Provider requires authentication and neither its default source nor the consumption override resolves, planning fails with `credential_missing`. Arca must not add a usable-looking OpenCode model without a corresponding credential path.
 
 ## Private Transactions and Stale Plans
 
@@ -184,8 +184,8 @@ The logical transaction is:
 2. Prepare Agent model-config and credential-target candidates in memory.
 3. Verify permissions, hashes, and ownership boundaries.
 4. Atomically replace all files for that one Agent physical target.
-5. Persist the MUX consumption record.
-6. On failure, restore the complete pre-operation Agent state and leave the MUX consumption unchanged.
+5. Persist the Arca consumption record.
+6. On failure, restore the complete pre-operation Agent state and leave the Arca consumption unchanged.
 
 Unknown and external fields are preserved throughout.
 
@@ -194,7 +194,7 @@ Unknown and external fields are preserved throughout.
 Catalog loading migrates legacy Provider records in memory and persists the upgraded representation on the next owned write:
 
 - Existing `env_key` becomes `{ "kind": "env", "name": env_key }`.
-- A Provider with an existing MUX Keychain entry becomes `{ "kind": "mux-store" }`.
+- A Provider with an existing Arca Keychain entry becomes `{ "kind": "arca-store" }`.
 - A known local Provider with neither becomes `auth_requirement: "none"`.
 - A known remote Provider with neither becomes `auth_requirement: "required"` with a missing credential state.
 - A custom Provider with neither becomes `auth_requirement: "optional"`.
@@ -208,16 +208,16 @@ Legacy data remains readable during the migration window, but all new writes use
 The Provider dialog uses a dropdown plus adaptive form:
 
 1. Authentication requirement: required, optional, or none.
-2. Credential source: MUX secure storage, environment variable, key file, or credential helper.
+2. Credential source: Arca secure storage, environment variable, key file, or credential helper.
 3. Source-specific fields:
-   - MUX secure storage: masked key input, replace, and clear actions.
+   - Arca secure storage: masked key input, replace, and clear actions.
    - Environment variable: variable-name input.
    - Key file: path input and permission/identity validation status.
    - Credential helper: command, repeatable arguments, TTL, and a non-secret “test” result.
 
 ### Agent assignment
 
-The Agent consumption editor exposes `Auto (recommended)`, `Agent credential store`, and `Plaintext configuration`. It shows the resolved route, for example: “Provider MUX secure storage → OpenCode Agent credential store → auth.json”. Unsupported routes are disabled with the core-provided reason. Source override is optional and uses the same adaptive source fields.
+The Agent consumption editor exposes `Auto (recommended)`, `Agent credential store`, and `Plaintext configuration`. It shows the resolved route, for example: “Provider Arca secure storage → OpenCode Agent credential store → auth.json”. Unsupported routes are disabled with the core-provided reason. Source override is optional and uses the same adaptive source fields.
 
 The plaintext confirmation is a small application-level modal overlay, not an inline Models card or a large technical-plan panel.
 
@@ -253,4 +253,4 @@ Focused tests must prove:
 - Provider and Agent adaptive UI forms, disabled reasons, resolved-route preview, and compact global danger modal.
 - Existing Provider/model configurations continue to round-trip without unrelated changes.
 
-The implementation is accepted when all focused tests pass, production Rust and desktop builds pass, the diff contains no credential material, and the remote-only PR is merged through the existing MUX Direct Stable release path. The local installed MUX application is not updated for this task.
+The implementation is accepted when all focused tests pass, production Rust and desktop builds pass, the diff contains no credential material, and the remote-only PR is merged through the existing Arca Direct Stable release path. The local installed Arca application is not updated for this task.

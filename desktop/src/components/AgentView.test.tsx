@@ -416,7 +416,7 @@ it("keeps a Model-only Agent in the full resource workspace", async () => {
     capabilities: {
       model: {
         mode: "managed",
-        storage_authority: "mux-mapping",
+        storage_authority: "arca-mapping",
         installed: true,
         config_paths: ["~/.model-only/config.json"],
         assigned_profiles: [],
@@ -437,7 +437,7 @@ it("keeps a Model-only Agent in the full resource workspace", async () => {
     id: modelOnlyAgent.identity.id,
     name: modelOnlyAgent.identity.name,
     mode: "managed",
-    storage_authority: "mux-mapping",
+    storage_authority: "arca-mapping",
     installed: true,
     config_path: "~/.model-only/config.json",
     config_paths: ["~/.model-only/config.json"],
@@ -539,12 +539,12 @@ it("keeps an external MCP card read-only", async () => {
   const card = screen.getByText("computer-use").closest<HTMLElement>("li");
   expect(card).not.toBeNull();
   expect(within(card!).queryByText("computer-use::stdio")).not.toBeInTheDocument();
-  expect(card!.querySelector(".mux-consumption-copy small")).toBeNull();
+  expect(card!.querySelector(".arca-consumption-copy small")).toBeNull();
   expect(card).toHaveAttribute("data-enabled", "false");
   expect(within(card!).queryByRole("switch")).not.toBeInTheDocument();
   expect(within(card!).queryByRole("button", { name: /查看|移除/ })).not.toBeInTheDocument();
   expect(within(card!).queryByText("外部新增")).not.toBeInTheDocument();
-  expect(within(card!).getByRole("button", { name: /^收录 MUX：/ })).toBeVisible();
+  expect(within(card!).getByRole("button", { name: /^收录 Arca：/ })).toBeVisible();
   const clearAll = screen.getByRole("button", { name: "移除全部 MCP" });
   expect(clearAll).toHaveAttribute("title", expect.stringContaining("包括外部配置"));
   await userEvent.click(clearAll);
@@ -722,7 +722,7 @@ it("renders every external Model as its own read-only card", async () => {
   expect(within(card!).queryByRole("switch")).not.toBeInTheDocument();
   expect(within(card!).queryByRole("button", { name: /查看|移除/ })).not.toBeInTheDocument();
   expect(within(card!).queryByText("外部新增")).not.toBeInTheDocument();
-  expect(within(card!).getByRole("button", { name: /^收录 MUX：/ })).toBeVisible();
+  expect(within(card!).getByRole("button", { name: /^收录 Arca：/ })).toBeVisible();
 });
 
 it("renders external Skills as read-only cards", async () => {
@@ -779,7 +779,7 @@ it("renders external Skills as read-only cards", async () => {
   expect(within(card!).getByText("Review changes")).toBeVisible();
   expect(within(card!).queryByRole("button", { name: /查看|移除/ })).not.toBeInTheDocument();
   expect(within(card!).queryByText("外部新增")).not.toBeInTheDocument();
-  expect(within(card!).getByRole("button", { name: /^收录 MUX：/ })).toBeVisible();
+  expect(within(card!).getByRole("button", { name: /^收录 Arca：/ })).toBeVisible();
 });
 
 it("shows each Model's Provider icon in the picker and assigned cards", async () => {

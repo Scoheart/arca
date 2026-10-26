@@ -1,3 +1,4 @@
+import { ImeInput, isImeKey } from "./ImeInput";
 import { CSSProperties, ReactNode, type KeyboardEvent as ReactKeyboardEvent, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { SearchIcon, XIcon } from "./icons";
@@ -25,7 +26,7 @@ export function Avatar({
 }) {
   return (
     <div
-      className="mux-asset-avatar flex-shrink-0 flex items-center justify-center text-white font-semibold select-none"
+      className="arca-asset-avatar flex-shrink-0 flex items-center justify-center text-white font-semibold select-none"
       data-kind={kind}
       data-has-icon={icon ? "true" : undefined}
       aria-hidden="true"
@@ -67,8 +68,7 @@ export function Badge({
   const c = TONE[tone];
   return (
     <span
-      className="mux-badge"
-      data-tone={tone}
+      className="arca-badge"
       style={{ background: c.bg, color: c.fg }}
     >
       {icon}
@@ -99,7 +99,7 @@ export function IconButton({
       aria-label={title}
       disabled={disabled}
       data-active={active ? "true" : undefined}
-      className="mux-icon-btn"
+      className="arca-icon-btn"
       onClick={(e) => {
         e.stopPropagation();
         onClick?.(e);
@@ -143,7 +143,7 @@ export function Switch({
         e.stopPropagation();
         if (!disabled) onChange(!checked);
       }}
-      className="mux-switch relative flex-shrink-0 rounded-full border-0 transition-colors"
+      className="arca-switch relative flex-shrink-0 rounded-full border-0 transition-colors"
       style={{
         width,
         height,
@@ -189,11 +189,11 @@ export function SearchBar({
   onKeyDown?: (event: ReactKeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <div className="mux-search" style={style}>
+    <div className="arca-search" style={style}>
       <SearchIcon
-        className="mux-search-icon"
+        className="arca-search-icon"
       />
-      <input
+      <ImeInput
         type="search"
         autoComplete="off"
         autoCorrect="off"
@@ -209,7 +209,7 @@ export function SearchBar({
       />
       <button
         type="button"
-        className="mux-search-clear"
+        className="arca-search-clear"
         data-visible={value ? "true" : undefined}
         disabled={!value}
         tabIndex={value ? 0 : -1}
@@ -337,7 +337,7 @@ export function pickerOptionLabels(options: ReadonlyArray<{ id: string; name: st
 
 /** Arrow keys move between candidates; Enter/Space still select explicitly. */
 export function navigatePickerOptions(event: ReactKeyboardEvent<HTMLElement>): void {
-  if (event.nativeEvent.isComposing || event.altKey || event.metaKey || event.ctrlKey) return;
+  if (isImeKey(event.nativeEvent) || event.altKey || event.metaKey || event.ctrlKey) return;
   const search = event.target instanceof HTMLInputElement;
   if (search && !["ArrowDown", "ArrowUp"].includes(event.key)) return;
   if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
@@ -406,7 +406,7 @@ export function Modal({
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (handledLayerKeyboardEvents.has(event) || topmostModal() !== dialog) return;
+      if (isImeKey(event) || handledLayerKeyboardEvents.has(event) || topmostModal() !== dialog) return;
 
       if (event.key === "Escape") {
         claimLayerKeyboardEvent(event);
@@ -553,7 +553,7 @@ export function TransportPill({ entry, compact }: { entry: RegistryEntry; compac
   return (
     <span
       title={full}
-      className="mux-transport-pill"
+      className="arca-transport-pill"
       data-compact={compact ? "true" : undefined}
     >
       {label}

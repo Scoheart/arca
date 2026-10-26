@@ -1,6 +1,6 @@
 # Agent launcher
 
-The Agent picker and pinned-icon primary click continue to navigate MUX configuration. A compact split action in Agent details launches the runtime; pinned icons expose the same action in a context menu.
+The Agent picker and pinned-icon primary click continue to navigate Arca configuration. A compact split action in Agent details launches the runtime; pinned icons expose the same action in a context menu.
 
 Agent details use one unframed workspace directly on the page, without an outer
 background block, border or rounded shell. The icon sits above the centered name; credential,
@@ -14,7 +14,7 @@ use short rows with name/transport beside the icon and fixed-width controls on
 the right. Skills and Models separate the description from the footer; footer
 controls occupy a nonshrinking grid column, so long text and shared-state badges
 cannot push switches outside the card. External items retain their read-only and
-convergence contracts. Model selection caveats remain visible. Preserve MUX's
+convergence contracts. Model selection caveats remain visible. Preserve Arca's
 existing palette: blue actions and selection, green enabled switches, and the
 original semantic warning colors. The primary launch action is labeled briefly; missing runtimes offer
 installation, and icon-only actions retain tooltips and accessible names.
@@ -45,7 +45,7 @@ Core owns the built-in launch catalog, executable/application discovery, validat
 
 Use exact process arguments for app/URL dispatch. CLI shell and AppleScript strings are encoded separately; commands, paths and arguments are treated as data. Runtime discovery only resolves paths; the limited version probe is the sole automatic CLI invocation. Never install packages during discovery. Terminal actions happen only on a user click.
 
-The macOS bundle declares the Apple Events automation entitlement and a Terminal usage description. On first CLI launch, macOS may ask the user to allow MUX to control the selected terminal. A successful dispatch confirms that the launch request was sent, not that the Agent has authenticated or initialized successfully.
+The macOS bundle declares the Apple Events automation entitlement and a Terminal usage description. On first CLI launch, macOS may ask the user to allow Arca to control the selected terminal. A successful dispatch confirms that the launch request was sent, not that the Agent has authenticated or initialized successfully.
 
 This iteration targets the shipped macOS desktop. Unsupported hosts report that explicitly. CLI entry points without verified metadata remain configurable rather than guessed. Existing installation probes supply declared command candidates; explicit data overrides distinguish IDE/desktop products and extension hosts.
 
@@ -82,3 +82,9 @@ App and CLI targets accept an optional `env` string map (empty for older setting
 For ZCode, select `/Applications/ZCode.app` and add `NODE_USE_SYSTEM_CA` with value `1`. The launch environment only applies to new processes; restart the App or request a new instance. Recognition of this Node setting depends on ZCode's bundled runtime.
 
 The unified editor uses persistent Launch and Configuration Files tabs with a shared save footer. Switching tabs retains all drafts. Path labels sit above compact input/open-action controls; unsupported capabilities show a status row. Startup arguments use a smaller textarea and environment variables remain editable rows, reducing the default dialog height without removing settings.
+
+## Named launch profiles
+
+Each Agent supports 1–32 named launch profiles. Every profile independently stores its target, literal arguments, environment, new-instance option and default CLI working directory. Adding a profile copies the current draft; switching profiles retains all unsaved drafts, and deleting a custom profile selects the immutable default. The default profile is always empty: no target override, arguments, environment, new-instance option or default working directory. It cannot be edited, renamed or deleted; selecting it uses automatic runtime discovery. The shared Save action atomically saves all profiles and makes the selected profile the one used for subsequent launches. Cancel discards the whole draft.
+
+Legacy single-target preferences are read as an editable custom profile alongside the empty default without writing a migration during discovery. Older mutable default profiles are likewise preserved as custom profiles. The first profile save stores the collection and active ID, and removes the superseded target/default-directory fields. Existing CLI configure commands update the active custom profile, or create a custom profile when the empty default is active. CLI reset selects the default while preserving custom profiles. Runtime discovery, launch, capture, network discovery and Instructions launch-context checks all use the active profile through Core. An editor revision excludes the remembered one-off CLI directory, but rejects concurrent changes to profiles or their active selection. The launch editor has no Restore Default button; choosing the immutable default is the only default-launch selection. Each launch still validates the selected runtime before dispatch.

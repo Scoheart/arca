@@ -61,7 +61,7 @@ fn run_config_write_hook(_path: &Path, _rollback: bool) -> Result<(), String> {
 
 pub(crate) const AGENT_ID: &str = "claude-desktop";
 pub(crate) const PROFILE_ID: &str = "6d757800-0000-4000-8000-000000000001";
-pub(crate) const PROFILE_NAME: &str = "MUX";
+pub(crate) const PROFILE_NAME: &str = "Arca";
 
 pub(crate) struct PreparedClaudeDesktop {
     /// The three ordinary, non-secret targets in display-path order.
@@ -583,11 +583,11 @@ fn prepare_meta_apply(
         .collect::<Vec<_>>();
     if reserved.len() > 1
         || reserved.first().is_some_and(|entry| {
-            cst_string(entry, "name", path).ok().flatten().as_deref() != Some(PROFILE_NAME)
+            !matches!(cst_string(entry, "name", path).ok().flatten().as_deref(), Some(PROFILE_NAME) | Some("MUX"))
         })
     {
         return Err(
-            "claude_desktop_profile_collision: reserved MUX Profile ID is owned by another entry"
+            "claude_desktop_profile_collision: reserved Arca Profile ID is owned by another entry"
                 .into(),
         );
     }
@@ -659,18 +659,18 @@ fn prepare_meta_clear(
     if elements.iter().any(|entry| entry.as_object().is_none()) {
         return Err("claude_desktop_json_invalid: entries must contain objects".into());
     }
-    let mux_entries = elements
+    let arca_entries = elements
         .iter()
         .filter(|entry| cst_string(entry, "id", path).ok().flatten().as_deref() == Some(PROFILE_ID))
         .cloned()
         .collect::<Vec<_>>();
-    if mux_entries.len() > 1
-        || mux_entries.first().is_some_and(|entry| {
-            cst_string(entry, "name", path).ok().flatten().as_deref() != Some(PROFILE_NAME)
+    if arca_entries.len() > 1
+        || arca_entries.first().is_some_and(|entry| {
+            !matches!(cst_string(entry, "name", path).ok().flatten().as_deref(), Some(PROFILE_NAME) | Some("MUX"))
         })
     {
         return Err(
-            "claude_desktop_profile_collision: reserved MUX Profile ID is owned by another entry"
+            "claude_desktop_profile_collision: reserved Arca Profile ID is owned by another entry"
                 .into(),
         );
     }
@@ -679,8 +679,8 @@ fn prepare_meta_clear(
         .and_then(|property| property.value())
         .and_then(|value| value.to_serde_value())
         .and_then(|value| value.as_str().map(str::to_string));
-    let mux_active = applied.as_deref() == Some(PROFILE_ID);
-    if mux_active {
+    let arca_active = applied.as_deref() == Some(PROFILE_ID);
+    if arca_active {
         let remembered_matches = remembered
             .filter(|id| !id.trim().is_empty() && *id != PROFILE_ID)
             .map(|id| {
@@ -718,11 +718,11 @@ fn prepare_meta_clear(
             "$root",
         )?;
     }
-    let had_mux_entry = !mux_entries.is_empty();
-    for entry in mux_entries {
+    let had_arca_entry = !arca_entries.is_empty();
+    for entry in arca_entries {
         entry.remove();
     }
-    let changed = mux_active || had_mux_entry;
+    let changed = arca_active || had_arca_entry;
     Ok((
         original.clone(),
         changed.then(|| formatted_cst(&root)).or(original),
@@ -737,10 +737,10 @@ fn reject_profile_collision(entries: &[Value]) -> Result<(), String> {
     if reserved.len() > 1
         || reserved
             .first()
-            .is_some_and(|entry| entry.get("name").and_then(Value::as_str) != Some(PROFILE_NAME))
+            .is_some_and(|entry| !matches!(entry.get("name").and_then(Value::as_str), Some(PROFILE_NAME) | Some("MUX")))
     {
         return Err(
-            "claude_desktop_profile_collision: reserved MUX Profile ID is owned by another entry"
+            "claude_desktop_profile_collision: reserved Arca Profile ID is owned by another entry"
                 .into(),
         );
     }
@@ -982,7 +982,7 @@ pub(crate) fn apply(
         })
         .map_err(|error| {
             ModelTargetError::RecoveryRequired(format!(
-                "Claude Desktop config was applied, but MUX could not record restore state: {error}"
+                "Claude Desktop config was applied, but Arca could not record restore state: {error}"
             ))
         })?;
     }
@@ -1006,7 +1006,7 @@ pub(crate) fn clear(paths: &[PathBuf], remembered: Option<&str>) -> Result<(), M
     })
     .map_err(|error| {
         ModelTargetError::RecoveryRequired(format!(
-            "Claude Desktop config was cleared, but MUX could not clear restore state: {error}"
+            "Claude Desktop config was cleared, but Arca could not clear restore state: {error}"
         ))
     })?;
     Ok(())
@@ -1018,7 +1018,7 @@ fn normalized_profile_matches(file: &PreparedClaudeDesktopPrivateFile) -> Result
     };
     let mut actual: Value = serde_json::from_str(original).map_err(|_| {
         format!(
-            "claude_desktop_json_invalid: {}: invalid MUX Profile JSON",
+            "claude_desktop_json_invalid: {}: invalid Arca Profile JSON",
             file.path.display()
         )
     })?;
@@ -1151,7 +1151,7 @@ pub(crate) fn observe_installed(
 enum MetaSelection {
     Missing,
     None,
-    Mux,
+    Arca,
     External,
 }
 
@@ -1195,7 +1195,7 @@ fn meta_selection(path: &Path) -> Result<MetaSelection, String> {
         ));
     }
     Ok(if applied == PROFILE_ID {
-        MetaSelection::Mux
+        MetaSelection::Arca
     } else {
         MetaSelection::External
     })
@@ -1206,7 +1206,7 @@ pub(crate) fn observe_active(settings: &Settings, paths: &[PathBuf]) -> Observed
         return ObservedActiveModel::Conflicted;
     }
     match meta_selection(&paths[META_INDEX]) {
-        Ok(MetaSelection::Mux) => {
+        Ok(MetaSelection::Arca) => {
             let Some(profile_id) = settings.model_selection(AGENT_ID).active_profile_id else {
                 return ObservedActiveModel::Conflicted;
             };
@@ -1230,7 +1230,7 @@ pub(crate) fn observe_external(paths: &[PathBuf]) -> Result<ExternalModelObserve
     validate_paths(paths)?;
     Ok(match meta_selection(&paths[META_INDEX]) {
         Ok(MetaSelection::External) => ExternalModelObservedState::Present,
-        Ok(MetaSelection::Missing | MetaSelection::None | MetaSelection::Mux) => {
+        Ok(MetaSelection::Missing | MetaSelection::None | MetaSelection::Arca) => {
             ExternalModelObservedState::Absent
         }
         Err(_) => ExternalModelObservedState::Conflicted,
@@ -1467,7 +1467,7 @@ mod tests {
     }
 
     #[test]
-    fn prepare_clear_restores_remembered_profile_and_removes_only_mux_owned_targets() {
+    fn prepare_clear_restores_remembered_profile_and_removes_only_arca_owned_targets() {
         let home = TestHome::new("claude-clear");
         let paths = target_paths(&home);
         let first = json!({"deploymentMode": "3p", "mcpServers": {"keep": {}}});
@@ -1486,7 +1486,7 @@ mod tests {
                 "future": {"keep": true}
             }),
         );
-        write_json(&paths[3], &json!({"owned": "mux"}));
+        write_json(&paths[3], &json!({"owned": "arca"}));
 
         let prepared = prepare_clear(&paths, Some("cc-switch-id")).unwrap();
 
@@ -1558,7 +1558,7 @@ mod tests {
     }
 
     #[test]
-    fn prepare_clear_never_restores_mux_and_falls_back_to_default() {
+    fn prepare_clear_never_restores_arca_and_falls_back_to_default() {
         let home = TestHome::new("clear-self-default");
         let paths = target_paths(&home);
         write_json(
@@ -1578,7 +1578,7 @@ mod tests {
     }
 
     #[test]
-    fn prepare_clear_rejects_remembered_mux_without_default_restore_target() {
+    fn prepare_clear_rejects_remembered_arca_without_default_restore_target() {
         let home = TestHome::new("clear-self-missing");
         let paths = target_paths(&home);
         write_json(
@@ -1626,7 +1626,7 @@ mod tests {
         write_json(
             &paths[2],
             &json!({
-                "entries": [{"id": PROFILE_ID, "name": "Not MUX"}]
+                "entries": [{"id": PROFILE_ID, "name": "Not Arca"}]
             }),
         );
 
@@ -1638,7 +1638,7 @@ mod tests {
 
         assert_eq!(
             error,
-            "claude_desktop_profile_collision: reserved MUX Profile ID is owned by another entry"
+            "claude_desktop_profile_collision: reserved Arca Profile ID is owned by another entry"
         );
     }
 
@@ -1664,7 +1664,7 @@ mod tests {
 
         assert_eq!(
             error,
-            "claude_desktop_profile_collision: reserved MUX Profile ID is owned by another entry"
+            "claude_desktop_profile_collision: reserved Arca Profile ID is owned by another entry"
         );
     }
 
@@ -1831,7 +1831,7 @@ mod tests {
 
         assert_eq!(
             error,
-            "claude_desktop_profile_collision: reserved MUX Profile ID is owned by another entry"
+            "claude_desktop_profile_collision: reserved Arca Profile ID is owned by another entry"
         );
     }
 
@@ -1925,7 +1925,7 @@ mod tests {
             error.contains("claude_desktop_private_target_alias"),
             "{error}"
         );
-        assert!(!home.home.join(".mux/backups").exists());
+        assert!(!home.home.join(".arca/backups").exists());
         assert_eq!(read_value(&paths[3])["inferenceGatewayApiKey"], sentinel);
     }
 
@@ -1951,7 +1951,7 @@ mod tests {
             error.contains("claude_desktop_private_target_alias"),
             "{error}"
         );
-        assert!(!home.home.join(".mux/backups").exists());
+        assert!(!home.home.join(".arca/backups").exists());
     }
 
     #[test]
@@ -2219,7 +2219,7 @@ mod tests {
 
         assert_eq!(
             error,
-            "claude_desktop_credential_missing: Claude Desktop requires an API Key in MUX Keychain"
+            "claude_desktop_credential_missing: Claude Desktop requires an API Key in Arca Keychain"
         );
         assert!(paths.iter().all(|path| !path.exists()));
     }
@@ -2243,7 +2243,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn apply_tightens_an_existing_mux_profile_to_private_permissions() {
+    fn apply_tightens_an_existing_arca_profile_to_private_permissions() {
         use std::os::unix::fs::PermissionsExt;
 
         let home = TestHome::new("claude-desktop-private-profile");
@@ -2349,7 +2349,7 @@ mod tests {
         for agent in [&listed, &capability] {
             assert_eq!(agent.name, "Claude");
             assert_eq!(agent.mode, "managed");
-            assert_eq!(agent.storage_authority, ModelStorageAuthority::MuxMapping);
+            assert_eq!(agent.storage_authority, ModelStorageAuthority::ArcaMapping);
             assert_eq!(agent.config_paths, default_paths());
             assert!(!agent.supports_multiple);
             assert_eq!(agent.credential_mode, "keychain-export");

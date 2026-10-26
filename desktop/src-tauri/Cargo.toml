@@ -1,7 +1,7 @@
 [package]
 name = "desktop"
-version = "1.13.0"
-description = "MUX desktop adapter for the shared MCP, Model, Skill, and Agent core"
+version = "2.9.0"
+description = "Arca desktop adapter for the shared MCP, Model, Skill, and Agent core"
 authors = ["Scoheart"]
 edition = "2021"
 
@@ -33,7 +33,7 @@ tauri-plugin-process = "2"
 reqwest = { version = "0.13", default-features = false, features = ["socks"] }
 ureq = "3"
 libc = "0.2"
-mux-core = { path = "../../core" }
+arca-core = { path = "../../core" }
 notify = "8"
 
 [target.'cfg(target_os = "macos")'.dependencies]

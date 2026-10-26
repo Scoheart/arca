@@ -1,11 +1,5 @@
-import {
-  act,
-  cleanup,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../lib/api";
@@ -108,7 +102,7 @@ const importedItem = (): SkillInventoryItem => ({
   source: {
     kind: "imported",
     original_path: "~/.cursor/skills/imported-legacy",
-    backup_path: "~/.mux/backups/skills/fixture/imported-legacy",
+    backup_path: "~/.arca/backups/skills/fixture/imported-legacy",
   },
 });
 
@@ -325,7 +319,7 @@ describe("SkillsView", () => {
         source: {
           kind: "imported",
           original_path: "~/.agents/skills/dws",
-          backup_path: "~/.mux/backups/skills/dws",
+          backup_path: "~/.arca/backups/skills/dws",
         },
         affected_agent_ids: ["codex", "cursor"],
       },
@@ -341,7 +335,7 @@ describe("SkillsView", () => {
         source: {
           kind: "imported",
           original_path: "~/.claude/skills/dws",
-          backup_path: "~/.mux/backups/skills/dws-claude",
+          backup_path: "~/.arca/backups/skills/dws-claude",
         },
         affected_agent_ids: ["claude-code"],
       },
@@ -366,7 +360,7 @@ describe("SkillsView", () => {
     ).toBeVisible();
     expect(screen.queryByRole("tablist", { name: "Skill 状态" })).not.toBeInTheDocument();
     expect(screen.getByRole("separator", { name: "调整侧边栏宽度" })).toBeVisible();
-    expect(screen.getByRole("list", { name: "Skill 资产" })).toHaveClass("mux-skill-card-grid");
+    expect(screen.getByRole("list", { name: "Skill 资产" })).toHaveClass("arca-skill-card-grid");
     expect(screen.getByText("Review repository changes")).toBeVisible();
     expect(screen.getByText("acme/skills")).toBeVisible();
     expect(screen.queryByText("风险")).not.toBeInTheDocument();
@@ -556,8 +550,9 @@ describe("SkillsView", () => {
     rerender(
       <SkillsView state={stateWith(recovery, { loading: false, error: null })} />,
     );
-    expect(screen.getByText("Skills 已进入只读恢复状态")).toBeVisible();
-    expect(screen.getByText("检测到未完成事务，请先恢复。")).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveTextContent("上次 Skill 操作未完成");
+    expect(screen.getByRole("alert")).toHaveTextContent("请重新打开 Arca，程序会自动重试恢复。");
+    expect(screen.queryByText("检测到未完成事务，请先恢复。")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "review-changes" })).toBeVisible();
     expect(screen.getByRole("button", { name: "检查更新" })).toBeDisabled();
   });
@@ -579,8 +574,9 @@ describe("SkillsView", () => {
       />,
     );
 
-    expect(screen.getByText("Skills 已进入只读恢复状态")).toBeVisible();
-    expect(screen.getByText("journal recovery required")).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveTextContent("上次 Skill 操作未完成");
+    expect(screen.getByRole("alert")).toHaveTextContent("请重新打开 Arca，程序会自动重试恢复。");
+    expect(screen.queryByText("journal recovery required")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "重试" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "检查更新" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "添加 Skill" })).toBeDisabled();
@@ -626,7 +622,7 @@ describe("SkillsView", () => {
     );
     await waitFor(() => expect(cancel).toHaveBeenCalledWith("resolve-fixture"));
     expect(cancel).toHaveBeenCalledOnce();
-    expect(screen.getByText("Skills 已进入只读恢复状态")).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveTextContent("上次 Skill 操作未完成");
   });
 
   it("keeps cached inventory under hook errors and runs only a manual metadata check", async () => {

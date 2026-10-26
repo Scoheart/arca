@@ -1,6 +1,6 @@
 //! Bounded parity smoke: isolated data, fake curl, no real launches or network.
-//! cargo run -p mux-core --example verify_desktop_cli -- /absolute/path/to/mux
-use mux_core::{application, domain::types::ModelProtocol, resources::model::curl::{self, CurlAuth}, settings, testenv::TestHome};
+//! cargo run -p arca-core --example verify_desktop_cli -- /absolute/path/to/arca
+use arca_core::{application, domain::types::ModelProtocol, resources::model::curl::{self, CurlAuth}, settings, testenv::TestHome};
 use serde_json::{json, Value};
 use std::{collections::BTreeMap, fs, path::Path, process::Command};
 #[cfg(unix)] use std::os::unix::fs::PermissionsExt;
@@ -14,14 +14,15 @@ fn run(binary: &Path, args: &[&str]) -> Value {
 }
 
 fn main() {
-    let binary = std::env::args().nth(1).expect("absolute mux binary path");
+    let binary = std::env::args().nth(1).expect("absolute arca binary path");
     let binary = Path::new(&binary);
     assert!(binary.is_absolute());
     let fixture = TestHome::new("parity");
     let bin = fixture.home.join("bin");
     fs::write(bin.join("curl"), "#!/bin/sh\nprintf '%s\\0' \"$@\"\n").unwrap();
+    fs::write(bin.join("jq"), "#!/bin/sh\n[ \"$#\" -eq 1 ] && [ \"$1\" = '-r' ] || exit 1\ncat\n").unwrap();
     fs::write(bin.join("fixture-agent"), "#!/bin/sh\nexit 0\n").unwrap();
-    for name in ["curl", "fixture-agent"] {
+    for name in ["curl", "jq", "fixture-agent"] {
         #[cfg(unix)] fs::set_permissions(bin.join(name), fs::Permissions::from_mode(0o700)).unwrap();
     }
     let terminal = fixture.home.join("System/Applications/Utilities/Terminal.app/Contents");

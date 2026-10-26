@@ -1,0 +1,103 @@
+{
+  "cursor": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "chromium": true,
+    "ca_scope": "mixed"
+  },
+  "grok-build": {
+    "ca_environment": [
+      "SSL_CERT_FILE"
+    ],
+    "ca_scope": "process"
+  },
+  "qoder": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "chromium": true,
+    "ca_scope": "mixed"
+  },
+  "qoder-desktop": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "chromium": true,
+    "ca_scope": "system"
+  },
+  "codex": {
+    "explicit_proxy": true,
+    "ca_environment": [
+      "CODEX_CA_CERTIFICATE",
+      "SSL_CERT_FILE"
+    ],
+    "ca_scope": "process"
+  },
+  "codex-desktop": {
+    "ca_environment": [
+      "SSL_CERT_FILE"
+    ],
+    "chromium": true,
+    "ca_scope": "system"
+  },
+  "pi": {
+    "explicit_proxy": true,
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "process_title": "pi",
+    "ca_scope": "process"
+  },
+  "qoder-cli": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "npm_package": "@qoder-ai/qodercli",
+    "ca_scope": "process"
+  },
+  "opencode": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "ca_scope": "process"
+  },
+  "opencode-desktop": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "chromium": true,
+    "ca_scope": "mixed"
+  },
+  "qwenwork": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "chromium": true,
+    "ca_scope": "mixed"
+  },
+  "qwenwork-cn": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "chromium": true,
+    "ca_scope": "mixed"
+  },
+  "qoderwork": {
+    "ca_environment": [
+      "NODE_EXTRA_CA_CERTS",
+      "SSL_CERT_FILE"
+    ],
+    "chromium": true,
+    "ca_scope": "mixed"
+  }
+}

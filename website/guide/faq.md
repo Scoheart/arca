@@ -2,13 +2,13 @@
 
 ## 桌面与 CLI 是同一份数据吗？
 
-是。两者共享 `~/.mux/`、资产、关系与写入规则。完整 CLI 管理 Models、Providers、MCPs 和 Skills；无参数 TUI 聚焦 MCP。无需重复创建资产。
+是。两者共享 `~/.arca/`、资产、关系与写入规则。完整 CLI 管理 Models、Providers、MCPs 和 Skills；无参数 TUI 聚焦 MCP。无需重复创建资产。
 
 ## 为什么 Agent 可启动，却没有某项配置能力？
 
 启动、运行时版本、配置文件与可写能力是不同事实。只有核验过的原生路径和格式才可写；缺少契约的能力保持只读或官方引导。插件宿主存在也不能证明插件已安装。
 
-## MUX 会覆盖我已有的设置吗？
+## Arca 会覆盖我已有的设置吗？
 
 只修改已管理字段，保留其他内容、注释与策略。外部新增和修改先显示为观测；格式不合法、并发变化和不安全的覆盖会拒绝对应写入。请根据当前可用动作采用、恢复或解除管理。
 
@@ -30,7 +30,7 @@ MCP 使用 `name::transport`，同名 stdio 与 HTTP 是不同资产。Skill 中
 
 ## Skills 支持项目级路径、私有仓库或在线编辑吗？
 
-当前只管理核验过的用户级路径，不支持需认证的私有 Git 来源或在 MUX 内编辑 `SKILL.md`。本地文件夹与压缩包可以直接导入。详见 [Skills](/guide/skills)。
+当前只管理核验过的用户级路径，不支持需认证的私有 Git 来源或在 Arca 内编辑 `SKILL.md`。本地文件夹与压缩包可以直接导入。详见 [Skills](/guide/skills)。
 
 ## Trace 是在线上传或自动执行吗？
 
@@ -38,10 +38,10 @@ Trace 读取本地会话或显式导入文件。预览不会上传或执行内�
 
 ## 怎样更新？
 
-桌面端在设置中检查最新正式版；独立 CLI 使用 `mux upgrade`，桌面包内的 CLI 跟随 App 更新。先把 App 安装到 `/Applications`，不要直接在只读 DMG 内执行更新。下载与首次启动说明见 [安装](/guide/install)。
+桌面端在设置中检查最新正式版；独立 CLI 使用 `arca upgrade`，桌面包内的 CLI 跟随 App 更新。先把 App 安装到 `/Applications`，不要直接在只读 DMG 内执行更新。下载与首次启动说明见 [安装](/guide/install)。
 
 ## 支持哪些平台？
 
 正式预编译 Desktop 与 CLI 目前发布 macOS Apple Silicon。其他环境可研究源码构建，但不能把可编译等同于已经完成平台验收。
 
-[GitHub Issues](https://github.com/Scoheart/mux/issues) · [演示](/guide/demo)
+[GitHub Issues](https://github.com/Scoheart/arca/issues) · [演示](/guide/demo)

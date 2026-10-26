@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Regenerate public documentation metadata from the registry and a released CLI.
-// Usage: node scripts/update-reference.mjs --mux /absolute/path/to/mux
+// Usage: node scripts/update-reference.mjs --arca /absolute/path/to/arca
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -9,12 +9,12 @@ import { fileURLToPath } from "node:url";
 
 const website = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const root = resolve(website, "..");
-const index = process.argv.indexOf("--mux");
-if (index < 0 || !process.argv[index + 1]) throw new Error("Pass --mux /absolute/path/to/mux");
+const index = process.argv.indexOf("--arca");
+if (index < 0 || !process.argv[index + 1]) throw new Error("Pass --arca /absolute/path/to/arca");
 const cli = resolve(process.argv[index + 1]);
-const sandbox = mkdtempSync(resolve(tmpdir(), "mux-doc-reference-"));
+const sandbox = mkdtempSync(resolve(tmpdir(), "arca-doc-reference-"));
 try {
-  const env = { ...process.env, MUX_HOME: sandbox, MUX_NO_UPDATE_CHECK: "1" };
+  const env = { ...process.env, HOME: sandbox, ARCA_HOME: sandbox, ARCA_TEST_PROBE_ROOT: sandbox, ARCA_NO_UPDATE_CHECK: "1" };
   const query = (args) => {
     const value = JSON.parse(execFileSync(cli, ["--json", ...args], { env, encoding: "utf8" }));
     if (!value.ok) throw new Error(`Reference query failed: ${args.join(" ")}`);

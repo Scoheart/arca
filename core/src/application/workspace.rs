@@ -88,7 +88,7 @@ fn wait_for_cooperative_lock(started: Instant) -> CoreResult<()> {
     if started.elapsed() >= WORKSPACE_LOCK_TIMEOUT {
         return Err(crate::domain::error::CoreError::new(
             "snapshot_lock_timeout",
-            "timed out waiting for a consistent MUX workspace read",
+            "timed out waiting for a consistent Arca workspace read",
         ));
     }
     thread::sleep(
@@ -102,7 +102,7 @@ pub fn snapshot() -> CoreResult<WorkspaceSnapshot> {
         // Skills transactions and some cross-domain asset transactions acquire
         // their exclusive locks in opposite orders. Acquire both shared locks
         // with non-blocking attempts and never wait while retaining either one;
-        // this coordinates cooperating MUX processes without introducing a
+        // this coordinates cooperating Arca processes without introducing a
         // reader/writer deadlock. External Agent files cannot participate in
         // that protocol and are intentionally accepted as one point-in-time
         // observation. Requiring two whole-workspace reads to be byte-identical
@@ -154,7 +154,7 @@ pub fn snapshot() -> CoreResult<WorkspaceSnapshot> {
             let accepted_content = serialize_projection(&accepted)?;
 
             // A pristine HOME has no lock files and reads must not create
-            // ~/.mux. If a cooperating writer initialized either domain while
+            // ~/.arca. If a cooperating writer initialized either domain while
             // this projection ran, restart and acquire both through the
             // deadlock-avoiding try-lock protocol before accepting the result.
             if skills_guard.is_none()
@@ -180,7 +180,7 @@ pub fn snapshot() -> CoreResult<WorkspaceSnapshot> {
         }
         Err(crate::domain::error::CoreError::new(
             "snapshot_lock_raced",
-            "MUX central state locks changed repeatedly while building the workspace snapshot",
+            "Arca central state locks changed repeatedly while building the workspace snapshot",
         ))
     })
 }
@@ -191,16 +191,16 @@ mod tests {
     use std::time::{Duration, Instant};
 
     #[test]
-    fn snapshot_of_pristine_home_does_not_create_mux_storage() {
+    fn snapshot_of_pristine_home_does_not_create_arca_storage() {
         let home = crate::testenv::TestHome::new("snapshot-pristine");
-        let mux_home = home.home.join(".mux");
-        assert!(!mux_home.exists());
+        let arca_home = home.home.join(".arca");
+        assert!(!arca_home.exists());
 
         super::snapshot().unwrap();
 
         assert!(
-            !mux_home.exists(),
-            "a read-only snapshot must not initialize ~/.mux"
+            !arca_home.exists(),
+            "a read-only snapshot must not initialize ~/.arca"
         );
     }
 
@@ -218,7 +218,7 @@ mod tests {
     fn snapshot_try_locks_avoid_opposite_writer_order_deadlock() {
         let _home = crate::testenv::TestHome::new("snapshot-lock-order");
         let skills_paths = crate::resources::skill::SkillsPaths::resolve_from_env().unwrap();
-        skills_paths.ensure_mux_root().unwrap();
+        skills_paths.ensure_arca_root().unwrap();
         // Persist the Skills lock first so the snapshot has both initialized
         // domains to coordinate.
         drop(

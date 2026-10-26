@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Sidebar default/min/max widths are exactly `224px`, `184px`, and `340px`.
-- Persist one shared width under `localStorage` key `mux.resourceWorkspace.sidebarWidth`.
+- Persist one shared width under `localStorage` key `arca.resourceWorkspace.sidebarWidth`.
 - The sidebar is resizable but has no close or collapse action.
 - The detail drawer overlays only the resource content area and never changes grid width or column count.
 - Drawer width is `clamp(400px, 38vw, 520px)` and `min(520px, calc(100% - 32px))` on constrained windows.
@@ -92,7 +92,7 @@ Expected: FAIL because `resourceWorkspace.ts` does not exist.
 Create constants for the exact width bounds, parse finite stored numbers through the clamp function, and recursively copy arrays/objects. Treat a key as sensitive when its normalized name contains `token`, `secret`, `password`, `api_key`, `access_key`, `private_key`, or `credential`; replace the entire value with `••••••••` before descending.
 
 ```ts
-export const SIDEBAR_WIDTH_STORAGE_KEY = "mux.resourceWorkspace.sidebarWidth";
+export const SIDEBAR_WIDTH_STORAGE_KEY = "arca.resourceWorkspace.sidebarWidth";
 export const DEFAULT_SIDEBAR_WIDTH = 224;
 export const MIN_SIDEBAR_WIDTH = 184;
 export const MAX_SIDEBAR_WIDTH = 340;
@@ -179,8 +179,8 @@ Pass the value through the workspace style variable:
 
 ```tsx
 <div
-  className="mux-workspace"
-  style={{ "--mux-workspace-sidebar-width": `${sidebarWidth}px` } as React.CSSProperties}
+  className="arca-workspace"
+  style={{ "--arca-workspace-sidebar-width": `${sidebarWidth}px` } as React.CSSProperties}
 >
 ```
 
@@ -241,7 +241,7 @@ Keep status counts scoped to the selected source. Preserve the existing rule tha
 Import `redactSensitiveConfig` and replace the preview expression with:
 
 ```tsx
-<pre className="mux-config-preview">
+<pre className="arca-config-preview">
   {JSON.stringify(redactSensitiveConfig(entry.config), null, 2)}
 </pre>
 ```
@@ -289,7 +289,7 @@ Expected: all commands exit 0.
 
 - [ ] **Step 2: Update only the installed application for review**
 
-Follow `../../skills/tool/mux-ui-review/SKILL.md`: compare source, latest stable release, and `/Applications/MUX.app`; build/package and replace the installed app only when required. Do not launch a dev server or preview bundle.
+Follow `../../skills/tool/arca-ui-review/SKILL.md`: compare source, latest stable release, and `/Applications/Arca.app`; build/package and replace the installed app only when required. Do not launch a dev server or preview bundle.
 
 - [ ] **Step 3: Verify at `1200x820`**
 
@@ -301,7 +301,7 @@ Confirm all top-bar actions remain visible, sidebar stays within `184–340px`, 
 
 - [ ] **Step 5: Verify persistence and redaction**
 
-Set the sidebar width to a non-default value, restart `/Applications/MUX.app`, and verify it restores. Open an MCP containing environment credentials and confirm no original token, secret, password, or key value exists in visible text or captured DOM.
+Set the sidebar width to a non-default value, restart `/Applications/Arca.app`, and verify it restores. Open an MCP containing environment credentials and confirm no original token, secret, password, or key value exists in visible text or captured DOM.
 
 - [ ] **Step 6: Run final diff and worktree checks**
 

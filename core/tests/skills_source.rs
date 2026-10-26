@@ -2,11 +2,11 @@ mod support;
 
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use mux_core::skills::{
+use arca_core::skills::{
     resolve_source, GithubEndpoints, SkillError, SkillSource, SkillSourceInput, SkillsPaths,
     MAX_ARCHIVE_BYTES, MAX_ARCHIVE_ENTRIES, MAX_DOWNLOAD_BYTES, MAX_SINGLE_FILE_BYTES,
 };
-use mux_core::testenv::TestHome;
+use arca_core::testenv::TestHome;
 use std::fs;
 use std::io::{Cursor, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
@@ -46,7 +46,7 @@ fn local_folder_is_copied_not_linked_and_can_contain_multiple_skills() {
     fs::write(source.join("alpha/SKILL.md"), "changed after resolve").unwrap();
     assert_ne!(
         fs::read_to_string(th.home.join(format!(
-            ".mux/staging/skills/{}/candidates/alpha/SKILL.md",
+            ".arca/staging/skills/{}/candidates/alpha/SKILL.md",
             result.operation_id,
         )))
         .unwrap(),
@@ -56,13 +56,13 @@ fn local_folder_is_copied_not_linked_and_can_contain_multiple_skills() {
 
 #[cfg(unix)]
 #[test]
-fn source_resolution_rejects_a_symlinked_staging_parent_without_writing_outside_mux() {
+fn source_resolution_rejects_a_symlinked_staging_parent_without_writing_outside_arca() {
     let th = TestHome::new("skills-source-staging-parent");
     let source = th.home.join("source");
     write_skill(&source.join("safe"), "safe", "Safe fixture");
     let paths = SkillsPaths::from_env().unwrap();
-    let staging_parent = paths.mux_dir().join("staging");
-    let retained_parent = paths.mux_dir().join("retained-staging");
+    let staging_parent = paths.arca_dir().join("staging");
+    let retained_parent = paths.arca_dir().join("retained-staging");
     fs::rename(&staging_parent, &retained_parent).unwrap();
     let outside = th.home.join("outside-staging");
     fs::create_dir(&outside).unwrap();
@@ -155,7 +155,7 @@ fn substitute_staging_parent(th: &TestHome) -> (std::path::PathBuf, std::path::P
         .collect::<Vec<_>>();
     assert_eq!(operation_ids.len(), 1);
     let operation_id = &operation_ids[0];
-    let staging_parent = paths.mux_dir().join("staging");
+    let staging_parent = paths.arca_dir().join("staging");
     let retained_parent = th.home.join("retained-staging-parent");
     fs::rename(&staging_parent, &retained_parent).unwrap();
 
@@ -286,11 +286,11 @@ fn repository_input_uses_default_branch_and_returns_validated_summaries() {
         result.operation_id
     );
     let wire = serde_json::to_string(&result).unwrap();
-    assert!(!wire.contains("/.mux/staging/"));
+    assert!(!wire.contains("/.arca/staging/"));
     assert!(!wire.contains(th.home.to_string_lossy().as_ref()));
     assert_private_directory(
         &th.home
-            .join(format!(".mux/staging/skills/{}", result.operation_id)),
+            .join(format!(".arca/staging/skills/{}", result.operation_id)),
     );
 }
 
@@ -373,7 +373,7 @@ fn selected_skill_root_is_one_candidate_and_its_snapshot_is_independent() {
     assert!(th
         .home
         .join(format!(
-            ".mux/staging/skills/{}/candidates/direct/nested/SKILL.md",
+            ".arca/staging/skills/{}/candidates/direct/nested/SKILL.md",
             result.operation_id
         ))
         .is_file());
@@ -550,8 +550,8 @@ fn archive_paths_hardlinks_specials_and_duplicates_are_rejected() {
             valid_manifest("escape"),
         )]),
         archive_with(&[ArchiveEntry::RawFile(
-            "/tmp/mux-escape/SKILL.md".into(),
-            valid_manifest("mux-escape"),
+            "/tmp/arca-escape/SKILL.md".into(),
+            valid_manifest("arca-escape"),
         )]),
         archive_with(&[ArchiveEntry::Link {
             path: format!("skills-{FIXTURE_SHA}/catalog/review/hard"),
@@ -1150,7 +1150,7 @@ fn github_success_retains_only_private_candidate_snapshots() {
     .unwrap();
     let operation = th
         .home
-        .join(format!(".mux/staging/skills/{}", result.operation_id));
+        .join(format!(".arca/staging/skills/{}", result.operation_id));
     for directory in [
         operation.clone(),
         operation.join("candidates"),
@@ -1221,7 +1221,7 @@ fn local_candidate_snapshots_are_private_even_when_the_source_is_broad() {
     )
     .unwrap();
     let candidate = th.home.join(format!(
-        ".mux/staging/skills/{}/candidates/review",
+        ".arca/staging/skills/{}/candidates/review",
         result.operation_id
     ));
     assert_eq!(
@@ -1604,7 +1604,7 @@ fn regular_record(path: &str, body: Vec<u8>) -> (Header, Vec<u8>) {
 fn extension_record(kind: u8, body: Vec<u8>) -> (Header, Vec<u8>) {
     (
         raw_header(
-            "././@MuxExtension",
+            "././@ArcaExtension",
             EntryType::new(kind),
             body.len() as u64,
             None,

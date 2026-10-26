@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::os::unix::fs::OpenOptionsExt;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use mux_core::application::assets::{
+use arca_core::application::assets::{
     AgentConsumptionSelection, AssetRef, CentralAssetDraft, ConvergenceAction, McpAdoptionStatus,
     ModelAdoptionStatus, PlanClearAgentMcpRequest, PlanClearAgentModelsRequest, PlanConvergeConsumptionRequest,
     PlanDeleteCentralAssetRequest, PlanEnsureAgentConsumptionRequest,
@@ -14,12 +14,12 @@ use mux_core::application::assets::{
     PlanSetMcpEnabledRequest, PlanSetModelEnabledRequest, PlanSetSkillEnabledRequest,
     PlanUpdateCentralAssetRequest,
 };
-use mux_core::application::mcp::catalog::read_registry;
-use mux_core::application::mcp::operations as mcp_operations;
-use mux_core::application::operations::PlanOperationRequest;
-use mux_core::application::skills::{InventoryState, SkillLocation};
-use mux_core::application::MuxCore;
-use mux_core::domain::types::{
+use arca_core::application::mcp::catalog::read_registry;
+use arca_core::application::mcp::operations as mcp_operations;
+use arca_core::application::operations::PlanOperationRequest;
+use arca_core::application::skills::{InventoryState, SkillLocation};
+use arca_core::application::ArcaCore;
+use arca_core::domain::types::{
     HttpConfig, RegistryConfig, RegistryEntry, RegistryOrigin, StdioConfig,
 };
 use serde_json::{json, Value};
@@ -33,9 +33,9 @@ use crate::review::{execute_direct_mutation, execute_operation, MutationOptions}
 
 #[derive(Debug, Parser)]
 #[command(
-    name = "mux",
+    name = "arca",
     version,
-    about = "MUX — central MCP, Model, and Skill assets for AI Agents",
+    about = "Arca — central MCP, Model, and Skill assets for AI Agents",
     color = clap::ColorChoice::Never
 )]
 pub struct Cli {
@@ -87,7 +87,7 @@ pub enum Command {
         #[command(subcommand)]
         command: crate::diagnostics::TraceCommand,
     },
-    /// Inspect saved, redacted capture records without starting capture.
+    /// Discover processes, record scoped traffic, or inspect saved redacted records.
     Capture {
         #[command(subcommand)]
         command: crate::diagnostics::CaptureCommand,
@@ -104,7 +104,7 @@ pub enum Command {
         #[command(subcommand)]
         command: crate::operation_session::OperationCommand,
     },
-    /// Inspect or change preferences shared with MUX Desktop.
+    /// Inspect or change preferences shared with Arca Desktop.
     Settings {
         #[command(subcommand)]
         command: crate::preferences::SettingsCommand,
@@ -129,7 +129,7 @@ pub enum Command {
         #[command(subcommand)]
         command: AgentCommand,
     },
-    /// Inspect or configure the shared MUX network proxy.
+    /// Inspect or configure the shared Arca network proxy.
     Network {
         #[command(subcommand)]
         command: crate::network_management::NetworkCommand,
@@ -394,12 +394,12 @@ pub enum AgentCommand {
     Manage(crate::agent_management::AgentManagementCommand),
     /// List configured Agents and their supported resource capabilities.
     List,
-    /// Enable one configured Agent for MUX operations.
+    /// Enable one configured Agent for Arca operations.
     Enable {
         #[arg(value_parser = parse_identity)]
         agent: String,
     },
-    /// Disable one configured Agent for MUX operations.
+    /// Disable one configured Agent for Arca operations.
     Disable {
         #[arg(value_parser = parse_identity)]
         agent: String,
@@ -451,8 +451,8 @@ pub fn dispatch(cli: &Cli) -> Result<CommandOutput, CliError> {
         Command::Capture { command } => crate::diagnostics::captured(cli, command),
         Command::Status { agents, capability } => {
             cli.reject_mutation_options()?;
-            let inventory = mux_core::application::assets::list_inventory_scoped(
-                mux_core::application::assets::InventoryScope {
+            let inventory = arca_core::application::assets::list_inventory_scoped(
+                arca_core::application::assets::InventoryScope {
                     capability: capability.map(core_capability),
                     agent_ids: agents.iter().cloned().collect(),
                 },
@@ -486,8 +486,8 @@ fn dispatch_mcp(cli: &Cli, command: &McpCommand) -> Result<CommandOutput, CliErr
             let enabled = matches!(command, McpCommand::EnableAll { .. });
             let options = cli.mutation_options();
             options.validate()?;
-            let plan = MuxCore::plan(PlanOperationRequest::SetAllMcpEnabled(
-                mux_core::domain::assets::PlanSetAllMcpEnabledRequest { agent_id: agent.clone(), enabled },
+            let plan = ArcaCore::plan(PlanOperationRequest::SetAllMcpEnabled(
+                arca_core::domain::assets::PlanSetAllMcpEnabledRequest { agent_id: agent.clone(), enabled },
             )).map_err(CliError::from_core)?;
             execute_operation(if enabled { "mcp.enable-all" } else { "mcp.disable-all" }, plan, options)
         }
@@ -497,7 +497,7 @@ fn dispatch_mcp(cli: &Cli, command: &McpCommand) -> Result<CommandOutput, CliErr
             options.validate()?;
             let entry: RegistryEntry = serde_json::from_value(crate::input::json_file(file)?)
                 .map_err(|error| CliError::private("invalid_mcp_entry", error.to_string()))?;
-            let plan = MuxCore::plan(PlanOperationRequest::UpdateCentralAsset(PlanUpdateCentralAssetRequest {
+            let plan = ArcaCore::plan(PlanOperationRequest::UpdateCentralAsset(PlanUpdateCentralAssetRequest {
                 draft: CentralAssetDraft::Mcp { existing_key: key.clone(), entry: Box::new(entry) },
             })).map_err(CliError::from_core)?;
             execute_operation("mcp.save", plan, options)
@@ -740,7 +740,7 @@ fn mcp_show(key: &str, palette: Palette) -> Result<CommandOutput, CliError> {
 }
 
 fn model_list(palette: Palette) -> Result<CommandOutput, CliError> {
-    let mut profiles = mux_core::application::models::list_profiles();
+    let mut profiles = arca_core::application::models::list_profiles();
     profiles.sort_by(|left, right| left.profile.id.cmp(&right.profile.id));
     let human = if profiles.is_empty() {
         palette.dim("No central Model Profiles.")
@@ -847,8 +847,8 @@ fn status(
     if let Some(agent) = agent {
         require_agent_capability(agent, domain)?;
     }
-    let inventory = mux_core::application::assets::list_inventory_scoped(
-        mux_core::application::assets::InventoryScope {
+    let inventory = arca_core::application::assets::list_inventory_scoped(
+        arca_core::application::assets::InventoryScope {
             capability: Some(core_capability(domain)),
             agent_ids: agent.into_iter().map(str::to_owned).collect(),
         },
@@ -860,13 +860,13 @@ fn status(
         .iter()
         .filter(|diagnostic| match domain {
             AssetDomain::Mcp => {
-                diagnostic.capability == mux_core::application::assets::AssetCapability::Mcp
+                diagnostic.capability == arca_core::application::assets::AssetCapability::Mcp
             }
             AssetDomain::Model => {
-                diagnostic.capability == mux_core::application::assets::AssetCapability::Model
+                diagnostic.capability == arca_core::application::assets::AssetCapability::Model
             }
             AssetDomain::Skill => {
-                diagnostic.capability == mux_core::application::assets::AssetCapability::Skill
+                diagnostic.capability == arca_core::application::assets::AssetCapability::Skill
             }
         })
         .cloned()
@@ -926,8 +926,8 @@ fn status(
     ))
 }
 
-fn core_capability(domain: AssetDomain) -> mux_core::application::assets::AssetCapability {
-    use mux_core::application::assets::AssetCapability;
+fn core_capability(domain: AssetDomain) -> arca_core::application::assets::AssetCapability {
+    use arca_core::application::assets::AssetCapability;
     match domain {
         AssetDomain::Mcp => AssetCapability::Mcp,
         AssetDomain::Model => AssetCapability::Model,
@@ -936,18 +936,18 @@ fn core_capability(domain: AssetDomain) -> mux_core::application::assets::AssetC
 }
 
 fn status_projection(
-    inventory: mux_core::application::assets::ConsumptionInventory,
+    inventory: arca_core::application::assets::ConsumptionInventory,
     domain: AssetDomain,
     agent: Option<&str>,
 ) -> (
-    Vec<mux_core::application::assets::ConsumptionView>,
-    Vec<mux_core::application::assets::ConsumptionView>,
-    Vec<mux_core::application::assets::TargetIncident>,
+    Vec<arca_core::application::assets::ConsumptionView>,
+    Vec<arca_core::application::assets::ConsumptionView>,
+    Vec<arca_core::application::assets::TargetIncident>,
 ) {
     let capability = match domain {
-        AssetDomain::Mcp => mux_core::application::assets::AssetCapability::Mcp,
-        AssetDomain::Model => mux_core::application::assets::AssetCapability::Model,
-        AssetDomain::Skill => mux_core::application::assets::AssetCapability::Skill,
+        AssetDomain::Mcp => arca_core::application::assets::AssetCapability::Mcp,
+        AssetDomain::Model => arca_core::application::assets::AssetCapability::Model,
+        AssetDomain::Skill => arca_core::application::assets::AssetCapability::Skill,
     };
     let mut target_incidents = inventory
         .target_incidents
@@ -985,7 +985,7 @@ fn converge(
 ) -> Result<CommandOutput, CliError> {
     options.validate()?;
     let inventory =
-        mux_core::application::assets::list_inventory().map_err(CliError::from_legacy)?;
+        arca_core::application::assets::list_inventory().map_err(CliError::from_legacy)?;
     let row = inventory
         .consumptions
         .iter()
@@ -1003,7 +1003,7 @@ fn converge(
             format!("available actions: {:?}", row.available_actions),
         ));
     }
-    let plan = MuxCore::plan(PlanOperationRequest::ConvergeConsumption(
+    let plan = ArcaCore::plan(PlanOperationRequest::ConvergeConsumption(
         PlanConvergeConsumptionRequest {
             agent_id: agent_id.to_string(),
             asset,
@@ -1037,7 +1037,7 @@ fn assign(
             selection,
         })
     };
-    let plan = MuxCore::plan(request).map_err(CliError::from_core)?;
+    let plan = ArcaCore::plan(request).map_err(CliError::from_core)?;
     execute_operation(
         domain_command(domain, "assign"),
         plan,
@@ -1068,7 +1068,7 @@ fn unassign(
             selection: selection(domain, identities.to_vec()),
         })
     };
-    let plan = MuxCore::plan(request).map_err(CliError::from_core)?;
+    let plan = ArcaCore::plan(request).map_err(CliError::from_core)?;
     execute_operation(
         domain_command(domain, "unassign"),
         plan,
@@ -1106,7 +1106,7 @@ fn set_enabled(
             target_id: target_id.map(str::to_string),
         }),
     };
-    let plan = MuxCore::plan(request).map_err(CliError::from_core)?;
+    let plan = ArcaCore::plan(request).map_err(CliError::from_core)?;
     execute_operation(command, plan, options)
 }
 
@@ -1118,7 +1118,7 @@ fn model_use(
     options.validate()?;
     require_enabled_agent_capability(agent, AssetDomain::Model)?;
     require_central_assets(AssetDomain::Model, &[profile_id.to_string()])?;
-    let plan = MuxCore::plan(PlanOperationRequest::SetActiveModel(
+    let plan = ArcaCore::plan(PlanOperationRequest::SetActiveModel(
         PlanSetActiveModelRequest {
             agent_id: agent.to_string(),
             profile_id: profile_id.to_string(),
@@ -1207,7 +1207,7 @@ fn mcp_add(
         }),
         repo: None,
     };
-    let plan = MuxCore::plan(PlanOperationRequest::UpdateCentralAsset(
+    let plan = ArcaCore::plan(PlanOperationRequest::UpdateCentralAsset(
         PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::Mcp {
                 existing_key: None,
@@ -1227,7 +1227,7 @@ fn mcp_delete(key: &str, options: MutationOptions) -> Result<CommandOutput, CliE
         .as_ref()
         .and_then(|origin| origin.source.clone())
         .or_else(|| entry.origin.as_ref().map(|origin| origin.kind.clone()));
-    let plan = MuxCore::plan(PlanOperationRequest::DeleteCentralAsset(
+    let plan = ArcaCore::plan(PlanOperationRequest::DeleteCentralAsset(
         PlanDeleteCentralAssetRequest {
             asset: AssetRef::Mcp {
                 key: key.to_string(),
@@ -1315,7 +1315,7 @@ fn write_new_private_export(path: &Path, content: &str) -> Result<(), CliError> 
     {
         // The path may be renamed and replaced by another process after this
         // handle was opened. Blind pathname cleanup could then delete content
-        // MUX never created. Leave the still-private partial file in place and
+        // Arca never created. Leave the still-private partial file in place and
         // fail closed; create_new prevents a later export from overwriting it.
         return Err(CliError::private("export_write_failed", error.to_string())
             .with_detail("path", safe_path(&path.to_string_lossy())));
@@ -1324,7 +1324,7 @@ fn write_new_private_export(path: &Path, content: &str) -> Result<(), CliError> 
 }
 
 fn agent_list(palette: Palette) -> Result<CommandOutput, CliError> {
-    let agents = mux_core::application::agents::list_capabilities().map_err(CliError::from_core)?;
+    let agents = arca_core::application::agents::list_capabilities().map_err(CliError::from_core)?;
     let human = if agents.is_empty() {
         palette.dim("No configured Agents.")
     } else {
@@ -1367,7 +1367,7 @@ fn agent_set(
     options: MutationOptions,
 ) -> Result<CommandOutput, CliError> {
     options.validate()?;
-    let agents = mux_core::application::agents::load_agents();
+    let agents = arca_core::application::agents::load_agents();
     let definition = agents.get(agent).ok_or_else(|| {
         CliError::new(
             "unknown_agent",
@@ -1391,7 +1391,7 @@ fn agent_set(
         &review,
         definition.enabled == enabled,
         || {
-            mux_core::application::agents::set_enabled(agent, enabled)
+            arca_core::application::agents::set_enabled(agent, enabled)
                 .map_err(CliError::from_legacy)
         },
     )
@@ -1399,19 +1399,19 @@ fn agent_set(
 
 fn discover(domain: Option<AssetDomain>, palette: Palette) -> Result<CommandOutput, CliError> {
     let mcps = if domain.is_none() || domain == Some(AssetDomain::Mcp) {
-        mux_core::application::assets::list_mcp_adoption_candidates()
+        arca_core::application::assets::list_mcp_adoption_candidates()
             .map_err(CliError::from_legacy)?
     } else {
         Vec::new()
     };
     let models = if domain.is_none() || domain == Some(AssetDomain::Model) {
-        mux_core::application::assets::list_model_adoption_candidates()
+        arca_core::application::assets::list_model_adoption_candidates()
             .map_err(CliError::from_legacy)?
     } else {
         Vec::new()
     };
     let skills = if domain.is_none() || domain == Some(AssetDomain::Skill) {
-        mux_core::application::skills::list_migration_candidates()
+        arca_core::application::skills::list_migration_candidates()
             .map_err(skill_error)?
             .into_iter()
             .filter(is_external_skill)
@@ -1462,7 +1462,7 @@ fn discover(domain: Option<AssetDomain>, palette: Palette) -> Result<CommandOutp
 }
 
 fn workspace(palette: Palette) -> Result<CommandOutput, CliError> {
-    let snapshot = MuxCore::snapshot().map_err(CliError::from_core)?;
+    let snapshot = ArcaCore::snapshot().map_err(CliError::from_core)?;
     let central_skills = snapshot
         .assets
         .skills
@@ -1472,7 +1472,7 @@ fn workspace(palette: Palette) -> Result<CommandOutput, CliError> {
         .count();
     let human = format!(
         "{}\n  revision: {}\n  Agents: {}\n  MCPs: {}\n  Models: {}\n  Skills: {}\n  managed relationships: {}\n  external observations: {}",
-        palette.bold("MUX workspace"),
+        palette.bold("Arca workspace"),
         snapshot.revision,
         snapshot.agents.len(),
         snapshot.assets.mcp.len(),
@@ -1501,7 +1501,7 @@ fn workspace(palette: Palette) -> Result<CommandOutput, CliError> {
 fn upgrade(options: MutationOptions) -> Result<CommandOutput, CliError> {
     options.validate()?;
     let current = env!("CARGO_PKG_VERSION");
-    if let Some(real) = mux_core::application::update::managed_by_desktop_app() {
+    if let Some(real) = arca_core::application::update::managed_by_desktop_app() {
         return Ok(CommandOutput::new(
             "upgrade",
             false,
@@ -1511,7 +1511,7 @@ fn upgrade(options: MutationOptions) -> Result<CommandOutput, CliError> {
                 "version": current,
             }),
             format!(
-                "This CLI is provided by MUX.app ({}); it upgrades with the Desktop app.",
+                "This CLI is provided by Arca.app ({}); it upgrades with the Desktop app.",
                 real.display()
             ),
         ));
@@ -1545,7 +1545,7 @@ fn execute_upgrade_after_review(
         false,
         || {
             outcome = Some(
-                mux_core::application::update::upgrade_cli(current)
+                arca_core::application::update::upgrade_cli(current)
                     .map_err(|error| CliError::private("upgrade_failed", error.to_string()))?,
             );
             Ok(())
@@ -1569,7 +1569,7 @@ fn execute_upgrade_after_review(
 }
 
 fn perform_upgrade(current: &str) -> Result<CommandOutput, CliError> {
-    match mux_core::application::update::upgrade_cli(current)
+    match arca_core::application::update::upgrade_cli(current)
         .map_err(|error| CliError::private("upgrade_failed", error.to_string()))?
     {
         Some(upgrade) => Ok(CommandOutput::new(
@@ -1633,7 +1633,7 @@ fn require_central_assets(domain: AssetDomain, identities: &[String]) -> Result<
             .into_iter()
             .map(|entry| entry.key())
             .collect::<BTreeSet<_>>(),
-        AssetDomain::Model => mux_core::application::models::list_profiles()
+        AssetDomain::Model => arca_core::application::models::list_profiles()
             .into_iter()
             .map(|profile| profile.profile.id)
             .collect::<BTreeSet<_>>(),
@@ -1673,7 +1673,7 @@ fn require_agent_capability_state(
     domain: AssetDomain,
     require_enabled: bool,
 ) -> Result<(), CliError> {
-    let capabilities = mux_core::application::agents::list_capabilities()
+    let capabilities = arca_core::application::agents::list_capabilities()
         .map_err(CliError::from_core)?
         .into_iter()
         .find(|candidate| candidate.identity.id == agent)
@@ -1681,7 +1681,7 @@ fn require_agent_capability_state(
     if require_enabled && !capabilities.identity.enabled {
         return Err(CliError::new(
             "agent_disabled",
-            format!("Agent {agent} is disabled in MUX"),
+            format!("Agent {agent} is disabled in Arca"),
         ));
     }
     let supported = match domain {
@@ -1713,8 +1713,8 @@ fn central_mcp(key: &str) -> Result<RegistryEntry, CliError> {
 
 fn central_model(
     profile_id: &str,
-) -> Result<mux_core::application::models::ModelProfileView, CliError> {
-    mux_core::application::models::list_profiles()
+) -> Result<arca_core::application::models::ModelProfileView, CliError> {
+    arca_core::application::models::list_profiles()
         .into_iter()
         .find(|profile| profile.profile.id == profile_id)
         .ok_or_else(|| {
@@ -1727,7 +1727,7 @@ fn central_model(
 
 fn central_skill(
     name: &str,
-) -> Result<mux_core::application::skills::SkillInventoryItem, CliError> {
+) -> Result<arca_core::application::skills::SkillInventoryItem, CliError> {
     skill_inventory()?
         .items
         .into_iter()
@@ -1740,11 +1740,11 @@ fn central_skill(
         })
 }
 
-fn skill_inventory() -> Result<mux_core::application::skills::SkillsInventory, CliError> {
-    mux_core::application::skills::list_inventory().map_err(skill_error)
+fn skill_inventory() -> Result<arca_core::application::skills::SkillsInventory, CliError> {
+    arca_core::application::skills::list_inventory().map_err(skill_error)
 }
 
-pub(crate) fn skill_error(error: mux_core::application::skills::SkillError) -> CliError {
+pub(crate) fn skill_error(error: arca_core::application::skills::SkillError) -> CliError {
     let parts = error.into_command_parts();
     let mut result = CliError::private(parts.code, parts.message);
     if let Some(retry_at) = parts.retry_at {
@@ -1756,12 +1756,12 @@ pub(crate) fn skill_error(error: mux_core::application::skills::SkillError) -> C
     result
 }
 
-fn is_external_skill(item: &mux_core::application::skills::SkillInventoryItem) -> bool {
+fn is_external_skill(item: &arca_core::application::skills::SkillInventoryItem) -> bool {
     matches!(item.location, SkillLocation::AgentTarget { .. })
         && item.states.contains(&InventoryState::External)
 }
 
-fn format_status_row(row: &mux_core::application::assets::ConsumptionView) -> String {
+fn format_status_row(row: &arca_core::application::assets::ConsumptionView) -> String {
     let identity = match &row.asset {
         AssetRef::Mcp { key } => key,
         AssetRef::Model { profile_id } => profile_id,
@@ -1837,7 +1837,7 @@ fn redacted_mcp_entry(entry: &RegistryEntry) -> Value {
     })
 }
 
-fn redacted_model_profile(view: &mux_core::application::models::ModelProfileView) -> Value {
+fn redacted_model_profile(view: &arca_core::application::models::ModelProfileView) -> Value {
     let profile = &view.profile;
     json!({
         "id": profile.id,
@@ -1879,31 +1879,31 @@ mod tests {
 
     #[test]
     fn model_clear_requires_explicit_all_or_exact_profiles() {
-        assert!(Cli::try_parse_from(["mux", "model", "unassign", "--agent", "qoder-cli"]).is_err());
-        assert!(Cli::try_parse_from(["mux", "model", "unassign", "work", "--all", "--agent", "qoder-cli"]).is_err());
-        let cli = Cli::try_parse_from(["mux", "model", "unassign", "--all", "--agent", "qoder-cli"]).unwrap();
+        assert!(Cli::try_parse_from(["arca", "model", "unassign", "--agent", "qoder-cli"]).is_err());
+        assert!(Cli::try_parse_from(["arca", "model", "unassign", "work", "--all", "--agent", "qoder-cli"]).is_err());
+        let cli = Cli::try_parse_from(["arca", "model", "unassign", "--all", "--agent", "qoder-cli"]).unwrap();
         assert!(matches!(cli.command, Some(Command::Model { command: ModelCommand::Unassign { all: true, .. } })));
     }
 
     #[test]
     fn skill_install_requires_one_source_and_explicit_names() {
         for args in [
-            vec!["mux", "skill", "install", "--name", "review"],
-            vec!["mux", "skill", "install", "--path", "/tmp/skills"],
-            vec!["mux", "skill", "install", "--path", "/tmp/skills", "--github", "owner/repo", "--name", "review"],
+            vec!["arca", "skill", "install", "--name", "review"],
+            vec!["arca", "skill", "install", "--path", "/tmp/skills"],
+            vec!["arca", "skill", "install", "--path", "/tmp/skills", "--github", "owner/repo", "--name", "review"],
         ] {
             assert!(Cli::try_parse_from(args).is_err());
         }
-        let cli = Cli::try_parse_from(["mux", "skill", "install", "--path", "/tmp/skills", "--name", "review", "--yes"]).unwrap();
+        let cli = Cli::try_parse_from(["arca", "skill", "install", "--path", "/tmp/skills", "--name", "review", "--yes"]).unwrap();
         assert!(!cli.accept_risk);
-        let cli = Cli::try_parse_from(["mux", "skill", "install", "--path", "/tmp/skills", "--name", "review", "--accept-risk", "--yes"]).unwrap();
+        let cli = Cli::try_parse_from(["arca", "skill", "install", "--path", "/tmp/skills", "--name", "review", "--accept-risk", "--yes"]).unwrap();
         assert!(cli.accept_risk);
     }
 
     #[test]
     fn disabled_agents_remain_queryable_but_are_rejected_for_mutations() {
-        let _home = mux_core::testenv::TestHome::new("cli-disabled-query");
-        mux_core::application::agents::set_enabled("codex", false).unwrap();
+        let _home = arca_core::testenv::TestHome::new("cli-disabled-query");
+        arca_core::application::agents::set_enabled("codex", false).unwrap();
 
         require_agent_capability("codex", AssetDomain::Model).unwrap();
         let error = require_enabled_agent_capability("codex", AssetDomain::Model).unwrap_err();
@@ -1913,11 +1913,11 @@ mod tests {
     #[test]
     fn parses_complete_resource_command_tree() {
         for args in [
-            vec!["mux", "mcp", "list"],
-            vec!["mux", "mcp", "show", "github::stdio"],
-            vec!["mux", "mcp", "status", "--agent", "codex"],
+            vec!["arca", "mcp", "list"],
+            vec!["arca", "mcp", "show", "github::stdio"],
+            vec!["arca", "mcp", "status", "--agent", "codex"],
             vec![
-                "mux",
+                "arca",
                 "mcp",
                 "assign",
                 "github::stdio",
@@ -1926,21 +1926,21 @@ mod tests {
                 "codex",
             ],
             vec![
-                "mux",
+                "arca",
                 "mcp",
                 "unassign",
                 "github::stdio",
                 "--agent",
                 "codex",
             ],
-            vec!["mux", "mcp", "unassign", "--all", "--agent", "codex"],
-            vec!["mux", "mcp", "enable", "github::stdio", "--agent", "codex"],
-            vec!["mux", "mcp", "disable", "github::stdio", "--agent", "codex"],
-            vec!["mux", "mcp", "add", "github::stdio", "--command", "npx"],
-            vec!["mux", "mcp", "delete", "github::stdio"],
-            vec!["mux", "mcp", "export", "--out", "mcp.json"],
+            vec!["arca", "mcp", "unassign", "--all", "--agent", "codex"],
+            vec!["arca", "mcp", "enable", "github::stdio", "--agent", "codex"],
+            vec!["arca", "mcp", "disable", "github::stdio", "--agent", "codex"],
+            vec!["arca", "mcp", "add", "github::stdio", "--command", "npx"],
+            vec!["arca", "mcp", "delete", "github::stdio"],
+            vec!["arca", "mcp", "export", "--out", "mcp.json"],
             vec![
-                "mux",
+                "arca",
                 "mcp",
                 "converge",
                 "github::stdio",
@@ -1949,7 +1949,7 @@ mod tests {
                 "restore",
             ],
             vec![
-                "mux",
+                "arca",
                 "mcp",
                 "converge",
                 "github::stdio",
@@ -1958,7 +1958,7 @@ mod tests {
                 "adopt",
             ],
             vec![
-                "mux",
+                "arca",
                 "mcp",
                 "converge",
                 "github::stdio",
@@ -1966,22 +1966,22 @@ mod tests {
                 "codex",
                 "detach",
             ],
-            vec!["mux", "model", "list"],
-            vec!["mux", "model", "show", "work"],
-            vec!["mux", "model", "status", "--agent", "codex"],
-            vec!["mux", "model", "assign", "work", "--agent", "codex"],
-            vec!["mux", "model", "unassign", "work", "--agent", "codex"],
-            vec!["mux", "model", "enable", "work", "--agent", "codex"],
-            vec!["mux", "model", "disable", "work", "--agent", "codex"],
-            vec!["mux", "model", "use", "work", "--agent", "codex"],
+            vec!["arca", "model", "list"],
+            vec!["arca", "model", "show", "work"],
+            vec!["arca", "model", "status", "--agent", "codex"],
+            vec!["arca", "model", "assign", "work", "--agent", "codex"],
+            vec!["arca", "model", "unassign", "work", "--agent", "codex"],
+            vec!["arca", "model", "enable", "work", "--agent", "codex"],
+            vec!["arca", "model", "disable", "work", "--agent", "codex"],
+            vec!["arca", "model", "use", "work", "--agent", "codex"],
             vec![
-                "mux", "model", "converge", "work", "--agent", "codex", "restore",
+                "arca", "model", "converge", "work", "--agent", "codex", "restore",
             ],
-            vec!["mux", "skill", "list"],
-            vec!["mux", "skill", "show", "review-changes"],
-            vec!["mux", "skill", "status", "--agent", "codex"],
+            vec!["arca", "skill", "list"],
+            vec!["arca", "skill", "show", "review-changes"],
+            vec!["arca", "skill", "status", "--agent", "codex"],
             vec![
-                "mux",
+                "arca",
                 "skill",
                 "assign",
                 "review-changes",
@@ -1989,7 +1989,7 @@ mod tests {
                 "codex",
             ],
             vec![
-                "mux",
+                "arca",
                 "skill",
                 "unassign",
                 "review-changes",
@@ -1997,7 +1997,7 @@ mod tests {
                 "codex",
             ],
             vec![
-                "mux",
+                "arca",
                 "skill",
                 "enable",
                 "review-changes",
@@ -2005,7 +2005,7 @@ mod tests {
                 "codex",
             ],
             vec![
-                "mux",
+                "arca",
                 "skill",
                 "disable",
                 "review-changes",
@@ -2013,7 +2013,7 @@ mod tests {
                 "codex",
             ],
             vec![
-                "mux",
+                "arca",
                 "skill",
                 "converge",
                 "review-changes",
@@ -2021,23 +2021,23 @@ mod tests {
                 "codex",
                 "restore",
             ],
-            vec!["mux", "agent", "list"],
-            vec!["mux", "agent", "enable", "codex"],
-            vec!["mux", "agent", "disable", "codex"],
-            vec!["mux", "discover"],
-            vec!["mux", "discover", "skill"],
-            vec!["mux", "workspace"],
-            vec!["mux", "upgrade"],
+            vec!["arca", "agent", "list"],
+            vec!["arca", "agent", "enable", "codex"],
+            vec!["arca", "agent", "disable", "codex"],
+            vec!["arca", "discover"],
+            vec!["arca", "discover", "skill"],
+            vec!["arca", "workspace"],
+            vec!["arca", "upgrade"],
         ] {
             Cli::try_parse_from(args.clone()).unwrap_or_else(|error| {
                 panic!("failed to parse {args:?}: {error}");
             });
         }
         assert!(
-            Cli::try_parse_from(["mux", "mcp", "converge", "github::stdio", "restore"]).is_err()
+            Cli::try_parse_from(["arca", "mcp", "converge", "github::stdio", "restore"]).is_err()
         );
         assert!(Cli::try_parse_from([
-            "mux",
+            "arca",
             "mcp",
             "converge",
             "github::stdio",
@@ -2055,7 +2055,7 @@ mod tests {
             "agents", "detected", "manage", "import",
         ] {
             assert!(
-                Cli::try_parse_from(["mux", command]).is_err(),
+                Cli::try_parse_from(["arca", command]).is_err(),
                 "legacy command unexpectedly parsed: {command}"
             );
         }
@@ -2063,9 +2063,9 @@ mod tests {
 
     #[test]
     fn relationship_mutations_require_one_explicit_agent() {
-        assert!(Cli::try_parse_from(["mux", "mcp", "assign", "github::stdio"]).is_err());
+        assert!(Cli::try_parse_from(["arca", "mcp", "assign", "github::stdio"]).is_err());
         assert!(Cli::try_parse_from([
-            "mux",
+            "arca",
             "skill",
             "unassign",
             "review-changes",
@@ -2075,9 +2075,9 @@ mod tests {
             "cursor"
         ])
         .is_err());
-        assert!(Cli::try_parse_from(["mux", "mcp", "unassign", "--agent", "codex"]).is_err());
+        assert!(Cli::try_parse_from(["arca", "mcp", "unassign", "--agent", "codex"]).is_err());
         assert!(Cli::try_parse_from([
-            "mux",
+            "arca",
             "mcp",
             "unassign",
             "github::stdio",
@@ -2087,21 +2087,21 @@ mod tests {
         ])
         .is_err());
         assert!(
-            Cli::try_parse_from(["mux", "model", "unassign", "--all", "--agent", "codex"]).is_err()
+            Cli::try_parse_from(["arca", "model", "unassign", "--all", "--agent", "codex"]).is_err()
         );
     }
 
     #[test]
     fn mcp_writes_require_exact_transport_identity() {
-        assert!(Cli::try_parse_from(["mux", "mcp", "delete", "github"]).is_err());
-        assert!(Cli::try_parse_from(["mux", "mcp", "delete", "github::sse"]).is_err());
-        assert!(Cli::try_parse_from(["mux", "mcp", "delete", "github::http"]).is_ok());
+        assert!(Cli::try_parse_from(["arca", "mcp", "delete", "github"]).is_err());
+        assert!(Cli::try_parse_from(["arca", "mcp", "delete", "github::sse"]).is_err());
+        assert!(Cli::try_parse_from(["arca", "mcp", "delete", "github::http"]).is_ok());
     }
 
     #[test]
     fn model_assign_supports_explicit_replace() {
         let cli = Cli::try_parse_from([
-            "mux",
+            "arca",
             "--json",
             "model",
             "assign",
@@ -2125,9 +2125,9 @@ mod tests {
     #[test]
     fn global_flags_parse_before_or_after_subcommands() {
         for args in [
-            vec!["mux", "--json", "skill", "list", "--no-color"],
-            vec!["mux", "skill", "--json", "list", "--no-color"],
-            vec!["mux", "skill", "list", "--json", "--no-color"],
+            vec!["arca", "--json", "skill", "list", "--no-color"],
+            vec!["arca", "skill", "--json", "list", "--no-color"],
+            vec!["arca", "skill", "list", "--json", "--no-color"],
         ] {
             let cli = Cli::try_parse_from(args).unwrap();
             assert!(cli.json);
@@ -2202,7 +2202,7 @@ mod tests {
 
     #[test]
     fn status_projection_is_sorted_and_scopes_target_incidents() {
-        use mux_core::application::assets::{
+        use arca_core::application::assets::{
             AssetCapability, ConsumptionInventory, ConsumptionStatus, ConsumptionView,
             TargetIncident,
         };
@@ -2210,7 +2210,7 @@ mod tests {
         let row = |agent: &str, key: &str| ConsumptionView {
             agent_id: agent.into(),
             asset: AssetRef::Mcp { key: key.into() },
-            ownership: mux_core::application::assets::OwnershipState::Managed,
+            ownership: arca_core::application::assets::OwnershipState::Managed,
             desired: true,
             observed: true,
             enabled: Some(true),
@@ -2251,14 +2251,14 @@ mod tests {
 
     #[test]
     fn human_status_preserves_observed_and_desired_model_current_state() {
-        use mux_core::application::assets::{ConsumptionStatus, ConsumptionView};
+        use arca_core::application::assets::{ConsumptionStatus, ConsumptionView};
 
         let row = ConsumptionView {
             agent_id: "codex".into(),
             asset: AssetRef::Model {
                 profile_id: "work".into(),
             },
-            ownership: mux_core::application::assets::OwnershipState::Managed,
+            ownership: arca_core::application::assets::OwnershipState::Managed,
             desired: true,
             observed: true,
             enabled: None,
@@ -2269,7 +2269,7 @@ mod tests {
             reason: Some("current model changed externally".into()),
             observation_id: None,
             available_actions: vec![
-                mux_core::application::assets::ConvergenceAction::AdoptObserved,
+                arca_core::application::assets::ConvergenceAction::AdoptObserved,
             ],
             affected_agent_ids: Vec::new(),
             target: None,
@@ -2282,7 +2282,7 @@ mod tests {
     #[test]
     fn export_creates_one_private_file_and_never_overwrites_it() {
         let unique = format!(
-            "mux-cli-export-{}-{}",
+            "arca-cli-export-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

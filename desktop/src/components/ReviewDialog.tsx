@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useState, type ReactNode } from "react";
 import { formatError } from "../lib/format";
 import { DialogShell } from "./DialogShell";
@@ -40,15 +41,15 @@ export function ReviewDialog({
     <DialogShell
       kind="review"
       width="min(408px, calc(100vw - 32px))"
-      className={`mux-review-dialog mux-review-dialog-${tone}`}
+      className={`arca-review-dialog arca-review-dialog-${tone}`}
       leading={tone === "danger" ? (
-        <span className="mux-review-dialog-glyph" aria-hidden="true">
+        <span className="arca-review-dialog-glyph" aria-hidden="true">
           <TrashIcon className="w-4 h-4" />
         </span>
       ) : undefined}
       title={title}
       subtitle={subtitle}
-      status={error ? <div className="mux-review-error" role="alert">{error}</div> : undefined}
+      status={error ? <ToastNotice message={error} /> : undefined}
       busy={busy}
       onClose={onClose}
       footerEnd={
@@ -65,7 +66,7 @@ export function ReviewDialog({
         </>
       }
     >
-      <div className="mux-review-content">{children}</div>
+      <div className="arca-review-content">{children}</div>
     </DialogShell>
   );
 }

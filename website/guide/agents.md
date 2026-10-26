@@ -1,6 +1,6 @@
 # 支持的 Agent
 
-下表来自 MUX 发布版的核验目录与 Core 能力输出，支持按名称、准确 ID 和能力搜索。不同产品形态保留独立身份；名称相同的条目通过 CLI、Desktop、IDE 或 Plugin 区分。
+下表来自 Arca 发布版的核验目录与 Core 能力输出，支持按名称、准确 ID 和能力搜索。不同产品形态保留独立身份；名称相同的条目通过 CLI、Desktop、IDE 或 Plugin 区分。
 
 <AgentReference />
 
@@ -24,7 +24,7 @@ MCP 路径、Skills 目录和 Models 能力分别核验，不能从其中一项�
 
 运行时检测与“配置文件已经存在”分开显示。macOS 应用从包信息读取版本；已核验的默认 CLI 通过限时版本查询检测，自定义 CLI 不会被自动执行。
 
-插件宿主可以启动，不代表插件已经安装。未确认的信息保持未知。CLI 可用 `mux agent launch show <agent-id> --json` 查看同一套启动与版本信息。
+插件宿主可以启动，不代表插件已经安装。未确认的信息保持未知。CLI 可用 `arca agent launch show <agent-id> --json` 查看同一套启动与版本信息。
 
 ## Skills 能力
 
@@ -34,4 +34,4 @@ Skills 仅分配到明确核验的用户级目录。只有当前机器实际可�
 
 没有稳定用户级配置文件契约的产品保持只读或提供原生设置指导。Pi 的原生 MCP 契约适用于 0.99.0+；更早版本需其对应扩展。Claude 桌面端的本地 MCP 文件只接收 stdio，远程连接由客户端的 Connectors 管理。
 
-核验方法与来源见仓库 [Agent Catalog](https://github.com/Scoheart/mux/blob/main/docs/agent-catalog.md)。
+核验方法与来源见仓库 [Agent Catalog](https://github.com/Scoheart/arca/blob/main/docs/agent-catalog.md)。

@@ -3,7 +3,7 @@ import reference from "./reference.json";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "MUX",
+  title: "Arca",
   cleanUrls: true,
   lastUpdated: true,
   srcExclude: ["README.md"],
@@ -12,8 +12,8 @@ export default defineConfig({
   head: [
     ["meta", { name: "theme-color", content: "#7C5CFC" }],
     ["link", { rel: "icon", href: "/favicon.png", type: "image/png" }],
-    ["meta", { property: "og:title", content: "MUX — Agent Resource Manager" }],
-    ["meta", { property: "og:image", content: "https://mux.scoheart.com/media/mux-1.10.0-models.jpg" }],
+    ["meta", { property: "og:title", content: "Arca — Agent Asset Manager" }],
+    ["meta", { property: "og:image", content: "https://mux.scoheart.com/favicon.png" }],
     [
       "meta",
       {
@@ -24,7 +24,7 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    socialLinks: [{ icon: "github", link: "https://github.com/Scoheart/mux" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/Scoheart/arca" }],
     search: { provider: "local" },
     externalLinkIcon: true,
   },
@@ -33,21 +33,21 @@ export default defineConfig({
     root: {
       label: "简体中文",
       lang: "zh-CN",
-      description: "集中管理 Models、MCPs、Skills 与本地 Agent Trace · MUX 官方文档",
+      description: "集中管理 Models、MCPs、Skills 与本地 Agent Trace · Arca 官方文档",
       themeConfig: {
         nav: [
           { text: "首页", link: "/" },
-          { text: "指南", link: "/guide/what-is-mux", activeMatch: "/guide/" },
+          { text: "指南", link: "/guide/what-is-arca", activeMatch: "/guide/" },
           { text: "支持的 Agent", link: "/guide/agents" },
           { text: "演示", link: "/guide/demo" },
-          { text: `v${reference.version}`, link: "https://github.com/Scoheart/mux/releases/latest" },
+          { text: `v${reference.version}`, link: "https://github.com/Scoheart/arca/releases/latest" },
         ],
         sidebar: {
           "/guide/": [
             {
               text: "开始",
               items: [
-                { text: "MUX 是什么", link: "/guide/what-is-mux" },
+                { text: "Arca 是什么", link: "/guide/what-is-arca" },
                 { text: "安装", link: "/guide/install" },
                 { text: "核心概念", link: "/guide/concepts" },
               ],
@@ -71,7 +71,7 @@ export default defineConfig({
           ],
         },
         editLink: {
-          pattern: "https://github.com/Scoheart/mux/edit/main/website/:path",
+          pattern: "https://github.com/Scoheart/arca/edit/main/website/:path",
           text: "在 GitHub 上编辑此页",
         },
         docFooter: { prev: "上一页", next: "下一页" },
@@ -85,7 +85,7 @@ export default defineConfig({
         langMenuLabel: "切换语言",
         footer: {
           message: "MIT Licensed",
-          copyright: "© 2026 Scoheart · MUX",
+          copyright: "© 2026 Scoheart · Arca",
         },
       },
     },
@@ -94,21 +94,21 @@ export default defineConfig({
       label: "English",
       lang: "en-US",
       link: "/en/",
-      description: "Manage Models, MCPs, Skills, and local Agent traces · Official MUX docs",
+      description: "Manage Models, MCPs, Skills, and local Agent traces · Official Arca docs",
       themeConfig: {
         nav: [
           { text: "Home", link: "/en/" },
-          { text: "Guide", link: "/en/guide/what-is-mux", activeMatch: "/en/guide/" },
+          { text: "Guide", link: "/en/guide/what-is-arca", activeMatch: "/en/guide/" },
           { text: "Agents", link: "/en/guide/agents" },
           { text: "Demo", link: "/en/guide/demo" },
-          { text: `v${reference.version}`, link: "https://github.com/Scoheart/mux/releases/latest" },
+          { text: `v${reference.version}`, link: "https://github.com/Scoheart/arca/releases/latest" },
         ],
         sidebar: {
           "/en/guide/": [
             {
               text: "Getting started",
               items: [
-                { text: "What is MUX", link: "/en/guide/what-is-mux" },
+                { text: "What is Arca", link: "/en/guide/what-is-arca" },
                 { text: "Installation", link: "/en/guide/install" },
                 { text: "Core concepts", link: "/en/guide/concepts" },
               ],
@@ -132,12 +132,12 @@ export default defineConfig({
           ],
         },
         editLink: {
-          pattern: "https://github.com/Scoheart/mux/edit/main/website/:path",
+          pattern: "https://github.com/Scoheart/arca/edit/main/website/:path",
           text: "Edit this page on GitHub",
         },
         footer: {
           message: "MIT Licensed",
-          copyright: "© 2026 Scoheart · MUX",
+          copyright: "© 2026 Scoheart · Arca",
         },
       },
     },

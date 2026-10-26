@@ -88,5 +88,38 @@
     "mcp": "https://kilo.ai/docs/desktop/settings/ai",
     "skill": "https://kilo.ai/docs/customize/skills",
     "model": "https://kilo.ai/docs/desktop/settings/ai"
+  },
+  "claude-ai": {
+    "mcp": "https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp"
+  },
+  "chatgpt": {
+    "mcp": "https://platform.openai.com/docs/guides/developer-mode"
+  },
+  "librechat": {
+    "mcp": "https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers"
+  },
+  "open-webui": {
+    "mcp": "https://docs.openwebui.com/features/extensibility/mcp/"
+  },
+  "postman": {
+    "mcp": "https://learning.postman.com/docs/postman-ai/mcp-requests/overview/"
+  },
+  "mcpjam": {
+    "mcp": "https://docs.mcpjam.com/inspector/playground"
+  },
+  "mcp-use": {
+    "mcp": "https://mcp-use.com/docs"
+  },
+  "mcp-use-inspector": {
+    "mcp": "https://mcp-use.com/docs/inspector"
+  },
+  "smithery-playground": {
+    "mcp": "https://smithery.ai/playground"
+  },
+  "copilotkit": {
+    "mcp": "https://docs.copilotkit.ai/"
+  },
+  "ag-ui": {
+    "mcp": "https://docs.ag-ui.com/"
   }
 }

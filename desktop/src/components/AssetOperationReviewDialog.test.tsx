@@ -1,4 +1,5 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { assetOperationPlanFixture } from "../test/consumptionFixtures";
@@ -365,8 +366,8 @@ it("translates Model conflict warnings into user-facing copy", () => {
     />,
   );
 
-  expect(screen.getByText("Pi：当前 Model 与 MUX 记录不一致，请先刷新或重新选择当前 Model")).toBeVisible();
-  expect(screen.getByText("Pi：当前 Model 由 Agent 外部配置管理，切换前需要先让 MUX 接管")).toBeVisible();
+  expect(screen.getByText("Pi：当前 Model 与 Arca 记录不一致，请先刷新或重新选择当前 Model")).toBeVisible();
+  expect(screen.getByText("Pi：当前 Model 由 Agent 外部配置管理，切换前需要先让 Arca 接管")).toBeVisible();
   expect(screen.queryByText(/pi: model_/)).not.toBeInTheDocument();
 });
 
@@ -762,7 +763,7 @@ it("reviews an MCP key-only location change without implying migration", () => {
   expect(screen.getByText("mcpServers")).toBeVisible();
   expect(screen.getByText("amp.mcpServers")).toBeVisible();
   expect(screen.getByText(
-    "只更新 MUX 后续使用的 MCP 配置位置；旧文件不会删除，现有 MCP 配置不会复制到新位置。",
+    "只更新 Arca 后续使用的 MCP 配置位置；旧文件不会删除，现有 MCP 配置不会复制到新位置。",
   )).toBeVisible();
 });
 
@@ -802,7 +803,7 @@ it("explains that changing Model paths does not move existing configuration", ()
   );
 
   expect(screen.getByText(
-    "只更新 MUX 后续使用的 Model 配置位置；旧文件不会删除，现有 Model 配置不会复制到新位置。",
+    "只更新 Arca 后续使用的 Model 配置位置；旧文件不会删除，现有 Model 配置不会复制到新位置。",
   )).toBeVisible();
   expect(screen.queryByText(/后续使用的 MCP/)).not.toBeInTheDocument();
 });

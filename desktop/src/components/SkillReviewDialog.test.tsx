@@ -1,4 +1,5 @@
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import userEvent from "@testing-library/user-event";
 import { StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -393,7 +394,7 @@ describe("SkillReviewDialog", () => {
     expect(screen.getByText("来源")).toBeVisible();
     expect(screen.queryByText("现有来源")).not.toBeInTheDocument();
     expect(
-      screen.queryByText("先在 ~/.mux/backups/skills/ 保留备份，再替换现有中央副本"),
+      screen.queryByText("先在 ~/.arca/backups/skills/ 保留备份，再替换现有中央副本"),
     ).not.toBeInTheDocument();
   });
 
@@ -440,7 +441,7 @@ describe("SkillReviewDialog", () => {
     ).toBeVisible();
     expect(screen.getByText("链接冲突")).toBeVisible();
     expect(
-      screen.getByText("先在 ~/.mux/backups/skills/ 保留备份，再替换现有中央副本"),
+      screen.getByText("先在 ~/.arca/backups/skills/ 保留备份，再替换现有中央副本"),
     ).toBeVisible();
     expect(screen.getByText("SKILL.md")).toBeVisible();
     expect(screen.getByText("文本差异已截断")).toBeVisible();

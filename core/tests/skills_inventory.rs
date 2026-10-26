@@ -2,12 +2,12 @@
 
 mod support;
 
-use mux_core::settings::{mutate_settings, AgentConfigPathOverride};
-use mux_core::skills::{
+use arca_core::settings::{mutate_settings, AgentConfigPathOverride};
+use arca_core::skills::{
     get_skill_detail, hash_tree, list_inventory, list_skill_agents, normalize_agent_selection,
     recover_pending_with_paths, InventoryState, JournalPhase, SkillError, SkillsPaths,
 };
-use mux_core::testenv::TestHome;
+use arca_core::testenv::TestHome;
 use std::fs;
 use std::os::unix::fs::{symlink, PermissionsExt};
 use support::skills::{has_state, managed_record, write_skill, TransactionFixture};
@@ -37,8 +37,8 @@ fn inventory_surfaces_pending_recovery_without_mutating_it_and_clears_after_reco
 #[test]
 fn inventory_turns_recovery_required_root_evidence_into_a_path_free_status() {
     let th = TestHome::new("inventory-recovery-status");
-    fs::create_dir_all(th.home.join(".mux/journals")).unwrap();
-    fs::write(th.home.join(".mux/journals/skills"), "not a directory").unwrap();
+    fs::create_dir_all(th.home.join(".arca/journals")).unwrap();
+    fs::write(th.home.join(".arca/journals/skills"), "not a directory").unwrap();
 
     let inventory = list_inventory().unwrap();
 
@@ -48,7 +48,7 @@ fn inventory_turns_recovery_required_root_evidence_into_a_path_free_status() {
     );
     let rendered = serde_json::to_string(&inventory).unwrap();
     assert!(!rendered.contains(th.home.to_string_lossy().as_ref()));
-    assert!(th.home.join(".mux/journals/skills").is_file());
+    assert!(th.home.join(".arca/journals/skills").is_file());
 }
 
 #[test]
@@ -105,7 +105,7 @@ fn inventory_distinguishes_external_broken_conflicting_and_modified() {
     let th = TestHome::new("inventory-states");
     fs::create_dir_all(th.home.join(".codex")).unwrap();
     install_cursor(&th.home);
-    let central = th.home.join(".mux/assets/skills/items/managed");
+    let central = th.home.join(".arca/assets/skills/items/managed");
     write_skill(&central, "managed", "Managed fixture");
     let original_hash = hash_tree(&central).unwrap();
     mutate_settings(|settings| {
@@ -154,7 +154,7 @@ fn inventory_distinguishes_external_broken_conflicting_and_modified() {
 #[test]
 fn assigned_target_remains_visible_after_its_agent_probe_disappears() {
     let th = TestHome::new("inventory-orphaned-target");
-    let central = th.home.join(".mux/assets/skills/items/safe");
+    let central = th.home.join(".arca/assets/skills/items/safe");
     write_skill(&central, "safe", "Managed fixture");
     let hash = hash_tree(&central).unwrap();
     mutate_settings(|settings| {
@@ -331,7 +331,7 @@ fn selection_rejects_duplicates_unknown_ids_and_agents_without_current_evidence(
 #[test]
 fn detail_uses_opaque_identity_and_truncates_skill_md_at_a_utf8_boundary() {
     let th = TestHome::new("inventory-detail-bound");
-    let central = th.home.join(".mux/assets/skills/items/large");
+    let central = th.home.join(".arca/assets/skills/items/large");
     fs::create_dir_all(&central).unwrap();
     let mut skill_md = "---\nname: large\ndescription: Large fixture\n---\n\n".to_string();
     skill_md.push_str(&"界".repeat(400_000));
@@ -371,9 +371,9 @@ fn detail_uses_opaque_identity_and_truncates_skill_md_at_a_utf8_boundary() {
 #[test]
 fn strict_settings_errors_do_not_expose_private_paths() {
     let th = TestHome::new("inventory-corrupt-settings");
-    fs::create_dir_all(th.home.join(".mux")).unwrap();
+    fs::create_dir_all(th.home.join(".arca")).unwrap();
     fs::write(
-        th.home.join(".mux/settings.json"),
+        th.home.join(".arca/settings.json"),
         r#"{"managed_skills": ["#,
     )
     .unwrap();
@@ -385,14 +385,14 @@ fn strict_settings_errors_do_not_expose_private_paths() {
 }
 
 #[test]
-fn read_only_inventory_does_not_create_mux_skill_roots() {
+fn read_only_inventory_does_not_create_arca_skill_roots() {
     let th = TestHome::new("inventory-read-only-roots");
-    let mux_home = th.home.join(".mux");
+    let arca_home = th.home.join(".arca");
 
     let inventory = list_inventory().unwrap();
 
     assert!(inventory.items.is_empty());
-    assert!(!mux_home.exists(), "a list API created the MUX home");
+    assert!(!arca_home.exists(), "a list API created the Arca home");
 }
 
 #[test]
@@ -408,13 +408,13 @@ fn missing_installed_target_roots_remain_absent_after_listing() {
         !target.exists(),
         "a list API created a missing Agent target"
     );
-    assert!(!th.home.join(".mux").exists());
+    assert!(!th.home.join(".arca").exists());
 }
 
 #[test]
 fn invalid_managed_tree_is_visible_but_is_not_marked_managed() {
     let th = TestHome::new("inventory-corrupt-managed-tree");
-    let central = th.home.join(".mux/assets/skills/items/corrupt");
+    let central = th.home.join(".arca/assets/skills/items/corrupt");
     write_skill(&central, "wrong-name", "Mismatched manifest fixture");
     let hash = hash_tree(&central).unwrap();
     mutate_settings(|settings| {
@@ -439,7 +439,7 @@ fn invalid_managed_tree_is_visible_but_is_not_marked_managed() {
 #[test]
 fn managed_central_link_failures_are_broken_and_never_managed() {
     let th = TestHome::new("inventory-managed-central-links");
-    let central_root = th.home.join(".mux/assets/skills/items");
+    let central_root = th.home.join(".arca/assets/skills/items");
     fs::create_dir_all(&central_root).unwrap();
     symlink(
         th.home.join("missing/dangling"),
@@ -497,8 +497,8 @@ fn target_self_loop_is_reported_as_broken_instead_of_aborting_inventory() {
 #[test]
 fn inventory_root_errors_do_not_expose_the_private_home() {
     let th = TestHome::new("inventory-private-root-error");
-    fs::create_dir_all(th.home.join(".mux/assets/skills")).unwrap();
-    fs::write(th.home.join(".mux/assets/skills/items"), "not a directory").unwrap();
+    fs::create_dir_all(th.home.join(".arca/assets/skills")).unwrap();
+    fs::write(th.home.join(".arca/assets/skills/items"), "not a directory").unwrap();
 
     let error = list_inventory().unwrap_err();
     let rendered = serde_json::to_string(&error).unwrap();
@@ -509,7 +509,7 @@ fn inventory_root_errors_do_not_expose_the_private_home() {
 #[test]
 fn read_api_path_resolution_errors_are_path_free() {
     let th = TestHome::new("inventory-path-resolution-error");
-    std::env::set_var("MUX_HOME", "relative-mux-home");
+    std::env::set_var("ARCA_HOME", "relative-arca-home");
 
     let error = list_inventory().unwrap_err();
     let rendered = serde_json::to_string(&error).unwrap();
@@ -639,15 +639,15 @@ fn detail_recomputes_external_content_kind_from_the_full_safe_tree() {
     write_skill(&instructions, "instructions", "Instructions fixture");
 
     for (name, expected) in [
-        ("automation", mux_core::skills::SkillContentKind::Automation),
-        ("assets-kind", mux_core::skills::SkillContentKind::Assets),
+        ("automation", arca_core::skills::SkillContentKind::Automation),
+        ("assets-kind", arca_core::skills::SkillContentKind::Assets),
         (
             "reference-kind",
-            mux_core::skills::SkillContentKind::Reference,
+            arca_core::skills::SkillContentKind::Reference,
         ),
         (
             "instructions",
-            mux_core::skills::SkillContentKind::Instructions,
+            arca_core::skills::SkillContentKind::Instructions,
         ),
     ] {
         let identity = format!("target:agents-user:{name}");
@@ -659,7 +659,7 @@ fn detail_recomputes_external_content_kind_from_the_full_safe_tree() {
             .unwrap();
         assert_eq!(
             list_item.content_kind,
-            mux_core::skills::SkillContentKind::Instructions
+            arca_core::skills::SkillContentKind::Instructions
         );
         assert_eq!(
             get_skill_detail(&identity).unwrap().item.content_kind,
@@ -672,7 +672,7 @@ fn detail_recomputes_external_content_kind_from_the_full_safe_tree() {
 fn modified_central_content_and_its_exact_links_expose_the_observed_fingerprint() {
     let th = TestHome::new("inventory-observed-central");
     fs::create_dir_all(th.home.join(".codex")).unwrap();
-    let central = th.home.join(".mux/assets/skills/items/observed");
+    let central = th.home.join(".arca/assets/skills/items/observed");
     write_skill(&central, "observed", "Original description");
     let original = hash_tree(&central).unwrap();
     mutate_settings(|settings| {
@@ -692,16 +692,16 @@ fn modified_central_content_and_its_exact_links_expose_the_observed_fingerprint(
         assert_eq!(item.description, "Observed description");
         assert!(item.risk.is_none(), "the installed audit must not certify changed content");
     }
-    let rows = mux_core::assets::list_consumption_inventory().unwrap();
+    let rows = arca_core::assets::list_consumption_inventory().unwrap();
     let row = rows.consumptions.iter().find(|row| row.agent_id == "codex").unwrap();
-    assert_eq!(row.status, mux_core::domain::assets::ConsumptionStatus::ExternalChanged);
+    assert_eq!(row.status, arca_core::domain::assets::ConsumptionStatus::ExternalChanged);
     assert_eq!(row.reason.as_deref(), Some("skill_local_modification"));
 }
 
 #[test]
 fn invalid_central_bytes_cannot_reuse_the_installed_hash_for_adoption() {
     let th = TestHome::new("inventory-invalid-central-fingerprint");
-    let central = th.home.join(".mux/assets/skills/items/invalid");
+    let central = th.home.join(".arca/assets/skills/items/invalid");
     write_skill(&central, "invalid", "Valid before editing");
     let original = hash_tree(&central).unwrap();
     mutate_settings(|settings| {
@@ -721,7 +721,7 @@ fn invalid_central_bytes_cannot_reuse_the_installed_hash_for_adoption() {
 fn same_name_external_directory_never_inherits_central_provenance_or_hash() {
     let th = TestHome::new("inventory-external-provenance");
     fs::create_dir_all(th.home.join(".codex")).unwrap();
-    let central = th.home.join(".mux/assets/skills/items/same-name");
+    let central = th.home.join(".arca/assets/skills/items/same-name");
     write_skill(&central, "same-name", "Central description");
     let original = hash_tree(&central).unwrap();
     mutate_settings(|settings| {

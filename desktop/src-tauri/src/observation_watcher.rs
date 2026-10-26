@@ -1,4 +1,4 @@
-use mux_core::assets::{ObservationDomain, ObservationWatchTarget};
+use arca_core::assets::{ObservationDomain, ObservationWatchTarget};
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -32,18 +32,18 @@ pub fn start(app: AppHandle) -> Result<(), String> {
     )
     .map_err(|error| error.to_string())?;
 
-    let mut roots = desired_roots(&mux_core::assets::observation_watch_targets());
+    let mut roots = desired_roots(&arca_core::assets::observation_watch_targets());
     // A single inaccessible Agent path must not disable observation for every
     // other capability. Keep every watch that the host can establish.
     roots.retain(|root, mode| watcher.watch(root, *mode).is_ok());
 
     std::thread::Builder::new()
-        .name("mux-observation-watcher".into())
+        .name("arca-observation-watcher".into())
         .spawn(move || {
             // Keep the watcher owned by this thread. Coalesce editor temp-file
-            // sequences and MUX's own atomic writes into one projection refresh.
+            // sequences and Arca's own atomic writes into one projection refresh.
             while let Ok(first) = receiver.recv() {
-                let targets = mux_core::assets::observation_watch_targets();
+                let targets = arca_core::assets::observation_watch_targets();
                 let deadline = Instant::now() + Duration::from_secs(1);
                 let mut domains = affected_domains(&[first], &targets);
                 loop {
@@ -67,8 +67,8 @@ pub fn start(app: AppHandle) -> Result<(), String> {
                 // directories to recursive mode) so later edits stay live.
                 // Agent capability paths are themselves mutable central state.
                 // Rebuild targets as well as roots so changing a configured
-                // path takes effect without restarting MUX.
-                let next = desired_roots(&mux_core::assets::observation_watch_targets());
+                // path takes effect without restarting Arca.
+                let next = desired_roots(&arca_core::assets::observation_watch_targets());
                 if next != roots {
                     for root in roots.keys() {
                         let _ = watcher.unwatch(root);
@@ -85,8 +85,8 @@ pub fn start(app: AppHandle) -> Result<(), String> {
                 {
                     // Reconcile before notifying readers so the fresh snapshot
                     // does not label a normal native /model switch as drift.
-                    if let Err(error) = mux_core::application::models::reconcile_native_selection() {
-                        eprintln!("MUX native model selection reconciliation: {error}");
+                    if let Err(error) = arca_core::application::models::reconcile_native_selection() {
+                        eprintln!("Arca native model selection reconciliation: {error}");
                     }
                 }
                 let _ = app.emit(
@@ -138,7 +138,7 @@ fn path_affects_target(path: &Path, target: &ObservationWatchTarget) -> bool {
 }
 
 fn desired_roots(
-    targets: &[mux_core::assets::ObservationWatchTarget],
+    targets: &[arca_core::assets::ObservationWatchTarget],
 ) -> BTreeMap<PathBuf, RecursiveMode> {
     let mut roots = BTreeMap::new();
     for target in targets {
@@ -185,7 +185,7 @@ mod tests {
             .unwrap()
             .as_nanos();
         let root = std::env::temp_dir().join(format!(
-            "mux-observation-watcher-{name}-{}-{nonce}",
+            "arca-observation-watcher-{name}-{}-{nonce}",
             std::process::id()
         ));
         fs::create_dir_all(&root).unwrap();

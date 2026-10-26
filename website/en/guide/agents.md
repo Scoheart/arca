@@ -1,6 +1,6 @@
 # Supported Agents
 
-This searchable table comes from the released MUX registry and Core capability output. Search by name or exact ID and filter capabilities. Product forms retain separate identities; CLI, Desktop, IDE, and Plugin distinguish same-named entries.
+This searchable table comes from the released Arca registry and Core capability output. Search by name or exact ID and filter capabilities. Product forms retain separate identities; CLI, Desktop, IDE, and Plugin distinguish same-named entries.
 
 <AgentReference lang="en" />
 
@@ -18,13 +18,13 @@ MCP paths, Skill directories, and Model capabilities are verified independently.
 
 **OpenCode CLI and Desktop** share native configuration and both manage Models. **Qoder IDE** has its own MCP file; **Qoder Desktop and CLI** share settings but select Models differently. **QoderWork** has independent user configuration. Use the exact identity rather than only the display name.
 
-A shared file or directory review lists all affected Agents; MUX does not treat one physical target as several unrelated files.
+A shared file or directory review lists all affected Agents; Arca does not treat one physical target as several unrelated files.
 
 ## Installation and versions
 
 Runtime detection is separate from an existing configuration file. macOS app versions come from bundle metadata; audited default CLI commands use bounded version queries. Custom CLI commands are not run automatically for detection.
 
-A launchable plugin host does not prove the plugin is installed. Unconfirmed facts remain unknown. `mux agent launch show <agent-id> --json` returns the same launch and version information.
+A launchable plugin host does not prove the plugin is installed. Unconfirmed facts remain unknown. `arca agent launch show <agent-id> --json` returns the same launch and version information.
 
 ## Skills
 
@@ -34,4 +34,4 @@ Skill assignment uses verified user-level directories and targets available on t
 
 Products without a stable user-level configuration contract remain read-only or guided. Pi's native MCP contract applies to 0.99.0+; earlier versions need their appropriate extension. Claude desktop's local MCP file accepts stdio; remote connections use its native Connectors.
 
-See the repository's [Agent Catalog methodology](https://github.com/Scoheart/mux/blob/main/docs/agent-catalog.md).
+See the repository's [Agent Catalog methodology](https://github.com/Scoheart/arca/blob/main/docs/agent-catalog.md).

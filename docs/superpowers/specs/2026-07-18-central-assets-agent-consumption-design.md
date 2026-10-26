@@ -1,4 +1,4 @@
-# MUX 中央资产与 Agent 消费模型设计
+# Arca 中央资产与 Agent 消费模型设计
 
 ## 状态
 
@@ -9,10 +9,10 @@
 
 ## 背景与问题证据
 
-MUX 已经把 MCPs、Models、Skills 放在并列的顶层资源视图中，但三类资源的产品逻辑并未真正统一。
+Arca 已经把 MCPs、Models、Skills 放在并列的顶层资源视图中，但三类资源的产品逻辑并未真正统一。
 
 - MCP Registry 基本属于中央资产，Agent 页面会从 Registry 中选择 MCP 并写入 Agent 配置。
-- Model Profile 保存在 `~/.mux/settings.json`，Agent 会选择一个兼容 Profile；但编辑 Profile 时现有实现会清除 assignment，而不是将变更传播给消费者。
+- Model Profile 保存在 `~/.arca/settings.json`，Agent 会选择一个兼容 Profile；但编辑 Profile 时现有实现会清除 assignment，而不是将变更传播给消费者。
 - Skills core 已经分别保存 `managed_skills` 中央副本和 `skill_assignments`，但 UI 将“中央入库”和“分配给 Agent”耦合在同一个安装向导中。
 - Agent 页的“添加 Skill”会跳转到来源解析、候选选择和安装流程，而不是先列出中央已有 Skills，因此用户看起来必须为每个 Agent 重新添加同一资产。
 - MCP 当前主要从 Agent 文件和 disabled snapshot 反推使用状态，没有明确的 desired relationship；扫描结果、中央资产和期望状态的权威边界不够清楚。
@@ -21,7 +21,7 @@ MUX 已经把 MCPs、Models、Skills 放在并列的顶层资源视图中，但�
 问题的根因不是单个按钮或文案，而是 UI 和部分 core 数据流仍把 Agent 配置文件当作资源管理入口。目标产品模型应当是：
 
 ```text
-中央资产入库与维护 → Agent 选择消费 → MUX 对账实际状态
+中央资产入库与维护 → Agent 选择消费 → Arca 对账实际状态
 ```
 
 ## 已确认的产品决策
@@ -41,7 +41,7 @@ MUX 已经把 MCPs、Models、Skills 放在并列的顶层资源视图中，但�
 
 ## 目标
 
-1. 让 MCP、Model、Skill 都成为先在 MUX 中统一配置的中央资产。
+1. 让 MCP、Model、Skill 都成为先在 Arca 中统一配置的中央资产。
 2. 让 Agent 只消费中央资产，不在 Agent 上下文中重新创建或安装来源。
 3. 为三类资源建立相同的 desired、observed 和 reconciled 状态语义。
 4. 让中央资产编辑、更新和删除对所有消费者产生可审阅、可恢复的影响计划。
@@ -56,7 +56,7 @@ MUX 已经把 MCPs、Models、Skills 放在并列的顶层资源视图中，但�
 - 不重新引入项目级配置写入。
 - 不让中央资产页或 Agent 页显示 Keychain 明文、token、secret 或未脱敏配置。
 - 不在本设计中增加市场、搜索服务、私有仓库支持或云同步。
-- 不在本设计中发布 Stable Release 或替换 `/Applications/MUX.app`。
+- 不在本设计中发布 Stable Release 或替换 `/Applications/Arca.app`。
 
 ## 术语与权威边界
 
@@ -70,7 +70,7 @@ MUX 已经把 MCPs、Models、Skills 放在并列的顶层资源视图中，但�
 
 ### 消费关系
 
-消费关系定义“哪个 Agent 应该使用哪个中央资产”。它是 MUX 持久化的 desired state，不由文件扫描临时推断。
+消费关系定义“哪个 Agent 应该使用哪个中央资产”。它是 Arca 持久化的 desired state，不由文件扫描临时推断。
 
 - MCP：每个 Agent 为 `0..N`，允许领域专属的 enabled state 和 override。
 - Model：本历史设计当时限定为 `0..1`；当前实现已由多模型语义取代，支持的 Agent 为 `0..N` assigned、最多一个 current，单模型 Agent 仍由兼容性门禁限制为一个。
@@ -125,7 +125,7 @@ Rust core 是资产、关系、兼容性、计划、写入和恢复的唯一权�
 
 - MCP 继续以 source 聚合后的 effective Registry 作为中央资产集合。
 - Model 继续使用 `model_profiles`，凭据只存在系统 Keychain。
-- Skill 继续使用 `managed_skills` 和 `~/.mux/skills/<name>/` 中央副本。
+- Skill 继续使用 `managed_skills` 和 `~/.arca/skills/<name>/` 中央副本。
 
 ### 消费关系
 
@@ -266,7 +266,7 @@ Agent 页面保留 MCPs、Model、Skills Tabs。主列表只展示当前 Agent �
 - identity 是 `name::transport`，同名不同 transport 是不同资产。
 - compatibility 由 Agent supported transports 决定。
 - desired relationship 显式保存 enabled state 和 Agent-specific override。
-- observed scan 区分 active、MUX disabled snapshot、exact central match、customized drift 和 external。
+- observed scan 区分 active、Arca disabled snapshot、exact central match、customized drift 和 external。
 - `refreshAll` 不再调用会写 Registry 的 `importDiscovered`；新扫描结果进入只读 external inventory，只有显式导入才写中央资产。
 - 旧版本已经持久化到 managed discovered source 的 MCP 继续作为中央资产保留，避免升级时丢失用户数据；本版本之后的新发现不再自动入库。
 - 中央 MCP 编辑替代现有独立的自动 resync 路径，统一经过影响计划。
@@ -389,7 +389,7 @@ read snapshots
 
 - 不允许关系已保存但 Agent 配置未生效；
 - 不允许中央资产已更新但只有部分消费者更新；
-- 不允许中央资产已删除但消费者仍被 MUX 声称为 managed；
+- 不允许中央资产已删除但消费者仍被 Arca 声称为 managed；
 - 不允许 cancel 后残留 staging 或可提交旧 plan；
 - 任一并发 hash 变化使原 plan 失效，必须重新计划。
 

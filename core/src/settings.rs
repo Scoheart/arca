@@ -1,10 +1,10 @@
 //! Runtime settings plus hydrated central asset catalogs.
 //!
-//! MUX's desktop app and the CLI share `~/.mux/`. Historically that meant a
+//! Arca's desktop app and the CLI share `~/.arca/`. Historically that meant a
 //! sprawl of files: `registry/<name>__<transport>.json` (one per custom MCP),
 //! `agents.json`, `disabled.json`, `state.json`, and a `.imported` marker. This
 //! module originally collapsed all of it into one `settings.json`. Central MCP,
-//! Model, and Skill metadata now live below `~/.mux/assets/{mcps,models,skills}`;
+//! Model, and Skill metadata now live below `~/.arca/assets/{mcps,models,skills}`;
 //! callers still receive one hydrated [`Settings`] value so domain code does
 //! not need to know which physical document owns a field.
 //!
@@ -21,7 +21,7 @@ use crate::domain::types::{
     AgentDefinition, ModelProfile, ModelProviderConfig, RegistryEntry, SourceDef,
 };
 use crate::paths::{
-    backups_dir, mcp_catalog_file, model_catalog_file, mux_dir, registry_dir, settings_file,
+    backups_dir, mcp_catalog_file, model_catalog_file, arca_dir, registry_dir, settings_file,
     skill_catalog_file, user_agents_file,
 };
 use crate::safe_write::{acquire_settings_lock, remove_if_unchanged, write_private_if_unchanged};
@@ -57,7 +57,7 @@ pub struct UiSettings {
     pub extra: BTreeMap<String, Value>,
 }
 
-/// MUX-owned network preferences. Proxy credentials are intentionally not
+/// Arca-owned network preferences. Proxy credentials are intentionally not
 /// supported here so settings.json never becomes a credential store.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct NetworkSettings {
@@ -69,7 +69,8 @@ pub struct NetworkSettings {
 
 /// User-selected write locations that are independent from an Agent's audited
 /// wire schema. MCP section keys plus Model and Skills paths live here so a
-/// location override never mutates the built-in codec contract. Skills keeps
+/// location override never mutates the built-in codec contract. Instructions
+/// locations select native editor sources without asset projection. Skills keeps
 /// one primary write directory plus zero or more compatibility read targets.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct AgentConfigPathOverride {
@@ -81,6 +82,12 @@ pub struct AgentConfigPathOverride {
     pub skills_global_dir: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skills_alias_dirs: Option<Vec<String>>,
+    /// Explicit local Instructions locations, keyed by stable native source ID.
+    /// These only select files for Arca's editor; they never project resources.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_paths: Option<BTreeMap<String, String>>,
+    #[serde(flatten)]
+    pub extra: BTreeMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -91,7 +98,7 @@ pub struct ModelAgentRuntimeState {
     pub extra: BTreeMap<String, Value>,
 }
 
-/// The whole `~/.mux/settings.json` document.
+/// The whole `~/.arca/settings.json` document.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Settings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -116,7 +123,7 @@ pub struct Settings {
     pub registry: Option<Vec<RegistryEntry>>,
     /// User-added catalog sources (subscribed remote URLs + local files). Their
     /// servers are parsed from cached files under
-    /// `~/.mux/assets/mcps/sources/` on read.
+    /// `~/.arca/assets/mcps/sources/` on read.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sources: Option<Vec<SourceDef>>,
     /// Disable snapshots, keyed by agent id.
@@ -130,7 +137,7 @@ pub struct Settings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_providers: Option<BTreeMap<String, ModelProviderConfig>>,
     /// Current/active managed Model Profile per Agent. This legacy-compatible
-    /// pointer is retained so older MUX builds do not lose the current model.
+    /// pointer is retained so older Arca builds do not lose the current model.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_assignments: Option<BTreeMap<String, String>>,
     /// Installed Model Profiles per Agent, including disabled relationships.
@@ -165,7 +172,7 @@ pub struct Settings {
     pub skill_update_checked_at: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ui: Option<UiSettings>,
-    /// Optional proxy used by MUX-owned outbound requests.
+    /// Optional proxy used by Arca-owned outbound requests.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub network: Option<NetworkSettings>,
     /// CLI-owned: last applied state. Opaque to the desktop — carried through.
@@ -386,7 +393,7 @@ fn invalid_document(path: &Path, error: impl std::fmt::Display) -> Error {
     Error::new(
         ErrorKind::InvalidData,
         format!(
-            "refusing to replace invalid MUX document at {}: {}",
+            "refusing to replace invalid Arca document at {}: {}",
             path.display(),
             error
         ),
@@ -469,7 +476,7 @@ fn parse_for_update(path: &Path) -> std::io::Result<(Settings, PersistedDocument
         return Err(Error::new(
             ErrorKind::InvalidData,
             format!(
-                "refusing to read MUX settings schema {} with supported schema {SETTINGS_VERSION}",
+                "refusing to read Arca settings schema {} with supported schema {SETTINGS_VERSION}",
                 settings.version.unwrap_or_default()
             ),
         ));
@@ -702,7 +709,7 @@ where
     Ok(out)
 }
 
-/// Move legacy MCP sources below `~/.mux/assets` and extract central
+/// Move legacy MCP sources below `~/.arca/assets` and extract central
 /// metadata from the legacy consolidated settings document into one catalog per
 /// asset domain. The operation is idempotent. If a crash leaves both the old
 /// fields and a new catalog, the strict loader accepts them only when they are
@@ -749,7 +756,7 @@ fn archive(from: &Path, legacy_dir: &Path, name: &str) -> std::io::Result<()> {
 
 /// One-time migration: if `settings.json` is absent but legacy files exist, fold
 /// them into a fresh `settings.json`, then move the old files aside into
-/// `~/.mux/backups/legacy-<ts>/` (reversible, not deleted). Idempotent: a no-op
+/// `~/.arca/backups/legacy-<ts>/` (reversible, not deleted). Idempotent: a no-op
 /// once `settings.json` exists.
 pub fn migrate_if_needed() -> std::io::Result<bool> {
     let settings_path = settings_file();
@@ -759,9 +766,9 @@ pub fn migrate_if_needed() -> std::io::Result<bool> {
 
     let reg_dir = registry_dir();
     let agents_path = user_agents_file();
-    let disabled_path = mux_dir().join("disabled.json");
-    let state_path = mux_dir().join("state.json");
-    let imported_path = mux_dir().join(".imported");
+    let disabled_path = arca_dir().join("disabled.json");
+    let state_path = arca_dir().join("state.json");
+    let imported_path = arca_dir().join(".imported");
 
     let has_legacy = || {
         reg_dir.is_dir()
@@ -770,7 +777,7 @@ pub fn migrate_if_needed() -> std::io::Result<bool> {
             || state_path.exists()
             || imported_path.exists()
     };
-    // Avoid creating ~/.mux solely to discover that there is nothing to
+    // Avoid creating ~/.arca solely to discover that there is nothing to
     // migrate. Once legacy state exists, serialize the complete check, write,
     // and archival decision with every other cooperating settings writer.
     if !has_legacy() {
@@ -1140,7 +1147,7 @@ mod tests {
         let th = crate::testenv::TestHome::new("settings-strict");
         assert!(load_settings_strict().unwrap().extra.is_empty());
 
-        let path = th.home.join(".mux/settings.json");
+        let path = th.home.join(".arca/settings.json");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(&path, r#"{"managed_skills": ["#).unwrap();
 
@@ -1181,7 +1188,7 @@ mod tests {
     #[test]
     fn mutation_refuses_to_replace_corrupt_settings() {
         let th = crate::testenv::TestHome::new("settings-corrupt");
-        let path = th.home.join(".mux/settings.json");
+        let path = th.home.join(".arca/settings.json");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         let original = r#"{"registry": ["#;
         std::fs::write(&path, original).unwrap();
@@ -1235,7 +1242,7 @@ mod tests {
     #[test]
     fn mutation_refuses_a_concurrent_settings_change() {
         let home = crate::testenv::TestHome::new("settings-concurrent");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(&path, r#"{"imported":"original"}"#).unwrap();
 
@@ -1254,7 +1261,7 @@ mod tests {
     #[test]
     fn mutation_waits_for_settings_lock_before_reading_document() {
         let home = crate::testenv::TestHome::new("settings-filesystem-lock");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(&path, r#"{"imported":"original","future":{"value":1}}"#).unwrap();
         let filesystem_lock = acquire_settings_lock(&path).unwrap();
@@ -1288,7 +1295,7 @@ mod tests {
     #[test]
     fn settings_writers_take_the_filesystem_lock_before_the_process_mutex() {
         let home = crate::testenv::TestHome::new("settings-lock-order");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(&path, r#"{"imported":"original"}"#).unwrap();
 
@@ -1321,10 +1328,10 @@ mod tests {
     #[test]
     fn legacy_migration_rechecks_settings_after_waiting_for_filesystem_lock() {
         let home = crate::testenv::TestHome::new("migration-lock");
-        let mux = home.home.join(".mux");
-        let path = mux.join("settings.json");
-        std::fs::create_dir_all(&mux).unwrap();
-        std::fs::write(mux.join("agents.json"), r#"{"legacy":{"name":"Legacy"}}"#).unwrap();
+        let arca = home.home.join(".arca");
+        let path = arca.join("settings.json");
+        std::fs::create_dir_all(&arca).unwrap();
+        std::fs::write(arca.join("agents.json"), r#"{"legacy":{"name":"Legacy"}}"#).unwrap();
 
         let filesystem_lock = acquire_settings_lock(&path).unwrap();
         let (started_tx, started_rx) = mpsc::channel();
@@ -1342,7 +1349,7 @@ mod tests {
 
         assert_eq!(std::fs::read_to_string(path).unwrap(), fresh);
         assert!(
-            mux.join("agents.json").exists(),
+            arca.join("agents.json").exists(),
             "legacy inputs must not be archived when fresh settings already won"
         );
     }
@@ -1350,7 +1357,7 @@ mod tests {
     #[test]
     fn checked_mutation_does_not_write_when_closure_fails() {
         let home = crate::testenv::TestHome::new("settings-checked-failure");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         let original = r#"{"imported":"original"}"#;
         std::fs::write(&path, original).unwrap();
@@ -1367,7 +1374,7 @@ mod tests {
     #[test]
     fn future_schema_is_never_downgraded_by_an_older_writer() {
         let home = crate::testenv::TestHome::new("settings-future-version");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         let original = format!(
             r#"{{"version":{},"future":{{"nested":"keep"}}}}"#,
@@ -1451,7 +1458,7 @@ mod tests {
         let th = crate::testenv::TestHome::new("settings-mode");
         mutate_settings(|settings| settings.imported = Some("now".into())).unwrap();
 
-        let mode = std::fs::metadata(th.home.join(".mux/settings.json"))
+        let mode = std::fs::metadata(th.home.join(".arca/settings.json"))
             .unwrap()
             .permissions()
             .mode()

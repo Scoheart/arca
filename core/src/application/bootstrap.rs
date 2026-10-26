@@ -1,6 +1,6 @@
-//! One recovery-aware startup path for every MUX frontend.
+//! One recovery-aware startup path for every Arca frontend.
 //!
-//! Startup recovers MUX-owned transactions and upgrades central metadata. It
+//! Startup recovers Arca-owned transactions and upgrades central metadata. It
 //! never treats Agent files as migration input and never rewrites them. Agent
 //! state is observed after startup through the regular inventory pipeline.
 
@@ -11,6 +11,7 @@ use std::fmt;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum BootstrapStage {
+    BrandMigration,
     GlobalWriteRecovery,
     SkillRecovery,
     AssetRecovery,
@@ -24,6 +25,7 @@ pub enum BootstrapStage {
 impl BootstrapStage {
     pub fn code(self) -> &'static str {
         match self {
+            Self::BrandMigration => "brand_migration",
             Self::GlobalWriteRecovery => "global_write_recovery",
             Self::SkillRecovery => "skill_recovery",
             Self::AssetRecovery => "asset_recovery",
@@ -75,11 +77,17 @@ enum BootstrapProgress {
     },
 }
 
-/// Recover incomplete MUX writes and migrate only MUX-owned central metadata.
+/// Recover incomplete Arca writes and migrate only Arca-owned central metadata.
 /// External Agent edits are not errors and are deliberately absent from this
 /// path; they become relationship observations after bootstrap.
 pub fn bootstrap() -> BootstrapReport {
     let permit = super::gate::begin_bootstrap();
+    if let Err(reason) = crate::brand::validate_roots() {
+        let error = BootstrapError { stage: BootstrapStage::BrandMigration, message: reason.to_string() };
+        let status = read_only_status(&error);
+        permit.finish(status.clone());
+        return degraded_report(error, status);
+    }
     let _cross_process_guard = match super::gate::acquire_cross_process_mutation_lock() {
         Ok(guard) => guard,
         Err(_) => {
@@ -98,6 +106,14 @@ pub fn bootstrap() -> BootstrapReport {
             warnings,
             skill_updates_allowed,
         }) => {
+            if skill_updates_allowed && warnings.is_empty() {
+                if let Err(reason) = crate::brand::migrate_home() {
+                    let error = BootstrapError { stage: BootstrapStage::BrandMigration, message: reason.to_string() };
+                    let status = read_only_status(&error);
+                    permit.finish(status.clone());
+                    return degraded_report(error, status);
+                }
+            }
             let status = BackendStatus::Ready;
             permit.finish(status.clone());
             BootstrapReport {
@@ -219,7 +235,7 @@ fn classify_skill_recovery(
         Err(crate::resources::skill::SkillError::Conflict { .. }) => {
             warnings.push(BootstrapWarning {
                 stage: BootstrapStage::SkillRecovery,
-                message: "another MUX process is reading or updating Skills; unrelated capabilities remain available"
+                message: "another Arca process is reading or updating Skills; unrelated capabilities remain available"
                     .into(),
             });
             Ok(false)
@@ -245,7 +261,7 @@ fn model_central_state_status(error: &BootstrapError) -> BackendStatus {
         capability: CapabilityDomain::Model,
         stage: error.stage.code().into(),
         code: "model_central_state_unavailable".into(),
-        message: "MUX central Model metadata could not be upgraded safely; Agent files were left untouched"
+        message: "Arca central Model metadata could not be upgraded safely; Agent files were left untouched"
             .into(),
     }
 }

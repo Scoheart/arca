@@ -310,8 +310,8 @@ export function updateCargoLockPackageVersions(
 
 async function refreshCargoLocks(root, version) {
   const locks = [
-    ["Cargo.lock", ["mux-core", "mux-cli"]],
-    ["desktop/src-tauri/Cargo.lock", ["desktop", "mux-core"]],
+    ["Cargo.lock", ["arca-core", "arca-cli"]],
+    ["desktop/src-tauri/Cargo.lock", ["desktop", "arca-core"]],
   ];
 
   await Promise.all(
@@ -368,7 +368,7 @@ async function refreshNpmLock(root) {
   const desktop = join(root, "desktop");
   const packageJson = join(desktop, "package.json");
   const packageLock = join(desktop, "package-lock.json");
-  const temporary = await mkdtemp(join(tmpdir(), "mux-desktop-lock-"));
+  const temporary = await mkdtemp(join(tmpdir(), "arca-desktop-lock-"));
 
   try {
     await copyFile(packageJson, join(temporary, "package.json"));
@@ -385,7 +385,11 @@ async function refreshNpmLock(root) {
       );
       if (closureErrors.length === 0) {
         await copyFile(packageLock, join(temporary, "package-lock.json"));
-        rebuild = false;
+        // Feature dependency additions must also use this clean-directory
+        // installer; npm version alone does not synchronize manifest changes.
+        rebuild = ["dependencies", "devDependencies", "optionalDependencies"].some(group =>
+          JSON.stringify(Object.entries(current.packages?.[""]?.[group] ?? {}).sort())
+          !== JSON.stringify(Object.entries(manifest[group] ?? {}).sort()));
       } else {
         console.warn(
           `Rebuilding a portable desktop lockfile because ${closureErrors.length} dependency entry or entries are missing.`,
@@ -485,7 +489,7 @@ function changelogCommits(root, previousVersion, sourceSha) {
     }
     const sha = line.slice(0, separator);
     const title = line.slice(separator + 1).replaceAll("[", "\\[");
-    return `* ${title} ([${sha.slice(0, 7)}](https://github.com/Scoheart/mux/commit/${sha}))`;
+    return `* ${title} ([${sha.slice(0, 7)}](https://github.com/Scoheart/arca/commit/${sha}))`;
   });
 }
 
@@ -515,6 +519,14 @@ export async function prepareDirectRelease(root, sourceSha, releaseType) {
     await writeFile(path, refreshed);
   }
   await writeFile(versionPath, `${version}\n`);
+  // Keep published documentation metadata on the same generated release version.
+  const referencePath = join(root, "website/.vitepress/reference.json");
+  try {
+    const reference = await readFile(referencePath, "utf8");
+    await writeFile(referencePath, updateJsonString(reference, ["version"], version, referencePath));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
 
   const changelogPath = join(root, "CHANGELOG.md");
   const changelog = await readFile(changelogPath, "utf8");
@@ -529,7 +541,7 @@ export async function prepareDirectRelease(root, sourceSha, releaseType) {
   const commits = changelogCommits(root, previousVersion, sourceSha);
   const entry = [
     "",
-    `## [${version}](https://github.com/Scoheart/mux/compare/v${previousVersion}...v${version}) (${date})`,
+    `## [${version}](https://github.com/Scoheart/arca/compare/v${previousVersion}...v${version}) (${date})`,
     "",
     "### Changes",
     "",

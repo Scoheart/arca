@@ -11,11 +11,10 @@ Provider 定义一套 API 连接，Model 引用它并指定协议与 Model ID。
 5. 保存 Provider，再点击 **添加 Models**，选 Provider、协议与准确的 Model ID。上下文和最大输出等设置按实际模型填写。
 6. 进入 Agent 的 Models 页，添加中央模型并选择当前模型；需要时重启客户端或新建会话。
 
-![Provider 编辑器：入口、模型列表与协议](/media/mux-1.10.0-provider.jpg)
 
 Provider 使用一个 Base URL。不同协议可以有不同的相对 Endpoint Path；不同域名或账号应创建独立 Provider。例如 `https://gateway.example.com/v1` 与 `/responses` 对应 `https://gateway.example.com/v1/responses`。
 
-仍有 Model 使用某协议时，MUX 会阻止停用该协议。若客户端无法无损表达自定义请求路径，MUX 会拒绝该关系，不会忽略你的 Path。
+仍有 Model 使用某协议时，Arca 会阻止停用该协议。若客户端无法无损表达自定义请求路径，Arca 会拒绝该关系，不会忽略你的 Path。
 
 ## 支持的协议
 
@@ -30,7 +29,7 @@ Provider 使用一个 Base URL。不同协议可以有不同的相对 Endpoint P
 
 ## Agent 支持与当前模型
 
-下表由发布版 Core 能力导出。名称与身份取自 MUX 核验目录，CLI 与 Desktop 形态分别列出。
+下表由发布版 Core 能力导出。名称与身份取自 Arca 核验目录，CLI 与 Desktop 形态分别列出。
 
 <AgentReference models-only />
 
@@ -39,13 +38,13 @@ Provider 使用一个 Base URL。不同协议可以有不同的相对 Endpoint P
 - **Codex CLI 与桌面入口**共用用户配置；Model writer 在 `codex` 上管理同一配置。
 - **OpenCode CLI 与 Desktop**共用原生配置，可从对应入口管理 Models。
 - **Qoder IDE、Qoder Desktop、Qoder CLI**分别保留身份。IDE 的 Models 是官方引导；Desktop 0.1.8+ 与 CLI 1.1.50+ 可以自动配置自定义端点。
-- **Qoder Desktop**在会话里选用模型；**Qoder CLI**支持全局当前模型。它们共用 settings 文件，但有独立的 MUX Provider 身份；共享文件仍有其他消费关系时，不能清空整个库。
+- **Qoder Desktop**在会话里选用模型；**Qoder CLI**支持全局当前模型。它们共用 settings 文件，但有独立的 Arca Provider 身份；共享文件仍有其他消费关系时，不能清空整个库。
 
 ## 凭据
 
 中央密钥正文存系统 Keychain。Agent 的原生能力决定交付方式：Keychain 读取命令、环境变量引用，或在明确审阅后导出到客户端的私有配置。Claude 桌面端、ZCode 和可用的 Qoder 原生交付方式有各自限制，界面会展示实际支持的选项。
 
-使用环境变量引用时，启动 Agent 的环境必须提供该变量。仅把 Key 保存到 MUX Keychain，并不自动把它变成任意客户端可读取的环境变量。不要把真实密钥放进 CLI 参数、示例文件或共享截图。
+使用环境变量引用时，启动 Agent 的环境必须提供该变量。仅把 Key 保存到 Arca Keychain，并不自动把它变成任意客户端可读取的环境变量。不要把真实密钥放进 CLI 参数、示例文件或共享截图。
 
 Keychain 读取失败会阻止相关操作，不会当成“没有密钥”继续覆盖。编辑 Provider 会包含全部受影响的消费者；不相关的 MCP 和 Skill 操作保持可用。
 

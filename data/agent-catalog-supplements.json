@@ -1,0 +1,91 @@
+{
+  "claude-ai": {
+    "name": "Claude.ai",
+    "category": "web",
+    "docs": "https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp",
+    "note": "Web 客户端。远程 MCP 连接器在 Claude 账户内管理，没有可由 Arca 编辑的本机全局配置文件。",
+    "verified_at": "2026-10-16"
+  },
+  "chatgpt": {
+    "name": "ChatGPT",
+    "category": "web",
+    "docs": "https://platform.openai.com/docs/guides/developer-mode",
+    "note": "Web 客户端。MCP Apps / 连接器由 ChatGPT 账户和工作区管理，Arca 提供官方配置指南，不写入本机 Agent 文件。",
+    "verified_at": "2026-10-16"
+  },
+  "librechat": {
+    "name": "LibreChat",
+    "category": "web",
+    "docs": "https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers",
+    "note": "自托管 Web 客户端。MCP 配置属于部署的 librechat.yaml 和服务端设置；MCP Apps 还需按部署版本启用。Arca 不猜测部署路径或改写服务端数据库。",
+    "verified_at": "2026-10-16",
+    "evidence": "official-source",
+    "source": "https://github.com/danny-avila/LibreChat/blob/e1dfc10449ff713faffacd60273fddcfe2c0a698/docs/mcp-apps.md"
+  },
+  "open-webui": {
+    "name": "Open WebUI",
+    "category": "web",
+    "docs": "https://docs.openwebui.com/features/extensibility/mcp/",
+    "note": "自托管 Web 客户端。MCP 连接通过部署与账户设置管理，Arca 提供官方接入指南；不把社区 MCP Apps Bridge 当作稳定版原生渲染支持。",
+    "verified_at": "2026-10-16"
+  },
+  "postman": {
+    "name": "Postman",
+    "category": "desktop",
+    "docs": "https://learning.postman.com/docs/postman-ai/mcp-requests/overview/",
+    "note": "API / MCP 客户端。服务器连接在 Postman 请求和工作区内管理，Arca 可打开本地应用并提供配置指南，不改写工作区数据库。",
+    "verified_at": "2026-10-16"
+  },
+  "mcpjam": {
+    "name": "MCPJam Inspector",
+    "category": "desktop",
+    "docs": "https://docs.mcpjam.com/inspector/playground",
+    "note": "MCP 开发与测试客户端，提供本地应用和浏览器版本。MCP 与 Skills 请在客户端内配置；当前不开放 Arca 的文件写入或 Skills 分配。",
+    "verified_at": "2026-10-16",
+    "evidence": "official-source",
+    "source": "https://github.com/MCPJam/inspector/blob/5f652c40b574921ba800727dd7ad0b4159c1633b/mcpjam-inspector/server/utils/skill-tools.ts"
+  },
+  "mcp-use": {
+    "name": "mcp-use",
+    "category": "framework",
+    "docs": "https://mcp-use.com/docs",
+    "note": "MCP 开发框架，不是独立 Agent 应用。可视化连接与 MCP App 调试请使用 MCP Inspector by mcp-use 条目。",
+    "verified_at": "2026-10-16",
+    "evidence": "official-source",
+    "source": "https://github.com/mcp-use/mcp-use/tree/ad8fbee97af6c39fc95b46486a04142d68644822"
+  },
+  "mcp-use-inspector": {
+    "name": "MCP Inspector by mcp-use",
+    "category": "web",
+    "docs": "https://mcp-use.com/docs/inspector",
+    "note": "浏览器内的 MCP 调试客户端，可在线使用或在本地运行。连接由浏览器存储管理，没有已核验的用户级全局配置文件；Arca 提供配置指南。",
+    "verified_at": "2026-10-16",
+    "evidence": "official-source",
+    "source": "https://github.com/mcp-use/mcp-use/blob/ad8fbee97af6c39fc95b46486a04142d68644822/libraries/typescript/packages/inspector/README.md"
+  },
+  "smithery-playground": {
+    "name": "Smithery Playground",
+    "category": "web",
+    "docs": "https://smithery.ai/playground",
+    "note": "Smithery 的在线 MCP Playground，连接在平台内管理。Arca 提供官方入口，不创建虚构的本机配置文件；与 Smithery CLI 保持区分。",
+    "verified_at": "2026-10-16"
+  },
+  "copilotkit": {
+    "name": "CopilotKit",
+    "category": "framework",
+    "docs": "https://docs.copilotkit.ai/",
+    "note": "用于构建 Agent UI 的开发框架，不是独立桌面宿主。MCP Apps 集成由使用该框架的应用实现，Arca 仅提供开发文档。",
+    "verified_at": "2026-10-16",
+    "evidence": "official-source",
+    "source": "https://github.com/CopilotKit/CopilotKit/tree/6e4cb6ad9ce32881636edaa212b7dbb440f0a0c3"
+  },
+  "ag-ui": {
+    "name": "AG-UI",
+    "category": "framework",
+    "docs": "https://docs.ag-ui.com/",
+    "note": "Agent 与界面通信的协议和开发基础设施。MCP Apps Middleware 是集成组件，不代表一个可由 Arca 分配本机资产的独立 Agent。",
+    "verified_at": "2026-10-16",
+    "evidence": "official-source",
+    "source": "https://github.com/ag-ui-protocol/ag-ui/tree/a1131c90709d51d562202b7b6cc0a2a1b48b05fc"
+  }
+}

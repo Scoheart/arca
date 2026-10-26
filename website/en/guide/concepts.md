@@ -23,28 +23,28 @@ New discoveries in Agent files are external observations, not automatically crea
 
 ## Desired and observed state
 
-MUX records what an Agent should use and reads files and Skill links to compare that with reality.
+Arca records what an Agent should use and reads files and Skill links to compare that with reality.
 
 | State | Meaning |
 |---|---|
 | Synced | Content and relationship agree |
-| External added | Present in the Agent, not managed by MUX |
+| External added | Present in the Agent, not managed by Arca |
 | External changed | Managed content was changed elsewhere |
 | External removed | Relationship remains, target is missing |
 | Unparseable / ambiguous / unsupported | The target cannot be read safely or represented losslessly |
 
-For an exact affected relationship, MUX exposes only safe available actions: **adopt, restore, detach**. Scanning never adopts content automatically. Restoring does not overwrite an external directory, file, or foreign symlink.
+For an exact affected relationship, Arca exposes only safe available actions: **adopt, restore, detach**. Scanning never adopts content automatically. Restoring does not overwrite an external directory, file, or foreign symlink.
 
 ## Synchronization and recovery
 
 Central changes persist first. Each `Agent × capability × physical target` then converges independently. Agents sharing a target appear together in the impact review. A failed target does not roll back other completed targets; its relationship remains for targeted repair or retry.
 
-Existing Agent files update in place after backup and concurrency checks, preserving the path and inode for clients watching the file. New files and MUX-private documents publish atomically. A changed target invalidates an old review.
+Existing Agent files update in place after backup and concurrency checks, preserving the path and inode for clients watching the file. New files and Arca-private documents publish atomically. A changed target invalidates an old review.
 
 ## Data layout
 
 ```text
-~/.mux/
+~/.arca/
 ├── settings.json                  # Preferences and relationships
 ├── assets/
 │   ├── mcps/                      # Catalog, sources, MCP icons

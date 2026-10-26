@@ -1,4 +1,38 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke as tauriInvoke } from "@tauri-apps/api/core";
+
+export const CREDENTIAL_SESSION_REQUIRED = "arca:credential-session-required";
+export const CREDENTIAL_SESSION_CHANGED = "arca:credential-session-changed";
+
+async function invoke<T>(command: string, args?: Parameters<typeof tauriInvoke>[1]): Promise<T> {
+  try {
+    const result = await tauriInvoke<T>(command, args);
+    if (command === "commit_operation" || command === "set_model_credential_delivery" || command === "set_agent_credential_delivery") {
+      window.dispatchEvent(new Event(CREDENTIAL_SESSION_CHANGED));
+    }
+    return result;
+  } catch (error) {
+    const description = typeof error === "string" ? error
+      : error && typeof error === "object"
+        ? `${"code" in error ? error.code : ""} ${"message" in error ? error.message : ""}` : "";
+    if (/credential_(?:session_|vault_)/.test(description)) {
+      // Notify application scope without copying credentials or error details.
+      window.dispatchEvent(new Event(CREDENTIAL_SESSION_REQUIRED));
+    }
+    throw error;
+  }
+}
+
+export const unlockModelCredentials = (retry = false) => invoke<{
+  unlocked: boolean;
+  expires_in_seconds: number;
+  sync_deferred: boolean;
+}>("unlock_model_credentials", { retry });
+
+export const getModelCredentialSessionStatus = () => invoke<{
+  unlocked: boolean;
+  expires_in_seconds: number;
+  sync_deferred: boolean;
+}>("get_model_credential_session_status");
 import type {
   AgentDefinitionInput,
   BackendStatus,
@@ -194,7 +228,7 @@ export const setAgentCredentialDelivery = (
 });
 /** All entry copies across sources (not deduped), each flagged in_effect. */
 export const listRegistryAll = () => invoke<CatalogItem[]>("list_registry_all");
-/** 桌面包内 mux CLI 的安装状态（sidecar → ~/.local/bin 软链）。 */
+/** 桌面包内 arca CLI 的安装状态（sidecar → ~/.local/bin 软链）。 */
 export type CliStatus = { bundled: boolean; installed: boolean; link_path: string; in_path: boolean };
 export const cliStatus = () => invoke<CliStatus>("cli_status");
 export const installCli = () => invoke<CliStatus>("install_cli");

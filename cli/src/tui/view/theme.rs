@@ -19,7 +19,7 @@ use ratatui::text::Span;
 use ratatui::widgets::BorderType;
 
 use crate::tui::model::bucket_of;
-use mux_core::domain::types::RegistryEntry;
+use arca_core::domain::types::RegistryEntry;
 
 /// Same rule crossterm uses: a non-empty `NO_COLOR` disables color.
 pub fn color_enabled() -> bool {
@@ -32,7 +32,7 @@ pub fn color_enabled() -> bool {
 pub enum Tone {
     /// Focus, active navigation, interactive affordances.
     Accent,
-    /// The MUX wordmark and HTTP transport.
+    /// The Arca wordmark and HTTP transport.
     Brand,
     /// Enabled, installed, local origin, additive actions.
     Success,

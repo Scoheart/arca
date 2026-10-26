@@ -1,10 +1,10 @@
-# MUX 依赖维护批次设计
+# Arca 依赖维护批次设计
 
 日期：2026-07-18
 
 ## 背景与目标
 
-MUX 当前有 11 个未关闭的 Dependabot PR。每个合入 `main` 的普通提交都会触发一次完整 macOS 构建并发布 Pre-release；逐个合并会产生不必要的构建与发布噪音。另一方面，前端工具链和 TOML 1.1 都存在已验证的兼容性失败，不能与纯依赖刷新混成一个不可诊断的大 PR。
+Arca 当前有 11 个未关闭的 Dependabot PR。每个合入 `main` 的普通提交都会触发一次完整 macOS 构建并发布 Pre-release；逐个合并会产生不必要的构建与发布噪音。另一方面，前端工具链和 TOML 1.1 都存在已验证的兼容性失败，不能与纯依赖刷新混成一个不可诊断的大 PR。
 
 目标是在不降低测试门禁、不绕过 lockfile 规则、不直接发布 Stable 的前提下，将这些 PR 收敛为三个可独立审查、验证和回滚的维护批次。原 Dependabot PR 只在对应替代批次合并后关闭。
 
@@ -46,7 +46,7 @@ MUX 当前有 11 个未关闭的 Dependabot PR。每个合入 `main` 的普通�
 
 联合替代 Dependabot `#30/#31`，同时升级 root Core 与 Desktop Tauri 的 `toml`，避免两个工作区长期采用不同解析口径。
 
-已知失败是 TOML 1.1 的序列化/解析行为改变导致六个 Core 测试失败。修复必须保持 MUX 的安全不变量：未知字段、注释、格式和非目标策略继续由 `toml_edit` 保真；损坏或歧义输入继续 fail closed；不得通过修改 fixture 预期掩盖真实配置损坏。
+已知失败是 TOML 1.1 的序列化/解析行为改变导致六个 Core 测试失败。修复必须保持 Arca 的安全不变量：未知字段、注释、格式和非目标策略继续由 `toml_edit` 保真；损坏或歧义输入继续 fail closed；不得通过修改 fixture 预期掩盖真实配置损坏。
 
 验证包括全部 root workspace tests、TOML adapter 定向测试、Agent codec round-trip、Desktop Tauri tests，以及针对未知字段与非目标配置保留的回归用例。
 

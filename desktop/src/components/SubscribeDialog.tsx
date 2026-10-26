@@ -1,3 +1,4 @@
+import { ImeInput } from "./ImeInput";
 import { useState } from "react";
 import type { InstallState } from "../hooks/useInstallState";
 import { useToast } from "./Toast";
@@ -7,11 +8,11 @@ import { LinkIcon, SparklesIcon } from "./icons";
 
 /** Official curated collection preset for the shared subscription flow. */
 const OFFICIAL_SOURCE = {
-  url: "https://raw.githubusercontent.com/Scoheart/mux/main/data/registry.json",
-  name: "Mux 精选",
+  url: "https://raw.githubusercontent.com/Scoheart/arca/main/data/registry.json",
+  name: "Arca 精选",
 };
 
-/** Add a remote MCP config source, optionally using the Mux curated preset. */
+/** Add a remote MCP config source, optionally using the Arca curated preset. */
 export function SubscribeDialog({
   state,
   onClose,
@@ -42,11 +43,11 @@ export function SubscribeDialog({
 
   return (
     <DialogShell
-      className="mux-dialog-subscription"
+      className="arca-dialog-subscription"
       kind="editor"
       size="md"
       title="添加订阅"
-      subtitle="输入 MCP 配置 URL，或使用 Mux 精选。"
+      subtitle="输入 MCP 配置 URL，或使用 Arca 精选。"
       busy={busy}
       onClose={onClose}
       footerEnd={
@@ -58,31 +59,31 @@ export function SubscribeDialog({
         </>
       }
     >
-      <div className="mux-subscription-form">
+      <div className="arca-subscription-form">
         <button
           type="button"
           onClick={() => { setUrl(OFFICIAL_SOURCE.url); setName(OFFICIAL_SOURCE.name); }}
-          className="mux-subscription-preset"
-          title="使用 Mux 精选"
+          className="arca-subscription-preset"
+          title="使用 Arca 精选"
         >
           <SparklesIcon className="w-4 h-4" />
-          <span>使用 Mux 精选</span>
+          <span>使用 Arca 精选</span>
         </button>
-        <label className="mux-dialog-field">
+        <label className="arca-dialog-field">
           <span><LinkIcon className="w-4 h-4" />配置 URL <i>*</i></span>
-          <input
+          <ImeInput
             autoFocus
-            className="mux-dialog-input mux-dialog-input-mono"
+            className="arca-dialog-input arca-dialog-input-mono"
             placeholder="https://example.com/mcp.json"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
           />
         </label>
-        <label className="mux-dialog-field">
+        <label className="arca-dialog-field">
           <span>名称</span>
-          <input
-            className="mux-dialog-input"
+          <ImeInput
+            className="arca-dialog-input"
             placeholder="留空则用 URL 主机名"
             value={name}
             onChange={(e) => setName(e.target.value)}

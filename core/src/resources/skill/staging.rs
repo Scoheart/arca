@@ -46,11 +46,11 @@ mod platform {
 
     impl StagingRoot {
         pub(crate) fn open_or_create(paths: &SkillsPaths) -> Result<Self, SkillError> {
-            let mux = open_or_create_mux(paths.mux_dir())?;
+            let arca = open_or_create_arca(paths.arca_dir())?;
             let staging = open_or_create_private_directory(
-                &mux,
+                &arca,
                 &c("staging")?,
-                &paths.mux_dir().join("staging"),
+                &paths.arca_dir().join("staging"),
             )?;
             let skills = open_or_create_private_directory(
                 &staging,
@@ -64,9 +64,9 @@ mod platform {
         }
 
         pub(crate) fn open(paths: &SkillsPaths) -> Result<Self, SkillError> {
-            let mux = open_mux(paths.mux_dir())?;
+            let arca = open_arca(paths.arca_dir())?;
             let staging =
-                open_private_directory(&mux, &c("staging")?, &paths.mux_dir().join("staging"))?;
+                open_private_directory(&arca, &c("staging")?, &paths.arca_dir().join("staging"))?;
             let skills =
                 open_private_directory(&staging, &c("skills")?, &paths.staging_skills_dir())?;
             Ok(Self {
@@ -496,7 +496,7 @@ mod platform {
         }
     }
 
-    fn open_or_create_mux(path: &Path) -> Result<File, SkillError> {
+    fn open_or_create_arca(path: &Path) -> Result<File, SkillError> {
         match fs::symlink_metadata(path) {
             Ok(metadata) if metadata.file_type().is_dir() => {}
             Ok(_) => return Err(unsafe_staging()),
@@ -509,10 +509,10 @@ mod platform {
             }
             Err(error) => return Err(io_error(path, error)),
         }
-        open_mux(path)
+        open_arca(path)
     }
 
-    fn open_mux(path: &Path) -> Result<File, SkillError> {
+    fn open_arca(path: &Path) -> Result<File, SkillError> {
         let metadata = fs::symlink_metadata(path).map_err(|error| io_error(path, error))?;
         if !metadata.file_type().is_dir() {
             return Err(unsafe_staging());
@@ -528,7 +528,7 @@ mod platform {
         let opened = file.metadata().map_err(|error| io_error(path, error))?;
         if opened.dev() != metadata.dev() || opened.ino() != metadata.ino() {
             return Err(SkillError::Conflict {
-                message: "the MUX root changed while opening Skills staging".into(),
+                message: "the Arca root changed while opening Skills staging".into(),
                 path: String::new(),
             });
         }

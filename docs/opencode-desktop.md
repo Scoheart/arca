@@ -4,9 +4,9 @@ Verified on 2026-09-26 against the official `anomalyco/opencode` release `v1.18.
 
 ## Identity and discovery
 
-- MUX identity: `opencode-desktop`, displayed as **OpenCode**, category `desktop`.
+- Arca identity: `opencode-desktop`, displayed as **OpenCode**, category `desktop`.
 - Existing `opencode` remains the CLI identity. Both use the OpenCode brand icon with distinct CLI/Desktop badges.
-- Official production application: `OpenCode.app`, bundle ID `ai.opencode.desktop`. MUX discovers `/Applications/OpenCode.app` or `~/Applications/OpenCode.app` and opens the installed app through the existing macOS launcher.
+- Official production application: `OpenCode.app`, bundle ID `ai.opencode.desktop`. Arca discovers `/Applications/OpenCode.app` or `~/Applications/OpenCode.app` and opens the installed app through the existing macOS launcher.
 - Download: https://opencode.ai/download. OpenCode Beta/Dev are separate upstream channels and are not automatically selected.
 
 ## Local resource contract
@@ -18,11 +18,11 @@ Verified on 2026-09-26 against the official `anomalyco/opencode` release `v1.18.
 | Native credentials | `~/.local/share/opencode/auth.json` | Existing reviewed OpenCode credential delivery, with separate Desktop provider IDs |
 | Skills | `~/.config/opencode/skills` | Shared `opencode-user` physical target; also reads `~/.claude/skills` and `~/.agents/skills` |
 
-The official Electron desktop bundles the OpenCode server and sets `OPENCODE_CLIENT=desktop`. It redirects the state directory, not the default config/data directories. These resources therefore belong to the local OpenCode server and are shared with the CLI. MUX does not edit Electron preferences, sessions, remote servers, project files, or shell initialization files.
+The official Electron desktop bundles the OpenCode server and sets `OPENCODE_CLIENT=desktop`. It redirects the state directory, not the default config/data directories. These resources therefore belong to the local OpenCode server and are shared with the CLI. Arca does not edit Electron preferences, sessions, remote servers, project files, or shell initialization files.
 
-Desktop-generated model provider IDs use `mux_desktop_<profile-id-hex>`; CLI entries keep their existing IDs. Removing a Desktop profile preserves CLI providers, other models and any current pointer that references a different entry. Importing a Desktop external model creates only a central asset; explicitly adding it then creates the separate Desktop entry. The physical global `model` pointer is shared, so changing the global default affects both clients; individual desktop conversations can select their own model. Clearing the entire model registry is rejected while the sibling Agent still has model consumers in the same configured file. Explicitly separated paths can be cleared independently.
+Desktop-generated model provider IDs use `arca_desktop_<profile-id-hex>`; CLI entries keep their existing IDs. Removing a Desktop profile preserves CLI providers, other models and any current pointer that references a different entry. Importing a Desktop external model creates only a central asset; explicitly adding it then creates the separate Desktop entry. The physical global `model` pointer is shared, so changing the global default affects both clients; individual desktop conversations can select their own model. Clearing the entire model registry is rejected while the sibling Agent still has model consumers in the same configured file. Explicitly separated paths can be cleared independently.
 
-MCP and Skills use the existing shared-physical-target planner, including its conflict handling; they are not independent copies. A desktop connection to a remote server needs MUX on that server. Custom `XDG_CONFIG_HOME`, `OPENCODE_CONFIG`, `OPENCODE_CONFIG_DIR` and `opencode.jsonc` locations require corresponding explicit MUX path configuration. Upstream loads JSONC after JSON, so configure the actual effective file when both exist. Credential-store routing retains the existing default XDG data path contract. Restart the local OpenCode service after changes if an existing session does not refresh.
+MCP and Skills use the existing shared-physical-target planner, including its conflict handling; they are not independent copies. A desktop connection to a remote server needs Arca on that server. Custom `XDG_CONFIG_HOME`, `OPENCODE_CONFIG`, `OPENCODE_CONFIG_DIR` and `opencode.jsonc` locations require corresponding explicit Arca path configuration. Upstream loads JSONC after JSON, so configure the actual effective file when both exist. Credential-store routing retains the existing default XDG data path contract. Restart the local OpenCode service after changes if an existing session does not refresh.
 
 ## Evidence
 

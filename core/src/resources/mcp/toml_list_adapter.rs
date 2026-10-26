@@ -293,7 +293,7 @@ impl TomlListAdapter {
         match table.get("enabled") {
             None | Some(Toml::Boolean(true)) => Ok(()),
             Some(Toml::Boolean(false)) => Err(
-                "VT Code MCP is disabled by 'mcp.enabled'; enable it in VT Code before MUX updates it"
+                "VT Code MCP is disabled by 'mcp.enabled'; enable it in VT Code before Arca updates it"
                     .into(),
             ),
             Some(_) => Err(

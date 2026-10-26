@@ -4,7 +4,7 @@
 
 - `gmi-cloud.png`: original PNG bytes served from <https://www.gmicloud.ai/favicon.ico> (256×256); the extension reflects the actual file format. Used for the GMI Cloud Provider, separately from Qwen/Alibaba model branding.
 
-These assets identify third-party model providers inside MUX. They were retrieved
+These assets identify third-party model providers inside Arca. They were retrieved
 from official product sites, official brand packages, or verified official GitHub
 organizations on 2026-07-27 and 2026-07-28. ICO assets were converted to PNG without altering
 the artwork. All trademarks remain the property of their respective owners.
@@ -87,3 +87,85 @@ Official favicon assets served by vendor websites or linked by their documentati
 - `302-ai.ico` — <https://302.ai/favicon.ico>
 - `portkey.png` — <https://framerusercontent.com/images/pkFK3AGXHirogqiN67JGtlnMVM.png>
 - `helicone.ico` — <https://www.helicone.ai/favicon.ico>
+## 2026-10-24 provider icon completion batch
+
+Covered every Provider in `core/src/resources/model/mod.rs` that had no icon
+asset (42 brands). All bytes retrieved from each product's official site,
+official CDN, or the verified brand asset via Wikimedia Commons on 2026-10-24.
+ICO assets keep the `.ico` extension reflecting actual bytes; artwork unchanged.
+
+| Asset | Official source |
+|---|---|
+| `0g-private-computer.png` | <https://0g.ai/assets/69de313618847214109e4795_webclip.png> |
+| `agnes-ai.png` | <https://agnes-ai.com/images/biglogo.png> |
+| `akashml.png` | <https://akashml.com/apple-touch-icon.png> |
+| `ant-ling.ico` | <https://gw.alipayobjects.com/render/p/yuyan/180020010001289651/favicon.ico> (favicon linked by <https://ant-ling.com/>) |
+| `antdigital-dtmaas.ico` | <https://antdigital.com/favicon.ico> |
+| `apinex.png` | <https://apinex.bond/favicon.png> |
+| `atria.png` | <https://atria-asi.ai/releases/atria-dawn/atria-dawn-20261024-34b1af8-r24/assets/atria-logo.png> |
+| `beatapi.png` | <https://beatapi.io/apple-touch-icon.png> |
+| `bilibili-index-translate.png` | <https://i0.hdslb.com/bfs/static/jinkela/long/images/512.png> (official bilibili CDN) |
+| `clean-apis.png` | <https://cleanapis.com/storage/branding/6bM3jb3ZzA7suRSpWMlgPnjLu3JibzYmRjzPmvnu.png> |
+| `codecraft.png` | <https://codecraftapi.com/storage/branding/4FNYY6kXeIAwp9AIexKfZa1LzkF2RCxQfgm4VzVn.png> |
+| `constellation-gate.png` | <https://constellationgate.ai/apple-touch-icon.png> |
+| `coralbricks.svg` | <https://coralbricks.ai/favicon.svg> |
+| `dolphin.png` | <https://dphn.ai/favicon/apple-touch-icon.png> |
+| `experiential-labs.svg` | <https://experientiallabs.ai/icon.svg> |
+| `fikra.png` | <https://fikraapi.co.ke/static/logo.png> |
+| `flock.png` | <https://flock.io/light-mode-favicon.png> |
+| `gonkarouter.ico` | <https://gonkarouter.io/favicon.ico> |
+| `indicstack.png` | <https://indicstack.ai/apple-icon.png> |
+| `infron.png` | <https://framerusercontent.com/images/jYZGKXX6mcMkU1qAXZQeevZRY.png> (icon linked by <https://llm.onerouter.pro/>) |
+| `iteracompute.svg` | <https://iteracompute.com/img/iteracompute-logo.svg> |
+| `krafton-raon.png` | <https://raon.krafton.ai/brand/krafton-ai-favicon.png> |
+| `liquid-ai.png` | <https://liquid.ai/icon.png> |
+| `llmtr.png` | <https://llmtr.com/apple-touch-icon.png> |
+| `maximo-ai.png` | <https://maximoai.co/maximo-ai-icon-180.png> |
+| `meta.svg` | <https://commons.wikimedia.org/wiki/File:Meta_Platforms_Inc._logo_(cropped).svg> (official Meta infinity mark via Wikimedia Commons) |
+| `munito.png` | <https://munito.ai/apple-touch-icon.png> |
+| `nomask.png` | <https://nomask.ai/storage/app/public/favicon/icon.png?v=4> |
+| `nous-portal.png` | <https://nousresearch.com/assets/nous-web/favicon.png> |
+| `orcarouter.png` | <https://orcarouter.ai/apple-touch-icon.png> |
+| `ppq.png` | <https://ppq.ai/meta/apple-touch-icon.png> |
+| `river.png` | <https://river.ai/assets/favicon-192.png?v=2> |
+| `routeway.ico` | <https://routeway.ai/favicon.ico> |
+| `runanywhere.png` | <https://runanywhere.ai/apple-icon.png> |
+| `runinfra.png` | <https://runinfra.ai/apple-touch-icon.png> |
+| `sarashina.svg` | <https://sarashina.ai/favicon.svg> |
+| `sensenova.png` | <https://www.sensenova.cn/icon.png> |
+| `tencent.png` | <https://cloudcache.tencent-cloud.com/qcloud/favicon.ico> (official Tencent Cloud CDN; shared by the `tencent-*` aliases) |
+| `tokenharbor.png` | <https://tokenharbor.ai/apple-icon.png> |
+| `trustedrouter.png` | <https://trustedrouter.com/static/apple-touch-icon.png> |
+| `unisound.png` | <https://unisound.com/static/icons.png> |
+| `unorouter.png` | <https://unorouter.com/images/icons/icon-512.png> |
+
+`custom` intentionally keeps the letter fallback: it is the user-defined
+Provider slot, not a third-party brand.
+
+## LarpRouter — 2026-10-24
+
+- `larprouter.png`: official 800×800 site icon served from <https://larprouter.com/logo.png> (the `rel="icon"` linked by <https://larprouter.com/>, <https://larprouter.com/docs>, and <https://larprouter.com/models>).
+
+## Yeta — 2026-10-24
+
+- `yeta.svg`: official brand mark served by <https://platform.yeta.ai/yeta-mark.svg> (favicon of the Yeta platform, referenced from its homepage).
+
+## InferX — 2026-10-24
+
+- `inferx.png`: official 256×256 site icon served from <https://inferx.net/inferx-favicon-v11.png> (the `rel="icon"` linked by <https://inferx.net/> and <https://inferx.net/docs/quickstart>). The square catalog mark at <https://model.inferx.net/static/favicon.svg> is the same glyph; the PNG is the homepage icon.
+
+## Stark Relay — 2026-10-24
+
+- `stark-relay.svg`: official 128×128 site icon served from <https://starkrelay.bond/favicon-dark.svg?v=2> (the `rel="icon"` linked by <https://starkrelay.bond/>).
+
+## Oxion AI — 2026-10-24
+
+- `oxion-ai.png`: official square brand mark served as the site icon from <https://oxionai.com/storage/branding/mtLpl0lm90mTEG70Ova2vt8UMOPr75Gm8X5ak42k.png> (the `rel="icon"` and `apple-touch-icon` linked by <https://oxionai.com/>). The file is a 960×960 PNG.
+
+## SCNet — 2026-10-24
+
+- `scnet.png`: official 48×48 site icon served as PNG bytes from <https://www.scnet.cn/acx/resource/sites/isclogo?logoType=ico> (the favicon linked by <https://www.scnet.cn/ui/mall/> and <https://www.scnet.cn/ui/console>). The extension matches the PNG bytes. The wide wordmark at `logoType=logo` is not used for the square glyph.
+
+## BlazeRail — 2026-10-24
+
+- `blazerail.svg`: official site icon served from <https://www.blazerail.com/favicon.svg> (the `rel="icon"` linked by <https://www.blazerail.com/>, <https://www.blazerail.com/docs>, and <https://www.blazerail.com/free>).

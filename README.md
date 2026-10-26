@@ -1,67 +1,98 @@
-<img src="desktop/src-tauri/icons/icon.png" width="104" align="right" alt="MUX icon" />
+<img src="desktop/src-tauri/icons/icon.png" width="104" align="right" alt="Arca icon" />
 
-# MUX — Agent Resource Manager
+# Arca — Agent Asset Manager
 
 **Configure MCP servers, reusable model endpoints, and user-level Agent Skills once, then let each Agent consume those central assets.**
 
-MUX is a central asset and Agent configuration manager for Claude Code, Claude
+Arca is a central asset and Agent configuration manager for Claude Code, Claude
 Desktop, Codex, Cursor, QoderWork, OpenCode CLI/Desktop, and many other AI agents. MCPs, Model Profiles, and
 Skills are created and maintained in their top-level libraries; each Agent then
-selects which compatible assets it should consume. MUX adapts that desired state
+selects which compatible assets it should consume. Arca adapts that desired state
 to the Agent's native format while preserving unrelated settings.
 
-Model credentials managed by MUX stay in macOS Keychain. Agents without a safe
-Keychain command receive only a non-secret environment-variable reference; MUX
+The Agent picker also includes [Web clients and MCP development tools](docs/mcp-apps-clients.md),
+including LibreChat, Open WebUI, ChatGPT, Claude.ai, Postman, MCPJam Inspector,
+and MCP Inspector by mcp-use. Web entries provide official configuration guides;
+Postman and MCPJam also offer native macOS launch entries. CopilotKit, AG-UI,
+and mcp-use are labeled as development frameworks. These reference entries do
+not imply local asset assignment or MCP Apps rendering inside Arca.
+
+Model credentials managed by Arca stay in macOS Keychain. Agents without a safe
+Keychain command receive only a non-secret environment-variable reference; Arca
 never edits shell startup files. Primary model selection is managed independently
 from fork, small, auxiliary, and other secondary model slots. Skills are downloaded
-from GitHub or imported from local folders and archives directly into one managed copy. MUX
+from GitHub or imported from local folders and archives directly into one managed copy. Arca
 still validates paths, archive structure, hashes, and concurrent changes in the
 background. Assigning that copy to verified Agent directories remains a
 separate operation, so an Agent page never asks you to reinstall the same Skill.
 
 In the desktop Agent page, use the editor menu beside the theme and language controls to choose
 VS Code, Cursor, Zed, Sublime Text, TextEdit, or another installed macOS app.
-MUX remembers the choice for configuration files across Agents and app restarts.
+Arca remembers the choice for configuration files across Agents and app restarts.
 Folder links still use Finder. Selecting **系统默认** restores the system file association;
-if a selected editor cannot launch, MUX reports the error without silently switching apps.
+if a selected editor cannot launch, Arca reports the error without silently switching apps.
 
 To launch an Agent on macOS, use **▶ 运行** in the upper-right corner of its
 workspace, or right-click
 a pinned Agent icon. Desktop applications open through the system launcher; CLI
-Agents open in Terminal and ask for a working directory on first use. MUX remembers
+Agents open in Terminal and ask for a working directory on first use. Arca remembers
 that directory per Agent. The run dropdown lets CLI Agents use another directory;
-**安装文档** is a separate toolbar button. Configure the application, executable
-with arguments, or website through **编辑配置**. Extension entries name the host editor they open. Missing
+**安装文档** is a separate toolbar button that opens the official installation
+steps for that Agent’s CLI or extension, or its desktop download page. Configure the application, executable
+with arguments through **编辑配置**. Extension entries name the host editor they open. Missing
 built-in runtimes offer their official installation page. On the first CLI launch,
-macOS may ask for permission to let MUX control Terminal.
-Installed Agent pages show a detected version beside the launch controls. MUX
+macOS may ask for permission to let Arca control Terminal.
+Installed Agent pages show a detected version beside the launch controls. Arca
 reads macOS app bundle metadata or checks an audited default CLI with a bounded
 `--version` call; custom CLI commands are not executed for version detection.
-`mux agent launch show <agent-id>` exposes the same version in the CLI.
+`arca agent launch show <agent-id>` exposes the same version in the CLI.
 
-Agent details use one workspace with a centered identity, compact launch and
-credential controls, and a single MCPs / Models / Skills tab bar. **配置** expands
-the selected capability's paths and documentation inline. MCP resources use compact
-rows with controls on the right. Skill cards separate the title, three-line
-description, and footer so shared-state badges and controls stay readable. Their
-**…** menu exposes details and removal when supported. Narrow windows reduce the
-number of columns.
+Agent details center the Agent identity and its launch, Trace, capture, and edit
+actions above the workspace. A left sidebar lists Models, MCPs, Skills and, when
+supported, Instructions; asset counts stay beside each resource. Use Up/Down,
+Home or End to navigate with the keyboard. The right pane holds that resource's
+actions, search, cards or native Instructions editor. MCP resources use compact
+rows; Skill cards separate the title, description and controls. Their **…** menu
+exposes details and removal when supported. Narrow windows keep the sidebar and
+reduce the number of content columns.
 
-**编辑配置** includes application / CLI / website launch settings alongside the
-MCP, Model and Skills paths. Changing only the launcher saves directly; path edits
-retain the impact review. Cancelling that review leaves launch preferences
-unchanged. Configurable Agents keep launch settings in this editor instead of
-duplicating the settings entry in the run dropdown.
+Click **运行** to open launch settings. **编辑配置** holds the MCP, Model,
+Skills and Instructions paths; path edits retain their impact review.
 
-MUX ships as **two front-ends that share the same data** (`~/.mux/`):
+In the launch dialog, use **新增** to copy the current launch configuration into
+a named profile. Each Agent can keep up to 32 profiles with separate arguments,
+environment variables and launch options. Switching profiles keeps every draft;
+**保存** saves them together and uses the selected profile for future launches.
+A vertical list switches profiles. The dialog keeps a fixed size, with scrolling
+inside the selected profile. Saving keeps the dialog open; running closes it
+after a successful launch. Arguments and environment variables use compact
+previews with separate multiline editing.
+A fixed, empty **默认配置** always remains available and cannot be edited, renamed or deleted.
+Existing custom launch settings are retained in a separate editable profile.
+
+For Codex CLI, **编辑配置 → 编辑配置文件** opens an in-app editor with common
+options and full TOML source. **原生配置** edits `$CODEX_HOME/config.toml`
+(`~/.codex/config.toml` by default). **Arca 专属配置** edits the separate
+`$CODEX_HOME/arca.config.toml`; files are created only when explicitly saved.
+Comments, unknown fields and line endings are retained. Existing files are
+updated in place, with revision checks and a private Keychain rollback snapshot.
+
+In an editable Codex launch profile, select **Arca 专属配置** under **配置来源**
+to add `--profile arca` to that profile's arguments. These overrides apply to
+that launch and do not rewrite the native file. Unset options still inherit the
+native configuration; project and explicit CLI overrides retain Codex's normal
+precedence. Authentication and session storage are shared. A profile-specific
+`CODEX_HOME` environment variable also determines which files this editor opens.
+
+Arca ships as **two front-ends that share the same data** (`~/.arca/`):
 
 - 🖥️ a **macOS desktop app** (Tauri + React) — a visual manager, and
-- ⌨️ a **CLI + TUI** (`mux`, a native Rust binary) — an interactive terminal UI
+- ⌨️ a **CLI + TUI** (`arca`, a native Rust binary) — an interactive terminal UI
   plus scriptable subcommands.
 
 Both frontends enter through the same revisioned workspace, capability graph,
 startup recovery, and plan/commit/cancel application boundary. External MCP,
-Model, and Skill changes use the same explicit per-item contract: `mux discover`
+Model, and Skill changes use the same explicit per-item contract: `arca discover`
 is read-only, while each domain's `converge` command adopts, restores, or detaches
 one exact observation. Desktop and CLI share central asset lifecycles, Agent
 launch configuration, default terminals, and credential rules. The no-argument
@@ -69,51 +100,112 @@ TUI remains an MCP-focused terminal workspace.
 
 ---
 
+
+## Upgrade from MUX
+
+Arca is the new name of MUX. Install **Arca.app** and use **`arca`** for new
+installations. Quit the previous app before upgrading or opening Arca.
+
+On first successful startup, Core recovers pending writes in the existing
+`~/.mux` directory, moves that physical directory to `~/.arca`, and retains
+`~/.mux` as a compatibility symlink. Existing Skills, links, settings and backups
+remain available. If both directories already contain independent data, startup
+refuses to merge them; set `ARCA_HOME` to the intended real directory. An explicit
+`ARCA_HOME` takes priority; the former `MUX_HOME` override remains accepted and
+its chosen directory is not moved automatically.
+
+Keychain service identifiers and native Agent ownership IDs remain stable.
+The rename does not copy secrets, rewrite Agent documents, or claim their
+external settings. Legacy `mux-store` metadata is accepted, while new API
+responses use `arca-store`.
+
+Keychain labels and permission prompts use `Arca · Model Provider · <id>` (or
+`Model Profile` for legacy items). Existing items keep their service lookup key
+so Agent credential commands continue working. After a successful save,
+Core attempts a metadata-only name update without another authorization
+dialog; trusted apps and access rules are preserved. An already-open prompt
+still shows its original name, and a denied metadata update leaves it unchanged.
+
+Desktop opens one application credential session at startup, shared by all
+Arca-managed Providers. Its Keychain-only aggregate is labelled
+`Arca · Credentials`; unlike the individual compatibility items, this vault
+trusts only the creating application, not `/usr/bin/security`. After the first
+additive import (which may require authorizing the existing items), ordinary
+Provider reads share the unlocked vault until Arca completely quits or eight
+hours elapse. Closing the macOS window merely hides Arca and keeps this session.
+Sleep time counts toward the limit; both wall-clock and process timers are checked.
+No API keys are written to files or browser storage. Transaction rollback items
+remain separate and are not retained in the application session.
+
+Each read checks the original item's metadata revision without a password
+dialog. External replacement requires the global **Unlock credentials** action;
+external deletion immediately invalidates that cached key. Cancelling an unlock
+is shared across pages until explicit retry. Existing Agent helper commands
+continue to read their original items and follow those items' access controls.
+Completing an old source item's write-permission migration can still require a
+system confirmation when explicitly saving or deleting that key; reopening the
+aggregate cannot grant a different item's write permissions. Ordinary navigation
+never triggers this source-item recovery path.
+If an aggregate refresh cannot be saved, the source key remains authoritative
+and the app reports that the next startup may need authorization again.
+
+Existing desktop updaters keep the same signature trust key and follow the
+canonical [Scoheart/arca](https://github.com/Scoheart/arca) repository. GitHub
+redirects former repository URLs so older clients can still reach releases.
+A legacy CLI upgrade archive remains solely for
+older standalone clients; the executable it contains is Arca. The installer is
+named Arca.app; an in-place update of an old MUX.app may retain that old folder
+name, so use the Arca installer to replace the application name in Applications.
+Do not run the old and new applications side by side against the same assets.
+
+The documentation continues at the existing hostname until a separate domain
+change is deployed. Old guide routes redirect to the Arca guide.
+
 ## Central sources and external observations
 
-MUX doesn't bundle a fixed server list. Its central MCP catalog is assembled from sources you control, while Agent files remain an independent observed-state input:
+Arca doesn't bundle a fixed server list. Its central MCP catalog is assembled from sources you control, while Agent files remain an independent observed-state input:
 
 | Source | What it is |
 |--------|------------|
-| **订阅 (Subscribe)** | A **URL** to an MCP config file. MUX fetches + caches it; refresh re-pulls upstream. |
-| **本地 (Local)** | A config file **imported from disk** — copied into MUX; refresh re-reads the original. |
+| **订阅 (Subscribe)** | A **URL** to an MCP config file. Arca fetches + caches it; refresh re-pulls upstream. |
+| **本地 (Local)** | A config file **imported from disk** — copied into Arca; refresh re-reads the original. |
 | **手动添加 (Manual)** | Servers you create by hand or **paste** in — stored as a managed local source. |
-| **外部发现 (External)** | Servers already present in Agent files, scanned as read-only observed state. MUX detects them automatically and offers explicit per-item management. |
+| **外部发现 (External)** | Servers already present in Agent files, scanned as read-only observed state. Arca detects them automatically and offers explicit per-item management. |
 
-A one-click **Mux 精选 (curated collection)** subscribes you to a curated source. Managed sources can be toggled on/off; the Registry shows their effective union, while external Agent observations remain read-only until the user reviews and manages one exact item. MUX never bulk-adopts detected Agent configurations.
+A one-click **Arca 精选 (curated collection)** subscribes you to a curated source. Managed sources can be toggled on/off; the Registry shows their effective union, while external Agent observations remain read-only until the user reviews and manages one exact item. Arca never bulk-adopts detected Agent configurations.
 
 ## Features
 
 - **Aggregated catalog** with search, source filtering, and an explicit view of copies shadowed by precedence.
 - **Central assets, explicit consumers** — create or import assets once, then manage each Agent's desired MCP/Skill/Model sets from that Agent's page. Asset Inspectors keep lifecycle and impact read-only.
 - **Transport-aware** — `stdio` / `http` / `sse`, plus a **custom `type`** (e.g. `streamable-http`). Same-named stdio and http variants are tracked separately.
-- **Paste a config** — drop a `{"mcpServers": {…}}` block and MUX recognizes the servers and adds them.
+- **Paste a config** — drop a `{"mcpServers": {…}}` block and Arca recognizes the servers and adds them.
 - **Desired vs. observed state** — Agent files and Skill links are scanned for `synced`, `external-added`, `external-changed`, `external-removed`, `unparseable`, `ambiguous`, and `unsupported`; scans never silently create ownership.
-- **Normal external change tracking** — newly added, removed, toggled, or edited MCPs, Models, and Skills refresh in place. Every changed relationship exposes only the safe core-projected actions: adopt observed state, restore MUX desired state, or detach ownership.
+- **Normal external change tracking** — newly added, removed, toggled, or edited MCPs, Models, and Skills refresh in place. Every changed relationship exposes only the safe core-projected actions: adopt observed state, restore Arca desired state, or detach ownership.
 - **Reviewed propagation** — editing or deleting a central MCP or Model plans the central change together with every consumer. Ordinary central edits never overwrite drift; an exact convergence operation must resolve the affected relationship first.
-- **Safe, local writes** — MUX reads and edits only fields it owns. Existing files are backed up, prepared, and verified as one recoverable transaction; unrelated keys, comments, formatting, policy fields, permissions, and symlinks are preserved.
+- **Safe, local writes** — Arca reads and edits only fields it owns. Existing files are backed up, prepared, and verified as one recoverable transaction; unrelated keys, comments, formatting, policy fields, permissions, and symlinks are preserved.
 - **Unified Agent consumption center** — each Agent page shows only desired central assets under MCPs, Model, and Skills, with a central picker for relationship changes and a separate read-only external section.
-- **Reusable model connections (preview)** — define one Provider Base URL, shared credential, and an editable Endpoint Path for every enabled protocol; Models then reference that connection with only their model ID and optional token limits. Native multi-model Agents can keep several Profiles installed, enable or disable each one, and choose exactly one current primary model; Claude, Claude Code, and Codex are managed single-Profile Model Agents. Claude accepts only Anthropic Messages-compatible Providers. Applying selects or creates one MUX-owned third-party inference Profile; the operation review discloses the selected Provider key export and that the key is written only to Claude's private `0600` Profile, and non-Claude route names automatically disable Claude model verification. Restart Claude after apply or clear. This is Model configuration, separate from Claude MCP support and Connectors.
+- **Reusable model connections (preview)** — define one Provider Base URL, shared credential, and an editable Endpoint Path for every enabled protocol; Models then reference that connection with only their model ID and optional token limits. Native multi-model Agents can keep several Profiles installed, enable or disable each one, and choose exactly one current primary model; Claude, Claude Code, and Codex are managed single-Profile Model Agents. Claude accepts only Anthropic Messages-compatible Providers. Applying selects or creates one Arca-owned third-party inference Profile; the operation review discloses the selected Provider key export and that the key is written only to Claude's private `0600` Profile, and non-Claude route names automatically disable Claude model verification. Restart Claude after apply or clear. This is Model configuration, separate from Claude MCP support and Connectors.
 - **User-level Skills in Desktop** — enter a public GitHub source and press Enter, or select a local folder / archive, to import all discovered Skills directly without a second install confirmation. Same-name central copies are backed up before replacement. No Git, Node.js, or `npx` is needed; Agent assignment remains a separate step.
-- **One proxy for MUX networking** — configure HTTP, SOCKS4/SOCKS4A, or SOCKS5 once for GitHub Skills, remote sources, CLI updates, and signed Desktop update checks; credentials are never stored in `settings.json`.
+- **One proxy for Arca networking** — configure HTTP, SOCKS4/SOCKS4A, or SOCKS5 once for GitHub Skills, remote sources, CLI updates, and signed Desktop update checks; credentials are never stored in `settings.json`.
 - **CLI ⇄ Desktop on one application core** — both use the same bootstrap, Agent capability graph, revisioned MCP/Model/Skill snapshot, typed errors, and recoverable operation coordinator.
 - **Dark mode** and a compact, consistent resource workspace for MCPs, Models, and Skills, with shared cards, right-side Inspectors, and review dialogs only for consequential existing-asset changes.
 
 ## Screenshots
 
-[Watch the MUX 1.10.0 desktop walkthrough](https://mux.scoheart.com/en/guide/demo) — Models, MCPs, Skills, Provider editing, and the Agent picker, with Chinese / English captions.
+[Watch the historical desktop walkthrough (before the rename)](https://mux.scoheart.com/en/guide/demo) — Models, MCPs, Skills, Provider editing, and the Agent picker, with Chinese / English captions.
 
-![MUX central Models library](website/public/media/mux-1.10.0-models.jpg)
+![Arca central Models library](website/public/media/arca-1.10.0-models.jpg)
 
-![MUX Skills source navigation and cards](website/public/media/mux-1.10.0-skills.jpg)
+![Arca Skills source navigation and cards](website/public/media/arca-1.10.0-skills.jpg)
 
-![MUX editable Provider portal and protocol paths](website/public/media/mux-1.10.0-provider.jpg)
+![Arca editable Provider portal and protocol paths](website/public/media/arca-1.10.0-provider.jpg)
 
 See the [desktop app guide](website/guide/desktop.md) for the current workspace and source navigation. Demo assets are public examples and contain no live credentials.
 
 ## Supported agents
 
-MUX keeps audited Agent contracts in `data/agents.json` and discovery-only records in `data/agent-catalog.json`. Only verified user-level MCP paths and native schemas are writable; other entries expose verified Skills or native setup guidance. MUX never guesses a path or writes a generic schema into discovery-only records.
+Arca keeps audited Agent contracts in `data/agents.json` and discovery-only records in `data/agent-catalog.json`. Only verified user-level MCP paths and native schemas are writable; other entries expose verified Skills or native setup guidance. Arca never guesses a path or writes a generic schema into discovery-only records.
 
 Audited targets include Claude Code/Desktop, Codex, Cursor, VS Code, Zed, Windsurf, Gemini CLI, Google Antigravity, Amazon Q, OpenCode, Grok Build, MiniMax Code, Copilot CLI, Cline, Cline Desktop, Freebuff, Continue, Goose, Hermes, Kimi Code CLI/Desktop, Qwen Code, Qoder, Qoder Desktop, Qoder CLI, QoderWork, QwenWork (international and CN), Step Code, Mistral Vibe, Rovo Dev, Tabnine, LM Studio, and others. For MCP, Claude and BoltAI local files accept stdio only. Pi 0.99.0+ reads `~/.pi/agent/mcp.json` natively; older Pi builds need an MCP extension. Devin, Cline Desktop, and Freebuff remain audited read-only records because no stable user-level global config file is documented.
 
@@ -129,24 +221,39 @@ Models use a shared Provider architecture: one Provider owns its name, type,
 single Base URL, enabled protocol Endpoint Paths, environment reference, and
 single Keychain credential, while any number of Models reference it by stable
 `providerId`. Editing a Provider reapplies every affected Agent transactionally.
-MUX refuses to disable a protocol while a named Model still uses it. Existing
+Arca refuses to disable a protocol while a named Model still uses it. Existing
 same-origin protocol endpoints migrate to Base URL + Endpoint Path without
 changing request targets; a legacy Provider with multiple origins is left
 untouched and must be split explicitly. If an Agent's native schema can only
-represent a client Base URL, MUX also blocks custom paths it cannot preserve
+represent a client Base URL, Arca also blocks custom paths it cannot preserve
 exactly instead of silently ignoring them.
 
 See the [complete audited matrix](website/guide/agents.md) and [catalog methodology](docs/agent-catalog.md). Every writable target's global path remains editable; paths inside the home directory are normalized to the portable `~/…` form.
 
-Skill consumption supports the audited user-level capabilities declared in `data/agents.json`, across CLI, IDE, and desktop products. `mux agent list --json` exposes the current capability matrix. Only capabilities detected on the current machine appear, and Agents sharing one physical compatibility directory are selected and reviewed as an inseparable impact group. Managed links expose one live central copy, so consumer-side edits are detected as central drift rather than isolated copies. See the [Skills guide](website/guide/skills.md).
+Skill consumption supports the audited user-level capabilities declared in `data/agents.json`, across CLI, IDE, and desktop products. `arca agent list --json` exposes the current capability matrix. Only capabilities detected on the current machine appear, and Agents sharing one physical compatibility directory are selected and reviewed as an inseparable impact group. Managed links expose one live central copy, so consumer-side edits are detected as central drift rather than isolated copies. See the [Skills guide](website/guide/skills.md).
 
 ---
 
 ## Desktop app
 
-Grab the **Desktop installer · Apple Silicon** asset from the latest stable [**Release**](../../releases/latest). The app checks that stable channel automatically and also exposes a manual **Check for updates** action. Installing the app makes its bundled `mux` CLI available through `~/.local/bin/mux` when that directory is on `PATH`.
+Grab the **Desktop installer · Apple Silicon** asset from the latest stable [**Release**](../../releases/latest). The app checks that stable channel automatically and also exposes a manual **Check for updates** action. Installing the app makes its bundled `arca` CLI available through `~/.local/bin/arca` when that directory is on `PATH`.
 
-MUX uses a direct Stable flow started by an explicit `workflow_dispatch` request on the current ordinary `main` commit. Select `patch` for fixes, `minor` for compatible new capabilities, or `major` for breaking changes. Ordinary commits and pushes do not publish a release. Direct Stable creates the release metadata commit, Draft, and immutable version tag, then dispatches exactly one macOS Stable build from the resulting `main` commit; automated Quality is currently paused and is run manually when requested. Stable publication still requires release provenance, version consistency, signing, App/DMG inspection, updater and CLI packaging, complete-asset validation, and semantic-version latest-channel ordering.
+Arca uses a direct Stable flow started by an explicit `workflow_dispatch` request on the current ordinary `main` commit. Select `patch` for fixes, `minor` for compatible new capabilities, or `major` for breaking changes. Ordinary commits and pushes do not publish a release. Direct Stable creates the release metadata commit, Draft, and immutable version tag, then dispatches exactly one macOS Stable build from the resulting `main` commit; automated Quality is currently paused and is run manually when requested. Stable publication still requires release provenance, version consistency, signing, App/DMG inspection, updater and CLI packaging, complete-asset validation, and semantic-version latest-channel ordering.
+
+The stable build uses a shared Cargo target directory for CLI and Desktop, with frontend and CLI preparation in parallel. After the Draft and tag exist, independently verify the published artifacts without waiting for the build job's cache upload:
+
+```bash
+bash .github/scripts/verify-stable-release.sh --source-root "$PWD" --wait vX.Y.Z
+```
+
+The verifier downloads the five expected assets with bounded parallelism using
+the current command environment's proxy settings. It reuses completed assets
+only when repository, tag, asset ID, size and SHA-256 match, and limits stalled
+downloads. Its cache defaults to `~/Library/Caches/Arca/release-assets`; use
+`--cache-dir` to choose another location. Every run still checks SHA-256 digests,
+updater payload and trusted-comment signatures, both the updater App and the
+mounted DMG, the standalone CLI and the existing upgrade bridge. Verification
+does not install or launch the app.
 
 Build from source:
 
@@ -156,57 +263,90 @@ npm ci
 npm run tauri build      # or: npm run tauri dev
 ```
 
+`npm run tauri dev` starts **Arca Dev** with its own application identifier and
+purple DEV icon. It shares your Arca data, while the installed **Arca** keeps its
+existing Dock entry. The Run script stops only this checkout's development
+processes and leaves the installed application running.
+
 ## CLI
 
-The `mux` CLI is a native Rust binary built on the same `mux-core` as the desktop app. It is bundled with the desktop app, can be downloaded separately from Releases, or built from source:
+The `arca` CLI is a native Rust binary built on the same `arca-core` as the desktop app. It is bundled with the desktop app, can be downloaded separately from Releases, or built from source:
 
 ```bash
-cargo install --path cli    # installs the `mux` binary onto your PATH
+cargo install --path cli    # installs the `arca` binary onto your PATH
 # or just build it:
-cargo build --release -p mux-cli   # → target/release/mux
+cargo build --release -p arca-cli   # → target/release/arca
 ```
 
-Everything runs against `~/.mux/`, shared with the desktop app.
+Everything runs against `~/.arca/`, shared with the desktop app.
 
-Run `mux` with **no arguments** for the **interactive TUI** — an MCP-focused,
+### Teach an Agent to use the CLI
+
+The portable [arca-cli Skill](skills/arca-cli/SKILL.md) teaches Agents to discover
+the installed CLI, configure launch paths/arguments/environment variables, manage
+MCPs, Models and Skills, and verify changes through structured output. It includes
+command recipes and guidance for shared targets, credentials and partial failures.
+
+From a local checkout, install it into Arca's central library, then assign it to
+an Agent (replace `codex` with the exact ID from `arca agent list --json`):
+
+```bash
+arca skill inspect-source --path ./skills/arca-cli --json
+arca skill install --path ./skills/arca-cli --name arca-cli --dry-run --json
+arca skill install --path ./skills/arca-cli --name arca-cli --yes --json
+arca skill assign arca-cli --agent codex --dry-run --json
+arca skill assign arca-cli --agent codex --yes --json
+arca skill status --agent codex --json
+```
+
+Review any reported risk findings before explicitly adding `--accept-risk`; a
+plain `--yes` does not accept those findings. Desktop users can import the
+`skills/arca-cli` folder through **Skills → Add**, then select it for their Agent.
+The Skill and its `references/` directory must stay together when using another
+Agent's supported Skill installation method. Start a new Agent session or use
+its supported reload mechanism after assignment.
+
+### Interactive and scripted commands
+
+Run `arca` with **no arguments** for the **interactive TUI** — an MCP-focused,
 keyboard-driven terminal workspace with three screens (Registry /
 Sources / Agents). Browse and search the MCP catalog, install to Agents, enable,
 disable, or delete entries, and manage MCP sources and Agent targets. Press `?`
-for the keymap and `q` to quit. Set `MUX_NO_TUI=1` to print help instead when a
-script invokes `mux` without arguments.
+for the keymap and `q` to quit. Set `ARCA_NO_TUI=1` to print help instead when a
+script invokes `arca` without arguments.
 
 Or drive it non-interactively with subcommands:
 
 ```text
-mux mcp {list,show,status,assign,unassign,enable,disable,enable-all,disable-all,converge,add,save,delete,export,source,icon}
-mux mcp icon {list,set,import,reset}
-mux mcp source {list,subscribe,add-local,add-builtin,refresh,enable,disable,remove}
-mux model {list,show,status,save,delete,import,assign,unassign,enable,disable,converge,use,delivery,provider,curl}
-mux model provider {list,show,templates,models,save,delete,docs}
-mux skill {list,show,status,inspect-source,install,import,update,remove,repair,check-updates,assign,unassign,enable,disable,converge}
-mux agent {list,save,configure,enable,disable,run,launch}
-mux agent launch {show,configure,reset}
-mux settings {show,terminal,locale,pins}
-mux network proxy {show,set,clear}
-mux discover [mcp|model|skill]
-mux status --agent <id> [--agent <id>] [--capability mcp|model|skill]
-mux operation {apply,review} --file request.json
-mux trace {list,show}
-mux capture {list,show}
-mux workspace
-mux upgrade
+arca mcp {list,show,status,assign,unassign,enable,disable,enable-all,disable-all,converge,add,save,delete,export,source,icon}
+arca mcp icon {list,set,import,reset}
+arca mcp source {list,subscribe,add-local,add-builtin,refresh,enable,disable,remove}
+arca model {list,show,status,save,delete,import,assign,unassign,enable,disable,converge,use,delivery,provider,curl}
+arca model provider {list,show,templates,models,save,delete,docs}
+arca skill {list,show,status,inspect-source,install,import,update,remove,repair,check-updates,assign,unassign,enable,disable,converge}
+arca agent {list,save,configure,enable,disable,run,launch}
+arca agent launch {show,configure,reset}
+arca settings {show,terminal,locale,pins}
+arca network proxy {show,set,clear}
+arca discover [mcp|model|skill]
+arca status --agent <id> [--agent <id>] [--capability mcp|model|skill]
+arca operation {apply,review} --file request.json
+arca trace {list,show}
+arca capture {prepare,environment,run,state,list,show}
+arca workspace
+arca upgrade
 ```
 
 All Agent-relationship writes use exact stable asset IDs and exactly one explicit
 `--agent <id>`. `assign` adds only the named relationships; `unassign` removes
 only those relationships; `enable` and `disable` preserve the relationship.
-`mux mcp unassign --all --agent <id>` performs a reviewed,
+`arca mcp unassign --all --agent <id>` performs a reviewed,
 target-scoped clear of managed, disabled, and external MCP entries while
 leaving the central catalog and every other Agent unchanged.
-`mux model unassign --all --agent <id>` uses the same Model clear operation as
+`arca model unassign --all --agent <id>` uses the same Model clear operation as
 Desktop, including external Models on native-registry Agents. Core protects
 shared physical stores and retains central Profiles, Providers and credentials.
-`mux model use <profile-id> --agent <id>` selects the current Model independently
+`arca model use <profile-id> --agent <id>` selects the current Model independently
 of assignment. `converge <asset-id> --agent <id> <adopt|restore|detach>` is the
 shared explicit reconciliation verb; repeating `assign`, `enable`, or `use`
 never repairs or overwrites external changes as a side effect.
@@ -218,7 +358,7 @@ re-scans before commit, so a changed observation returns `observation_stale`.
 
 The global `--json`, `--yes`, `--dry-run`, and `--no-color` options support
 machine output, reviewed automation, plan-only runs, and deterministic terminal
-output. Any command that writes—including `mux mcp export --out`—requires
+output. Any command that writes—including `arca mcp export --out`—requires
 interactive confirmation or an explicit `--yes` / `--dry-run`. See the
 [complete CLI guide](website/guide/cli.md). High-risk Skill plans additionally require
 `--accept-risk`; ordinary `--yes` does not grant a risk override. A partially
@@ -231,20 +371,30 @@ Central Model, Provider, MCP and Agent edits accept typed JSON documents via
 or ordinary JSON output. Skill source inspection and installation support the
 same GitHub, local directory and archive resolver as Desktop.
 
-Model schema upgrades migrate central MUX data and credentials without rewriting
+Model schema upgrades migrate central Arca data and credentials without rewriting
 the Agent's current files. Those files are scanned afterward as ordinary observed
 state. A capability-local migration or parser failure isolates that capability;
 only damaged shared settings or an incomplete transaction that cannot be safely
 recovered make the whole workspace read-only.
 
+Skill registration and assignment retire only their own operation records. The
+shared journal directory stays in place, so an empty directory or old cleanup
+residue does not turn a completed operation into a recovery failure. Startup
+still checks and recovers unfinished writes before further Skill mutations.
+
+Operation feedback uses one notification bar at the top right, sliding in from
+the right. Success, errors, validation, recovery, startup sync and software updates
+share this surface. Repeated messages are deduplicated; background progress
+updates one notice while other operation results remain visible above it.
+
 ---
 
 ## Data layout
 
-Everything lives under `~/.mux/`:
+Everything lives under `~/.arca/`:
 
 ```
-~/.mux/
+~/.arca/
 ├── settings.json           # agents · consumption relationships · UI/network state
 ├── assets/
 │   ├── mcps/
@@ -265,13 +415,13 @@ Everything lives under `~/.mux/`:
 Skills-specific runtime paths:
 
 ```text
-~/.mux/assets/skills/items/     managed Skill contents
-~/.mux/staging/skills/          staged candidates and internal operation plans
-~/.mux/backups/skills/          reversible replacements/removals
-~/.mux/journals/skills/         crash recovery journals
+~/.arca/assets/skills/items/     managed Skill contents
+~/.arca/staging/skills/          staged candidates and internal operation plans
+~/.arca/backups/skills/          reversible replacements/removals
+~/.arca/journals/skills/         crash recovery journals
 ```
 
-Model API keys are not stored under `~/.mux/`; they remain in macOS Keychain.
+Model API keys are not stored under `~/.arca/`; they remain in macOS Keychain.
 
 The three resource types share one typed state contract in Core and one central
 asset root, while retaining domain-specific catalogs and payload formats. Asset
@@ -288,7 +438,7 @@ credentials remain in macOS Keychain.
 2. **Choose consumers** — from an Agent page or the CLI, select compatible assets. MCPs and Skills are sets; supported multi-model Agents also keep a Model Profile set plus one independent current pointer.
 3. **Review only meaningful risk** — routine reversible Agent relationship changes sync directly with inline progress; conflicts, removals from shared Skill directories, and disruptive Model changes still show their exact impact before commit.
 4. **Commit and verify** — settings, Agent targets, and central lifecycle changes are applied as a recoverable transaction and return their verified inventory before reporting success.
-5. **Converge external state explicitly, one item at a time** — MUX detects unmanaged and externally changed MCPs, Model Profiles, and user-level Skills without changing ownership. Adopt, restore, or detach one exact revision-bound observation through a recoverable transaction.
+5. **Converge external state explicitly, one item at a time** — Arca detects unmanaged and externally changed MCPs, Model Profiles, and user-level Skills without changing ownership. Adopt, restore, or detach one exact revision-bound observation through a recoverable transaction.
 6. **Propagate central lifecycle changes** — updates reach every desired consumer; deletion clears all managed targets and relationships instead of leaving implicit orphan copies.
 
 Skills in this version are user-level only. Project-level Skills, private repositories, and Skill editing are not supported. The CLI can query and manage Agent consumption for MCPs, Models, and Skills, and explicitly converge one detected change at a time. CLI commands also cover central Model/Provider/MCP authoring, Skill lifecycle, MCP sources, Agent configuration and proxy settings. Desktop retains file dialogs, icon/locale/pinning preferences, launch integration and credential reveal/validation UI; the no-argument TUI is MCP-focused. See the [source-backed parity audit](analysis/11-cli-desktop-parity-and-bug-audit-2026-09-12.md) for remaining differences.
@@ -298,20 +448,26 @@ Skills in this version are user-level only. Project-level Skills, private reposi
 A Cargo workspace plus the Tauri desktop app:
 
 ```
-core/           # mux-core — domain contracts, application facade, resource engines, transactions
+core/           # arca-core — domain contracts, application facade, resource engines, transactions
   src/domain/       # IO-free Agent/resource/relationship/error contracts
   src/application/  # bootstrap, workspace snapshot, capability graph, plan/commit/cancel
   src/resources/    # MCP/Model/Skill-specific engines (MCP codecs no longer occupy root)
   src/assets/       # cross-domain desired/observed relationships and coordinator
-cli/            # mux-cli  — the clap-based `mux` binary, built on mux-core
-desktop/        # Tauri v2 (Rust, depends on mux-core) + React 19 + Vite + Tailwind v4
+cli/            # arca-cli  — the clap-based `arca` binary, built on arca-core
+desktop/        # Tauri v2 (Rust, depends on arca-core) + React 19 + Vite + Tailwind v4
 data/           # audited agent definitions + discovery catalog + curated MCP collection
 ```
 
 The desktop app is a separate build (`exclude`d from the workspace) so its Tauri bundle output path stays put.
 
+`tauri dev` rebuilds the desktop app, not the standalone CLI. If your `arca`
+command points to a debug binary, rebuild it with
+`cargo build -p arca-cli --target-dir desktop/src-tauri/target` and check
+`arca --version` before writing live configuration. A stale CLI can discard
+newer launch-profile fields when it saves shared settings.
+
 ```bash
-cargo test                            # mux-core + mux-cli
+cargo test                            # arca-core + arca-cli
 cd desktop/src-tauri && cargo test    # Rust core + integration tests (desktop)
 cd desktop && npm run build           # desktop frontend (tsc + vite)
 node scripts/update-agent-catalog.mjs # refresh the public client discovery catalog
@@ -332,7 +488,7 @@ open actions; a title without a documentation URL is not clickable.
 
 Agent pages include an installation status and an official download or installation
 guide link. Detection checks declared executable/application probes, not configuration
-directories; unavailable probes show an unknown state. Refocus MUX after installation to refresh detection. MUX opens the vendor page and does not run installers.
+directories; unavailable probes show an unknown state. Refocus Arca after installation to refresh detection. Arca opens the vendor page and does not run installers.
 
 CodeBuddy CLI (`codebuddy-code`), CodeBuddy, and the two WorkBuddy editions
 are separate Agents. **WorkBuddy AI** (`workbuddy`) uses
@@ -355,27 +511,67 @@ ChatGPT (`codex-desktop`) opens ChatGPT.app and shares `~/.codex/config.toml` pl
 
 Agent labels use the actual application name, or the official CLI/plugin product name. Region, version, and surface are not added to the name. Existing IDs and bindings stay stable; see the [name audit](docs/agent-name-audit.md).
 
+右下角的形态角标用于区分共用品牌图标的不同产品，共 **5 种**：
+
+| 形态 | 符号 | 颜色 | 示例 |
+| --- | --- | --- | --- |
+| 命令行 | 终端提示符 `>_` | 石板灰 | Cursor CLI、Codex CLI |
+| 桌面应用 | 显示器 | 蓝色 | ChatGPT、Claude Desktop |
+| IDE 编辑器 | 代码括号 | 紫色 | Cursor、Qoder |
+| IDE 插件 | 插头 | 琥珀色 | Codex IDE、Cline |
+| Web 应用 | 地球 | 青绿色 | ChatGPT 网页版、Claude 网页版 |
+
+Cursor 与 Cursor CLI 共用 Cursor 品牌图标，分别显示 IDE 与命令行角标。固定栏、Agent 选择卡片、详情页和资源消费者共用同一个角标组件；尺寸随品牌图标调整，边框在浅色和深色背景下保持可见，悬停显示完整名称与形态。独有品牌图标、同形态的多个发行版和未知自定义 Agent 不会被自动添加形态角标。完整分类、显示条件与组件职责见 [Agent 形态角标](docs/agent-surface-badges.md)。
+
+
+### 原生全局 Instructions / Rules
+
+Agent 详情页的 **Instructions** 展示已确认的本机全局 Prompt / Rules 文件，可直接查看原文、预览并编辑保存。保留原路径、规则条件、格式和优先级；不建立中央指令库，不提供文件删除、规则集合增删、分配或自动补写。
+
+在 **Agent → 编辑 → 配置文件** 中可输入或选择 Instructions 目录，并恢复原生默认路径。目录偏好独立保存；只改变 Arca 读取和编辑的位置，不创建、迁移或删除原文件，也不修改 Agent 的原生加载设置。
+
+只有完整检查确认没有已有原生入口时，才提供主动新建一个文件的入口；普通保存不会把外部已删除的文件重新创建。保存校验外部变化并保留草稿，已有文件保留 inode、BOM 和未编辑行的换行。同一路径的多个 Agent 读取者会标明共用影响。保存成功不代表当前模型请求已经加载，刷新方式仍遵循原生客户端。
+
+未完整确认格式、初始化或自定义后端的入口保持只读/引导。详情见 [原生指令文件](docs/instructions.md)。
 
 ### Agent Trace（本地会话）
 
 顶部「Trace」或 Agent 详情页的「Trace」按钮打开只读会话工作台。它与「网络 → Agent 抓包」不同：直接读取已有会话文件，不拦截流量、启动 Agent 或修改原始日志。
 
-自动发现 Pi、Codex CLI / ChatGPT、Claude Code 和 Gemini CLI 的默认用户级会话目录。左侧按 Agent、项目和路径查找会话，中间按页查看用户、助理、工具与其他事件，右侧按需读取完整正文、原始调用 JSON 和按调用 ID 配对的返回 JSON。复制与导出当前记录均保留原始结构及元数据，仅常见凭据脱敏。
+自动发现 Pi、Codex CLI / ChatGPT、Claude Code 和 Gemini CLI 的默认用户级会话目录。左侧按 Agent、项目和路径查找会话，右侧以对话形态阅读：用户靠右、Agent 靠左，Markdown 正文直接展示，工具调用展开查看完整输入与按原生 ID 配对的返回。原始 JSON 在独立查看器中按需读取。复制正文与复制 / 导出原始记录分别提供，原始记录保留结构及元数据，仅常见凭据脱敏。
 
-其他 Agent 可选择其导出的 JSON / JSONL 文件导入；导入只登记本次 MUX 进程内的只读文件引用，不复制到中央资产库。无法识别的格式显示通用原始事件，不猜测角色或工具配对。搜索只覆盖已加载记录的摘要，不是全文 / 全历史搜索。
+其他 Agent 可选择其导出的 JSON / JSONL 文件导入；导入只登记本次 Arca 进程内的只读文件引用，不复制到中央资产库。无法识别的格式显示通用原始事件，不猜测角色或工具配对。搜索覆盖当前已加载的正文、摘要及调用 ID，不扫描未加载历史或工具的完整原始数据。
 
 系统与内部推理条目不展示。Pi 时间线包含历史分支，原始 ID / parentId 保留。JSONL 单条记录上限 8 MiB，按 60 条原始记录分页；JSON / Gemini 文档上限 32 MiB。文件变化、无效 JSON、超限和未配对返回明确提示，不静默截断。来源路径和适配器权威在 `data/trace-sources.json` 与 Rust Core。更多边界见 [Agent Trace](docs/agent-traces.md)。
 
 ### Agent 抓包（macOS）
 
-顶部「网络 → Agent 抓包」打开独立工作台；Agent 详情页的「抓包」按钮会预选当前 Agent。
-先启动 Agent，选择实际运行的应用或独立 CLI 进程，再指定直连、MUX 已配置的代理或任意无认证 HTTP 上游地址。抓包出口独立于 MUX 自身联网设置，指定代理后失败不回退直连。
+从 Agent 详情页点击「抓包」，再点击「开始记录」即可使用默认方案；进入页面不再自动弹出配置表。进程与历史会话只展示当前 Agent。「记录选项」用于选择已有实例、工作目录或自定义出口。
+所有 Agent 共用 Core 的网络上下文：依次检查 Arca 代理、Agent 启动环境、Arca 进程环境、终端登录环境、已声明的原生网络配置和系统代理；全部未配置时才直连。记录选项会在开始前显示解析出的上游地址及来源；遇到读取失败、不可用或不支持的代理会明确提示，不自动绕过。仍可手动选择直连、Arca 代理或无认证 HTTP 上游。原生配置的位置、格式及字段由 `data/agent-network-sources.json` 声明；共享解析器支持 JSON、TOML 和 YAML 来源，扩展客户端时复用相同的来源接口、优先级、校验和错误处理。
 
-依赖本机官方 mitmproxy（`mitmdump`）。在系统设置「通用 → 登录项与扩展」启用 Mitmproxy Redirector 网络扩展，客户端还需信任 `~/.mitmproxy/mitmproxy-ca-cert.pem`。MUX 只检查状态，不自动安装证书或批准系统权限，也不自动重启 Agent。共享 Node / Python 进程不自动绑定；界面展示实际进程范围，用户须核对后开始。
+首次缺少引擎时，按钮显示「下载并开始」。Arca 从 mitmproxy 官方地址下载固定的 12.2.1 包，验证固定 SHA-256 与 macOS 代码签名，原子安装到 `~/.arca/captures/runtime/`。无需预装 Homebrew、Python 或修改 shell 配置；已有私有组件优先复用，也可使用已有 `mitmdump`。下载或校验失败不会发布半成品，也不会关闭 TLS 校验。
 
-Request / Response 可查看 Headers、文本 Body 与 SSE，并复制或导出单条 / 整会话 JSON。记录保存于 `~/.mux/captures/`（或 `MUX_HOME/captures/`），目录 0700、文件 0600。常见认证头和令牌字段脱敏后才落盘；这不是任意正文的完整隐私审计。二进制正文不保存，单条正文最多 2 MiB，会话最多 5000 条 / 100 MiB。导出也是脱敏后的记录，不是原始网络包。
+Codex CLI、Pi 的「启动并记录」自动使用本机临时代理：引擎先就绪并分配空闲端口，再带代理与额外公开 CA 启动 Agent，无需网络扩展或系统证书授权，也能接到启动阶段的请求。策略由 `data/capture-agent-profiles.json` 控制，其他客户端不会被未经验证地切换到此方式。只有经过该代理的请求可见；绕过代理的 SDK、原始 TCP/UDP 不在此路径覆盖范围内。
 
-第一版仅保证已验证的 HTTP / HTTPS 路径；不支持认证上游或 SOCKS。代理出口下 DNS 通过同一代理访问 Cloudflare DoH；解析失败不回退直连 DNS。无法通过 HTTP 上游的连接会失败。证书固定、UDP / QUIC、未触发功能、进程更新间隙均不能算作全量覆盖；更新范围会等待已有请求完成，等待期间新进程尚未纳入。停止会话或退出 MUX 会结束 MUX 启动的抓包器，不停止已有代理服务。
+临时抓包端口与网络出口是两层：Agent → Arca 临时端口 → 已配置的上游代理 → 模型服务，地址和端口均从上下文取得。需要代理访问模型时，在记录选项确认上游地址，或选择「自定义 HTTP 代理」；将客户端入口直接指向上游会跳过记录。尚未保存到配置或启动环境、仅在另一个终端窗口临时设置的变量，需要在记录选项显式指定。共享网络层可解析 HTTP/SOCKS 来源；当前抓包传输只接受 HTTP 上游，遇到其他协议会明确拒绝。
+
+macOS 上，`⌘W` 和红色关闭按钮收起 Arca 主窗口，保留页面状态、后台任务与抓包；点击 Dock 图标重新打开。`⌘H` 隐藏应用，`⌘Q` 才退出并执行抓包收尾。
+
+桌面客户端和已有进程仍使用按进程的系统网络扩展。首次开始时由官方引擎安装并注册 Mitmproxy Redirector；通知条提供「打开授权设置」，批准后自动继续，最多等待 3 分钟。普通引擎启动上限为 12 秒。Arca 不代替用户批准系统权限。启动失败和引擎意外退出会清理本次引擎的进程组并释放抓包锁；不会通过删除锁文件或结束 Agent 进程绕过占用。
+
+HTTPS 记录涉及 `~/.mitmproxy/mitmproxy-ca-cert.pem`。「启动并记录」给支持的运行时传入临时公开证书集合，保留 TLS 校验，不保存启动偏好或凭据。需要系统信任的客户端提供「打开证书设置」：Arca 自动生成证书并打开钥匙串访问，用户完成一次 SSL 信任授权后返回，环境状态自动刷新。Arca 不静默信任根证书。Cursor、Qoder 的额外 CA 只覆盖采用它的 Node 请求；Codex 桌面端关闭了 Electron 的 NodeOptions fuse，无法依靠 `NODE_EXTRA_CA_CERTS`。系统 CA 未信任时，系统型客户端仍拒绝开始，避免中断现有 HTTPS 请求。浏览器网络栈、证书固定和已经打开的单实例应用仍需分别验证。
+
+按实际 launcher 和可执行文件识别 Cursor、Grok Build、Qoder IDE/Desktop、Codex CLI/Desktop、Pi、Qoder CLI、OpenCode CLI/Desktop、QwenWork、QwenWorkCN 与 QoderWork。桌面应用可选择整个应用或独立顶层 PID 实例；CLI 实例也使用 PID 与启动时间绑定，跟踪其后代。Node/Bun 按脚本路径、已核验的包入口或 Pi 的进程标题识别，不会捕获所有 Node 进程。适配记录和「可启动」不代表该产品已经完成真实请求验证；未安装的客户端没有可选择的进程。
+
+OpenCode Desktop 的本地模型服务继承公开 CA 集合，辅助进程随应用纳入记录；1.19.0 官方 GUI 的本机 HTTPS / gzip SSE 链路已验证。QoderWork 0.9.18 的 Node 网络探针已验证，GUI 模型请求仍待账号条件具备后检查。两者按混合网络栈处理，浏览器请求仍受系统信任条件限制。完整的逐客户端证据和未验证项见 [抓包验收记录](analysis/16-agent-capture-workbench.md)。
+
+工作台提供 Structure 主机/路径树、Sequence 时序表和可调整的面板。Overview / Request / Response / Timing 显示状态、协议、Headers、Query、文本 Body、首字节耗时与流量大小。请求发出即记录，SSE 的完整事件会在结束前增量更新，选中详情自动刷新；支持分片 UTF-8、gzip、deflate 和多行 data。WebSocket 请求保持流式状态，Request / Response 分别展示客户端 / 服务端消息、序号和时间，完整文本分片重组后脱敏；最多保存 512 条 / 2 MiB 文本，二进制消息只记录长度与省略标记，原始传输不修改。复制与 JSON 导出只包含已脱敏内容。记录保存于 `~/.arca/captures/`（或 `ARCA_HOME/captures/`），目录 0700、文件 0600。常见认证头和令牌字段脱敏后才落盘；这不是任意正文的完整隐私审计。二进制、Multipart、无法安全解析的 JSON 和不支持的压缩正文不保存；正文最多 2 MiB，会话最多 5000 条 / 100 MiB。
+
+只保证已实际验证的 HTTP / HTTPS 路径；不支持认证上游、SOCKS 或自动代理脚本。网络扩展路径的 DNS 通过同一代理访问 Cloudflare DoH；解析失败不回退直连 DNS。无法通过 HTTP 上游的连接会失败。每两秒刷新进程范围，长 SSE 不再阻塞新进程纳入；短生命周期子进程和切换间隙仍不能算作全量覆盖。
+
+停止记录时收尾未完成记录并释放记录锁。系统网络扩展路径会退出引擎。由临时代理启动的 CLI 则保留仅转发、不保存请求的辅助进程，避免 Agent 断网；Arca 或 CLI 记录命令退出时也会停止保存并继续转发，直到绑定的 Agent 实例退出。它只监听本机随机端口，不修改全局网络设置。现有流上的记录到停止时截止，后续请求不再进入会话文件。
 
 
-网络扩展可能按系统顺序先接管连接。若已有 ProxyBridge 等目标应用代理规则，请在抓包期间只暂停目标规则并重建目标连接，完成后恢复原规则；MUX 不自动修改其他工具的规则。本机回环通信保留原出口，回环 HTTPS 不解密，避免破坏桌面 Agent 内部页面或 IPC；Agent 自身配置了本机代理 / 网关时，它的最终公网请求可能由其他进程发出，须单独核对拦截范围，不能按全量覆盖处理。
+网络扩展可能按系统顺序先接管连接。若已有 ProxyBridge 等目标应用代理规则，请在抓包期间只暂停目标规则并重建目标连接，完成后恢复原规则；Arca 不自动修改其他工具的规则。普通回环 HTTPS 不解密，避免破坏内部页面和 IPC；中央 Provider 明确配置的回环 HTTPS 模型端点会纳入解密范围，仍需客户端信任与引擎实际覆盖。Agent 自己配置的代理/网关（包括继承的 HTTP_PROXY 等环境变量）可能让最终请求由其他进程发出，必须核对来源进程，不能据此宣称全量覆盖。
+
+CLI 使用同一 core：`arca --json capture prepare` 提前安装并验证私有组件；`capture environment` 查询适配与实际进程；`arca --json capture run --agent pi --launch --seconds 60` 自动准备并启动记录，默认出口为 `auto`；也可用 `--target "<target-id>"` 记录已有进程。`capture state <session-id>` 查询实时状态；`capture list` / `capture show <session-id> --flow <flow-id>` 查看脱敏记录。Desktop 可查看 CLI 发起的会话并请求停止。多实例共享记录锁，所有者与引擎以 PID 和启动时间核验；转发辅助进程不占用记录锁，不再写入请求。异常退出或容量限制导致的未完成请求显示为已中断。

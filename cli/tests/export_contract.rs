@@ -9,35 +9,35 @@ fn temporary_home() -> std::path::PathBuf {
         .as_nanos();
     let temp_root = fs::canonicalize(std::env::temp_dir()).expect("canonical temporary root");
     temp_root.join(format!(
-        "mux-export-contract-{}-{nonce}",
+        "arca-export-contract-{}-{nonce}",
         std::process::id()
     ))
 }
 
 fn run(home: &std::path::Path, args: &[&std::ffi::OsStr]) -> Output {
-    let mux_home = home.join(".mux");
+    let arca_home = home.join(".arca");
     let probe_root = home.join("probe");
-    let mut command = Command::new(env!("CARGO_BIN_EXE_mux"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_arca"));
     command
         .args(args)
         .env("HOME", home)
-        .env("MUX_HOME", &mux_home)
-        .env("MUX_TEST_PROBE_ROOT", &probe_root)
-        .env("MUX_NO_UPDATE_CHECK", "1");
-    command.output().expect("run isolated mux command")
+        .env("ARCA_HOME", &arca_home)
+        .env("ARCA_TEST_PROBE_ROOT", &probe_root)
+        .env("ARCA_NO_UPDATE_CHECK", "1");
+    command.output().expect("run isolated arca command")
 }
 
 #[test]
 fn file_export_requires_consent_is_private_and_never_echoes_or_overwrites_secrets() {
     let home = temporary_home();
-    let mux_home = home.join(".mux");
-    fs::create_dir_all(&mux_home).expect("create isolated MUX home");
+    let arca_home = home.join(".arca");
+    fs::create_dir_all(&arca_home).expect("create isolated Arca home");
     fs::create_dir_all(home.join("probe")).expect("create isolated probe root");
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(&mux_home, fs::Permissions::from_mode(0o700))
-            .expect("secure isolated MUX home");
+        fs::set_permissions(&arca_home, fs::Permissions::from_mode(0o700))
+            .expect("secure isolated Arca home");
     }
 
     let secret = "EXPORT_SECRET_SENTINEL";
@@ -150,11 +150,11 @@ fn file_export_requires_consent_is_private_and_never_echoes_or_overwrites_secret
 #[test]
 fn json_errors_do_not_echo_invalid_configuration_or_absolute_paths() {
     let home = temporary_home();
-    let mux_home = home.join(".mux");
-    fs::create_dir_all(&mux_home).expect("create isolated MUX home");
+    let arca_home = home.join(".arca");
+    fs::create_dir_all(&arca_home).expect("create isolated Arca home");
     fs::create_dir_all(home.join("probe")).expect("create isolated probe root");
     fs::write(
-        mux_home.join("settings.json"),
+        arca_home.join("settings.json"),
         "{ INVALID_SETTINGS_SECRET_SENTINEL",
     )
     .expect("seed invalid settings");

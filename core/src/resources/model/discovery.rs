@@ -1,4 +1,4 @@
-use super::{full_request_url, provider_credential_subject, read_credential_checked};
+use super::full_request_url;
 use crate::domain::types::{ApiKeySource, AuthRequirement, ModelProtocol, ModelProviderConfig};
 use serde::Serialize;
 use serde_json::Value;
@@ -59,7 +59,7 @@ pub(super) fn model_discovery_supported(provider_type: &str) -> bool {
         | "stepfun" | "stepfun-global"
         | "featherless-ai" | "upstage" | "ai21" | "byteplus"
         | "tencent-tokenhub-cn" | "tencent-tokenhub-global" | "iflytek-spark-x2" | "nscale" | "tinfoil-proxy"
-        | "infini-ai" | "302-ai" | "portkey" | "helicone")
+        | "infini-ai" | "302-ai" | "portkey" | "helicone" | "ant-ling" | "antdigital-dtmaas")
 }
 
 pub(super) fn provider_model_discovery_supported(provider: &ModelProviderConfig) -> bool {
@@ -70,7 +70,6 @@ pub(super) fn provider_model_discovery_supported(provider: &ModelProviderConfig)
 /// credential helpers and HTTP run only after that gate has been released.
 pub(crate) struct ModelDiscoveryInput {
     provider: ModelProviderConfig,
-    stored_credential: Option<Zeroizing<Vec<u8>>>,
 }
 
 pub(crate) fn prepare_provider_discovery(provider_id: &str) -> Result<ModelDiscoveryInput, String> {
@@ -78,11 +77,7 @@ pub(crate) fn prepare_provider_discovery(provider_id: &str) -> Result<ModelDisco
     let provider = settings.model_providers.as_ref()
         .and_then(|providers| providers.get(provider_id)).cloned()
         .ok_or_else(|| format!("model_provider_not_found: Provider '{provider_id}' does not exist"))?;
-    let stored_credential = if provider.auth_requirement != AuthRequirement::None
-        && matches!(provider.api_key_source, None | Some(ApiKeySource::MuxStore)) {
-        read_credential_checked(&provider_credential_subject(provider_id))?.map(Zeroizing::new)
-    } else { None };
-    Ok(ModelDiscoveryInput { provider, stored_credential })
+    Ok(ModelDiscoveryInput { provider })
 }
 
 pub fn discover_provider_models(provider_id: &str) -> Result<Vec<ProviderModelSummary>, String> {
@@ -92,16 +87,20 @@ pub fn discover_provider_models(provider_id: &str) -> Result<Vec<ProviderModelSu
 pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<Vec<ProviderModelSummary>, String> {
     let provider = &input.provider;
     let spec = discovery_spec_for_provider(provider)?;
+    let stored_credential = if provider.auth_requirement != AuthRequirement::None
+        && matches!(provider.api_key_source, None | Some(ApiKeySource::ArcaStore)) {
+        super::read_runtime_provider_credential(&provider.id)?.map(Zeroizing::new)
+    } else { None };
     let source = provider.api_key_source.clone().or_else(||
-        input.stored_credential.is_some().then_some(ApiKeySource::MuxStore));
+        stored_credential.is_some().then_some(ApiKeySource::ArcaStore));
     let credential = if provider.auth_requirement == AuthRequirement::None {
         None
-    } else if matches!(source, Some(ApiKeySource::MuxStore))
-        && input.stored_credential.is_none() && provider.auth_requirement == AuthRequirement::Optional {
+    } else if matches!(source, Some(ApiKeySource::ArcaStore))
+        && stored_credential.is_none() && provider.auth_requirement == AuthRequirement::Optional {
         None
     } else if let Some(source) = source.as_ref() {
         let resolved = super::credential::resolve_source(source,
-            input.stored_credential.as_ref().map(|bytes| bytes.to_vec()))?;
+            stored_credential.as_ref().map(|bytes| bytes.to_vec()))?;
         Some(Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
             .map_err(|_| "model_provider_credential_invalid: API Key is not UTF-8".to_string())?))
     } else if provider.auth_requirement == AuthRequirement::Required {
@@ -178,6 +177,42 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "infron"
         | "apinex"
         | "tokenharbor"
+        | "flock"
+        | "codecraft"
+        | "beatapi"
+        | "experiential-labs"
+        | "runanywhere"
+        | "coralbricks"
+        | "meta"
+        | "maximo-ai"
+        | "krafton-raon"
+        | "clean-apis"
+        | "dolphin"
+        | "iteracompute"
+        | "llmtr"
+        | "munito"
+        | "nous-portal"
+        | "ppq"
+        | "river"
+        | "trustedrouter"
+        | "unorouter"
+        | "orcarouter"
+        | "fikra"
+        | "constellation-gate"
+        | "unisound"
+        | "bilibili-index-translate"
+        | "sensenova"
+        | "akashml"
+        | "0g-private-computer"
+        | "gonkarouter"
+        | "runinfra"
+        | "nomask"
+        | "anyrouter"
+        | "yeta"
+        | "scnet"
+        | "oxion-ai"
+        | "blazerail"
+        | "larprouter"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -255,6 +290,20 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "io-net"
             | "inception"
             | "ollama-cloud"
+            | "maximo-ai"
+            | "iteracompute"
+            | "llmtr"
+            | "munito"
+            | "nous-portal"
+            | "ppq"
+            | "trustedrouter"
+            | "orcarouter"
+            | "fikra"
+            | "constellation-gate"
+            | "0g-private-computer"
+            | "bilibili-index-translate"
+            | "anyrouter"
+            | "blazerail"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -323,10 +372,16 @@ fn discovery_url(provider: &ModelProviderConfig, adapter: DiscoveryAdapter) -> R
     }
     match adapter {
         DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra => [
-            ModelProtocol::OpenaiResponses,
-            ModelProtocol::OpenaiCompletions,
+            // Prefer the Provider's reviewed OpenAI protocol. An additional
+            // generic Responses path must not discard a plan/tenant prefix.
+            super::list_providers().iter().find(|template| template.id == provider.provider)
+                .map(|template| template.default_protocol.clone())
+                .filter(|protocol| matches!(protocol, ModelProtocol::OpenaiResponses | ModelProtocol::OpenaiCompletions)),
+            Some(ModelProtocol::OpenaiResponses),
+            Some(ModelProtocol::OpenaiCompletions),
         ]
         .into_iter()
+        .flatten()
         .find_map(|protocol| {
             provider
                 .protocols
@@ -624,7 +679,7 @@ fn discovery_agent_with_timeout(timeout: Duration) -> Result<ureq::Agent, String
             .max_redirects(0)
             .http_status_as_error(false)
             .timeout_global(Some(timeout))
-            .user_agent("mux-provider-model-discovery"),
+            .user_agent("arca-provider-model-discovery"),
     )
 }
 
@@ -781,6 +836,110 @@ mod tests {
     }
 
     #[test]
+    fn stark_relay_has_no_reviewed_catalog_spec_and_falls_back_to_the_openai_models_path() {
+        assert!(reviewed_discovery_spec("stark-relay").is_none());
+        let config = provider(
+            "stark-relay",
+            "https://starkrelay.bond",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://starkrelay.bond/v1/models"
+        );
+    }
+
+    #[test]
+    fn inferx_has_no_reviewed_catalog_spec_and_falls_back_to_the_openai_models_path() {
+        assert!(reviewed_discovery_spec("inferx").is_none());
+        let config = provider(
+            "inferx",
+            "https://model.inferx.net/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://model.inferx.net/v1/models"
+        );
+    }
+
+    #[test]
+    fn blazerail_discovers_the_public_openai_catalog() {
+        let config = provider(
+            "blazerail",
+            "https://api.blazerail.com/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.blazerail.com/v1/models"
+        );
+    }
+
+    #[test]
+    fn larprouter_discovers_openai_models_on_the_documented_catalog_path() {
+        let config = provider(
+            "larprouter",
+            "https://larprouter.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://larprouter.com/v1/models"
+        );
+    }
+
+    #[test]
+    fn oxion_ai_discovers_openai_models_on_the_documented_catalog_path() {
+        let config = provider(
+            "oxion-ai",
+            "https://oxionai.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://oxionai.com/v1/models"
+        );
+    }
+
+    #[test]
+    fn scnet_discovers_openai_models_on_the_documented_catalog_path() {
+        let config = provider(
+            "scnet",
+            "https://api.scnet.cn",
+            ModelProtocol::OpenaiCompletions,
+            "/api/llm/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.scnet.cn/api/llm/v1/models"
+        );
+    }
+
+    #[test]
     fn manual_catalogs_require_an_explicit_override_before_discovery() {
         for id in ["azure-openai", "perplexity", "baidu-qianfan-coding-plan"] {
             let mut config = provider(id, "https://tenant.example.test/openai/v1",
@@ -793,6 +952,22 @@ mod tests {
         }
     }
 
+    #[test]
+    fn step_plan_catalog_uses_the_reviewed_chat_prefix_before_generic_responses() {
+        for (id, origin) in [("stepfun-step-plan", "https://api.stepfun.com"),
+            ("stepfun-ai-step-plan", "https://api.stepfun.ai")] {
+            let mut config = provider(id, origin, ModelProtocol::OpenaiResponses, "/responses");
+            config.protocols.insert(ModelProtocol::OpenaiCompletions,
+                crate::domain::types::ModelProviderProtocolConfig { endpoint_path: "/step_plan/v1/chat/completions".into() });
+            let spec = discovery_spec_for_provider(&config).unwrap();
+            assert_eq!(discovery_url(&config, spec.adapter).unwrap().as_str(),
+                format!("{origin}/step_plan/v1/models"));
+            config.model_catalog_url = Some(format!("{origin}/custom-catalog"));
+            assert_eq!(discovery_url(&config, spec.adapter).unwrap().as_str(),
+                format!("{origin}/custom-catalog"));
+        }
+    }
+
     const EXPECTED_OPENAI_COMPATIBLE: &[&str] = &[
         "openrouter",
         "openai",
@@ -801,6 +976,42 @@ mod tests {
         "infron",
         "apinex",
         "tokenharbor",
+        "flock",
+        "codecraft",
+        "beatapi",
+        "experiential-labs",
+        "runanywhere",
+        "coralbricks",
+        "meta",
+        "maximo-ai",
+        "krafton-raon",
+        "clean-apis",
+        "dolphin",
+        "iteracompute",
+        "llmtr",
+        "munito",
+        "nous-portal",
+        "ppq",
+        "river",
+        "trustedrouter",
+        "unorouter",
+        "orcarouter",
+        "fikra",
+        "constellation-gate",
+        "unisound",
+        "bilibili-index-translate",
+        "sensenova",
+        "akashml",
+        "0g-private-computer",
+        "gonkarouter",
+        "runinfra",
+        "nomask",
+        "anyrouter",
+        "yeta",
+        "scnet",
+        "oxion-ai",
+        "blazerail",
+        "larprouter",
         "mistral",
         "deepseek",
         "groq",
@@ -921,7 +1132,8 @@ mod tests {
 
     #[test]
     fn distinguishes_manual_catalogs_from_compatible_custom_providers() {
-        for id in ["github-models", "azure-openai", "perplexity", "volcengine-coding-plan", "baidu-qianfan"] {
+        for id in ["github-models", "azure-openai", "perplexity", "volcengine-coding-plan", "baidu-qianfan",
+            "ant-ling", "antdigital-dtmaas"] {
             assert!(!model_discovery_supported(id), "{id}");
         }
         for provider_type in ["wandb", "custom", "private-gateway", "deepinfra", "amazon-bedrock-mantle"] {
@@ -967,6 +1179,20 @@ mod tests {
             "ollama",
             "lm-studio",
             "vllm",
+            "maximo-ai",
+            "iteracompute",
+            "llmtr",
+            "munito",
+            "nous-portal",
+            "ppq",
+            "trustedrouter",
+            "orcarouter",
+            "fikra",
+            "constellation-gate",
+            "0g-private-computer",
+            "bilibili-index-translate",
+            "anyrouter",
+            "blazerail",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -974,7 +1200,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
@@ -1261,7 +1487,7 @@ mod tests {
             let mut config = provider("openai", url.as_str(), ModelProtocol::OpenaiResponses, "/responses");
             config.auth_requirement = requirement.clone();
             config.api_key_source = Some(ApiKeySource::File { path: path.to_string_lossy().into_owned() });
-            execute_provider_discovery(ModelDiscoveryInput { provider: config, stored_credential: None }).unwrap();
+            execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
             let request = request.recv().unwrap().to_ascii_lowercase();
             handle.join().unwrap();
             assert_eq!(request.contains("authorization: bearer fixture-file-key"), requirement == AuthRequirement::Required);

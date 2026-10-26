@@ -4,12 +4,13 @@ A read-only, local session viewer, independent from network capture and MCP / Mo
 
 ## Navigation
 
-Open **Trace** in the top bar, or use **Trace** on an Agent page to preselect its source. The workspace has three panes: sessions, conversation / tool events, and full native records. Unsupported Agents open an import-only filter rather than showing another Agent's sessions as their own.
+Open **Trace** in the top bar, or use **Trace** on an Agent page to preselect its source. The workspace has a session sidebar and a wide conversation pane. User messages align right; Agent replies align left, with Markdown rendered inline. Tools remain compact until expanded; original records open in a separate inspector. Unsupported Agents open an import-only filter rather than showing another Agent's sessions as their own.
 
 - Session search: title, Agent name, project and file path.
-- Event search: already-loaded previews, tool names and call IDs. It does not scan full raw bodies or unloaded history.
+- Event search: already-loaded message text, previews, tool names and call IDs. It does not scan full raw bodies or unloaded history.
 - Role filters: user, assistant, tool calls / results, and other events.
-- Select a tool call to inspect its complete native JSON and its paired result.
+- Expand a tool card for full input and native-ID-paired results. Only an immediately adjacent result with the exact same native call ID is folded into its card; interleaved and unmatched events keep their original timeline position.
+- Inspect any message or tool to open its complete redacted native JSON. Copy message text independently from raw JSON.
 - Copy or export the selected record and paired result; export is not a whole-session export.
 - Refresh explicitly after the Agent appends to or rewrites a session.
 
@@ -31,7 +32,7 @@ Custom session roots, database-backed histories, remote hosts and cloud history 
 
 Raw calls/results retain their native fields and nesting, including tool-result metadata, error flags and nested tool-call information when recorded by the Agent. There is no content summarization or silent truncation of the selected raw record. Conversational system / internal-reasoning fields are omitted, and common credential fields, bearer tokens, OAuth query secrets and explicitly identified passwords are masked **before IPC, copying or exporting**.
 
-Redaction is conservative and is not a full privacy audit of arbitrary prose, files, screenshots or binary data. Raw previews are local React text nodes, not executable HTML. Do not share exported records without reviewing them.
+Redaction is conservative and is not a full privacy audit of arbitrary prose, files, screenshots or binary data. Markdown omits HTML, renders external links only as explicit opener actions, and displays image placeholders without fetching remote assets. Raw records remain React text nodes. Do not share exported records without reviewing them.
 
 Tools are paired by their native call ID, never by adjacency. For stream formats, pairing searches at most the following 1000 records / 32 MiB. A missing result explicitly states the bounded search scope; it is not proof that the Agent never produced a result. Opaque image content remains in raw JSON; there is no remote asset loading.
 
@@ -45,7 +46,8 @@ Tools are paired by their native call ID, never by adjacency. For stream formats
 - Unix reads anchor every path component with no-follow directory/file descriptors; symbolic-link records, non-regular files and path substitution are rejected.
 - Agent files are opened read-only. No trace data is uploaded, no commands from logs are executed, and no configuration or Keychain entries are read or modified.
 - Imported file references, discovered identities and password-redaction context remain in memory only, scoped to the current user directory.
-- The detail cache holds at most six records in memory. No persistent trace cache or duplicate transcript is created under `~/.mux`.
+- Inline message text is redacted before taking a UTF-8-safe prefix, bounded to 32 KiB per message and 512 KiB per page. Larger messages explicitly offer the full reader. The frontend releases older inline bodies above a 2 MiB estimated string budget while preserving summaries and IDs. Search covers only retained content.
+- The detail cache holds at most six records / 4 MiB estimated JSON memory. Large text and Markdown use navigable segments of 32 Ki UTF-16 units / 800 lines; JSON is prettified only within its size budget. No persistent trace cache or duplicate transcript is created under `~/.arca`.
 - Export creates a new selected file with mode 0600 on Unix. Existing files, including transcripts, are never silently overwritten.
 
-Regression fixtures in `core/tests/traces.rs` cover native adapters, exact ID pairing, password masking, source revisions, immutable source files, private export permissions and rejected symlinks. Frontend preview filters have independent tests in `desktop/src/lib/traces.test.ts`. Tests follow MUX's isolated HOME contract and only run when explicitly requested.
+Regression fixtures in `core/tests/traces.rs` cover native adapters, exact ID pairing, password masking, source revisions, immutable source files, private export permissions and rejected symlinks. Frontend preview filters have independent tests in `desktop/src/lib/traces.test.ts`. Tests follow Arca's isolated HOME contract and only run when explicitly requested.

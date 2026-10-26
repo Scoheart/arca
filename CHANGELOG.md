@@ -1,5 +1,431 @@
 # Changelog
 
+## [2.9.0](https://github.com/Scoheart/arca/compare/v2.8.0...v2.9.0) (2026-10-25)
+
+### Changes
+
+* fix(delivery): isolate Arca Dev and reuse verified downloads ([dc8f97c](https://github.com/Scoheart/arca/commit/dc8f97cde008c471a34353a1571b13f6d2fa4505))
+* feat(credentials): share application authorization session ([5f9b322](https://github.com/Scoheart/arca/commit/5f9b322c9f8f9846e1e3ef319d3ad5288d1d4906))
+
+## [2.8.0](https://github.com/Scoheart/arca/compare/v2.7.0...v2.8.0) (2026-10-25)
+
+### Changes
+
+* feat(models): streamline provider setup and request commands ([c53e893](https://github.com/Scoheart/arca/commit/c53e893d2285f8c57d25de4ae0bb7f179180c938))
+
+## [2.7.0](https://github.com/Scoheart/arca/compare/v2.6.2...v2.7.0) (2026-10-25)
+
+### Changes
+
+* feat(codex): edit native and Arca launch configuration ([8fa39b2](https://github.com/Scoheart/arca/commit/8fa39b258db6bb6e9df3d06ae387f7a2581e3023))
+
+## [2.6.2](https://github.com/Scoheart/arca/compare/v2.6.1...v2.6.2) (2026-10-25)
+
+### Changes
+
+* fix(launch): review launch settings before running agents ([533ff03](https://github.com/Scoheart/arca/commit/533ff0367d307cb4b4418f253d02cd2ccce48dfa))
+
+## [2.6.1](https://github.com/Scoheart/arca/compare/v2.6.0...v2.6.1) (2026-10-25)
+
+### Changes
+
+* fix(launch): remove redundant profile hint and divider ([1843094](https://github.com/Scoheart/arca/commit/1843094308d4d428ca49ba1e7dac1b3c9258ced7))
+
+## [2.6.0](https://github.com/Scoheart/arca/compare/v2.5.29...v2.6.0) (2026-10-25)
+
+### Changes
+
+* feat(launch): add named profiles with immutable empty default ([5dd44b9](https://github.com/Scoheart/arca/commit/5dd44b98799a7b28c5cec266c5f0aa68158fdcfe))
+
+## [2.5.29](https://github.com/Scoheart/arca/compare/v2.5.28...v2.5.29) (2026-10-24)
+
+### Changes
+
+* feat(models): add Stark Relay OpenAI-compatible provider (#247) ([b488ffd](https://github.com/Scoheart/arca/commit/b488ffd1747c099c3f67926b90cb14a09eb01e20))
+
+## [2.5.28](https://github.com/Scoheart/arca/compare/v2.5.27...v2.5.28) (2026-10-24)
+
+### Changes
+
+* feat(models): add LarpRouter gateway provider (#246) ([c34c39d](https://github.com/Scoheart/arca/commit/c34c39d18f69f278ef615b710ce1b720a19aad92))
+
+## [2.5.27](https://github.com/Scoheart/arca/compare/v2.5.26...v2.5.27) (2026-10-24)
+
+### Changes
+
+* feat(models): add BlazeRail OpenAI-compatible provider (#245) ([ac9bdb0](https://github.com/Scoheart/arca/commit/ac9bdb0142a4f1324bcaaf4b5691812897f76b61))
+
+## [2.5.26](https://github.com/Scoheart/arca/compare/v2.5.25...v2.5.26) (2026-10-24)
+
+### Changes
+
+* feat(models): add InferX OpenAI-compatible provider (#244) ([7dae1b0](https://github.com/Scoheart/arca/commit/7dae1b08298aad5e9201e0f7c4b25899ef396b48))
+
+## [2.5.25](https://github.com/Scoheart/arca/compare/v2.5.24...v2.5.25) (2026-10-24)
+
+### Changes
+
+* feat(models): add Oxion AI OpenAI-compatible provider (#243) ([8d551de](https://github.com/Scoheart/arca/commit/8d551de06103ecdfa3186e6d210c281091145cd9))
+
+## [2.5.24](https://github.com/Scoheart/arca/compare/v2.5.23...v2.5.24) (2026-10-24)
+
+### Changes
+
+* feat(models): add SCNet OpenAI-compatible provider (#242) ([4a81fbe](https://github.com/Scoheart/arca/commit/4a81fbe96f7615159c3089dc611272b8f715eb26))
+
+## [2.5.23](https://github.com/Scoheart/arca/compare/v2.5.22...v2.5.23) (2026-10-24)
+
+### Changes
+
+* feat(models): add official Yeta provider icon ([c83092b](https://github.com/Scoheart/arca/commit/c83092bd42a6aaf06ba4a09dfbe7a2aeaee53748))
+
+## [2.5.22](https://github.com/Scoheart/arca/compare/v2.5.21...v2.5.22) (2026-10-24)
+
+### Changes
+
+* feat(models): add Yeta OpenAI-compatible provider (#240) ([98c80c0](https://github.com/Scoheart/arca/commit/98c80c0a0cdfa8ffed2fac286403ae45acc7bd2e))
+
+## [2.5.21](https://github.com/Scoheart/arca/compare/v2.5.20...v2.5.21) (2026-10-24)
+
+### Changes
+
+* feat(models): add official icons for all uncovered Providers ([b5203ba](https://github.com/Scoheart/arca/commit/b5203ba9d59b0f4f6cf4eaa838ed96362d8711a3))
+
+## [2.5.20](https://github.com/Scoheart/arca/compare/v2.5.19...v2.5.20) (2026-10-24)
+
+### Changes
+
+* chore(deps): bump Swatinem/rust-cache ([1d5fa0c](https://github.com/Scoheart/arca/commit/1d5fa0c3b418b902ce46829879e7f9243b91cdeb))
+* chore(deps): bump actions/setup-node ([0f8007f](https://github.com/Scoheart/arca/commit/0f8007f20d8e2f008f44fb44160245a14b249d78))
+* chore(deps): bump yaml-edit from 0.2.3 to 0.3.1 (#169) ([4b104b1](https://github.com/Scoheart/arca/commit/4b104b1e0b24fe3995e025afeb1348f963ffd5df))
+* chore(deps): bump dirs from 5.0.1 to 7.0.0 (#168) ([6b3c923](https://github.com/Scoheart/arca/commit/6b3c9239af43c15fce8147d72c292d260df8731e))
+* chore(deps): bump the workspace-minor-patch group across 1 directory with 9 updates (#220) ([4a43cb0](https://github.com/Scoheart/arca/commit/4a43cb0ac1524d79c64faf16c88950dc7cb84634))
+* chore(deps): bump the tauri-minor-patch group across 1 directory with 12 updates (#214) ([d8c00a7](https://github.com/Scoheart/arca/commit/d8c00a76d8d97c7a406d085100b9a3d02326ca3b))
+* chore(deps): bump the desktop-minor-patch group across 1 directory with 16 updates (#202) ([214f093](https://github.com/Scoheart/arca/commit/214f093a1c5020ad1022e3d5a17259f723b0eff4))
+* chore(deps-dev): bump @testing-library/jest-dom from 6.9.1 to 7.0.1 in /desktop (#165) ([dad09c1](https://github.com/Scoheart/arca/commit/dad09c17b2c2def5cc529ba46b1f6e5c11ff3462))
+* \[ImgBot] Optimize images (#162) ([33fd7f8](https://github.com/Scoheart/arca/commit/33fd7f8a64270407b97c54887f7a58b7063ef82d))
+* chore(deps): bump Swatinem/rust-cache from e18b497 to f0d9c38 (#163) ([30b3fff](https://github.com/Scoheart/arca/commit/30b3fff4a453b1c66937de8999d8de399408370f))
+* chore(deps): bump actions/setup-node from 7.0.0 to 7.1.0 in the actions-minor-patch group (#206) ([d698839](https://github.com/Scoheart/arca/commit/d6988399aa3862970feffcd9d8317a9d3f2410ef))
+* chore(deps): bump yaml-edit from 0.3.1 to 0.3.2 in the workspace-minor-patch group across 1 directory (#239) ([0b6ba67](https://github.com/Scoheart/arca/commit/0b6ba67349f8565a1f4926bc2771542bf4890f5f))
+* chore(deps): sync dirs 7.0.0 into desktop tauri lockfile ([b8da55d](https://github.com/Scoheart/arca/commit/b8da55d12484bd6d92167336b7a6ac25ec03a9d8))
+* docs(agents): point wiki and delivery links at arca names ([37e7f83](https://github.com/Scoheart/arca/commit/37e7f83cc828da191bd68f96038f170e7ed0f096))
+
+## [2.5.19](https://github.com/Scoheart/arca/compare/v2.5.18...v2.5.19) (2026-10-24)
+
+### Changes
+
+* feat(models): add AnyRouter provider (#238) ([6b6d236](https://github.com/Scoheart/arca/commit/6b6d236055de0327a95c3527bda12429324efb97))
+
+## [2.5.18](https://github.com/Scoheart/arca/compare/v2.5.17...v2.5.18) (2026-10-23)
+
+### Changes
+
+* feat(models): add NoMask provider (#237) ([382217b](https://github.com/Scoheart/arca/commit/382217b4a7846bf54b2044778c0c94ab203859b5))
+
+## [2.5.17](https://github.com/Scoheart/arca/compare/v2.5.16...v2.5.17) (2026-10-23)
+
+### Changes
+
+* feat(models): add RunInfra provider (#236) ([0cfe43f](https://github.com/Scoheart/arca/commit/0cfe43f5cf34e75981f5af78a3672539a0b64e98))
+
+## [2.5.16](https://github.com/Scoheart/arca/compare/v2.5.15...v2.5.16) (2026-10-22)
+
+### Changes
+
+* feat(models): add GonkaRouter gateway provider (#234) ([c399779](https://github.com/Scoheart/arca/commit/c399779e10c4fd403d01c09d359ef8c363c69f82))
+
+## [2.5.15](https://github.com/Scoheart/arca/compare/v2.5.14...v2.5.15) (2026-10-22)
+
+### Changes
+
+* fix(desktop): preserve native IME candidate confirmation ([df1e17d](https://github.com/Scoheart/arca/commit/df1e17dbbce07f2675326cfeb93ca7300f1fc58a))
+
+## [2.5.14](https://github.com/Scoheart/arca/compare/v2.5.13...v2.5.14) (2026-10-22)
+
+### Changes
+
+* fix(desktop): keep IME confirmation keys out of submit actions ([504e541](https://github.com/Scoheart/arca/commit/504e541e3b29ce02dfbd4ee98f690e669d3a7e82))
+* fix(agents): open precise official installation instructions ([7821fed](https://github.com/Scoheart/arca/commit/7821fed96fcc164f40478d2555291cd8e138e90a))
+
+## [2.5.13](https://github.com/Scoheart/arca/compare/v2.5.12...v2.5.13) (2026-10-22)
+
+### Changes
+
+* feat(models): add KRAFTON Raon provider ([7d7da78](https://github.com/Scoheart/arca/commit/7d7da788add12bc471f1c013712a4c27f4cc5774))
+
+## [2.5.12](https://github.com/Scoheart/arca/compare/v2.5.11...v2.5.12) (2026-10-20)
+
+### Changes
+
+* feat(models): add 0G Private Computer gateway provider (#232) ([db2366d](https://github.com/Scoheart/arca/commit/db2366dc1b6937eaac63598faa56d4105cbbd7f8))
+
+## [2.5.11](https://github.com/Scoheart/arca/compare/v2.5.10...v2.5.11) (2026-10-20)
+
+### Changes
+
+* feat(models): add Maximo AI provider (#231) ([f225146](https://github.com/Scoheart/arca/commit/f225146133597ff6cd744ad9ffaee15d7fc39013))
+
+## [2.5.10](https://github.com/Scoheart/arca/compare/v2.5.9...v2.5.10) (2026-10-20)
+
+### Changes
+
+* feat(models): add IndicStack provider (#230) ([5bbd863](https://github.com/Scoheart/arca/commit/5bbd863c0b621f447cdd1c6f01bbc0da643d1158))
+
+## [2.5.9](https://github.com/Scoheart/arca/compare/v2.5.8...v2.5.9) (2026-10-20)
+
+### Changes
+
+* refactor(network): share proxy context across agents and capture ([45eb7eb](https://github.com/Scoheart/arca/commit/45eb7ebd8810154b25501bc10c5e6d10a8fb7000))
+
+## [2.5.8](https://github.com/Scoheart/arca/compare/v2.5.7...v2.5.8) (2026-10-20)
+
+### Changes
+
+* fix(desktop): preserve capture upstream and close window state ([bc69f18](https://github.com/Scoheart/arca/commit/bc69f18f009bd9c92a1e8d8530eda49600fc35cd))
+
+## [2.5.7](https://github.com/Scoheart/arca/compare/v2.5.6...v2.5.7) (2026-10-20)
+
+### Changes
+
+* fix(capture): bind launched CLI instances and reconcile exited targets ([fe52d67](https://github.com/Scoheart/arca/commit/fe52d67e0fc75e3a05ad399a0508d9b5c3ede909))
+
+## [2.5.6](https://github.com/Scoheart/arca/compare/v2.5.5...v2.5.6) (2026-10-20)
+
+### Changes
+
+* fix(desktop): show instruction files in separate rows ([1c9c245](https://github.com/Scoheart/arca/commit/1c9c2454dc35db3ff3e394fe4c302653d72e7aa6))
+* fix(desktop): clarify agent surface badges and cover Cursor ([f36571b](https://github.com/Scoheart/arca/commit/f36571b95e9093cc016a734b38944c49efce150b))
+
+## [2.5.5](https://github.com/Scoheart/arca/compare/v2.5.4...v2.5.5) (2026-10-19)
+
+### Changes
+
+* docs(cli): add portable arca-cli skill for agents ([7ed8f9f](https://github.com/Scoheart/arca/commit/7ed8f9ff70d4c230b125f04740ca92743a303d0c))
+* feat(models): add AkashML provider (#228) ([1eee487](https://github.com/Scoheart/arca/commit/1eee487b29d3f7f8fd2ae13cfb8e5cd2d95f1535))
+* feat(models): add Constellation Gate gateway provider (#229) ([c78219b](https://github.com/Scoheart/arca/commit/c78219b68a8618a8ad1bdc339ab48cdbc958356a))
+
+## [2.5.4](https://github.com/Scoheart/arca/compare/v2.5.3...v2.5.4) (2026-10-18)
+
+### Changes
+
+* test(capture): use absolute commands in isolated lease regression ([ed8d514](https://github.com/Scoheart/arca/commit/ed8d514947c497cdca1055dfd9facc6db0c06619))
+
+## [2.5.3](https://github.com/Scoheart/arca/compare/v2.5.2...v2.5.3) (2026-10-18)
+
+### Changes
+
+* feat(models): add Fikra API provider (#227) ([e098f3c](https://github.com/Scoheart/arca/commit/e098f3c64e4cb2aaff5adf07cb6cd489f3ed72fb))
+
+## [2.5.2](https://github.com/Scoheart/arca/compare/v2.5.1...v2.5.2) (2026-10-18)
+
+### Changes
+
+* feat(models): add SenseNova Token Plan provider (#226) ([d4a389f](https://github.com/Scoheart/arca/commit/d4a389f43a2bbcfce7fec7386ce9e08b1b2d573d))
+
+## [2.5.1](https://github.com/Scoheart/arca/compare/v2.5.0...v2.5.1) (2026-10-18)
+
+### Changes
+
+* feat(models): add Bilibili Index-Translate provider (#225) ([6c1a67e](https://github.com/Scoheart/arca/commit/6c1a67edea87e3fb2d89b013c79b8146f3defd39))
+
+## [2.5.0](https://github.com/Scoheart/arca/compare/v2.4.6...v2.5.0) (2026-10-17)
+
+### Changes
+
+* feat(capture): prepare and launch agent recording automatically ([97bd959](https://github.com/Scoheart/arca/commit/97bd959d6c68643401f4532bc2daaef3d4d3b9ef))
+
+## [2.4.6](https://github.com/Scoheart/arca/compare/v2.4.5...v2.4.6) (2026-10-17)
+
+### Changes
+
+* feat(models): add OrcaRouter gateway provider (#224) ([503bc73](https://github.com/Scoheart/arca/commit/503bc736577a79e9f04bcc20f561f1af321d0de8))
+
+## [2.4.5](https://github.com/Scoheart/arca/compare/v2.4.4...v2.4.5) (2026-10-17)
+
+### Changes
+
+* feat(models): add Meta Model API provider (#223) ([e61d96b](https://github.com/Scoheart/arca/commit/e61d96b3babaade00c59a31b2745892f3b2478ed))
+
+## [2.4.4](https://github.com/Scoheart/arca/compare/v2.4.3...v2.4.4) (2026-10-17)
+
+### Changes
+
+* feat(models): add Agnes AI provider (#222) ([28fd44c](https://github.com/Scoheart/arca/commit/28fd44c95fa7b8236bf9b58214b58657f7c4f801))
+
+## [2.4.3](https://github.com/Scoheart/arca/compare/v2.4.2...v2.4.3) (2026-10-17)
+
+### Changes
+
+* fix(desktop): simplify Instructions page copy ([4583a87](https://github.com/Scoheart/arca/commit/4583a8750d0e68e0249c0a37780001c50a327fc0))
+
+## [2.4.2](https://github.com/Scoheart/arca/compare/v2.4.1...v2.4.2) (2026-10-17)
+
+### Changes
+
+* fix(desktop): arrange Agent workspace with sidebar navigation ([2b4b947](https://github.com/Scoheart/arca/commit/2b4b94716ffbb54417e62f915421b0eb3159755f))
+
+## [2.4.1](https://github.com/Scoheart/arca/compare/v2.4.0...v2.4.1) (2026-10-17)
+
+### Changes
+
+* feat(models): add Coral Bricks gateway provider (#221) ([24d26d7](https://github.com/Scoheart/arca/commit/24d26d77d5291781ce3831237dd9c385fab0b9c2))
+
+## [2.4.0](https://github.com/Scoheart/arca/compare/v2.3.2...v2.4.0) (2026-10-16)
+
+### Changes
+
+* feat(agents): add MCP Apps client and framework guide entries ([226aed1](https://github.com/Scoheart/arca/commit/226aed146fb5e199f01b476c89d79cb2038b4197))
+
+## [2.3.2](https://github.com/Scoheart/arca/compare/v2.3.1...v2.3.2) (2026-10-16)
+
+### Changes
+
+* fix(instructions): enable explicit OpenCode global file creation ([2443675](https://github.com/Scoheart/arca/commit/24436754d87f6b5fd1e85a215a14007127f48941))
+
+## [2.3.1](https://github.com/Scoheart/arca/compare/v2.3.0...v2.3.1) (2026-10-16)
+
+### Changes
+
+* fix(instructions): configure native directories per Agent ([4219b4b](https://github.com/Scoheart/arca/commit/4219b4b0c9dac427c42f872300425477b7af8b66))
+
+## [2.3.0](https://github.com/Scoheart/arca/compare/v2.2.0...v2.3.0) (2026-10-16)
+
+### Changes
+
+* feat(instructions): edit native global Agent files in place ([4a3db95](https://github.com/Scoheart/arca/commit/4a3db9548a5e95c2490f5e818ffae67b607fcd8e))
+
+## [2.2.0](https://github.com/Scoheart/arca/compare/v2.1.2...v2.2.0) (2026-10-16)
+
+### Changes
+
+* feat(traces): present conversations inline and release failed capture leases ([e6791b0](https://github.com/Scoheart/arca/commit/e6791b047e03b7975777eaf84b979a7b22559d78))
+
+## [2.1.2](https://github.com/Scoheart/arca/compare/v2.1.1...v2.1.2) (2026-10-16)
+
+### Changes
+
+* fix(capture): bind recording to the current agent ([5aa6c62](https://github.com/Scoheart/arca/commit/5aa6c62420af1ee7c2548deaceb270b42de565f4))
+* fix(capture): allow first-run redirector installation ([9e8ff98](https://github.com/Scoheart/arca/commit/9e8ff988ee282ddb98ae2948f5cac94f28648536))
+* fix(capture): guide system approval inside the app ([2bb4958](https://github.com/Scoheart/arca/commit/2bb4958ae9e374985bff8bbd8476a45a91ffdbd6))
+* feat(models): add UnoRouter gateway provider (#218) ([b5d6fa0](https://github.com/Scoheart/arca/commit/b5d6fa0563e2f9c3b345b9612434a1fbcf201b7c))
+* feat(models): add RunAnywhere gateway provider (#219) ([e201a3e](https://github.com/Scoheart/arca/commit/e201a3e6e3826219970da3b5893315f05e3ec4ca))
+
+## [2.1.1](https://github.com/Scoheart/arca/compare/v2.1.0...v2.1.1) (2026-10-15)
+
+### Changes
+
+* feat(models): add Atria official provider (#217) ([5ec4257](https://github.com/Scoheart/arca/commit/5ec4257f8c35068210e9001ac7bb803c7403c995))
+
+## [2.1.0](https://github.com/Scoheart/arca/compare/v2.0.10...v2.1.0) (2026-10-14)
+
+### Changes
+
+* feat(capture): unify agent recording and streamline stable delivery ([caf3f05](https://github.com/Scoheart/arca/commit/caf3f0565ccc421932e9fe997407529d285c6360))
+
+## [2.0.10](https://github.com/Scoheart/arca/compare/v2.0.9...v2.0.10) (2026-10-14)
+
+### Changes
+
+* fix(skills): prevent recovery locks and unify operation notifications ([eda5124](https://github.com/Scoheart/arca/commit/eda5124b9da8f037b84bea866fb434c2389df268))
+
+## [2.0.9](https://github.com/Scoheart/arca/compare/v2.0.8...v2.0.9) (2026-10-14)
+
+### Changes
+
+* feat(models): add Experiential Labs gateway provider (#216) ([f07a8e2](https://github.com/Scoheart/arca/commit/f07a8e2e135a424a8852437d8d4f86be397180e1))
+
+## [2.0.8](https://github.com/Scoheart/arca/compare/v2.0.7...v2.0.8) (2026-10-13)
+
+### Changes
+
+* feat(models): add Liquid AI official provider ([7c22797](https://github.com/Scoheart/arca/commit/7c22797793da0c68dfdc9d2ec6711dec193c4f4c))
+
+## [2.0.7](https://github.com/Scoheart/arca/compare/v2.0.6...v2.0.7) (2026-10-13)
+
+### Changes
+
+* feat(models): add BeatAPI gateway provider (#212) ([2e478c1](https://github.com/Scoheart/arca/commit/2e478c1cd0cbd27fb0dcb5b6dcbab19fae0d695f))
+
+## [2.0.6](https://github.com/Scoheart/arca/compare/v2.0.5...v2.0.6) (2026-10-13)
+
+### Changes
+
+* feat(models): add CodeCraft API gateway provider (#211) ([1a83013](https://github.com/Scoheart/arca/commit/1a8301313ddf8c8d33d42057570582a44d0a37dd))
+
+## [2.0.5](https://github.com/Scoheart/arca/compare/v2.0.4...v2.0.5) (2026-10-13)
+
+### Changes
+
+* feat(models): add 12 verified providers from the free-offer list (#210) ([4fbef29](https://github.com/Scoheart/arca/commit/4fbef29851b1c80b1a38a6112ed9bb1b2b6b3cfd))
+
+## [2.0.4](https://github.com/Scoheart/arca/compare/v2.0.3...v2.0.4) (2026-10-13)
+
+### Changes
+
+* feat(models): add Sarashina official provider (#209) ([9733c01](https://github.com/Scoheart/arca/commit/9733c0183e1e4fea3dca2ea4582cf62489780d98))
+
+## [2.0.3](https://github.com/Scoheart/arca/compare/v2.0.2...v2.0.3) (2026-10-13)
+
+### Changes
+
+* fix(brand): use the canonical Arca repository across update channels ([f65a5c2](https://github.com/Scoheart/arca/commit/f65a5c2e6f1a64411f4fd2109db64fbddd694276))
+
+## [2.0.2](https://github.com/Scoheart/mux/compare/v2.0.1...v2.0.2) (2026-10-13)
+
+### Changes
+
+* feat(models): add FLock API Platform gateway provider (#208) ([cfb336f](https://github.com/Scoheart/mux/commit/cfb336feceb9ad932e6aacae32c761ffde69184e))
+
+## [2.0.1](https://github.com/Scoheart/mux/compare/v2.0.0...v2.0.1) (2026-10-13)
+
+### Changes
+
+* fix(brand): preserve native model identity across adapters ([b8e5b06](https://github.com/Scoheart/mux/commit/b8e5b0652b504576b68094d4af3573bdc5de84c8))
+
+## [2.0.0](https://github.com/Scoheart/mux/compare/v1.14.5...v2.0.0) (2026-10-13)
+
+### Changes
+
+* feat(brand)!: rename MUX to Arca and migrate shared assets ([d9ddb8a](https://github.com/Scoheart/mux/commit/d9ddb8a3587cceda73bda0b447d15c1cbb0fae0d))
+* fix(brand): keep repository transport usable during rename ([5c858be](https://github.com/Scoheart/mux/commit/5c858bec2c8ae60c6cc08afb3410626aff696544))
+
+## [1.14.5](https://github.com/Scoheart/mux/compare/v1.14.4...v1.14.5) (2026-10-13)
+
+### Changes
+
+* perf(memory): bound trace rendering and capture allocations ([2203ee1](https://github.com/Scoheart/mux/commit/2203ee11e2e2bda56317e1107a79dd178ed80e68))
+
+## [1.14.4](https://github.com/Scoheart/mux/compare/v1.14.3...v1.14.4) (2026-10-12)
+
+### Changes
+
+* fix(agents): align overview actions in a dedicated toolbar ([a07940f](https://github.com/Scoheart/mux/commit/a07940fc184ba31bbca5e0495a980a3686651e50))
+
+## [1.14.3](https://github.com/Scoheart/mux/compare/v1.14.2...v1.14.3) (2026-10-12)
+
+### Changes
+
+* fix(skills): open collection GitHub links in browser ([4c0e190](https://github.com/Scoheart/mux/commit/4c0e190d0aa4067f6a83960c862a6c0176d2c672))
+
+## [1.14.2](https://github.com/Scoheart/mux/compare/v1.14.1...v1.14.2) (2026-10-12)
+
+### Changes
+
+* fix(skills): correct reading view error fixture type ([540d510](https://github.com/Scoheart/mux/commit/540d510bf061eca2eed491eea6d5be3fd4633039))
+
+## [1.14.1](https://github.com/Scoheart/mux/compare/v1.14.0...v1.14.1) (2026-10-12)
+
+### Changes
+
+* fix(skills): simplify detail dialog to metadata and body ([7ce4fee](https://github.com/Scoheart/mux/commit/7ce4feec39ed160e5e3c131a89a92935efd83f82))
+
+## [1.14.0](https://github.com/Scoheart/mux/compare/v1.13.0...v1.14.0) (2026-10-12)
+
+### Changes
+
+* feat(tui): centralize the visual design system and polish every screen (#204) ([84a91e1](https://github.com/Scoheart/mux/commit/84a91e15cfdcba0ca3638d95f7eab6afdd46dadc))
+* feat(capture): stream agent traffic in a Charles-style workbench ([b8d3145](https://github.com/Scoheart/mux/commit/b8d3145372c9cdda041f9e00b20284cf3c7e0796))
+
 ## [1.13.0](https://github.com/Scoheart/mux/compare/v1.12.2...v1.13.0) (2026-10-10)
 
 ### Changes

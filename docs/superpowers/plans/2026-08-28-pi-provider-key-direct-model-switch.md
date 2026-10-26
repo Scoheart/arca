@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Use readable MUX Provider names in Pi configuration and make current-Model switching a direct action without a review panel.
+**Goal:** Use readable Arca Provider names in Pi configuration and make current-Model switching a direct action without a review panel.
 
 **Architecture:** Core derives a collision-safe Pi Provider identity from shared `ModelProviderConfig`, materializes it only for managed Pi writes, and updates Pi Provider entries model-by-model so shared Providers remain intact. Desktop routes current-Model changes through the existing immediate plan/commit transaction instead of storing a review plan.
 
@@ -17,10 +17,10 @@
 - Modify: `core/src/assets/model_migration.rs`
 
 - [ ] Add focused Rust tests proving `OpenRouter` maps to `openrouter`, explicit `native_ids.pi` wins, normalized-name collisions receive a stable Provider-ID suffix, and `observe_active_model_for_settings` recognizes the generated key.
-- [ ] Add Pi JSONC tests proving two Profiles on one Provider coexist in one `models` array, the old `mux-{profile.id}` entry is removed, unrelated Providers and unknown fields survive, and clearing one Profile preserves its sibling.
+- [ ] Add Pi JSONC tests proving two Profiles on one Provider coexist in one `models` array, the old `arca-{profile.id}` entry is removed, unrelated Providers and unknown fields survive, and clearing one Profile preserves its sibling.
 - [ ] Implement `generated_pi_provider_id(settings, profile)` and use it in runtime materialization, active-model observation, and migration ownership matching.
 - [ ] Split Pi Provider/model value construction so upsert replaces only the matching model ID and clear removes only that model.
-- [ ] Remove a legacy `mux-{profile.id}` entry only when its model array contains the same managed Model.
+- [ ] Remove a legacy `arca-{profile.id}` entry only when its model array contains the same managed Model.
 
 Expected contract:
 
@@ -57,7 +57,7 @@ Expected contract:
 - Add: `docs/superpowers/specs/2026-08-28-pi-provider-key-direct-model-switch-design.md`
 - Add: `docs/superpowers/plans/2026-08-28-pi-provider-key-direct-model-switch.md`
 
-- [ ] Run `git diff --check` and inspect every changed path. Per MUX fast mode, retain tests but do not run local tests/build/formatter/preflight.
+- [ ] Run `git diff --check` and inspect every changed path. Per Arca fast mode, retain tests but do not run local tests/build/formatter/preflight.
 - [ ] Create one exact remote manifest, remote commit, PR, blob comparison, squash merge, and remote branch deletion.
-- [ ] Observe the exact Direct Stable run and verify the immutable tag plus DMG, updater, CLI, and `latest.json` without installing or launching MUX.
+- [ ] Observe the exact Direct Stable run and verify the immutable tag plus DMG, updater, CLI, and `latest.json` without installing or launching Arca.
 

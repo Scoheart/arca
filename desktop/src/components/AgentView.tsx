@@ -1,7 +1,6 @@
 import { RESOURCE_CATEGORIES, RESOURCE_PRESENTATION } from "./resourcePresentation";
 import capabilityGuides from "../../../data/agent-capability-guides.json";
 import { AgentLaunchAction } from "./AgentLaunchAction";
-import { useAgentLauncher } from "../lib/agentLauncherContext";
 import "./AgentOverview.css";
 import "./CaptureView.css";
 import agentDocsHome from "../../../data/agent-docs-home.json";
@@ -45,7 +44,7 @@ import { Avatar, Badge } from "./ui";
 import { AgentGlyph } from "./brandIcons";
 import { ProviderGlyph } from "./providerIcons";
 import { AgentConfigurationDialog } from "./AgentConfigurationDialog";
-import { useToast } from "./Toast";
+import { ToastNotice, useToast } from "./Toast";
 import { AgentResourcePanel, type AgentResourceTab } from "./AgentResourcePanel";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
 import {
@@ -58,6 +57,7 @@ import { mergeAgentInfos } from "../lib/agentCapabilities";
 import { SkillReviewDialog } from "./SkillReviewDialog";
 import { useTranslation } from "react-i18next";
 import { McpAvatar } from "./McpIcon";
+import { InstructionsEditor } from "./InstructionsEditor";
 
 type PickerDomain = "mcp" | "model" | "skill";
 type ConfigLocationKind = "file" | "folder";
@@ -82,7 +82,7 @@ function modelProviderIcon(provider: string | undefined, name: string, size = 28
 }
 
 function modelCompatibilityReason(profile: ModelProfileView, agent: ModelAgentView | null) {
-  if (!agent || agent.mode !== "managed") return "此 Agent 不支持 MUX Model 管理";
+  if (!agent || agent.mode !== "managed") return "此 Agent 不支持 Arca Model 管理";
   if (!agent.supported_protocols.includes(profile.protocol)) return "协议不兼容";
   return null;
 }
@@ -140,9 +140,8 @@ export function AgentView({
   const { t } = useTranslation();
   const { entries, refreshAgents } = state;
   const { show: showToast } = useToast();
-  const agentLauncher = useAgentLauncher();
   const [editingAgent, setEditingAgent] = useState(false);
-  const [editLaunchFirst, setEditLaunchFirst] = useState(false);
+  const [instructionsRevision, setInstructionsRevision] = useState(0);
   const [pickerDomain, setPickerDomain] = useState<PickerDomain | null>(null);
   const [modelProfiles, setModelProfiles] = useState<ModelProfileView[]>([]);
   const [modelAgents, setModelAgents] = useState<ModelAgentView[]>([]);
@@ -336,22 +335,28 @@ export function AgentView({
     ...centralSkills.map((skill) => [`skill:${skill.name}`, skill.name] as const),
   ]), [entries, modelProfiles, centralSkills]);
 
-  if (!agent) return <div className="mux-agent-state">未找到该 Agent</div>;
+  if (!agent) return <div className="arca-agent-state">未找到该 Agent</div>;
 
-  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent) {
+  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent && !agent.has_instructions) {
     return (
-      <div className="mux-agent-page">
-        <div className="mux-agent-shell">
-          <section className="mux-agent-context" aria-label={`${agent.name} 参考信息`}>
-            <AgentHeader agent={agent} tone="reference" actions={<><button className="mux-capture-button" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button><button className="mux-capture-button" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button><AgentLaunchAction key={agent.id} agentId={agent.id} /></>} />
-            <div className="mux-agent-reference">
+      <div className="arca-agent-page">
+        <div className="arca-agent-shell">
+          <section className="arca-agent-context" aria-label={`${agent.name} 参考信息`}>
+            <AgentHeader agent={agent} tone="reference" actions={<>
+              {agent.category !== "web" && agent.category !== "framework" && <>
+                <button className="arca-agent-tool" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button>
+                <button className="arca-agent-tool" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button>
+              </>}
+              <AgentLaunchAction key={agent.id} agentId={agent.id} />
+            </>} />
+            <div className="arca-agent-reference">
               <strong>{agent.note ?? "未提供可写的用户级全局配置。"}</strong>
             </div>
-            {(capabilityGuides as Record<string, Record<string, string>>)[agentId] && <div className="mux-agent-file-map mux-agent-guided-cards">
+            {(capabilityGuides as Record<string, Record<string, string>>)[agentId] && <div className="arca-agent-file-map arca-agent-guided-cards">
               {RESOURCE_CATEGORIES.filter((resource) => (capabilityGuides as Record<string, Record<string, string>>)[agentId][resource.domain]).map((resource) => <ConfigPath
                 key={resource.domain} label={resource.label}
                 icon={<resource.Icon className="w-4 h-4" />}
-                docsUrl={(capabilityGuides as Record<string, Record<string, string>>)[agentId][resource.domain]} description="应用内配置" paths={[]} kind="file" home={userHome}
+                docsUrl={(capabilityGuides as Record<string, Record<string, string>>)[agentId][resource.domain]} description={agent.category === "framework" ? "开发文档" : "应用内配置"} paths={[]} kind="file" home={userHome}
                 onOpen={() => {}} unavailableLabel="查看设置文档" />)}
             </div>}
           </section>
@@ -638,25 +643,25 @@ export function AgentView({
   };
 
   return (
-    <div className="mux-agent-page">
-      <div className="mux-agent-shell">
-        <section className="mux-agent-workbench" aria-label={`${agent.name} 工作区`}>
+    <div className="arca-agent-page">
+      <div className="arca-agent-shell">
+        <section className="arca-agent-workbench" aria-label={`${agent.name} 工作区`}>
           <AgentHeader agent={agent} actions={<>
-            <button className="mux-capture-button" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button>
-            <button className="mux-capture-button" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button>
+            <button className="arca-agent-tool" onClick={() => onOpenTrace?.(agent.id)}><DocumentIcon className="w-4 h-4" />{t("trace.open")}</button>
+            <button className="arca-agent-tool" onClick={() => onOpenCapture?.(agent.id)}><NetworkIcon className="w-4 h-4" />抓包</button>
             {canEditConfiguration && (
-              <button type="button" className="mux-agent-tool" title="编辑配置" aria-label="编辑配置" onClick={() => { setEditLaunchFirst(false); setEditingAgent(true); }}>
+              <button type="button" className="arca-agent-tool" title="编辑配置" aria-label="编辑配置" onClick={() => setEditingAgent(true)}>
                 <EditIcon className="w-3.5 h-3.5" /><span>编辑</span>
               </button>
             )}
-            <AgentLaunchAction key={agent.id} agentId={agent.id} showLabel
-              onConfigure={canEditConfiguration ? () => { setEditLaunchFirst(true); setEditingAgent(true); } : undefined} />
+            <AgentLaunchAction key={agent.id} agentId={agent.id} showLabel />
           </>} />
 
         <AgentResourcePanel
           key={agent.id}
           value={resourceTab}
           onChange={setResourceTab}
+          instructions={agent.has_instructions}
           counts={{
             mcps: mcpRows.length + mcpExternal.length,
             models: modelVisibleCount,
@@ -671,11 +676,11 @@ export function AgentView({
               onConfirm={commitClearModels}
               onClose={() => void consumptionState.cancel()}
             >
-              <div className="mux-clear-models-impact">
+              <div className="arca-clear-models-impact">
                 <strong>将移除此 Agent 配置中的全部 Model</strong>
                 <span>包括外部和手工配置，操作无法撤销</span>
               </div>
-              <p className="mux-clear-models-preserved">
+              <p className="arca-clear-models-preserved">
                 中央 Models、Providers 与凭据保持不变
               </p>
             </ReviewDialog>
@@ -696,14 +701,10 @@ export function AgentView({
               onCancel={consumptionState.cancel}
             />
           ) : null}
-          {preparingChange && (
-            <div className="mux-agent-operation-progress" role="status" aria-live="polite">
-              <RefreshIcon data-spinning="true" />
-              <span>正在检查并同步 {agent.name} 的资产…</span>
-            </div>
-          )}
-          {resourceTab === "mcps" ? !agent.has_global ? (
-            <div className="mux-agent-inline-state">此 Agent 未接入 MCP。</div>
+          <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
+            message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
+          {resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global ? (
+            <div className="arca-agent-inline-state">此 Agent 未接入 MCP。</div>
           ) : (
             <AgentConsumptionPanel
               domain="mcp"
@@ -753,8 +754,8 @@ export function AgentView({
             />
           ) : resourceTab === "models" ? (
             modelAgent?.mode === "guided" ? (
-              <section className="mux-agent-section mux-agent-resource-content">
-                <div className="mux-agent-guided-model">
+              <section className="arca-agent-section arca-agent-resource-content">
+                <div className="arca-agent-guided-model">
                   <div><strong>由 Agent 管理</strong><span>{modelAgent.note || `请在 ${agent.name} 内切换。`}</span></div>
                   <button type="button" className="btn-secondary" onClick={() => openUrl(modelAgent.docs)}>
                     <LinkIcon className="w-4 h-4" />打开设置文档
@@ -763,18 +764,18 @@ export function AgentView({
               </section>
             ) : (
               modelsLoading ? (
-                <div className="mux-agent-inline-state">正在读取 Model…</div>
+                <div className="arca-agent-inline-state">正在读取 Model…</div>
               ) : modelsError ? (
-                <div className="mux-agent-inline-state">Model 读取失败：{modelsError}</div>
+                <div className="arca-agent-inline-state">Model 读取失败：{modelsError}</div>
               ) : !modelAgent ? (
-                <div className="mux-agent-inline-state">此 Agent 尚未接入 Models。</div>
+                <div className="arca-agent-inline-state">此 Agent 尚未接入 Models。</div>
               ) : (
                 <AgentConsumptionPanel
                   domain="model"
                   title={RESOURCE_PRESENTATION.model.label}
                   description={modelAgent.storage_authority === "native-registry"
                     ? `配置中 ${modelVisibleCount} 个${modelAgent.supports_global_selection === false ? ` · 重启 ${agent.name} 后在会话中选用` : modelAgent.supports_multiple ? " · 同一时间使用其中一个" : ""}`
-                    : `MUX 管理 ${modelVisibleCount} 个`}
+                    : `Arca 管理 ${modelVisibleCount} 个`}
                   manageLabel="添加 Models"
                   rows={displayedModelRows}
                   columns={3}
@@ -783,7 +784,7 @@ export function AgentView({
                   bulkRemoveLabel="清空全部 Models"
                   bulkRemoveTitle={modelAgent.storage_authority === "native-registry"
                     ? `清空 ${agent.name} 真实配置中的全部 Model，包括外部和手工配置；中央资产与凭据保留`
-                    : `清空 ${agent.name} 的全部 MUX Model 映射；中央资产与凭据保留`}
+                    : `清空 ${agent.name} 的全部 Arca Model 映射；中央资产与凭据保留`}
                   bulkRemoveDisabled={modelVisibleCount === 0
                     || preparingChange
                     || consumptionState.committing
@@ -847,7 +848,7 @@ export function AgentView({
                       name: profile?.name ?? profileId,
                       description: profile
                         ? `${profile.model} · ${modelProtocolLabel(profile.protocol)} · ${profile.provider}`
-                        : "MUX 中央模型资产已缺失",
+                        : "Arca 中央模型资产已缺失",
                       icon: modelProviderIcon(profile?.provider, profile?.name ?? profileId),
                     };
                   }}
@@ -935,8 +936,7 @@ export function AgentView({
         <AgentConfigurationDialog
           agent={agent}
           modelAgent={modelAgent}
-          initialSection={editLaunchFirst ? "launch" : "paths"}
-          onLaunchSaved={agentLauncher.refresh}
+          onInstructionPathsSaved={() => setInstructionsRevision(value => value + 1)}
           onClose={() => setEditingAgent(false)}
           onSaved={async () => {
             await Promise.allSettled([
@@ -956,7 +956,7 @@ export function AgentView({
 }
 
 function TransportMark({ transport }: { transport: string }) {
-  return <span className="mux-transport-mark">{transport}</span>;
+  return <span className="arca-transport-mark">{transport}</span>;
 }
 
 function AgentHeader({
@@ -971,25 +971,25 @@ function AgentHeader({
   const { show } = useToast();
   const docsHome = (agentDocsHome as Record<string, string>)[agent.id] ?? agent.docs;
   const identity = <>
-    <span data-agent-entry-glyph className="inline-flex flex-shrink-0"><AgentGlyph id={agent.id} name={agent.name} size={44} /></span>
-    <div className="mux-agent-header-copy">
+    <span data-agent-entry-glyph className="inline-flex flex-shrink-0"><AgentGlyph id={agent.id} name={agent.name} size={tone === "reference" ? 44 : 52} /></span>
+    <div className="arca-agent-header-copy">
       <div>
         <h2 data-agent-entry-name>{agent.name}</h2>
-        {tone === "reference" ? <Badge>仅供参考</Badge> : agent.evidence === "community-extension" ? (
+        {tone === "reference" ? <Badge>{agent.category === "framework" ? "开发框架" : agent.category === "web" ? "Web 客户端" : "仅供参考"}</Badge> : agent.evidence === "community-extension" ? (
           <Badge tone="warning">社区扩展</Badge>
         ) : !agent.builtin ? <Badge>自定义</Badge> : null}
       </div>
     </div>
   </>;
   return (
-    <header className="mux-agent-header mux-agent-overview-header" data-tone={tone} data-agent-entry-id={agent.id} aria-label={`Agent ${agent.name} (${agent.id})`}>
-      {docsHome ? <a className="mux-agent-header-identity mux-agent-docs-link"
+    <header className="arca-agent-header arca-agent-overview-header" data-tone={tone} data-agent-entry-id={agent.id} aria-label={`Agent ${agent.name} (${agent.id})`}>
+      {docsHome ? <a className="arca-agent-header-identity arca-agent-docs-link"
         href={docsHome} title={`打开 ${agent.name} 官方文档`} aria-label={`打开 ${agent.name} 官方文档`}
         onClick={(event) => {
           event.preventDefault();
           void openUrl(docsHome).catch((error) => show({ kind: "error", msg: `无法打开官方文档：${formatError(error)}` }));
-        }}>{identity}</a> : <div className="mux-agent-header-identity">{identity}</div>}
-      {actions && <div className="mux-agent-overview-actions" role="group" aria-label="Agent 操作">{actions}</div>}
+        }}>{identity}</a> : <div className="arca-agent-header-identity">{identity}</div>}
+      {actions && <div className="arca-agent-overview-actions" role="group" aria-label="Agent 操作">{actions}</div>}
     </header>
   );
 }
@@ -1024,26 +1024,26 @@ function ConfigPath({
   };
   const state = description.includes("失败") ? "error" : description.includes("读取中") ? "loading" : paths.length ? "ready" : "unavailable";
   return (
-    <details className="mux-config-disclosure" data-state={state} data-inline={inline || undefined} open={inline || undefined} aria-label={`${label} 配置位置`}>
+    <details className="arca-config-disclosure" data-state={state} data-inline={inline || undefined} open={inline || undefined} aria-label={`${label} 配置位置`}>
       <summary aria-label={`${label} 配置位置 · ${state === "error" || state === "loading" ? description : paths.length ? `${paths.length} 个${kind === "folder" ? "文件夹" : "文件"}` : description}`}>
-        <span className="mux-config-symbol" aria-hidden="true">{icon}</span>
+        <span className="arca-config-symbol" aria-hidden="true">{icon}</span>
         <strong>{label}</strong>
-        <span className="mux-config-indicator" title={state === "error" || state === "loading" ? description : paths.length ? `${paths.length} 个配置${kind === "folder" ? "目录" : "文件"}` : unavailableLabel} aria-hidden="true">
-          {state === "error" ? "!" : state === "loading" ? <RefreshIcon className="mux-config-loading" /> : paths.length ? <>
+        <span className="arca-config-indicator" title={state === "error" || state === "loading" ? description : paths.length ? `${paths.length} 个配置${kind === "folder" ? "目录" : "文件"}` : unavailableLabel} aria-hidden="true">
+          {state === "error" ? "!" : state === "loading" ? <RefreshIcon className="arca-config-loading" /> : paths.length ? <>
             {kind === "folder" ? <FolderIcon /> : <DocumentIcon />}<span>{paths.length}</span>
           </> : "—"}
         </span>
-        <ChevronDownIcon className="mux-config-chevron" />
+        <ChevronDownIcon className="arca-config-chevron" />
       </summary>
-      <div className="mux-config-body">
-        <div className="mux-config-description">
+      <div className="arca-config-body">
+        <div className="arca-config-description">
           <span>{description}</span>
-          {docsUrl && <button type="button" className="mux-config-docs" title={`查看 ${label} 文档`} aria-label={`查看 ${label} 文档`} onClick={openDocs}>
+          {docsUrl && <button type="button" className="arca-config-docs" title={`查看 ${label} 文档`} aria-label={`查看 ${label} 文档`} onClick={openDocs}>
             <ExternalLinkIcon className="w-3.5 h-3.5" />
           </button>}
         </div>
         {paths.length > 0 ? (
-          <div className="mux-agent-file-paths">
+          <div className="arca-agent-file-paths">
             {paths.map((path) => {
               const absolutePath = absoluteConfigLocation(path, home);
               const root = home.replace(/\/$/, "");
@@ -1051,7 +1051,7 @@ function ConfigPath({
               return (
                 <button
                   type="button"
-                  className="mux-agent-file-path"
+                  className="arca-agent-file-path"
                   key={path}
                   title={kind === "folder" ? `在 Finder 中打开 ${absolutePath}` : `使用所选编辑器打开 ${absolutePath}`}
                   aria-label={`${kind === "folder" ? "打开文件夹" : "使用所选编辑器打开文件"}：${absolutePath}`}
@@ -1064,7 +1064,7 @@ function ConfigPath({
             })}
           </div>
         ) : (
-          description !== unavailableLabel && <span className="mux-agent-file-unavailable">{unavailableLabel}</span>
+          description !== unavailableLabel && <span className="arca-agent-file-unavailable">{unavailableLabel}</span>
         )}
       </div>
     </details>

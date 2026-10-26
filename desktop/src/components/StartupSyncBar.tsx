@@ -1,24 +1,9 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { StartupSyncState } from "../hooks/useStartupSync";
-import { RefreshIcon } from "./icons";
+import { ToastNotice } from "./Toast";
 
 export function StartupSyncBar({ state }: { state: StartupSyncState }) {
   const { t, i18n } = useTranslation();
-  const [showSettled, setShowSettled] = useState(false);
-
-  useEffect(() => {
-    if (!state.settled || state.failed > 0) {
-      setShowSettled(false);
-      return;
-    }
-    setShowSettled(true);
-    const timer = setTimeout(() => setShowSettled(false), 1_400);
-    return () => clearTimeout(timer);
-  }, [state.failed, state.settled]);
-
-  if (state.settled && state.failed === 0 && !showSettled) return null;
-
   const taskLabel = (label: string | null) => {
     switch (label) {
       case "registry": return t("startup.tasks.registry");
@@ -34,58 +19,14 @@ export function StartupSyncBar({ state }: { state: StartupSyncState }) {
       default: return null;
     }
   };
-  const activeLabel = taskLabel(state.activeLabel);
-  const failedLabels = state.tasks
-    .filter((task) => task.status === "error")
-    .map((task) => taskLabel(task.label) ?? task.label);
-  const failedList = new Intl.ListFormat(i18n.resolvedLanguage, {
-    style: "short",
-    type: "conjunction",
-  }).format(failedLabels);
-  const detail = state.failed > 0
-    ? t("startup.failedNamed", {
-        tasks: failedList,
-        completed: state.completed,
-      })
-    : state.settled
-      ? null
-      : state.slow
-        ? t("startup.slow")
-        : activeLabel ?? t("startup.waiting");
-  const title = state.failed > 0
-    ? t("startup.partialTitle")
-    : state.settled
-      ? t("startup.complete")
-      : t("startup.title");
-
-  return (
-    <div
-      className="mux-startup-sync"
-      data-slow={state.slow ? "true" : undefined}
-      data-settled={state.settled ? "true" : undefined}
-      data-failed={state.failed > 0 ? "true" : undefined}
-      role={state.failed > 0 ? "alert" : "status"}
-      aria-live="polite"
-    >
-      <RefreshIcon
-        className="mux-startup-sync-icon"
-        data-spinning={state.syncing ? "true" : undefined}
-      />
-      <strong>{title}</strong>
-      {detail && <span className="mux-startup-sync-detail">{detail}</span>}
-      <span className="mux-startup-sync-count">
-        {state.completed}/{state.total}
-      </span>
-      {state.failed > 0 && (
-        <button
-          type="button"
-          className="mux-startup-sync-retry"
-          disabled={state.syncing}
-          onClick={() => void state.retryFailed()}
-        >
-          {t("startup.retryFailed")}
-        </button>
-      )}
-    </div>
-  );
+  const failedList = new Intl.ListFormat(i18n.resolvedLanguage, { style: "short", type: "conjunction" })
+    .format(state.tasks.filter((task) => task.status === "error").map((task) => taskLabel(task.label) ?? task.label));
+  const failure = state.failed > 0;
+  return <ToastNotice noticeKey="startup-sync" kind={failure ? "warning" : state.settled ? "success" : "info"}
+    persistent={!state.settled && !failure}
+    message={failure ? `${t("startup.partialTitle")} · ${t("startup.failedNamed", { tasks: failedList, completed: state.completed })} · ${state.completed}/${state.total}`
+      : state.settled ? `${t("startup.complete")} · ${state.completed}/${state.total}`
+      : `${t("startup.title")} · ${state.slow ? t("startup.slow") : taskLabel(state.activeLabel) ?? t("startup.waiting")} · ${state.completed}/${state.total}`}
+    action={failure ? <button type="button" className="btn-ghost" onClick={() => void state.retryFailed()}>
+      {t("startup.retryFailed")}</button> : undefined} />;
 }

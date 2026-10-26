@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Display at most 6 pinned Agents; only catalog entries with `has_global = true` are pinnable.
-- Preserve pinned order exactly and persist it in `~/.mux/settings.json` under `ui.pinned_agents`.
+- Preserve pinned order exactly and persist it in `~/.arca/settings.json` under `ui.pinned_agents`.
 - Preserve every other settings section and unknown top-level field through the existing strict, locked, atomic, optimistic-concurrency write path.
 - Never use `localStorage` as the pinned Agent source of truth.
 - Keep the closed Agent selector exactly `220px` wide normally and `170px` at widths up to `1080px`; keep its popup exactly `390px` wide.
@@ -19,7 +19,7 @@
 - Preserve all top-bar commands without horizontal scrolling or clipping at `1200x820` and `900x600`.
 - Provide tooltip/accessibility names, keyboard pin actions, and `Option+ArrowUp` / `Option+ArrowDown` ordering equivalents.
 - Do not add a drag-and-drop dependency; native drag events plus tested pure reorder functions are sufficient for a maximum of six rows.
-- Do not bump versions, tag, push, publish, or replace `/Applications/MUX.app` during implementation. Real installed-app screenshots require a separate, explicitly approved stable-release step.
+- Do not bump versions, tag, push, publish, or replace `/Applications/Arca.app` during implementation. Real installed-app screenshots require a separate, explicitly approved stable-release step.
 
 ---
 
@@ -81,7 +81,7 @@ fn ui_section_and_unknown_fields_survive_settings_roundtrip() {
 #[test]
 fn mutation_refuses_a_concurrent_settings_change() {
     let home = crate::testenv::TestHome::new("settings-concurrent");
-    let path = home.home.join(".mux/settings.json");
+    let path = home.home.join(".arca/settings.json");
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
     std::fs::write(&path, r#"{"imported":"original"}"#).unwrap();
 
@@ -110,7 +110,7 @@ mod tests {
     use std::fs;
 
     fn settings_path(home: &TestHome) -> std::path::PathBuf {
-        home.home.join(".mux/settings.json")
+        home.home.join(".arca/settings.json")
     }
 
     #[test]
@@ -190,9 +190,9 @@ mod tests {
 Run:
 
 ```bash
-cargo test -p mux-core pinned_agents -- --nocapture
-cargo test -p mux-core ui_section_and_unknown_fields_survive_settings_roundtrip -- --nocapture
-cargo test -p mux-core mutation_refuses_a_concurrent_settings_change -- --nocapture
+cargo test -p arca-core pinned_agents -- --nocapture
+cargo test -p arca-core ui_section_and_unknown_fields_survive_settings_roundtrip -- --nocapture
+cargo test -p arca-core mutation_refuses_a_concurrent_settings_change -- --nocapture
 ```
 
 Expected: compilation fails because `Settings::ui`, `MAX_PINNED_AGENTS`, `get_pinned_agents`, and `set_pinned_agents` do not exist; the concurrency test itself compiles against the existing mutation API.
@@ -287,12 +287,12 @@ Add to `desktop/src-tauri/src/commands.rs` after `list_agents`:
 ```rust
 #[tauri::command]
 pub fn get_pinned_agents() -> Result<Vec<String>, String> {
-    mux_core::pinned_agents::get_pinned_agents()
+    arca_core::pinned_agents::get_pinned_agents()
 }
 
 #[tauri::command]
 pub fn set_pinned_agents(agent_ids: Vec<String>) -> Result<Vec<String>, String> {
-    mux_core::pinned_agents::set_pinned_agents(agent_ids)
+    arca_core::pinned_agents::set_pinned_agents(agent_ids)
 }
 ```
 
@@ -318,9 +318,9 @@ Run:
 
 ```bash
 cargo fmt --check
-cargo test -p mux-core pinned_agents -- --nocapture
-cargo test -p mux-core ui_section_and_unknown_fields_survive_settings_roundtrip -- --nocapture
-cargo test -p mux-core mutation_refuses_a_concurrent_settings_change -- --nocapture
+cargo test -p arca-core pinned_agents -- --nocapture
+cargo test -p arca-core ui_section_and_unknown_fields_survive_settings_roundtrip -- --nocapture
+cargo test -p arca-core mutation_refuses_a_concurrent_settings_change -- --nocapture
 bash desktop/scripts/prepare-sidecar.sh
 cargo test --manifest-path desktop/src-tauri/Cargo.toml
 ```
@@ -765,7 +765,7 @@ export function AgentNavigation({
     return (
       <div
         key={agent.id}
-        className="mux-agent-picker-row"
+        className="arca-agent-picker-row"
         data-active={active ? "true" : undefined}
         data-dragging={draggedId === agent.id ? "true" : undefined}
         onDragOver={sortable ? (event) => event.preventDefault() : undefined}
@@ -774,7 +774,7 @@ export function AgentNavigation({
         {sortable && (
           <button
             type="button"
-            className="mux-agent-order-handle"
+            className="arca-agent-order-handle"
             draggable={!saving}
             disabled={saving}
             title="拖拽排序；Option + 上下方向键调整"
@@ -791,20 +791,20 @@ export function AgentNavigation({
         )}
         <button
           type="button"
-          className="mux-agent-picker-select"
+          className="arca-agent-picker-select"
           aria-current={active ? "page" : undefined}
           onClick={() => selectAgent(agent.id)}
         >
           <AgentGlyph id={agent.id} name={agent.name} size={32} />
           <span className="min-w-0 flex-1">
-            <span className="mux-agent-picker-name">{agent.name}</span>
-            <span className="mux-agent-picker-meta">{agent.format.toUpperCase()} · {agent.id}</span>
+            <span className="arca-agent-picker-name">{agent.name}</span>
+            <span className="arca-agent-picker-meta">{agent.format.toUpperCase()} · {agent.id}</span>
           </span>
-          {active && <CheckIcon className="mux-agent-picker-check" />}
+          {active && <CheckIcon className="arca-agent-picker-check" />}
         </button>
         <button
           type="button"
-          className="mux-agent-pin-action"
+          className="arca-agent-pin-action"
           data-pinned={isPinned ? "true" : undefined}
           disabled={pinDisabled}
           title={isPinned ? "取消置顶" : pinLimitReached ? "最多置顶 6 个 Agent" : "置顶"}
@@ -819,15 +819,15 @@ export function AgentNavigation({
   };
 
   return (
-    <div className="mux-agent-navigation">
+    <div className="arca-agent-navigation">
       <span className="sr-only" aria-live="polite">{announcement}</span>
       {sections.pinned.length > 0 && (
-        <nav className="mux-pinned-agent-bar" aria-label="置顶 Agent">
+        <nav className="arca-pinned-agent-bar" aria-label="置顶 Agent">
           {sections.pinned.map((agent) => (
             <button
               type="button"
               key={agent.id}
-              className="mux-pinned-agent"
+              className="arca-pinned-agent"
               data-active={selectedAgentId === agent.id ? "true" : undefined}
               aria-current={selectedAgentId === agent.id ? "page" : undefined}
               aria-label={agent.name}
@@ -840,10 +840,10 @@ export function AgentNavigation({
         </nav>
       )}
 
-      <div className="mux-agent-picker-anchor" ref={anchorRef}>
+      <div className="arca-agent-picker-anchor" ref={anchorRef}>
         <button
           type="button"
-          className="mux-agent-picker-trigger"
+          className="arca-agent-picker-trigger"
           data-active={selectedAgent ? "true" : undefined}
           data-open={open ? "true" : undefined}
           aria-haspopup="dialog"
@@ -861,15 +861,15 @@ export function AgentNavigation({
           ) : (
             <PackageIcon className="w-5 h-5 flex-shrink-0" />
           )}
-          <span className="mux-agent-picker-trigger-name">
+          <span className="arca-agent-picker-trigger-name">
             {selectedAgent?.name ?? "选择 Agent"}
           </span>
-          <ChevronDownIcon className="mux-agent-picker-chevron" />
+          <ChevronDownIcon className="arca-agent-picker-chevron" />
         </button>
 
         {open && (
-          <section className="mux-agent-picker" role="dialog" aria-label="选择和置顶 Agent">
-            <div className="mux-agent-picker-search">
+          <section className="arca-agent-picker" role="dialog" aria-label="选择和置顶 Agent">
+            <div className="arca-agent-picker-search">
               <SearchIcon className="w-4 h-4 flex-shrink-0" />
               <input
                 type="search"
@@ -882,7 +882,7 @@ export function AgentNavigation({
               />
               <button
                 type="button"
-                className="mux-agent-picker-search-clear"
+                className="arca-agent-picker-search-clear"
                 data-visible={query ? "true" : undefined}
                 disabled={!query}
                 tabIndex={query ? 0 : -1}
@@ -895,33 +895,33 @@ export function AgentNavigation({
               </button>
             </div>
 
-            <div className="mux-agent-picker-list">
+            <div className="arca-agent-picker-list">
               {sections.searchResults ? (
                 sections.searchResults.length > 0 ? (
                   sections.searchResults.map((agent) =>
                     agentRow(agent, pinnedIds.includes(agent.id), false),
                   )
                 ) : (
-                  <div className="mux-agent-picker-empty">未找到匹配项</div>
+                  <div className="arca-agent-picker-empty">未找到匹配项</div>
                 )
               ) : (
                 <>
-                  <div className="mux-agent-picker-section-heading">
+                  <div className="arca-agent-picker-section-heading">
                     <span>已置顶</span><span>{sections.pinned.length}/{MAX_PINNED_AGENTS}</span>
                   </div>
                   {sections.pinned.length > 0 ? (
                     sections.pinned.map((agent) => agentRow(agent, true, true))
                   ) : (
-                    <div className="mux-agent-picker-hint">在常用 Agent 右侧点击 Pin</div>
+                    <div className="arca-agent-picker-hint">在常用 Agent 右侧点击 Pin</div>
                   )}
-                  <div className="mux-agent-picker-section-heading"><span>全部 Agent</span></div>
+                  <div className="arca-agent-picker-section-heading"><span>全部 Agent</span></div>
                   {sections.available.map((agent) => agentRow(agent, false, false))}
                 </>
               )}
             </div>
 
             {onAddAgent && (
-              <div className="mux-agent-picker-footer">
+              <div className="arca-agent-picker-footer">
                 <button
                   type="button"
                   onClick={() => {
@@ -950,7 +950,7 @@ In `desktop/src/components/Layout.tsx`:
 2. Remove `CheckIcon`, `ChevronDownIcon`, `PlusIcon`, `SearchIcon`, `XIcon`, and `AgentGlyph` imports.
 3. Add `import { AgentNavigation } from "./AgentNavigation";`.
 4. Remove `agentPickerOpen`, `agentQuery`, `agentPickerRef`, `selectedAgent`, `writableCount`, `visibleAgents`, and the picker Escape/outside-pointer effect.
-5. Replace the entire existing `.mux-agent-picker-anchor` JSX block with:
+5. Replace the entire existing `.arca-agent-picker-anchor` JSX block with:
 
 ```tsx
 <AgentNavigation
@@ -965,64 +965,64 @@ Keep the existing flex spacer immediately before it and the existing divider imm
 
 - [ ] **Step 5: Replace the Agent picker CSS block with fixed launcher dimensions**
 
-In `desktop/src/index.css`, replace the block from `.mux-agent-picker-anchor` through its reduced-motion media rule with styles that enforce these selectors and dimensions:
+In `desktop/src/index.css`, replace the block from `.arca-agent-picker-anchor` through its reduced-motion media rule with styles that enforce these selectors and dimensions:
 
 ```css
-.mux-agent-navigation { display: flex; min-width: 0; flex: 0 0 auto; align-items: center; gap: 8px; }
-.mux-pinned-agent-bar { display: flex; height: 40px; align-items: center; gap: 3px; padding: 3px 5px; border: 1px solid var(--border-hairline); border-radius: 8px; background: color-mix(in srgb, var(--surface-raised) 78%, transparent); box-shadow: var(--glass-highlight); }
-.mux-pinned-agent { position: relative; display: inline-flex; width: 34px; height: 34px; flex: 0 0 34px; align-items: center; justify-content: center; padding: 0; border: 1px solid transparent; border-radius: 7px; background: transparent; cursor: pointer; }
-.mux-pinned-agent:hover { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
-.mux-pinned-agent[data-active="true"] { border-color: color-mix(in srgb, var(--color-blue) 42%, var(--border-hairline)); background: color-mix(in srgb, var(--color-blue) 10%, transparent); }
-.mux-pinned-agent[data-active="true"]::after { position: absolute; right: 8px; bottom: 1px; left: 8px; height: 2px; border-radius: 2px; background: var(--color-blue); content: ""; }
-.mux-pinned-agent:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 56%, transparent); outline-offset: 1px; }
-.mux-agent-picker-anchor { position: relative; flex: 0 0 auto; }
-.mux-agent-picker-trigger { display: inline-flex; width: 220px; height: 40px; align-items: center; gap: 7px; padding: 0 10px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-card), var(--glass-highlight); cursor: pointer; }
-.mux-agent-picker-trigger:hover, .mux-agent-picker-trigger[data-active="true"] { border-color: color-mix(in srgb, var(--color-blue) 38%, var(--border-hairline)); }
-.mux-agent-picker-trigger[data-open="true"] { border-color: color-mix(in srgb, var(--color-blue) 62%, var(--border-hairline)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 10%, transparent), var(--shadow-card); }
-.mux-agent-picker-trigger-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font: 650 12px/1 var(--font-sans); }
-.mux-agent-picker-chevron { width: 14px; height: 14px; flex: 0 0 auto; color: var(--text-secondary); transition: transform .14s ease, color .14s ease; }
-.mux-agent-picker-trigger[data-open="true"] .mux-agent-picker-chevron { color: var(--color-blue); transform: rotate(180deg); }
-.mux-agent-picker { position: absolute; z-index: 520; top: calc(100% + 5px); right: 0; display: flex; width: 390px; max-height: min(590px, calc(100vh - 70px)); flex-direction: column; overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-blue) 18%, var(--border-hairline)); border-radius: 9px; background: var(--surface-popover); box-shadow: 0 18px 44px rgba(24, 29, 43, .20), 0 4px 12px rgba(24, 29, 43, .10); animation: mux-agent-picker-in .14s ease-out; }
-@keyframes mux-agent-picker-in { from { opacity: 0; transform: translateY(-5px) scale(.992); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.mux-agent-picker-search { display: flex; height: 38px; margin: 10px 10px 8px; align-items: center; gap: 9px; padding: 0 6px 0 10px; border: 1px solid transparent; border-radius: 8px; background: var(--surface-app); color: var(--text-secondary); box-shadow: inset 0 0 0 1px var(--border-hairline); }
-.mux-agent-picker-search:focus-within { background: var(--surface-raised); color: var(--color-blue); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-blue) 42%, var(--border-hairline)), 0 0 0 2px color-mix(in srgb, var(--color-blue) 8%, transparent); }
-.mux-agent-picker-search input { height: 100%; min-width: 0; flex: 1; padding: 0; border: 0; outline: 0; appearance: none; background: transparent; color: var(--text-primary); font: 13px/1 var(--font-sans); }
-.mux-agent-picker-search input::placeholder { color: var(--text-secondary); }
-.mux-agent-picker-search input::-webkit-search-cancel-button { display: none; }
-.mux-agent-picker-search-clear, .mux-agent-order-handle, .mux-agent-pin-action { display: inline-flex; width: 26px; height: 26px; flex: 0 0 26px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer; }
-.mux-agent-picker-search-clear { opacity: 0; visibility: hidden; pointer-events: none; }
-.mux-agent-picker-search-clear[data-visible="true"] { opacity: 1; visibility: visible; pointer-events: auto; }
-.mux-agent-picker-list { min-height: 220px; overflow-y: auto; padding: 4px 6px 7px; border-top: 1px solid var(--border-hairline); }
-.mux-agent-picker-section-heading { display: flex; height: 28px; align-items: center; justify-content: space-between; padding: 0 8px; color: var(--text-secondary); font-size: 10px; font-weight: 650; }
-.mux-agent-picker-section-heading:not(:first-child) { margin-top: 4px; border-top: 1px solid var(--border-hairline); }
-.mux-agent-picker-hint { padding: 12px 8px; color: var(--text-secondary); font-size: 11px; }
-.mux-agent-picker-row { display: flex; width: 100%; min-height: 48px; align-items: center; gap: 3px; padding: 4px; border-radius: 6px; color: var(--text-primary); }
-.mux-agent-picker-row:hover { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
-.mux-agent-picker-row[data-active="true"] { background: color-mix(in srgb, var(--color-blue) 11%, transparent); }
-.mux-agent-picker-row[data-dragging="true"] { opacity: .48; }
-.mux-agent-picker-select { display: flex; min-width: 0; flex: 1; align-items: center; gap: 9px; padding: 2px 4px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
-.mux-agent-picker-name, .mux-agent-picker-meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mux-agent-picker-name { font-size: 12px; font-weight: 600; }
-.mux-agent-picker-meta { margin-top: 3px; color: var(--text-secondary); font: 10px/1 var(--font-mono); }
-.mux-agent-picker-check { width: 15px; height: 15px; flex: 0 0 auto; color: var(--color-blue); }
-.mux-agent-order-handle { cursor: grab; }
-.mux-agent-order-handle:active { cursor: grabbing; }
-.mux-agent-pin-action { opacity: 0; }
-.mux-agent-picker-row:hover .mux-agent-pin-action, .mux-agent-pin-action:focus-visible, .mux-agent-pin-action[data-pinned="true"] { opacity: 1; }
-.mux-agent-pin-action[data-pinned="true"] { color: var(--color-blue); }
-.mux-agent-order-handle:hover, .mux-agent-pin-action:hover:not(:disabled), .mux-agent-picker-search-clear:hover { background: var(--color-gray-150); color: var(--text-primary); }
-.mux-agent-order-handle:disabled, .mux-agent-pin-action:disabled { opacity: .32; cursor: default; }
-.mux-agent-picker-select:focus-visible, .mux-agent-order-handle:focus-visible, .mux-agent-pin-action:focus-visible, .mux-agent-picker-footer button:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 56%, transparent); outline-offset: -2px; }
-.mux-agent-picker-empty { padding: 28px 12px; color: var(--text-secondary); font-size: 12px; text-align: center; }
-.mux-agent-picker-footer { display: flex; min-height: 48px; align-items: center; padding: 7px 10px; border-top: 1px solid var(--border-hairline); background: var(--surface-app); }
-.mux-agent-picker-footer button { display: inline-flex; height: 32px; align-items: center; gap: 7px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: var(--color-blue); font: 600 12px/1 var(--font-sans); cursor: pointer; }
-.mux-agent-picker-footer button:hover { background: color-mix(in srgb, var(--color-blue) 9%, transparent); }
-@media (max-height: 680px) { .mux-agent-picker { max-height: calc(100vh - 66px); } .mux-agent-picker-list { min-height: 160px; } }
-@media (max-width: 1080px) { .mux-agent-picker-trigger { width: 170px; } .mux-pinned-agent-bar { gap: 2px; padding-right: 4px; padding-left: 4px; } .mux-pinned-agent { width: 31px; height: 31px; flex-basis: 31px; } .mux-pinned-agent > * { transform: scale(.933333); transform-origin: center; } }
-@media (prefers-reduced-motion: reduce) { .mux-agent-picker { animation: none; } }
+.arca-agent-navigation { display: flex; min-width: 0; flex: 0 0 auto; align-items: center; gap: 8px; }
+.arca-pinned-agent-bar { display: flex; height: 40px; align-items: center; gap: 3px; padding: 3px 5px; border: 1px solid var(--border-hairline); border-radius: 8px; background: color-mix(in srgb, var(--surface-raised) 78%, transparent); box-shadow: var(--glass-highlight); }
+.arca-pinned-agent { position: relative; display: inline-flex; width: 34px; height: 34px; flex: 0 0 34px; align-items: center; justify-content: center; padding: 0; border: 1px solid transparent; border-radius: 7px; background: transparent; cursor: pointer; }
+.arca-pinned-agent:hover { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
+.arca-pinned-agent[data-active="true"] { border-color: color-mix(in srgb, var(--color-blue) 42%, var(--border-hairline)); background: color-mix(in srgb, var(--color-blue) 10%, transparent); }
+.arca-pinned-agent[data-active="true"]::after { position: absolute; right: 8px; bottom: 1px; left: 8px; height: 2px; border-radius: 2px; background: var(--color-blue); content: ""; }
+.arca-pinned-agent:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 56%, transparent); outline-offset: 1px; }
+.arca-agent-picker-anchor { position: relative; flex: 0 0 auto; }
+.arca-agent-picker-trigger { display: inline-flex; width: 220px; height: 40px; align-items: center; gap: 7px; padding: 0 10px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-card), var(--glass-highlight); cursor: pointer; }
+.arca-agent-picker-trigger:hover, .arca-agent-picker-trigger[data-active="true"] { border-color: color-mix(in srgb, var(--color-blue) 38%, var(--border-hairline)); }
+.arca-agent-picker-trigger[data-open="true"] { border-color: color-mix(in srgb, var(--color-blue) 62%, var(--border-hairline)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 10%, transparent), var(--shadow-card); }
+.arca-agent-picker-trigger-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font: 650 12px/1 var(--font-sans); }
+.arca-agent-picker-chevron { width: 14px; height: 14px; flex: 0 0 auto; color: var(--text-secondary); transition: transform .14s ease, color .14s ease; }
+.arca-agent-picker-trigger[data-open="true"] .arca-agent-picker-chevron { color: var(--color-blue); transform: rotate(180deg); }
+.arca-agent-picker { position: absolute; z-index: 520; top: calc(100% + 5px); right: 0; display: flex; width: 390px; max-height: min(590px, calc(100vh - 70px)); flex-direction: column; overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-blue) 18%, var(--border-hairline)); border-radius: 9px; background: var(--surface-popover); box-shadow: 0 18px 44px rgba(24, 29, 43, .20), 0 4px 12px rgba(24, 29, 43, .10); animation: arca-agent-picker-in .14s ease-out; }
+@keyframes arca-agent-picker-in { from { opacity: 0; transform: translateY(-5px) scale(.992); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.arca-agent-picker-search { display: flex; height: 38px; margin: 10px 10px 8px; align-items: center; gap: 9px; padding: 0 6px 0 10px; border: 1px solid transparent; border-radius: 8px; background: var(--surface-app); color: var(--text-secondary); box-shadow: inset 0 0 0 1px var(--border-hairline); }
+.arca-agent-picker-search:focus-within { background: var(--surface-raised); color: var(--color-blue); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-blue) 42%, var(--border-hairline)), 0 0 0 2px color-mix(in srgb, var(--color-blue) 8%, transparent); }
+.arca-agent-picker-search input { height: 100%; min-width: 0; flex: 1; padding: 0; border: 0; outline: 0; appearance: none; background: transparent; color: var(--text-primary); font: 13px/1 var(--font-sans); }
+.arca-agent-picker-search input::placeholder { color: var(--text-secondary); }
+.arca-agent-picker-search input::-webkit-search-cancel-button { display: none; }
+.arca-agent-picker-search-clear, .arca-agent-order-handle, .arca-agent-pin-action { display: inline-flex; width: 26px; height: 26px; flex: 0 0 26px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.arca-agent-picker-search-clear { opacity: 0; visibility: hidden; pointer-events: none; }
+.arca-agent-picker-search-clear[data-visible="true"] { opacity: 1; visibility: visible; pointer-events: auto; }
+.arca-agent-picker-list { min-height: 220px; overflow-y: auto; padding: 4px 6px 7px; border-top: 1px solid var(--border-hairline); }
+.arca-agent-picker-section-heading { display: flex; height: 28px; align-items: center; justify-content: space-between; padding: 0 8px; color: var(--text-secondary); font-size: 10px; font-weight: 650; }
+.arca-agent-picker-section-heading:not(:first-child) { margin-top: 4px; border-top: 1px solid var(--border-hairline); }
+.arca-agent-picker-hint { padding: 12px 8px; color: var(--text-secondary); font-size: 11px; }
+.arca-agent-picker-row { display: flex; width: 100%; min-height: 48px; align-items: center; gap: 3px; padding: 4px; border-radius: 6px; color: var(--text-primary); }
+.arca-agent-picker-row:hover { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
+.arca-agent-picker-row[data-active="true"] { background: color-mix(in srgb, var(--color-blue) 11%, transparent); }
+.arca-agent-picker-row[data-dragging="true"] { opacity: .48; }
+.arca-agent-picker-select { display: flex; min-width: 0; flex: 1; align-items: center; gap: 9px; padding: 2px 4px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.arca-agent-picker-name, .arca-agent-picker-meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arca-agent-picker-name { font-size: 12px; font-weight: 600; }
+.arca-agent-picker-meta { margin-top: 3px; color: var(--text-secondary); font: 10px/1 var(--font-mono); }
+.arca-agent-picker-check { width: 15px; height: 15px; flex: 0 0 auto; color: var(--color-blue); }
+.arca-agent-order-handle { cursor: grab; }
+.arca-agent-order-handle:active { cursor: grabbing; }
+.arca-agent-pin-action { opacity: 0; }
+.arca-agent-picker-row:hover .arca-agent-pin-action, .arca-agent-pin-action:focus-visible, .arca-agent-pin-action[data-pinned="true"] { opacity: 1; }
+.arca-agent-pin-action[data-pinned="true"] { color: var(--color-blue); }
+.arca-agent-order-handle:hover, .arca-agent-pin-action:hover:not(:disabled), .arca-agent-picker-search-clear:hover { background: var(--color-gray-150); color: var(--text-primary); }
+.arca-agent-order-handle:disabled, .arca-agent-pin-action:disabled { opacity: .32; cursor: default; }
+.arca-agent-picker-select:focus-visible, .arca-agent-order-handle:focus-visible, .arca-agent-pin-action:focus-visible, .arca-agent-picker-footer button:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 56%, transparent); outline-offset: -2px; }
+.arca-agent-picker-empty { padding: 28px 12px; color: var(--text-secondary); font-size: 12px; text-align: center; }
+.arca-agent-picker-footer { display: flex; min-height: 48px; align-items: center; padding: 7px 10px; border-top: 1px solid var(--border-hairline); background: var(--surface-app); }
+.arca-agent-picker-footer button { display: inline-flex; height: 32px; align-items: center; gap: 7px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: var(--color-blue); font: 600 12px/1 var(--font-sans); cursor: pointer; }
+.arca-agent-picker-footer button:hover { background: color-mix(in srgb, var(--color-blue) 9%, transparent); }
+@media (max-height: 680px) { .arca-agent-picker { max-height: calc(100vh - 66px); } .arca-agent-picker-list { min-height: 160px; } }
+@media (max-width: 1080px) { .arca-agent-picker-trigger { width: 170px; } .arca-pinned-agent-bar { gap: 2px; padding-right: 4px; padding-left: 4px; } .arca-pinned-agent { width: 31px; height: 31px; flex-basis: 31px; } .arca-pinned-agent > * { transform: scale(.933333); transform-origin: center; } }
+@media (prefers-reduced-motion: reduce) { .arca-agent-picker { animation: none; } }
 ```
 
-Remove the older `@media (max-width: 1080px) { .mux-agent-picker-trigger { width: 270px; } }` declaration near the Agent page styles so it cannot override the new `170px` contract.
+Remove the older `@media (max-width: 1080px) { .arca-agent-picker-trigger { width: 270px; } }` declaration near the Agent page styles so it cannot override the new `170px` contract.
 
 - [ ] **Step 6: Run focused UI verification**
 
@@ -1074,7 +1074,7 @@ Expected: every command exits 0.
 Run:
 
 ```bash
-rg -n "mux-pinned-agent|mux-agent-picker-trigger|width: 390px|width: 170px" desktop/dist/assets
+rg -n "arca-pinned-agent|arca-agent-picker-trigger|width: 390px|width: 170px" desktop/dist/assets
 ```
 
 Expected: the production bundle contains the pinned launcher and both fixed responsive dimensions. Do not launch Vite, a target bundle, a renamed app, or a synthetic Tauri page.
@@ -1084,10 +1084,10 @@ Expected: the production bundle contains the pinned launcher and both fixed resp
 Run:
 
 ```bash
-cargo test -p mux-core pinned_agents -- --nocapture
-cargo test -p mux-core mutation_refuses_to_replace_corrupt_settings -- --nocapture
-cargo test -p mux-core mutation_refuses_a_concurrent_settings_change -- --nocapture
-cargo test -p mux-core settings_are_written_with_private_permissions -- --nocapture
+cargo test -p arca-core pinned_agents -- --nocapture
+cargo test -p arca-core mutation_refuses_to_replace_corrupt_settings -- --nocapture
+cargo test -p arca-core mutation_refuses_a_concurrent_settings_change -- --nocapture
+cargo test -p arca-core settings_are_written_with_private_permissions -- --nocapture
 ```
 
 Expected: all focused tests pass, malformed settings remain byte-identical, and settings permissions remain `0600`.
@@ -1132,12 +1132,12 @@ If verification passes without corrections, do not create an empty commit.
 
 ## Stable Release And Screenshot Gate
 
-The implementation plan ends with review-ready source. It intentionally does not publish a release because repository rules permit UI review only against the official stable `/Applications/MUX.app`, while publishing and replacing that app are separate state-changing delivery operations.
+The implementation plan ends with review-ready source. It intentionally does not publish a release because repository rules permit UI review only against the official stable `/Applications/Arca.app`, while publishing and replacing that app are separate state-changing delivery operations.
 
 After the user explicitly approves formal publication:
 
 1. Rebase or merge the reviewed feature onto the intended release branch without coupling it to unrelated `feat/user-skills-management` work.
 2. Prepare a separate release plan that updates all seven version sources, creates the annotated stable tag, pushes it, waits for the GitHub workflow, and verifies every published asset.
-3. Follow `../../skills/tool/mux-ui-review/SKILL.md` to install only the verified stable GitHub Release into `/Applications/MUX.app`.
+3. Follow `../../skills/tool/arca-ui-review/SKILL.md` to install only the verified stable GitHub Release into `/Applications/Arca.app`.
 4. Capture the real installed app at `1200x820` and `900x600`, showing six pins, the `220px`/`170px` selector, pin/unpin, drag order, search mode, dark/light themes, and restart persistence.
 5. Report release URL, asset hashes, codesign result, installed version, screenshot paths, and any remaining UI defect.

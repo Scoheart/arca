@@ -1,4 +1,5 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import type { RegistryEntry } from "../lib/types";

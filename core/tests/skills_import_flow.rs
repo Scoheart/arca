@@ -2,8 +2,8 @@
 
 mod support;
 
-use mux_core::settings::load_settings;
-use mux_core::skills::{
+use arca_core::settings::load_settings;
+use arca_core::skills::{
     cancel_operation, commit_assignment, commit_import, hash_tree, list_inventory,
     list_migration_candidates, plan_assignment, plan_import, recover_pending,
     PlanAssignmentRequest, PlanImportRequest, PlanInstallRequest, SkillError, SkillSource,
@@ -52,10 +52,10 @@ fn import_from_alias_only_target_keeps_one_discovery_link() {
             item.name == name
                 && item
                     .states
-                    .contains(&mux_core::skills::InventoryState::External)
+                    .contains(&arca_core::skills::InventoryState::External)
                 && matches!(
                     &item.location,
-                    mux_core::skills::SkillLocation::AgentTarget { target_id, .. }
+                    arca_core::skills::SkillLocation::AgentTarget { target_id, .. }
                         if target_id == "agents-user"
                 )
         })
@@ -178,7 +178,7 @@ fn import_plan_is_read_only_and_persists_imported_source_with_timestamped_backup
         panic!("import plan did not use Imported provenance")
     };
     assert_eq!(original_path, "~/.claude/skills/legacy-source");
-    assert!(backup_path.starts_with("~/.mux/backups/skills/import-"));
+    assert!(backup_path.starts_with("~/.arca/backups/skills/import-"));
     assert!(backup_path.ends_with("/legacy-source"));
 
     commit_import(plan.confirmation()).unwrap();
@@ -243,10 +243,10 @@ fn replacing_import_preserves_other_enabled_and_disabled_consumers() {
     let fixture = SkillsFixture::managed_on_targets(name, &["agents-user", "cursor-user"]);
     let disabled = fixture.target("cursor-user", name);
     fs::remove_file(&disabled).unwrap();
-    mux_core::settings::mutate_settings(|settings| {
+    arca_core::settings::mutate_settings(|settings| {
         for (target, enabled) in [("agents-user", true), ("cursor-user", false)] {
             settings.skill_consumptions.get_or_insert_default().entry(name.into()).or_default().insert(
-                target.into(), mux_core::domain::assets::SkillConsumptionRecord {
+                target.into(), arca_core::domain::assets::SkillConsumptionRecord {
                     name: name.into(), target_id: target.into(), enabled,
                 });
         }
@@ -254,7 +254,7 @@ fn replacing_import_preserves_other_enabled_and_disabled_consumers() {
     let before = load_settings().skill_consumptions.unwrap()[name].clone();
     fixture.create_real_target("claude-user", name);
     let request = fixture.import_request(name);
-    let plan = mux_core::skills::plan_asset_import(mux_core::skills::PlanSkillAssetImportRequest {
+    let plan = arca_core::skills::plan_asset_import(arca_core::skills::PlanSkillAssetImportRequest {
         identity: request.identity, replace_conflicts: true,
     }).unwrap();
     assert_eq!(plan.targets.iter().map(|target| target.target_id.as_str()).collect::<Vec<_>>(), vec!["claude-user"]);
@@ -283,7 +283,7 @@ fn import_replacement_flag_never_overwrites_other_agent_targets() {
                 item.name == name
                     && matches!(
                         &item.location,
-                        mux_core::skills::SkillLocation::AgentTarget { target_id, .. }
+                        arca_core::skills::SkillLocation::AgentTarget { target_id, .. }
                             if target_id == "claude-user"
                     )
             })
@@ -494,7 +494,7 @@ fn cancellation_requires_canonical_uuid_never_follows_symlinks_and_refuses_a_jou
 fn operation_ids_and_private_plan_files_are_canonical_and_wire_requests_roundtrip() {
     let fixture = SkillsFixture::installed_agents(&["codex"]);
     let resolution = fixture.resolve_local(&["private-plan"]);
-    let plan = mux_core::skills::plan_install(PlanInstallRequest {
+    let plan = arca_core::skills::plan_install(PlanInstallRequest {
         resolution_id: resolution.operation_id,
         skill_names: vec!["private-plan".into()],
         agent_ids: vec!["codex".into()],
@@ -583,7 +583,7 @@ fn every_task7_operation_root_has_private_cleanup_metadata() {
     let fixture = SkillsFixture::installed_agents(&["codex"]);
     let resolution = fixture.resolve_local(&["metadata-install"]);
     assert_metadata(&resolution.operation_id);
-    let install = mux_core::skills::plan_install(PlanInstallRequest {
+    let install = arca_core::skills::plan_install(PlanInstallRequest {
         resolution_id: resolution.operation_id,
         skill_names: vec!["metadata-install".into()],
         agent_ids: vec!["codex".into()],
@@ -636,7 +636,7 @@ fn cancellation_rejects_a_swapped_staging_parent_and_preserves_outside_content()
     let fixture = SkillsFixture::installed_agents(&[]);
     let resolution = fixture.resolve_local(&["parent-swap"]);
     let paths = SkillsPaths::from_env().unwrap();
-    let staging_parent = paths.mux_dir().join("staging");
+    let staging_parent = paths.arca_dir().join("staging");
     let retained = fixture.home.home.join("retained-staging-parent");
     fs::rename(&staging_parent, &retained).unwrap();
 

@@ -30,10 +30,10 @@ export function AgentInstallAction({ agentId }: { agentId: string }) {
   if (!link) return null;
   const status = busy ? "检测中…" : installed === true ? "已检测到" : installed === false ? "未检测到" : "安装状态未知";
   const state = busy ? "checking" : installed === true ? "installed" : installed === false ? "missing" : "unknown";
-  return <div className="mux-agent-install-actions" data-state={state} role="group" aria-label="下载与安装检测">
-    <button type="button" className="mux-agent-install-link" title={`${link.label} · ${status}`} aria-label={`${link.label}，${status}`} onClick={() => {
+  return <div className="arca-agent-install-actions" data-state={state} role="group" aria-label="下载与安装检测">
+    <button type="button" className="arca-agent-install-link" title={`${link.label} · ${status}`} aria-label={`${link.label}，${status}`} onClick={() => {
       void openUrl(link.url).catch((error) => show({ kind: "error", msg: `无法打开安装页面：${formatError(error)}` }));
-    }}><DownloadIcon className="w-3.5 h-3.5" />{link.label}<span className="mux-agent-install-dot" aria-hidden="true" /></button>
+    }}><DownloadIcon className="w-3.5 h-3.5" />{link.label}<span className="arca-agent-install-dot" aria-hidden="true" /></button>
     <span className="sr-only" aria-live="polite">{status}</span>
   </div>;
 }

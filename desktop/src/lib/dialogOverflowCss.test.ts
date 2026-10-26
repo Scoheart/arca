@@ -10,8 +10,8 @@ function declarations(selector: string): string {
 }
 
 it("keeps picker content on one vertical scroll axis", () => {
-  const pickerBody = declarations('.mux-dialog-shell[data-dialog-kind="picker"] .mux-dialog-shell-body');
-  const list = declarations(".mux-picker-list");
+  const pickerBody = declarations('.arca-dialog-shell[data-dialog-kind="picker"] .arca-dialog-shell-body');
+  const list = declarations(".arca-picker-list");
 
   expect(pickerBody).toMatch(/overflow:\s*hidden/);
   expect(list).toMatch(/width:\s*100%/);
@@ -21,7 +21,7 @@ it("keeps picker content on one vertical scroll axis", () => {
 });
 
 it("prevents picker rows from widening their scroll container", () => {
-  const option = declarations(".mux-picker-option");
+  const option = declarations(".arca-picker-option");
 
   expect(option).toMatch(/width:\s*100%/);
   expect(option).toMatch(/min-width:\s*0/);

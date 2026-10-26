@@ -19,7 +19,7 @@ pub fn render(model: &Model, f: &mut Frame, area: Rect) {
 }
 
 /// The dimmed capability note for agents without a global MCP config.
-fn capability_note(a: &mux_core::application::agents::AgentInfo) -> Option<&'static str> {
+fn capability_note(a: &arca_core::application::agents::AgentInfo) -> Option<&'static str> {
     if a.has_global {
         None
     } else if a.skills_global_dir.is_some() {

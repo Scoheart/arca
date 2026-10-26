@@ -32,7 +32,7 @@ elif [[ "$1" == issue && "$2" == list ]]; then
 elif [[ "$1" == issue && "$2" == create ]]; then
   echo OPEN >"$FAKE_STATE/issue-state"
   printf '%s\n' "$*" >"$FAKE_STATE/create-args"
-  echo "https://github.com/Scoheart/mux/issues/17"
+  echo "https://github.com/Scoheart/arca/issues/17"
 elif [[ "$1" == issue && "$2" == edit ]]; then
   printf '%s\n' "$*" >"$FAKE_STATE/edit-args"
 elif [[ "$1" == issue && "$2" == reopen ]]; then
@@ -49,7 +49,7 @@ chmod +x "$TMP/bin/gh"
 export PATH="$TMP/bin:$PATH"
 export FAKE_STATE="$TMP/state"
 export FAKE_MAIN_SHA="0000000000000000000000000000000000000002"
-export GITHUB_REPOSITORY="Scoheart/mux"
+export GITHUB_REPOSITORY="Scoheart/arca"
 export GITHUB_RUN_ID=1234
 export GITHUB_SERVER_URL="https://github.com"
 export GITHUB_EVENT_NAME=push

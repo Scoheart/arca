@@ -1,5 +1,5 @@
 {
-  "version": "1.10.0",
+  "version": "2.9.0",
   "agents": [
     {
       "id": "agentkube",
@@ -1042,6 +1042,40 @@
         ]
       },
       "model": null
+    },
+    {
+      "id": "kilo-desktop",
+      "name": "Kilo",
+      "category": "desktop",
+      "docs": "https://kilo.ai/docs/desktop/overview",
+      "mcp": {
+        "path": "~/Library/Application Support/Kilo Desktop/plugins/kilo-server/runtime/config/kilo/kilo.jsonc",
+        "format": "json",
+        "key": "mcp",
+        "transports": [
+          "stdio",
+          "http"
+        ]
+      },
+      "skills": {
+        "path": "~/.kilo/skills",
+        "aliases": []
+      },
+      "model": {
+        "mode": "managed",
+        "protocols": [
+          "anthropic-messages",
+          "openai-responses",
+          "openai-completions",
+          "gemini-generate-content"
+        ],
+        "paths": [
+          "~/Library/Application Support/Kilo Desktop/plugins/kilo-server/runtime/config/kilo/kilo.jsonc"
+        ],
+        "multiple": true,
+        "globalSelection": false,
+        "credentialMode": "environment-reference"
+      }
     },
     {
       "id": "kilo-vscode",
@@ -2664,6 +2698,22 @@
       "portal": {
         "kind": "api-key",
         "url": "https://deepinfra.com/dash/api_keys"
+      }
+    },
+    {
+      "id": "gmi-cloud",
+      "name": "GMI Cloud",
+      "category": "gateway",
+      "baseUrl": "https://api.gmi-serving.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.gmicloud.ai/inference-engine/api-reference/llm-api-reference",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.gmicloud.ai/user-setting/api-keys"
       }
     },
     {

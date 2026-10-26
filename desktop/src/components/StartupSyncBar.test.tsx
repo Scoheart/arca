@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import type { StartupSyncState } from "../hooks/useStartupSync";
@@ -40,7 +41,7 @@ it("names the failed capability and makes successful startup work explicit", asy
   render(<StartupSyncBar state={state} />);
 
   const alert = screen.getByRole("alert");
-  expect(alert).toHaveAttribute("data-failed", "true");
+  expect(alert).toHaveAttribute("data-kind", "warning");
   expect(alert).toHaveTextContent("部分配置暂不可用");
   expect(alert).toHaveTextContent("资产关系");
   expect(alert).toHaveTextContent("其余 2 项已可用");

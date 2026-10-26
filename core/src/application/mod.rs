@@ -4,6 +4,8 @@
 //! composing storage, recovery, adapters, or domain engines themselves.
 
 pub mod agents;
+pub mod instructions;
+pub mod codex_configuration;
 pub mod agent_launch;
 pub mod terminals;
 pub mod assets;
@@ -23,9 +25,9 @@ pub mod workspace;
 pub use gate::{BackendStatus, CapabilityDomain};
 
 /// Stable service facade for non-Rust consumers and future frontends.
-pub struct MuxCore;
+pub struct ArcaCore;
 
-impl MuxCore {
+impl ArcaCore {
     pub fn bootstrap() -> bootstrap::BootstrapReport {
         bootstrap::bootstrap()
     }

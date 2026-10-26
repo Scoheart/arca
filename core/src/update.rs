@@ -1,4 +1,4 @@
-//! CLI 自更新：对着 GitHub 稳定 Release 通道(最新 vX.Y.Z)检查/替换 `mux` 二进制。
+//! CLI 自更新：对着 GitHub 稳定 Release 通道(最新 vX.Y.Z)检查/替换 `arca` 二进制。
 //! 桌面端的自更新由 tauri-plugin-updater 走同一通道(latest.json)，不经过这里。
 
 use std::ffi::OsStr;
@@ -7,9 +7,10 @@ use std::path::PathBuf;
 use std::process::Stdio;
 use std::time::Duration;
 
-use crate::paths::mux_dir;
+use crate::paths::arca_dir;
 
-const REPO: &str = "scoheart/mux";
+// Canonical repository; former clients continue through GitHub’s rename redirect.
+const REPO: &str = "Scoheart/arca";
 /// 被动检查的间隔：每天最多打一次 GitHub API。
 const PASSIVE_CHECK_INTERVAL_SECS: i64 = 24 * 60 * 60;
 
@@ -18,12 +19,12 @@ fn api_agent() -> Result<ureq::Agent, String> {
         ureq::Agent::config_builder()
             .timeout_global(Some(Duration::from_secs(15)))
             // GitHub API 要求带 User-Agent
-            .user_agent("mux-cli-updater"),
+            .user_agent("arca-cli-updater"),
     )
 }
 
-/// 当前运行的 `mux` 由桌面 App 提供时(真身在某个 `.app` 包内——直接运行包内
-/// 二进制，或经 `~/.local/bin/mux` 软链)，返回真身路径。这种安装随桌面 App
+/// 当前运行的 `arca` 由桌面 App 提供时(真身在某个 `.app` 包内——直接运行包内
+/// 二进制，或经 `~/.local/bin/arca` 软链)，返回真身路径。这种安装随桌面 App
 /// 自动更新，`upgrade` 不应自行替换(会破坏 .app 的签名/更新一致性)。
 pub fn managed_by_desktop_app() -> Option<PathBuf> {
     let real = std::env::current_exe().ok()?.canonicalize().ok()?;
@@ -94,7 +95,7 @@ pub struct UpgradeOutcome {
     pub to: String,
 }
 
-/// 把当前运行的 `mux` 替换为最新 Release 里的二进制。
+/// 把当前运行的 `arca` 替换为最新 Release 里的二进制。
 /// 已是最新时返回 `Ok(None)`。
 pub fn upgrade_cli(current_version: &str) -> Result<Option<UpgradeOutcome>, String> {
     let latest = fetch_latest_version()?;
@@ -102,13 +103,13 @@ pub fn upgrade_cli(current_version: &str) -> Result<Option<UpgradeOutcome>, Stri
         return Ok(None);
     }
 
-    // Release 资产名与 CI 打包一致：mux_v{ver}_{triple}.tar.gz
+    // Release 资产名与 CI 打包一致：arca_v{ver}_{triple}.tar.gz
     let triple = target_triple();
-    let asset = format!("mux_v{latest}_{triple}.tar.gz");
+    let asset = format!("arca_v{latest}_{triple}.tar.gz");
     let url = format!("https://github.com/{REPO}/releases/download/v{latest}/{asset}");
 
-    // 下载到 ~/.mux 下的临时目录(与最终 rename 同卷，且天然可写)。
-    let tmp_dir = mux_dir().join("update-tmp");
+    // 下载到 ~/.arca 下的临时目录(与最终 rename 同卷，且天然可写)。
+    let tmp_dir = arca_dir().join("update-tmp");
     let _ = fs::remove_dir_all(&tmp_dir);
     fs::create_dir_all(&tmp_dir).map_err(|e| format!("创建临时目录失败: {e}"))?;
     let tarball = tmp_dir.join(&asset);
@@ -124,9 +125,9 @@ pub fn upgrade_cli(current_version: &str) -> Result<Option<UpgradeOutcome>, Stri
 
     // 解包(依赖系统 tar，macOS/Linux 都有，免拉压缩库依赖)。
     extract_tarball(OsStr::new("tar"), &tarball, &tmp_dir)?;
-    let new_bin = tmp_dir.join("mux");
+    let new_bin = tmp_dir.join("arca");
     if !new_bin.exists() {
-        return Err("更新包里没有 mux 二进制".into());
+        return Err("更新包里没有 arca 二进制".into());
     }
 
     // 原子替换：老的先挪走(运行中的二进制可以 rename)，新的挪进来，失败则回滚。
@@ -178,17 +179,17 @@ fn extract_tarball(
 }
 
 /// 被动更新提醒：普通命令跑完后调用。每天最多联网查一次(结果缓存在
-/// `~/.mux/update-check.json`)，有新版本时返回一行提示文案。
-/// 设置 `MUX_NO_UPDATE_CHECK=1` 可完全关闭。
+/// `~/.arca/update-check.json`)，有新版本时返回一行提示文案。
+/// 设置 `ARCA_NO_UPDATE_CHECK=1` 可完全关闭。
 pub fn passive_check_notice(current_version: &str) -> Option<String> {
-    if std::env::var_os("MUX_NO_UPDATE_CHECK").is_some() {
+    if crate::brand::env_os("ARCA_NO_UPDATE_CHECK").is_some() {
         return None;
     }
-    // 桌面 App 带出来的 CLI 随 App 更新——提示 `mux upgrade` 没有意义。
+    // 桌面 App 带出来的 CLI 随 App 更新——提示 `arca upgrade` 没有意义。
     if managed_by_desktop_app().is_some() {
         return None;
     }
-    let cache_file = mux_dir().join("update-check.json");
+    let cache_file = arca_dir().join("update-check.json");
     let now = chrono::Utc::now().timestamp();
 
     // 读缓存：一天内不重复联网，直接用上次的结果。
@@ -202,7 +203,7 @@ pub fn passive_check_notice(current_version: &str) -> Option<String> {
         _ => {
             // 缓存过期才联网；失败也写缓存，避免离线时每条命令都卡一次超时。
             let fetched = fetch_latest_version().ok();
-            let _ = fs::create_dir_all(mux_dir());
+            let _ = fs::create_dir_all(arca_dir());
             let _ = fs::write(
                 &cache_file,
                 serde_json::json!({
@@ -217,7 +218,7 @@ pub fn passive_check_notice(current_version: &str) -> Option<String> {
 
     if is_newer(&latest, current_version) {
         Some(format!(
-            "✨ 新版本 v{latest} 可用(当前 v{current_version})，运行 `mux upgrade` 升级"
+            "✨ 新版本 v{latest} 可用(当前 v{current_version})，运行 `arca upgrade` 升级"
         ))
     } else {
         None

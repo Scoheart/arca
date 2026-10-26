@@ -36,7 +36,7 @@ function mediaBlocks(source: string, heading: string): string[] {
 }
 
 it("scopes the Skills busy spinner and disables it for reduced motion", () => {
-  expect(skillsView).toMatch(/className="mux-skill-check-icon/);
+  expect(skillsView).toMatch(/className="arca-skill-check-icon/);
   expect(skillsView).toMatch(/data-busy=\{checking \? "true" : undefined\}/);
   expect(skillsView).not.toMatch(
     /style=\{checking \? \{ animation: "spin 0\.8s linear infinite" \}/,
@@ -44,7 +44,7 @@ it("scopes the Skills busy spinner and disables it for reduced motion", () => {
 
   const busy = declarations(
     css,
-    '.mux-skill-check-icon[data-busy="true"]',
+    '.arca-skill-check-icon[data-busy="true"]',
   );
   expect(busy).toMatch(/animation:\s*spin\s+0\.8s\s+linear\s+infinite/);
 
@@ -53,21 +53,21 @@ it("scopes the Skills busy spinner and disables it for reduced motion", () => {
     "@media (prefers-reduced-motion: reduce)",
   )
     .map((block) =>
-      declarations(block, '.mux-skill-check-icon[data-busy="true"]'),
+      declarations(block, '.arca-skill-check-icon[data-busy="true"]'),
     )
     .find((rule) => rule !== null);
   expect(reducedMotionBusy).toMatch(/animation:\s*none/);
 });
 
 it("uses one shared Soft Workbench geometry for every resource domain", () => {
-  expect(skillsView).toMatch(/className="mux-skill-workspace"/);
+  expect(skillsView).toMatch(/className="arca-skill-workspace"/);
 
-  const sharedSidebar = declarations(css, ".mux-workspace-sidebar");
-  const sharedToolbar = declarations(css, ".mux-workspace-toolbar");
-  const sharedFilters = declarations(css, ".mux-workspace-filters");
+  const sharedSidebar = declarations(css, ".arca-workspace-sidebar");
+  const sharedToolbar = declarations(css, ".arca-workspace-toolbar");
+  const sharedFilters = declarations(css, ".arca-workspace-filters");
   const fullWidthWorkspace = declarations(
     css,
-    '.mux-workspace[data-sidebar="false"]',
+    '.arca-workspace[data-sidebar="false"]',
   );
   expect(sharedSidebar).toMatch(/border:\s*0/);
   expect(sharedSidebar).toMatch(/border-radius:\s*var\(--radius-canvas\)/);
@@ -78,13 +78,13 @@ it("uses one shared Soft Workbench geometry for every resource domain", () => {
   expect(fullWidthWorkspace).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   expect(fullWidthWorkspace).toMatch(/gap:\s*0/);
 
-  expect(css).not.toMatch(/\.mux-skill-workspace\s+\.mux-workspace-(?:sidebar|toolbar|scroll)/);
-  expect(css).not.toMatch(/\.mux-skill-workspace\s+\.mux-resource-(?:grid|tabs|tab)/);
+  expect(css).not.toMatch(/\.arca-skill-workspace\s+\.arca-workspace-(?:sidebar|toolbar|scroll)/);
+  expect(css).not.toMatch(/\.arca-skill-workspace\s+\.arca-resource-(?:grid|tabs|tab)/);
   expect(sharedToolbar).toMatch(/min-height:\s*52px/);
   expect(sharedFilters).toMatch(/height:\s*42px/);
 
-  const content = declarations(css, ".mux-workspace-content");
-  const grid = declarations(css, ".mux-resource-grid");
+  const content = declarations(css, ".arca-workspace-content");
+  const grid = declarations(css, ".arca-resource-grid");
   expect(content).toMatch(/container:\s*resource-stage\s*\/\s*inline-size/);
   expect(grid).toMatch(/grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
   expect(grid).toMatch(/gap:\s*8px/);
@@ -97,7 +97,7 @@ it("uses one shared Soft Workbench geometry for every resource domain", () => {
     css,
     "@container resource-stage (max-width: 760px)",
   )
-    .map((block) => declarations(block, ".mux-resource-grid"))
+    .map((block) => declarations(block, ".arca-resource-grid"))
     .find((rule) => rule !== null);
   expect(mediumContainerGrid).toMatch(/grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
 
@@ -105,17 +105,17 @@ it("uses one shared Soft Workbench geometry for every resource domain", () => {
     css,
     "@container resource-stage (max-width: 500px)",
   )
-    .map((block) => declarations(block, ".mux-resource-grid"))
+    .map((block) => declarations(block, ".arca-resource-grid"))
     .find((rule) => rule !== null);
   expect(narrowContainerGrid).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
 });
 
 it("lays out the three Skill intake sources as compact peers", () => {
-  const sources = declarations(css, ".mux-skill-source-step-compact");
+  const sources = declarations(css, ".arca-skill-source-step-compact");
   expect(sources).toMatch(
     /grid-template-columns:\s*minmax\(0,\s*2\.2fr\)\s*repeat\(2,\s*minmax\(118px,\s*1fr\)\)/,
   );
   expect(sources).toMatch(/align-items:\s*stretch/);
   expect(sources).toMatch(/gap:\s*8px/);
-  expect(css).not.toMatch(/mux-skill-source-divider|mux-skill-local-sources/);
+  expect(css).not.toMatch(/arca-skill-source-divider|arca-skill-local-sources/);
 });

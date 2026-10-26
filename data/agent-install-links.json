@@ -1,10 +1,10 @@
 {
   "agentkube": {
-    "url": "https://docs.agentkube.com/introduction",
-    "label": "安装文档"
+    "url": "https://agentkube.com/downloads",
+    "label": "官方下载"
   },
   "amp": {
-    "url": "https://ampcode.com/manual",
+    "url": "https://ampcode.com/docs/cli#install",
     "label": "安装文档"
   },
   "amazon-q": {
@@ -20,7 +20,7 @@
     "label": "安装文档"
   },
   "augment": {
-    "url": "https://docs.augmentcode.com/",
+    "url": "https://docs.augmentcode.com/cli/overview#getting-started",
     "label": "安装文档"
   },
   "boltai": {
@@ -32,7 +32,7 @@
     "label": "官方下载"
   },
   "claude-code": {
-    "url": "https://code.claude.com/docs/en/quickstart",
+    "url": "https://code.claude.com/docs/en/quickstart#step-1-install-claude-code",
     "label": "安装文档"
   },
   "claude-desktop": {
@@ -44,7 +44,7 @@
     "label": "安装文档"
   },
   "cline": {
-    "url": "https://docs.cline.bot/",
+    "url": "https://docs.cline.bot/getting-started/installing-cline#ide-extension",
     "label": "安装文档"
   },
   "cline-desktop": {
@@ -68,15 +68,15 @@
     "label": "安装文档"
   },
   "continue": {
-    "url": "https://docs.continue.dev/",
+    "url": "https://docs.continue.dev/ide-extensions/install",
     "label": "安装文档"
   },
   "continue-cli": {
-    "url": "https://docs.continue.dev/",
+    "url": "https://docs.continue.dev/cli/quickstart#install",
     "label": "安装文档"
   },
   "copilot-cli": {
-    "url": "https://docs.github.com/en/copilot",
+    "url": "https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli#installing-or-updating-copilot-cli",
     "label": "安装文档"
   },
   "cortex-code": {
@@ -108,7 +108,7 @@
     "label": "官方下载"
   },
   "factory-droid": {
-    "url": "https://docs.factory.ai/",
+    "url": "https://docs.factory.com/droid-cli/quickstart#step-1-install-and-start-droid",
     "label": "安装文档"
   },
   "firebender": {
@@ -120,11 +120,11 @@
     "label": "安装文档"
   },
   "gemini": {
-    "url": "https://geminicli.com/docs/",
+    "url": "https://geminicli.com/docs/#install",
     "label": "安装文档"
   },
   "goose": {
-    "url": "https://goose-docs.ai/docs/",
+    "url": "https://goose-docs.ai/docs/getting-started/installation/",
     "label": "安装文档"
   },
   "grok-build": {
@@ -132,11 +132,11 @@
     "label": "安装文档"
   },
   "hermes": {
-    "url": "https://hermes-agent.nousresearch.com/docs/",
+    "url": "https://hermes-agent.nousresearch.com/docs#without-hermes-desktop",
     "label": "安装文档"
   },
   "junie": {
-    "url": "https://www.jetbrains.com/help/junie/",
+    "url": "https://www.jetbrains.com/help/ai-assistant/junie-agent.html#junie-get-started",
     "label": "安装文档"
   },
   "kilo-code": {
@@ -172,11 +172,11 @@
     "label": "安装文档"
   },
   "opencode": {
-    "url": "https://opencode.ai/docs/",
+    "url": "https://opencode.ai/docs/#install",
     "label": "安装文档"
   },
   "openclaw": {
-    "url": "https://docs.openclaw.ai/",
+    "url": "https://docs.openclaw.ai/install",
     "label": "安装文档"
   },
   "openhands": {
@@ -184,7 +184,7 @@
     "label": "安装文档"
   },
   "pi": {
-    "url": "https://pi.dev/docs/latest",
+    "url": "https://pi.dev/docs/latest/quickstart#1-install-pi",
     "label": "安装文档"
   },
   "poolside": {
@@ -304,7 +304,7 @@
     "label": "安装文档"
   },
   "cline-cli": {
-    "url": "https://github.com/cline/cline/tree/main/apps/cli",
+    "url": "https://docs.cline.bot/getting-started/installing-cline#cli",
     "label": "安装文档"
   },
   "codex-ide": {
@@ -340,7 +340,7 @@
     "label": "安装文档"
   },
   "kilo-vscode": {
-    "url": "https://github.com/Kilo-Org/kilocode/tree/76bcfd40be616a72f4697b3041565f322245b462/packages/kilo-vscode",
+    "url": "https://kilo.ai/docs/getting-started/installing",
     "label": "安装文档"
   },
   "kiro-cli": {
@@ -353,6 +353,14 @@
   },
   "kilo-desktop": {
     "url": "https://kilo.ai/install",
+    "label": "官方下载"
+  },
+  "postman": {
+    "url": "https://www.postman.com/downloads/",
+    "label": "官方下载"
+  },
+  "mcpjam": {
+    "url": "https://docs.mcpjam.com/installation",
     "label": "官方下载"
   }
 }

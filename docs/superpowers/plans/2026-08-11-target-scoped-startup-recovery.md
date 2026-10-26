@@ -6,7 +6,7 @@
 
 **Architecture:** Keep durable mutation-intent recovery as the file-safety authority, then classify MCP convergence independently per Agent without writing Agent files. Finalize the old operation only when every incident, claim, and lifecycle postcondition is verified.
 
-**Tech Stack:** Rust, MUX core asset transactions, JSON/TOML Agent adapters, durable safe-write journals.
+**Tech Stack:** Rust, Arca core asset transactions, JSON/TOML Agent adapters, durable safe-write journals.
 
 ---
 
@@ -21,7 +21,7 @@ Create a committed desired MCP projection without its commit marker, add a targe
 
 - [ ] **Step 2: Verify the regression is red**
 
-Run: `cargo test -p mux-core startup_recovery_finalizes_a_resolved_target_incident_marker -- --exact`
+Run: `cargo test -p arca-core startup_recovery_finalizes_a_resolved_target_incident_marker -- --exact`
 
 Expected: FAIL because the current marker branch immediately continues and leaves the operation root and incident intact.
 
@@ -57,7 +57,7 @@ When the operation has no incidents, `ensure_no_transaction_mutation_intents` su
 
 - [ ] **Step 3: Verify the focused behavior**
 
-Run: `cargo test -p mux-core startup_recovery_finalizes_a_resolved_target_incident_marker -- --exact`
+Run: `cargo test -p arca-core startup_recovery_finalizes_a_resolved_target_incident_marker -- --exact`
 
 Expected: PASS, with the Agent config intact, the incident removed, and the operation staging directory absent.
 
@@ -69,7 +69,7 @@ Expected: PASS, with the Agent config intact, the incident removed, and the oper
 
 - [ ] **Step 1: Document stable Agent file identity**
 
-State that existing watched Agent configuration files use CAS-guarded in-place rewrites, while MUX-private files retain atomic replacement.
+State that existing watched Agent configuration files use CAS-guarded in-place rewrites, while Arca-private files retain atomic replacement.
 
 - [ ] **Step 2: Review and compile**
 
@@ -77,4 +77,4 @@ Run `git diff --check`, inspect the complete diff, and run the repository-requir
 
 - [ ] **Step 3: Commit and publish**
 
-Commit with `fix(core): localize startup target recovery`, push `main`, wait for Direct Stable, install the signed release, restart MUX, and verify that only the unresolved Qoder target remains incident-scoped.
+Commit with `fix(core): localize startup target recovery`, push `main`, wait for Direct Stable, install the signed release, restart Arca, and verify that only the unresolved Qoder target remains incident-scoped.

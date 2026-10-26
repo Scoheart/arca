@@ -4,14 +4,14 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use clap::{Subcommand, ValueEnum};
-use mux_core::application::assets::{
+use arca_core::application::assets::{
     AssetRef, CentralAssetDraft, PlanDeleteCentralAssetRequest, PlanModelAdoptionRequest,
     PlanUpdateCentralAssetRequest,
 };
-use mux_core::application::models::{self, ApiKeyDelivery, ModelProviderInstanceView};
-use mux_core::application::operations::{OperationPlan, PlanOperationRequest};
-use mux_core::application::MuxCore;
-use mux_core::domain::types::{ApiKeySource, ModelProfile, ModelProviderConfig};
+use arca_core::application::models::{self, ApiKeyDelivery, ModelProviderInstanceView};
+use arca_core::application::operations::{OperationPlan, PlanOperationRequest};
+use arca_core::application::ArcaCore;
+use arca_core::domain::types::{ApiKeySource, ModelProfile, ModelProviderConfig};
 use serde_json::{json, Value};
 
 use crate::command::{parse_identity, Cli};
@@ -42,7 +42,7 @@ pub enum ModelManagementCommand {
         #[arg(value_parser = parse_identity)]
         profile_id: String,
     },
-    /// Explicitly import an external candidate shown by `mux discover model`.
+    /// Explicitly import an external candidate shown by `arca discover model`.
     Import {
         #[arg(value_parser = parse_identity)]
         candidate_id: String,
@@ -160,11 +160,11 @@ pub fn dispatch(cli: &Cli, command: &ModelManagementCommand) -> Result<CommandOu
             "model.delete", AssetRef::Model { profile_id: profile_id.clone() }, options,
         ),
         ModelManagementCommand::Import { candidate_id } => {
-            let candidate = mux_core::application::assets::list_model_adoption_candidates()
+            let candidate = arca_core::application::assets::list_model_adoption_candidates()
                 .map_err(CliError::from_legacy)?.into_iter()
                 .find(|candidate| candidate.candidate_id == *candidate_id)
-                .ok_or_else(|| CliError::new("candidate_not_found", "run mux discover model to obtain a current candidate ID"))?;
-            let plan = mux_core::application::assets::plan_model_adoption(PlanModelAdoptionRequest {
+                .ok_or_else(|| CliError::new("candidate_not_found", "run arca discover model to obtain a current candidate ID"))?;
+            let plan = arca_core::application::assets::plan_model_adoption(PlanModelAdoptionRequest {
                 candidate_fingerprints: BTreeMap::from([(candidate.candidate_id, candidate.fingerprint)]),
             }).map_err(CliError::from_legacy)?;
             execute_operation("model.import", OperationPlan::Asset { plan: Box::new(plan) }, options)
@@ -180,7 +180,7 @@ pub fn dispatch(cli: &Cli, command: &ModelManagementCommand) -> Result<CommandOu
 
 fn apply(command: &'static str, request: PlanOperationRequest, options: MutationOptions) -> Result<CommandOutput, CliError> {
     options.validate()?;
-    let plan = MuxCore::plan(request).map_err(CliError::from_core)?;
+    let plan = ArcaCore::plan(request).map_err(CliError::from_core)?;
     execute_operation(command, plan, options)
 }
 
@@ -228,7 +228,7 @@ fn provider(command: &ProviderCommand, options: MutationOptions) -> Result<Comma
 fn safe_provider(view: &ModelProviderInstanceView) -> Value {
     let provider = &view.provider;
     let source = provider.api_key_source.as_ref().map(|source| match source {
-        ApiKeySource::MuxStore => json!({"kind": "mux-store"}),
+        ApiKeySource::ArcaStore => json!({"kind": "arca-store"}),
         ApiKeySource::Env { name } => json!({"kind": "env", "name": name}),
         ApiKeySource::File { path } => json!({"kind": "file", "path": safe_path(path)}),
         ApiKeySource::Helper { .. } => json!({"kind": "helper", "command_redacted": true}),

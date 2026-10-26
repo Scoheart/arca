@@ -4,7 +4,13 @@ const sessionValues = new Map<string, string | null>();
 
 export function readLocalSetting(key: string): string | null {
   if (sessionValues.has(key)) return sessionValues.get(key) ?? null;
-  try { return window.localStorage.getItem(key); } catch { return null; }
+  try {
+    const saved = window.localStorage.getItem(key);
+    if (saved !== null || !key.startsWith("arca")) return saved;
+    const legacy = window.localStorage.getItem(`mux${key.slice(4)}`);
+    if (legacy !== null) window.localStorage.setItem(key, legacy);
+    return legacy;
+  } catch { return null; }
 }
 
 export function writeLocalSetting(key: string, value: string | null): void {

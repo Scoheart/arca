@@ -41,7 +41,7 @@ export function SkillRiskBadge({
 }) {
   return (
     <span
-      className="mux-skill-risk-badge"
+      className="arca-skill-risk-badge"
       data-level={level ?? "unreviewed"}
     >
       {label ?? skillRiskLabel(level)}
@@ -84,16 +84,16 @@ export function SkillCard({ item, selected, onOpen, agentIds = [], agentNames = 
       ? { labelKey: "updateAvailable" as const, tone: "info" as const }
       : assetState.labelKey !== "normal" ? assetState : null;
   return (
-    <article className="mux-skill-card" data-selected={selected ? "true" : undefined}>
-      <button type="button" className="mux-skill-card-main"
+    <article className="arca-skill-card" data-selected={selected ? "true" : undefined}>
+      <button type="button" className="arca-skill-card-main"
         aria-label={t("centralAssets.openSkillDetails", { name: item.name })}
         aria-pressed={selected} onClick={onOpen}>
         <h2 title={item.name}>{item.name}</h2>
-        <span className="mux-skill-card-description" title={item.description}>
+        <span className="arca-skill-card-description" title={item.description}>
           {item.description || t("centralAssets.noDescription")}
         </span>
       </button>
-      <div className="mux-skill-card-footer">
+      <div className="arca-skill-card-footer">
         <SkillAgentHand ids={agentIds} names={agentNames} skillName={item.name} onOpenAgent={onOpenAgent} />
         {status && <Badge tone={status.tone}>{t(`centralAssets.${status.labelKey}`)}</Badge>}
       </div>

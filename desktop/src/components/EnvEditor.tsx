@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { EyeIcon, EyeOffIcon, PlusIcon, TrashIcon } from "./icons";
@@ -66,12 +67,12 @@ export function EnvEditor({ value, onChange, onValidityChange, kind = "env", dis
 
   const label = t(kind === "headers" ? "mcpEditor.headers" : "mcpEditor.environment");
   return (
-    <div className="mux-key-value-editor">
+    <div className="arca-key-value-editor">
       {rows.map((row, index) => (
-        <div key={row.id} className="mux-key-value-item">
-        <div className="mux-key-value-row">
+        <div key={row.id} className="arca-key-value-item">
+        <div className="arca-key-value-row">
           <input
-            className="mux-dialog-input mux-dialog-input-mono"
+            className="arca-dialog-input arca-dialog-input-mono"
             placeholder={t(kind === "headers" ? "mcpEditor.header" : "mcpEditor.variable")}
             aria-label={t("mcpEditor.keyLabel", { label, row: index + 1 })}
             aria-invalid={!!errors[index] || undefined}
@@ -82,9 +83,9 @@ export function EnvEditor({ value, onChange, onValidityChange, kind = "env", dis
             autoCapitalize="off"
             autoCorrect="off"
           />
-          <div className="mux-key-value-value">
+          <div className="arca-key-value-value">
           <input
-            className="mux-dialog-input mux-dialog-input-mono"
+            className="arca-dialog-input arca-dialog-input-mono"
             type={row.revealed ? "text" : "password"}
             placeholder={t("mcpEditor.value")}
             aria-label={t("mcpEditor.valueLabel", { label, row: index + 1 })}
@@ -96,7 +97,7 @@ export function EnvEditor({ value, onChange, onValidityChange, kind = "env", dis
             autoCapitalize="off"
             autoCorrect="off"
           />
-          <button type="button" className="mux-key-value-reveal" disabled={disabled}
+          <button type="button" className="arca-key-value-reveal" disabled={disabled}
             aria-label={t(row.revealed ? "mcpEditor.hideValue" : "mcpEditor.showValue", { row: index + 1 })}
             title={t(row.revealed ? "mcpEditor.hideValue" : "mcpEditor.showValue", { row: index + 1 })}
             aria-pressed={!!row.revealed}
@@ -107,7 +108,7 @@ export function EnvEditor({ value, onChange, onValidityChange, kind = "env", dis
           <button
             type="button"
             onClick={() => removeRow(row.id)}
-            className="mux-key-value-delete"
+            className="arca-key-value-delete"
             title={t("mcpEditor.deleteRow", { row: index + 1 })}
             aria-label={t("mcpEditor.deleteRow", { row: index + 1 })}
             disabled={disabled}
@@ -115,13 +116,13 @@ export function EnvEditor({ value, onChange, onValidityChange, kind = "env", dis
             <TrashIcon className="w-3.5 h-3.5" />
           </button>
         </div>
-        {errors[index] && <small className="mux-mcp-field-error">{errors[index]}</small>}
+        {errors[index] && <ToastNotice kind="warning" delay={500} message={errors[index]} />}
         </div>
       ))}
       <button
         type="button"
         onClick={addRow}
-        className="mux-key-value-add"
+        className="arca-key-value-add"
         disabled={disabled}
       >
         <PlusIcon className="w-3.5 h-3.5" />

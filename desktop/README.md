@@ -1,4 +1,4 @@
-# MUX Desktop
+# Arca Desktop
 
 Tauri + React desktop app for MCP configuration management.
 
@@ -7,7 +7,7 @@ Tauri + React desktop app for MCP configuration management.
 ```bash
 cd desktop
 npm install
-npm run tauri dev   # Opens the MUX window (requires a display)
+npm run tauri dev   # Opens the Arca window (requires a display)
 ```
 
 ## Features (Plan 2)
@@ -22,7 +22,7 @@ npm run tauri dev   # Opens the MUX window (requires a display)
 ## Data
 
 - Server/agent definitions: repo root `data/registry.json` / `data/agents.json` (shared with CLI)
-- Overrides: `~/.mux/overrides.json`
+- Overrides: `~/.arca/overrides.json`
 
 ## Manual Smoke Test (requires display — cannot run in headless CI)
 
@@ -40,7 +40,7 @@ Verify the following:
 3. Clicking a card opens the install dialog.
 4. Open an Agent and click "添加 MCP" to install an entry into its global config.
 5. Confirm with `cat ~/.claude.json` (or the agent's config file) that the server was added to `mcpServers`.
-6. Confirm `ls ~/.mux/backups/` shows a backup file.
+6. Confirm `ls ~/.arca/backups/` shows a backup file.
 7. Close and reopen the app — the Agent page still lists the installed server.
 
 Record results in the PR description or commit message.

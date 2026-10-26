@@ -2,10 +2,14 @@ pub mod cli_tool;
 pub mod commands;
 mod capture;
 mod traces;
+mod instructions;
+mod codex_configuration;
 mod observation_watcher;
 mod file_editors;
 mod agent_launch;
 mod trackpad_gestures;
+#[cfg(target_os = "macos")]
+mod window_lifecycle;
 pub mod updater_guard;
 
 use tauri::Manager;
@@ -17,9 +21,9 @@ pub fn run() {
     // boundary. Desktop failures publish a read-only backend and still return a
     // diagnostic report. CLI read queries use the same degraded report while
     // every mutation remains constrained by the published backend status.
-    let bootstrap = mux_core::application::MuxCore::bootstrap();
+    let bootstrap = arca_core::application::ArcaCore::bootstrap();
     for warning in &bootstrap.warnings {
-        eprintln!("MUX startup warning: {warning:?}");
+        eprintln!("Arca startup warning: {warning:?}");
     }
 
     tauri::Builder::default()
@@ -30,26 +34,41 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         // Needed to relaunch the app after an update is installed.
         .plugin(tauri_plugin_process::init())
+        .on_window_event(|window, event| {
+            #[cfg(target_os = "macos")]
+            if window.label() == "main" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
+            let _ = (window, event);
+        })
         .setup(move |app| {
-            // Catch native selections changed while MUX was closed.
-            if let Err(error) = mux_core::application::models::reconcile_native_selection() {
-                eprintln!("MUX native model selection reconciliation: {error}");
+            #[cfg(target_os = "macos")]
+            window_lifecycle::install(app)?;
+            // Catch native selections changed while Arca was closed.
+            if let Err(error) = arca_core::application::models::reconcile_native_selection() {
+                eprintln!("Arca native model selection reconciliation: {error}");
             }
             if let Err(error) = observation_watcher::start(app.handle().clone()) {
-                eprintln!("MUX observation watcher warning: {error}");
+                eprintln!("Arca observation watcher warning: {error}");
             }
             if bootstrap.skill_updates_allowed {
                 std::thread::spawn(|| {
-                    let _ = mux_core::application::skills::check_updates_if_due();
+                    let _ = arca_core::application::skills::check_updates_if_due();
                 });
             }
 
             // macOS may keep the process alive after the last window closes.
             // Always restore the configured main window on a fresh launch.
             if let Some(window) = app.get_webview_window("main") {
+                #[cfg(debug_assertions)]
+                window.set_title("Arca Dev · 本地开发预览")?;
                 #[cfg(target_os = "macos")]
                 if let Err(error) = trackpad_gestures::install(window.clone()) {
-                    eprintln!("MUX trackpad phase bridge unavailable: {error}");
+                    eprintln!("Arca trackpad phase bridge unavailable: {error}");
                 }
                 window.show()?;
                 window.set_focus()?;
@@ -61,12 +80,15 @@ pub fn run() {
             agent_launch::get_agent_launch_info,
             agent_launch::get_agent_runtime_version,
             agent_launch::configure_agent_launch,
+            agent_launch::configure_agent_launch_profiles,
             agent_launch::launch_agent,
             agent_launch::get_terminal_settings,
             agent_launch::set_terminal_preference,
             file_editors::list_file_editors,
             file_editors::detect_agent_installation,
             commands::get_backend_status,
+            commands::unlock_model_credentials,
+            commands::get_model_credential_session_status,
             commands::copy_to_clipboard,
             commands::get_workspace_snapshot,
             commands::list_agent_capabilities,
@@ -143,11 +165,25 @@ pub fn run() {
             commands::import_mcp_icon_dialog,
             commands::reset_mcp_icon,
             traces::trace_index,
+            instructions::instruction_list,
+            instructions::instruction_get_paths,
+            instructions::instruction_set_paths,
+            instructions::instruction_read,
+            instructions::instruction_prepare_save,
+            instructions::instruction_prepare_create,
+            instructions::instruction_commit,
+            codex_configuration::codex_configuration_read,
+            codex_configuration::codex_configuration_render,
+            codex_configuration::codex_configuration_save,
             traces::trace_page,
             traces::trace_detail,
             traces::trace_import,
             traces::trace_export,
             capture::capture_environment,
+            capture::capture_proxy,
+            capture::capture_install_engine,
+            capture::capture_open_certificate,
+            capture::capture_launch_agent,
             capture::capture_sessions,
             capture::capture_snapshot,
             capture::capture_delta,
@@ -168,7 +204,10 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app, event| {
-            if matches!(&event, tauri::RunEvent::Exit) { mux_core::capture::shutdown(); }
+            if matches!(&event, tauri::RunEvent::Exit) {
+                arca_core::application::models::clear_credential_session();
+                arca_core::capture::shutdown();
+            }
             #[cfg(target_os = "macos")]
             if matches!(&event, tauri::RunEvent::Exit) { trackpad_gestures::stop(); }
             if let tauri::RunEvent::Reopen {
@@ -178,6 +217,7 @@ pub fn run() {
             {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
+                    let _ = window.unminimize();
                     let _ = window.set_focus();
                 }
             }

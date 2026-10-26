@@ -341,14 +341,14 @@ mod tests {
             &HashMap::new(),
         )
         .unwrap();
-        let before = fs::read(home.home.join(".mux/settings.json")).unwrap();
+        let before = fs::read(home.home.join(".arca/settings.json")).unwrap();
 
         let candidates = list_mcp_adoption_candidates().unwrap();
 
         assert_eq!(candidates.len(), 1);
         assert_eq!(candidates[0].status, McpAdoptionStatus::ExternalAdded);
         assert_eq!(
-            fs::read(home.home.join(".mux/settings.json")).unwrap(),
+            fs::read(home.home.join(".arca/settings.json")).unwrap(),
             before
         );
         assert!(crate::settings::load_settings().mcp_consumptions.is_none());
@@ -380,7 +380,7 @@ mod tests {
         assert_eq!(plan.relationship_changes.len(), 1);
         let persisted = fs::read_to_string(
             home.home
-                .join(".mux/staging/consumption")
+                .join(".arca/staging/consumption")
                 .join(&plan.operation_id)
                 .join("plan.json"),
         )
@@ -491,7 +491,7 @@ mod tests {
         .unwrap();
         let plan_path = home
             .home
-            .join(".mux/staging/consumption")
+            .join(".arca/staging/consumption")
             .join(&plan.operation_id)
             .join("plan.json");
         assert!(!fs::read_to_string(plan_path)
@@ -504,7 +504,7 @@ mod tests {
         })
         .unwrap();
 
-        let source = home.home.join(".mux/sources/local/manual.json");
+        let source = home.home.join(".arca/sources/local/manual.json");
         assert!(fs::read_to_string(&source)
             .unwrap()
             .contains("super-secret"));

@@ -61,14 +61,14 @@ export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, dis
   }, [orderKey]);
 
   const clearDrag = () => { dragged.current = null; previewRef.current = null; setPreview(null); };
-  return <><nav ref={dock} className={`mux-pinned-agent-bar${expanded ? " mux-hand-dock" : ""}`}
+  return <><nav ref={dock} className={`arca-pinned-agent-bar${expanded ? " arca-hand-dock" : ""}`}
     aria-label="置顶 Agent" data-replacing={replacementName ? "true" : undefined}
     onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPreview(null); }}>
     {Array.from({ length: expanded ? MAX_PINNED_AGENTS : order.length }, (_, index) => {
       const id = order[index];
       const agent = agents.find((agent) => agent.id === id);
       const label = replacementName ? `用 ${replacementName} 替换 ${agent?.name ?? "空位"}` : agent?.name ?? "空置顶位";
-      return <button key={id ?? `empty-${index}`} type="button" className="mux-pinned-agent"
+      return <button key={id ?? `empty-${index}`} type="button" className="arca-pinned-agent"
         data-agent-id={id} data-pin-slot={index} data-empty={!agent || undefined}
         data-active={selectedId === id ? "true" : undefined}
         aria-current={selectedId === id ? "page" : undefined}
@@ -114,12 +114,12 @@ export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, dis
           onReorder(previewRef.current ?? ids, dragged.current);
           clearDrag();
         }} onDragEnd={clearDrag}>
-        {agent ? <span className="mux-pinned-agent-glyph"><AgentGlyph id={agent.id} name={agent.name} size={30} /></span>
+        {agent ? <span className="arca-pinned-agent-glyph"><AgentGlyph id={agent.id} name={agent.name} size={30} /></span>
           : <PlusIcon className="w-3.5 h-3.5" />}
       </button>;
     })}
   </nav>
-    {context && createPortal(<div ref={menuRef} className="mux-agent-launch-context" role="menu" aria-label="Agent 操作" tabIndex={-1}
+    {context && createPortal(<div ref={menuRef} className="arca-agent-launch-context" role="menu" aria-label="Agent 操作" tabIndex={-1}
       style={{ left: context.x, top: context.y }} onKeyDown={(event) => {
         if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); context.opener.focus(); setContext(null); return; }
         if (["ArrowDown", "ArrowUp", "Home", "End", "Tab"].includes(event.key)) {

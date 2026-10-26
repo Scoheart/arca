@@ -1,4 +1,4 @@
-# MUX Unified Resource Interface Implementation Plan
+# Arca Unified Resource Interface Implementation Plan
 
 **Goal:** Implement the approved unified interface for top-level MCPs, Models,
 and Skills, the Agent-scoped resource hub, and the editor, picker, and review
@@ -7,7 +7,7 @@ dialog system without changing core ownership or safety behavior.
 **Design authority:**
 `docs/superpowers/specs/2026-07-18-unified-resource-interface-design.md`
 
-**Baseline:** branch `codex/unify-resource-ui`, based on MUX v1.2.20. The design
+**Baseline:** branch `codex/unify-resource-ui`, based on Arca v1.2.20. The design
 commit is `ccabb20`.
 
 **Architecture:** Rust core remains the authority for resource discovery,
@@ -30,7 +30,7 @@ Tauri 2, Rust workspace tests.
 - Preserve the existing sidebar resize persistence contract.
 - Make every phase independently buildable and reviewable.
 - Do not edit release-owned version files or generated lockfile versions.
-- Do not replace `/Applications/MUX.app` without explicit user authorization.
+- Do not replace `/Applications/Arca.app` without explicit user authorization.
 - Stage only files named by the current task and inspect every staged diff.
 
 ## Common verification commands
@@ -52,7 +52,7 @@ cargo test --workspace
 cargo test --manifest-path desktop/src-tauri/Cargo.toml
 ```
 
-All tests must isolate `HOME` and `MUX_HOME` through the existing test helpers.
+All tests must isolate `HOME` and `ARCA_HOME` through the existing test helpers.
 
 ---
 
@@ -574,7 +574,7 @@ cargo test --manifest-path desktop/src-tauri/Cargo.toml
 
 1. Run all Desktop tests, production build, and icon checks.
 2. Run the root Rust workspace and Tauri test suites.
-3. Confirm test processes use isolated `HOME`/`MUX_HOME` and do not touch real
+3. Confirm test processes use isolated `HOME`/`ARCA_HOME` and do not touch real
    Keychain or Skills.
 4. Search rendered fixtures and source snapshots for secret-like values.
 5. Run `git diff --check` and review the complete branch diff by phase.
@@ -597,20 +597,20 @@ git diff --check origin/main...HEAD
 
 **Steps:**
 
-1. Follow `../../../memory/reference/mux-ui-review.md` and the project release
+1. Follow `../../../memory/reference/arca-ui-review.md` and the project release
    contracts.
 2. Build/package from the committed branch only after static verification passes.
 3. Verify bundle ID, architecture, sidecar version, and deep strict codesign for
    the review artifact.
 4. Do not name or launch a source target bundle as the installed application.
 5. Stop and request explicit authorization before replacing
-   `/Applications/MUX.app`.
+   `/Applications/Arca.app`.
 
 ### Task 5.3: Installed-app acceptance after authorization
 
 **Steps:**
 
-1. Atomically stage and replace `/Applications/MUX.app` under the UI review
+1. Atomically stage and replace `/Applications/Arca.app` under the UI review
    playbook, with a verified rollback copy.
 2. Inspect only the exact installed path with Computer Use.
 3. Capture MCPs, Models, Skills, an Agent page, and all three dialog kinds at
@@ -656,7 +656,7 @@ npm test
 npm run build
 ```
 
-**Suggested final commit:** `docs(mux): document unified resource interface`
+**Suggested final commit:** `docs(arca): document unified resource interface`
 
 ## Completion evidence
 
@@ -669,6 +669,6 @@ The implementation is complete only when the handoff includes:
 - the final decision on Inspector-only card actions;
 - confirmation that no real configuration, Skills, Keychain value, or secret was
   read by tests or included in artifacts;
-- clean MUX and parent worktrees, or an explicit list of preserved unrelated
+- clean Arca and parent worktrees, or an explicit list of preserved unrelated
   changes;
 - push/PR/release status stated accurately.

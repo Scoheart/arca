@@ -1,3 +1,5 @@
+import { ImeInput } from "./ImeInput";
+import { ToastNotice } from "./Toast";
 import { ResourceIcon } from "./resourcePresentation";
 import {
   useCallback,
@@ -388,8 +390,8 @@ export function SkillInstallDialog({
 
   return (
     <DialogShell
-      leading={<span className="mux-dialog-shell-glyph"><ResourceIcon domain="skill" /></span>}
-      className="mux-dialog-skill-flow"
+      leading={<span className="arca-dialog-shell-glyph"><ResourceIcon domain="skill" /></span>}
+      className="arca-dialog-skill-flow"
       kind="editor"
       size="md"
       title="添加 Skills"
@@ -397,7 +399,7 @@ export function SkillInstallDialog({
       busy={busy}
       closeLabel="关闭"
       onClose={() => void closeDialog()}
-      footerStart={resolution ? <span className="mux-skill-selection-count">已选 {selectedCount} / {candidateCount}</span> : undefined}
+      footerStart={resolution ? <span className="arca-skill-selection-count">已选 {selectedCount} / {candidateCount}</span> : undefined}
       footerEnd={resolution ? (
         <>
           <button type="button" className="btn-ghost" disabled={busy} onClick={() => void returnToSource()}>
@@ -414,21 +416,21 @@ export function SkillInstallDialog({
         </>
       ) : undefined}
     >
-      <div className="mux-skill-install-dialog">
-        <div className="mux-skill-dialog-body">
+      <div className="arca-skill-install-dialog">
+        <div className="arca-skill-dialog-body">
           {!resolution ? (
-            <div className="mux-skill-source-step mux-skill-source-step-compact">
+            <div className="arca-skill-source-step arca-skill-source-step-compact">
               <section>
-                <div className="mux-skill-source-heading">
+                <div className="arca-skill-source-heading">
                   <LinkIcon className="w-4 h-4" />
                   <div>
                     <h3>GitHub</h3>
                   </div>
                 </div>
-                <label htmlFor="mux-skill-github-source">仓库地址</label>
-                <div className="mux-skill-source-input-row">
-                  <input
-                    id="mux-skill-github-source"
+                <label htmlFor="arca-skill-github-source">仓库地址</label>
+                <div className="arca-skill-source-input-row">
+                  <ImeInput
+                    id="arca-skill-github-source"
                     data-modal-initial-focus
                     type="text"
                     value={githubValue}
@@ -455,12 +457,12 @@ export function SkillInstallDialog({
 
               <button
                 type="button"
-                className="mux-skill-local-source"
+                className="arca-skill-local-source"
                 aria-label="选择本地文件夹"
                 disabled={busy}
                 onClick={resolveLocal}
               >
-                <span className="mux-skill-local-source-icon"><FolderIcon className="w-4 h-4" /></span>
+                <span className="arca-skill-local-source-icon"><FolderIcon className="w-4 h-4" /></span>
                 <span>
                   <strong>文件夹</strong>
                   <small>本机目录</small>
@@ -468,28 +470,23 @@ export function SkillInstallDialog({
               </button>
               <button
                 type="button"
-                className="mux-skill-local-source"
+                className="arca-skill-local-source"
                 aria-label="选择 Skill 压缩包"
                 disabled={busy}
                 onClick={resolveArchive}
               >
-                <span className="mux-skill-local-source-icon"><PackageIcon className="w-4 h-4" /></span>
+                <span className="arca-skill-local-source-icon"><PackageIcon className="w-4 h-4" /></span>
                 <span>
                   <strong>压缩包</strong>
                   <small>.zip · .tar.gz</small>
                 </span>
               </button>
 
-              {sourceError && (
-                <div className="mux-skill-dialog-error" role="alert">
-                  <strong>{sourceError.message}</strong>
-                  {sourceError.retry_at && <code>可重试时间：{sourceError.retry_at}</code>}
-                </div>
-              )}
+              <ToastNotice message={sourceError ? `${sourceError.message}${sourceError.retry_at ? ` · 可重试时间：${sourceError.retry_at}` : ""}` : null} />
             </div>
           ) : (
-            <div className="mux-skill-selection-step">
-              <div className="mux-skill-resolution-summary">
+            <div className="arca-skill-selection-step">
+              <div className="arca-skill-resolution-summary">
                 {resolution.source.kind === "github" ? (
                   <LinkIcon className="w-4 h-4" />
                 ) : resolution.source.kind === "archive" ? (
@@ -507,14 +504,14 @@ export function SkillInstallDialog({
               </div>
 
               <section>
-                <div className="mux-skill-selection-heading">
+                <div className="arca-skill-selection-heading">
                   <h3>{busy ? "正在导入 Skills" : "找到的 Skills"}</h3>
                   <span>{candidateCount} 项</span>
                 </div>
-                <div className="mux-skill-choice-list">
+                <div className="arca-skill-choice-list">
                   {resolution.candidates.map((candidate) => (
                     <label key={candidate.name}>
-                      <input
+                      <ImeInput
                         type="checkbox"
                         aria-label={candidate.name}
                         checked={wizard.selectedSkillNames.includes(candidate.name)}
@@ -534,17 +531,7 @@ export function SkillInstallDialog({
                 </div>
               </section>
 
-              {planError && (
-                <div
-                  className={planError.code === "conflict" ? "mux-skill-conflict-prompt" : "mux-skill-dialog-error"}
-                  role="alert"
-                >
-                  <strong>{planError.code === "conflict" ? "发现冲突" : planError.message}</strong>
-                  {planError.code === "conflict" && <span>{planError.message}</span>}
-                  {planError.code === "conflict" && <small>再次操作会先备份原内容。</small>}
-                  {planError.retry_at && <code>可重试时间：{planError.retry_at}</code>}
-                </div>
-              )}
+              <ToastNotice message={planError ? `${planError.message}${planError.code === "conflict" ? " · 再次操作会先备份原内容。" : ""}${planError.retry_at ? ` · 可重试时间：${planError.retry_at}` : ""}` : null} />
             </div>
           )}
         </div>

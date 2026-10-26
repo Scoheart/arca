@@ -1,3 +1,4 @@
+import { isImeKey } from "./ImeInput";
 import { RESOURCE_CATEGORIES } from "./resourcePresentation";
 import { ReactNode, useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
@@ -80,7 +81,7 @@ export function Layout({
 
   useEffect(() => {
     const find = (event: KeyboardEvent) => {
-      if (event.isComposing || event.altKey || !(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "f") return;
+      if (isImeKey(event) || event.altKey || !(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "f") return;
       const modal = Array.from(document.querySelectorAll<HTMLElement>(MODAL_DIALOG_SELECTOR)).at(-1);
       const search = (modal ?? document.querySelector("main"))?.querySelector<HTMLInputElement>('input[type="search"]:not(:disabled)');
       if (!search || search.closest("[inert]")) return;
@@ -130,7 +131,7 @@ export function Layout({
     <AgentLauncherProvider><div className="flex flex-col h-full">
       {/* Top bar */}
       <header
-        className="mux-topbar flex-shrink-0 flex items-center gap-3 px-5"
+        className="arca-topbar flex-shrink-0 flex items-center gap-3 px-5"
         style={{
           height: 56,
           background: "var(--surface-workspace)",
@@ -138,33 +139,33 @@ export function Layout({
           zIndex: 100,
         }}
       >
-        {/* MUX wordmark */}
+        {/* Arca wordmark */}
         <span
-          className="mux-wordmark text-[22px] font-bold bg-gradient-to-r from-brand-gold via-brand-coral to-brand-magenta bg-clip-text select-none flex-shrink-0"
+          className="arca-wordmark text-[22px] font-bold bg-gradient-to-r from-brand-gold via-brand-coral to-brand-magenta bg-clip-text select-none flex-shrink-0"
           style={{ WebkitTextFillColor: "transparent", letterSpacing: 0 }}
         >
-          MUX
+          Arca
         </span>
 
         {/* Top-level resources (also the way back from an Agent view) */}
-        <div className="mux-seg mux-skill-seg flex-shrink-0" role="navigation" aria-label="中央资源">
+        <div className="arca-seg arca-skill-seg flex-shrink-0" role="navigation" aria-label="中央资源">
           {RESOURCE_CATEGORIES.map((resource) => <button
             key={resource.id}
-            className="mux-seg-item"
+            className="arca-seg-item"
             data-active={view.kind === resource.view ? "true" : undefined}
             aria-pressed={view.kind === resource.view}
             onClick={{ models: onSelectModels, mcps: onSelectRegistry, skills: onSelectSkills }[resource.id]}
           >
             <span className="flex items-center gap-1.5">
               <resource.Icon className="w-3.5 h-3.5" />
-              <span className="mux-resource-label">{resource.label}</span>
+              <span className="arca-resource-label">{resource.label}</span>
             </span>
           </button>)}
         </div>
 
         {/* The picker settles at one icon, then pinned Agents disappear one
             whole shortcut at a time until their strip has no footprint. */}
-        <div className="mux-topbar-navigation-lane">
+        <div className="arca-topbar-navigation-lane">
           <AgentNavigation
             agents={agents}
             selectedAgentId={view.kind === "agent" ? view.id : null}
@@ -173,10 +174,10 @@ export function Layout({
           />
         </div>
 
-        <button type="button" className="mux-settings-trigger" aria-label="设置" title="设置"
+        <button type="button" className="arca-settings-trigger" aria-label="设置" title="设置"
           aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => setSettingsOpen(true)}>
           <SlidersIcon className="w-4 h-4" /><span>设置</span>
-          {updater?.phase.kind === "available" && <span className="mux-settings-update-dot" aria-label="有可用更新" />}
+          {updater?.phase.kind === "available" && <span className="arca-settings-update-dot" aria-label="有可用更新" />}
         </button>
       </header>
 
@@ -189,30 +190,30 @@ export function Layout({
       </main>
 
       {settingsOpen && !proxySettingsOpen && (
-        <DialogShell kind="editor" size="sm" title="设置" className="mux-workspace-settings" leading={<SlidersIcon className="w-5 h-5" />}
+        <DialogShell kind="editor" size="sm" title="设置" className="arca-workspace-settings" leading={<SlidersIcon className="w-5 h-5" />}
           onClose={() => setSettingsOpen(false)}>
-          <div className="mux-settings-section">
-            <div className="mux-settings-row"><span className="mux-settings-label"><EditIcon className="w-4 h-4" />{t("fileEditor.label")}</span><FileEditorSelect showLabel /></div>
-            <div className="mux-settings-row"><span className="mux-settings-label"><TerminalIcon className="w-4 h-4" />默认终端</span><TerminalSelect /></div>
+          <div className="arca-settings-section">
+            <div className="arca-settings-row"><span className="arca-settings-label"><EditIcon className="w-4 h-4" />{t("fileEditor.label")}</span><FileEditorSelect showLabel /></div>
+            <div className="arca-settings-row"><span className="arca-settings-label"><TerminalIcon className="w-4 h-4" />默认终端</span><TerminalSelect /></div>
           </div>
-          <div className="mux-settings-section">
-            <div className="mux-settings-row"><span className="mux-settings-label"><SunIcon className="w-4 h-4" />外观</span>
-              <div className="mux-seg"><button type="button" className="mux-seg-item" data-active={theme === "light" || undefined} aria-label={t("layout.lightTheme")} aria-pressed={theme === "light"} onClick={() => { if (theme !== "light") toggleTheme(); }}><SunIcon className="w-4 h-4" /></button>
-                <button type="button" className="mux-seg-item" data-active={theme === "dark" || undefined} aria-label={t("layout.darkTheme")} aria-pressed={theme === "dark"} onClick={() => { if (theme !== "dark") toggleTheme(); }}><MoonIcon className="w-4 h-4" /></button></div>
+          <div className="arca-settings-section">
+            <div className="arca-settings-row"><span className="arca-settings-label"><SunIcon className="w-4 h-4" />外观</span>
+              <div className="arca-seg"><button type="button" className="arca-seg-item" data-active={theme === "light" || undefined} aria-label={t("layout.lightTheme")} aria-pressed={theme === "light"} onClick={() => { if (theme !== "light") toggleTheme(); }}><SunIcon className="w-4 h-4" /></button>
+                <button type="button" className="arca-seg-item" data-active={theme === "dark" || undefined} aria-label={t("layout.darkTheme")} aria-pressed={theme === "dark"} onClick={() => { if (theme !== "dark") toggleTheme(); }}><MoonIcon className="w-4 h-4" /></button></div>
             </div>
-            <div className="mux-settings-row"><span className="mux-settings-label"><LanguageIcon className="w-4 h-4" />{t("layout.language")}</span>
+            <div className="arca-settings-row"><span className="arca-settings-label"><LanguageIcon className="w-4 h-4" />{t("layout.language")}</span>
               <FormSelect ariaLabel={t("layout.language")} value={localeState.preference ?? "system"} disabled={localeState.saving}
                 options={[{ value: "system", label: t("layout.followSystem") }, { value: "zh-CN", label: t("layout.simplifiedChinese") }, { value: "en-US", label: t("layout.english") }]}
                 onChange={(value) => void selectLocale(value === "system" ? null : value as LocalePreference)} />
             </div>
-            <div className="mux-settings-row"><span className="mux-settings-label"><NetworkIcon className="w-4 h-4" />{t("layout.networkProxy")}</span>
-              <button type="button" className="mux-settings-value" disabled={proxySettingsLoading} onClick={() => setProxySettingsOpen(true)}><span className="mux-settings-status" data-active={Boolean(proxyUrl)} />{proxyUrl ? "已配置" : "未配置"}<span aria-hidden="true">›</span></button>
+            <div className="arca-settings-row"><span className="arca-settings-label"><NetworkIcon className="w-4 h-4" />{t("layout.networkProxy")}</span>
+              <button type="button" className="arca-settings-value" disabled={proxySettingsLoading} onClick={() => setProxySettingsOpen(true)}><span className="arca-settings-status" data-active={Boolean(proxyUrl)} />{proxyUrl ? "已配置" : "未配置"}<span aria-hidden="true">›</span></button>
             </div>
           </div>
-          <div className="mux-settings-section">
-            {onRescan && <button type="button" className="mux-settings-action" disabled={rescanning} onClick={() => void handleRescan().catch((error) => toast.show({ kind: "error", msg: formatError(error) }))}>
+          <div className="arca-settings-section">
+            {onRescan && <button type="button" className="arca-settings-action" disabled={rescanning} onClick={() => void handleRescan().catch((error) => toast.show({ kind: "error", msg: formatError(error) }))}>
               <RefreshIcon className="w-4 h-4" /><span>{rescanning ? t("layout.scanning") : t("layout.rescan")}</span></button>}
-            <button type="button" className="mux-settings-action" disabled={!updater || checkingUpdate} onClick={() => { setSettingsOpen(false); void handleCheckUpdate(); }}>
+            <button type="button" className="arca-settings-action" disabled={!updater || checkingUpdate} onClick={() => { setSettingsOpen(false); void handleCheckUpdate(); }}>
               <DownloadIcon className="w-4 h-4" /><span>{checkingUpdate ? t("layout.checking") : t("layout.checkUpdate")}</span><small>{version && `v${version}`}</small></button>
           </div>
         </DialogShell>

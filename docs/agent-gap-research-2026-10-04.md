@@ -1,10 +1,10 @@
-# MUX Agent 覆盖与接入审计
+# Arca Agent 覆盖与接入审计
 
 调研日期：2026-10-04。该调研完成时对应本地开发预览，尚未提交、推送、升版或发布；后续交付由单独的发布请求决定。
 
 ## 结论与范围
 
-原先的 MUX 并非缺少 Claude Code、Codex CLI、Cursor、OpenCode、Pi、Gemini、Qoder 等主流名称，主要缺口是同品牌的独立产品形态，以及新出现的本地 Agent。原始已核验定义为 75 个，其中 61 个有 MCP 文件契约、57 个有用户级 Skills 目录。本轮新增 13 个已核验入口，达到 **88 个定义、73 个 MCP 目标、68 个 Skills 消费者**。这三个数字按契约声明计数，包含共用物理文件的产品，不代表本机安装数或独立配置文件数。
+原先的 Arca 并非缺少 Claude Code、Codex CLI、Cursor、OpenCode、Pi、Gemini、Qoder 等主流名称，主要缺口是同品牌的独立产品形态，以及新出现的本地 Agent。原始已核验定义为 75 个，其中 61 个有 MCP 文件契约、57 个有用户级 Skills 目录。本轮新增 13 个已核验入口，达到 **88 个定义、73 个 MCP 目标、68 个 Skills 消费者**。这三个数字按契约声明计数，包含共用物理文件的产品，不代表本机安装数或独立配置文件数。
 
 更新后的发现目录为 **246 项**，与已核验定义去重合并后 **271 个身份**。目录刷新补充了官方产品、Glama 客户端和 ACP Registry 的新增项目；ACP 的启动身份不能证明 MCP、Models 或 Skills 的文件写入契约。
 
@@ -30,7 +30,7 @@
 | AnythingLLM | `anythingllm` | desktop | `~/Library/Application Support/anythingllm-desktop/storage/plugins/anythingllm_mcp_servers.json` | `—` | stdio/http |
 | IBM Bob | `ibm-bob` | ide | `~/.bob/settings/mcp.json` | `—` | stdio/http |
 
-上述 macOS 默认路径均可以通过 MUX 已有配置入口调整。Jan 用户若移动过 data folder，需要选择实际 `mcp_config.json`；自定义路径不被默认值覆盖。
+上述 macOS 默认路径均可以通过 Arca 已有配置入口调整。Jan 用户若移动过 data folder，需要选择实际 `mcp_config.json`；自定义路径不被默认值覆盖。
 
 ## 核验发现与实现选择
 
@@ -44,9 +44,9 @@
 
 ### 新 CLI
 
-- **MiMoCode**：官方仓库约 1.36 万 Star（本次 GitHub API 快照），是 OpenCode 分支但有独立命名空间和配置。新增 JSONC writer，使用 `mcp`、`local/remote`、command 数组、environment；不写不支持的 cwd，不把 SSE 冒充支持的远程协议，保留模型、permission、sampling、oauth 与 timeout。原生停用条目保持只读，需先在 Agent 中启用后再由 MUX 更新。Skills 使用官方用户目录和共享 `.agents` 目录。来源：[配置源码](https://github.com/XiaomiMiMo/MiMo-Code/blob/6babeb0b98f9b4818bddf04a4331edfee04dbf85/packages/cli/src/config/config.ts)、[MCP Schema](https://github.com/XiaomiMiMo/MiMo-Code/blob/6babeb0b98f9b4818bddf04a4331edfee04dbf85/packages/cli/src/config/mcp.ts)、[Skills](https://github.com/XiaomiMiMo/MiMo-Code/blob/6babeb0b98f9b4818bddf04a4331edfee04dbf85/packages/cli/src/skill/index.ts)。
+- **MiMoCode**：官方仓库约 1.36 万 Star（本次 GitHub API 快照），是 OpenCode 分支但有独立命名空间和配置。新增 JSONC writer，使用 `mcp`、`local/remote`、command 数组、environment；不写不支持的 cwd，不把 SSE 冒充支持的远程协议，保留模型、permission、sampling、oauth 与 timeout。原生停用条目保持只读，需先在 Agent 中启用后再由 Arca 更新。Skills 使用官方用户目录和共享 `.agents` 目录。来源：[配置源码](https://github.com/XiaomiMiMo/MiMo-Code/blob/6babeb0b98f9b4818bddf04a4331edfee04dbf85/packages/cli/src/config/config.ts)、[MCP Schema](https://github.com/XiaomiMiMo/MiMo-Code/blob/6babeb0b98f9b4818bddf04a4331edfee04dbf85/packages/cli/src/config/mcp.ts)、[Skills](https://github.com/XiaomiMiMo/MiMo-Code/blob/6babeb0b98f9b4818bddf04a4331edfee04dbf85/packages/cli/src/skill/index.ts)。
 - **DeepSeek Harness**：官方仓库约 24.3 万 Star，仍是 developer preview。MCP 连接挂在插件树中，不能用通用 `mcpServers` 映射安全写入；当前只开放 Skills 分配，运行配置必须启用 filesystem skill provider。来源：[产品](https://www.deepseek.com/en/harness/)、[Skill provider](https://github.com/deepseek-ai/deepseek-harness/blob/5badb15009ae1756c3afe0ae0cef1faafc290ccc/packages/skill/skill-filesystem/README.md)、[MCP 插件](https://github.com/deepseek-ai/deepseek-harness/blob/5badb15009ae1756c3afe0ae0cef1faafc290ccc/packages/mcp/mcp-client/README.md)。
-- **jcode**：从官方网站反查到 `1jehuang/jcode`，排除了多个同名仓库；官方仓库约 2.03 万 Star。源码序列化键是 `servers`，`mcpServers` 是上游接收的另一个名称，当前仅运行 STDIO。MUX 使用原生序列化键；若已有文件使用不同键，拒绝新增第二个映射，提示设置实际键，不自动迁移。保留 shared、timeout_secs 与停用策略；HTTP、SSE 和 cwd 会被拒绝。来源：[官网](https://jcode.sh/)、[MCP 格式](https://github.com/1jehuang/jcode/blob/77f4f9d50bb41ae849da9ffaab7ea25e7815e096/crates/jcode-base/src/mcp/protocol.rs)、[Skills](https://github.com/1jehuang/jcode/blob/77f4f9d50bb41ae849da9ffaab7ea25e7815e096/crates/jcode-base/src/skill.rs)。
+- **jcode**：从官方网站反查到 `1jehuang/jcode`，排除了多个同名仓库；官方仓库约 2.03 万 Star。源码序列化键是 `servers`，`mcpServers` 是上游接收的另一个名称，当前仅运行 STDIO。Arca 使用原生序列化键；若已有文件使用不同键，拒绝新增第二个映射，提示设置实际键，不自动迁移。保留 shared、timeout_secs 与停用策略；HTTP、SSE 和 cwd 会被拒绝。来源：[官网](https://jcode.sh/)、[MCP 格式](https://github.com/1jehuang/jcode/blob/77f4f9d50bb41ae849da9ffaab7ea25e7815e096/crates/jcode-base/src/mcp/protocol.rs)、[Skills](https://github.com/1jehuang/jcode/blob/77f4f9d50bb41ae849da9ffaab7ea25e7815e096/crates/jcode-base/src/skill.rs)。
 
 ### 桌面与 IDE
 
@@ -59,7 +59,7 @@
 
 ## 其他知名候选：目前为何只保留发现
 
-| 产品/形态 | MUX 调研前状态 | 本轮结果与原因 | 官方来源 |
+| 产品/形态 | Arca 调研前状态 | 本轮结果与原因 | 官方来源 |
 |---|---|---|---|
 | GitHub Copilot app / Desktop | 缺少独立桌面身份 | 新增发现项；官方有 MCP/Skills UI，但没有确认可直接写入的全局文件，不推定与 CLI 共用 | [定制](https://docs.github.com/en/copilot/how-tos/github-copilot-app/customize-github-copilot-app) |
 | Xiaomi MiMo Desktop | 缺少桌面身份 | 新增发现项；官方 README 确认 Desktop beta 使用 MiMoCode 核心，但不能据此假定配置路径一致 | [官方 beta](https://github.com/XiaomiMiMo/MiMo-Code#xiaomi-mimo-desktop-beta) |
@@ -87,9 +87,9 @@
 - `data/agents.json` 继续是核验身份/路径/Skills 的权威；`agent-launchers`、安装/帮助链接仅提供入口。新增原生格式集中在 Rust Core 的 MCP codec 和已有安全 JSON adapter，CLI/Tauri/React 不复制配置写入逻辑。
 - 复用原地写入、CAS、备份、未知字段保留及 shared-target 机制；没有新增旧中央目录兼容代码，没有导入或改动真实 Agent 配置。
 - 新增官方格式的脱敏 fixtures、共享形态 round-trip、策略保留、原生开关、无效文件/混用格式拒写用例；同步修正旧测试中滞后的目录数量断言。
-- Rust workspace 生产编译检查、CLI 构建与前端生产构建通过；隔离 HOME/MUX_HOME 的 CLI inventory 查询返回 271 个身份，新增 13 个入口的 MCP/Skill 能力与声明一致。
+- Rust workspace 生产编译检查、CLI 构建与前端生产构建通过；隔离 HOME/ARCA_HOME 的 CLI inventory 查询返回 271 个身份，新增 13 个入口的 MCP/Skill 能力与声明一致。
 - 按当前极速模式，本轮没有执行测试套件、fmt/clippy、图标检查脚本或发布验证。新增格式用例已经写入，尚未运行；没有安装全部外部 Agent 做真实端到端连接或发送付费模型请求。
-- 完成后重启 `npm run tauri dev`，使用真实 HOME 和 `~/.mux` 做本地预览。开发预览不等同于已安装 Stable，也不会替换 `/Applications/MUX.app`。
+- 完成后重启 `npm run tauri dev`，使用真实 HOME 和 `~/.arca` 做本地预览。开发预览不等同于已安装 Stable，也不会替换 `/Applications/Arca.app`。
 
 ## 可重复来源与后续优先级
 

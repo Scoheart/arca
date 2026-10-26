@@ -1,4 +1,4 @@
-use mux_core::application::traces as core;
+use arca_core::application::traces as core;
 use tauri_plugin_dialog::DialogExt;
 
 async fn worker<T: Send + 'static>(f: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<T, String> {
@@ -23,7 +23,7 @@ pub async fn trace_import(app: tauri::AppHandle) -> Result<Option<core::TraceSes
 }
 #[tauri::command]
 pub async fn trace_export(app: tauri::AppHandle, session_id: String, event_id: String, revision: String) -> Result<Option<String>, String> {
-    let picked = tauri::async_runtime::spawn_blocking(move || app.dialog().file().add_filter("Trace JSON", &["json"]).set_file_name("mux-trace-record.json").blocking_save_file()).await.map_err(|_| "无法打开导出窗口。".to_owned())?;
+    let picked = tauri::async_runtime::spawn_blocking(move || app.dialog().file().add_filter("Trace JSON", &["json"]).set_file_name("arca-trace-record.json").blocking_save_file()).await.map_err(|_| "无法打开导出窗口。".to_owned())?;
     let Some(picked) = picked else { return Ok(None); };
     let path = picked.into_path().map_err(|_| "导出位置无效。".to_owned())?;
     worker(move || { core::export_detail(&session_id, &event_id, &revision, &path)?; Ok(Some(path.to_string_lossy().into_owned())) }).await

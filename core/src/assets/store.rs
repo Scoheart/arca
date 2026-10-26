@@ -1,4 +1,4 @@
-//! Unified, typed access to MUX-owned asset state.
+//! Unified, typed access to Arca-owned asset state.
 //!
 //! MCP, Model, and Skill payloads deliberately keep their native persistence
 //! backends. This store unifies how planners bind the central assets, desired

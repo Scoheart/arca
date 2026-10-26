@@ -61,4 +61,4 @@ Rejected because Delete Source needs the same small danger treatment. Extending 
 - The dialog states both destructive scope and preserved central data.
 - Confirm, cancel, busy, focus, and error behavior remain unchanged.
 - Delete Source continues to work and inherits the shared danger presentation.
-- Local tests/build/formatters remain skipped under MUX fast mode; regression tests are retained and the production Stable build is required.
+- Local tests/build/formatters remain skipped under Arca fast mode; regression tests are retained and the production Stable build is required.

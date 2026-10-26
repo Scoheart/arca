@@ -1,10 +1,11 @@
-//! Shared domain and application core for MUX.
+//! Shared domain and application core for Arca.
 //!
-//! MUX manages central MCP, Model, and Skill assets plus their desired and
+//! Arca manages central MCP, Model, and Skill assets plus their desired and
 //! observed relationships with Agents. Frontends should enter through
 //! [`application`]; domain contracts live under [`domain`].
 
 pub mod agents;
+pub mod brand;
 pub mod application;
 pub mod assets;
 pub mod domain;

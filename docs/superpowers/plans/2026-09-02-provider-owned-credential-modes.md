@@ -6,7 +6,7 @@
 
 **Goal:** Make Provider the only credential configuration surface and make every Agent consume it through automatic safe routing.
 
-**Architecture:** Preserve the four existing source wire variants, relabel `mux-store` as 明文, and remove the per-Agent delivery mutation surface. Core ignores legacy consumption overrides and always selects `ApiKeyDelivery::Auto`, retaining wire compatibility without retaining user-visible behavior.
+**Architecture:** Preserve the four existing source wire variants, relabel `arca-store` as 明文, and remove the per-Agent delivery mutation surface. Core ignores legacy consumption overrides and always selects `ApiKeyDelivery::Auto`, retaining wire compatibility without retaining user-visible behavior.
 
 **Tech Stack:** Rust/serde, Tauri 2, React 19, TypeScript, Vitest.
 
@@ -20,7 +20,7 @@
 - Test: `core/src/resources/model/mod.rs`
 
 - [ ] Add a failing regression that stores `delivery: plaintext` and a source override on one consumption, then asserts routing still uses the Provider source and never writes a literal credential.
-- [ ] Run `cargo test -p mux-core provider_owned_credential -- --nocapture`; expect the old per-Agent policy to win and the assertion to fail.
+- [ ] Run `cargo test -p arca-core provider_owned_credential -- --nocapture`; expect the old per-Agent policy to win and the assertion to fail.
 - [ ] Make `credential_route_for` read only `provider.api_key_source` (plus legacy Profile fallback) and call `select_delivery(..., ApiKeyDelivery::Auto)`.
 - [ ] Remove the public `set_model_credential_delivery` resource function and capability/policy fields that exist solely for Agent UI.
 - [ ] Re-run the focused Rust test; expect pass.
@@ -50,7 +50,7 @@
 - Modify: `desktop/src/i18n/index.ts`
 - Modify: `desktop/src/components/ModelsView.test.tsx`
 
-- [ ] Update the existing Provider-source test to require the four Chinese labels 明文、环境变量、文件、命令 and reject “MUX 安全存储 / 凭据助手”.
+- [ ] Update the existing Provider-source test to require the four Chinese labels 明文、环境变量、文件、命令 and reject “Arca 安全存储 / 凭据助手”.
 - [ ] Run the focused test and observe failure.
 - [ ] Change only the labels/help text; keep persisted `kind` values unchanged and state explicitly that 明文 is stored in Keychain.
 - [ ] Re-run the focused test and desktop production build; expect pass.

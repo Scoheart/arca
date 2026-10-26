@@ -3,10 +3,10 @@
 
 use std::collections::HashMap;
 
-use mux_core::ops;
-use mux_core::registry::{read_registry, write_manual_entry};
-use mux_core::testenv::TestHome;
-use mux_core::types::{RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::ops;
+use arca_core::registry::{read_registry, write_manual_entry};
+use arca_core::testenv::TestHome;
+use arca_core::types::{RegistryConfig, RegistryEntry, StdioConfig};
 
 #[test]
 fn forget_removes_from_catalog_and_uninstalls() {

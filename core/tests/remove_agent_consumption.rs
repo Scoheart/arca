@@ -2,26 +2,26 @@
 
 mod support;
 
-use mux_core::application::assets::{
+use arca_core::application::assets::{
     cancel_asset_operation, commit_asset_operation, list_inventory, plan_clear_agent_mcp,
     plan_ensure_agent_consumption, plan_remove_agent_consumption, plan_set_agent_consumption,
     plan_set_mcp_enabled, plan_set_model_enabled, plan_set_skill_enabled,
 };
-use mux_core::application::operations::{OperationPlan, PlanOperationRequest};
-use mux_core::application::MuxCore;
-use mux_core::domain::assets::{
+use arca_core::application::operations::{OperationPlan, PlanOperationRequest};
+use arca_core::application::ArcaCore;
+use arca_core::domain::assets::{
     AgentConsumptionSelection, AssetCommitRequest, AssetOperationKind, AssetOperationPlan,
     AssetRef, PlanClearAgentMcpRequest, PlanEnsureAgentConsumptionRequest,
     PlanRemoveAgentConsumptionRequest, PlanSetAgentConsumptionRequest, PlanSetMcpEnabledRequest,
     PlanSetModelEnabledRequest, PlanSetSkillEnabledRequest, RelationshipAction,
 };
-use mux_core::resources::mcp::registry::{delete_registry_entry, write_manual_entry};
-use mux_core::resources::mcp::scanner::expand_tilde;
-use mux_core::resources::model::save_profile;
-use mux_core::resources::skill::{audit_skill, hash_tree, RiskLevel};
-use mux_core::settings::{load_settings, mutate_settings};
-use mux_core::testenv::TestHome;
-use mux_core::types::{ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::resources::mcp::registry::{delete_registry_entry, write_manual_entry};
+use arca_core::resources::mcp::scanner::expand_tilde;
+use arca_core::resources::model::save_profile;
+use arca_core::resources::skill::{audit_skill, hash_tree, RiskLevel};
+use arca_core::settings::{load_settings, mutate_settings};
+use arca_core::testenv::TestHome;
+use arca_core::types::{ModelProfile, ModelProtocol, RegistryConfig, RegistryEntry, StdioConfig};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::os::unix::fs::symlink;
@@ -149,7 +149,7 @@ fn mcp_removal_is_atomic_preserves_other_relationships_and_is_idempotent() {
     );
     cancel_asset_operation(&stale_operation_id).unwrap();
 
-    let plan = MuxCore::plan(PlanOperationRequest::RemoveAgentConsumption(
+    let plan = ArcaCore::plan(PlanOperationRequest::RemoveAgentConsumption(
         PlanRemoveAgentConsumptionRequest {
             agent_id: "claude-code".into(),
             selection: AgentConsumptionSelection::Mcp {
@@ -482,7 +482,7 @@ fn final_drifted_model_detach_releases_ownership_without_touching_agent_bytes() 
         item.agent_id == "codex"
             && item.observed
             && !item.desired
-            && item.status == mux_core::consumption::ConsumptionStatus::ExternalAdded
+            && item.status == arca_core::consumption::ConsumptionStatus::ExternalAdded
             && matches!(&item.asset, AssetRef::Model { profile_id } if profile_id.starts_with("external-"))
     }));
 
@@ -819,7 +819,7 @@ fn final_skill_unassign_removes_its_link_after_every_target_agent_is_uninstalled
     ] {
         fs::remove_dir_all(fixture.home.home.join(probe)).unwrap();
     }
-    let prior = mux_core::resources::skill::list_inventory().unwrap();
+    let prior = arca_core::resources::skill::list_inventory().unwrap();
     assert!(prior.targets.iter().any(|target| target.target_id == "agents-user"));
     assert!(fs::symlink_metadata(&target).unwrap().file_type().is_symlink());
 
@@ -832,7 +832,7 @@ fn final_skill_unassign_removes_its_link_after_every_target_agent_is_uninstalled
     assert!(fixture.central("last-uninstalled").is_dir());
     assert_skill_settings_cleared("last-uninstalled");
     assert!(list_inventory().unwrap().target_incidents.is_empty());
-    assert!(!mux_core::resources::skill::list_inventory().unwrap().targets.iter()
+    assert!(!arca_core::resources::skill::list_inventory().unwrap().targets.iter()
         .any(|target| target.target_id == "agents-user"));
 }
 

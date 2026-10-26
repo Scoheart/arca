@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useEffect, useRef, useState } from "react";
 import { normalizeSkillCommandError } from "../hooks/useSkillsState";
 import type {
@@ -79,7 +80,7 @@ const fileChangeLabels = {
 
 const targetStateLabels = {
   missing: "当前不存在",
-  managed: "已由 MUX 管理",
+  managed: "已由 Arca 管理",
   broken: "链接损坏",
   directory: "已有目录",
   unknown_symlink: "未知符号链接",
@@ -95,20 +96,20 @@ function agentNames(ids: string[]) {
 
 function RiskEvidence({ risk }: { risk: SkillRiskSummary }) {
   return (
-    <div className="mux-skill-review-findings" data-level={risk.level}>
-      <div className="mux-skill-review-section-title">
+    <div className="arca-skill-review-findings" data-level={risk.level}>
+      <div className="arca-skill-review-section-title">
         <span>风险证据</span>
         <SkillRiskBadge level={risk.level} />
       </div>
       {risk.findings.length === 0 ? (
-        <p className="mux-skill-review-empty">未发现需要展示的风险证据。</p>
+        <p className="arca-skill-review-empty">未发现需要展示的风险证据。</p>
       ) : (
         <ul>
           {risk.findings.map((finding, index) => (
             <li
               key={`${finding.rule_id}:${finding.path}:${finding.line ?? "file"}:${index}`}
             >
-              <div className="mux-skill-review-finding-head">
+              <div className="arca-skill-review-finding-head">
                 <code>
                   {finding.path}
                   {finding.line === null ? "" : `:${finding.line}`}
@@ -124,7 +125,7 @@ function RiskEvidence({ risk }: { risk: SkillRiskSummary }) {
         </ul>
       )}
       {risk.findings_truncated && (
-        <p className="mux-skill-review-truncation">
+        <p className="arca-skill-review-truncation">
           已显示 {risk.findings.length} / {risk.finding_count} 条证据
         </p>
       )}
@@ -146,7 +147,7 @@ function PlannedSkillReview({
       kind === "update" ||
       (kind === "repair" && skill.existing_source !== null));
   return (
-    <article className="mux-skill-review-skill">
+    <article className="arca-skill-review-skill">
       <header>
         <div>
           <h3>{skill.manifest.name}</h3>
@@ -156,7 +157,7 @@ function PlannedSkillReview({
       </header>
 
       <DialogDisclosure title="文件与来源详情" summary={`${skill.files.length} 个文件`}>
-      <dl className="mux-skill-review-metadata">
+      <dl className="arca-skill-review-metadata">
         {replacesCentral ? (
           <>
             <div>
@@ -199,17 +200,17 @@ function PlannedSkillReview({
         {replacesCentral && (
           <div>
             <dt>冲突处理</dt>
-            <dd>先在 ~/.mux/backups/skills/ 保留备份，再替换现有中央副本</dd>
+            <dd>先在 ~/.arca/backups/skills/ 保留备份，再替换现有中央副本</dd>
           </div>
         )}
       </dl>
 
-      <section className="mux-skill-review-files" aria-label={`${skill.manifest.name} 文件变更`}>
+      <section className="arca-skill-review-files" aria-label={`${skill.manifest.name} 文件变更`}>
         <h4>文件变更</h4>
         <ul>
           {skill.files.map((file) => (
             <li key={file.path}>
-              <div className="mux-skill-review-file-head">
+              <div className="arca-skill-review-file-head">
                 <code>{file.path}</code>
                 <span>{fileChangeLabels[file.kind]}</span>
               </div>
@@ -224,7 +225,7 @@ function PlannedSkillReview({
                 </div>
               </dl>
               {file.diff_truncated ? (
-                <p className="mux-skill-review-truncation">文本差异已截断</p>
+                <p className="arca-skill-review-truncation">文本差异已截断</p>
               ) : file.unified_diff ? (
                 <pre aria-label={`${file.path} 文本差异`}>{file.unified_diff}</pre>
               ) : null}
@@ -336,7 +337,7 @@ export function SkillReviewDialog({
 
   return (
     <DialogShell
-      className="mux-dialog-skill-review"
+      className="arca-dialog-skill-review"
       key="review"
       kind="review"
       size="lg"
@@ -358,11 +359,11 @@ export function SkillReviewDialog({
         </>
       }
     >
-      <div className="mux-skill-review-dialog">
-        <div className="mux-skill-review-body">
-          {error && <p className="mux-skill-review-error" role="alert">{error.message}</p>}
+      <div className="arca-skill-review-dialog">
+        <div className="arca-skill-review-body">
+          <ToastNotice message={error?.message} />
 
-          <section className="mux-skill-review-section" aria-label="Skill 变更">
+          <section className="arca-skill-review-section" aria-label="Skill 变更">
             {plan.skills.map((skill) => (
               <PlannedSkillReview
                 key={`${skill.manifest.name}:${skill.content_hash}`}
@@ -373,7 +374,7 @@ export function SkillReviewDialog({
           </section>
 
           {needsRiskAcknowledgment && (
-            <label className="mux-skill-risk-acknowledgment">
+            <label className="arca-skill-risk-acknowledgment">
               <input type="checkbox" checked={riskAcknowledged} disabled={busy || reviewExpired}
                 onChange={(event) => setRiskAcknowledged(event.target.checked)} />
               <span>我已了解高风险内容及其影响</span>
@@ -382,7 +383,7 @@ export function SkillReviewDialog({
 
           {plan.kind === "assignment" && assignmentContext && (
             <section
-              className="mux-skill-review-section mux-skill-review-assignment"
+              className="arca-skill-review-section arca-skill-review-assignment"
               aria-label="分配影响"
             >
               <h3>
@@ -404,13 +405,13 @@ export function SkillReviewDialog({
           )}
 
           <DialogDisclosure title="目标与 Agent 影响" summary={`${plan.targets.length} 个目标`}>
-          <section className="mux-skill-review-section mux-skill-review-targets">
-            <div className="mux-skill-review-section-title">
+          <section className="arca-skill-review-section arca-skill-review-targets">
+            <div className="arca-skill-review-section-title">
               <h3>目标与 Agent 影响</h3>
               <span>{plan.targets.length} 个目标</span>
             </div>
             {plan.targets.length === 0 ? (
-              <p className="mux-skill-review-empty">此操作不会更改 Agent 目标。</p>
+              <p className="arca-skill-review-empty">此操作不会更改 Agent 目标。</p>
             ) : (
               <ul>
                 {plan.targets.map((target) => (
@@ -435,7 +436,7 @@ export function SkillReviewDialog({
           </DialogDisclosure>
 
           {plan.warnings.length > 0 && (
-            <section className="mux-skill-review-section mux-skill-review-warnings">
+            <section className="arca-skill-review-section arca-skill-review-warnings">
               <h3>注意事项</h3>
               <ul>
                 {plan.warnings.map((warning, index) => (

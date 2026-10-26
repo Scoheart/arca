@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19, TypeScript 7, Vite 8, Vitest 4, Testing Library, CSS
 
-**Delivery override:** Do not create a local git commit or push. After focused verification, create the feature commit through the GitHub Git Data API, open a PR, merge it after required checks, and let MUX Direct Stable publish the next patch release.
+**Delivery override:** Do not create a local git commit or push. After focused verification, create the feature commit through the GitHub Git Data API, open a PR, merge it after required checks, and let Arca Direct Stable publish the next patch release.
 
 ---
 
@@ -225,7 +225,7 @@ function AgentSurfaceBadge({ surface, size }: { surface: AgentSurface; size: num
   const badgeSize = surfaceBadgeSize(size);
   return (
     <span
-      className="mux-agent-surface-badge"
+      className="arca-agent-surface-badge"
       data-agent-surface={surface}
       aria-hidden="true"
       style={{ width: badgeSize, height: badgeSize }}
@@ -270,11 +270,11 @@ const surface = logo ? visibleSurface(id) : null;
 
 return (
   <span
-    className="mux-agent-glyph"
+    className="arca-agent-glyph"
     data-agent-id={id}
     style={{ width: size, height: size }}
   >
-    <span className="mux-agent-glyph-base" style={{ width: size, height: size }}>
+    <span className="arca-agent-glyph-base" style={{ width: size, height: size }}>
       {baseGlyph}
     </span>
     {surface && <AgentSurfaceBadge surface={surface} size={size} />}
@@ -289,20 +289,20 @@ Use the wrapper for the wide-tile, full-bleed, mark-only, and monogram branches.
 Add the following near the Agent navigation styles in `desktop/src/index.css`:
 
 ```css
-.mux-agent-glyph {
+.arca-agent-glyph {
   position: relative;
   display: inline-flex;
   flex: 0 0 auto;
   overflow: visible;
   vertical-align: middle;
 }
-.mux-agent-glyph-base {
+.arca-agent-glyph-base {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: inherit;
 }
-.mux-agent-surface-badge {
+.arca-agent-surface-badge {
   position: absolute;
   right: -2px;
   bottom: -2px;
@@ -315,12 +315,12 @@ Add the following near the Agent navigation styles in `desktop/src/index.css`:
   color: #fff;
   box-shadow: 0 0 0 2px var(--surface-app);
 }
-.mux-agent-surface-badge[data-agent-surface="cli"] { background: #202733; }
-.mux-agent-surface-badge[data-agent-surface="desktop"] { background: var(--color-blue); }
-.mux-agent-surface-badge[data-agent-surface="ide"] { background: #7656d6; }
-.mux-agent-surface-badge[data-agent-surface="web"] { background: #159b91; }
-.mux-agent-surface-badge > svg { width: 78%; height: 78%; }
-.mux-agent-surface-badge :is(path, rect, circle) {
+.arca-agent-surface-badge[data-agent-surface="cli"] { background: #202733; }
+.arca-agent-surface-badge[data-agent-surface="desktop"] { background: var(--color-blue); }
+.arca-agent-surface-badge[data-agent-surface="ide"] { background: #7656d6; }
+.arca-agent-surface-badge[data-agent-surface="web"] { background: #159b91; }
+.arca-agent-surface-badge > svg { width: 78%; height: 78%; }
+.arca-agent-surface-badge :is(path, rect, circle) {
   stroke: currentColor;
   stroke-width: 1.35;
   stroke-linecap: round;
@@ -374,10 +374,10 @@ it("distinguishes shared Claude logos in the Agent picker", () => {
     />,
   );
 
-  fireEvent.click(container.querySelector<HTMLButtonElement>(".mux-agent-picker-trigger")!);
+  fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
 
-  const codeRow = screen.getByText("Claude Code").closest(".mux-agent-picker-select");
-  const desktopRow = screen.getByText("Claude Desktop").closest(".mux-agent-picker-select");
+  const codeRow = screen.getByText("Claude Code").closest(".arca-agent-picker-select");
+  const desktopRow = screen.getByText("Claude Desktop").closest(".arca-agent-picker-select");
   expect(codeRow?.querySelector("[data-agent-surface='cli']")).not.toBeNull();
   expect(desktopRow?.querySelector("[data-agent-surface='desktop']")).not.toBeNull();
 });
@@ -428,7 +428,7 @@ Expected: TypeScript and Vite build successfully with no new warning or error.
 
 - [ ] **Step 3: Inspect the actual installed-size contexts**
 
-Run the MUX desktop review workflow against the development build and inspect:
+Run the Arca desktop review workflow against the development build and inspect:
 
 - pinned bar at 30px;
 - collapsed Agent trigger at 24px;
@@ -489,6 +489,6 @@ The PR body must summarize the collision-only policy and list the focused test/b
 
 After required checks pass, squash merge the PR and delete the remote feature branch. Wait for `Direct stable release` and the dispatched macOS desktop build to succeed. Verify the published release contains exactly `latest.json`, the updater app archive, the Apple Silicon DMG, and the CLI archive.
 
-- [ ] **Step 5: Do not update the user's local MUX installation**
+- [ ] **Step 5: Do not update the user's local Arca installation**
 
-Report the PR, merge commit, Stable tag, workflow results, and focused test evidence. Leave local MUX source and `/Applications/MUX.app` unchanged.
+Report the PR, merge commit, Stable tag, workflow results, and focused test evidence. Leave local Arca source and `/Applications/Arca.app` unchanged.

@@ -347,7 +347,7 @@ mod tests {
     #[test]
     fn locale_roundtrips_and_preserves_unknown_ui_fields() {
         let home = TestHome::new("ui-locale-roundtrip");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(
             &path,
@@ -382,7 +382,7 @@ mod tests {
     #[test]
     fn mcp_builtin_icon_roundtrips_without_clobbering_unknown_settings() {
         let home = TestHome::new("ui-mcp-icon-builtin");
-        let path = home.home.join(".mux/settings.json");
+        let path = home.home.join(".arca/settings.json");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(
             &path,
@@ -420,7 +420,7 @@ mod tests {
         assert_eq!(icon.kind, "custom");
         assert!(icon.value.ends_with(".png"));
         let copied = std::path::PathBuf::from(icon.path.as_ref().unwrap());
-        assert!(copied.starts_with(home.home.join(".mux/assets/mcp-icons")));
+        assert!(copied.starts_with(home.home.join(".arca/assets/mcp-icons")));
         assert_eq!(fs::read(&copied).unwrap(), b"\x89PNG\r\n\x1a\ncustom-icon");
         #[cfg(unix)]
         {

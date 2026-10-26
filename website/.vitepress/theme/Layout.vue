@@ -24,7 +24,7 @@ provide("toggle-appearance", async ({ clientX: x, clientY: y }: MouseEvent) => {
     )}px at ${x}px ${y}px)`,
   ];
 
-  document.documentElement.classList.add("mux-appearance-pending");
+  document.documentElement.classList.add("arca-appearance-pending");
 
   try {
     await document.startViewTransition(async () => {
@@ -44,7 +44,7 @@ provide("toggle-appearance", async ({ clientX: x, clientY: y }: MouseEvent) => {
   } finally {
     // Keep class briefly so the transition stylesheet stays disabled.
     window.setTimeout(() => {
-      document.documentElement.classList.remove("mux-appearance-pending");
+      document.documentElement.classList.remove("arca-appearance-pending");
     }, 400);
   }
 });

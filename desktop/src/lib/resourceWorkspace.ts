@@ -1,4 +1,4 @@
-export const SIDEBAR_WIDTH_STORAGE_KEY = "mux.resourceWorkspace.sidebarWidth";
+export const SIDEBAR_WIDTH_STORAGE_KEY = "arca.resourceWorkspace.sidebarWidth";
 export const DEFAULT_SIDEBAR_WIDTH = 224;
 export const MIN_SIDEBAR_WIDTH = 184;
 export const MAX_SIDEBAR_WIDTH = 340;

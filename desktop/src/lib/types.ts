@@ -36,6 +36,7 @@ export interface AgentInfo {
   has_global: boolean; has_project: boolean; enabled: boolean;
   /** Derived from WorkspaceSnapshot; absent on the legacy MCP-shaped wire. */
   has_model?: boolean;
+  has_instructions?: boolean;
   supported_transports: Array<"stdio" | "http">;
   /** Raw stored config paths (e.g. `~/Library/Application Support/…/mcp.json`). */
   global: string | null; project: string | null;
@@ -67,6 +68,7 @@ export interface AgentCapabilityView {
   runtime_detected?: boolean | null;
   config_detected?: boolean;
   capabilities: {
+    instructions?: boolean;
     mcp?: {
       writable: boolean;
       config_path?: string | null;
@@ -105,7 +107,7 @@ export type ModelProtocol =
 export type AuthRequirement = "required" | "optional" | "none";
 
 export type ApiKeySource =
-  | { kind: "mux-store" }
+  | { kind: "arca-store" }
   | { kind: "env"; name: string }
   | { kind: "file"; path: string }
   | { kind: "helper"; command: string; args: string[]; ttl_ms?: number };
@@ -207,7 +209,7 @@ export interface ModelProviderView {
   } | null;
 }
 
-export type ModelStorageAuthority = "native-registry" | "mux-mapping" | "guided";
+export type ModelStorageAuthority = "native-registry" | "arca-mapping" | "guided";
 
 export interface ModelAgentView {
   id: "claude-code" | "codex" | "pi" | "qoder" | string;
@@ -226,7 +228,7 @@ export interface ModelAgentView {
   credential_mode: "keychain-command" | "environment-reference" | "guided" | string;
   credential_capabilities?: {
     native_sources: Array<ApiKeySource["kind"]>;
-    mux_keychain_helper: boolean;
+    arca_keychain_helper: boolean;
     agent_store: boolean;
     plaintext: boolean;
     note?: string;
@@ -304,7 +306,7 @@ export interface InstalledMcp {
   name: string; agent: string; scope: string; file_path: string; transport: string;
   customized?: boolean;
   /** Whether the server is active in the agent's config (true) or paused natively /
-   *  remembered in MUX's disabled store (false). */
+   *  remembered in Arca's disabled store (false). */
   enabled: boolean;
   observation_fingerprint: string;
 }
@@ -365,11 +367,11 @@ export type View =
   | { kind: "models"; intent?: Extract<ResourceNavigationIntent, { domain: "model" }> }
   | { kind: "skills"; intent?: SkillNavigationIntent }
   | { kind: "agent"; id: string; tab?: "skills" }
-  | { kind: "capture"; agentId?: string }
+  | { kind: "capture"; agentId: string }
   | { kind: "traces"; agentId?: string };
 
 /** A catalog source (mirrors Rust SourceView): a subscribed remote URL or a
- *  local file. Its servers are parsed under ~/.mux/assets/mcps/sources/. */
+ *  local file. Its servers are parsed under ~/.arca/assets/mcps/sources/. */
 export type SourceKind = "remote" | "local";
 export interface SourceView {
   id: string;

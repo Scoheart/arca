@@ -1148,7 +1148,7 @@ mod tests {
         );
         let persisted = std::fs::read_to_string(
             home.home
-                .join(".mux/staging/consumption")
+                .join(".arca/staging/consumption")
                 .join(plan.operation_id)
                 .join("plan.json"),
         )

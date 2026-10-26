@@ -2,24 +2,24 @@
 
 ## Remove every managed Model together
 
-Add one destructive action that removes every MUX-managed Model from the currently selected Agent in a single reviewed operation.
+Add one destructive action that removes every Arca-managed Model from the currently selected Agent in a single reviewed operation.
 
 ## Keep central assets and external Models unchanged
 
-The action applies only to the selected Agent's desired Model consumption set. It removes the Agent relationships and the corresponding MUX-owned entries from that Agent's configured Model files.
+The action applies only to the selected Agent's desired Model consumption set. It removes the Agent relationships and the corresponding Arca-owned entries from that Agent's configured Model files.
 
 It does not:
 
 - delete Models from the central Models library;
 - delete Providers or Keychain credentials;
-- remove Models observed as external and not managed by MUX;
+- remove Models observed as external and not managed by Arca;
 - affect another Agent's Model relationships.
 
 ## Confirm the complete removal before writing
 
-The Models panel places a danger-style `清空 Models` button immediately before `添加 Model`. The button is enabled only when the Agent has at least one MUX-managed Model and no Model change or asset plan is in progress.
+The Models panel places a danger-style `清空 Models` button immediately before `添加 Model`. The button is enabled only when the Agent has at least one Arca-managed Model and no Model change or asset plan is in progress.
 
-Clicking the button always prepares a review. It never commits immediately, even if the generated plan has no warnings. The existing review surface lists every relationship removal, every Model state transition, the Agent configuration files that will be updated, and any current-Model fallback computed by Core. The user must confirm the plan before MUX writes anything.
+Clicking the button always prepares a review. It never commits immediately, even if the generated plan has no warnings. The existing review surface lists every relationship removal, every Model state transition, the Agent configuration files that will be updated, and any current-Model fallback computed by Core. The user must confirm the plan before Arca writes anything.
 
 After success, the Models panel shows its empty state and reports that every Model was removed from the selected Agent. External observations remain visible as read-only cards.
 
@@ -61,6 +61,6 @@ The repository's current fast-delivery policy leaves local test and build comman
 
 1. A selected Agent with managed Models exposes `清空 Models` beside `添加 Model`.
 2. One click opens a single review for all managed Models on that Agent.
-3. Confirming the review removes all of those relationships and MUX-owned Agent configuration entries atomically through the existing planner/transaction contract.
+3. Confirming the review removes all of those relationships and Arca-owned Agent configuration entries atomically through the existing planner/transaction contract.
 4. Central Models, Providers, Keychain credentials, other Agents, and external observations remain unchanged.
 5. Empty, busy, conflicting, stale, and failed states are safe and explicit.

@@ -195,6 +195,41 @@
       "kind": "api-key"
     }
   },
+  "agnes-ai": {
+    "docs_url": "https://wiki.agnes-ai.com/en/docs/quickstart",
+    "portal": {
+      "url": "https://platform.agnes-ai.com/",
+      "kind": "console"
+    }
+  },
+  "agnes-ai-cn": {
+    "docs_url": "https://wiki.agnes-ai.cn/zh-Hans/docs/quickstart",
+    "portal": {
+      "url": "https://platform.agnes-ai.cn/",
+      "kind": "console"
+    }
+  },
+  "meta": {
+    "docs_url": "https://dev.meta.ai/docs/quickstart",
+    "portal": {
+      "url": "https://dev.meta.ai/",
+      "kind": "console"
+    }
+  },
+  "maximo-ai": {
+    "docs_url": "https://maximoai.co/platform/docs",
+    "portal": {
+      "url": "https://maximoai.co/platform/keys",
+      "kind": "api-key"
+    }
+  },
+  "krafton-raon": {
+    "docs_url": "https://raon-mini.krafton.ai/en/docs",
+    "portal": {
+      "url": "https://raon-console.krafton.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
   "ollama-cloud": {
     "docs_url": "https://docs.ollama.com/cloud",
     "portal": {
@@ -241,6 +276,272 @@
     "docs_url": "https://tokenharbor.ai/docs/api/curl",
     "portal": {
       "url": "https://tokenharbor.ai/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "flock": {
+    "docs_url": "https://docs.flock.io/flock-products/api-platform/api-endpoint",
+    "portal": {
+      "url": "https://platform.flock.io/",
+      "kind": "console"
+    }
+  },
+  "codecraft": {
+    "docs_url": "https://codecraftapi.com/docs",
+    "portal": {
+      "url": "https://codecraftapi.com/register",
+      "kind": "console"
+    }
+  },
+  "beatapi": {
+    "docs_url": "https://docs.beatapi.io/quick-guide",
+    "portal": {
+      "url": "https://beatapi.io/dashboard/get-started",
+      "kind": "console"
+    }
+  },
+  "experiential-labs": {
+    "docs_url": "https://platform.experientiallabs.ai/docs",
+    "portal": {
+      "url": "https://platform.experientiallabs.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "runanywhere": {
+    "docs_url": "https://docs.runanywhere.ai/wally-cloud/api",
+    "portal": {
+      "url": "https://console.runanywhere.ai",
+      "kind": "console"
+    }
+  },
+  "coralbricks": {
+    "docs_url": "https://www.coralbricks.ai/docs",
+    "portal": {
+      "url": "https://www.coralbricks.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "clean-apis": {
+    "docs_url": "https://cleanapis.com/docs/getting-started",
+    "portal": {
+      "url": "https://cleanapis.com/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "dolphin": {
+    "docs_url": "https://dphn.ai/docs/coupon-credits",
+    "portal": {
+      "url": "https://app.dphn.ai/",
+      "kind": "console"
+    }
+  },
+  "iteracompute": {
+    "docs_url": "https://iteracompute.com/docs.html",
+    "portal": {
+      "url": "https://platform.iteracompute.com/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "llmtr": {
+    "docs_url": "https://llmtr.com/docs/",
+    "portal": {
+      "url": "https://llmtr.com/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "munito": {
+    "docs_url": "https://docs.munito.ai/api",
+    "portal": {
+      "url": "https://console.munito.ai/keys",
+      "kind": "api-key"
+    }
+  },
+  "nous-portal": {
+    "docs_url": "https://portal.nousresearch.com/api-docs",
+    "portal": {
+      "url": "https://portal.nousresearch.com/",
+      "kind": "console"
+    }
+  },
+  "ppq": {
+    "docs_url": "https://ppq.ai/llms.txt",
+    "portal": {
+      "url": "https://ppq.ai/api-docs",
+      "kind": "api-key"
+    }
+  },
+  "river": {
+    "docs_url": "https://docs.river.ai/guides/inference/",
+    "portal": {
+      "url": "https://console.river.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "trustedrouter": {
+    "docs_url": "https://trustedrouter.com/docs",
+    "portal": {
+      "url": "https://trustedrouter.com/console/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "unorouter": {
+    "docs_url": "https://unorouter.com/en/docs/platform/quickstart",
+    "portal": {
+      "url": "https://unorouter.com/en/token",
+      "kind": "api-key"
+    }
+  },
+  "orcarouter": {
+    "docs_url": "https://docs.orcarouter.ai/getting-started/quickstart",
+    "portal": {
+      "url": "https://www.orcarouter.ai/console",
+      "kind": "console"
+    }
+  },
+  "fikra": {
+    "docs_url": "https://docs.fikraapi.co.ke/",
+    "portal": {
+      "url": "https://fikraapi.co.ke/dashboard",
+      "kind": "api-key"
+    }
+  },
+  "constellation-gate": {
+    "docs_url": "https://docs.constellationgate.ai/getting-started/authentication/",
+    "portal": {
+      "url": "https://app.constellationgate.ai",
+      "kind": "console"
+    }
+  },
+  "ant-ling": {
+    "docs_url": "https://developer.ant-ling.com/en/docs/api-reference/openai/",
+    "portal": {
+      "url": "https://chat.ant-ling.com/open",
+      "kind": "console"
+    }
+  },
+  "antdigital-dtmaas": {
+    "docs_url": "https://maas.antdigital.com/dt-maas-docs/quick-access",
+    "portal": {
+      "url": "https://maas.antdigital.com/",
+      "kind": "console"
+    }
+  },
+  "unisound": {
+    "docs_url": "https://maas.unisound.com/docs/guide/quickstart",
+    "portal": {
+      "url": "https://maas.unisound.com/",
+      "kind": "console"
+    }
+  },
+  "bilibili-index-translate": {
+    "docs_url": "https://github.com/bilibili/Index-Translate#option-1-free-online-api-zero-gpu-setup",
+    "portal": {
+      "url": "https://index-translate.bilibili.com/",
+      "kind": "setup"
+    }
+  },
+  "sensenova": {
+    "docs_url": "https://platform.sensenova.cn/docs",
+    "portal": {
+      "url": "https://platform.sensenova.cn/console/keys",
+      "kind": "api-key"
+    }
+  },
+  "akashml": {
+    "docs_url": "https://akashml.com/docs/getting-started/introduction",
+    "portal": {
+      "url": "https://playground.akashml.com/settings",
+      "kind": "api-key"
+    }
+  },
+  "indicstack": {
+    "docs_url": "https://indicstack.ai/blog/migrate-openai-to-india-hosted-api",
+    "portal": {
+      "url": "https://console.indicstack.ai/signup",
+      "kind": "console"
+    }
+  },
+  "0g-private-computer": {
+    "docs_url": "https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart",
+    "portal": {
+      "url": "https://pc.0g.ai/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "gonkarouter": {
+    "docs_url": "https://gonkarouter.io/docs",
+    "portal": {
+      "url": "https://gonkarouter.io/dashboard",
+      "kind": "console"
+    }
+  },
+  "runinfra": {
+    "docs_url": "https://runinfra.ai/settings/api-keys",
+    "portal": {
+      "url": "https://runinfra.ai/settings/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "nomask": {
+    "docs_url": "https://nomask.ai/api/doc/quickstart",
+    "portal": {
+      "url": "https://nomask.ai/api/doc/quickstart",
+      "kind": "api-key"
+    }
+  },
+  "anyrouter": {
+    "docs_url": "https://docs.anyrouter.dev/getting-started/quickstart",
+    "portal": {
+      "url": "https://anyrouter.dev/dashboard/keys",
+      "kind": "api-key"
+    }
+  },
+  "yeta": {
+    "docs_url": "https://platform.yeta.ai/docs",
+    "portal": {
+      "url": "https://platform.yeta.ai/keys",
+      "kind": "api-key"
+    }
+  },
+  "scnet": {
+    "docs_url": "https://www.scnet.cn/help/docs/mainsite/mass/tutorial/quickstart.html",
+    "portal": {
+      "url": "https://www.scnet.cn/ui/console",
+      "kind": "console"
+    }
+  },
+  "oxion-ai": {
+    "docs_url": "https://oxionai.com/docs/getting-started",
+    "portal": {
+      "url": "https://oxionai.com/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "inferx": {
+    "docs_url": "https://inferx.net/docs/quickstart",
+    "portal": {
+      "url": "https://model.inferx.net/login",
+      "kind": "console"
+    }
+  },
+  "blazerail": {
+    "docs_url": "https://www.blazerail.com/docs",
+    "portal": {
+      "url": "https://www.blazerail.com/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "larprouter": {
+    "docs_url": "https://larprouter.com/docs",
+    "portal": {
+      "url": "https://larprouter.com/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "stark-relay": {
+    "docs_url": "https://app.notion.com/p/05-Start-using-your-API-key-3941472684838133afbfdbb70a0d82f4",
+    "portal": {
+      "url": "https://starkrelay.bond/api-keys",
       "kind": "api-key"
     }
   },
@@ -409,6 +710,27 @@
     "docs_url": "https://docs.mistral.ai/getting-started/models/",
     "portal": {
       "url": "https://admin.mistral.ai/plateforme/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "sarashina": {
+    "docs_url": "https://docs.sarashina.ai/introduction",
+    "portal": {
+      "url": "https://sarashina.ai/",
+      "kind": "console"
+    }
+  },
+  "liquid-ai": {
+    "docs_url": "https://docs.liquid.ai/",
+    "portal": {
+      "url": "https://console.liquid.ai/",
+      "kind": "console"
+    }
+  },
+  "atria": {
+    "docs_url": "https://api.atria-asi.ai/docs",
+    "portal": {
+      "url": "https://api.atria-asi.ai/console/keys",
       "kind": "api-key"
     }
   },

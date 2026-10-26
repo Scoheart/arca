@@ -421,7 +421,7 @@ mod tests {
 
     fn tmp(name: &str) -> std::path::PathBuf {
         let mut d = std::env::temp_dir();
-        d.push(format!("mux-toml-{}-{}.toml", name, std::process::id()));
+        d.push(format!("arca-toml-{}-{}.toml", name, std::process::id()));
         d
     }
 

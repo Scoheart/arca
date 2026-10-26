@@ -241,7 +241,7 @@ fn mutation_blocker(scope: MutationScope) -> Option<CoreError> {
 
 pub(crate) fn acquire_cross_process_mutation_lock() -> Result<SettingsLock, String> {
     acquire_settings_lock(
-        &crate::paths::mux_dir()
+        &crate::paths::arca_dir()
             .join("locks")
             .join("application-mutation"),
     )
@@ -250,7 +250,7 @@ pub(crate) fn acquire_cross_process_mutation_lock() -> Result<SettingsLock, Stri
 fn mutation_coordination_error() -> CoreError {
     CoreError {
         code: "mutation_busy".into(),
-        message: "another MUX process is mutating shared state; retry this operation".into(),
+        message: "another Arca process is mutating shared state; retry this operation".into(),
         details: BTreeMap::new(),
         retry_at: None,
         confirmation: None,
@@ -269,7 +269,7 @@ fn latched_status(current: &BackendStatus, stage: &str, message: String) -> Back
     }
 }
 
-/// TestHome already serializes the process-wide HOME/MUX_HOME environment for
+/// TestHome already serializes the process-wide HOME/ARCA_HOME environment for
 /// its entire lifetime. Use that same scope to make application mutations
 /// explicitly ready and restore the prior lifecycle state before releasing the
 /// environment lock.
@@ -326,7 +326,7 @@ fn blocker_for_status(status: &BackendStatus, scope: MutationScope) -> Option<Co
             details.insert("backend_state".into(), Value::String("starting".into()));
             Some(CoreError {
                 code: "backend_initializing".into(),
-                message: "MUX backend startup has not completed".into(),
+                message: "Arca backend startup has not completed".into(),
                 details,
                 retry_at: None,
                 confirmation: None,
@@ -361,7 +361,7 @@ fn blocker_for_status(status: &BackendStatus, scope: MutationScope) -> Option<Co
             details.insert("stage".into(), Value::String(stage.clone()));
             Some(CoreError {
                 code: "recovery_required".into(),
-                message: format!("MUX is read-only because {stage} failed: {message}"),
+                message: format!("Arca is read-only because {stage} failed: {message}"),
                 details,
                 retry_at: None,
                 confirmation: None,
@@ -469,11 +469,11 @@ mod tests {
         use std::os::unix::fs::symlink;
 
         let home = crate::testenv::TestHome::new("gate-lock-symlink");
-        let mux = home.home.join(".mux");
+        let arca = home.home.join(".arca");
         let outside = home.home.join("outside-locks");
-        std::fs::create_dir(&mux).unwrap();
+        std::fs::create_dir(&arca).unwrap();
         std::fs::create_dir(&outside).unwrap();
-        symlink(&outside, mux.join("locks")).unwrap();
+        symlink(&outside, arca.join("locks")).unwrap();
 
         let Err(error) = acquire_cross_process_mutation_lock() else {
             panic!("symlinked application lock directory was accepted");

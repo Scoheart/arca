@@ -207,7 +207,7 @@ pub(crate) fn backup_bytes(
 
 /// Restore one complete MCP entry captured before disable. The write receives
 /// the same backup and fail-closed treatment as normal installs, but restores
-/// Agent-owned fields in addition to MUX's modeled connection fields.
+/// Agent-owned fields in addition to Arca's modeled connection fields.
 pub fn restore_snapshot(
     agent_id: &str,
     def: &AgentDefinition,
@@ -385,7 +385,7 @@ mod tests {
     #[test]
     fn applies_add_and_creates_backup() {
         let mut base = std::env::temp_dir();
-        base.push(format!("mux-apply-add-{}", std::process::id()));
+        base.push(format!("arca-apply-add-{}", std::process::id()));
         std::fs::create_dir_all(&base).unwrap();
         let cfg_path = base.join("mcp.json");
         std::fs::write(&cfg_path, r#"{"mcpServers":{"old":{"command":"x"}}}"#).unwrap();
@@ -434,11 +434,11 @@ mod tests {
     #[test]
     fn apply_only_changes_target_mcp_entry() {
         let mut base = std::env::temp_dir();
-        base.push(format!("mux-apply-private-{}", std::process::id()));
+        base.push(format!("arca-apply-private-{}", std::process::id()));
         std::fs::create_dir_all(&base).unwrap();
         let cfg_path = base.join("agent.json");
         let original = r#"{
-  // Private agent data is outside MUX ownership.
+  // Private agent data is outside Arca ownership.
   "account": { "token" : "secret", "history": true },
   "mcpServers": {
     "existing": { "command" : "keep", "cwd": "/tmp" },
@@ -483,7 +483,7 @@ mod tests {
 
         let written = std::fs::read_to_string(&cfg_path).unwrap();
         assert!(written.contains(
-            "// Private agent data is outside MUX ownership.\n  \"account\": { \"token\" : \"secret\", \"history\": true },"
+            "// Private agent data is outside Arca ownership.\n  \"account\": { \"token\" : \"secret\", \"history\": true },"
         ));
         assert!(written.contains("\"existing\": { \"command\" : \"keep\", \"cwd\": \"/tmp\" },"));
         assert!(written.ends_with("  \"theme\": \"dark\"\n}\n"));
@@ -497,7 +497,7 @@ mod tests {
     #[test]
     fn apply_refuses_to_replace_invalid_config() {
         let mut base = std::env::temp_dir();
-        base.push(format!("mux-apply-invalid-{}", std::process::id()));
+        base.push(format!("arca-apply-invalid-{}", std::process::id()));
         std::fs::create_dir_all(&base).unwrap();
         let cfg_path = base.join("agent.json");
         let original = r#"{"account":{"token":"secret"},"mcpServers": "#;
@@ -550,7 +550,7 @@ mod tests {
     #[test]
     fn apply_refuses_to_write_when_backup_fails() {
         let mut base = std::env::temp_dir();
-        base.push(format!("mux-apply-backup-failure-{}", std::process::id()));
+        base.push(format!("arca-apply-backup-failure-{}", std::process::id()));
         std::fs::create_dir_all(&base).unwrap();
         let cfg_path = base.join("agent.json");
         let original = r#"{"mcpServers":{"existing":{"command":"keep"}}}"#;
@@ -606,7 +606,7 @@ mod tests {
     fn chatmcp_credentials_are_rejected_before_whole_file_backup() {
         let mut base = std::env::temp_dir();
         base.push(format!(
-            "mux-chatmcp-credential-preflight-{}",
+            "arca-chatmcp-credential-preflight-{}",
             std::process::id()
         ));
         std::fs::create_dir_all(&base).unwrap();
@@ -658,7 +658,7 @@ mod tests {
     #[test]
     fn backups_never_overwrite_and_agent_ids_are_filename_safe() {
         let mut base = std::env::temp_dir();
-        base.push(format!("mux-backup-collision-{}", std::process::id()));
+        base.push(format!("arca-backup-collision-{}", std::process::id()));
         let backups = base.join("backups");
         std::fs::create_dir_all(&base).unwrap();
         let source = base.join("settings.json");

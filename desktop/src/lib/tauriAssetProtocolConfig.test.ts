@@ -10,7 +10,7 @@ it("keeps the Tauri asset protocol config and Cargo feature in lockstep", async 
 
   expect(config.app.security.assetProtocol).toEqual({
     enable: true,
-    scope: ["$HOME/.mux/assets/mcp-icons/**"],
+    scope: ["$HOME/.arca/assets/mcp-icons/**"],
   });
   expect(tauriDependency).toContain('features = ["protocol-asset"]');
 });

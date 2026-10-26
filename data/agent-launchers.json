@@ -111,7 +111,8 @@
     "kind": "app",
     "candidates": [
       "ChatGPT"
-    ]
+    ],
+    "bundle_ids": ["com.openai.codex"]
   },
   "continue": {
     "kind": "app",
@@ -145,7 +146,8 @@
     "kind": "app",
     "candidates": [
       "Cursor"
-    ]
+    ],
+    "bundle_ids": ["com.todesktop.230313mzl4w4u92"]
   },
   "cursor-cli": {
     "kind": "cli",
@@ -313,11 +315,13 @@
     "candidates": [
       "Qoder IDE",
       "Qoder"
-    ]
+    ],
+    "bundle_ids": ["com.qoder.ide"]
   },
   "qoder-cli": {
     "kind": "cli",
     "candidates": [
+      "qodercli",
       "qoder"
     ],
     "args": []
@@ -325,13 +329,20 @@
   "qoder-desktop": {
     "kind": "app",
     "candidates": [
-      "Qoder Desktop"
+      "Qoder Desktop",
+      "Qoder"
+    ],
+    "bundle_ids": [
+      "com.qoder.app"
     ]
   },
   "qoderwork": {
     "kind": "app",
     "candidates": [
       "QoderWork"
+    ],
+    "bundle_ids": [
+      "com.qoder.work"
     ]
   },
   "qwen-code": {
@@ -345,12 +356,18 @@
     "kind": "app",
     "candidates": [
       "QwenWork"
+    ],
+    "bundle_ids": [
+      "com.qwenwork.desktop.mac"
     ]
   },
   "qwenwork-cn": {
     "kind": "app",
     "candidates": [
       "QwenWorkCN"
+    ],
+    "bundle_ids": [
+      "cn.qwenwork.desktop.mac"
     ]
   },
   "raycast": {
@@ -458,6 +475,9 @@
     "kind": "app",
     "candidates": [
       "OpenCode"
+    ],
+    "bundle_ids": [
+      "ai.opencode.desktop"
     ]
   },
   "anythingllm": {
@@ -553,6 +573,18 @@
     "kind": "app",
     "candidates": [
       "Kilo"
+    ]
+  },
+  "postman": {
+    "kind": "app",
+    "candidates": [
+      "Postman"
+    ]
+  },
+  "mcpjam": {
+    "kind": "app",
+    "candidates": [
+      "MCPJam Inspector"
     ]
   }
 }

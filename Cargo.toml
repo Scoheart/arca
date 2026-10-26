@@ -3,9 +3,9 @@ resolver = "2"
 members = ["core", "cli"]
 exclude = ["desktop"]
 
-# Match the desktop release profile. MUX is an I/O-bound configuration manager,
+# Match the desktop release profile. Arca is an I/O-bound configuration manager,
 # so extra optimizer work has no user-visible benefit; the faster profile cut a
-# clean local mux-cli release build by about 14%.
+# clean local arca-cli release build by about 14%.
 [profile.release]
 codegen-units = 256
 opt-level = 2

@@ -1,4 +1,4 @@
-# MUX 桌面 GUI · Plan 1：基础层（共享数据 + Rust Core）实现计划
+# Arca 桌面 GUI · Plan 1：基础层（共享数据 + Rust Core）实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -429,7 +429,7 @@ mod tests {
 
     fn tmp(name: &str) -> std::path::PathBuf {
         let mut d = std::env::temp_dir();
-        d.push(format!("mux-json-{}-{}.json", name, std::process::id()));
+        d.push(format!("arca-json-{}-{}.json", name, std::process::id()));
         d
     }
 
@@ -578,7 +578,7 @@ mod tests {
 
     fn tmp(name: &str) -> std::path::PathBuf {
         let mut d = std::env::temp_dir();
-        d.push(format!("mux-toml-{}-{}.toml", name, std::process::id()));
+        d.push(format!("arca-toml-{}-{}.toml", name, std::process::id()));
         d
     }
 
@@ -691,7 +691,7 @@ mod tests {
     #[test]
     fn user_entry_overrides_builtin() {
         let mut dir = std::env::temp_dir();
-        dir.push(format!("mux-reg-{}", std::process::id()));
+        dir.push(format!("arca-reg-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(
             dir.join("filesystem.json"),
@@ -885,7 +885,7 @@ mod tests {
     #[test]
     fn scans_project_json_config() {
         let mut base = std::env::temp_dir();
-        base.push(format!("mux-scan-{}", std::process::id()));
+        base.push(format!("arca-scan-{}", std::process::id()));
         std::fs::create_dir_all(&base).unwrap();
         std::fs::write(base.join("mcp.json"),
             r#"{"mcpServers":{"git":{"command":"npx"}}}"#).unwrap();
@@ -1096,7 +1096,7 @@ mod tests {
     #[test]
     fn applies_add_and_creates_backup() {
         let mut base = std::env::temp_dir();
-        base.push(format!("mux-apply-{}", std::process::id()));
+        base.push(format!("arca-apply-{}", std::process::id()));
         std::fs::create_dir_all(&base).unwrap();
         let cfg_path = base.join("mcp.json");
         std::fs::write(&cfg_path, r#"{"mcpServers":{"old":{"command":"x"}}}"#).unwrap();
@@ -1188,7 +1188,7 @@ function App() {
   useEffect(() => {
     invoke<unknown[]>("list_registry").then((r) => setCount(r.length));
   }, []);
-  return <main><h1>MUX Desktop</h1><p>内置服务器：{count ?? "加载中…"}</p></main>;
+  return <main><h1>Arca Desktop</h1><p>内置服务器：{count ?? "加载中…"}</p></main>;
 }
 export default App;
 ```

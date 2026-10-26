@@ -10,8 +10,12 @@ function surfaceFor(container: HTMLElement): string | null {
     ?.getAttribute("data-agent-surface") ?? null;
 }
 
-it("distinguishes Claude and Qoder product surfaces", () => {
+it("distinguishes shared-brand product surfaces with localized names", () => {
   const cases = [
+    ["cursor", "Cursor", "ide"],
+    ["cursor-cli", "Cursor CLI", "cli"],
+    ["codex-ide", "Codex", "plugin"],
+    ["chatgpt", "ChatGPT", "web"],
     ["claude-code", "Claude Code", "cli"],
     ["claude-desktop", "Claude Desktop", "desktop"],
     ["qoder-cli", "Qoder CLI", "cli"],
@@ -32,6 +36,8 @@ it("distinguishes Claude and Qoder product surfaces", () => {
       "true",
     );
     expect(view.getByAltText(name)).toBeVisible();
+    const labels = { cli: "命令行", desktop: "桌面应用", ide: "IDE 编辑器", plugin: "IDE 插件", web: "Web 应用" };
+    expect(view.getByRole("img", { name: `${name} · ${labels[surface]}` })).toHaveAttribute("title", `${name} · ${labels[surface]}`);
     view.unmount();
   }
 });
@@ -39,7 +45,7 @@ it("distinguishes Claude and Qoder product surfaces", () => {
 it("keeps unique, custom, and fallback Agent icons unbadged", () => {
   for (const [id, name] of [
     ["qoder-desktop", "Qoder Desktop"],
-    ["cursor", "Cursor"],
+    ["freebuff", "Freebuff"],
     ["my-custom-agent", "My Custom Agent"],
   ]) {
     const view = render(<AgentGlyph id={id} name={name} size={30} />);
@@ -59,14 +65,17 @@ it("uses brand assets for Cline Desktop and Freebuff", () => {
   }
 });
 
-it("uses the compact, regular, and large badge size tiers", () => {
+it("scales badges for consumer lists, pinned bars, and Agent headers", () => {
   const cases = [
-    [20, "10px"],
-    [24, "10px"],
-    [30, "12px"],
-    [32, "12px"],
-    [42, "14px"],
-    [44, "14px"],
+    [16, "10px"],
+    [20, "12px"],
+    [24, "12px"],
+    [30, "15px"],
+    [32, "15px"],
+    [42, "19px"],
+    [44, "19px"],
+    [52, "19px"],
+    [64, "24px"],
   ] as const;
 
   for (const [size, expected] of cases) {

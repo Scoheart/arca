@@ -1,0 +1,26 @@
+export const instructionsZhCN = {
+  draftDirectoryChanged: 'Instructions 目录已更改。旧目录的草稿已保留；请复制需要的内容并刷新，原文件未被修改。',
+  closeTitle: '关闭 Arca 并放弃未保存的草稿？', closeBody: '{{count}} 个 Agent 的指令草稿尚未保存，原文件未被修改。', closeDiscard: '放弃草稿并关闭',
+  title: '指令', refresh: '刷新', source: '源文件', preview: '预览', save: '保存', saving: '正在保存…', cancel: '取消编辑', saved: '已保存到原文件。', created: '已创建原生全局指令文件。',
+  unreadable: '请选择可读取的原生文件', chooseFile: '可重新选择文件，或使用默认编辑器打开，原文未修改。',
+  loading: '正在读取…', empty: '暂无文件', unsupported: '暂不支持', incomplete: '部分原生路径无法完整检查；新建入口暂不可用。', guided: '原生初始化机制尚未完整确认，请先在 Agent 中创建文件，再刷新。',
+  create: '新建', createHint: '仅创建下方这个原生文件，内容由你填写。', untouched: '查看与刷新不会修改文件。', readOnly: '只读', dirty: '未保存', shared: '共用此文件', readers: '已知读取者，其他使用此路径的工具也可能受影响。',
+  nativeDetails: '原生加载说明', nativeDocs: '原生文档', openEditor: '在默认编辑器中打开', discardTitle: '放弃未保存的修改？', discardBody: '原文件尚未修改，当前草稿将被丢弃。', discard: '放弃修改', keep: '继续编辑',
+  restored: '已恢复本次 Arca 运行中尚未保存的草稿。', draftsFull: '请先保存或取消其他 Agent 的草稿。', fileChanged: '原文件已在外部变化。草稿已保留，保存前请重新载入或对照。',
+  reload: { 'new-session': '新会话读取', 'native-reload': '请使用原生 reload 或新建会话', 'next-request': '由原生客户端在后续请求读取', unknown: '读取时机由原生客户端决定' },
+  loadingState: { 'native-file': '原生文件', 'native-rule': '原生规则', preferred: '优先候选', fallback: '回退候选', shadowed: '被主文件遮蔽', 'compatibility-fallback': '兼容回退候选', empty: '空文件 / 回退条件' },
+  purpose: { instructions: '全局指导', 'system-prompt': '替换系统提示', 'append-system': '追加系统提示', identity: '身份 / 风格' },
+};
+export const instructionsEnUS = {
+  draftDirectoryChanged: 'Instructions directories changed. The draft from the previous location is preserved; copy any content you need, then refresh. No native file was changed.',
+  closeTitle: 'Close Arca and discard unsaved drafts?', closeBody: 'Instruction drafts in {{count}} Agents are unsaved. Their original files are unchanged.', closeDiscard: 'Discard drafts and close',
+  title: 'Instructions', refresh: 'Refresh', source: 'Source', preview: 'Preview', save: 'Save', saving: 'Saving…', cancel: 'Cancel edits', saved: 'Saved to the original file.', created: 'Native global instruction file created.',
+  unreadable: 'Select a readable native file', chooseFile: 'Select another file or open it in your preferred editor. The original is unchanged.',
+  loading: 'Loading…', empty: 'No files', unsupported: 'Not supported', incomplete: 'Some native paths could not be fully inspected. Initialization is unavailable.', guided: 'Native initialization is not fully verified. Create the file in the Agent, then refresh.',
+  create: 'Create', createHint: 'Create only this native file, with the content you enter.', untouched: 'Viewing and refreshing leave files unchanged.', readOnly: 'Read-only', dirty: 'Unsaved', shared: 'Shared file', readers: 'Known readers; other tools using this path may also be affected.',
+  nativeDetails: 'Native loading details', nativeDocs: 'Native documentation', openEditor: 'Open in preferred editor', discardTitle: 'Discard unsaved changes?', discardBody: 'The original file is unchanged. Your current draft will be discarded.', discard: 'Discard changes', keep: 'Keep editing',
+  restored: 'Restored your unsaved draft from this Arca session.', draftsFull: 'Save or cancel drafts in other Agents first.', fileChanged: 'The original file changed externally. Your draft is preserved; reload or compare it before saving.',
+  reload: { 'new-session': 'Read in a new session', 'native-reload': 'Use native reload or start a new session', 'next-request': 'Read by the native client on subsequent requests', unknown: 'Reload timing is controlled by the native client' },
+  loadingState: { 'native-file': 'Native file', 'native-rule': 'Native rule', preferred: 'Preferred candidate', fallback: 'Fallback candidate', shadowed: 'Shadowed by primary file', 'compatibility-fallback': 'Compatibility fallback', empty: 'Empty / fallback conditions' },
+  purpose: { instructions: 'Global guidance', 'system-prompt': 'Replaces system prompt', 'append-system': 'Appends system prompt', identity: 'Identity / style' },
+};

@@ -3,10 +3,10 @@
 
 use std::collections::HashMap;
 
-use mux_core::ops;
-use mux_core::registry::write_manual_entry;
-use mux_core::testenv::TestHome;
-use mux_core::types::{RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::ops;
+use arca_core::registry::write_manual_entry;
+use arca_core::testenv::TestHome;
+use arca_core::types::{RegistryConfig, RegistryEntry, StdioConfig};
 
 fn stdio_entry(args: &[&str]) -> RegistryEntry {
     RegistryEntry {
@@ -96,7 +96,7 @@ fn edit_reports_agent_sync_failure_without_touching_its_config() {
     let agent_path = th.home.join(".claude.json");
     let before = std::fs::read_to_string(&agent_path).unwrap();
 
-    let backups = th.home.join(".mux/backups");
+    let backups = th.home.join(".arca/backups");
     let _ = std::fs::remove_dir_all(&backups);
     std::fs::write(&backups, "block backup directory").unwrap();
 

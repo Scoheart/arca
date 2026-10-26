@@ -107,7 +107,7 @@ export function SourcesSidebar({
           <PlusIcon className="w-4 h-4" />
           添加 MCPs
         </button>
-        <div className="mux-sidebar-action-pair">
+        <div className="arca-sidebar-action-pair">
           <button className="btn-secondary" type="button" onClick={() => setSubscribeOpen(true)}>
             <CloudIcon className="w-4 h-4" />
             添加订阅
@@ -128,7 +128,7 @@ export function SourcesSidebar({
           onClick={() => onSelect(null)}
         />
         {sorted.length === 0 ? (
-          <div className="mux-sidebar-empty">暂无来源</div>
+          <div className="arca-sidebar-empty">暂无来源</div>
         ) : (
           sorted.map((source) => (
             <SidebarItem

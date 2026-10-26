@@ -1,10 +1,10 @@
 use desktop_lib::commands;
-use mux_core::application::assets::{CentralAssetDraft, PlanUpdateCentralAssetRequest};
-use mux_core::application::operations::{
+use arca_core::application::assets::{CentralAssetDraft, PlanUpdateCentralAssetRequest};
+use arca_core::application::operations::{
     CancelOperationRequest, CommitOperationRequest, OperationPlan, PlanOperationRequest,
 };
-use mux_core::application::skills::SkillOperationKind;
-use mux_core::domain::types::{RegistryConfig, RegistryEntry, StdioConfig};
+use arca_core::application::skills::SkillOperationKind;
+use arca_core::domain::types::{RegistryConfig, RegistryEntry, StdioConfig};
 use serde_json::json;
 
 #[test]
@@ -142,7 +142,7 @@ fn unified_operation_envelopes_match_the_tauri_json_contract() {
 
 #[test]
 fn lifecycle_command_returns_a_secret_free_review_plan() {
-    let home = mux_core::testenv::TestHome::new("tauri-consumption-command");
+    let home = arca_core::testenv::TestHome::new("tauri-consumption-command");
     let plan = tauri::async_runtime::block_on(commands::plan_operation(
         PlanOperationRequest::UpdateCentralAsset(PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::Mcp {
@@ -176,7 +176,7 @@ fn lifecycle_command_returns_a_secret_free_review_plan() {
     assert!(!serialized.contains("private-command-sentinel"));
     let persisted = std::fs::read_to_string(
         home.home
-            .join(".mux/staging/consumption")
+            .join(".arca/staging/consumption")
             .join(&plan.operation_id)
             .join("plan.json"),
     )

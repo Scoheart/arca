@@ -1046,7 +1046,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn mux_owned_skill_roots_are_user_only() {
+    fn arca_owned_skill_roots_are_user_only() {
         use std::os::unix::fs::PermissionsExt;
         let _th = TestHome::new("skill-root-permissions");
         let paths = SkillsPaths::from_env().unwrap();
@@ -1342,9 +1342,9 @@ mod tests {
     }
 
     #[test]
-    fn rejects_a_relative_mux_root() {
-        let _th = TestHome::new("skill-relative-mux-root");
-        std::env::set_var("MUX_HOME", "relative-mux-root");
+    fn rejects_a_relative_arca_root() {
+        let _th = TestHome::new("skill-relative-arca-root");
+        std::env::set_var("ARCA_HOME", "relative-arca-root");
         assert!(matches!(
             SkillsPaths::from_env(),
             Err(SkillError::InvalidSource { .. })
@@ -1354,7 +1354,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn anchored_reopen_rejects_type_identity_link_and_size_mismatches() {
-        let path = Path::new("/private/mux-test/skill/file.txt");
+        let path = Path::new("/private/arca-test/skill/file.txt");
         let expected = AnchoredIdentity {
             kind: AnchoredFileKind::Regular,
             device: 7,
@@ -1395,7 +1395,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn anchored_reader_bounds_bytes_and_rejects_digest_changes() {
-        let path = Path::new("/private/mux-test/skill/file.txt");
+        let path = Path::new("/private/arca-test/skill/file.txt");
         let mut output = Vec::new();
         let error = consume_bounded_and_hash(
             Cursor::new(b"12345"),

@@ -148,16 +148,16 @@ test("drag preview drives both pinned surfaces and exposes target styling", () =
   assert.match(component, /previewPinnedAgentOrder/);
   assert.match(component, /data-drop-position=/);
 
-  const row = declarations(css, ".mux-agent-picker-row");
+  const row = declarations(css, ".arca-agent-picker-row");
   assert.match(row, /position:\s*relative/);
-  assert.match(css, /\.mux-agent-picker-row\[data-drop-position="before"\]::before/);
-  assert.match(css, /\.mux-agent-picker-row\[data-drop-position="after"\]::after/);
+  assert.match(css, /\.arca-agent-picker-row\[data-drop-position="before"\]::before/);
+  assert.match(css, /\.arca-agent-picker-row\[data-drop-position="after"\]::after/);
 });
 
 test("reduced motion disables drag-preview transitions", () => {
   const reducedStart = css.indexOf("@media (prefers-reduced-motion: reduce)");
   assert.notEqual(reducedStart, -1);
-  assert.match(css.slice(reducedStart), /\.mux-agent-picker-row\s*\{[^}]*transition:\s*none/);
+  assert.match(css.slice(reducedStart), /\.arca-agent-picker-row\s*\{[^}]*transition:\s*none/);
 });
 ```
 
@@ -246,7 +246,7 @@ Update `onDragStart`:
 ```ts
 event.dataTransfer.effectAllowed = "move";
 event.dataTransfer.setData("text/plain", agent.id);
-const row = event.currentTarget.closest(".mux-agent-picker-row");
+const row = event.currentTarget.closest(".arca-agent-picker-row");
 if (row instanceof HTMLElement) {
   const bounds = row.getBoundingClientRect();
   event.dataTransfer.setDragImage(row, 18, Math.min(bounds.height / 2, 24));
@@ -263,17 +263,17 @@ Use `onDragEnd={clearDragPreview}`. Replace both `sections.pinned.map(...)` rend
 Change/add CSS:
 
 ```css
-.mux-agent-picker-row {
+.arca-agent-picker-row {
   position: relative;
   transition: background-color .12s ease, opacity .12s ease, transform .12s ease;
 }
-.mux-agent-picker-row[data-dragging="true"] {
+.arca-agent-picker-row[data-dragging="true"] {
   background: color-mix(in srgb, var(--color-blue) 8%, transparent);
   opacity: .52;
   transform: scale(.985);
 }
-.mux-agent-picker-row[data-drop-position="before"]::before,
-.mux-agent-picker-row[data-drop-position="after"]::after {
+.arca-agent-picker-row[data-drop-position="before"]::before,
+.arca-agent-picker-row[data-drop-position="after"]::after {
   position: absolute;
   right: 8px;
   left: 8px;
@@ -284,16 +284,16 @@ Change/add CSS:
   content: "";
   pointer-events: none;
 }
-.mux-agent-picker-row[data-drop-position="before"]::before { top: -1px; }
-.mux-agent-picker-row[data-drop-position="after"]::after { bottom: -1px; }
+.arca-agent-picker-row[data-drop-position="before"]::before { top: -1px; }
+.arca-agent-picker-row[data-drop-position="after"]::after { bottom: -1px; }
 ```
 
 Extend the existing reduced-motion query:
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  .mux-agent-picker { animation: none; }
-  .mux-agent-picker-row { transition: none; }
+  .arca-agent-picker { animation: none; }
+  .arca-agent-picker-row { transition: none; }
 }
 ```
 
@@ -330,7 +330,7 @@ git commit -m "feat(ui): preview Agent order while dragging"
 
 **Interfaces:**
 - Consumes: completed Task 1 and Task 2 commits.
-- Produces: stable annotated tag `v1.2.15`, four verified Release assets, and installed `/Applications/MUX.app` version `1.2.15`.
+- Produces: stable annotated tag `v1.2.15`, four verified Release assets, and installed `/Applications/Arca.app` version `1.2.15`.
 
 - [ ] **Step 1: Run the complete pre-release verification suite**
 
@@ -350,13 +350,13 @@ Expected: all commands pass. If the nested worktree triggers Cargo workspace anc
 
 - [ ] **Step 2: Bump all version sources to 1.2.15**
 
-Change only the package versions for `mux-core`, `mux-cli`, and `desktop` from `1.2.14` to `1.2.15` in the seven listed manifests/lockfiles. Verify:
+Change only the package versions for `arca-core`, `arca-cli`, and `desktop` from `1.2.14` to `1.2.15` in the seven listed manifests/lockfiles. Verify:
 
 ```bash
 rg -n '1\.2\.14|1\.2\.15' Cargo.lock core cli desktop/package.json desktop/src-tauri
 ```
 
-Expected: package source-of-truth entries show `1.2.15`; no MUX package remains at `1.2.14`.
+Expected: package source-of-truth entries show `1.2.15`; no Arca package remains at `1.2.14`.
 
 - [ ] **Step 3: Re-run focused release checks and commit**
 
@@ -390,7 +390,7 @@ Expected: clean runner builds and verifies the pre-release DMG before any stable
 - [ ] **Step 5: Create and push the annotated stable tag**
 
 ```bash
-git tag -a v1.2.15 -m "MUX v1.2.15"
+git tag -a v1.2.15 -m "Arca v1.2.15"
 git push origin v1.2.15
 TAG_RUN_ID=$(gh run list --workflow build-desktop.yml --limit 10 \
   --json databaseId,headBranch --jq '.[] | select(.headBranch == "v1.2.15") | .databaseId' | head -1)
@@ -405,20 +405,20 @@ Expected: stable workflow publishes `latest.json`, desktop updater tarball, Appl
 Download to a unique temporary directory and compare every file against GitHub's `sha256:` digest. Verify:
 
 ```bash
-gh release view v1.2.15 --repo Scoheart/mux --json assets,isDraft,isPrerelease,url
+gh release view v1.2.15 --repo Scoheart/arca --json assets,isDraft,isPrerelease,url
 ```
 
-Then verify `latest.json` version/URL/signature, `mux --version`, arm64 architecture, DMG checksum, `CFBundleShortVersionString=1.2.15`, `CFBundleIdentifier=com.scoheart.mux`, bundled `mux 1.2.15`, and `codesign --verify --deep --strict` for updater and DMG apps.
+Then verify `latest.json` version/URL/signature, `arca --version`, arm64 architecture, DMG checksum, `CFBundleShortVersionString=1.2.15`, `CFBundleIdentifier=com.scoheart.arca`, bundled `arca 1.2.15`, and `codesign --verify --deep --strict` for updater and DMG apps.
 
 - [ ] **Step 7: Transactionally update and inspect the installed app**
 
-Follow `../../skills/tool/mux-ui-review/SKILL.md`: stage the verified app under `/Applications`, stop only `/Applications/MUX.app/Contents/MacOS/desktop`, retain a rollback copy until post-install verification, launch only `/Applications/MUX.app`, and confirm version `1.2.15` and a live on-screen CGWindow.
+Follow `../../skills/tool/arca-ui-review/SKILL.md`: stage the verified app under `/Applications`, stop only `/Applications/Arca.app/Contents/MacOS/desktop`, retain a rollback copy until post-install verification, launch only `/Applications/Arca.app`, and confirm version `1.2.15` and a live on-screen CGWindow.
 
 Attempt one real drag verification in the installed app. Confirm list and top shortcuts reorder together before drop, cancel restores, and a completed drop survives restart. If Computer Use again returns `cgWindowNotFound` with an on-screen native window, stop retries and report that UI automation mapping blocks the physical drag check; do not substitute a preview build.
 
 - [ ] **Step 8: Record durable release knowledge and workspace state**
 
-Update the parent repository's current-day MUX daily brief, `memory/MEMORY.md`, and `memory/reference/mux-registry-release.md` with the stable release and verified preview-state contract. Run:
+Update the parent repository's current-day Arca daily brief, `memory/MEMORY.md`, and `memory/reference/arca-registry-release.md` with the stable release and verified preview-state contract. Run:
 
 ```bash
 python3 scripts/workspace-state.py capture

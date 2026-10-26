@@ -276,7 +276,7 @@ pub fn normalize_with_codec(codec: Codec, config: &McpConfig) -> McpConfig {
 }
 
 impl Codec {
-    /// Reject an existing entry that the Agent explicitly marks inactive. MUX
+    /// Reject an existing entry that the Agent explicitly marks inactive. Arca
     /// must not silently rewrite a disabled entry and present it as effective.
     /// Native-toggle codecs validate the flag here and filter active reads separately.
     pub fn validate_existing_entry(self, value: &Value) -> Result<(), String> {
@@ -332,7 +332,7 @@ impl Codec {
             }
             Codec::ChatMcp if contains_sensitive_auth(value) => {
                 return Err(
-                    "credential-bearing ChatMCP entries are external-managed and read-only in MUX"
+                    "credential-bearing ChatMCP entries are external-managed and read-only in Arca"
                         .into(),
                 )
             }
@@ -874,7 +874,7 @@ impl Codec {
         Ok(EntryPatch {
             controlled: match (self, config) {
                 // Warp permits environment variables on URL-based entries for
-                // runtime substitution. MUX cannot model those as HTTP headers,
+                // runtime substitution. Arca cannot model those as HTTP headers,
                 // so they remain Agent-owned when the URL is updated.
                 (Codec::Warp, McpConfig::Http(_)) => WARP_HTTP_FIELDS,
                 _ => self.controlled_fields(),
@@ -916,7 +916,7 @@ fn validate_active_field(
         None => Ok(()),
         Some(Value::Bool(value)) if *value == active_value => Ok(()),
         Some(Value::Bool(_)) => Err(format!(
-            "MCP entry is disabled by '{field}'; enable it in the Agent before MUX updates it"
+            "MCP entry is disabled by '{field}'; enable it in the Agent before Arca updates it"
         )),
         Some(_) => Err(format!(
             "MCP entry switch '{field}' is not a boolean; refusing to infer state"

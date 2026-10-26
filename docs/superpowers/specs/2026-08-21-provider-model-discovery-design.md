@@ -2,7 +2,7 @@
 
 ## 背景与目标
 
-MUX 当前要求用户在新增 Model 时手动填写 Model ID。多数内置 Provider 已提供模型列表接口。本功能让 MUX 在新增 Model 时按 Provider 能力动态获取可用模型，同时保留手动输入作为可靠兜底。
+Arca 当前要求用户在新增 Model 时手动填写 Model ID。多数内置 Provider 已提供模型列表接口。本功能让 Arca 在新增 Model 时按 Provider 能力动态获取可用模型，同时保留手动输入作为可靠兜底。
 
 完整 Provider 调研与依据见 [`2026-08-21-provider-model-discovery-research.md`](2026-08-21-provider-model-discovery-research.md)。结论是：当前 51 个内置 Provider 类型中，首版支持 48 个；`github-models`（服务已下线）、`wandb`（缺少必需 Project 参数）、`custom`（不盲探测）除外。
 
@@ -64,7 +64,7 @@ Core 按以下顺序执行：
 1. 从设置读取指定 Provider instance，并根据其 `provider` 类型查能力表。
 2. 构造经过验证的同源模型列表 URL；不接受前端传入任意 URL、Header 或 codec。
 3. 按能力的 `required` / `optional` / `none` 凭据策略从永久 Provider Keychain 项读取 API Key。`required` 缺失时在发网前返回可识别错误；`optional` 有 Key 就附带，以获得该 Key 的真实可见目录。
-4. 使用 MUX 现有代理感知的 `ureq` agent 发起 GET，15 秒全局超时并关闭自动重定向。
+4. 使用 Arca 现有代理感知的 `ureq` agent 发起 GET，15 秒全局超时并关闭自动重定向。
 5. 每页响应限制为 4 MiB；有官方 continuation token 的原生适配器最多跟随 10 页，所有页面合计最多接收 2,000 个有效条目。
 6. 跳过空 ID，按首次出现去重，并保留 Provider 返回顺序。
 7. 只返回摘要；不返回响应头、原始响应或凭据。
@@ -99,7 +99,7 @@ API Key 不进入参数、配置、日志或错误文本。Core 使用 `zeroize:
 - React 只传 `provider_id`，不能指定任意 URL、Header 或响应解析器。
 - Core 只请求设置中已存在的 Provider instance，并使用该 Provider 类型的已审核能力。
 - 模型发现 URL 必须与 Provider 配置 URL 同 scheme/host/port；关闭重定向，避免凭据离开已配置 origin。
-- 请求复用 MUX 全局网络代理设置，不创建第二套代理或直连兜底逻辑。
+- 请求复用 Arca 全局网络代理设置，不创建第二套代理或直连兜底逻辑。
 - 本功能不修改 Provider/Model 持久化 schema，不触发 settings 版本迁移。
 - 本地 Provider 保留 HTTP 能力；远端 Provider 继续服从现有 Provider URL 校验。
 - 模型列表只存在于当前 Desktop 弹窗内，关闭后释放。
@@ -108,7 +108,7 @@ API Key 不进入参数、配置、日志或错误文本。Core 使用 `zeroize:
 
 按测试先行实现：
 
-- Core：用隔离 HOME/MUX_HOME 和本地 TCP fixture 验证五种 adapter、URL 推导、必需/可选鉴权、特殊 Header、分页上限、响应 codec、去重顺序、缺少凭据、重定向、非成功状态、格式错误、超大响应以及错误不泄露密钥。
+- Core：用隔离 HOME/ARCA_HOME 和本地 TCP fixture 验证五种 adapter、URL 推导、必需/可选鉴权、特殊 Header、分页上限、响应 codec、去重顺序、缺少凭据、重定向、非成功状态、格式错误、超大响应以及错误不泄露密钥。
 - Application/Tauri：验证只读用例导出、异步阻塞边界、命令注册与 wire-safe 序列化。
 - Desktop：验证新建时自动请求、搜索和选择真实 ID、刷新、Provider 切换的竞态保护、编辑时不自动请求、错误后仍可手填并保存、不支持 Provider 不发请求。
 - 回归：运行相关 Rust 单测、Desktop `ModelsView` 单测、Desktop 全量测试与 build；完成前在从远端分支导出的临时目录独立复验。

@@ -46,7 +46,21 @@ pub fn discover_provider_models(provider_id: &str) -> Result<Vec<ProviderModelSu
 }
 
 pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
-    super::gate::read(|| crate::resources::model::reveal_provider_credential(provider_id))
+    let provider = super::gate::read(|| crate::resources::model::prepare_provider_credential_reveal(provider_id))?;
+    crate::resources::model::execute_provider_credential_reveal(&provider)
+}
+
+/// Explicit startup/user retry; metadata-only queries never call this.
+pub fn unlock_credential_session(retry: bool) -> Result<serde_json::Value, String> {
+    crate::resources::model::unlock_credential_session(retry)
+}
+
+pub fn clear_credential_session() {
+    crate::resources::model::clear_credential_session();
+}
+
+pub fn credential_session_status() -> serde_json::Value {
+    crate::resources::model::credential_session_status()
 }
 
 pub fn infer_provider(base_url: &str) -> String {
@@ -110,7 +124,7 @@ pub fn set_agent_credential_delivery(
 }
 
 /// Follow native model selections through the normal model mutation gate.
-/// This only updates MUX metadata; it never writes Agent configuration.
+/// This only updates Arca metadata; it never writes Agent configuration.
 pub fn reconcile_native_selection() -> Result<(), String> {
     super::gate::write_for(
         super::gate::CapabilityDomain::Model,

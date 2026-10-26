@@ -37,12 +37,12 @@ it("defines role-based Soft Workbench surfaces and radius hierarchy", () => {
 });
 
 it("uses regions and row islands instead of structural divider lines", () => {
-  const shell = declarations(".mux-workspace");
-  const fullWidthShell = declarations('.mux-workspace[data-sidebar="false"]');
-  const sidebar = declarations(".mux-workspace-sidebar");
-  const toolbar = declarations(".mux-workspace-toolbar");
-  const filters = declarations(".mux-workspace-filters");
-  const row = declarations(".mux-resource-card");
+  const shell = declarations(".arca-workspace");
+  const fullWidthShell = declarations('.arca-workspace[data-sidebar="false"]');
+  const sidebar = declarations(".arca-workspace-sidebar");
+  const toolbar = declarations(".arca-workspace-toolbar");
+  const filters = declarations(".arca-workspace-filters");
+  const row = declarations(".arca-resource-card");
 
   expect(shell).toMatch(/gap:\s*14px/);
   expect(shell).toMatch(/padding:\s*14px/);
@@ -56,33 +56,33 @@ it("uses regions and row islands instead of structural divider lines", () => {
   expect(sidebar).toMatch(/background:\s*var\(--surface-navigation\)/);
   expect(toolbar).toMatch(/background:\s*var\(--surface-section\)/);
   expect(row).toMatch(/background:\s*var\(--surface-asset\)/);
-  expect(declarations(".mux-resource-card:hover")).toMatch(/transform:\s*none/);
+  expect(declarations(".arca-resource-card:hover")).toMatch(/transform:\s*none/);
 });
 
 it("keeps the top bar quiet and gives dialogs only structural hairlines", () => {
   expect(layout).not.toMatch(/borderBottom/);
   expect(layout).not.toMatch(/h-5 w-px/);
   expect(layout).toMatch(/background:\s*"var\(--surface-workspace\)"/);
-  expect(declarations(".mux-dialog-shell-header")).toMatch(/border-bottom:\s*1px solid var\(--border-hairline\)/);
-  expect(declarations(".mux-dialog-shell-footer")).toMatch(/border-top:\s*1px solid var\(--border-hairline\)/);
-  expect(declarations(".mux-resource-inspector")).toMatch(/border:\s*0/);
+  expect(declarations(".arca-dialog-shell-header")).toMatch(/border-bottom:\s*1px solid var\(--border-hairline\)/);
+  expect(declarations(".arca-dialog-shell-footer")).toMatch(/border-top:\s*1px solid var\(--border-hairline\)/);
+  expect(declarations(".arca-resource-inspector")).toMatch(/border:\s*0/);
   expect(ui).toMatch(/background:\s*"var\(--surface-modal-scrim\)"/);
 });
 
 it("separates interactive controls from nested preview content", () => {
-  expect(declarations(".mux-search input")).toMatch(/background:\s*var\(--surface-control\)/);
-  expect(declarations(".mux-config-preview")).toMatch(/background:\s*var\(--surface-item\)/);
-  expect(declarations(".mux-skill-preview")).toMatch(/background:\s*var\(--surface-item\)/);
+  expect(declarations(".arca-search input")).toMatch(/background:\s*var\(--surface-control\)/);
+  expect(declarations(".arca-config-preview")).toMatch(/background:\s*var\(--surface-item\)/);
+  expect(declarations(".arca-skill-preview")).toMatch(/background:\s*var\(--surface-item\)/);
 });
 
 it("keeps passive metadata labels compact without shrinking interactive controls", () => {
-  expect(ui).toMatch(/className="mux-badge"/);
-  expect(ui).toMatch(/className="mux-transport-pill"/);
+  expect(ui).toMatch(/className="arca-badge"/);
+  expect(ui).toMatch(/className="arca-transport-pill"/);
 
-  const labelFrame = declarations(":where(.mux-badge, .mux-transport-pill)");
-  const badge = declarations(".mux-badge");
-  const transport = declarations(".mux-transport-pill");
-  const risk = declarations(".mux-skill-risk-badge");
+  const labelFrame = declarations(":where(.arca-badge, .arca-transport-pill)");
+  const badge = declarations(".arca-badge");
+  const transport = declarations(".arca-transport-pill");
+  const risk = declarations(".arca-skill-risk-badge");
   for (const label of [labelFrame, risk]) {
     expect(label).toMatch(/height:\s*18px/);
     expect(label).toMatch(/padding:\s*0 6px/);
@@ -90,34 +90,34 @@ it("keeps passive metadata labels compact without shrinking interactive controls
   }
   expect(badge).toMatch(/font-size:\s*10px/);
   expect(transport).toMatch(/font:\s*650 9px\/1 var\(--font-mono\)/);
-  expect(declarations(".mux-resource-tab")).toMatch(/height:\s*32px/);
-  expect(declarations(".mux-icon-btn")).toMatch(/width:\s*30px; height:\s*30px/);
+  expect(declarations(".arca-resource-tab")).toMatch(/height:\s*32px/);
+  expect(declarations(".arca-icon-btn")).toMatch(/width:\s*30px; height:\s*30px/);
 });
 
 it("groups Agent identity and paths in one context region", () => {
-  expect(agentView).toMatch(/className="mux-agent-context"/);
-  expect(agentView).toMatch(/<section className="mux-agent-context"[^>]*>[\s\S]*?<AgentHeader agent=\{agent\} tone="reference" \/>/);
-  expect(workspace).toMatch(/className="mux-workspace-intro"/);
-  expect(declarations(".mux-agent-context")).toMatch(/border-radius:\s*var\(--radius-canvas\)/);
-  expect(declarations(".mux-agent-context")).toMatch(/background:\s*var\(--surface-workspace\)/);
-  expect(declarations(".mux-consumption-list > li")).toMatch(/border:\s*0/);
-  expect(declarations(".mux-consumption-external")).toMatch(/background:\s*var\(--surface-attention\)/);
+  expect(agentView).toMatch(/className="arca-agent-context"/);
+  expect(agentView).toMatch(/<section className="arca-agent-context"[^>]*>[\s\S]*?<AgentHeader agent=\{agent\} tone="reference" \/>/);
+  expect(workspace).toMatch(/className="arca-workspace-intro"/);
+  expect(declarations(".arca-agent-context")).toMatch(/border-radius:\s*var\(--radius-canvas\)/);
+  expect(declarations(".arca-agent-context")).toMatch(/background:\s*var\(--surface-workspace\)/);
+  expect(declarations(".arca-consumption-list > li")).toMatch(/border:\s*0/);
+  expect(declarations(".arca-consumption-external")).toMatch(/background:\s*var\(--surface-attention\)/);
 });
 
 it("centers the Agent identity and keeps actions with configuration locations", () => {
-  expect(declarations(".mux-agent-header")).toMatch(/justify-content:\s*center/);
-  expect(declarations(".mux-agent-header-identity")).toMatch(/justify-content:\s*center/);
-  expect(agentView).toMatch(/className="mux-agent-section-actions"[\s\S]*?官方文档[\s\S]*?编辑配置/);
-  expect(agentView).not.toMatch(/mux-agent-header-actions/);
+  expect(declarations(".arca-agent-header")).toMatch(/justify-content:\s*center/);
+  expect(declarations(".arca-agent-header-identity")).toMatch(/justify-content:\s*center/);
+  expect(agentView).toMatch(/className="arca-agent-section-actions"[\s\S]*?官方文档[\s\S]*?编辑配置/);
+  expect(agentView).not.toMatch(/arca-agent-header-actions/);
   expect(agentView).not.toMatch(/agent\.id\} · \{agent\.category/);
 });
 
 it("uses three columns for central assets and every Agent asset domain", () => {
-  const centralGrid = declarations(".mux-resource-grid");
-  const agentGrid = declarations(".mux-consumption-list");
-  const agentSkillGrid = declarations(".mux-consumption-list[data-columns=\"3\"]");
-  const centralItem = declarations(".mux-resource-card");
-  const agentItem = declarations(".mux-consumption-list > li");
+  const centralGrid = declarations(".arca-resource-grid");
+  const agentGrid = declarations(".arca-consumption-list");
+  const agentSkillGrid = declarations(".arca-consumption-list[data-columns=\"3\"]");
+  const centralItem = declarations(".arca-resource-card");
+  const agentItem = declarations(".arca-consumption-list > li");
 
   expect(centralGrid).toMatch(/grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
   expect(centralGrid).toMatch(/gap:\s*8px/);
@@ -142,17 +142,17 @@ it("uses three columns for central assets and every Agent asset domain", () => {
     expect(item).toMatch(/background:\s*var\(--surface-asset\)/);
     expect(item).toMatch(/box-shadow:\s*none/);
   }
-  expect(declarations(".mux-consumption-list > li[data-enabled=\"false\"]")).toMatch(
+  expect(declarations(".arca-consumption-list > li[data-enabled=\"false\"]")).toMatch(
     /background:\s*color-mix\(in srgb,\s*var\(--surface-asset\) 68%,\s*var\(--surface-section\)\)/,
   );
-  expect(declarations(".mux-resource-card:hover")).toMatch(/var\(--surface-asset\)/);
-  expect(declarations(".mux-consumption-list > li:hover")).toMatch(/var\(--surface-asset\)/);
+  expect(declarations(".arca-resource-card:hover")).toMatch(/var\(--surface-asset\)/);
+  expect(declarations(".arca-consumption-list > li:hover")).toMatch(/var\(--surface-asset\)/);
   expect(centralItem).toMatch(/grid-template-areas:\s*"identity"\s*"configuration"\s*"state"\s*"impact"/);
   expect(centralItem).toMatch(/box-shadow:\s*none/);
 
-  const external = declarations(".mux-consumption-external");
+  const external = declarations(".arca-consumption-external");
   expect(external).toMatch(/width:\s*100%/);
   expect(external).toMatch(/border:\s*0/);
   expect(agentView).toMatch(/externalMode="cards"/);
-  expect(agentView).not.toMatch(/mux-consumption-adopt|让 MUX 管理/);
+  expect(agentView).not.toMatch(/arca-consumption-adopt|让 Arca 管理/);
 });

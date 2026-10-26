@@ -1,6 +1,6 @@
 // End-to-end for the source-based catalog: add a local config file as a source,
 // confirm its servers populate the catalog, toggle it off/on, and remove it.
-// HOME/MUX_HOME are redirected to a temp dir so ~/.mux stays isolated. No network.
+// HOME/ARCA_HOME are redirected to a temp dir so ~/.arca stays isolated. No network.
 use std::fs;
 use tauri::async_runtime::block_on;
 
@@ -10,7 +10,7 @@ use desktop_lib::commands::{
 
 #[test]
 fn local_source_flow_populates_toggles_and_removes() {
-    let th = mux_core::testenv::TestHome::new("sources");
+    let th = arca_core::testenv::TestHome::new("sources");
     let home = th.home.clone();
 
     // A standard mcpServers config file the user "adds" as a local source.
@@ -49,9 +49,9 @@ fn local_source_flow_populates_toggles_and_removes() {
         .iter()
         .any(|e| e.name == "wiki" && e.transport() == "http"));
 
-    // The cached copy exists under ~/.mux/assets/mcps/sources/local/.
+    // The cached copy exists under ~/.arca/assets/mcps/sources/local/.
     let cached = home
-        .join(".mux")
+        .join(".arca")
         .join("sources")
         .join("local")
         .join(format!("{id}.json"));
@@ -83,9 +83,9 @@ fn local_source_flow_populates_toggles_and_removes() {
 
     // The opt-in curated collection is available as a local source (no network).
     let curated = block_on(add_builtin_collection()).expect("add_builtin_collection should succeed");
-    let expected = mux_core::registry::builtin_registry().len();
+    let expected = arca_core::registry::builtin_registry().len();
     assert_eq!(curated.kind, "local");
-    assert_eq!(curated.name, "Mux 精选");
+    assert_eq!(curated.name, "Arca 精选");
     assert_eq!(curated.server_count as usize, expected);
     assert_eq!(block_on(list_registry()).unwrap().len(), expected);
 }

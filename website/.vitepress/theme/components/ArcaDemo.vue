@@ -18,14 +18,14 @@ function jump(time: number) {
 }
 </script>
 <template>
-  <div class="mux-demo">
-    <video ref="video" controls playsinline preload="none" width="1440" height="984" :poster="withBase('/media/mux-1.10.0-models.jpg')" :aria-label="en ? 'MUX 1.10.0 desktop walkthrough' : 'MUX 1.10.0 桌面演示'">
+  <div class="arca-demo">
+    <video ref="video" controls playsinline preload="none" width="1440" height="984" :poster="withBase('/media/mux-1.10.0-models.jpg')" :aria-label="en ? 'Historical MUX 1.10.0 walkthrough' : '改名前的历史演示'">
       <source :src="withBase('/media/mux-1.10.0-overview.mp4')" type="video/mp4" />
       <track kind="captions" :src="withBase('/media/mux-1.10.0-zh.vtt')" srclang="zh-CN" label="简体中文" :default="!en" />
       <track kind="captions" :src="withBase('/media/mux-1.10.0-en.vtt')" srclang="en" label="English" :default="en" />
       {{ en ? 'Your browser cannot play this video.' : '浏览器无法播放此视频。' }}
     </video>
-    <div class="mux-demo__chapters" :aria-label="en ? 'Video chapters' : '视频章节'"><button v-for="chapter in chapters" :key="chapter.time" type="button" @click="jump(chapter.time)"><span>{{ Math.floor(chapter.time / 60) }}:{{ String(chapter.time % 60).padStart(2, '0') }}</span>{{ chapter.label }}</button></div>
-    <p class="mux-demo__caption">{{ en ? 'Recorded in the released 1.10.0 desktop app with public sample assets. No live model requests.' : '使用正式版 1.10.0 与公开示例资产录制；未发送实际模型请求。' }} <a :href="withBase('/media/mux-1.10.0-overview.mp4')" download>{{ en ? 'Download MP4' : '下载 MP4' }}</a></p>
+    <div class="arca-demo__chapters" :aria-label="en ? 'Video chapters' : '视频章节'"><button v-for="chapter in chapters" :key="chapter.time" type="button" @click="jump(chapter.time)"><span>{{ Math.floor(chapter.time / 60) }}:{{ String(chapter.time % 60).padStart(2, '0') }}</span>{{ chapter.label }}</button></div>
+    <p class="arca-demo__caption">{{ en ? 'Recorded in the released 1.10.0 desktop app with public sample assets. No live model requests.' : '使用正式版 1.10.0 与公开示例资产录制；未发送实际模型请求。' }} <a :href="withBase('/media/mux-1.10.0-overview.mp4')" download>{{ en ? 'Download MP4' : '下载 MP4' }}</a></p>
   </div>
 </template>

@@ -1,21 +1,24 @@
-# AGENTS.md — MUX
+# AGENTS.md — Arca
 
-> 作用域：MUX 独立 Git 仓库。用户用法写 README；完整操作规则按任务读取父仓 `llm-wiki/wiki/knowledge/`。
+> 作用域：Arca 独立 Git 仓库。用户用法写 README；完整操作规则按任务读取父仓 `llm-wiki/wiki/knowledge/`。
 
 ## 架构边界
 
+- 跨 Agent 行为使用共享 Core 机制；原生配置路径、字段和运行时能力通过声明或适配器接入。用户代理地址和端口来自运行上下文，验证覆盖多个客户端及可变参数，具体故障实例只作为复现场景。
 - Rust `core/` 是 Agent 发现、codec、MCP/Model/Skills 中央资产、消费关系与写入行为的唯一权威；CLI、TUI、Tauri command 和 React 只做薄适配。
 - `data/` 是 Agent 与精选资源的 source of truth。新增可写 Agent 时同步 codec、发现、fixture、round-trip、图标 alias 与完整性检查。
 - 当前只管理全局 Agent 配置和用户级 Skills；不得重新暴露项目级写入或在多个前端复制 core 编排。
 - 顶层 `MCPs`、`Models`、`Skills` 是中央资产生命周期入口；Agent 页面只能选择和解除消费关系，不能创建、导入、编辑或安装资产。外部扫描结果保持只读，只有显式导入才进入中央资产库；唯一例外是 `native-registry` Model Agent 的专用 reviewed `clear_agent_models`，它可删除当前 Agent observer 已列出的全部原生 Model（含 external），但不得删除中央资产、Provider 或凭据，单个 external 卡片仍不可直接写入。
+- 用户明确授权的 `Instructions` 是 Agent 原生全局文件查看/编辑能力，不属于中央资产。只保存用户对原文件的修改；完整检查确认没有原生入口后才允许用户主动新建一个文件。不得增加删除、迁移、分配、托管标记、中央正文副本、自动补文件或规则集合 CRUD。
+- `Instructions` 目录通过 Agent「编辑 → 配置文件」配置，由 Core 按稳定原生 source ID 保存和解析；registry 路径只是默认值。更改路径只更新 Arca 偏好，不迁移原文件、不变更 Agent 原生加载设置，也不触发中央资产投影。
 
 ## 安全不变量
 
-- 配置修改必须保留未知字段、注释、格式和非目标策略；损坏、歧义或并发变化时 fail closed，并经过备份、权限收紧和 CAS。已存在且被 Agent 监听的配置文件必须原地改写并保留路径与 inode；仅 MUX 私有文件和新建目标使用同目录临时文件与原子发布。
+- 配置修改必须保留未知字段、注释、格式和非目标策略；损坏、歧义或并发变化时 fail closed，并经过备份、权限收紧和 CAS。已存在且被 Agent 监听的配置文件必须原地改写并保留路径与 inode；仅 Arca 私有文件和新建目标使用同目录临时文件与原子发布。
 - MCP 与 model writer 只能修改各自拥有的字段。API key/token 只存系统 Keychain，不进入配置、日志、fixture、截图或仓库。ZCode 原生 Models 为用户明确授权的例外：仅在显式选择 plaintext delivery 时向其私有配置导出凭据，中央密钥仍存 Keychain；必须使用权限收紧、CAS 和加密回滚快照，禁止明文备份或日志。
-- Skills 只保留 `~/.mux/assets/skills/items/` 中央副本并通过已核验用户级目录链接分配；不保留旧中央目录回退、迁移或兼容链接。生命周期写操作必须由 core 先 plan，再以原 operation id、候选哈希和风险确认 commit。
+- Skills 只保留 `~/.arca/assets/skills/items/` 中央副本并通过已核验用户级目录链接分配；不保留旧中央目录回退、迁移或兼容链接。生命周期写操作必须由 core 先 plan，再以原 operation id、候选哈希和风险确认 commit。
 - 中央 desired state 与 Agent 投影必须分离提交：中央变更先持久化，每个 `Agent × capability × physical target` 再独立收敛。跨 target 不得回滚已经成功的目标；失败只形成与最小物理 write set 绑定的 incident，并允许无关 Agent、无关能力和无关偏好继续写入。单个 target 内仍必须 fail closed、CAS、备份，并按上一条的目标类型选择原地改写或原子发布。MCP/Skills 每个 Agent 为 `0..N`；原生支持多模型的 Agent 可安装 `0..N` 个 Model Profile 且最多一个为当前模型，单模型 Agent 仍为 `0..1`。
-- 测试必须隔离 `HOME`/`MUX_HOME`，不得访问真实用户配置、Skills 或 Keychain。
+- 测试必须隔离 `HOME`/`ARCA_HOME`，不得访问真实用户配置、Skills 或 Keychain。
 
 ## 产品与验证
 
@@ -24,28 +27,34 @@
 - Agent 显示名使用核验过的实际 App 名称；CLI / 插件使用其正式产品名，不额外添加地区、版本或形态说明。同名产品保留独立 ID，用现有图标形态标记和类别区分；不得为消歧改名。名称权威在 `data/agents.json`（目录项在 `data/agent-catalog.json`），各能力页面与前端不得维护第二份名称表。
 
 - 资产操作不得以内嵌确认面板替换页面列表。普通添加/移除直接执行，失败使用全局通知；必要确认统一通过 `DialogShell` / `Modal` 挂到 `document.body`，覆盖整个应用，禁止局部弹窗或重复弹窗外壳。
+- 成功、失败、校验、恢复、启动同步和更新反馈统一使用 `ToastProvider` / `ToastNotice`：右上角通知条，从右向左进入，并位于所有 dialog 之上。禁止另建页面内提示框或底部横幅；持续进度使用稳定 noticeKey 更新同一条通知，普通操作反馈可打断后台进度。资源与请求自身的状态、操作计划和风险内容仍作为数据展示。
 - 顶层为 `MCPs`、`Models`、`Skills` 中央资产库；Agent 页面统一显示已添加资产与中央选择器，多模型 Agent 还需区分“已添加 / 已启用 / 当前模型”，三类状态由 core 的 desired/observed inventory 提供。UI 保持不透明、克制，并覆盖 `1200x820` 与 `900x600`。
-- 完成功能修改后先启动 `npm run tauri dev` 做本地开发预览，默认使用真实 `HOME` 与 `~/.mux`，从而验证同一套 MCP、Model、Skill 和 Agent 配置；不得用空白临时数据冒充本地启动。只有自动化测试继续隔离 `HOME`/`MUX_HOME`，或用户明确要求隔离环境时才覆盖这些路径。
+- 完成功能修改后先启动 `npm run tauri dev` 做本地开发预览，默认使用真实 `HOME` 与 `~/.arca`，从而验证同一套 MCP、Model、Skill 和 Agent 配置；不得用空白临时数据冒充本地启动。只有自动化测试继续隔离 `HOME`/`ARCA_HOME`，或用户明确要求隔离环境时才覆盖这些路径。
 - 当前使用极速交付模式：除非用户在当前任务中明确要求，不运行 `cargo test`、`npm test`、fmt、clippy、图标检查、changed-surface validator 或 push preflight。修改后默认停在本地开发预览；提交、推送和发布由用户明确指定，见父仓 Standing Authorization 与本文件 Git 节。
 - 自动 Quality workflow 暂停。测试代码继续保留，便于用户明确要求时按需手动运行；生产编译、版本生成、签名、打包与 Release 资产发布仍属于交付必需步骤。
-- 本地开发预览用于发布前检查当前源码，并明确标注为开发版；正式发布后的安装验收只使用 `/Applications/MUX.app`，不得用开发预览或 mock 冒充正式安装版。
+- 本地开发预览用于发布前检查当前源码，并明确标注为开发版；正式发布后的安装验收只使用 `/Applications/Arca.app`，不得用开发预览或 mock 冒充正式安装版。
 
 ## 按需路由
 
-- Registry、codec、Models、更新与发布：[`mux-registry-release.md`](../../../llm-wiki/wiki/knowledge/mux-registry-release.md)
-- 测试环境：[`mux-test-isolation.md`](../../../llm-wiki/wiki/knowledge/mux-test-isolation.md)
-- 正式安装版 UI：[`mux-ui-review.md`](../../../llm-wiki/wiki/knowledge/mux-ui-review.md)
+- Registry、codec、Models、更新与发布：[`arca-registry-release.md`](../../../llm-wiki/wiki/knowledge/arca-registry-release.md)
+- 测试环境：[`arca-test-isolation.md`](../../../llm-wiki/wiki/knowledge/arca-test-isolation.md)
+- 正式安装版 UI：[`arca-ui-review.md`](../../../llm-wiki/wiki/knowledge/arca-ui-review.md)
 - Git、记忆与跨仓交付：[`repository-delivery.md`](../../../llm-wiki/wiki/knowledge/repository-delivery.md)
 
 ## Git
 
 在本独立仓执行 status、commit、tag 和 push；父仓不得跟踪其内部文件。提交使用 `<type>(<scope>): <summary>` 并在 body 解释原因。不要提交 `target/`、`dist/`、临时 App、截图或本机配置。
 
-MUX 交付授权与默认链路以父仓根 [`AGENTS.md — Standing Authorization`](../../../AGENTS.md#standing-authorization) 为准；按已授权链路执行，不重复询问，不因脏工作树或分叉切换链路：
+用户持续授权（2026-10-20）：每次完成本仓库的任务修改后，自动提交本次相关改动、推送到 `main`，并执行 Direct Stable 发布；无需再次确认。该授权覆盖后续任务，除非用户明确要求暂不发布或撤回授权。按实际改动范围选择 patch/minor/major，跟进构建与正式发布结果；不包含无关改动，也不改变下述不可变 tag、签名、资产完整性和安装验收要求。此持续授权优先于本文件中默认停在开发预览、等待逐次发布指令的规则。
 
-- 本地 commit & push：父仓 `mux-local-push`
-- Remote PR：父仓 `mux-remote-pr-delivery`
-- 功能 SHA 落到 `main` 之后的 Stable 观察、复验、重试、安装：父仓 `mux-release`
+Arca 交付授权与默认链路以父仓根 [`AGENTS.md — Standing Authorization`](../../../AGENTS.md#standing-authorization) 为准；按已授权链路执行，不重复询问，不因脏工作树或分叉切换链路：
+
+- 本地 commit & push：父仓 `arca-local-push`
+- Remote PR：父仓 `arca-remote-pr-delivery`
+- 功能 SHA 落到 `main` 之后的 Stable 观察、复验、重试、安装：父仓 `arca-release`
+
+- Arca 正式发布必须交给一个专用 subagent。主 agent 完成已授权的提交/推送或 PR 合并后，交接准确功能/合并 SHA、授权终点、验证证据与用户约束；由 subagent 连续负责发布触发、构建观察、正式发布和独立验包。主 agent 等待并核对最终证据后向用户汇报，不另开重复发布、观察器或下载；没有可用的 subagent 工具时说明阻塞，不静默改为自行发布。
+- 接管已经启动的发布时，交接精确 run ID、当前阶段和既有验证器/日志/产物记录，从首个未完成阶段继续。已是发布 subagent 的执行者不递归委派；工具会话无法跨 agent 访问时复用共享日志与证据，由原持有者回收原会话的最终结果，不重启验证器。
 
 本地链路要求当前在 `main`，且 local `main` 已包含最新 `origin/main`。不满足则停在该链路内处理，不得因为工作树脏或分叉就改走 Remote PR。Remote PR 链路只在用户明确要求远端 commit / PR / 不移动本地 HEAD 时使用；脏或分叉只约束「不要改用户 checkout」。
 

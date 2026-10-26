@@ -28,6 +28,7 @@ function projectedAgentInfo(
     has_global: Boolean(mcp?.config_path),
     has_project: legacy?.has_project ?? false,
     has_model: capabilities.model != null,
+    has_instructions: capabilities.instructions ?? false,
     enabled: identity.enabled,
     supported_transports: supportedTransports(mcp?.supported_transports),
     global: mcp?.config_path ?? null,

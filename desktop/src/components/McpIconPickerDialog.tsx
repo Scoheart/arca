@@ -1,3 +1,4 @@
+import { ToastNotice } from "./Toast";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { McpIconPreference, RegistryEntry } from "../lib/types";
@@ -59,7 +60,7 @@ export function McpIconPickerDialog({
       subtitle={t("mcpIcons.subtitle")}
       busy={busy}
       onClose={onClose}
-      status={error && <div className="mux-mcp-icon-error" role="alert">{error}</div>}
+      status={error && <ToastNotice message={error} />}
       footerStart={preference && (
         <button type="button" className="btn-ghost" disabled={busy} onClick={() => void run(onReset)}>
           <RefreshIcon className="w-4 h-4" />
@@ -78,26 +79,26 @@ export function McpIconPickerDialog({
         </>
       }
     >
-      <div className="mux-mcp-icon-picker">
-        <section className="mux-mcp-icon-current">
+      <div className="arca-mcp-icon-picker">
+        <section className="arca-mcp-icon-current">
           <McpAvatar assetKey={assetKey} entry={entry} preference={preference} size={52} />
-          <div className="mux-mcp-icon-current-copy">
+          <div className="arca-mcp-icon-current-copy">
             <strong>{entry.name}</strong>
             <span>{t("mcpIcons.recommended", { name: recommendation })}</span>
           </div>
           {recommended && (
-            <span className="mux-mcp-icon-recommendation" data-icon-tone={MCP_ICON_OPTIONS.find((item) => item.id === recommended)?.tone}>
+            <span className="arca-mcp-icon-recommendation" data-icon-tone={MCP_ICON_OPTIONS.find((item) => item.id === recommended)?.tone}>
               <McpIconGlyph id={recommended} />
             </span>
           )}
         </section>
 
-        <section className="mux-mcp-icon-catalog" aria-labelledby="mux-mcp-icon-catalog-title">
-          <div className="mux-mcp-icon-section-head">
-            <h3 id="mux-mcp-icon-catalog-title">{t("mcpIcons.allIcons")}</h3>
+        <section className="arca-mcp-icon-catalog" aria-labelledby="arca-mcp-icon-catalog-title">
+          <div className="arca-mcp-icon-section-head">
+            <h3 id="arca-mcp-icon-catalog-title">{t("mcpIcons.allIcons")}</h3>
             <span>{t("mcpIcons.iconCount", { count: MCP_ICON_OPTIONS.length })}</span>
           </div>
-          <div className="mux-mcp-icon-grid">
+          <div className="arca-mcp-icon-grid">
             {MCP_ICON_OPTIONS.map((option) => {
               const selected = preference?.kind === "builtin" && preference.value === option.id;
               const name = iconName(option.id);
@@ -105,7 +106,7 @@ export function McpIconPickerDialog({
                 <button
                   type="button"
                   key={option.id}
-                  className="mux-mcp-icon-choice"
+                  className="arca-mcp-icon-choice"
                   data-selected={selected ? "true" : undefined}
                   data-icon-tone={option.tone}
                   aria-label={t("mcpIcons.chooseBuiltin", { name })}
@@ -121,7 +122,7 @@ export function McpIconPickerDialog({
           </div>
         </section>
 
-        <p className="mux-mcp-icon-upload-hint">{t("mcpIcons.uploadHint")}</p>
+        <p className="arca-mcp-icon-upload-hint">{t("mcpIcons.uploadHint")}</p>
       </div>
     </DialogShell>
   );
