@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.10.0](https://github.com/Scoheart/arca/compare/v2.9.1...v2.10.0) (2026-10-26)
+
+### Changes
+
+* fix(launch): format terminal commands as readable continuation lines ([a472f92](https://github.com/Scoheart/arca/commit/a472f92b154634424b0a91fb0dcce8eaef146d26))
+* feat(models): add missing providers and catalog agents (#255) ([3f9cf81](https://github.com/Scoheart/arca/commit/3f9cf817acac38531f60667b891a23d45355827a))
+* fix(release): encode RGBA icons and enforce four assets (#256) ([fe53df8](https://github.com/Scoheart/arca/commit/fe53df86a573c672c40461151345776f9e5fcf2c))
+
 ## [2.9.1](https://github.com/Scoheart/arca/compare/v2.9.0...v2.9.1) (2026-10-26)
 
 ### Changes
