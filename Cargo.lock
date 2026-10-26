@@ -250,12 +250,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6aedf8ae72766347502cf3cb4f41cf5e9cc37d28bee90f1fdaaae15f9cf9424"
 
 [[package]]
-name = "byteorder"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
-
-[[package]]
 name = "bytes"
 version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1561,9 +1555,9 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "plist"
-version = "1.10.2"
+version = "1.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65dca778f41c79ebbe8b2b2139fee86f01b766b67130d108c7c2b8ffbd949f77"
+checksum = "327a4cb2ad49dc48adfdc9da89e22c64d488b508c67a044d71ba729e4521a285"
 dependencies = [
  "base64 0.23.1",
  "indexmap",
@@ -1841,9 +1835,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.41"
+version = "0.23.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b92b125634d9b795e7beca796cc790df15a7fb38323bf3196fda83292d06b1f"
+checksum = "48e13bd8c0e9365c43cfa5c9e8f9ad49d3c8444926c9aac819e0e4dc503c8fdf"
 dependencies = [
  "log",
  "once_cell",
@@ -1904,9 +1898,9 @@ checksum = "f87165f0995f63a9fbeea62b64d10b4d9d8e78ec6d7d51fb2125fda7bb36788f"
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.13"
+version = "0.103.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61c429a8649f110dddef65e2a5ad240f747e85f7758a6bccc7e5777bd33f756e"
+checksum = "4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281"
 dependencies = [
  "ring",
  "rustls-pki-types",
@@ -2159,17 +2153,6 @@ name = "smallvec"
 version = "1.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
-
-[[package]]
-name = "socks"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0c3dbbd9ae980613c6dd8e28a9407b50509d3803b57624d5dfe8315218cd58b"
-dependencies = [
- "byteorder",
- "libc",
- "winapi",
-]
 
 [[package]]
 name = "stable_deref_trait"
@@ -2560,9 +2543,9 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "ureq"
-version = "3.4.2"
+version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a7ac20be9b7726e0bbdbf974c059676d9acb1cd414961f570a4e8231cacd7fc"
+checksum = "cde93ff05758a36a851a398a772b0b79a82fbe3c186a46f2696baaeaf84c966b"
 dependencies = [
  "base64 0.23.1",
  "flate2",
@@ -2571,7 +2554,6 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "rustls-platform-verifier",
- "socks",
  "ureq-proto",
  "utf8-zero",
  "webpki-roots",
@@ -2728,9 +2710,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-roots"
-version = "1.0.8"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf85cb06032201fa7c6f829d7db5a7e5aa45bcc0655327713065f6f0576731bf"
+checksum = "f5f280bbb2b287bc8e7de7e3852945a0ff50d1bbcb5ed42b6c7a568c546df171"
 dependencies = [
  "rustls-pki-types",
 ]
@@ -3018,9 +3000,9 @@ dependencies = [
 
 [[package]]
 name = "yaml-edit"
-version = "0.3.2"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79e531de3d80075e0a2dc8246ca46c9167211297f8b9d513130880c2ef98d0b8"
+checksum = "4c51b74331bfa10feffb8945c197439b4f937b68b9853cd48224d3226be247b8"
 dependencies = [
  "base64 0.22.1",
  "rowan",
