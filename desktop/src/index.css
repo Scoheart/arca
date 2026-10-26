@@ -47,10 +47,28 @@
   --surface-sidebar: #F3F5F8;
   --surface-overlay: #FFFFFF;
   --text-primary: #1B2230;
-  --text-secondary: #6D7685;
-  --text-tertiary: #939CAB;
+  /* Secondary text keeps >= 4.5:1 on every light surface, including section
+     and navigation fills; tertiary stays >= 3.4:1 for incidental hints. */
+  --text-secondary: #5D6676;
+  --text-tertiary: #747D8C;
+  /* Semantic text colors. Brand fills (--color-blue/green/red/brand-gold)
+     are too light to read as small text, so text uses these instead. */
+  --text-accent: #0B5CCF;
+  --text-success: #1C7A45;
+  --text-warning: #7A4A00;
+  --text-danger: #B42C34;
   --border-hairline: #DDE3EA;
+  --border-subtle: #E6EBF1;
+  --surface-hover: #F1F5FA;
+  --focus-ring: color-mix(in srgb, var(--color-blue) 58%, transparent);
   --header-bg: #FAFBFC;
+  /* Type scale. 10px is the floor for passive labels; reading text uses 11px+. */
+  --font-size-label: 10px;
+  --font-size-caption: 11px;
+  --font-size-body: 12px;
+  --font-size-emphasis: 13px;
+  --font-size-title: 16px;
+  --font-size-display: 22px;
   --radius-canvas: 22px;
   --radius-region: 18px;
   --radius-row: 14px;
@@ -109,8 +127,15 @@
   --surface-overlay: #1D222A;
   --text-primary: #F2F5F8;
   --text-secondary: #A5AFBA;
-  --text-tertiary: #76818D;
+  --text-tertiary: #8B95A1;
+  --text-accent: #7AB2FF;
+  --text-success: #4CC27D;
+  --text-warning: #F2C063;
+  --text-danger: #FF7B82;
   --border-hairline: #303741;
+  --border-subtle: #29313A;
+  --surface-hover: #313B47;
+  --focus-ring: color-mix(in srgb, #4D9BFF 70%, transparent);
   --header-bg: #15191F;
 
   --glass-fill: #24272B;
@@ -137,6 +162,14 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Baseline keyboard focus for every interactive element. Zero specificity, so
+   component rules that draw their own ring still win. */
+:where(button, a[href], input, select, textarea, summary, [role="button"], [role="tab"], [role="option"], [role="menuitem"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+::selection { background: color-mix(in srgb, var(--color-blue) 24%, transparent); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -309,7 +342,7 @@ body {
 .arca-icon-btn:hover { background: var(--color-gray-150); color: var(--text-primary); }
 .arca-icon-btn[data-active="true"] {
   background: color-mix(in srgb, var(--color-blue) 12%, transparent);
-  color: var(--color-blue);
+  color: var(--text-accent);
 }
 .arca-icon-btn:disabled { opacity: .35; cursor: default; }
 .arca-icon-btn:disabled:hover { background: transparent; color: var(--color-gray-600); }
@@ -361,7 +394,7 @@ body {
   padding: 0 16px; border-top: 1px solid var(--border-hairline);
   border-bottom: 1px solid var(--border-hairline);
   background: color-mix(in srgb, var(--surface-section) 78%, transparent);
-  color: var(--text-secondary); font-size: 10px;
+  color: var(--text-secondary); font-size: var(--font-size-caption);
 }
 .arca-startup-sync strong { color: var(--text-primary); font-size: 10px; }
 .arca-startup-sync-icon { width: 12px; height: 12px; flex: 0 0 12px; }
@@ -402,7 +435,7 @@ body {
 }
 .arca-update-check:hover:not(:disabled) {
   background: var(--surface-selected);
-  color: var(--color-blue);
+  color: var(--text-accent);
 }
 .arca-update-check:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-blue) 58%, transparent);
@@ -546,9 +579,9 @@ body {
 .btn-secondary {
   border: 1px solid var(--border-hairline); background: var(--surface-raised); color: var(--text-primary);
 }
-.btn-secondary:hover:not(:disabled) { border-color: color-mix(in srgb, var(--color-blue) 38%, var(--border-hairline)); color: var(--color-blue); }
+.btn-secondary:hover:not(:disabled) { border-color: color-mix(in srgb, var(--color-blue) 38%, var(--border-hairline)); color: var(--text-accent); }
 .btn-secondary:disabled { opacity: .45; cursor: default; }
-.btn-danger { border: 0; background: transparent; color: var(--color-red); }
+.btn-danger { border: 0; background: transparent; color: var(--text-danger); }
 .btn-danger:hover { background: color-mix(in srgb, var(--color-red) 9%, transparent); }
 .btn-danger-solid {
   display: inline-flex; height: 34px; align-items: center; justify-content: center; gap: 6px;
@@ -648,7 +681,7 @@ body {
 .arca-sidebar-section + .arca-sidebar-section { margin-top: 18px; }
 .arca-sidebar-section-head {
   display: flex; align-items: center; min-height: 28px; padding: 0 6px 4px 8px;
-  color: var(--text-secondary); font-size: 10px; font-weight: 650;
+  color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: 650;
 }
 .arca-sidebar-section-head > span { flex: 1; }
 .arca-sidebar-section-actions { display: flex; align-items: center; gap: 1px; }
@@ -698,7 +731,7 @@ body {
 .arca-resource-overview-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .arca-resource-overview-icon {
   display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 48px; height: 48px;
-  border: 1px solid var(--border-hairline); border-radius: 14px; background: var(--surface-control); color: var(--color-blue);
+  border: 1px solid var(--border-hairline); border-radius: 14px; background: var(--surface-control); color: var(--text-accent);
 }
 .arca-resource-overview-identity { flex: 1; min-width: 120px; }
 .arca-resource-overview-eyebrow { color: var(--text-secondary); font-size: 10px; font-weight: 550; }
@@ -765,7 +798,7 @@ body {
 .arca-resource-card-identity { display: flex; min-width: 0; grid-area: identity; align-items: center; gap: 9px; }
 .arca-resource-card-configuration {
   min-width: 0; grid-area: configuration; padding: 0; overflow: hidden; border: 0; border-radius: 0;
-  background: transparent; color: var(--text-secondary); font-size: 10px; line-height: 1.4;
+  background: transparent; color: var(--text-secondary); font-size: var(--font-size-caption); line-height: 1.4;
 }
 .arca-resource-card-state { display: flex; min-width: 0; grid-area: state; flex-wrap: wrap; align-items: center; gap: 4px; }
 .arca-resource-card-impact {
@@ -875,7 +908,7 @@ body {
 :where(.arca-registry-workspace, .arca-models-workspace, .arca-skill-workspace) .arca-asset-list-row {
   width: 100%; min-height: 78px; padding: 10px 11px; border: 1px solid var(--border-hairline);
   border-radius: 10px;
-  background: var(--surface-asset); color: var(--text-primary); font: 10px/1.3 var(--font-sans);
+  background: var(--surface-asset); color: var(--text-primary); font: var(--font-size-caption)/1.3 var(--font-sans);
   text-align: left; cursor: pointer;
   transition: border-color .12s ease, background-color .12s ease, box-shadow .12s ease;
 }
@@ -910,7 +943,7 @@ body {
 :where(.arca-registry-workspace, .arca-models-workspace, .arca-skill-workspace) .arca-asset-list-transport {
   display: inline-flex; width: fit-content; max-width: 100%; min-width: 0; align-items: center;
   padding: 4px 7px; overflow: hidden; border-radius: 5px; background: var(--surface-control);
-  color: var(--text-secondary); font-size: 8px; font-weight: 680; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-secondary); font-size: var(--font-size-label); font-weight: 680; text-overflow: ellipsis; white-space: nowrap;
 }
 :where(.arca-registry-workspace, .arca-models-workspace, .arca-skill-workspace) .arca-asset-list-status { display: flex; min-width: 0; align-items: center; }
 .arca-registry-workspace :is(.arca-mcp-list-header, .arca-mcp-list-row) {
@@ -942,7 +975,7 @@ body {
 .arca-model-manual-card {
   display: flex; align-items: center; gap: 12px; width: 100%; min-height: 78px; padding: 10px 14px;
   border: 1px dashed color-mix(in srgb, var(--color-blue) 36%, var(--border-hairline)); border-radius: 10px;
-  background: transparent; color: var(--color-blue); text-align: left; cursor: pointer;
+  background: transparent; color: var(--text-accent); text-align: left; cursor: pointer;
 }
 .arca-model-manual-card:hover:not(:disabled) { border-color: var(--color-blue); background: var(--surface-selected); }
 .arca-model-manual-card:disabled { opacity: .45; cursor: default; }
@@ -976,7 +1009,7 @@ body {
 .arca-model-card-action[aria-busy="true"] { opacity: .55; }
 .arca-model-list-subline {
   display: flex !important; min-width: 0; align-items: center; gap: 6px; margin-top: 4px;
-  overflow: hidden; color: var(--text-secondary); font: 9px/1.25 var(--font-mono); white-space: nowrap;
+  overflow: hidden; color: var(--text-secondary); font: var(--font-size-label)/1.25 var(--font-mono); white-space: nowrap;
 }
 .arca-model-list-subline code {
   min-width: 0; overflow: hidden; color: inherit; font: inherit; text-overflow: ellipsis; white-space: nowrap;
@@ -984,7 +1017,7 @@ body {
 .arca-model-list-context {
   display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: 4px; padding: 2px 6px;
   border-radius: 999px; background: var(--surface-control); color: var(--text-tertiary);
-  font: 8px/1 var(--font-sans); letter-spacing: .01em;
+  font: var(--font-size-label)/1 var(--font-sans); letter-spacing: .01em;
 }
 .arca-model-list-context strong { color: var(--text-secondary); font: 650 9px/1 var(--font-mono); }
 @container resource-stage (max-width: 780px) {
@@ -1090,7 +1123,7 @@ body {
 .arca-dialog-shell-leading { display: inline-flex; flex: 0 0 auto; }
 .arca-dialog-shell-glyph {
   display: inline-flex; width: 32px; height: 32px; flex: 0 0 32px; align-items: center; justify-content: center;
-  border-radius: 9px; background: color-mix(in srgb, var(--color-blue) 10%, transparent); color: var(--color-blue);
+  border-radius: 9px; background: color-mix(in srgb, var(--color-blue) 10%, transparent); color: var(--text-accent);
 }
 .arca-dialog-shell-glyph svg { width: 15px; height: 15px; }
 .arca-dialog-shell-heading h2 { margin: 0; color: var(--text-primary); font-size: 14px; font-weight: 680; line-height: 1.3; }
@@ -1160,7 +1193,7 @@ body {
 .arca-subscription-preset {
   display: inline-flex; width: fit-content; height: 30px; align-items: center; gap: 7px; padding: 0 9px;
   border: 0; border-radius: 7px; background: color-mix(in srgb, var(--color-blue) 9%, transparent);
-  color: var(--color-blue); font: 650 10px/1 var(--font-sans); cursor: pointer;
+  color: var(--text-accent); font: 650 var(--font-size-caption)/1 var(--font-sans); cursor: pointer;
 }
 .arca-subscription-preset:hover { background: color-mix(in srgb, var(--color-blue) 14%, transparent); }
 .arca-dialog-field { display: grid; min-width: 0; gap: 6px; }
@@ -1276,7 +1309,7 @@ body {
 .arca-review-dialog-glyph {
   display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
   border-radius: 7px; background: color-mix(in srgb, var(--color-red) 10%, var(--surface-raised));
-  color: var(--color-red);
+  color: var(--text-danger);
 }
 .arca-review-dialog-glyph svg { width: 15px; height: 15px; }
 .arca-review-dialog-danger .arca-dialog-shell-status { margin: 0 var(--arca-dialog-inline) 8px; background: color-mix(in srgb, var(--color-red) 7%, var(--surface-raised)); }
@@ -1551,20 +1584,20 @@ body {
 }
 .arca-skill-risk-badge[data-level="high"] {
   background: color-mix(in srgb, var(--color-red) 10%, var(--surface-raised));
-  color: var(--color-red);
+  color: var(--text-danger);
 }
 .arca-skill-risk-badge[data-level="unreviewed"] { background: var(--surface-quiet); color: var(--text-secondary); }
 .arca-skill-inspector-update-error,
 .arca-skill-inspector-error {
   margin: 0; padding: 8px 9px; border: 1px solid color-mix(in srgb, var(--color-red) 30%, var(--border-hairline));
   border-radius: 6px; background: color-mix(in srgb, var(--color-red) 7%, var(--surface-raised));
-  color: var(--color-red); overflow-wrap: anywhere; font-size: 10px; line-height: 1.45;
+  color: var(--text-danger); overflow-wrap: anywhere; font-size: var(--font-size-caption); line-height: 1.45;
 }
 .arca-skill-notice {
   display: grid; width: min(100%, 1280px); min-width: 0; margin: 0 auto 12px; padding: 10px 12px;
   grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 4px 10px;
   border: 0; border-radius: var(--radius-row); background: var(--surface-section);
-  color: var(--text-secondary); font-size: 10px;
+  color: var(--text-secondary); font-size: var(--font-size-caption);
 }
 .arca-skill-notice strong { color: var(--text-primary); font-size: 11px; }
 .arca-skill-notice span,
@@ -1633,7 +1666,7 @@ body {
 .arca-skill-inspector-findings li > code { display: block; color: var(--text-secondary); font: 9px/1.4 var(--font-mono); }
 .arca-skill-inspector-truncation {
   margin: 8px 0 0; padding: 7px 8px; border-radius: 5px; background: var(--color-gray-150);
-  color: var(--text-secondary); font-size: 9px; line-height: 1.4;
+  color: var(--text-secondary); font-size: var(--font-size-label); line-height: 1.4;
 }
 .arca-skill-inspector-agents { min-width: 0; }
 .arca-skill-inspector-agents p { margin: 7px 0 0; color: var(--text-secondary); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
@@ -1682,7 +1715,7 @@ body {
 .arca-skill-dialog-glyph {
   display: inline-flex; width: 34px; height: 34px; flex: 0 0 34px; align-items: center;
   justify-content: center; border-radius: var(--radius-control); background: var(--surface-selected);
-  color: var(--color-blue);
+  color: var(--text-accent);
 }
 .arca-skill-dialog-close,
 .arca-skill-review-header > button {
@@ -1755,7 +1788,7 @@ body {
 .arca-skill-local-source:disabled { opacity: .5; cursor: default; }
 .arca-skill-local-source-icon {
   display: inline-flex; width: 28px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center;
-  border-radius: 7px; background: color-mix(in srgb, var(--color-blue) 11%, var(--surface-raised)); color: var(--color-blue);
+  border-radius: 7px; background: color-mix(in srgb, var(--color-blue) 11%, var(--surface-raised)); color: var(--text-accent);
 }
 .arca-skill-local-source > span:last-child { display: grid; min-width: 0; gap: 3px; }
 .arca-skill-local-source strong { font-size: 11px; }
@@ -1766,7 +1799,7 @@ body {
   display: grid; min-width: 0; gap: 4px; margin: 0 0 12px; padding: 9px 10px;
   border: 1px solid color-mix(in srgb, var(--color-red) 34%, var(--border-hairline));
   border-radius: 6px; background: color-mix(in srgb, var(--color-red) 7%, var(--surface-raised));
-  color: var(--color-red); font-size: 10px; line-height: 1.45;
+  color: var(--text-danger); font-size: var(--font-size-caption); line-height: 1.45;
 }
 .arca-skill-dialog-error:last-child { margin-bottom: 0; }
 .arca-skill-dialog-error code { font: 9px/1.45 var(--font-mono); }
@@ -1820,7 +1853,7 @@ body {
 .arca-skill-conflict-prompt {
   display: grid; min-width: 0; gap: 3px; padding: 9px 10px;
   border: 0; border-radius: var(--radius-control); background: var(--surface-attention);
-  color: var(--text-secondary); font-size: 9px; line-height: 1.45;
+  color: var(--text-secondary); font-size: var(--font-size-label); line-height: 1.45;
 }
 .arca-skill-conflict-prompt strong { color: var(--text-primary); font-size: 10px; }
 .arca-skill-conflict-prompt span,
@@ -1866,7 +1899,7 @@ body {
 .arca-skill-review-targets li > dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 7px 0 0; }
 .arca-skill-review-files pre {
   max-height: 180px; margin: 8px 0 0; padding: 8px; overflow: auto; overscroll-behavior: contain;
-  border-radius: 5px; background: var(--surface-raised); white-space: pre-wrap; font: 8px/1.5 var(--font-mono);
+  border-radius: 5px; background: var(--surface-raised); white-space: pre-wrap; font: var(--font-size-label)/1.5 var(--font-mono);
 }
 .arca-skill-review-findings { min-width: 0; margin-top: 12px; }
 .arca-skill-review-finding-head { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 8px; }
@@ -1885,7 +1918,7 @@ body {
   display: flex; min-width: 0; align-items: flex-start; gap: 8px; margin-top: 14px; padding: 10px;
   border: 1px solid color-mix(in srgb, var(--color-red) 32%, var(--border-hairline)); border-radius: 6px;
   background: color-mix(in srgb, var(--color-red) 6%, var(--surface-raised)); color: var(--text-primary);
-  font-size: 10px; line-height: 1.45;
+  font-size: var(--font-size-caption); line-height: 1.45;
 }
 .arca-skill-risk-acknowledgment input { flex: 0 0 auto; margin-top: 2px; accent-color: var(--color-red); }
 
@@ -1893,7 +1926,7 @@ body {
 .arca-skill-inspector-actions [role="status"] { margin-left: auto; color: var(--text-secondary); font-size: 9px; }
 .arca-skill-replacement-choice {
   display: flex; min-width: 0; flex: 1 0 100%; align-items: flex-start; gap: 6px; color: var(--text-secondary);
-  font-size: 9px; line-height: 1.35;
+  font-size: var(--font-size-label); line-height: 1.35;
 }
 .arca-skill-replacement-choice input { flex: 0 0 auto; margin: 1px 0 0; accent-color: var(--color-blue); }
 .arca-skill-assignment-list { display: grid; min-width: 0; gap: 6px; margin-top: 10px; }
@@ -1991,14 +2024,14 @@ body {
 .arca-provider-catalog-copy code { overflow: hidden; color: var(--text-secondary); font: 8px/1.25 var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .arca-provider-catalog-check {
   display: inline-flex; width: 16px; height: 16px; align-items: center; justify-content: center; border-radius: 50%;
-  opacity: 0; background: var(--color-blue); color: white; font-size: 8px; transform: scale(.72);
+  opacity: 0; background: var(--color-blue); color: white; font-size: var(--font-size-label); transform: scale(.72);
   transition: opacity .14s ease, transform .14s ease;
 }
 .arca-provider-catalog-item[data-selected="true"] .arca-provider-catalog-check { opacity: 1; transform: scale(1); }
 .arca-provider-catalog-selection { display: inline-flex; min-width: 0; align-items: center; gap: 8px; color: var(--text-primary); font-size: 11px; }
 .arca-provider-catalog-selection > span {
   display: inline-flex; width: 18px; height: 18px; flex: 0 0 18px; align-items: center; justify-content: center;
-  border-radius: 50%; background: color-mix(in srgb, var(--color-blue) 13%, transparent); color: var(--color-blue); font-size: 9px;
+  border-radius: 50%; background: color-mix(in srgb, var(--color-blue) 13%, transparent); color: var(--text-accent); font-size: var(--font-size-label);
 }
 .arca-provider-catalog-selection strong { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .arca-provider-catalog-empty { display: grid; min-height: 150px; place-content: center; color: var(--text-secondary); font-size: 10px; }
@@ -2033,7 +2066,7 @@ body {
 .arca-agent-bulk-toggle {
   display: inline-flex; height: 32px; align-items: center; gap: 7px; padding: 0 9px;
   border-radius: var(--radius-control); background: var(--surface-control);
-  color: var(--text-secondary); font-size: 10px; font-weight: 650;
+  color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: 650;
 }
 .arca-agent-config-locations { margin-top: 18px; }
 .arca-agent-file-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; gap: 8px; border: 0; border-radius: 0; background: transparent; }
@@ -2083,7 +2116,7 @@ body {
 .arca-agent-resource-panel-body { min-height: 0; padding: 0 16px 16px; }
 .arca-agent-operation-progress {
   display: flex; min-height: 38px; align-items: center; gap: 9px; margin-top: 12px; padding: 0 12px;
-  border-radius: var(--radius-control); background: var(--surface-selected); color: var(--color-blue); font-size: 10px; font-weight: 650;
+  border-radius: var(--radius-control); background: var(--surface-selected); color: var(--text-accent); font-size: var(--font-size-caption); font-weight: 650;
 }
 .arca-agent-operation-progress svg { width: 13px; height: 13px; flex: 0 0 13px; animation: spin .8s linear infinite; }
 .arca-agent-resource-content,
@@ -2138,7 +2171,7 @@ body {
 }
 .arca-agent-skill-identity p {
   display: -webkit-box; margin: 4px 0 0; overflow: hidden; color: var(--text-secondary);
-  font-size: 10px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  font-size: var(--font-size-caption); line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
 }
 .arca-agent-skill-badges {
   display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px;
@@ -2155,11 +2188,11 @@ body {
 .arca-agent-skill-target > div { display: grid; min-width: 0; gap: 2px; }
 .arca-agent-skill-path {
   display: block; min-width: 0; overflow-wrap: anywhere; color: var(--text-primary);
-  font: 9px/1.45 var(--font-mono);
+  font: var(--font-size-label)/1.45 var(--font-mono);
 }
 .arca-agent-skill-target > small {
   grid-column: 2; min-width: 0; overflow-wrap: anywhere; color: var(--text-secondary);
-  font-size: 9px; line-height: 1.4;
+  font-size: var(--font-size-label); line-height: 1.4;
 }
 .arca-agent-skill-actions {
   display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: 8px;
@@ -2172,7 +2205,7 @@ body {
 .arca-agent-skill-state {
   display: grid; min-height: 88px; place-content: center; justify-items: center; gap: 6px;
   padding: 13px; border: 0; border-radius: var(--radius-row); background: var(--surface-item);
-  color: var(--text-secondary); font-size: 10px; line-height: 1.45; text-align: center;
+  color: var(--text-secondary); font-size: var(--font-size-caption); line-height: 1.45; text-align: center;
 }
 .arca-agent-skill-state strong { color: var(--text-primary); font-size: 11px; }
 .arca-agent-skill-state > button { margin-top: 3px; }
@@ -2180,7 +2213,7 @@ body {
 .arca-agent-skill-progress {
   display: grid; margin-bottom: 8px; padding: 8px 10px; gap: 3px;
   border: 0; border-radius: var(--radius-control);
-  background: var(--surface-section); color: var(--text-secondary); font-size: 10px;
+  background: var(--surface-section); color: var(--text-secondary); font-size: var(--font-size-caption);
 }
 .arca-agent-skill-notice strong { color: var(--text-primary); font-size: 10px; }
 .arca-agent-skill-notice[data-tone="error"] {
@@ -2198,7 +2231,7 @@ body {
 .arca-skill-review-assignment > ul { display: grid; margin: 0; padding: 0; gap: 6px; list-style: none; }
 .arca-skill-review-assignment > ul > li {
   display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr) auto; gap: 8px;
-  color: var(--text-secondary); font-size: 10px;
+  color: var(--text-secondary); font-size: var(--font-size-caption);
 }
 .arca-skill-review-assignment code { min-width: 0; overflow-wrap: anywhere; color: var(--text-primary); font: 9px/1.4 var(--font-mono); }
 .arca-agent-add-wrap { position: relative; z-index: 50; }
@@ -2280,7 +2313,7 @@ body {
 }
 .arca-convergence-menu > button {
   display: grid; min-height: 30px; grid-template-columns: 16px minmax(0, 1fr); align-items: center; gap: 7px; padding: 5px 8px;
-  border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); font: 600 10px/1.2 var(--font-sans); text-align: left; cursor: pointer;
+  border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); font: 600 var(--font-size-caption)/1.2 var(--font-sans); text-align: left; cursor: pointer;
 }
 .arca-convergence-menu > button:hover { background: var(--surface-control); }
 .arca-convergence-menu > button[data-action="detach"] { color: var(--color-red); }
@@ -2346,12 +2379,12 @@ body {
 .arca-agent-create-field[data-wide] { grid-column: 1 / -1; }
 .arca-agent-create-field > span {
   display: block; margin-bottom: 5px; color: var(--text-secondary);
-  font-size: 9px; font-weight: 680; line-height: 1.25;
+  font-size: var(--font-size-label); font-weight: 680; line-height: 1.25;
 }
 .arca-agent-create-field > span i { color: var(--color-red); font-style: normal; }
 .arca-agent-create-field > small {
   display: block; margin-top: 4px; color: var(--text-secondary);
-  font-size: 8px; line-height: 1.45;
+  font-size: var(--font-size-label); line-height: 1.45;
 }
 .arca-agent-create-field > small[data-error="true"] { color: var(--color-red); }
 .arca-agent-create-field input,
@@ -2414,7 +2447,7 @@ body {
 }
 .arca-agent-format-picker button {
   padding: 0 8px; border: 0; border-radius: 5px;
-  background: transparent; color: var(--text-secondary); font-size: 9px; font-weight: 680; cursor: pointer;
+  background: transparent; color: var(--text-secondary); font-size: var(--font-size-label); font-weight: 680; cursor: pointer;
 }
 .arca-agent-format-picker button[aria-pressed="true"] {
   background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-card);
@@ -2434,7 +2467,7 @@ body {
 }
 .arca-agent-config-field-icon {
   display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center;
-  border-radius: 7px; background: color-mix(in srgb, var(--color-blue) 10%, transparent); color: var(--color-blue);
+  border-radius: 7px; background: color-mix(in srgb, var(--color-blue) 10%, transparent); color: var(--text-accent);
 }
 .arca-agent-config-field > strong { color: var(--text-primary); font-size: 11px; font-weight: 680; }
 .arca-agent-config-field > input { font-family: var(--font-mono); font-size: 10px; }
@@ -2654,7 +2687,7 @@ body {
 }
 .arca-provider-protocol-path {
   display: block; max-width: 100%; overflow: hidden; color: var(--text-tertiary);
-  font: 9px/1.2 var(--font-mono); text-overflow: ellipsis; white-space: nowrap;
+  font: var(--font-size-label)/1.2 var(--font-mono); text-overflow: ellipsis; white-space: nowrap;
 }
 .arca-provider-protocol[data-enabled="true"] .arca-provider-protocol-path { color: var(--color-blue); }
 .arca-provider-protocol-toggle { display: flex; align-items: center; padding: 0 11px 0 5px; cursor: pointer; }
@@ -2704,7 +2737,7 @@ body {
   display: block; min-width: 0; overflow: hidden; padding: 0 10px;
   border-top: 1px solid color-mix(in srgb, var(--border-hairline) 72%, transparent);
   background: color-mix(in srgb, var(--surface-control) 58%, transparent); color: var(--text-tertiary);
-  font: 9px/23px var(--font-mono); text-overflow: ellipsis; white-space: nowrap;
+  font: var(--font-size-label)/23px var(--font-mono); text-overflow: ellipsis; white-space: nowrap;
   cursor: text; user-select: text;
 }
 .arca-provider-route-preview[data-empty="true"] { color: var(--text-tertiary); }
