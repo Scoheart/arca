@@ -770,7 +770,7 @@ fn every_writable_builtin_roundtrips_through_its_wire_format() {
         .values()
         .filter(|agent| agent.global.is_some())
         .count();
-    assert_eq!(writable, 73);
+    assert_eq!(writable, 74);
 
     for (agent_id, definition) in agents {
         if definition.global.is_none() {
@@ -1114,16 +1114,16 @@ fn verified_and_catalog_definitions_have_auditable_boundaries() {
     let all_ids: std::collections::BTreeSet<_> =
         verified_ids.union(&catalog_ids).cloned().collect();
 
-    assert_eq!(verified.len(), 88);
-    assert_eq!(catalog.len(), 246);
-    assert_eq!(verified_ids.intersection(&catalog_ids).count(), 63);
-    assert_eq!(all_ids.len(), 271);
+    assert_eq!(verified.len(), 89);
+    assert_eq!(catalog.len(), 278);
+    assert_eq!(verified_ids.intersection(&catalog_ids).count(), 64);
+    assert_eq!(all_ids.len(), 303);
     assert_eq!(
         verified
             .values()
             .filter(|item| item.global.is_some())
         .count(),
-        73
+        74
     );
     assert!(catalog.len() >= 170);
     for (id, definition) in verified {

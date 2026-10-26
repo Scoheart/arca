@@ -545,6 +545,83 @@
       "kind": "api-key"
     }
   },
+  "pojiaai": {
+    "docs_url": "https://pojia.ai/",
+    "portal": {
+      "url": "https://pojia.ai/keys",
+      "kind": "api-key"
+    }
+  },
+  "mango-inference": {
+    "docs_url": "https://inference.mangoboost.io/docs/concepts/openai-compatibility/",
+    "portal": {
+      "url": "https://inference.mangoboost.io/",
+      "kind": "console"
+    }
+  },
+  "darkbloom": {
+    "docs_url": "https://docs.darkbloom.dev/quickstart-consumer",
+    "portal": {
+      "url": "https://console.darkbloom.dev/api-console",
+      "kind": "api-key"
+    }
+  },
+  "scaledown": {
+    "docs_url": "https://docs.scaledown.ai/api-reference/openai-compatibility",
+    "portal": {
+      "url": "https://scaledown.ai/",
+      "kind": "console"
+    }
+  },
+  "empero": {
+    "docs_url": "https://free.empero.org/",
+    "portal": {
+      "url": "https://free.empero.org/",
+      "kind": "setup"
+    }
+  },
+  "inworld": {
+    "docs_url": "https://docs.inworld.ai/router/quickstart",
+    "portal": {
+      "url": "https://platform.inworld.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "amd-token-factory": {
+    "docs_url": "https://amd-aim.github.io/radeon-cloud-docs/guides/token-factory/",
+    "portal": {
+      "url": "https://developer.amd.com.cn/radeon/tokenfactory",
+      "kind": "console"
+    }
+  },
+  "subq": {
+    "docs_url": "https://docs.subq.ai/",
+    "portal": {
+      "url": "https://subq.ai/",
+      "kind": "console"
+    }
+  },
+  "whatstoken": {
+    "docs_url": "https://www.whatstoken.ai/",
+    "portal": {
+      "url": "https://www.whatstoken.ai/console/token",
+      "kind": "api-key"
+    }
+  },
+  "intern-inkstone": {
+    "docs_url": "https://discovery.intern-ai.org.cn/token-plan/home",
+    "portal": {
+      "url": "https://discovery.intern-ai.org.cn/token-plan/home",
+      "kind": "console"
+    }
+  },
+  "swarms": {
+    "docs_url": "https://docs.swarms.ai/docs/documentation/capabilities/openai-compatible",
+    "portal": {
+      "url": "https://swarms.world/platform/api-keys",
+      "kind": "api-key"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {

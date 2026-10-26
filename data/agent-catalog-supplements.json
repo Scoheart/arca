@@ -87,5 +87,221 @@
     "verified_at": "2026-10-16",
     "evidence": "official-source",
     "source": "https://github.com/ag-ui-protocol/ag-ui/tree/a1131c90709d51d562202b7b6cc0a2a1b48b05fc"
+  },
+  "autoclaw": {
+    "name": "AutoClaw",
+    "category": "desktop",
+    "docs": "https://autoclaw.zhipuai.cn/",
+    "note": "智谱澳龙（AutoClaw），与已有的 OpenClaw 不是同一产品。公开站点未给出可由 Arca 写入的用户级 MCP、Models 或 Skills 契约；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "command-code": {
+    "name": "Command Code",
+    "category": "cli",
+    "docs": "https://commandcode.ai/docs/quickstart",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "eigent": {
+    "name": "Eigent",
+    "category": "desktop",
+    "docs": "https://www.eigent.ai/download",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "opencrabs": {
+    "name": "OpenCrabs",
+    "category": "cli",
+    "docs": "https://github.com/opencrabs/opencrabs/releases/latest",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "monkeycode": {
+    "name": "MonkeyCode",
+    "category": "cli",
+    "docs": "https://github.com/chaitin/MonkeyCode",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "praex": {
+    "name": "Praex",
+    "category": "client",
+    "docs": "https://praex.ai",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "wave-code": {
+    "name": "Wave Code",
+    "category": "desktop",
+    "docs": "https://thewavecode.com/",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "atomic-agent": {
+    "name": "Atomic Agent",
+    "category": "desktop",
+    "docs": "https://atomicagent.io/",
+    "note": "Atomic Agent（atomicagent.io）与目录里的 Atomic Chat 不是同一产品。尚未核验可由 Arca 写入的用户级配置文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "ccode": {
+    "name": "CCode",
+    "category": "cli",
+    "docs": "https://ccode.si/",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "alysis-code": {
+    "name": "Alysis Code",
+    "category": "cli",
+    "docs": "https://alysiscode.com/docs/getting-started/installation",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "codar": {
+    "name": "科搭 Codar",
+    "category": "desktop",
+    "docs": "https://codar.speedai.com/download",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "freemilk": {
+    "name": "FreeMilk",
+    "category": "client",
+    "docs": "https://apps.apple.com/us/app/freemilk-ai-code-ide-agents/id6767423666",
+    "note": "iOS 应用。没有可在本机由 Arca 写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "deepworks": {
+    "name": "DeepWorks",
+    "category": "client",
+    "docs": "https://deepworks.cn/",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "tabbit": {
+    "name": "Tabbit Browser",
+    "category": "desktop",
+    "docs": "https://www.tabbit.ai/",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "traycer": {
+    "name": "Traycer",
+    "category": "client",
+    "docs": "https://traycer.ai/",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "perch": {
+    "name": "Perch",
+    "category": "desktop",
+    "docs": "https://www.perchai.app/",
+    "note": "Perch 同时提供 Desktop 与 CLI。尚未核验可由 Arca 写入的用户级配置文件；Arca 用一个产品身份展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "maximo-syntax": {
+    "name": "Maximo Syntax",
+    "category": "client",
+    "docs": "https://maximoai.co/syntax/",
+    "note": "Maximo Syntax 是编码产品面，与模型 Provider maximo-ai 分开登记。尚未核验可由 Arca 写入的用户级配置文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "instabox": {
+    "name": "InstaBox",
+    "category": "cli",
+    "docs": "https://instabox.sh",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "lightvela": {
+    "name": "LightVela",
+    "category": "client",
+    "docs": "https://lightvela.com",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "omnirush": {
+    "name": "OmniRush",
+    "category": "cli",
+    "docs": "https://omnirush.ai/docs",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "eaon-code": {
+    "name": "Eaon Code",
+    "category": "cli",
+    "docs": "https://github.com/eaonlabs/eaon-code",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "adcode": {
+    "name": "ADCode",
+    "category": "desktop",
+    "docs": "https://adcode.bluethenics.com/versions",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "free-pi": {
+    "name": "free-pi",
+    "category": "cli",
+    "docs": "https://freepi.ai",
+    "note": "free-pi / free-pi-cli。与已有的 Pi 不是同一产品。尚未核验可由 Arca 写入的用户级配置文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "today-ai": {
+    "name": "Today AI",
+    "category": "client",
+    "docs": "https://todayai.cn",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "xiaohuanxiong": {
+    "name": "商汤小浣熊",
+    "category": "web",
+    "docs": "https://xiaohuanxiong.com/",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "codearts-agent": {
+    "name": "华为云码道 CodeArts",
+    "category": "web",
+    "docs": "https://activity.huaweicloud.com/codearts_agent.html",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
+  },
+  "fx": {
+    "name": "fx",
+    "category": "cli",
+    "docs": "https://fx.sh/docs/getting-started/authentication",
+    "note": "已确认公开产品入口，但尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 文件；Arca 仅展示，不写入。",
+    "verified_at": "2026-10-26",
+    "evidence": "official"
   }
 }
