@@ -300,6 +300,7 @@ const zhCN = {
     providerSetup: {
       azure: "填写 Azure 资源的 /openai/v1 地址，使用资源 API Key；Model ID 填部署名称。",
       bedrock: "填写所选 AWS 区域的 Bedrock Mantle /v1 地址，使用 Bedrock API Key。",
+      "bedrock-converse": "填写所选区域的 bedrock-runtime 地址，使用 Bedrock API Key；手动填写模型或推理配置 ID。",
       cloudflare: "填写包含 Account ID 的 Workers AI /ai/v1 地址，使用有 Workers AI 权限的 API Token。",
       tinfoil: "先启动官方 Tinfoil Proxy；本地代理会验证每次连接，再转发模型请求。",
     },
@@ -712,6 +713,7 @@ const enUS: TranslationShape<typeof zhCN> = {
     providerSetup: {
       azure: "Use your Azure resource /openai/v1 URL and resource API key. Model ID is your deployment name.",
       bedrock: "Use the Bedrock Mantle /v1 URL for your AWS region and a Bedrock API key.",
+      "bedrock-converse": "Use your regional bedrock-runtime URL and a Bedrock API key; enter a model or inference profile ID manually.",
       cloudflare: "Use the Workers AI /ai/v1 URL containing your Account ID and a token with Workers AI permissions.",
       tinfoil: "Start the official Tinfoil Proxy first. The local proxy verifies each connection before forwarding requests.",
     },

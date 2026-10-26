@@ -636,6 +636,13 @@
       "kind": "console"
     }
   },
+  "amazon-bedrock": {
+    "docs_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html",
+    "portal": {
+      "url": "https://console.aws.amazon.com/bedrock/home",
+      "kind": "console"
+    }
+  },
   "cloudflare-workers-ai": {
     "docs_url": "https://developers.cloudflare.com/workers-ai/",
     "portal": {

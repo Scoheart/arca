@@ -1,4 +1,5 @@
 import { ResourceIcon } from "./resourcePresentation";
+import protocolDefinitions from "../../../data/model-protocols.json";
 import { memo, type ReactNode, useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useModelObservationRevision } from "../lib/modelObservation";
 import { cachedModelLibrary, loadModelLibrary } from "../lib/modelLibrary";
@@ -70,19 +71,10 @@ import {
   WorkspaceSidebar,
 } from "./ResourceWorkspace";
 
-const PROTOCOLS: Array<{ id: ModelProtocol; label: string }> = [
-  { id: "anthropic-messages", label: "Anthropic Messages" },
-  { id: "openai-responses", label: "OpenAI Responses" },
-  { id: "openai-completions", label: "OpenAI Chat Completions" },
-  { id: "gemini-generate-content", label: "Gemini GenerateContent" },
-];
-
-const DEFAULT_ENDPOINT_PATHS: Record<ModelProtocol, string> = {
-  "anthropic-messages": "/v1/messages",
-  "openai-responses": "/responses",
-  "openai-completions": "/chat/completions",
-  "gemini-generate-content": "/models/{model}:generateContent",
-};
+const PROTOCOLS = protocolDefinitions as Array<{ id: ModelProtocol; label: string; endpoint_path: string }>;
+const DEFAULT_ENDPOINT_PATHS = Object.fromEntries(
+  PROTOCOLS.map(({ id, endpoint_path }) => [id, endpoint_path]),
+) as Record<ModelProtocol, string>;
 
 const KEYLESS_PROVIDER_TYPES = new Set(["ollama", "lm-studio", "vllm", "bilibili-index-translate"]);
 
@@ -97,6 +89,14 @@ const emptyProfile = (): ModelProfile => ({
 
 function protocolLabel(protocol: ModelProtocol) {
   return PROTOCOLS.find((item) => item.id === protocol)?.label ?? protocol;
+}
+
+function defaultProtocol(
+  protocols: ModelProviderConfig["protocols"] | undefined,
+  preferred?: ModelProtocol,
+): ModelProtocol {
+  return preferred && protocols?.[preferred] ? preferred
+    : PROTOCOLS.find(({ id }) => protocols?.[id])?.id ?? "openai-responses";
 }
 
 function providerLabel(providers: ModelProviderView[], provider: string) {
@@ -603,6 +603,7 @@ export function ModelsView({
           <ModelProfileDialog
             initial={editing}
             providerInstances={providerInstances}
+            providerTemplates={providers}
             preferredProviderId={editing.provider_id}
             presentation="inspector"
             onClose={clearSelection}
@@ -734,6 +735,7 @@ export function ModelsView({
         <ModelProfileDialog
           initial={editing}
           providerInstances={providerInstances}
+          providerTemplates={providers}
           preferredProviderId={creatingForProviderId}
           onClose={() => {
             setEditing(undefined);
@@ -1224,6 +1226,7 @@ function ProviderCatalogDialog({
 function ModelProfileDialog({
   initial,
   providerInstances,
+  providerTemplates,
   preferredProviderId,
   onClose,
   onReview,
@@ -1231,6 +1234,7 @@ function ModelProfileDialog({
 }: {
   initial: ModelProfileView | null;
   providerInstances: ModelProviderInstanceView[];
+  providerTemplates: ModelProviderView[];
   preferredProviderId?: string | null;
   onClose: () => void;
   onReview: (profile: ModelProfile) => Promise<void>;
@@ -1246,11 +1250,13 @@ function ModelProfileDialog({
     ...emptyProfile(),
     provider_id: preferredProvider?.id,
     provider: preferredProvider?.provider ?? "",
-    protocol: PROTOCOLS.find(({ id }) => preferredProvider?.protocols[id])?.id ?? "openai-responses",
+    protocol: defaultProtocol(preferredProvider?.protocols,
+      providerTemplates.find((template) => template.id === preferredProvider?.provider)?.default_protocol),
     base_url: preferredProvider?.base_url ?? "",
     env_key: preferredProvider?.env_key,
   });
   const [busy, setBusy] = useState(false);
+  const [protocolChosen, setProtocolChosen] = useState(Boolean(initial));
   const providerInstance = providerInstances.find((provider) => provider.id === draft.provider_id) ?? null;
   const availableProtocols = PROTOCOLS.filter(({ id }) => providerInstance?.protocols[id]);
   const requestUrl = providerInstance
@@ -1270,8 +1276,9 @@ function ModelProfileDialog({
       ...current,
       provider_id: provider.id,
       provider: provider.provider,
-      protocol: provider.protocols[current.protocol] ? current.protocol
-        : PROTOCOLS.find(({ id }) => provider.protocols[id])?.id ?? current.protocol,
+      protocol: protocolChosen && provider.protocols[current.protocol] ? current.protocol
+        : defaultProtocol(provider.protocols,
+            providerTemplates.find((template) => template.id === provider.provider)?.default_protocol),
       base_url: provider.base_url,
       env_key: provider.env_key,
     }));
@@ -1336,7 +1343,10 @@ function ModelProfileDialog({
           <span>{t("models.protocol")}</span>
           <FormSelect ariaLabel={t("models.protocol")} value={draft.protocol}
             options={availableProtocols.map(({ id, label }) => ({ value: id, label }))}
-            onChange={(protocol) => setDraft({ ...draft, protocol: protocol as ModelProtocol })} />
+            onChange={(protocol) => {
+              setProtocolChosen(true);
+              setDraft({ ...draft, protocol: protocol as ModelProtocol });
+            }} />
         </div>
       </div>
       <div className="arca-model-form-grid arca-model-editor-limits">
@@ -1457,7 +1467,7 @@ function ModelProviderDialog({
     ) as Record<ModelProtocol, string>,
   );
   const [selectedProtocol, setSelectedProtocol] = useState<ModelProtocol>(
-    PROTOCOLS.find(({ id }) => Boolean(initialProtocols[id]))?.id ?? "openai-responses",
+    defaultProtocol(initialProtocols, template?.default_protocol),
   );
   const [credential, setCredential] = useState("");
   const [credentialDirty, setCredentialDirty] = useState(false);

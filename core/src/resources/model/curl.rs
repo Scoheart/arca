@@ -25,7 +25,7 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
         "  --header 'Content-Type: application/json'".into()];
     let prefix = match protocol {
         ModelProtocol::AnthropicMessages => "x-api-key: ",
-        ModelProtocol::GeminiGenerateContent => "x-goog-api-key: ",
+        ModelProtocol::GeminiGenerateContent | ModelProtocol::GeminiInteractions => "x-goog-api-key: ",
         _ => "Authorization: Bearer ",
     };
     match auth {
@@ -44,11 +44,43 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
             json!({"model": model, "max_tokens": 1024, "messages": [{"role": "user", "content": "Hello"}]})
         }
         ModelProtocol::GeminiGenerateContent => json!({"contents": [{"role": "user", "parts": [{"text": "Hello"}]}]}),
+        ModelProtocol::GeminiInteractions => json!({"model": model, "input": "Hello", "store": false}),
+        ModelProtocol::AwsBedrockConverse => json!({"messages": [{"role": "user", "content": [{"text": "Hello"}]}], "inferenceConfig": {"maxTokens": 1024}}),
         ModelProtocol::OpenaiResponses => json!({"model": model, "input": "Hello"}),
         ModelProtocol::OpenaiCompletions => json!({"model": model, "messages": [{"role": "user", "content": "Hello"}]}),
     };
     lines.push(format!("  --data-raw {}", quote(&serde_json::to_string_pretty(&body).map_err(|_| "curl_serialization_failed")?)));
     Ok(format!("{} | jq -r", lines.join(" \\\n")))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn interactions_uses_google_auth_and_stateless_input() {
+        let command = render(&ModelProtocol::GeminiInteractions,
+            "https://example.invalid/v1beta/interactions", "gemini-fixture", CurlAuth::Placeholder).unwrap();
+        assert!(command.contains("x-goog-api-key: ${ARCA_API_KEY}"));
+        assert!(command.contains("\"input\": \"Hello\""));
+        assert!(command.contains("\"store\": false"));
+        assert!(!command.contains("\"contents\""));
+        assert!(!command.contains("Authorization: Bearer"));
+    }
+
+    #[test]
+    fn converse_escapes_model_path_and_uses_content_blocks() {
+        let model = "arn:aws:bedrock:us-east-1:123456789012:inference-profile/a/b";
+        let command = render(&ModelProtocol::AwsBedrockConverse,
+            "https://example.invalid/model/{model}/converse", model, CurlAuth::Placeholder).unwrap();
+        assert!(command.contains("/model/arn%3Aaws%3Abedrock%3Aus-east-1%3A123456789012%3Ainference-profile%2Fa%2Fb/converse"));
+        assert!(command.contains("Authorization: Bearer ${ARCA_API_KEY}"));
+        assert!(command.contains("\"text\": \"Hello\""));
+        assert!(!command.contains("\"model\":"));
+        assert!(!command.contains("{model}"));
+        assert!(render(&ModelProtocol::AwsBedrockConverse, "https://example.invalid/model/{model}/converse",
+            "model", CurlAuth::Key("fixture\r\nInjected: yes")).is_err());
+    }
 }
 
 /// The returned command may contain a secret only on explicit export. Never log,

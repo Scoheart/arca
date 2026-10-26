@@ -1,5 +1,6 @@
 import { RESOURCE_CATEGORIES, RESOURCE_PRESENTATION } from "./resourcePresentation";
 import capabilityGuides from "../../../data/agent-capability-guides.json";
+import protocolDefinitions from "../../../data/model-protocols.json";
 import { AgentLaunchAction } from "./AgentLaunchAction";
 import "./AgentOverview.css";
 import "./CaptureView.css";
@@ -71,10 +72,7 @@ function absoluteConfigLocation(path: string, home: string) {
 }
 
 function modelProtocolLabel(protocol: ModelProfileView["protocol"]) {
-  if (protocol === "anthropic-messages") return "Anthropic Messages";
-  if (protocol === "openai-responses") return "OpenAI Responses";
-  if (protocol === "gemini-generate-content") return "Gemini GenerateContent";
-  return "OpenAI Chat Completions";
+  return protocolDefinitions.find((definition) => definition.id === protocol)?.label ?? protocol;
 }
 
 function modelProviderIcon(provider: string | undefined, name: string, size = 28) {

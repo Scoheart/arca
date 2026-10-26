@@ -90,6 +90,23 @@ native configuration; project and explicit CLI overrides retain Codex's normal
 precedence. Authentication and session storage are shared. A profile-specific
 `CODEX_HOME` environment variable also determines which files this editor opens.
 
+Arca manages six model request protocols: OpenAI Chat Completions, OpenAI
+Responses, Anthropic Messages, Gemini Interactions, Gemini generateContent,
+and AWS Bedrock Converse. Provider creation, model profiles and cURL export
+use the same protocol definitions in the CLI and desktop app.
+
+New Google AI Studio connections default to Interactions and also enable
+generateContent. Interactions cURL examples use `store=false`. Amazon Bedrock
+Converse has a separate regional `bedrock-runtime` connection using an official
+Bedrock Bearer API key; enter the model or inference-profile ID manually.
+AWS IAM access-key/secret-key and role administration are outside this connection
+workflow. Bedrock Mantle remains its separate OpenAI Responses connection.
+
+Agent assignment depends on its verified native adapter. OpenCode and Kilo
+adapters support Converse through the Amazon Bedrock SDK. Arca can manage and
+export Interactions profiles, but the current Agent writers cannot yet select
+the Interactions factory and therefore reject assignment of those profiles.
+
 Arca ships as **two front-ends that share the same data** (`~/.arca/`):
 
 - 🖥️ a **macOS desktop app** (Tauri + React) — a visual manager, and

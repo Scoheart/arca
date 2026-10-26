@@ -102,7 +102,9 @@ export type ModelProtocol =
   | "anthropic-messages"
   | "openai-responses"
   | "openai-completions"
-  | "gemini-generate-content";
+  | "gemini-generate-content"
+  | "gemini-interactions"
+  | "aws-bedrock-converse";
 
 export type AuthRequirement = "required" | "optional" | "none";
 
@@ -205,7 +207,7 @@ export interface ModelProviderView {
   /** Display-only instructions for account/region-specific connections. */
   setup?: {
     base_url_placeholder: string;
-    hint: "azure" | "bedrock" | "cloudflare" | "tinfoil";
+    hint: "azure" | "bedrock" | "bedrock-converse" | "cloudflare" | "tinfoil";
   } | null;
 }
 

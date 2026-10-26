@@ -48,6 +48,7 @@ pub fn prepare_apply(
     profile: &ModelProfile,
     active: bool,
 ) -> Result<Vec<PreparedModelFile>, String> {
+    super::ensure_supported(agent_id, &profile.protocol)?;
     let prepared = match agent_id {
         "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => prepare_open_code(agent_id, &paths[0], profile, active, None)?,
         "zcode" => zcode::prepare(&paths[0], profile, None)?,
@@ -70,6 +71,7 @@ pub fn prepare_apply_plaintext(
     active: bool,
     credential: &[u8],
 ) -> Result<PreparedModelFile, String> {
+    super::ensure_supported(agent_id, &profile.protocol)?;
     if !matches!(agent_id, "zcode" | "qoder-desktop" | "opencode" | "opencode-desktop" | "kilo-code") {
         return Err(format!(
             "credential_delivery_unsupported: {agent_id} plaintext adapter is not verified"
@@ -542,13 +544,16 @@ fn prepared_json(path: &Path, original: Option<String>, root: CstRootNode) -> Pr
     }
 }
 
-fn open_code_package(protocol: &ModelProtocol) -> &'static str {
-    match protocol {
+fn open_code_package(protocol: &ModelProtocol) -> Result<&'static str, String> {
+    Ok(match protocol {
         ModelProtocol::AnthropicMessages => "@ai-sdk/anthropic",
         ModelProtocol::OpenaiResponses => "@ai-sdk/openai",
         ModelProtocol::OpenaiCompletions => "@ai-sdk/openai-compatible",
         ModelProtocol::GeminiGenerateContent => "@ai-sdk/google",
-    }
+        ModelProtocol::AwsBedrockConverse => "@ai-sdk/amazon-bedrock",
+        ModelProtocol::GeminiInteractions => return Err(
+            "model_protocol_unsupported: this OpenCode adapter cannot select the native Google Interactions factory".into()),
+    })
 }
 
 fn merge_missing_json(target: &mut Value, source: &Value) {
@@ -569,7 +574,7 @@ fn open_code_provider(
     path: &Path,
     literal_api_key: Option<&str>,
 ) -> Result<Value, String> {
-    let package = open_code_package(&profile.protocol);
+    let package = open_code_package(&profile.protocol)?;
     let mut provider = match existing {
         None => Map::new(),
         Some(Value::Object(provider)) => provider,
@@ -673,8 +678,9 @@ fn prepare_open_code(
         .and_then(|value| value.to_serde_value());
     if agent_id == "opencode" && profile.native_ids.contains_key("__mux_generated_opencode_provider") {
         if let Some(value) = existing.as_ref() {
+            let package = open_code_package(&profile.protocol)?;
             let incompatible_package = value.get("npm").and_then(Value::as_str)
-                .is_some_and(|npm| npm != open_code_package(&profile.protocol));
+                .is_some_and(|npm| npm != package);
             let incompatible_endpoint = value.get("options").and_then(|options| options.get("baseURL"))
                 .and_then(Value::as_str)
                 .is_some_and(|url| url.trim_end_matches('/') != profile.base_url.trim_end_matches('/'));
@@ -1233,12 +1239,14 @@ fn prepare_clear_all_vibe(path: &Path) -> Result<PreparedModelFile, String> {
     })
 }
 
-fn factory_model(profile: &ModelProfile) -> Value {
+fn factory_model(profile: &ModelProfile) -> Result<Value, String> {
     let provider = match profile.protocol {
         ModelProtocol::AnthropicMessages => "anthropic",
         ModelProtocol::OpenaiResponses => "openai",
         ModelProtocol::OpenaiCompletions => "generic-chat-completion-api",
         ModelProtocol::GeminiGenerateContent => "google",
+        ModelProtocol::GeminiInteractions | ModelProtocol::AwsBedrockConverse => return Err(
+            "model_protocol_unsupported: Factory Droid cannot express this native protocol".into()),
     };
     let mut value = Map::from_iter([
         ("model".into(), Value::String(profile.model.clone())),
@@ -1252,7 +1260,7 @@ fn factory_model(profile: &ModelProfile) -> Value {
     if let Some(tokens) = profile.max_output_tokens {
         value.insert("maxOutputTokens".into(), tokens.into());
     }
-    Value::Object(value)
+    Ok(Value::Object(value))
 }
 
 fn factory_matches(value: &Value, profile: &ModelProfile) -> bool {
@@ -1269,7 +1277,7 @@ fn prepare_factory(
     let object = root_object(&root, path)?;
     let mut models = array_value(&object, "customModels");
     models.retain(|value| !factory_matches(value, profile));
-    models.push(factory_model(profile));
+    models.push(factory_model(profile)?);
     set_json(&object, "customModels", Some(Value::Array(models)));
     if active {
         set_json(&object, "model", Some(Value::String(profile.model.clone())));
@@ -2141,6 +2149,21 @@ fn render_yaml_with_pending_sections(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bedrock_uses_its_native_sdk_and_preserves_non_secret_credentials() {
+        let mut draft = profile(ModelProtocol::AwsBedrockConverse);
+        draft.base_url = "https://bedrock-runtime.eu-west-1.amazonaws.com".into();
+        let value = open_code_provider(&draft, None, Path::new("/fixture/opencode.json"), None).unwrap();
+        assert_eq!(value["npm"], "@ai-sdk/amazon-bedrock");
+        assert_eq!(value["options"]["baseURL"], draft.base_url);
+        assert_eq!(value["options"]["apiKey"], "{env:WORK_API_KEY}");
+        assert_eq!(value["models"]["vendor/model"]["id"], "vendor/model");
+        draft.protocol = ModelProtocol::GeminiInteractions;
+        assert!(open_code_provider(&draft, None, Path::new("/fixture/opencode.json"), None)
+            .unwrap_err().contains("Interactions factory"));
+        assert!(prepare_apply("qwen-code", &[], &draft, false).is_err());
+    }
 
     fn profile(protocol: ModelProtocol) -> ModelProfile {
         ModelProfile {
