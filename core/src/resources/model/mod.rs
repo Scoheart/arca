@@ -798,6 +798,36 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://starkrelay.bond",
             },
         ],
+        "mango-inference" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.mangoboost.io",
+        }],
+        "darkbloom" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.darkbloom.dev/v1",
+        }],
+        "inworld" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.inworld.ai/v1",
+        }],
+        "amd-token-factory" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://developer.amd.com.cn/radeon/api",
+        }],
+        "subq" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.subq.ai/v1",
+        }],
+        "intern-inkstone" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://discovery-api.intern-ai.org.cn/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://discovery-api.intern-ai.org.cn",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1348,6 +1378,83 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "stark-relay",
         name: "Stark Relay",
         default_base_url: Some("https://starkrelay.bond/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "pojiaai",
+        name: "Pojia AI",
+        default_base_url: Some("https://api.pojia.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "mango-inference",
+        name: "Mango Inference",
+        default_base_url: Some("https://api.mangoboost.io/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "darkbloom",
+        name: "Darkbloom",
+        default_base_url: Some("https://api.darkbloom.dev/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "scaledown",
+        name: "ScaleDown",
+        default_base_url: Some("https://api.scaledown.xyz/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "empero",
+        name: "Empero",
+        default_base_url: Some("https://free.empero.org/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "inworld",
+        name: "Inworld",
+        default_base_url: Some("https://api.inworld.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "amd-token-factory",
+        name: "AMD Token Factory",
+        default_base_url: Some("https://developer.amd.com.cn/radeon/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "subq",
+        name: "SubQ",
+        default_base_url: Some("https://api.subq.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "whatstoken",
+        name: "WhatsToken.AI",
+        default_base_url: Some("https://www.whatstoken.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "intern-inkstone",
+        name: "Intern InkStone (书生·端砚)",
+        default_base_url: Some("https://discovery-api.intern-ai.org.cn/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "swarms",
+        name: "Swarms",
+        default_base_url: Some("https://api.swarms.world/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2081,6 +2188,17 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.blazerail.com" => "blazerail",
         "larprouter.com" => "larprouter",
         "starkrelay.bond" => "stark-relay",
+        "cloud.infini-ai.com" => "infini-ai",
+        "api.pojia.ai" => "pojiaai",
+        "api.mangoboost.io" => "mango-inference",
+        "api.darkbloom.dev" => "darkbloom",
+        "api.scaledown.xyz" => "scaledown",
+        "free.empero.org" => "empero",
+        "api.inworld.ai" => "inworld",
+        "api.subq.ai" => "subq",
+        "www.whatstoken.ai" => "whatstoken",
+        "discovery-api.intern-ai.org.cn" => "intern-inkstone",
+        "api.swarms.world" => "swarms",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7641,6 +7759,83 @@ mod tests {
             ("https://starkrelay.bond/v1/messages", "stark-relay"),
             ("https://www.starkrelay.bond/v1", "custom"),
             ("https://starkrelay.bond.evil.test/v1", "custom"),
+            ("https://cloud.infini-ai.com/maas/v1/models", "infini-ai"),
+            ("https://cloud.infini-ai.com/iam/secret/key", "infini-ai"),
+            ("https://docs.infini-ai.com/gen-studio/api/get-started/", "custom"),
+            ("https://www.infini-ai.com/v1", "custom"),
+            ("https://cloud.infini-ai.com.evil.test/maas/v1", "custom"),
+            ("https://api.pojia.ai/v1", "pojiaai"),
+            ("https://api.pojia.ai/v1/chat/completions", "pojiaai"),
+            ("https://api.pojia.ai/v1/models", "pojiaai"),
+            ("https://pojia.ai/v1", "custom"),
+            ("https://pojia.ai/keys", "custom"),
+            ("https://pojia.org/v1", "custom"),
+            ("https://api.pojia.ai.evil.test/v1", "custom"),
+            ("https://api.mangoboost.io/v1", "mango-inference"),
+            ("https://api.mangoboost.io/v1/chat/completions", "mango-inference"),
+            ("https://api.mangoboost.io/v1/models", "mango-inference"),
+            ("https://api.mangoboost.io", "mango-inference"),
+            ("https://api.mangoboost.io/v1/messages", "mango-inference"),
+            ("https://inference.mangoboost.io/v1", "custom"),
+            ("https://api.mangoboost.io.evil.test/v1", "custom"),
+            ("https://api.darkbloom.dev/v1", "darkbloom"),
+            ("https://api.darkbloom.dev/v1/chat/completions", "darkbloom"),
+            ("https://api.darkbloom.dev/v1/responses", "darkbloom"),
+            ("https://api.darkbloom.dev/v1/models", "darkbloom"),
+            ("https://console.darkbloom.dev/v1", "custom"),
+            ("https://docs.darkbloom.dev/v1", "custom"),
+            ("https://api.darkbloom.dev.evil.test/v1", "custom"),
+            ("https://api.scaledown.xyz/v1", "scaledown"),
+            ("https://api.scaledown.xyz/v1/chat/completions", "scaledown"),
+            ("https://api.scaledown.xyz/v1/models", "scaledown"),
+            ("https://api.scaledown.ai/v1", "custom"),
+            ("https://scaledown.ai/v1", "custom"),
+            ("https://api.scaledown.xyz.evil.test/v1", "custom"),
+            ("https://free.empero.org/v1", "empero"),
+            ("https://free.empero.org/v1/chat/completions", "empero"),
+            ("https://free.empero.org/v1/models", "empero"),
+            ("https://empero.org/v1", "custom"),
+            ("https://free.empero.org.evil.test/v1", "custom"),
+            ("https://api.inworld.ai/v1", "inworld"),
+            ("https://api.inworld.ai/v1/chat/completions", "inworld"),
+            ("https://api.inworld.ai/v1/responses", "inworld"),
+            ("https://platform.inworld.ai/v1", "custom"),
+            ("https://docs.inworld.ai/v1", "custom"),
+            ("https://api.inworld.ai.evil.test/v1", "custom"),
+            ("https://developer.amd.com.cn/radeon/api/v1", "amd-token-factory"),
+            ("https://developer.amd.com.cn/radeon/api/v1/chat/completions", "amd-token-factory"),
+            ("https://developer.amd.com.cn/radeon/api", "amd-token-factory"),
+            ("https://developer.amd.com.cn/radeon/api/v1/messages", "amd-token-factory"),
+            ("https://developer.amd.com.cn/radeon/tokenfactory", "custom"),
+            ("https://developer.amd.com/radeon/api/v1", "custom"),
+            ("https://developer.amd.com.cn.evil.test/radeon/api/v1", "custom"),
+            ("https://api.subq.ai/v1", "subq"),
+            ("https://api.subq.ai/v1/chat/completions", "subq"),
+            ("https://api.subq.ai/v1/responses", "subq"),
+            ("https://api.subq.ai/v1/models", "subq"),
+            ("https://subq.ai/v1", "custom"),
+            ("https://docs.subq.ai/v1", "custom"),
+            ("https://api.subq.ai.evil.test/v1", "custom"),
+            ("https://www.whatstoken.ai/v1", "whatstoken"),
+            ("https://www.whatstoken.ai/v1/chat/completions", "whatstoken"),
+            ("https://www.whatstoken.ai/v1/models", "whatstoken"),
+            ("https://whatstoken.ai/v1", "custom"),
+            ("https://api.whatstoken.ai/v1", "custom"),
+            ("https://www.whatstoken.ai.evil.test/v1", "custom"),
+            ("https://discovery-api.intern-ai.org.cn/v1", "intern-inkstone"),
+            ("https://discovery-api.intern-ai.org.cn/v1/chat/completions", "intern-inkstone"),
+            ("https://discovery-api.intern-ai.org.cn/v1/responses", "intern-inkstone"),
+            ("https://discovery-api.intern-ai.org.cn", "intern-inkstone"),
+            ("https://discovery-api.intern-ai.org.cn/v1/messages", "intern-inkstone"),
+            ("https://discovery.intern-ai.org.cn/token-plan/home", "custom"),
+            ("https://chat.intern-ai.org.cn/api/v1", "custom"),
+            ("https://discovery-api.intern-ai.org.cn.evil.test/v1", "custom"),
+            ("https://api.swarms.world/v1", "swarms"),
+            ("https://api.swarms.world/v1/chat/completions", "swarms"),
+            ("https://api.swarms.world/v1/models", "swarms"),
+            ("https://swarms.world/v1", "custom"),
+            ("https://api.swarms.ai/v1", "custom"),
+            ("https://api.swarms.world.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7723,7 +7918,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 150);
+        assert_eq!(list_providers().len(), 161);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -7947,6 +8142,53 @@ mod tests {
             "anthropic-messages"
         );
         assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+
+        let mango = list_providers()
+            .iter()
+            .find(|provider| provider.id == "mango-inference")
+            .unwrap();
+        let serialized = serde_json::to_value(mango).unwrap();
+        assert_eq!(serialized["base_url"], "https://api.mangoboost.io");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        let amd = list_providers()
+            .iter()
+            .find(|provider| provider.id == "amd-token-factory")
+            .unwrap();
+        let serialized = serde_json::to_value(amd).unwrap();
+        assert_eq!(serialized["base_url"], "https://developer.amd.com.cn");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/radeon/api/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/radeon/api/v1/messages"
+        );
+        let subq = list_providers()
+            .iter()
+            .find(|provider| provider.id == "subq")
+            .unwrap();
+        let serialized = serde_json::to_value(subq).unwrap();
+        assert_eq!(serialized["base_url"], "https://api.subq.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/responses"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        let inworld = list_providers()
+            .iter()
+            .find(|provider| provider.id == "inworld")
+            .unwrap();
+        let serialized = serde_json::to_value(inworld).unwrap();
+        assert_eq!(serialized["model_discovery_supported"], false);
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(

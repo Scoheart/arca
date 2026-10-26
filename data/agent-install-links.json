@@ -362,5 +362,113 @@
   "mcpjam": {
     "url": "https://docs.mcpjam.com/installation",
     "label": "官方下载"
+  },
+  "autoclaw": {
+    "url": "https://autoclaw.zhipuai.cn/",
+    "label": "产品首页"
+  },
+  "command-code": {
+    "url": "https://commandcode.ai/docs/quickstart",
+    "label": "安装文档"
+  },
+  "eigent": {
+    "url": "https://www.eigent.ai/download",
+    "label": "官方下载"
+  },
+  "opencrabs": {
+    "url": "https://github.com/opencrabs/opencrabs/releases/latest",
+    "label": "官方下载"
+  },
+  "monkeycode": {
+    "url": "https://github.com/chaitin/MonkeyCode",
+    "label": "官方下载"
+  },
+  "praex": {
+    "url": "https://praex.ai",
+    "label": "产品首页"
+  },
+  "wave-code": {
+    "url": "https://thewavecode.com/",
+    "label": "产品首页"
+  },
+  "atomic-agent": {
+    "url": "https://atomicagent.io/",
+    "label": "产品首页"
+  },
+  "ccode": {
+    "url": "https://ccode.si/",
+    "label": "产品首页"
+  },
+  "alysis-code": {
+    "url": "https://alysiscode.com/docs/getting-started/installation",
+    "label": "安装文档"
+  },
+  "codar": {
+    "url": "https://codar.speedai.com/download",
+    "label": "官方下载"
+  },
+  "freemilk": {
+    "url": "https://apps.apple.com/us/app/freemilk-ai-code-ide-agents/id6767423666",
+    "label": "官方下载"
+  },
+  "deepworks": {
+    "url": "https://deepworks.cn/",
+    "label": "产品首页"
+  },
+  "tabbit": {
+    "url": "https://www.tabbit.ai/",
+    "label": "产品首页"
+  },
+  "traycer": {
+    "url": "https://traycer.ai/",
+    "label": "产品首页"
+  },
+  "perch": {
+    "url": "https://www.perchai.app/",
+    "label": "产品首页"
+  },
+  "maximo-syntax": {
+    "url": "https://maximoai.co/syntax/",
+    "label": "产品首页"
+  },
+  "instabox": {
+    "url": "https://instabox.sh",
+    "label": "产品首页"
+  },
+  "lightvela": {
+    "url": "https://lightvela.com",
+    "label": "产品首页"
+  },
+  "omnirush": {
+    "url": "https://omnirush.ai/docs",
+    "label": "安装文档"
+  },
+  "eaon-code": {
+    "url": "https://github.com/eaonlabs/eaon-code",
+    "label": "官方下载"
+  },
+  "adcode": {
+    "url": "https://adcode.bluethenics.com/versions",
+    "label": "官方下载"
+  },
+  "free-pi": {
+    "url": "https://freepi.ai",
+    "label": "产品首页"
+  },
+  "today-ai": {
+    "url": "https://todayai.cn",
+    "label": "产品首页"
+  },
+  "xiaohuanxiong": {
+    "url": "https://xiaohuanxiong.com/",
+    "label": "产品首页"
+  },
+  "codearts-agent": {
+    "url": "https://activity.huaweicloud.com/codearts_agent.html",
+    "label": "产品首页"
+  },
+  "fx": {
+    "url": "https://fx.sh/docs/getting-started/authentication",
+    "label": "安装文档"
   }
 }

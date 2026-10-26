@@ -59,7 +59,8 @@ pub(super) fn model_discovery_supported(provider_type: &str) -> bool {
         | "stepfun" | "stepfun-global"
         | "featherless-ai" | "upstage" | "ai21" | "byteplus"
         | "tencent-tokenhub-cn" | "tencent-tokenhub-global" | "iflytek-spark-x2" | "nscale" | "tinfoil-proxy"
-        | "infini-ai" | "302-ai" | "portkey" | "helicone" | "ant-ling" | "antdigital-dtmaas")
+        | "infini-ai" | "302-ai" | "portkey" | "helicone" | "ant-ling" | "antdigital-dtmaas"
+        | "inworld")
 }
 
 pub(super) fn provider_model_discovery_supported(provider: &ModelProviderConfig) -> bool {
@@ -213,6 +214,12 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "oxion-ai"
         | "blazerail"
         | "larprouter"
+        | "mango-inference"
+        | "darkbloom"
+        | "scaledown"
+        | "amd-token-factory"
+        | "subq"
+        | "swarms"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -304,6 +311,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "bilibili-index-translate"
             | "anyrouter"
             | "blazerail"
+            | "subq"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -1012,6 +1020,12 @@ mod tests {
         "oxion-ai",
         "blazerail",
         "larprouter",
+        "mango-inference",
+        "darkbloom",
+        "scaledown",
+        "amd-token-factory",
+        "subq",
+        "swarms",
         "mistral",
         "deepseek",
         "groq",
@@ -1133,7 +1147,7 @@ mod tests {
     #[test]
     fn distinguishes_manual_catalogs_from_compatible_custom_providers() {
         for id in ["github-models", "azure-openai", "perplexity", "volcengine-coding-plan", "baidu-qianfan",
-            "ant-ling", "antdigital-dtmaas"] {
+            "ant-ling", "antdigital-dtmaas", "inworld"] {
             assert!(!model_discovery_supported(id), "{id}");
         }
         for provider_type in ["wandb", "custom", "private-gateway", "deepinfra", "amazon-bedrock-mantle"] {
@@ -1193,6 +1207,7 @@ mod tests {
             "bilibili-index-translate",
             "anyrouter",
             "blazerail",
+            "subq",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -1200,7 +1215,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
