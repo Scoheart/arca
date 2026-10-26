@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.9.1](https://github.com/Scoheart/arca/compare/v2.9.0...v2.9.1) (2026-10-26)
+
+### Changes
+
+* fix(desktop): contrast, legibility and English localization pass across the GUI (#205) ([4d1a70f](https://github.com/Scoheart/arca/commit/4d1a70fe9418ef8fcc22472d61ed58c04c619a54))
+* chore(deps): bump Swatinem/rust-cache from f0d9c3887740aee45f6153b24b3a6b815192ec16 to c8037a86dde8214a8310e9f54a8fc61ab362aa31 (#248) ([cba4fb7](https://github.com/Scoheart/arca/commit/cba4fb7d25776d6d9dbd7db36a96389b72fe49e0))
+* \[ImgBot] Optimize images (#241) ([d076d41](https://github.com/Scoheart/arca/commit/d076d410875c7dfe87782020e41020d47824445c))
+* chore(deps): bump the workspace-minor-patch group with 3 updates (#251) ([ee253fd](https://github.com/Scoheart/arca/commit/ee253fd35e8dec454b93ee48d00d7e178125753a))
+* chore(deps): bump the tauri-minor-patch group in /desktop/src-tauri with 4 updates (#253) ([06a3611](https://github.com/Scoheart/arca/commit/06a361110d8448ad1aab981a57e8bbc19a496fb7))
+* chore(deps): bump dirs from 6.0.0 to 7.0.0 in /desktop/src-tauri (#254) ([d70be99](https://github.com/Scoheart/arca/commit/d70be99ea5ad9c1a06682a499ceaa950866fda6f))
+* chore(deps): bump the desktop-minor-patch group in /desktop with 4 updates (#249) ([39a58ea](https://github.com/Scoheart/arca/commit/39a58ea03311fdc2a734bf63b98812b64736bccb))
+
 ## [2.9.0](https://github.com/Scoheart/arca/compare/v2.8.0...v2.9.0) (2026-10-25)
 
 ### Changes
