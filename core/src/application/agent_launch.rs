@@ -487,8 +487,6 @@ pub fn configure_with_directory(agent_id: &str, target: Option<LaunchTarget>, de
     info(agent_id)
 }
 
-fn quote_shell(value: &str) -> String { format!("'{}'", value.replace('\'', "'\\''")) }
-
 pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Result<(), String> {
     #[cfg(any(test, debug_assertions))]
     if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
@@ -508,10 +506,7 @@ pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Resul
         LaunchTarget::Web { url } => { command = Command::new("/usr/bin/open"); command.arg(url); }
         LaunchTarget::Cli { command: program, args, env } => {
             let directory = directory.ok_or("请先选择工作目录")?;
-            let bin = Path::new(program).parent().ok_or("无效的可执行程序路径")?;
-            let environment = env.iter().map(|(name, value)| format!("{name}={} ", quote_shell(value))).collect::<String>();
-            let line = format!("cd -- {} && PATH={}:\"$PATH\" {}{}{}", quote_shell(&directory.to_string_lossy()),
-                quote_shell(&bin.to_string_lossy()), environment, quote_shell(program), args.iter().map(|arg| format!(" {}", quote_shell(arg))).collect::<String>());
+            let line = super::launch_command::cli_command(program, args, env, directory)?;
             return super::terminals::dispatch(&line);
         }
     }

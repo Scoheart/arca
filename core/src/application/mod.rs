@@ -7,6 +7,7 @@ pub mod agents;
 pub mod instructions;
 pub mod codex_configuration;
 pub mod agent_launch;
+mod launch_command;
 pub mod terminals;
 pub mod assets;
 pub mod bootstrap;

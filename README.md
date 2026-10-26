@@ -42,6 +42,12 @@ steps for that Agent’s CLI or extension, or its desktop download page. Configu
 with arguments through **编辑配置**. Extension entries name the host editor they open. Missing
 built-in runtimes offer their official installation page. On the first CLI launch,
 macOS may ask for permission to let Arca control Terminal.
+CLI launch commands remain visible and copyable, with the working directory,
+PATH, environment variables and executable on separate continuation lines.
+Ordinary environment values and URLs omit unnecessary quotes; paths and
+arguments retain literal quoting, and long argument lists wrap between arguments.
+Arca keeps the exact executable path it detected and does not clear terminal
+history or change your shell configuration.
 Installed Agent pages show a detected version beside the launch controls. Arca
 reads macOS app bundle metadata or checks an audited default CLI with a bounded
 `--version` call; custom CLI commands are not executed for version detection.
