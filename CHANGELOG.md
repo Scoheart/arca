@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.22.0](https://github.com/Scoheart/arca/compare/v2.21.0...v2.22.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe WorkBuddy AI native packages read-only ([494a1f1](https://github.com/Scoheart/arca/commit/494a1f10fae72030820056a6011a94db8d6004b2))
+
 ## [2.21.0](https://github.com/Scoheart/arca/compare/v2.20.0...v2.21.0) (2026-10-27)
 
 ### Changes
