@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.17.0](https://github.com/Scoheart/arca/compare/v2.16.0...v2.17.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Codex Desktop bundled resources ([c5d3aca](https://github.com/Scoheart/arca/commit/c5d3aca7536cdfb9051909960975ab9e5fcb0491))
+
 ## [2.16.0](https://github.com/Scoheart/arca/compare/v2.15.0...v2.16.0) (2026-10-27)
 
 ### Changes
