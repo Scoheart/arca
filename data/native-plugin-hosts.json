@@ -83,5 +83,27 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "opencode",
+    "adapter": "opencode",
+    "docs_url": "https://opencode.ai/docs/plugins/",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.config/opencode",
+        "layout": "opencode_global",
+        "presence": "declared"
+      },
+      {
+        "path": "~/.opencode/bin/opencode",
+        "layout": "opencode_bundled",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

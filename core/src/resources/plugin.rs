@@ -14,6 +14,7 @@ use std::sync::{Arc, OnceLock};
 mod codex;
 mod claude;
 mod gemini;
+mod opencode;
 
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
@@ -52,7 +53,7 @@ struct ScanBudget {
     visited: usize,
     references: usize,
     bytes: usize,
-    json: BTreeMap<PathBuf, Arc<Value>>,
+    json: BTreeMap<(PathBuf, DocumentFormat), Arc<Value>>,
 }
 impl ScanBudget {
     fn visit(&mut self) -> Result<(), ()> {
@@ -142,10 +143,32 @@ fn relative(root: &Path, input: &str) -> Result<PathBuf, ()> {
 }
 
 fn optional_json(root: &Path, input: &str, budget: &mut ScanBudget) -> Result<Option<Arc<Value>>, ()> {
+    optional_document(root, input, DocumentFormat::Json, budget)
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum DocumentFormat { Json, Jsonc, Toml }
+
+fn check_jsonc_depth(content: &str) -> Result<(), ()> {
+    use jsonc_parser::tokens::Token;
+    let mut scanner = jsonc_parser::Scanner::new(content, &Default::default());
+    let mut depth = 0usize;
+    while let Some(token) = scanner.scan().map_err(|_| ())? {
+        match token {
+            Token::OpenBrace | Token::OpenBracket => { depth += 1; if depth > 128 { return Err(()); } },
+            Token::CloseBrace | Token::CloseBracket => depth = depth.checked_sub(1).ok_or(())?,
+            _ => {},
+        }
+    }
+    if depth == 0 { Ok(()) } else { Err(()) }
+}
+
+fn optional_document(root: &Path, input: &str, format: DocumentFormat, budget: &mut ScanBudget) -> Result<Option<Arc<Value>>, ()> {
     budget.references += 1;
     if budget.references > MAX_REFERENCES { return Err(()); }
     let path = relative(root, input)?;
-    if let Some(value) = budget.json.get(&path) { return Ok(Some(value.clone())); }
+    let key = (path.clone(), format);
+    if let Some(value) = budget.json.get(&key) { return Ok(Some(value.clone())); }
     match fs::symlink_metadata(&path) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(_) => Err(()),
@@ -162,8 +185,16 @@ fn optional_json(root: &Path, input: &str, budget: &mut ScanBudget) -> Result<Op
             read.map_err(|_| ())?;
             if content.len() > 2_097_152 || content.len() == remaining { return Err(()); }
             let content = std::str::from_utf8(&content).map_err(|_| ())?;
-            let value = Arc::new(serde_json::from_str::<Value>(content).map_err(|_| ())?);
-            budget.json.insert(path, value.clone());
+            let value = Arc::new(match format { DocumentFormat::Jsonc => {
+                check_jsonc_depth(content)?;
+                let options = jsonc_parser::ParseOptions { allow_comments: true, allow_trailing_commas: true,
+                    allow_loose_object_property_names: false, allow_missing_commas: false,
+                    allow_single_quoted_strings: false, allow_hexadecimal_numbers: false, allow_unary_plus_numbers: false };
+                jsonc_parser::parse_to_ast(content, &Default::default(), &options).map_err(|_| ())?.value.ok_or(())?.into()
+            }, DocumentFormat::Json => serde_json::from_str::<Value>(content).map_err(|_| ())?,
+                DocumentFormat::Toml => serde_json::to_value(toml::from_str::<toml::Value>(content).map_err(|_| ())?).map_err(|_| ())?,
+            });
+            budget.json.insert(key, value.clone());
             Ok(Some(value))
         },
     }
@@ -351,6 +382,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "codex" { codex::observe(host, &mut result); continue; }
         if host.adapter == "claude" { claude::observe(host, &mut result); continue; }
         if host.adapter == "gemini" { gemini::observe(host, &mut result); continue; }
+        if host.adapter == "opencode" { opencode::observe(host, &mut result); continue; }
         if host.adapter != "cursor" { result.unavailable = true; continue; }
         for source in &host.roots {
             let root = expand_tilde(&source.path);
@@ -420,7 +452,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else {
             host.roots.iter().map(|root| if host.adapter == "codex" { codex::cache_root(root) } else { expand_tilde(&root.path) }).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()

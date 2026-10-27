@@ -1029,8 +1029,8 @@ export interface SkillCommandError {
   findings_hash?: string;
 }
 
-export type PluginPresence = "bundled" | "installed" | "local" | "cache_only";
-export type PluginComponentKind = "mcp" | "skill" | "rule" | "agent" | "command" | "hook" | "app" | "lsp" | "output_style" | "workflow" | "theme" | "monitor" | "eval" | "executable" | "type_declaration" | "channel" | "mcp_bundle" | "context" | "policy" | "plan";
+export type PluginPresence = "bundled" | "installed" | "local" | "cache_only" | "declared";
+export type PluginComponentKind = "mcp" | "skill" | "rule" | "agent" | "command" | "hook" | "app" | "lsp" | "output_style" | "workflow" | "theme" | "monitor" | "eval" | "executable" | "type_declaration" | "channel" | "mcp_bundle" | "context" | "policy" | "plan" | "code" | "auth_provider";
 export interface PluginComponent {
   kind: PluginComponentKind; name: string; source_path: string; native_id: string | null;
 }

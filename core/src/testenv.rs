@@ -77,6 +77,12 @@ impl TestHome {
             ("CODEX_HOME", home.join(".codex")),
             ("CLAUDE_CONFIG_DIR", home.join(".claude")),
             ("GEMINI_CLI_HOME", home.clone()),
+            ("XDG_CONFIG_HOME", home.join(".config")),
+            ("XDG_STATE_HOME", home.join(".local/state")),
+            ("OPENCODE_CONFIG", home.join(".config/opencode/opencode.json")),
+            ("OPENCODE_CONFIG_DIR", home.join(".config/opencode")),
+            ("OPENCODE_PLUGIN_META_FILE", home.join(".local/state/opencode/plugin-meta.json")),
+            ("OPENCODE_CONFIG_CONTENT", PathBuf::new()),
         ].into_iter().map(|(key, path)| {
             let previous = std::env::var_os(key);
             std::env::set_var(key, path);
