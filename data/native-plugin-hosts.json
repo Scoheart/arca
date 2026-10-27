@@ -66,5 +66,22 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "gemini",
+    "adapter": "gemini",
+    "docs_url": "https://geminicli.com/docs/extensions/reference/",
+    "manifest_paths": [
+      "gemini-extension.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.gemini/extensions",
+        "layout": "gemini_extensions",
+        "presence": "installed"
+      }
+    ]
   }
 ]

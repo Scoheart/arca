@@ -34,6 +34,7 @@ pub struct TestHome {
     saved_arca_home: Option<OsString>,
     saved_path: Option<OsString>,
     saved_test_probe_root: Option<OsString>,
+    saved_native_plugin_homes: Vec<(&'static str, Option<OsString>)>,
     readiness: Option<crate::application::gate::TestReadyGuard>,
     _guard: MutexGuard<'static, ()>,
 }
@@ -70,6 +71,17 @@ impl TestHome {
         std::env::set_var("ARCA_HOME", home.join(".arca"));
         std::env::set_var("PATH", &bin);
         std::env::set_var("ARCA_TEST_PROBE_ROOT", &home);
+        // Native observers honor host-specific homes. Isolate those overrides
+        // too, so inherited CLI variables cannot escape the temporary HOME.
+        let saved_native_plugin_homes = [
+            ("CODEX_HOME", home.join(".codex")),
+            ("CLAUDE_CONFIG_DIR", home.join(".claude")),
+            ("GEMINI_CLI_HOME", home.clone()),
+        ].into_iter().map(|(key, path)| {
+            let previous = std::env::var_os(key);
+            std::env::set_var(key, path);
+            (key, previous)
+        }).collect();
         let readiness = Some(crate::application::gate::TestReadyGuard::enter());
         TestHome {
             home,
@@ -77,6 +89,7 @@ impl TestHome {
             saved_arca_home,
             saved_path,
             saved_test_probe_root,
+            saved_native_plugin_homes,
             readiness,
             _guard: guard,
         }
@@ -107,6 +120,12 @@ impl Drop for TestHome {
         match &self.saved_test_probe_root {
             Some(v) => std::env::set_var("ARCA_TEST_PROBE_ROOT", v),
             None => std::env::remove_var("ARCA_TEST_PROBE_ROOT"),
+        }
+        for (key, previous) in &self.saved_native_plugin_homes {
+            match previous {
+                Some(value) => std::env::set_var(key, value),
+                None => std::env::remove_var(key),
+            }
         }
         let _ = std::fs::remove_dir_all(&self.home);
         // _guard releases after this body — env is consistent before the next
