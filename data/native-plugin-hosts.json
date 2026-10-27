@@ -336,5 +336,36 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "zcode",
+    "adapter": "zcode",
+    "docs_url": "https://zcode.z.ai/cn/docs/plugin",
+    "manifest_paths": [
+      ".zcode-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      ".codex-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "plugin:",
+    "roots": [
+      {
+        "path": "~/.zcode",
+        "layout": "zcode_global",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/ZCode.app/Contents/Resources/glm/packages",
+        "layout": "zcode_bundled",
+        "presence": "bundled"
+      },
+      {
+        "path": "/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs",
+        "layout": "zcode_runtime",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

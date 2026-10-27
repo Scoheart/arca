@@ -79,6 +79,7 @@ impl TestHome {
             ("CLAUDE_CONFIG_DIR", home.join(".claude")),
             ("GEMINI_CLI_HOME", home.clone()),
             ("QWEN_HOME", home.join(".qwen")),
+            ("ZCODE_STORAGE_DIR", PathBuf::new()),
             ("KIRO_POWERS_HOME", home.join(".kiro/powers")),
             ("WORKBUDDY_CONFIG_DIR", PathBuf::new()),
             ("CODEBUDDY_CONFIG_DIR", PathBuf::new()),
