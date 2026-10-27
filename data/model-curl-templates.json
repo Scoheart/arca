@@ -1,0 +1,271 @@
+{
+  "reviewed_on": "2026-10-27",
+  "templates": {
+    "openai-completions": {
+      "sources": [
+        "https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create"
+      ],
+      "notes": [
+        "For models requiring developer instructions, change the first message role from system to developer.",
+        "Sampling, penalties, reasoning, audio and tool options depend on model support; null leaves their service defaults unchanged.",
+        "max_tokens, functions, function_call, seed, user and prompt_cache_retention are legacy/deprecated; do not set max_tokens together with max_completion_tokens.",
+        "stream_options requires stream=true; top_logprobs requires logprobs=true; audio requires compatible modalities and a supported model."
+      ],
+      "request": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a helpful assistant. Answer clearly and concisely. If you are unsure, say so."
+          },
+          {
+            "role": "user",
+            "content": "Hello"
+          }
+        ],
+        "model": null,
+        "audio": null,
+        "frequency_penalty": null,
+        "function_call": null,
+        "functions": null,
+        "logit_bias": null,
+        "logprobs": null,
+        "max_completion_tokens": 1024,
+        "max_tokens": null,
+        "metadata": {},
+        "modalities": [
+          "text"
+        ],
+        "moderation": null,
+        "n": 1,
+        "parallel_tool_calls": null,
+        "prediction": null,
+        "presence_penalty": null,
+        "prompt_cache_key": null,
+        "prompt_cache_options": null,
+        "prompt_cache_retention": null,
+        "reasoning_effort": null,
+        "response_format": {
+          "type": "text"
+        },
+        "safety_identifier": null,
+        "seed": null,
+        "service_tier": null,
+        "stop": null,
+        "store": false,
+        "stream": false,
+        "stream_options": null,
+        "temperature": null,
+        "tool_choice": null,
+        "tools": [],
+        "top_logprobs": null,
+        "top_p": null,
+        "user": null,
+        "verbosity": null,
+        "web_search_options": null
+      }
+    },
+    "openai-responses": {
+      "sources": [
+        "https://developers.openai.com/api/reference/resources/responses/methods/create"
+      ],
+      "notes": [
+        "instructions supplies the system/developer instruction for this request.",
+        "conversation and previous_response_id are alternative ways to continue a conversation; prompt requires a real saved-prompt ID.",
+        "store=true is the documented API default; set false for a stateless example without stored responses.",
+        "Sampling, reasoning, access programs, moderation and cache options are model/account dependent; null inherits service behavior.",
+        "stream_options requires stream=true; truncation, user and prompt_cache_retention are deprecated."
+      ],
+      "request": {
+        "access_programs": null,
+        "background": false,
+        "context_management": null,
+        "conversation": null,
+        "include": [],
+        "input": "Hello",
+        "instructions": "You are a helpful assistant. Answer clearly and concisely. If you are unsure, say so.",
+        "max_output_tokens": 1024,
+        "max_tool_calls": null,
+        "metadata": {},
+        "model": null,
+        "moderation": null,
+        "parallel_tool_calls": null,
+        "previous_response_id": null,
+        "prompt": null,
+        "prompt_cache_key": null,
+        "prompt_cache_options": null,
+        "prompt_cache_retention": null,
+        "reasoning": null,
+        "safety_identifier": null,
+        "service_tier": null,
+        "store": true,
+        "stream": false,
+        "stream_options": null,
+        "temperature": null,
+        "text": {
+          "format": {
+            "type": "text"
+          }
+        },
+        "tool_choice": null,
+        "tools": [],
+        "top_logprobs": null,
+        "top_p": null,
+        "truncation": null,
+        "user": null
+      }
+    },
+    "anthropic-messages": {
+      "sources": [
+        "https://platform.claude.com/docs/en/api/messages/create",
+        "https://platform.claude.com/docs/en/api/migration-2026-10-21"
+      ],
+      "notes": [
+        "The command retains anthropic-version:2023-06-01 for existing gateway compatibility; the catalog also shows current standard optional fields. Beta-only fields requiring anthropic-beta are excluded.",
+        "system is a top-level instruction, not an OpenAI-style message.",
+        "temperature, top_p and top_k are legacy 2023-06-01 fields; API version2026-10-21 removes all three, even at default values. Newer models can restrict them on the old version too.",
+        "thinking, output_config, container, diagnostics, cache_control, inference_geo and speed need model/version support. Leave null unless configured."
+      ],
+      "request": {
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hello"
+          }
+        ],
+        "model": null,
+        "cache_control": null,
+        "container": null,
+        "diagnostics": null,
+        "inference_geo": null,
+        "metadata": {},
+        "output_config": null,
+        "service_tier": null,
+        "speed": null,
+        "stop_sequences": [],
+        "stream": false,
+        "system": "You are a helpful assistant. Answer clearly and concisely. If you are unsure, say so.",
+        "thinking": null,
+        "tool_choice": null,
+        "tools": [],
+        "temperature": null,
+        "top_k": null,
+        "top_p": null
+      }
+    },
+    "gemini-interactions": {
+      "sources": [
+        "https://ai.google.dev/api/interactions-api",
+        "https://ai.google.dev/gemini-api/docs/interactions-overview"
+      ],
+      "notes": [
+        "model/generation_config and agent/agent_config are alternative modes. This example uses the selected model.",
+        "store=false is an Arca stateless example choice; previous_interaction_id and background work require server-side storage.",
+        "response_format requires a supported structured-output model; environment and webhook_config require real resources/configuration.",
+        "Interactions uses snake_case fields, distinct from generateContent camelCase."
+      ],
+      "request": {
+        "model": null,
+        "agent": null,
+        "input": "Hello",
+        "generation_config": {
+          "max_output_tokens": 1024
+        },
+        "agent_config": null,
+        "system_instruction": "You are a helpful assistant. Answer clearly and concisely. If you are unsure, say so.",
+        "tools": [],
+        "response_format": null,
+        "previous_interaction_id": null,
+        "environment": null,
+        "service_tier": null,
+        "webhook_config": null,
+        "safety_settings": [],
+        "labels": {},
+        "stream": false,
+        "store": false,
+        "background": false
+      }
+    },
+    "gemini-generate-content": {
+      "sources": [
+        "https://ai.google.dev/api/generate-content"
+      ],
+      "notes": [
+        "The model is in the URL, not a model field in the request body.",
+        "Empty safetySettings keeps the API default safety policy. generationConfig sampling limits/defaults vary by model.",
+        "cachedContent and continuationToken require real resources/tokens; cached content can restrict inline system/tool settings.",
+        "store=null inherits project logging behavior rather than inventing a universal logging default."
+      ],
+      "request": {
+        "contents": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Hello"
+              }
+            ]
+          }
+        ],
+        "tools": [],
+        "toolConfig": null,
+        "safetySettings": [],
+        "continuationToken": null,
+        "labels": {},
+        "systemInstruction": {
+          "parts": [
+            {
+              "text": "You are a helpful assistant. Answer clearly and concisely. If you are unsure, say so."
+            }
+          ]
+        },
+        "generationConfig": {
+          "maxOutputTokens": 1024
+        },
+        "cachedContent": null,
+        "serviceTier": null,
+        "store": null
+      }
+    },
+    "aws-bedrock-converse": {
+      "sources": [
+        "https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html"
+      ],
+      "notes": [
+        "The model/inference-profile ID is in the URL. This command uses a Bedrock Bearer API key, not AWS access-key/secret-key credentials.",
+        "inferenceConfig sampling defaults and support depend on the selected model. additionalModelRequestFields contains model-specific extensions.",
+        "guardrailConfig, toolConfig, outputConfig and promptVariables require valid supporting configuration; empty placeholder objects are not valid defaults.",
+        "Prompt-management ARNs cannot send inline system, inferenceConfig, toolConfig or additionalModelRequestFields. The renderer leaves those fields null for prompt-resource models."
+      ],
+      "request": {
+        "additionalModelRequestFields": null,
+        "additionalModelResponseFieldPaths": [],
+        "guardrailConfig": null,
+        "inferenceConfig": {
+          "maxTokens": 1024
+        },
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "Hello"
+              }
+            ]
+          }
+        ],
+        "outputConfig": null,
+        "performanceConfig": null,
+        "promptVariables": null,
+        "requestMetadata": {},
+        "serviceTier": null,
+        "system": [
+          {
+            "text": "You are a helpful assistant. Answer clearly and concisely. If you are unsure, say so."
+          }
+        ],
+        "toolConfig": null
+      }
+    }
+  }
+}

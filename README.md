@@ -95,6 +95,17 @@ Responses, Anthropic Messages, Gemini Interactions, Gemini generateContent,
 and AWS Bedrock Converse. Provider creation, model profiles and cURL export
 use the same protocol definitions in the CLI and desktop app.
 
+**Copy cURL** and `arca model curl <profile-id>` now produce a complete editable
+top-level request template, including a system-instruction example in the
+protocol's native format. Required fields and portable examples are filled in;
+optional, conditional or model-dependent fields start at `null`. The command
+uses `jq` to omit only top-level `null` fields before sending, preserving
+`false`, `0`, empty collections and nested values. Invalid JSON stops before
+the network request. The copied command includes official reference links,
+the schema review date and compatibility notes. Token limits of `1024` are
+editable Arca examples, not service defaults. See [the protocol reference](docs/model-curl-templates.md)
+for the system mappings, field coverage and version-specific restrictions.
+
 New Google AI Studio connections default to Interactions and also enable
 generateContent. Interactions cURL examples use `store=false`. Amazon Bedrock
 Converse has a separate regional `bedrock-runtime` connection using an official
