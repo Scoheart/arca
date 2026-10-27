@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.26.0](https://github.com/Scoheart/arca/compare/v2.25.0...v2.26.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe ZCode native packages and shared MCP ([18a8c5b](https://github.com/Scoheart/arca/commit/18a8c5b8a99e4474bc2068762325a3b758000d90))
+
 ## [2.25.0](https://github.com/Scoheart/arca/compare/v2.24.0...v2.25.0) (2026-10-27)
 
 ### Changes
