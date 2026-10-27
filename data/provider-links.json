@@ -622,6 +622,13 @@
       "kind": "api-key"
     }
   },
+  "decuff": {
+    "docs_url": "https://decuff.ai/docs",
+    "portal": {
+      "url": "https://decuff.ai/account",
+      "kind": "console"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
