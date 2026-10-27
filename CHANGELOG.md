@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.13.0](https://github.com/Scoheart/arca/compare/v2.12.0...v2.13.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe native Codex CLI installations ([c03496d](https://github.com/Scoheart/arca/commit/c03496d5bf0aed85fc72bf21b7c67d3b531b4ff8))
+
 ## [2.12.0](https://github.com/Scoheart/arca/compare/v2.11.0...v2.12.0) (2026-10-27)
 
 ### Changes
