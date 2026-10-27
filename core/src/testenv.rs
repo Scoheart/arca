@@ -79,6 +79,7 @@ impl TestHome {
             ("CLAUDE_CONFIG_DIR", home.join(".claude")),
             ("GEMINI_CLI_HOME", home.clone()),
             ("QWEN_HOME", home.join(".qwen")),
+            ("KIRO_POWERS_HOME", home.join(".kiro/powers")),
             ("XDG_CONFIG_HOME", home.join(".config")),
             ("XDG_STATE_HOME", home.join(".local/state")),
             ("OPENCODE_CONFIG", home.join(".config/opencode/opencode.json")),

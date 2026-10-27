@@ -205,5 +205,25 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "kiro",
+    "adapter": "kiro",
+    "docs_url": "https://kiro.dev/docs/powers/installation/",
+    "manifest_paths": [
+      "plugin.json",
+      "POWER.md"
+    ],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "power-",
+    "roots": [
+      {
+        "path": "~/.kiro/powers",
+        "layout": "kiro_powers",
+        "presence": "installed"
+      }
+    ]
   }
 ]
