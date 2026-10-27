@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.14.0](https://github.com/Scoheart/arca/compare/v2.13.0...v2.14.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe native Claude Code installations ([1889f80](https://github.com/Scoheart/arca/commit/1889f803b05df007724c80b209947c884b5f342e))
+
 ## [2.13.0](https://github.com/Scoheart/arca/compare/v2.12.0...v2.13.0) (2026-10-27)
 
 ### Changes
