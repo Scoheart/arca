@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.0](https://github.com/Scoheart/arca/compare/v2.11.0...v2.12.0) (2026-10-27)
+
+### Changes
+
+* feat(models): export complete protocol-aware curl request templates ([e6de3ff](https://github.com/Scoheart/arca/commit/e6de3ff114bd8f92475289054a399a6ec8210770))
+* feat(plugins): expose Cursor native plugins and bundled MCPs ([064f9c6](https://github.com/Scoheart/arca/commit/064f9c69cc361369c2c1523ebc5d6a7762643f20))
+
 ## [2.11.0](https://github.com/Scoheart/arca/compare/v2.10.0...v2.11.0) (2026-10-26)
 
 ### Changes
