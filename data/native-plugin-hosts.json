@@ -47,5 +47,24 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "claude-code",
+    "adapter": "claude",
+    "docs_url": "https://code.claude.com/docs/en/plugins-reference",
+    "manifest_paths": [
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "plugin:",
+    "roots": [
+      {
+        "path": "~/.claude/plugins",
+        "layout": "claude_installed_registry",
+        "presence": "installed"
+      }
+    ]
   }
 ]

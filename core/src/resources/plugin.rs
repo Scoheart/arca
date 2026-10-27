@@ -12,6 +12,7 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 mod codex;
+mod claude;
 
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
@@ -260,7 +261,7 @@ fn component_files(root: &Path, path: &Path, kind: &PluginComponentKind, depth: 
                 PluginComponentKind::Rule => name.ends_with(".md") || name.ends_with(".mdc"),
                 PluginComponentKind::Agent | PluginComponentKind::Command => name.ends_with(".md"),
                 PluginComponentKind::Hook => name.ends_with(".json"),
-                PluginComponentKind::Mcp | PluginComponentKind::App => false,
+                _ => false,
             };
             if wanted {
                 let label = if *kind == PluginComponentKind::Skill { path.parent().unwrap_or(&path) } else { &path };
@@ -347,6 +348,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
     for host in hosts() {
         if !agents.get(&host.agent_id).is_some_and(|agent| agent.enabled) { continue; }
         if host.adapter == "codex" { codex::observe(host, &mut result); continue; }
+        if host.adapter == "claude" { claude::observe(host, &mut result); continue; }
         if host.adapter != "cursor" { result.unavailable = true; continue; }
         for source in &host.roots {
             let root = expand_tilde(&source.path);
@@ -416,7 +418,9 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| host.roots.iter().map(move |root| if host.adapter == "codex" { codex::cache_root(root) } else { expand_tilde(&root.path) }))
+        .flat_map(|host| if host.adapter == "claude" { claude::watch_paths() } else {
+            host.roots.iter().map(|root| if host.adapter == "codex" { codex::cache_root(root) } else { expand_tilde(&root.path) }).collect()
+        })
         .collect::<BTreeSet<_>>().into_iter().collect()
 }
 
