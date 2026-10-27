@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.24.0](https://github.com/Scoheart/arca/compare/v2.23.0...v2.24.0) (2026-10-27)
+
+### Changes
+
+* feat(qoder): observe IDE native plugins and MCPs ([f86e9c9](https://github.com/Scoheart/arca/commit/f86e9c9bfa119f7b1211f9b872e335be30fe78e7))
+
 ## [2.23.0](https://github.com/Scoheart/arca/compare/v2.22.0...v2.23.0) (2026-10-27)
 
 ### Changes
