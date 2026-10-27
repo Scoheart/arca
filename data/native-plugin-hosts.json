@@ -1,0 +1,13 @@
+[
+  {
+    "agent_id": "cursor",
+    "docs_url": "https://cursor.com/docs/plugins",
+    "manifest_paths": [".cursor-plugin/plugin.json", ".claude-plugin/plugin.json", "plugin.json"],
+    "default_mcp_files": [".mcp.json", "mcp.json"],
+    "mcp_id_prefix": "plugin-",
+    "roots": [
+      { "path": "~/.cursor/plugins/cache", "layout": "marketplace_cache", "presence": "cache_only", "complete_marker": ".cache-complete" },
+      { "path": "~/.cursor/plugins/local", "layout": "flat", "presence": "local" }
+    ]
+  }
+]

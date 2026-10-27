@@ -29,3 +29,19 @@ pub struct DisabledEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<Value>,
 }
+
+/// Installed native provider probe metadata; not a writable MCP configuration.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BuiltinMcpObservation {
+    pub agent_id: String,
+    pub server_id: String,
+    pub name: String,
+    pub provider: String,
+    pub source_path: String,
+    pub app_version: String,
+    pub docs_url: String,
+    pub source_fingerprint: String,
+    pub plugin_id: String,
+    pub plugin_version: String,
+    pub manifest_path: String,
+}

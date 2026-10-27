@@ -7,7 +7,7 @@ afterEach(cleanup);
 
 function Harness() {
   const [tab, setTab] = useState<AgentResourceTab>("mcps");
-  const content = { mcps: "MCP content", models: "Model content", skills: "Skill content", instructions: "Native instruction files" };
+  const content = { mcps: "MCP content", models: "Model content", skills: "Skill content", instructions: "Native instruction files", plugins: "Plugin content" };
   return (
     <AgentResourcePanel
       value={tab}

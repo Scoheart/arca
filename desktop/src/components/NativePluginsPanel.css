@@ -1,0 +1,18 @@
+.arca-native-plugins { min-width: 0; }
+.arca-native-intro { color: var(--muted-foreground, #98a2b3); font-size: 12px; line-height: 1.65; margin: 0 0 16px; }
+.arca-native-plugin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+.arca-native-plugin-card { min-width: 0; border: 1px solid rgb(128 138 153 / 20%); border-radius: 12px; padding: 16px; background: var(--panel-bg, #1c222a); overflow-wrap: anywhere; }
+.arca-native-plugin-card h4 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
+.arca-native-plugin-card p { font-size: 12px; line-height: 1.6; margin: 6px 0; }
+.arca-native-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.arca-native-label { display: inline-block; font-size: 10px; line-height: 1.6; color: var(--muted-foreground, #98a2b3); }
+.arca-native-muted { color: var(--muted-foreground, #98a2b3); }
+.arca-native-plugin-card summary, .arca-native-sources summary { cursor: pointer; font-size: 12px; margin-top: 8px; }
+.arca-native-version { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgb(128 138 153 / 20%); font-size: 12px; min-width: 0; }
+.arca-native-path, .arca-native-sources code { display: block; overflow-wrap: anywhere; white-space: normal; font-size: 10px; line-height: 1.6; margin: 4px 0; }
+.arca-native-components { list-style: none; padding: 0; margin: 12px 0 0; }
+.arca-native-components li { padding: 8px 0; border-bottom: 1px solid rgb(128 138 153 / 12%); }
+.arca-host-mcp-card .arca-consumption-copy { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.arca-host-mcp-card { align-items: flex-start !important; }
+.arca-host-mcp-card small { white-space: normal; overflow-wrap: anywhere; font-size: 10px; line-height: 1.6; color: var(--muted-foreground, #98a2b3); }
+.arca-native-id { font-size: 10px; overflow-wrap: anywhere; white-space: normal; }

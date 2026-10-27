@@ -12,6 +12,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import type { InstallState } from "../hooks/useInstallState";
 import type { SkillsState } from "../hooks/useSkillsState";
 import type { ConsumptionState } from "../hooks/useConsumptionState";
+import { useNativeResources } from "../hooks/useNativeResources";
 import { useMcpIconPreferences } from "../hooks/useMcpIconPreferences";
 import type {
   AgentConsumptionSelection,
@@ -58,6 +59,7 @@ import { mergeAgentInfos } from "../lib/agentCapabilities";
 import { SkillReviewDialog } from "./SkillReviewDialog";
 import { useTranslation } from "react-i18next";
 import { McpAvatar } from "./McpIcon";
+import { NativePluginsPanel } from "./NativePluginsPanel";
 import { InstructionsEditor } from "./InstructionsEditor";
 
 type PickerDomain = "mcp" | "model" | "skill";
@@ -98,7 +100,7 @@ interface AgentViewProps {
 }
 
 function completedMessage(plan: AssetOperationPlan, agentName: string) {
-  if (plan.kind === "clear-mcp") return `${agentName} 的全部 MCP 已移除。`;
+  if (plan.kind === "clear-mcp") return `${agentName} 的可写 MCP 配置已移除；宿主插件和内置资源保持不变。`;
   if (plan.kind === "clear-models") return `${agentName} 的全部 Model 已从权威配置中移除。`;
   const domain = plan.domain_plan.domain;
   const asset = domain === "mcp" ? "MCP" : domain === "model" ? "Model" : "Skill";
@@ -253,6 +255,14 @@ export function AgentView({
     [modelAgent, modelProfiles],
   );
   const inventory = consumptionState.inventory;
+  const nativeResources = useNativeResources(agentId);
+  const hostMcps = nativeResources.inventory?.host_mcps ?? [];
+  const nativePlugins = nativeResources.inventory?.native_plugins ?? [];
+  const nativePluginSupported = nativeResources.inventory?.native_plugin_agents.includes(agentId) ?? false;
+  const nativePluginCount = new Set(nativePlugins.map(item => item.plugin_id)).size;
+  useEffect(() => {
+    if (nativeResources.inventory && resourceTab === "plugins" && !nativePluginSupported) setResourceTab("mcps");
+  }, [agentId, nativeResources.inventory, resourceTab, nativePluginSupported]);
   const { mcpRows, modelRows, skillRows, mcpExternal, skillExternal, modelExternal } = useMemo(() => ({
     mcpRows: consumptionsForAgent(inventory, agentId, "mcp"),
     modelRows: consumptionsForAgent(inventory, agentId, "model"),
@@ -335,7 +345,7 @@ export function AgentView({
 
   if (!agent) return <div className="arca-agent-state">未找到该 Agent</div>;
 
-  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent && !agent.has_instructions) {
+  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent && !agent.has_instructions && hostMcps.length === 0 && !nativePluginSupported) {
     return (
       <div className="arca-agent-page">
         <div className="arca-agent-shell">
@@ -514,7 +524,7 @@ export function AgentView({
     setPreparingChange(true);
     try {
       await consumptionState.clearAgentMcp(agentId);
-      showToast({ kind: "success", msg: `${agent.name} 的全部 MCP 已移除。` });
+      showToast({ kind: "success", msg: t("nativePlugins.configuredRemoved", { agent: agent.name }) });
     } catch (error) {
       showToast({ kind: "error", msg: "移除全部 MCP 失败：" + formatError(error) });
     } finally {
@@ -660,8 +670,9 @@ export function AgentView({
           value={resourceTab}
           onChange={setResourceTab}
           instructions={agent.has_instructions}
+          plugins={nativePluginSupported ? nativePluginCount : undefined}
           counts={{
-            mcps: mcpRows.length + mcpExternal.length,
+            mcps: mcpRows.length + mcpExternal.length + hostMcps.length,
             models: modelVisibleCount,
             skills: skillRows.length + skillExternal.length,
           }}
@@ -701,24 +712,26 @@ export function AgentView({
           ) : null}
           <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
             message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
-          {resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global ? (
+          <ToastNotice kind="warning" noticeKey={`native-plugins:${agent.id}`} message={nativeResources.error || nativeResources.inventory?.unavailable ? t("nativePlugins.scanUnavailable") : null} />
+          {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global && hostMcps.length === 0 ? (
             <div className="arca-agent-inline-state">此 Agent 未接入 MCP。</div>
           ) : (
             <AgentConsumptionPanel
               domain="mcp"
               title={RESOURCE_PRESENTATION.mcp.label}
-              description={`${mcpRows.length} 项`}
+              description={t("nativePlugins.mcpCounts", { configured: mcpRows.length + mcpExternal.length, host: hostMcps.length })}
               manageLabel="添加 MCPs"
               rows={displayedMcpRows}
+              hostMcps={hostMcps}
               columns={3}
               external={mcpExternal}
               externalMode="cards"
               onManage={() => setPickerDomain("mcp")}
               manageDisabled={!agent.has_global || preparingChange}
-              bulkRemoveLabel="移除全部 MCP"
-              bulkRemoveTitle={`清空 ${agent.name} 的全部 MCP，包括外部配置；不会删除中央 MCP 资产`}
+              bulkRemoveLabel={t("nativePlugins.removeConfigured")}
+              bulkRemoveTitle={t("nativePlugins.removeConfiguredNote", { agent: agent.name })}
               bulkRemoveDisabled={preparingChange || togglingAllMcp !== null || mcpRows.length + mcpExternal.length === 0}
-              onBulkRemove={() => void clearMcp()}
+              onBulkRemove={mcpRows.length + mcpExternal.length > 0 ? () => void clearMcp() : undefined}
               bulkToggleLabel="全部"
               bulkEnabled={mcpRows.length > 0 && displayedMcpRows.every((item) => item.enabled === true)}
               bulkToggleDisabled={preparingChange || togglingMcp !== null || togglingAllMcp !== null || mcpRows.length === 0}

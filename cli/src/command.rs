@@ -855,6 +855,8 @@ fn status(
     ).map_err(CliError::from_legacy)?;
     let revision = inventory.revision.clone();
     let observed_at = inventory.observed_at.clone();
+    let host_mcps = inventory.host_mcps.clone();
+    let native_plugins = inventory.native_plugins.clone();
     let capability_errors = inventory
         .capability_errors
         .iter()
@@ -877,7 +879,7 @@ fn status(
         AssetDomain::Model => "model.status",
         AssetDomain::Skill => "skill.status",
     };
-    let mut lines = if managed.is_empty() && external.is_empty() {
+    let mut lines = if managed.is_empty() && external.is_empty() && host_mcps.is_empty() && native_plugins.is_empty() {
         vec![
             palette.dim(&format!("Observed at {observed_at} · revision {revision}")),
             palette.dim("No matching relationships or external observations."),
@@ -899,6 +901,20 @@ fn status(
         }
         lines
     };
+    if !host_mcps.is_empty() {
+        lines.push(String::new());
+        lines.push(palette.bold("Host MCPs (read-only; enablement and connection managed by the host)"));
+        for item in &host_mcps {
+            lines.push(format!("{} · {} · {} · {:?}", item.agent_id, item.server_id, item.provider, item.presence));
+        }
+    }
+    if !native_plugins.is_empty() {
+        lines.push(String::new());
+        lines.push(palette.bold("Host plugins (read-only; runtime state is not inferred)"));
+        for plugin in &native_plugins {
+            lines.push(format!("{} · {} · {} · {} · {:?} · {} components", plugin.agent_id, plugin.name, plugin.version, plugin.revision, plugin.presence, plugin.components.len()));
+        }
+    }
     for incident in &target_incidents {
         lines.push(String::new());
         lines.push(palette.yellow(&format!(
@@ -917,6 +933,8 @@ fn status(
         json!({
             "revision": revision,
             "observed_at": observed_at,
+            "host_mcps": host_mcps.iter().map(crate::projection::safe_host_mcp).collect::<Vec<_>>(),
+            "native_plugins": native_plugins.iter().map(crate::projection::safe_native_plugin).collect::<Vec<_>>(),
             "managed": managed.iter().map(safe_consumption_view).collect::<Vec<_>>(),
             "external": external.iter().map(safe_consumption_view).collect::<Vec<_>>(),
             "capability_errors": capability_errors,

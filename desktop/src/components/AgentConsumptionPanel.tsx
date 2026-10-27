@@ -1,6 +1,7 @@
 import { ResourceIcon } from "./resourcePresentation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { AssetRef, ConsumptionView, ConvergenceAction } from "../lib/types";
+import type { AssetRef, ConsumptionView, ConvergenceAction, HostMcpObservation } from "../lib/types";
+import { HostMcpCard } from "./NativePluginsPanel";
 import { assetIdentity } from "../lib/consumption";
 import {
   DownloadIcon,
@@ -178,6 +179,7 @@ export function AgentConsumptionPanel({
   manageLabel,
   rows,
   external,
+  hostMcps = [],
   externalMode = "summary",
   externalTitle = "外部配置",
   externalDescription = "尚未由 Arca 管理",
@@ -214,6 +216,7 @@ export function AgentConsumptionPanel({
   manageLabel: string;
   rows: ConsumptionView[];
   external: ConsumptionView[];
+  hostMcps?: HostMcpObservation[];
   externalMode?: "summary" | "cards";
   externalTitle?: string;
   externalDescription?: string;
@@ -254,6 +257,10 @@ export function AgentConsumptionPanel({
   ];
 
   const needle = query.trim().toLocaleLowerCase();
+  const hosts = domain === "mcp" ? hostMcps : [];
+  const filteredHosts = hosts.filter(item => !needle || `${item.name} ${item.server_id} ${item.provider}`.toLocaleLowerCase().includes(needle));
+  const total = items.length + hosts.length;
+  const visible = filteredHosts.length;
   const filtered = items.filter(({ item }) => {
     const presentation = present(item.asset);
     return !needle || `${presentation.name} ${presentation.description ?? ""} ${assetIdentity(item.asset)}`.toLocaleLowerCase().includes(needle);
@@ -267,7 +274,7 @@ export function AgentConsumptionPanel({
           {description && <p>{description}</p>}
         </div>
         <AgentResourceActions><div className="arca-agent-section-actions">
-          {bulkToggleLabel && bulkEnabled !== undefined && onBulkEnabledChange && (
+          {domainRows.length > 0 && bulkToggleLabel && bulkEnabled !== undefined && onBulkEnabledChange && (
             <div className="arca-agent-bulk-toggle">
               <span>{bulkToggleLabel}</span>
               <Switch
@@ -280,7 +287,7 @@ export function AgentConsumptionPanel({
               />
             </div>
           )}
-          {bulkRemoveLabel && onBulkRemove && (
+          {items.length > 0 && bulkRemoveLabel && onBulkRemove && (
             <button
               type="button"
               className="btn-danger"
@@ -306,9 +313,9 @@ export function AgentConsumptionPanel({
         </div></AgentResourceActions>
       </div>
 
-      {items.length > 0 && <div className="arca-consumption-search">
+      {total > 0 && <div className="arca-consumption-search">
         <SearchBar value={query} onChange={setQuery} placeholder={`搜索当前 ${title}`} />
-        <span role="status" aria-live="polite">{query ? `${filtered.length} / ${items.length} 项` : `${items.length} 项`}</span>
+        <span role="status" aria-live="polite">{query ? `${filtered.length + visible} / ${total} 项` : `${total} 项`}</span>
       </div>}
       {domain === "model" && description && <p className="arca-consumption-model-note">{description}</p>}
       {externalMode === "summary" && domainExternal.length > 0 && (
@@ -331,15 +338,16 @@ export function AgentConsumptionPanel({
         </div>
       )}
 
-      {items.length === 0 ? (
+      {total === 0 ? (
         <div className="arca-consumption-empty">
           <ResourceIcon domain={domain === "model-provider" ? "model" : domain} className="w-7 h-7" />
           <strong>{emptyTitle}</strong>
           {emptyDescription && <span>{emptyDescription}</span>}
           {emptyAction}
         </div>
-      ) : filtered.length === 0 ? <p role="status" className="arca-consumption-empty">没有匹配的 {title}</p> : (
+      ) : filtered.length + visible === 0 ? <p role="status" className="arca-consumption-empty">没有匹配的 {title}</p> : (
         <ul className="arca-consumption-list" data-columns={columns}>
+          {filteredHosts.map(item => <HostMcpCard key={`${item.agent_id}:${item.server_id}:${item.presence}`} item={item} />)}
           {filtered.map(({ item, external: isExternal }) => {
             const presentation = present(item.asset);
             const presentationDescription = presentation.description?.trim();
