@@ -56,6 +56,7 @@ export function NativePluginsPanel({ plugins }: { plugins: NativePluginObservati
         {versions.some(v => v.presence === "cache_only") && <p className="arca-native-muted">{t("nativePlugins.cacheRuntime")}</p>}
         <details><summary>{t("nativePlugins.componentsAndSources")}</summary>
           {versions.map(version => <div className="arca-native-version" key={`${version.revision}:${version.presence}:${version.version}`}>
+            <p><Presence value={version.presence} /></p>
             <strong>{version.version}</strong> <code title={version.revision}>{version.revision}</code>
             <p className="arca-native-muted">{version.enabled === null ? t("nativePlugins.enablementUnknown") : t(version.enabled ? "nativePlugins.enabled" : "nativePlugins.disabled")}</p>
             {version.source_paths.map(path => <code className="arca-native-path" key={path}>{path}</code>)}

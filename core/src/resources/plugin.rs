@@ -452,8 +452,8 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else {
-            host.roots.iter().map(|root| if host.adapter == "codex" { codex::cache_root(root) } else { expand_tilde(&root.path) }).collect()
+        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else {
+            host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()
 }

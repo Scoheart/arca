@@ -122,9 +122,14 @@ fn hooks(root: &Path, value: &Value, source: &str, depth: usize,
 }
 
 fn observe_package(host: &Host, source: &Root, root: &Path, identity: &str, result: &mut PluginScan) -> Result<(), ()> {
+    observe_selected_package(host, source, root, identity, None, result)
+}
+
+fn observe_selected_package(host: &Host, source: &Root, root: &Path, identity: &str,
+    selected: Option<(String, Arc<Value>, bool)>, result: &mut PluginScan) -> Result<(), ()> {
     result.budget.visit()?;
     checked_root(root)?;
-    let (manifest_path, manifest, standard) = manifest(host, root, result)?;
+    let (manifest_path, manifest, standard) = match selected { Some(value) => value, None => manifest(host, root, result)? };
     let name = metadata_name(manifest.get("name").and_then(Value::as_str).ok_or(())?).ok_or(())?;
     if standard && (name.len() > 64 || name.contains("--") || name.contains("..") || !name.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b".-".contains(&b)) || !name.as_bytes()[0].is_ascii_alphanumeric() || !name.as_bytes()[name.len()-1].is_ascii_alphanumeric()) { return Err(()); }
     let revision = root.file_name().and_then(|value| value.to_str()).and_then(metadata_name).ok_or(())?;
@@ -194,8 +199,70 @@ fn observe_package(host: &Host, source: &Root, root: &Path, identity: &str, resu
     Ok(())
 }
 
+fn resources_root(source: &Root) -> PathBuf {
+    std::env::var_os("CODEX_ELECTRON_BUNDLED_PLUGINS_RESOURCES_PATH")
+        .filter(|value| !value.to_string_lossy().trim().is_empty()).map(|value| PathBuf::from(value.to_string_lossy().trim()))
+        .unwrap_or_else(|| expand_tilde(&source.path))
+}
+
+fn packaged_marketplaces(resources: &Path) -> [PathBuf; 2] {
+    [resources.join("plugins/openai-bundled"), resources.join("app.asar.unpacked/plugins/openai-bundled")]
+}
+
+fn bundled_marketplace(host: &Host, source: &Root, root: &Path, result: &mut PluginScan) -> Result<bool, ()> {
+    checked_root(root)?;
+    let index_path = ".agents/plugins/marketplace.json";
+    let Some(index) = optional_json(root, index_path, &mut result.budget)? else { return Ok(false); };
+    let market = index.get("name").and_then(Value::as_str).and_then(metadata_name).ok_or(())?;
+    if market != "openai-bundled" { return Err(()); }
+    let entries = index.get("plugins").and_then(Value::as_array).filter(|entries| entries.len() <= MAX_ENTRIES).ok_or(())?;
+    let mut names = BTreeSet::new(); let mut packages = Vec::new();
+    // Native bundled resolution validates the index and every native manifest
+    // before selecting this resource root. Never infer installation from it.
+    for entry in entries {
+        result.budget.visit()?;
+        let name = entry.get("name").and_then(Value::as_str).and_then(metadata_name).ok_or(())?;
+        if name.contains(['/', '\\']) || matches!(name.as_str(), "." | "..") || !names.insert(name.clone()) { return Err(()); }
+        let local = entry.get("source").ok_or(())?;
+        if local.get("source").and_then(Value::as_str) != Some("local") { return Err(()); }
+        let input = local.get("path").and_then(Value::as_str).ok_or(())?;
+        let path = relative(root, input)?; checked_root(&path)?;
+        let manifest_path = ".codex-plugin/plugin.json";
+        let value = optional_json(&path, manifest_path, &mut result.budget)?.ok_or(())?;
+        if value.get("name").and_then(Value::as_str).and_then(metadata_name).as_ref() != Some(&name)
+            || value.get("version").and_then(Value::as_str).and_then(metadata_name).is_none() { return Err(()); }
+        packages.push((path, name, value));
+    }
+    for (path, name, value) in packages {
+        let identity = format!("{name}@{market}");
+        observe_selected_package(host, source, &path, &identity, Some((".codex-plugin/plugin.json".into(), value, false)), result)?;
+        let plugin = result.plugins.last_mut().ok_or(())?;
+        // Separate physical app bundles even when their plugin versions match.
+        plugin.revision = format!("bundled:{}", collapse_home(root));
+        plugin.source_paths.push(collapse_home(&root.join(index_path)));
+    }
+    Ok(true)
+}
+
+pub(super) fn watch_paths(host: &Host) -> Vec<PathBuf> {
+    host.roots.iter().flat_map(|source| match source.layout.as_str() {
+        "codex_active_cache" => vec![cache_root(source)],
+        "codex_bundled_resources" => packaged_marketplaces(&resources_root(source)).to_vec(),
+        _ => Vec::new(),
+    }).filter(|path| path.is_absolute() && checked_root(path).is_ok()).collect::<BTreeSet<_>>().into_iter().collect()
+}
+
 pub(super) fn observe(host: &Host, result: &mut PluginScan) {
+    let mut resources = BTreeSet::new();
     for source in &host.roots {
+        if source.layout == "codex_bundled_resources" {
+            let resource = resources_root(source);
+            if !resources.insert(resource.clone()) { continue; }
+            for root in packaged_marketplaces(&resource) {
+                match bundled_marketplace(host, source, &root, result) { Ok(true) => break, Ok(false) => {}, Err(()) => result.unavailable = true }
+            }
+            continue;
+        }
         if source.layout != "codex_active_cache" { result.unavailable = true; continue; }
         let markets = match dirs(&cache_root(source), &mut result.budget) { Ok(paths) => paths, Err(()) => { result.unavailable = true; continue; } };
         for market in markets {
@@ -223,6 +290,30 @@ mod tests {
         let root = home.home.join("fixture");
         fs::create_dir_all(root.join(".codex-plugin")).unwrap();
         root
+    }
+
+    #[test]
+    fn desktop_bundle_requires_native_marketplace_and_matching_manifests_and_stays_read_only() {
+        let home = TestHome::new("codex-desktop-bundle");
+        let host = hosts().iter().find(|host| host.agent_id == "codex-desktop").unwrap();
+        let resources = home.home.join("codex-app-resources"); let root = resources.join("plugins/openai-bundled");
+        let package = root.join("plugins/fixture");
+        fs::create_dir_all(root.join(".agents/plugins")).unwrap(); fs::create_dir_all(package.join(".codex-plugin")).unwrap();
+        fs::write(root.join(".agents/plugins/marketplace.json"), r#"{"name":"openai-bundled","plugins":[{"name":"fixture","source":{"source":"local","path":"./plugins/fixture"}}]}"#).unwrap();
+        fs::write(package.join(".codex-plugin/plugin.json"), r#"{"name":"fixture","version":"1.0.0","mcpServers":"./.mcp.json"}"#).unwrap();
+        fs::write(package.join(".mcp.json"), r#"{"mcpServers":{"bundled-server":{"env":{"TOKEN":"SECRET_SENTINEL"}}}}"#).unwrap();
+        // The desktop resource reader uses its exact native legacy manifest.
+        fs::write(package.join("plugin.json"), r#"{"$schema":"https://agent-plugins.org/schemas/99.0.0/plugin.schema.json"}"#).unwrap();
+        let source = &host.roots[1]; let mut scan = PluginScan::default();
+        assert!(bundled_marketplace(host, source, &root, &mut scan).unwrap()); normalize(&mut scan);
+        assert!(!scan.unavailable); assert_eq!(scan.plugins.len(), 1); assert_eq!(scan.plugins[0].plugin_id, "fixture@openai-bundled");
+        assert_eq!(scan.plugins[0].presence, PluginPresence::Bundled); assert_eq!(scan.plugins[0].enabled, None);
+        assert_eq!(scan.mcps[0].server_id, "bundled-server"); assert!(!serde_json::to_string(&scan.plugins).unwrap().contains("SECRET_SENTINEL"));
+        assert!(watch_paths(host).iter().all(|path| path.starts_with(&home.home)));
+        fs::write(package.join(".codex-plugin/plugin.json"), r#"{"name":"mismatch","version":"1.0.0"}"#).unwrap();
+        let mut scan = PluginScan::default(); assert!(bundled_marketplace(host, source, &root, &mut scan).is_err()); assert!(scan.plugins.is_empty());
+        fs::write(root.join(".agents/plugins/marketplace.json"), r#"{"name":"openai-bundled","plugins":[{"name":"outside","source":{"source":"local","path":"../outside"}}]}"#).unwrap();
+        let mut scan = PluginScan::default(); assert!(bundled_marketplace(host, source, &root, &mut scan).is_err()); assert!(scan.plugins.is_empty());
     }
 
     #[test]

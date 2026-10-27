@@ -75,6 +75,7 @@ impl TestHome {
         // too, so inherited CLI variables cannot escape the temporary HOME.
         let saved_native_plugin_homes = [
             ("CODEX_HOME", home.join(".codex")),
+            ("CODEX_ELECTRON_BUNDLED_PLUGINS_RESOURCES_PATH", home.join("codex-app-resources")),
             ("CLAUDE_CONFIG_DIR", home.join(".claude")),
             ("GEMINI_CLI_HOME", home.clone()),
             ("XDG_CONFIG_HOME", home.join(".config")),
