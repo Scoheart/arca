@@ -225,5 +225,33 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "workbuddy",
+    "adapter": "workbuddy",
+    "docs_url": "https://www.workbuddy.ai/docs/workbuddy/Overview",
+    "manifest_paths": [
+      "plugin.json",
+      ".codebuddy-plugin/plugin.json",
+      ".workbuddy-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json",
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.workbuddy-ai",
+        "layout": "workbuddy_installed",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/WorkBuddy AI.app/Contents/Resources/app.asar.unpacked/resources/plugins/workbuddy-builtin",
+        "layout": "workbuddy_bundled",
+        "presence": "bundled"
+      }
+    ]
   }
 ]
