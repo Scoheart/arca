@@ -1466,6 +1466,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "helmholtz-blablador",
+        name: "Helmholtz Blablador",
+        default_base_url: Some("https://api.blablador.fz-juelich.de/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2217,6 +2224,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "www.whatstoken.ai" => "whatstoken",
         "discovery-api.intern-ai.org.cn" => "intern-inkstone",
         "api.swarms.world" => "swarms",
+        "api.blablador.fz-juelich.de" => "helmholtz-blablador",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7893,6 +7901,13 @@ mod tests {
             ("https://swarms.world/v1", "custom"),
             ("https://api.swarms.ai/v1", "custom"),
             ("https://api.swarms.world.evil.test/v1", "custom"),
+            ("https://api.blablador.fz-juelich.de/v1", "helmholtz-blablador"),
+            ("https://api.blablador.fz-juelich.de/v1/chat/completions", "helmholtz-blablador"),
+            ("https://api.blablador.fz-juelich.de/v1/models", "helmholtz-blablador"),
+            ("https://blablador.fz-juelich.de/v1", "custom"),
+            ("http://blablador.fz-juelich.de", "custom"),
+            ("https://www.blablador.fz-juelich.de/v1", "custom"),
+            ("https://api.blablador.fz-juelich.de.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7975,7 +7990,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 162);
+        assert_eq!(list_providers().len(), 163);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8246,6 +8261,39 @@ mod tests {
             .unwrap();
         let serialized = serde_json::to_value(inworld).unwrap();
         assert_eq!(serialized["model_discovery_supported"], false);
+        let blablador = list_providers()
+            .iter()
+            .find(|provider| provider.id == "helmholtz-blablador")
+            .unwrap();
+        let serialized = serde_json::to_value(blablador).unwrap();
+        assert_eq!(blablador.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(blablador.category, "gateway");
+        assert_eq!(
+            blablador.default_base_url,
+            Some("https://api.blablador.fz-juelich.de/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.blablador.fz-juelich.de/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://codebase.helmholtz.cloud/-/user_settings/personal_access_tokens"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(

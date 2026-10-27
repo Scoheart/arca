@@ -622,6 +622,13 @@
       "kind": "api-key"
     }
   },
+  "helmholtz-blablador": {
+    "docs_url": "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/",
+    "portal": {
+      "url": "https://codebase.helmholtz.cloud/-/user_settings/personal_access_tokens",
+      "kind": "api-key"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
