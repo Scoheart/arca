@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.25.0](https://github.com/Scoheart/arca/compare/v2.24.0...v2.25.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe Antigravity App native packages ([44fd6a6](https://github.com/Scoheart/arca/commit/44fd6a6f0751e5f0e45298f05be7ad1fa35ca3a4))
+
 ## [2.24.0](https://github.com/Scoheart/arca/compare/v2.23.0...v2.24.0) (2026-10-27)
 
 ### Changes
