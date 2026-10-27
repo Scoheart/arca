@@ -157,5 +157,28 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "copilot-cli",
+    "adapter": "copilot",
+    "docs_url": "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference",
+    "manifest_paths": [
+      ".plugin/plugin.json",
+      "plugin.json",
+      ".github/plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      ".github/mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.copilot",
+        "layout": "copilot_global",
+        "presence": "installed"
+      }
+    ]
   }
 ]

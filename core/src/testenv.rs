@@ -84,6 +84,13 @@ impl TestHome {
             ("OPENCODE_CONFIG_DIR", home.join(".config/opencode")),
             ("OPENCODE_PLUGIN_META_FILE", home.join(".local/state/opencode/plugin-meta.json")),
             ("OPENCODE_CONFIG_CONTENT", PathBuf::new()),
+            ("COPILOT_HOME", home.join(".copilot")),
+            ("COPILOT_CACHE_HOME", home.join("copilot-cache")),
+            ("COPILOT_PKG_CACHE_HOME", home.join("copilot-pkg-cache")),
+            ("COPILOT_CLI_DIST_DIR", home.join("copilot-dist")),
+            ("COPILOT_CLI_RESOLVED_DIST_DIR", home.join("copilot-resolved-dist")),
+            ("XDG_CACHE_HOME", home.join(".cache")),
+            ("LOCALAPPDATA", home.join("AppData/Local")),
         ].into_iter().map(|(key, path)| {
             let previous = std::env::var_os(key);
             std::env::set_var(key, path);
