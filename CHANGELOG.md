@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.20.0](https://github.com/Scoheart/arca/compare/v2.19.0...v2.20.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Qwen Code extensions and bundled Skills ([f663d7d](https://github.com/Scoheart/arca/commit/f663d7d32b54d399bebf496367e24cd9ea60a33d))
+
 ## [2.19.0](https://github.com/Scoheart/arca/compare/v2.18.0...v2.19.0) (2026-10-27)
 
 ### Changes
