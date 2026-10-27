@@ -10,7 +10,7 @@
   "qoder-cli": "cli",
   "qoder": "ide",
   "qoder-desktop": "desktop",
-  "antigravity": "ide",
+  "antigravity": "desktop",
   "antigravity-cli": "cli",
   "continue": "plugin",
   "continue-cli": "cli",

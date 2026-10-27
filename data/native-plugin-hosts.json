@@ -312,5 +312,29 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "antigravity",
+    "adapter": "antigravity",
+    "docs_url": "https://antigravity.google/docs/plugins",
+    "manifest_paths": [
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp_config.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.gemini/config",
+        "layout": "antigravity_global",
+        "presence": "installed"
+      },
+      {
+        "path": "~/.gemini/antigravity/builtin",
+        "layout": "antigravity_builtin",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

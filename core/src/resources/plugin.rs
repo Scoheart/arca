@@ -20,6 +20,7 @@ mod qwen;
 mod kiro;
 mod workbuddy;
 mod qoder;
+mod antigravity;
 
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
@@ -429,6 +430,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "kiro" { kiro::observe(host, &mut result); continue; }
         if host.adapter == "workbuddy" { workbuddy::observe(host, &mut result); continue; }
         if host.adapter == "qoder" { qoder::observe(host, &mut result); continue; }
+        if host.adapter == "antigravity" { antigravity::observe(host, &mut result); continue; }
         if host.adapter != "cursor" { result.unavailable = true; continue; }
         for source in &host.roots {
             let root = expand_tilde(&source.path);
