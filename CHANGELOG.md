@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.19.0](https://github.com/Scoheart/arca/compare/v2.18.0...v2.19.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Copilot CLI native resources ([8311cdb](https://github.com/Scoheart/arca/commit/8311cdbccbcdc1c5e1f8a75bd631820bd8ec30b7))
+
 ## [2.18.0](https://github.com/Scoheart/arca/compare/v2.17.0...v2.18.0) (2026-10-27)
 
 ### Changes
