@@ -281,5 +281,36 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "qoder",
+    "adapter": "qoder",
+    "docs_url": "https://docs.qoder.com/extensions/plugins",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json",
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.qoder",
+        "layout": "qoder_installed",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/Qoder IDE.app/Contents/Resources/app",
+        "layout": "qoder_resources",
+        "presence": "bundled"
+      },
+      {
+        "path": "/Applications/Qoder IDE.app/Contents/Resources/app/resources/bin/aarch64_darwin/qoder-computer-use-plugin-darwin-arm64.zip",
+        "layout": "qoder_computer_use_archive",
+        "presence": "bundled"
+      }
+    ]
   }
 ]
