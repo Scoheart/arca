@@ -51,16 +51,6 @@ fn safe_root(path: &Path, config: &Path) -> Result<(), ()> {
     checked_root(path)
 }
 
-fn regular(path: &Path) -> Result<bool, ()> {
-    checked_root(path)?;
-    match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.file_type().is_file() => Ok(open_confined_file(path)?.metadata().map_err(|_| ())?.is_file()),
-        Ok(metadata) if metadata.file_type().is_dir() => Ok(false),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
-        _ => Err(()),
-    }
-}
-
 fn budget_available(budget: &ScanBudget) -> bool {
     budget.visited <= MAX_SCAN_ENTRIES && budget.references <= MAX_REFERENCES && budget.bytes < MAX_READ_BYTES
 }
@@ -98,7 +88,7 @@ fn markdown_files(root: &Path, input: &str, kind: PluginComponentKind, depth: us
     components: &mut Vec<PluginComponent>, budget: &mut ScanBudget) -> Result<(), ()> {
     if depth > 8 { return Err(()); }
     let path = relative(root, input)?;
-    if regular(&path)? {
+    if regular_metadata_file(&path)? {
         let name = path.file_name().and_then(|name| name.to_str()).ok_or(())?;
         let wanted = if kind == PluginComponentKind::Agent { name.ends_with(".agent.md") } else { name.ends_with(".md") };
         return if wanted { add(kind, input, &path, components) } else { Ok(()) };
@@ -115,48 +105,21 @@ fn markdown_files(root: &Path, input: &str, kind: PluginComponentKind, depth: us
 
 fn skills(root: &Path, input: &str, standard: bool, components: &mut Vec<PluginComponent>, budget: &mut ScanBudget) -> Result<(), ()> {
     let path = relative(root, input)?; checked_root(&path)?;
-    if !standard && regular(&path)? {
+    if !standard && regular_metadata_file(&path)? {
         if path.file_name().is_none_or(|name| name != "SKILL.md") { return Err(()); }
         return add(PluginComponentKind::Skill, input, &path, components);
     }
-    if !standard && regular(&path.join("SKILL.md"))? {
+    if !standard && regular_metadata_file(&path.join("SKILL.md"))? {
         return add(PluginComponentKind::Skill, &format!("{input}/SKILL.md"), &path.join("SKILL.md"), components);
     }
     for directory in dirs(&path, budget)? {
         let skill = directory.join("SKILL.md");
-        if regular(&skill)? {
+        if regular_metadata_file(&skill)? {
             let name = skill.strip_prefix(root).map_err(|_| ())?.to_string_lossy();
             add(PluginComponentKind::Skill, &name, &skill, components)?;
         }
     }
     Ok(())
-}
-
-fn string_map(value: &Value) -> bool { value.as_object().is_some_and(|object| object.values().all(Value::is_string)) }
-
-fn valid_standard_server(value: &Value) -> bool {
-    // Inspect the supported transport declaration shape only. The host still
-    // owns URL/path semantics, reserved variables, permissions and activation.
-    let Some(server) = value.as_object() else { return false; };
-    let nonempty = |key: &str| server.get(key).and_then(Value::as_str).is_some_and(|value| !value.is_empty());
-    match server.get("type").and_then(Value::as_str) {
-        Some("stdio") => {
-            if !nonempty("command") || server.keys().any(|key| !["type", "command", "args", "env", "cwd"].contains(&key.as_str())) { return false; }
-            if server.get("args").is_some_and(|args| !args.as_array().is_some_and(|args| args.iter().all(Value::is_string))) { return false; }
-            if server.get("env").is_some_and(|env| !string_map(env) || env.get("PLUGIN_ROOT").is_some() || env.get("PLUGIN_DATA").is_some()) { return false; }
-            if let Some(cwd) = server.get("cwd") {
-                let Some(cwd) = cwd.as_str() else { return false; };
-                let tail = if let Some(tail) = cwd.strip_prefix("./") { Some(tail) }
-                    else { ["${PLUGIN_ROOT}", "${PLUGIN_DATA}"].into_iter().find_map(|prefix| cwd.strip_prefix(prefix).filter(|tail| tail.is_empty() || tail.starts_with('/')).map(|tail| tail.strip_prefix('/').unwrap_or(tail))) };
-                if tail.is_none_or(|tail| Path::new(tail).components().any(|c| matches!(c, Component::ParentDir | Component::RootDir | Component::Prefix(_)))) { return false; }
-            }
-            true
-        },
-        Some("streamable-http" | "sse") => nonempty("url")
-            && server.keys().all(|key| ["type", "url", "headers"].contains(&key.as_str()))
-            && server.get("headers").is_none_or(string_map),
-        _ => false,
-    }
 }
 
 fn servers(value: &Value, path: &Path, kind: PluginComponentKind, standard: bool,
@@ -165,7 +128,7 @@ fn servers(value: &Value, path: &Path, kind: PluginComponentKind, standard: bool
     if values.len() > MAX_COMPONENTS { return Err(()); }
     for (name, config) in values {
         if metadata_name(name).is_none() || matches!(name.as_str(), "__proto__" | "constructor" | "prototype") { *unavailable = true; continue; }
-        if !config.is_object() || (standard && !valid_standard_server(config)) { *unavailable = true; continue; }
+        if !config.is_object() || (standard && !standard_mcp_declaration(config)) { *unavailable = true; continue; }
         add(kind.clone(), name, path, components)?;
         if kind == PluginComponentKind::Mcp { components.last_mut().ok_or(())?.native_id = Some(name.clone()); }
     }
@@ -242,7 +205,7 @@ fn observe_package(host: &Host, root: &Path, identity: &str, presence: PluginPre
         Ok(paths) => for input in paths { if skills(root, input, standard.is_some(), &mut components, &mut result.budget).is_err() { result.unavailable = true; } },
         Err(()) => result.unavailable = true,
     }
-    if standard.is_none() && manifest.get("skills").is_none() && !root.join("skills").try_exists().map_err(|_| ())? && regular(&root.join("SKILL.md"))? {
+    if standard.is_none() && manifest.get("skills").is_none() && !root.join("skills").try_exists().map_err(|_| ())? && regular_metadata_file(&root.join("SKILL.md"))? {
         add(PluginComponentKind::Skill, "SKILL.md", &root.join("SKILL.md"), &mut components)?;
     }
     for (key, default, kind) in [("agents", Some("agents"), PluginComponentKind::Agent), ("commands", None, PluginComponentKind::Command), ("rules", None, PluginComponentKind::Rule)] {
@@ -370,9 +333,9 @@ fn preferences(host: &Host, config: &Path, installed: &BTreeSet<String>, result:
 fn distribution(host: &Host, root: &Path, cache_version: Option<&str>, result: &mut PluginScan) -> Result<(), ()> {
     result.budget.visit()?; checked_root(root)?;
     if !root.try_exists().map_err(|_| ())? { return Ok(()); }
-    if cache_version.is_some() && !regular(&root.join(".extraction-complete"))? { return Ok(()); }
+    if cache_version.is_some() && !regular_metadata_file(&root.join(".extraction-complete"))? { return Ok(()); }
     for input in ["index.js".to_string(), "app.js".into(), "cli-main.js".into(), format!("prebuilds/{}/runtime.node", native_platform())] {
-        if !regular(&relative(root, &input)?)? { return Err(()); }
+        if !regular_metadata_file(&relative(root, &input)?)? { return Err(()); }
     }
     let package = optional_json(root, "package.json", &mut result.budget)?.ok_or(())?;
     let version = package.get("version").and_then(Value::as_str).ok_or(())?;

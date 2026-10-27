@@ -180,5 +180,30 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "qwen-code",
+    "adapter": "qwen",
+    "docs_url": "https://qwenlm.github.io/qwen-code-docs/en/users/extension/introduction/",
+    "manifest_paths": [
+      "plugin.json",
+      "qwen-extension.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.qwen/extensions",
+        "layout": "qwen_extensions",
+        "presence": "installed"
+      },
+      {
+        "path": "qwen",
+        "layout": "qwen_bundled_skills",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

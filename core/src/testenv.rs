@@ -78,6 +78,7 @@ impl TestHome {
             ("CODEX_ELECTRON_BUNDLED_PLUGINS_RESOURCES_PATH", home.join("codex-app-resources")),
             ("CLAUDE_CONFIG_DIR", home.join(".claude")),
             ("GEMINI_CLI_HOME", home.clone()),
+            ("QWEN_HOME", home.join(".qwen")),
             ("XDG_CONFIG_HOME", home.join(".config")),
             ("XDG_STATE_HOME", home.join(".local/state")),
             ("OPENCODE_CONFIG", home.join(".config/opencode/opencode.json")),

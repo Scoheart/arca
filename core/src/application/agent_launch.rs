@@ -94,7 +94,7 @@ fn application_matching(names: &[String], bundle_ids: &[String]) -> Option<PathB
         }))
 }
 
-fn find_command(name: &str) -> Option<PathBuf> {
+pub(crate) fn find_command(name: &str) -> Option<PathBuf> {
     let direct = expand(name);
     if direct.is_absolute() { return executable(&direct).then_some(direct); }
     if name.is_empty() || name.starts_with('-') || name.contains(['/', '\\']) || name.chars().any(char::is_whitespace) {

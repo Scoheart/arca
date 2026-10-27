@@ -16,6 +16,7 @@ mod claude;
 mod gemini;
 mod opencode;
 mod copilot;
+mod qwen;
 
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
@@ -248,6 +249,42 @@ fn metadata_name(value: &str) -> Option<String> {
     (!value.is_empty() && value.len() <= 240 && !value.chars().any(char::is_control)).then(|| value.to_string())
 }
 
+fn regular_metadata_file(path: &Path) -> Result<bool, ()> {
+    checked_root(path)?;
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_file() => Ok(open_confined_file(path)?.metadata().map_err(|_| ())?.is_file()),
+        Ok(metadata) if metadata.file_type().is_dir() => Ok(false),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        _ => Err(()),
+    }
+}
+
+/// Supported Agent Plugins transport declaration shape. Native parsers still
+/// own semantic acceptance, path/URL resolution, permissions and activation.
+fn standard_mcp_declaration(value: &Value) -> bool {
+    let Some(server) = value.as_object() else { return false; };
+    let nonempty = |key: &str| server.get(key).and_then(Value::as_str).is_some_and(|value| !value.is_empty());
+    let string_map = |value: &Value| value.as_object().is_some_and(|object| object.values().all(Value::is_string));
+    match server.get("type").and_then(Value::as_str) {
+        Some("stdio") => {
+            if !nonempty("command") || server.keys().any(|key| !["type", "command", "args", "env", "cwd"].contains(&key.as_str())) { return false; }
+            if server.get("args").is_some_and(|args| !args.as_array().is_some_and(|args| args.iter().all(Value::is_string))) { return false; }
+            if server.get("env").is_some_and(|env| !string_map(env) || env.get("PLUGIN_ROOT").is_some() || env.get("PLUGIN_DATA").is_some()) { return false; }
+            if let Some(cwd) = server.get("cwd") {
+                let Some(cwd) = cwd.as_str() else { return false; };
+                let tail = if let Some(tail) = cwd.strip_prefix("./") { Some(tail) }
+                    else { ["${PLUGIN_ROOT}", "${PLUGIN_DATA}"].into_iter().find_map(|prefix| cwd.strip_prefix(prefix).filter(|tail| tail.is_empty() || tail.starts_with('/')).map(|tail| tail.strip_prefix('/').unwrap_or(tail))) };
+                if tail.is_none_or(|tail| Path::new(tail).components().any(|c| matches!(c, Component::ParentDir | Component::RootDir | Component::Prefix(_)))) { return false; }
+            }
+            true
+        },
+        Some("streamable-http" | "sse") => nonempty("url")
+            && server.keys().all(|key| ["type", "url", "headers"].contains(&key.as_str()))
+            && server.get("headers").is_none_or(string_map),
+        _ => false,
+    }
+}
+
 fn mcp_keys(value: &Value) -> Result<Vec<String>, ()> {
     let Some(servers) = value.get("mcpServers") else { return Ok(Vec::new()); };
     let servers = servers.as_object().ok_or(())?;
@@ -385,6 +422,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "gemini" { gemini::observe(host, &mut result); continue; }
         if host.adapter == "opencode" { opencode::observe(host, &mut result); continue; }
         if host.adapter == "copilot" { copilot::observe(host, &mut result); continue; }
+        if host.adapter == "qwen" { qwen::observe(host, &mut result); continue; }
         if host.adapter != "cursor" { result.unavailable = true; continue; }
         for source in &host.roots {
             let root = expand_tilde(&source.path);
@@ -454,7 +492,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()
