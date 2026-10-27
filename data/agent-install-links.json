@@ -470,5 +470,9 @@
   "fx": {
     "url": "https://fx.sh/docs/getting-started/authentication",
     "label": "安装文档"
+  },
+  "qwenpaw": {
+    "url": "https://qwenpaw.agentscope.io/docs/quickstart",
+    "label": "安装文档"
   }
 }
