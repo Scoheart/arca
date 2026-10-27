@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.21.0](https://github.com/Scoheart/arca/compare/v2.20.0...v2.21.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Kiro registered Powers metadata ([48383e6](https://github.com/Scoheart/arca/commit/48383e60f9abed61cdeb9a46116ef723ec355cdc))
+
 ## [2.20.0](https://github.com/Scoheart/arca/compare/v2.19.0...v2.20.0) (2026-10-27)
 
 ### Changes
