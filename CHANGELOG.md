@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.15.0](https://github.com/Scoheart/arca/compare/v2.14.0...v2.15.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe native Gemini CLI extensions ([14ec585](https://github.com/Scoheart/arca/commit/14ec58582dedd3161e3ca484f65f4f3585a0ae1e))
+
 ## [2.14.0](https://github.com/Scoheart/arca/compare/v2.13.0...v2.14.0) (2026-10-27)
 
 ### Changes
