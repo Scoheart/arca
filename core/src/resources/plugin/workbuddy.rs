@@ -8,6 +8,14 @@ const LEGACY_MANIFESTS: [&str; 3] = [".codebuddy-plugin/plugin.json", ".workbudd
 const MARKETPLACE: &str = ".codebuddy-plugin/marketplace.json";
 
 fn source_root(source: &Root) -> PathBuf {
+    if source.layout == "workbuddy_installed" {
+        for variable in ["WORKBUDDY_CONFIG_DIR", "CODEBUDDY_CONFIG_DIR"] {
+            if let Ok(value) = std::env::var(variable) {
+                let value = value.trim();
+                if !value.is_empty() { return PathBuf::from(value); }
+            }
+        }
+    }
     if source.path.starts_with("/Applications/") { crate::paths::system_probe_path(&source.path) }
     else { expand_tilde(&source.path) }
 }
@@ -49,7 +57,7 @@ fn standard_manifest(value: &Value) -> bool {
             "keywords" => value.as_array().is_some_and(|values| values.iter().all(Value::is_string)),
             "author" => value.as_object().is_some_and(|author| author.iter().all(|(key, value)| ["name","email","url"].contains(&key.as_str()) && value.is_string())),
             "extensions" => true, // The native portable reader ignores invalid vendor metadata.
-            "$schema" | "name" | "displayName" | "version" | "description" | "homepage" | "repository" | "license" => value.is_string(),
+            "$schema" | "name" | "version" | "description" | "homepage" | "repository" | "license" => value.is_string(),
             _ => true, // Non-standard manifest fields are ignored, never components.
         })
 }
@@ -199,6 +207,7 @@ fn mcps(root: &Path, manifest: &Value, source: &str, standard: bool,
     if let Some(value) = manifest.get("mcpServers") {
         let observed = match value {
             Value::String(input) if !input.is_empty() => mcp_file(root, input, false, output, result),
+            Value::String(_) => Ok(()),
             Value::Object(_) => servers(value, &root.join(source), false, output, result),
             Value::Null | Value::Bool(false) => Ok(()), _ => Err(()),
         };
@@ -262,7 +271,7 @@ fn lsp(root: &Path, source: &str, manifest: &Value, output: &mut Vec<PluginCompo
     let (path, value) = match configured {
         Some(Value::Object(value)) if !value.is_empty() => (root.join(source), Arc::new(Value::Object(value.clone()))),
         _ => {
-            let custom = configured.and_then(Value::as_str);
+            let custom = configured.and_then(Value::as_str).filter(|input| !input.is_empty());
             let mut selected = None;
             if let Some(input) = custom {
                 if let Some(value) = optional_json(root, input, &mut result.budget)? {
@@ -444,7 +453,7 @@ mod tests {
         let home = TestHome::new("workbuddy-empty-hooks"); let (root, record) = install(&home, "docs", "1", "user");
         register(&home, serde_json::json!({"docs@market":[record]}));
         for hint in ["", "./", ".\\"] {
-            write(&root, LEGACY_MANIFESTS[0], &serde_json::json!({"name":"docs","version":"1","hooks":hint}).to_string());
+            write(&root, LEGACY_MANIFESTS[0], &serde_json::json!({"name":"docs","version":"1","hooks":hint,"mcpServers":"","lspServers":""}).to_string());
             write(&root, "hooks/hooks.json", r#"{"hooks":{"must-not-fall-back":[]}}"#);
             let result = scan(); assert!(!result.unavailable); assert_eq!(result.plugins.len(), 1);
             assert!(result.plugins[0].components.is_empty()); assert!(result.mcps.is_empty());
@@ -498,7 +507,7 @@ mod tests {
     fn standard_manifest_precedence_restricts_components_and_rejects_unknown_schemas() {
         let home = TestHome::new("workbuddy-standard"); let (root, record) = install(&home, "example", "1", "user");
         register(&home, serde_json::json!({"example@market":[record]}));
-        write(&root, "plugin.json", &serde_json::json!({"$schema":SCHEMA,"name":"example","version":"1","hooks":{"Ignored":[]},"extensions":{"vendor":{"private":"SECRET_SENTINEL"}}}).to_string());
+        write(&root, "plugin.json", &serde_json::json!({"$schema":SCHEMA,"name":"example","version":"1","displayName":{"unknown":"SECRET_SENTINEL"},"hooks":{"Ignored":[]},"extensions":{"vendor":{"private":"SECRET_SENTINEL"}}}).to_string());
         for input in ["skills/one/SKILL.md","skills/deep/nested/SKILL.md","agents/ignored.md","rules/ignored.md","hooks/ignored.md"] { write(&root, input, "SECRET_SENTINEL"); }
         write(&root, ".mcp.json", r#"{"mcpServers":{"legacy":{"command":"SECRET_SENTINEL"}}}"#);
         write(&root, "mcp.json", &serde_json::json!({"$schema":MCP_SCHEMA,"mcpServers":{
@@ -541,5 +550,37 @@ mod tests {
         let result = scan(); assert!(result.unavailable); assert!(result.plugins[0].components.is_empty());
         fs::remove_dir_all(&root).unwrap(); std::os::unix::fs::symlink(&outside, &root).unwrap();
         let result = scan(); assert!(result.unavailable); assert_eq!(result.plugins[0].presence, PluginPresence::Declared);
+    }
+
+    #[test]
+    fn cn_and_international_registries_keep_independent_agent_identity_and_versions() {
+        let home = TestHome::new("workbuddy-products"); let (_, ai) = install(&home, "example", "1", "user");
+        register(&home, serde_json::json!({"example@market":[ai]}));
+        let config = home.home.join(".workbuddy"); let root = config.join("plugins/cache/market/example/2");
+        write(&root, LEGACY_MANIFESTS[1], r#"{"name":"example","version":"2"}"#);
+        write(&config, "plugins/installed_plugins.json", &serde_json::json!({"plugins":{"example@market":[{"scope":"user","version":"2","installPath":root}]}}).to_string());
+        let cn = hosts().iter().find(|host| host.agent_id == "workbuddy-cn").unwrap();
+        let mut result = scan(); observe(cn, &mut result); normalize(&mut result);
+        assert!(!result.unavailable); assert_eq!(result.plugins.len(), 2);
+        assert!(result.plugins.iter().any(|plugin| plugin.agent_id == "workbuddy" && plugin.version == "1"));
+        assert!(result.plugins.iter().any(|plugin| plugin.agent_id == "workbuddy-cn" && plugin.version == "2"));
+    }
+
+    #[test]
+    fn native_config_overrides_select_registry_and_watch_root_without_relative_path_guessing() {
+        let home = TestHome::new("workbuddy-overrides");
+        let fallback = home.home.join("fallback"); let primary = home.home.join("primary");
+        for (config, name) in [(&fallback, "fallback"), (&primary, "primary")] {
+            let root = config.join("plugins/cache/market").join(name).join("1");
+            write(&root, LEGACY_MANIFESTS[0], &serde_json::json!({"name":name,"version":"1"}).to_string());
+            let id = format!("{name}@market");
+            write(config, "plugins/installed_plugins.json", &serde_json::json!({"plugins":{id:[{"scope":"user","version":"1","installPath":root}]}}).to_string());
+        }
+        std::env::set_var("CODEBUDDY_CONFIG_DIR", &fallback); std::env::set_var("WORKBUDDY_CONFIG_DIR", "  ");
+        assert_eq!(scan().plugins[0].name, "fallback"); assert!(watch_paths(host()).contains(&fallback));
+        std::env::set_var("WORKBUDDY_CONFIG_DIR", &primary);
+        let result = scan(); assert!(!result.unavailable); assert_eq!(result.plugins[0].name, "primary"); assert!(watch_paths(host()).contains(&primary));
+        std::env::set_var("WORKBUDDY_CONFIG_DIR", "relative");
+        let result = scan(); assert!(result.unavailable); assert!(result.plugins.is_empty());
     }
 }

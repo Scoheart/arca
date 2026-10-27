@@ -253,5 +253,33 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "workbuddy-cn",
+    "adapter": "workbuddy",
+    "docs_url": "https://www.workbuddy.cn/docs/workbuddy/Overview",
+    "manifest_paths": [
+      "plugin.json",
+      ".codebuddy-plugin/plugin.json",
+      ".workbuddy-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json",
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.workbuddy",
+        "layout": "workbuddy_installed",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/resources/plugins/workbuddy-builtin",
+        "layout": "workbuddy_bundled",
+        "presence": "bundled"
+      }
+    ]
   }
 ]
