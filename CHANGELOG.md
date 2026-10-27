@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.23.0](https://github.com/Scoheart/arca/compare/v2.22.0...v2.23.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose WorkBuddy native packages independently ([e905af0](https://github.com/Scoheart/arca/commit/e905af0884f85bdfed7cd96cdbad475dd02f42d1))
+
 ## [2.22.0](https://github.com/Scoheart/arca/compare/v2.21.0...v2.22.0) (2026-10-27)
 
 ### Changes
