@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.18.0](https://github.com/Scoheart/arca/compare/v2.17.0...v2.18.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Codex IDE global installations ([2858c8f](https://github.com/Scoheart/arca/commit/2858c8fac582d0ace42b34d1323e0e71bfd644dd))
+
 ## [2.17.0](https://github.com/Scoheart/arca/compare/v2.16.0...v2.17.0) (2026-10-27)
 
 ### Changes
