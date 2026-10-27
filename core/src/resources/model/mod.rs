@@ -1466,6 +1466,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "asi-cloud",
+        name: "ASI:Cloud",
+        default_base_url: Some("https://llm.a.singularitycompute.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2217,6 +2224,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "www.whatstoken.ai" => "whatstoken",
         "discovery-api.intern-ai.org.cn" => "intern-inkstone",
         "api.swarms.world" => "swarms",
+        "llm.a.singularitycompute.com" => "asi-cloud",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7893,6 +7901,17 @@ mod tests {
             ("https://swarms.world/v1", "custom"),
             ("https://api.swarms.ai/v1", "custom"),
             ("https://api.swarms.world.evil.test/v1", "custom"),
+            ("https://llm.a.singularitycompute.com/v1", "asi-cloud"),
+            ("https://llm.a.singularitycompute.com/v1/chat/completions", "asi-cloud"),
+            ("https://llm.a.singularitycompute.com/v1/models", "asi-cloud"),
+            ("https://llm.a.singularitycompute.com/v1/systemone", "asi-cloud"),
+            ("https://asicloud.cudos.org/", "custom"),
+            ("https://inference.asicloud.cudos.org/v1", "custom"),
+            ("https://singularitycompute.com/v1", "custom"),
+            ("https://www.singularitycompute.com/v1", "custom"),
+            ("https://a.singularitycompute.com/v1", "custom"),
+            ("https://llm.singularitycompute.com/v1", "custom"),
+            ("https://llm.a.singularitycompute.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7975,7 +7994,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 162);
+        assert_eq!(list_providers().len(), 163);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8246,6 +8265,37 @@ mod tests {
             .unwrap();
         let serialized = serde_json::to_value(inworld).unwrap();
         assert_eq!(serialized["model_discovery_supported"], false);
+        let asi_cloud = list_providers()
+            .iter()
+            .find(|provider| provider.id == "asi-cloud")
+            .unwrap();
+        let serialized = serde_json::to_value(asi_cloud).unwrap();
+        assert_eq!(asi_cloud.name, "ASI:Cloud");
+        assert_eq!(asi_cloud.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(asi_cloud.category, "gateway");
+        assert_eq!(
+            asi_cloud.default_base_url,
+            Some("https://llm.a.singularitycompute.com/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://llm.a.singularitycompute.com/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://github.com/Singularity-Compute/super-decider/blob/main/docs/API.md"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://asicloud.cudos.org/");
+        assert_eq!(serialized["portal"]["kind"], "console");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(

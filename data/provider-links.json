@@ -622,6 +622,13 @@
       "kind": "api-key"
     }
   },
+  "asi-cloud": {
+    "docs_url": "https://github.com/Singularity-Compute/super-decider/blob/main/docs/API.md",
+    "portal": {
+      "url": "https://asicloud.cudos.org/",
+      "kind": "console"
+    }
+  },
   "azure-openai": {
     "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
