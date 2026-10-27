@@ -136,5 +136,26 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "codex-ide",
+    "adapter": "codex",
+    "docs_url": "https://developers.openai.com/plugins",
+    "manifest_paths": [
+      ".codex-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      ".cursor-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.codex/plugins/cache",
+        "layout": "codex_active_cache",
+        "presence": "installed"
+      }
+    ]
   }
 ]
