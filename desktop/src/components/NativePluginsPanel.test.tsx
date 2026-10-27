@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import type { HostMcpObservation, NativePluginObservation } from "../lib/types";
 import { NativePluginsPanel } from "./NativePluginsPanel";
@@ -39,4 +39,15 @@ it("excludes host-only MCPs from every destructive and enablement callback", () 
   const native = screen.getByText(mcp.server_id).closest("li")!;
   expect(within(native).queryByRole("button", { name: /delete|remove|删除|移除/i })).not.toBeInTheDocument();
   expect(mutate).not.toHaveBeenCalled();
+});
+
+it("disambiguates same-name plugins by searchable native ID and keeps App declarations read-only", () => {
+  const first = { ...plugin, plugin_id: "same@first", name: "Same", components: [{ kind: "app" as const, name: "connector", source_path: "~/plugins/first/.app.json", native_id: null }] };
+  render(<NativePluginsPanel plugins={[first, { ...first, plugin_id: "same@second" }]} />);
+  expect(screen.getAllByRole("heading", { level: 4 })).toHaveLength(2);
+  fireEvent.change(screen.getByPlaceholderText("nativePlugins.search"), { target: { value: "same@second" } });
+  expect(screen.getAllByRole("heading", { level: 4 })).toHaveLength(1);
+  expect(screen.getByText("same@second")).toBeInTheDocument();
+  expect(screen.getByText("nativePlugins.kind_app")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /delete|remove|install|删除|移除|安装/i })).not.toBeInTheDocument();
 });

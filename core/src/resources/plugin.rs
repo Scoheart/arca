@@ -11,6 +11,8 @@ use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+mod codex;
+
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
 const MAX_SCAN_ENTRIES: usize = 32_768;
@@ -21,6 +23,7 @@ const MAX_READ_BYTES: usize = 64 * 1024 * 1024;
 #[serde(deny_unknown_fields)]
 struct Host {
     agent_id: String,
+    adapter: String,
     docs_url: String,
     manifest_paths: Vec<String>,
     default_mcp_files: Vec<String>,
@@ -257,7 +260,7 @@ fn component_files(root: &Path, path: &Path, kind: &PluginComponentKind, depth: 
                 PluginComponentKind::Rule => name.ends_with(".md") || name.ends_with(".mdc"),
                 PluginComponentKind::Agent | PluginComponentKind::Command => name.ends_with(".md"),
                 PluginComponentKind::Hook => name.ends_with(".json"),
-                PluginComponentKind::Mcp => false,
+                PluginComponentKind::Mcp | PluginComponentKind::App => false,
             };
             if wanted {
                 let label = if *kind == PluginComponentKind::Skill { path.parent().unwrap_or(&path) } else { &path };
@@ -343,6 +346,8 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
     let mut result = PluginScan::default();
     for host in hosts() {
         if !agents.get(&host.agent_id).is_some_and(|agent| agent.enabled) { continue; }
+        if host.adapter == "codex" { codex::observe(host, &mut result); continue; }
+        if host.adapter != "cursor" { result.unavailable = true; continue; }
         for source in &host.roots {
             let root = expand_tilde(&source.path);
             let mut packages = 0;
@@ -393,7 +398,7 @@ fn normalize(result: &mut PluginScan) {
         for component in &plugin.components {
             let Some(id) = component.native_id.as_ref() else { continue; };
             if component.kind != PluginComponentKind::Mcp { continue; }
-            let key = (plugin.agent_id.clone(), id.clone(), plugin.presence.clone());
+            let key = (plugin.agent_id.clone(), id.clone(), plugin.plugin_id.clone(), plugin.presence.clone());
             let mcp = mcps.entry(key).or_insert_with(|| HostMcpObservation {
                 agent_id: plugin.agent_id.clone(), server_id: id.clone(), name: component.name.clone(),
                 provider: plugin.name.clone(), origin: HostResourceOrigin::Plugin, presence: plugin.presence.clone(),
@@ -411,7 +416,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| host.roots.iter().map(|root| expand_tilde(&root.path)))
+        .flat_map(|host| host.roots.iter().map(move |root| if host.adapter == "codex" { codex::cache_root(root) } else { expand_tilde(&root.path) }))
         .collect::<BTreeSet<_>>().into_iter().collect()
 }
 

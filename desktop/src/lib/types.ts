@@ -1030,7 +1030,7 @@ export interface SkillCommandError {
 }
 
 export type PluginPresence = "bundled" | "installed" | "local" | "cache_only";
-export type PluginComponentKind = "mcp" | "skill" | "rule" | "agent" | "command" | "hook";
+export type PluginComponentKind = "mcp" | "skill" | "rule" | "agent" | "command" | "hook" | "app";
 export interface PluginComponent {
   kind: PluginComponentKind; name: string; source_path: string; native_id: string | null;
 }

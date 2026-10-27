@@ -133,6 +133,7 @@ dependencies = [
  "regex",
  "rustix",
  "security-framework-sys",
+ "semver",
  "serde",
  "serde_json",
  "serde_yaml_ng",

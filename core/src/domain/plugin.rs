@@ -11,7 +11,7 @@ pub enum HostResourceOrigin { Builtin, Plugin }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
-pub enum PluginComponentKind { Mcp, Skill, Rule, Agent, Command, Hook }
+pub enum PluginComponentKind { Mcp, Skill, Rule, Agent, Command, Hook, App }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PluginComponent {

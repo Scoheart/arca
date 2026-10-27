@@ -22,6 +22,7 @@ ureq = { version = "3", features = ["platform-verifier", "socks-proxy"] }
 url = "2"
 uuid = { version = "1", features = ["v4", "serde"] }
 sha2 = "0.11"
+semver = "1"
 hex = "0.4"
 regex = "1"
 similar = "3"

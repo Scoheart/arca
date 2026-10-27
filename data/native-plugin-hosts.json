@@ -2,12 +2,50 @@
   {
     "agent_id": "cursor",
     "docs_url": "https://cursor.com/docs/plugins",
-    "manifest_paths": [".cursor-plugin/plugin.json", ".claude-plugin/plugin.json", "plugin.json"],
-    "default_mcp_files": [".mcp.json", "mcp.json"],
+    "manifest_paths": [
+      ".cursor-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
     "mcp_id_prefix": "plugin-",
     "roots": [
-      { "path": "~/.cursor/plugins/cache", "layout": "marketplace_cache", "presence": "cache_only", "complete_marker": ".cache-complete" },
-      { "path": "~/.cursor/plugins/local", "layout": "flat", "presence": "local" }
+      {
+        "path": "~/.cursor/plugins/cache",
+        "layout": "marketplace_cache",
+        "presence": "cache_only",
+        "complete_marker": ".cache-complete"
+      },
+      {
+        "path": "~/.cursor/plugins/local",
+        "layout": "flat",
+        "presence": "local"
+      }
+    ],
+    "adapter": "cursor"
+  },
+  {
+    "agent_id": "codex",
+    "adapter": "codex",
+    "docs_url": "https://developers.openai.com/plugins",
+    "manifest_paths": [
+      ".codex-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      ".cursor-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.codex/plugins/cache",
+        "layout": "codex_active_cache",
+        "presence": "installed"
+      }
     ]
   }
 ]

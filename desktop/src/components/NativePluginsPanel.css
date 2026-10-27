@@ -16,3 +16,4 @@
 .arca-host-mcp-card { align-items: flex-start !important; }
 .arca-host-mcp-card small { white-space: normal; overflow-wrap: anywhere; font-size: 10px; line-height: 1.6; color: var(--muted-foreground, #98a2b3); }
 .arca-native-id { font-size: 10px; overflow-wrap: anywhere; white-space: normal; }
+.arca-native-plugin-card > .arca-native-id { display: block; line-height: 1.5; margin: 4px 0 8px; color: var(--muted-foreground, #98a2b3); }

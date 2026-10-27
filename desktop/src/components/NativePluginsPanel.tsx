@@ -34,7 +34,7 @@ export function NativePluginsPanel({ plugins }: { plugins: NativePluginObservati
     const needle = query.trim().toLocaleLowerCase();
     const groups = new Map<string, NativePluginObservation[]>();
     for (const plugin of plugins) {
-      const text = [plugin.name, plugin.version, plugin.revision, ...plugin.components.flatMap(c => [c.kind, c.name, c.native_id ?? ""])].join(" ").toLocaleLowerCase();
+      const text = [plugin.name, plugin.plugin_id, plugin.version, plugin.revision, ...plugin.components.flatMap(c => [c.kind, c.name, c.native_id ?? ""])].join(" ").toLocaleLowerCase();
       if (needle && !text.includes(needle)) continue;
       const key = `${plugin.agent_id}:${plugin.plugin_id}`;
       groups.set(key, [...groups.get(key) ?? [], plugin]);
@@ -49,6 +49,7 @@ export function NativePluginsPanel({ plugins }: { plugins: NativePluginObservati
     {groups.length === 0 ? <p className="arca-consumption-empty">{t(query ? "nativePlugins.noMatch" : "nativePlugins.empty")}</p> :
       <ul className="arca-native-plugin-grid">{groups.map(([key, versions]) => <li key={key} className="arca-native-plugin-card">
         <h4>{versions[0].name}</h4>
+        <code className="arca-native-id">{versions[0].plugin_id}</code>
         <div className="arca-native-badges">{[...new Set(versions.map(v => v.presence))].map(presence => <Presence key={presence} value={presence} />)}</div>
         <p>{[...new Set(versions.map(v => v.version))].join(", ")}</p>
         <p className="arca-native-muted">{t("nativePlugins.snapshotCount", { count: versions.length })}</p>
