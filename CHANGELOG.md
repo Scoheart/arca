@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.42.0](https://github.com/Scoheart/arca/compare/v2.41.0...v2.42.0) (2026-10-28)
+
+### Changes
+
+* feat(vibe): observe bundled and global plugin resources ([c367b23](https://github.com/Scoheart/arca/commit/c367b23921152424c2f80020fb0ad88fa9e862aa))
+
 ## [2.41.0](https://github.com/Scoheart/arca/compare/v2.40.1...v2.41.0) (2026-10-28)
 
 ### Changes
