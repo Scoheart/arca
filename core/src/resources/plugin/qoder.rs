@@ -12,7 +12,7 @@ fn source_root(source: &Root) -> PathBuf {
     else { expand_tilde(&source.path) }
 }
 
-fn local_path(input: &str) -> Result<String, ()> {
+pub(super) fn local_path(input: &str) -> Result<String, ()> {
     let path = Path::new(input);
     if input.is_empty() || input.contains('\\') || input.chars().any(char::is_control) || path.is_absolute()
         || path.components().any(|part| matches!(part, Component::ParentDir | Component::Prefix(_))) { return Err(()); }
@@ -37,25 +37,25 @@ fn foreign(id: &str, path: Option<&str>) -> bool {
             .any(|parts| parts[0] == "plugins" && parts[1] == "cache" && markets.contains(&parts[2])))
 }
 
-struct Entry { path: String, directory: bool, file: bool }
+pub(super) struct Entry { pub path: String, pub directory: bool, pub file: bool }
 
 /// Archive paths are metadata provenance (`archive.zip!/member`), never files
 /// extracted into a native installation or an Arca asset directory.
-enum Package<'a> {
+pub(super) enum Package<'a> {
     Disk(&'a Path),
-    Archive { path: &'a Path, zip: RefCell<zip::ZipArchive<fs::File>>, members: BTreeMap<String, (usize, bool)> },
+    Archive { path: &'a Path, prefix: &'static str, zip: RefCell<zip::ZipArchive<fs::File>>, members: BTreeMap<String, (usize, bool)> },
 }
 
 impl Package<'_> {
-    fn path(&self, input: &str) -> Result<String, ()> {
+    pub(super) fn path(&self, input: &str) -> Result<String, ()> {
         let input = local_path(input)?;
         match self {
             Self::Disk(root) => Ok(collapse_home(&relative(root, &input)?)),
-            Self::Archive { path, .. } => Ok(format!("{}!/computer-use/{input}", collapse_home(path))),
+            Self::Archive { path, prefix, .. } => Ok(format!("{}!/{prefix}{input}", collapse_home(path))),
         }
     }
 
-    fn exists(&self, input: &str) -> Result<bool, ()> {
+    pub(super) fn exists(&self, input: &str) -> Result<bool, ()> {
         let input = local_path(input)?;
         match self {
             Self::Disk(root) => {
@@ -70,7 +70,7 @@ impl Package<'_> {
         }
     }
 
-    fn file(&self, input: &str) -> Result<bool, ()> {
+    pub(super) fn file(&self, input: &str) -> Result<bool, ()> {
         let input = local_path(input)?;
         match self {
             Self::Disk(root) => regular_metadata_file(&relative(root, &input)?),
@@ -78,7 +78,7 @@ impl Package<'_> {
         }
     }
 
-    fn children(&self, input: &str, budget: &mut ScanBudget) -> Result<Vec<Entry>, ()> {
+    pub(super) fn children(&self, input: &str, budget: &mut ScanBudget) -> Result<Vec<Entry>, ()> {
         let input = if input.is_empty() { String::new() } else { local_path(input)? };
         match self {
             Self::Disk(root) => {
@@ -107,7 +107,7 @@ impl Package<'_> {
         }
     }
 
-    fn json(&self, input: &str, budget: &mut ScanBudget) -> Result<Option<Arc<Value>>, ()> {
+    pub(super) fn json(&self, input: &str, budget: &mut ScanBudget) -> Result<Option<Arc<Value>>, ()> {
         let input = local_path(input)?;
         match self {
             Self::Disk(root) => optional_json(root, &input, budget),
@@ -414,7 +414,7 @@ fn archive(host: &Host, path: &Path, result: &mut PluginScan) -> Result<(), ()> 
             parent = path.parent();
         }
     }
-    let source = Package::Archive { path, zip: RefCell::new(zip), members };
+    let source = Package::Archive { path, prefix: "computer-use/", zip: RefCell::new(zip), members };
     let plugin = package(host, &source, "computer-use@qoder-bundler", None, PluginPresence::Bundled, &[collapse_home(path)], result);
     result.plugins.push(plugin); Ok(())
 }

@@ -411,5 +411,31 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "qoder-cli",
+    "adapter": "qoder_cli",
+    "docs_url": "https://docs.qoder.com/cli/plugins",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.qoder",
+        "layout": "qoder_cli_global",
+        "presence": "installed"
+      },
+      {
+        "path": "~/.npm/_npx",
+        "layout": "qoder_cli_npm_cache",
+        "presence": "cache_only"
+      }
+    ]
   }
 ]

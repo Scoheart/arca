@@ -20,6 +20,7 @@ mod qwen;
 mod kiro;
 mod workbuddy;
 mod qoder;
+mod qoder_cli;
 mod antigravity;
 mod zcode;
 mod vscode_extensions;
@@ -456,6 +457,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "kiro" { kiro::observe(host, &mut result); continue; }
         if host.adapter == "workbuddy" { workbuddy::observe(host, &mut result); continue; }
         if host.adapter == "qoder" { qoder::observe(host, &mut result); continue; }
+        if host.adapter == "qoder_cli" { qoder_cli::observe(host, &mut result); continue; }
         if host.adapter == "antigravity" { antigravity::observe(host, &mut result); continue; }
         if host.adapter == "zcode" { zcode::observe(host, &mut result); continue; }
         if host.adapter == "vscode_extensions" { vscode_extensions::observe(host, &mut result); continue; }
@@ -528,7 +530,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()
