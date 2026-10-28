@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.35.0](https://github.com/Scoheart/arca/compare/v2.34.0...v2.35.0) (2026-10-28)
+
+### Changes
+
+* feat(agents): observe QoderWake native and bundled CLI resources ([af59e8e](https://github.com/Scoheart/arca/commit/af59e8e798023e72070bf4977d114a9c61f339e6))
+
 ## [2.34.0](https://github.com/Scoheart/arca/compare/v2.33.0...v2.34.0) (2026-10-28)
 
 ### Changes
