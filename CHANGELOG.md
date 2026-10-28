@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.32.0](https://github.com/Scoheart/arca/compare/v2.31.0...v2.32.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Qoder CN Desktop independently ([684d34b](https://github.com/Scoheart/arca/commit/684d34b926d711d9049c7b6811e3d3e50ab234eb))
+
 ## [2.31.0](https://github.com/Scoheart/arca/compare/v2.30.0...v2.31.0) (2026-10-28)
 
 ### Changes
