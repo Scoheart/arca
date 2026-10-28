@@ -714,7 +714,7 @@ export function AgentView({
             message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
           <ToastNotice kind="warning" noticeKey={`native-plugins:${agent.id}`} message={nativeResources.error || nativeResources.inventory?.unavailable ? t("nativePlugins.scanUnavailable") : null} />
           {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global && hostMcps.length === 0 ? (
-            <div className="arca-agent-inline-state">此 Agent 未接入 MCP。</div>
+            <div className="arca-agent-inline-state">{nativePluginSupported ? t("nativePlugins.hostEmpty") : "此 Agent 未接入 MCP。"}</div>
           ) : (
             <AgentConsumptionPanel
               domain="mcp"

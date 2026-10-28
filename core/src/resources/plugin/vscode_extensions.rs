@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn wrong_product_identity_does_not_fall_through_to_another_installation() {
-        let (_home,resources,profile)=fixture();write(&resources,"product.json",br#"{"nameShort":"TRAE","dataFolderName":".trae"}"#);
+        let (_home,resources,profile)=fixture();write(&resources,"product.json",br#"{"nameShort":"Trae","dataFolderName":".trae"}"#);
         let result=scan(&profile);assert!(result.unavailable);assert!(result.plugins.is_empty());
     }
 

@@ -389,5 +389,27 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "trae-ide",
+    "adapter": "vscode_extensions",
+    "docs_url": "https://docs.trae.ai/ide/skills",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Trae.app",
+        "layout": "vscode_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Trae.app",
+        "layout": "vscode_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

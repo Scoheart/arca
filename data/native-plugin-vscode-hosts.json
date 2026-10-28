@@ -118,5 +118,125 @@
         ]
       }
     ]
+  },
+  {
+    "agent_id": "trae-ide",
+    "bundle_id": "com.trae.app",
+    "product_name": "Trae",
+    "data_folder": ".trae",
+    "declared_lists": [
+      "traeBuiltinExtensions",
+      "soloBuiltinExtensions"
+    ],
+    "native_components": [
+      {
+        "plugin_id": "byted-solo.builtin-mcp",
+        "entrypoint": "dist/extension.js",
+        "guards": [
+          {
+            "path": "dist/extension.js",
+            "bytes": 98941,
+            "sha256": "4c34f858269481594f14a9795d1f23339a36dd23acf863150e596167dfc0a2dc"
+          }
+        ],
+        "components": [
+          {
+            "kind": "mcp",
+            "name": "macOS Connectors",
+            "native_id": "macos-connectors",
+            "source": "dist/extension.js"
+          },
+          {
+            "kind": "mcp",
+            "name": "Computer Use",
+            "native_id": "computer-use",
+            "source": "dist/extension.js"
+          },
+          {
+            "kind": "app",
+            "name": "Notes",
+            "native_id": null,
+            "source": "dist/extension.js"
+          },
+          {
+            "kind": "app",
+            "name": "Reminders",
+            "native_id": null,
+            "source": "dist/extension.js"
+          },
+          {
+            "kind": "app",
+            "name": "Calendar",
+            "native_id": null,
+            "source": "dist/extension.js"
+          },
+          {
+            "kind": "app",
+            "name": "Mail",
+            "native_id": null,
+            "source": "dist/extension.js"
+          },
+          {
+            "kind": "app",
+            "name": "Contacts",
+            "native_id": null,
+            "source": "dist/extension.js"
+          }
+        ]
+      },
+      {
+        "plugin_id": "byted-solo.builtin-mcp",
+        "entrypoint": "dist/extension.js",
+        "guards": [
+          {
+            "path": "dist/extension.js",
+            "bytes": 98941,
+            "sha256": "4c34f858269481594f14a9795d1f23339a36dd23acf863150e596167dfc0a2dc"
+          },
+          {
+            "path": "dist/chronicle/registration.js",
+            "bytes": 10811,
+            "sha256": "0416233280d03c0bf05878bbe65936585490ce6bb84ddbbdc1ac2bfb2a948b13"
+          },
+          {
+            "path": "dist/chronicle/types.js",
+            "bytes": 816,
+            "sha256": "8b4f575b466788f6e927c3aa01841bb897e819bda84dd7a07dcc57dfe23b141b"
+          }
+        ],
+        "components": [
+          {
+            "kind": "mcp",
+            "name": "Chronicle",
+            "native_id": "chronicle",
+            "source": "dist/chronicle/registration.js"
+          }
+        ]
+      },
+      {
+        "plugin_id": "byted-solo.builtin-mcp",
+        "entrypoint": "dist/extension.js",
+        "guards": [
+          {
+            "path": "dist/extension.js",
+            "bytes": 98941,
+            "sha256": "4c34f858269481594f14a9795d1f23339a36dd23acf863150e596167dfc0a2dc"
+          },
+          {
+            "path": "dist/record-replay/marketplace-plugin-identity.js",
+            "bytes": 2239,
+            "sha256": "76905c4d67aac66de5200dee49f74bc183777f2f53544dd7fe704b107cf478c8"
+          }
+        ],
+        "components": [
+          {
+            "kind": "plugin_reference",
+            "name": "record-and-replay",
+            "native_id": "25e0eae6-eec5-4073-9c3e-4dda74a11039",
+            "source": "dist/record-replay/marketplace-plugin-identity.js"
+          }
+        ]
+      }
+    ]
   }
 ]

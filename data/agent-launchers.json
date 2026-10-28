@@ -422,7 +422,10 @@
   "trae-ide": {
     "kind": "app",
     "candidates": [
-      "TRAE"
+      "Trae"
+    ],
+    "bundle_ids": [
+      "com.trae.app"
     ]
   },
   "vscode": {
