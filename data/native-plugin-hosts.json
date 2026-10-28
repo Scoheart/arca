@@ -107,6 +107,23 @@
     ]
   },
   {
+    "agent_id": "opencode-desktop",
+    "adapter": "opencode_desktop",
+    "docs_url": "https://opencode.ai/v2/docs/plugins/",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/OpenCode.app",
+        "layout": "opencode_desktop_bundle",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
     "agent_id": "codex-desktop",
     "adapter": "codex",
     "docs_url": "https://developers.openai.com/plugins",
