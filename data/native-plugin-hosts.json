@@ -732,5 +732,23 @@
         "presence": "local"
       }
     ]
+  },
+  {
+    "agent_id": "kimi-code",
+    "adapter": "kimi",
+    "docs_url": "https://www.npmjs.com/package/@moonshot-ai/kimi-code/v/2.4.0",
+    "manifest_paths": [
+      "kimi.plugin.json",
+      ".kimi-plugin/plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "plugin-",
+    "roots": [
+      {
+        "path": "~/.kimi-code/plugins",
+        "layout": "kimi_registry",
+        "presence": "installed"
+      }
+    ]
   }
 ]
