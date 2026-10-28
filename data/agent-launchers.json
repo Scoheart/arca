@@ -623,5 +623,11 @@
       "qoderclicn"
     ],
     "args": []
+  },
+  "qoderwake": {
+    "kind": "app",
+    "candidates": [
+      "QoderWake"
+    ]
   }
 }

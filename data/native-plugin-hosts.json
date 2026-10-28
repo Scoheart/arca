@@ -597,5 +597,27 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "qoderwake",
+    "adapter": "qoder_wake",
+    "docs_url": "https://docs.qoder.com/",
+    "manifest_paths": [
+      "qoderwake-plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/QoderWake.app",
+        "layout": "qoder_wake_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/QoderWake.app",
+        "layout": "qoder_wake_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

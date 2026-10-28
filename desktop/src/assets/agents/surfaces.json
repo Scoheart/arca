@@ -54,5 +54,6 @@
   "postman": "desktop",
   "mcpjam": "desktop",
   "mcp-use-inspector": "web",
-  "qoder-cli-cn": "cli"
+  "qoder-cli-cn": "cli",
+  "qoderwake": "desktop"
 }

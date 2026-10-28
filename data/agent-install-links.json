@@ -486,5 +486,9 @@
   "qoder-cli-cn": {
     "url": "https://qoder.cn/download",
     "label": "官方下载"
+  },
+  "qoderwake": {
+    "url": "https://download.qoder.com/qoderwake/installers/1.2.4/qoderwake_1.2.4_darwin_arm64.dmg",
+    "label": "官方安装包"
   }
 }

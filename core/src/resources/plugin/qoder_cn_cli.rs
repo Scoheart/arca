@@ -12,7 +12,7 @@ struct Contract {
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Builtin { id: String, source: String, components: Vec<Contribution> }
+pub(super) struct Builtin { id: String, source: String, components: Vec<Contribution> }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Contribution { kind: PluginComponentKind, name: String, source: String }
@@ -89,18 +89,19 @@ fn authored(p: &Package<'_>, budget: &mut ScanBudget) -> Result<Option<(String,A
     }
     Ok(None)
 }
-fn bundle(host: &Host, graph: &bun_package::Graph, result: &mut PluginScan) -> Result<Vec<NativePluginObservation>, ()> {
-    let c = contract(); let source = graph.source(&c.skill_source)?;
+pub(super) fn bundled(host: &Host, graph: &bun_package::Graph, product_name: &str, version: &str, skill_source: &str,
+    code_skills: &[String], builtin_plugins: &[Builtin], result: &mut PluginScan) -> Result<Vec<NativePluginObservation>, ()> {
+    let source = graph.source(skill_source)?;
     let p = Package::Bun { graph,prefix:"packages/core/src/skills/builtin/" };
-    let mut skills = snapshot(host,"@builtin/skills",&format!("{} packaged Skills",c.product_name),&c.version,&source);
+    let mut skills = snapshot(host,"@builtin/skills",&format!("{product_name} packaged Skills"),version,&source);
     super::qoder_cli::files(&p,"",PluginComponentKind::Skill,0,&mut skills.components,&mut result.budget)?;
-    for name in &c.code_skills {
+    for name in code_skills {
         skills.components.push(PluginComponent {kind:PluginComponentKind::Skill,name:metadata_name(name).ok_or(())?,source_path:source.clone(),native_id:None});
     }
     let mut out = vec![skills];
-    for builtin in &c.builtin_plugins {
+    for builtin in builtin_plugins {
         let source = graph.source(&builtin.source)?;
-        let mut item = snapshot(host,&builtin.id,&builtin.id,&c.version,&source);
+        let mut item = snapshot(host,&builtin.id,&builtin.id,version,&source);
         if builtin.id == "qoder-security" {
             let p = Package::Bun {graph,prefix:"vendor/qoder-security/"};
             let manifest = authored(&p,&mut result.budget)?.ok_or(())?;
@@ -159,7 +160,7 @@ pub(super) fn observe(host: &Host, result: &mut PluginScan) {
     let Some(command)=executable() else {return;};
     let Ok(path)=fs::canonicalize(command) else {result.unavailable=true;return;};
     let graph=match bun_package::Graph::open(&path,&c.bun,&mut result.budget) {Ok(value)=>value,Err(())=>{result.unavailable=true;return;}};
-    match bundle(host,&graph,result) {Ok(items)=>result.plugins.extend(items),Err(())=>result.unavailable=true,}
+    match bundled(host,&graph,&c.product_name,&c.version,&c.skill_source,&c.code_skills,&c.builtin_plugins,result) {Ok(items)=>result.plugins.extend(items),Err(())=>result.unavailable=true,}
     match plugins_root() {Ok(root)=>{if installed(host,&root,result).is_err(){result.unavailable=true;}},Err(())=>result.unavailable=true,}
 }
 pub(super) fn runtime_version(path: &Path) -> Option<String> {
