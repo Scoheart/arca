@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.28.0](https://github.com/Scoheart/arca/compare/v2.27.0...v2.28.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Trae bundled extensions and native providers ([0ed4528](https://github.com/Scoheart/arca/commit/0ed45288f3661d3d0ed089a776ba41680c62a078))
+
 ## [2.27.0](https://github.com/Scoheart/arca/compare/v2.26.0...v2.27.0) (2026-10-28)
 
 ### Changes
