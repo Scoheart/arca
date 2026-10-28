@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.37.0](https://github.com/Scoheart/arca/compare/v2.36.0...v2.37.0) (2026-10-28)
+
+### Changes
+
+* feat(agents): observe Claude Desktop extensions and native MCPs ([34ea709](https://github.com/Scoheart/arca/commit/34ea7093e4c8e52b94121c7ad57b6d889bb8f3c6))
+
 ## [2.36.0](https://github.com/Scoheart/arca/compare/v2.35.0...v2.36.0) (2026-10-28)
 
 ### Changes
