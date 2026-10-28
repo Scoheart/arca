@@ -70,16 +70,21 @@ fn global_plugins(host: &Host) -> Option<PathBuf> {
 }
 
 fn bundled(host: &Host, c: &Contract, runtime: &Runtime, result: &mut PluginScan) {
-    let source=collapse_home(&runtime.entry);
+    observe_compiled_skills(host,&c.version,collapse_home(&runtime.entry),
+        collapse_home(&runtime.root.join("package.json")),&c.builtin_skills,result);
+}
+
+pub(super) fn observe_compiled_skills(host: &Host, version: &str, source: String, manifest: String,
+    skills: &[String], result: &mut PluginScan) {
     // These are compiled-in shipped resources, not filesystem SKILL.md files.
     // Product flags, experiments, TUI scope and session membership are unknown.
-    let components=c.builtin_skills.iter().map(|name|PluginComponent {
+    let components=skills.iter().map(|name|PluginComponent {
         kind:PluginComponentKind::Skill, name:name.clone(), source_path:source.clone(), native_id:None,
     }).collect();
     result.plugins.push(NativePluginObservation {
         agent_id:host.agent_id.clone(),plugin_id:"@builtin/skills".into(),name:"Kimi Code bundled Skills".into(),
-        version:c.version.clone(),revision:source.clone(),presence:PluginPresence::Bundled,enabled:None,
-        source_paths:vec![source,collapse_home(&runtime.root.join("package.json"))],components,
+        version:version.into(),revision:source.clone(),presence:PluginPresence::Bundled,enabled:None,
+        source_paths:vec![source,manifest],components,
         docs_url:host.docs_url.clone(),source_fingerprint:String::new(),
     });
 }
@@ -92,6 +97,10 @@ pub(super) fn observe(host: &Host, result: &mut PluginScan) {
             Err(())=>result.unavailable=true,
         }
     }
+    observe_registered(host,verified,result);
+}
+
+pub(super) fn observe_registered(host: &Host, verified: bool, result: &mut PluginScan) {
     match global_plugins(host) {
         Some(root)=>packages::observe_registry(host,&root,verified,result),
         None=>result.unavailable=true,
@@ -107,6 +116,12 @@ pub(super) fn watch_paths(host: &Host) -> Vec<PathBuf> {
             paths.extend(c.members.iter().filter_map(|m|relative(&runtime.root,&m.path).ok()));
         }
     }
+    paths.extend(registry_watch_paths(host));
+    paths.sort();paths.dedup();paths
+}
+
+pub(super) fn registry_watch_paths(host: &Host) -> Vec<PathBuf> {
+    let mut paths=Vec::new();
     if let Some(root)=global_plugins(host) {
         paths.push(root.clone());paths.push(root.join("installed.json"));
         paths.extend(packages::registered_watch_paths(&root));

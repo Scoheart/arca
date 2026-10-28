@@ -750,5 +750,23 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "kimi-code-desktop",
+    "adapter": "kimi_desktop",
+    "docs_url": "https://www.kimi.com/code/docs/en/kimi-code-desktop/settings-and-extensions.html",
+    "manifest_paths": [
+      "kimi.plugin.json",
+      ".kimi-plugin/plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "plugin-",
+    "roots": [
+      {
+        "path": "~/.kimi-code/plugins",
+        "layout": "kimi_registry",
+        "presence": "installed"
+      }
+    ]
   }
 ]

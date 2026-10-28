@@ -1,0 +1,54 @@
+{
+  "agent_id": "kimi-code-desktop",
+  "version": "1.2.0",
+  "bundle_id": "com.kimi.code.desktop",
+  "product_name": "Kimi Code",
+  "app_paths": [
+    "/Applications/Kimi Code.app",
+    "~/Applications/Kimi Code.app"
+  ],
+  "catalog_member": "out/screenshot-CT9AOv7C.cjs",
+  "builtin_skills": [
+    "mcp-config",
+    "import-from-cc-codex",
+    "update-config",
+    "custom-theme",
+    "write-goal",
+    "check-kimi-code-docs",
+    "sub-skill",
+    "sub-skill.review",
+    "sub-skill.consolidate"
+  ],
+  "guards": [
+    {
+      "path": "out/app-DzioWUtH.cjs",
+      "bytes": 63449,
+      "sha256": "c851bd67b2fd13f4c873dbf22d8054d3089dcb2b6a2dd388882c24ad40c32978"
+    },
+    {
+      "path": "out/main.cjs",
+      "bytes": 2998,
+      "sha256": "d3a1d35fda5d721d5c4c99e6db09d8f774c3c80e71d7dad56f6ec41894bbb976"
+    },
+    {
+      "path": "out/protocol-BdnEEX3f.cjs",
+      "bytes": 5717,
+      "sha256": "e1d7644f31e92f577a00f9b219a58d244dceb951583b37614a10e3a62651da48"
+    },
+    {
+      "path": "out/release-channel-Be3VBwaC.cjs",
+      "bytes": 5694,
+      "sha256": "301fdd78c2d1732503cb6afe913d715d1831a130208ddb7501a68ad6cb21cb7f"
+    },
+    {
+      "path": "out/screenshot-CT9AOv7C.cjs",
+      "bytes": 5719725,
+      "sha256": "2c04470dbab56efd2f61592b958714a7ab90400f4fd297d6a37ca17ec60578e0"
+    },
+    {
+      "path": "package.json",
+      "bytes": 543,
+      "sha256": "03c5c587771e6c5275950024a579d5af60aa35d3f510504804c85377f35be3fc"
+    }
+  ]
+}
