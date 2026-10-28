@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.41.0](https://github.com/Scoheart/arca/compare/v2.40.1...v2.41.0) (2026-10-28)
+
+### Changes
+
+* feat(goose): observe standalone CLI native resources ([2cd6de4](https://github.com/Scoheart/arca/commit/2cd6de494dd5b86e59c970135c0405f5c70b6053))
+
 ## [2.40.1](https://github.com/Scoheart/arca/compare/v2.40.0...v2.40.1) (2026-10-28)
 
 ### Changes
