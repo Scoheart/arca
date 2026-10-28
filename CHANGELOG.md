@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.29.0](https://github.com/Scoheart/arca/compare/v2.28.0...v2.29.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Qoder CLI packages and global registrations ([71bfd6b](https://github.com/Scoheart/arca/commit/71bfd6beb6896e4497217140e812d3c4f5e028f2))
+
 ## [2.28.0](https://github.com/Scoheart/arca/compare/v2.27.0...v2.28.0) (2026-10-28)
 
 ### Changes
