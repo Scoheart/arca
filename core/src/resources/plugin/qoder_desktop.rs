@@ -333,6 +333,14 @@ mod tests {
         assert!(!bundled_match("security-scan@qoder-bundler",&config.join("plugins/cache/qoder-bundler/security-scan"),&config,Some(&value),None,&mut scan).unwrap());
         assert!(bundled_match("qoder-context@qoderapp-bundler",&config.join("plugins/cache/qoderapp-bundler/qoder-context/1.0.84"),&config,Some(&value),None,&mut scan).unwrap());
         assert!(!bundled_match("qoder-context@qoderapp-bundler",&config.join("plugins/cache/qoderapp-bundler/qoder-context/other"),&config,Some(&value),None,&mut scan).unwrap());
+        // Identical plugin IDs and versions cannot establish ownership across
+        // the two products' independently resolved native roots.
+        let cn=home.home.join(".qoder-cn");
+        let global_path=config.join("plugins/cache/qoderapp-bundler/qoder-context/1.0.84");
+        let cn_path=cn.join("plugins/cache/qoderapp-bundler/qoder-context/1.0.84");
+        assert!(!bundled_match("qoder-context@qoderapp-bundler",&global_path,&cn,Some(&value),None,&mut scan).unwrap());
+        assert!(!bundled_match("qoder-context@qoderapp-bundler",&cn_path,&config,Some(&value),None,&mut scan).unwrap());
+        assert!(bundled_match("qoder-context@qoderapp-bundler",&cn_path,&cn,Some(&value),None,&mut scan).unwrap());
     }
     #[test]
     fn authored_sdk_fallback_and_mcp_overlay_are_metadata_only() {

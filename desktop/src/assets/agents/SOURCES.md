@@ -112,3 +112,5 @@ Assets added 2026-10-16, original bytes:
 | `smithery-playground.svg` | [Smithery brand asset in Raycast's MCP registry extension](https://github.com/raycast/extensions/blob/c0eba1590385588f2b265cec8bdefb653f30816f/extensions/model-context-protocol-registry/assets/smithery.svg), reused unchanged from that MIT-licensed extension; this is a third-party copy of the brand asset, not a provider-hosted download |
 
 Claude.ai and ChatGPT reuse the already sourced Claude/OpenAI marks. Their Web surface badge distinguishes them from CLI and Desktop products.
+
+- `qoder-cn.png`: unchanged 128×128 PNG extracted by `iconutil` from the signed Qoder CN 0.4.11 App icon (`com.qodercn.app`), obtained from https://qoder.cn/download (2026-10-28). The native CN corner mark is preserved; no resampling. `surfaces.json` records the Desktop form.

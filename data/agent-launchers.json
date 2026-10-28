@@ -326,6 +326,15 @@
     ],
     "args": []
   },
+  "qoder-cn": {
+    "kind": "app",
+    "candidates": [
+      "Qoder CN"
+    ],
+    "bundle_ids": [
+      "com.qodercn.app"
+    ]
+  },
   "qoder-desktop": {
     "kind": "app",
     "candidates": [

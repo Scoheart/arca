@@ -504,5 +504,32 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "qoder-cn",
+    "adapter": "qoder_desktop",
+    "docs_url": "https://docs.qoder.cn/",
+    "manifest_paths": [
+      ".qoder-app-plugin/plugin.json",
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Qoder CN.app",
+        "layout": "qoder_desktop_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Qoder CN.app",
+        "layout": "qoder_desktop_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]
