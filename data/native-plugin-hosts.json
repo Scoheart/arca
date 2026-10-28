@@ -437,5 +437,45 @@
         "presence": "cache_only"
       }
     ]
+  },
+  {
+    "agent_id": "qoderwork",
+    "adapter": "qoderwork",
+    "docs_url": "https://docs.qoder.com/qoderwork/connectors",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "plugin:",
+    "roots": [
+      {
+        "path": "/Applications/QoderWork.app",
+        "layout": "qoderwork_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/QoderWork.app",
+        "layout": "qoderwork_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/.qoderwork/plugins",
+        "layout": "qoderwork_plugins",
+        "presence": "installed"
+      },
+      {
+        "path": "~/.qoderwork/plugins-custom",
+        "layout": "qoderwork_custom_plugins",
+        "presence": "local"
+      },
+      {
+        "path": "~/.qoderwork/legokits",
+        "layout": "qoderwork_legokits",
+        "presence": "local"
+      }
+    ]
   }
 ]
