@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.40.1](https://github.com/Scoheart/arca/compare/v2.40.0...v2.40.1) (2026-10-28)
+
+### Changes
+
+* fix(desktop): compact native resource cards and details ([fa9a89e](https://github.com/Scoheart/arca/commit/fa9a89e643aff7c77a7b26dc01e0d0671615c26b))
+
 ## [2.40.0](https://github.com/Scoheart/arca/compare/v2.39.0...v2.40.0) (2026-10-28)
 
 ### Changes
