@@ -1,0 +1,89 @@
+{
+  "agent_id": "goose",
+  "command": "goose",
+  "version": "1.56.0",
+  "product_name": "Goose",
+  "docs_url": "https://github.com/aaif-goose/goose/tree/9949cf926cd42f1d128b9991ed23a496ecace896",
+  "binary": {
+    "bytes": 177509984,
+    "sha256": "a64c2bf0df3a55ab18db7e65ab180cd17f91331fdf3c873fed1f46d98cd3bb92"
+  },
+  "platform_extensions": [
+    {
+      "id": "analyze",
+      "name": "Analyze"
+    },
+    {
+      "id": "todo",
+      "name": "Todo"
+    },
+    {
+      "id": "apps",
+      "name": "Apps"
+    },
+    {
+      "id": "chatrecall",
+      "name": "Chat Recall"
+    },
+    {
+      "id": "extensionmanager",
+      "name": "Extension Manager"
+    },
+    {
+      "id": "scheduler",
+      "name": "Scheduler"
+    },
+    {
+      "id": "summon",
+      "name": "Summon"
+    },
+    {
+      "id": "summarize",
+      "name": "Summarize"
+    },
+    {
+      "id": "code_execution",
+      "name": "Code Mode"
+    },
+    {
+      "id": "developer",
+      "name": "Developer"
+    },
+    {
+      "id": "tom",
+      "name": "Top Of Mind"
+    },
+    {
+      "id": "skills",
+      "name": "Skills"
+    }
+  ],
+  "embedded_skills": [
+    {
+      "name": "goose-doc-guide",
+      "member": "goose_doc_guide.md"
+    },
+    {
+      "name": "web-search",
+      "member": "web_search.md"
+    }
+  ],
+  "mcp_extensions": [
+    {
+      "id": "autovisualiser",
+      "name": "Auto Visualiser"
+    },
+    {
+      "id": "computercontroller",
+      "name": "Computer Controller"
+    },
+    {
+      "id": "memory",
+      "name": "Memory"
+    },
+    {
+      "id": "tutorial",
+      "name": "Tutorial"
+    }
+  ]
+}

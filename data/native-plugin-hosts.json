@@ -660,6 +660,27 @@
     ]
   },
   {
+    "agent_id": "goose",
+    "adapter": "goose_cli",
+    "docs_url": "https://github.com/aaif-goose/goose/tree/v1.56.0/crates/goose/src/plugins",
+    "manifest_paths": [
+      ".goose-plugin/plugin.json",
+      ".plugin/plugin.json",
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.agents/plugins",
+        "layout": "goose_global_plugins",
+        "presence": "local"
+      }
+    ]
+  },
+  {
     "agent_id": "goose-desktop",
     "adapter": "goose_desktop",
     "docs_url": "https://github.com/aaif-goose/goose/tree/v1.56.0/crates/goose/src/plugins",

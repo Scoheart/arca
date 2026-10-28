@@ -95,10 +95,15 @@ fn application_matching(names: &[String], bundle_ids: &[String]) -> Option<PathB
 }
 
 pub(crate) fn find_command(name: &str) -> Option<PathBuf> {
+    command_candidates(name).into_iter().find(|p| executable(p))
+}
+
+/// Same ordered candidates for passive observers and their installation watches.
+pub(crate) fn command_candidates(name: &str) -> Vec<PathBuf> {
     let direct = expand(name);
-    if direct.is_absolute() { return executable(&direct).then_some(direct); }
+    if direct.is_absolute() { return vec![direct]; }
     if name.is_empty() || name.starts_with('-') || name.contains(['/', '\\']) || name.chars().any(char::is_whitespace) {
-        return None;
+        return Vec::new();
     }
     let mut paths = std::env::var_os("PATH").map(|value| std::env::split_paths(&value).collect::<Vec<_>>()).unwrap_or_default();
     if let Ok(home) = home() {
@@ -115,7 +120,7 @@ pub(crate) fn find_command(name: &str) -> Option<PathBuf> {
         }
     }
     paths.extend(["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"].map(crate::paths::system_probe_path));
-    paths.into_iter().filter(|p| p.is_absolute()).map(|p| p.join(name)).find(|p| executable(p))
+    paths.into_iter().filter(|p| p.is_absolute()).map(|p| p.join(name)).collect()
 }
 
 fn validate_environment(env: &BTreeMap<String, String>) -> Result<(), String> {
