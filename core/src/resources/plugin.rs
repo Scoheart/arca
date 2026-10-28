@@ -19,6 +19,7 @@ mod goose_plugins;
 mod vibe;
 mod kimi;
 mod kimi_desktop;
+mod amp;
 mod claude;
 mod claude_desktop;
 mod gemini;
@@ -479,6 +480,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "vibe" { vibe::observe(host, &mut result); continue; }
         if host.adapter == "kimi" { kimi::observe(host, &mut result); continue; }
         if host.adapter == "kimi_desktop" { kimi_desktop::observe(host, &mut result); continue; }
+        if host.adapter == "amp" { amp::observe(host, &mut result); continue; }
         if host.adapter == "claude" { claude::observe(host, &mut result); continue; }
         if host.adapter == "claude_desktop" { claude_desktop::observe(host, &mut result); continue; }
         if host.adapter == "gemini" { gemini::observe(host, &mut result); continue; }
@@ -566,7 +568,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()
@@ -581,6 +583,7 @@ pub(crate) fn passive_runtime_version(agent_id: &str, path: &Path) -> Option<Opt
         Some("goose_cli") => Some(goose_cli::runtime_version(path)),
         Some("vibe") => Some(vibe::runtime_version(path)),
         Some("kimi") => Some(kimi::runtime_version(path)),
+        Some("amp") => Some(amp::runtime_version(path)),
         _ => None,
     }
 }

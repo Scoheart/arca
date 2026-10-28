@@ -768,5 +768,25 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "amp",
+    "adapter": "amp",
+    "docs_url": "https://ampcode.com/docs/customize/plugins",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.config/amp/plugins",
+        "layout": "amp_system_plugins",
+        "presence": "local"
+      },
+      {
+        "path": "~/.cache/amp/global-plugins",
+        "layout": "amp_global_cache",
+        "presence": "cache_only"
+      }
+    ]
   }
 ]
