@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.44.0](https://github.com/Scoheart/arca/compare/v2.43.0...v2.44.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Kimi Code Desktop native resources ([4ae55da](https://github.com/Scoheart/arca/commit/4ae55dafc97334ab0c41ef573811ec75a1018f5e))
+
 ## [2.43.0](https://github.com/Scoheart/arca/compare/v2.42.0...v2.43.0) (2026-10-28)
 
 ### Changes
