@@ -77,6 +77,7 @@ impl TestHome {
             ("CODEX_HOME", home.join(".codex")),
             ("CODEX_ELECTRON_BUNDLED_PLUGINS_RESOURCES_PATH", home.join("codex-app-resources")),
             ("CLAUDE_CONFIG_DIR", home.join(".claude")),
+            ("CLAUDE_USER_DATA_DIR", home.join("claude-desktop")),
             ("GEMINI_CLI_HOME", home.clone()),
             ("QWEN_HOME", home.join(".qwen")),
             ("ZCODE_STORAGE_DIR", PathBuf::new()),

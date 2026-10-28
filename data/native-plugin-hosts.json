@@ -641,5 +641,27 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "claude-desktop",
+    "adapter": "claude_desktop",
+    "docs_url": "https://www.anthropic.com/research/desktop-extensions",
+    "manifest_paths": [
+      "manifest.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "extension:",
+    "roots": [
+      {
+        "path": "~/Library/Application Support/Claude",
+        "layout": "claude_desktop_standard",
+        "presence": "installed"
+      },
+      {
+        "path": "~/Library/Application Support/Claude-3p",
+        "layout": "claude_desktop_third_party",
+        "presence": "installed"
+      }
+    ]
   }
 ]
