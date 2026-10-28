@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.31.0](https://github.com/Scoheart/arca/compare/v2.30.0...v2.31.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Qoder Desktop native layers ([63426d1](https://github.com/Scoheart/arca/commit/63426d1811cb2dd44372bc69f5d2b12005adfaf6))
+
 ## [2.30.0](https://github.com/Scoheart/arca/compare/v2.29.0...v2.30.0) (2026-10-28)
 
 ### Changes
