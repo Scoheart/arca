@@ -1,6 +1,6 @@
 [package]
 name = "arca-core"
-version = "2.33.0"
+version = "2.34.0"
 edition = "2021"
 description = "Shared MCP, Model, Skill, Agent, and transaction core for Arca frontends"
 

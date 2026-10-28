@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.34.0](https://github.com/Scoheart/arca/compare/v2.33.0...v2.34.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Qoder CLI CN native resources ([cbf0d2a](https://github.com/Scoheart/arca/commit/cbf0d2ad6f424de359cd8c03d074f09cc3f65747))
+
 ## [2.33.0](https://github.com/Scoheart/arca/compare/v2.32.0...v2.33.0) (2026-10-28)
 
 ### Changes
