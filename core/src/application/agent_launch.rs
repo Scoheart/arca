@@ -337,7 +337,9 @@ pub fn runtime_version(agent_id: &str) -> Result<Option<String>, String> {
     if !launch.available { return Ok(None); }
     Ok(match launch.resolved_target.as_ref() {
         Some(LaunchTarget::App { path, .. }) => cached_version(&Path::new(path).join("Contents/Info.plist"), || app_version(path)),
-        Some(LaunchTarget::Cli { command, .. }) if launch.configured_target.is_none() => cached_version(Path::new(command), || cli_version(command)),
+        Some(LaunchTarget::Cli { command, .. }) if launch.configured_target.is_none() => cached_version(Path::new(command), || {
+            crate::resources::plugin::passive_runtime_version(agent_id,Path::new(command)).unwrap_or_else(||cli_version(command))
+        }),
         _ => None,
     })
 }

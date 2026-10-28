@@ -44,6 +44,7 @@ pub(super) struct Entry { pub path: String, pub directory: bool, pub file: bool 
 pub(super) enum Package<'a> {
     Disk(&'a Path),
     Archive { path: &'a Path, prefix: &'static str, zip: RefCell<zip::ZipArchive<fs::File>>, members: BTreeMap<String, (usize, bool)> },
+    Bun { graph: &'a super::bun_package::Graph, prefix: &'a str },
 }
 
 impl Package<'_> {
@@ -52,6 +53,7 @@ impl Package<'_> {
         match self {
             Self::Disk(root) => Ok(collapse_home(&relative(root, &input)?)),
             Self::Archive { path, prefix, .. } => Ok(format!("{}!/{prefix}{input}", collapse_home(path))),
+            Self::Bun { graph, prefix } => graph.path(&format!("{prefix}{input}")),
         }
     }
 
@@ -67,6 +69,10 @@ impl Package<'_> {
             },
             Self::Archive { members, .. } => Ok(members.contains_key(&input)
                 || members.keys().any(|name| name.starts_with(&format!("{input}/")))),
+            Self::Bun { graph, prefix } => {
+                let key = format!("{prefix}{input}");
+                Ok(graph.has(&key) || graph.names().any(|name| name.starts_with(&format!("{key}/"))))
+            },
         }
     }
 
@@ -75,6 +81,7 @@ impl Package<'_> {
         match self {
             Self::Disk(root) => regular_metadata_file(&relative(root, &input)?),
             Self::Archive { members, .. } => Ok(members.get(&input).is_some_and(|(_, directory)| !directory)),
+            Self::Bun { graph, prefix } => Ok(graph.has(&format!("{prefix}{input}"))),
         }
     }
 
@@ -104,6 +111,20 @@ impl Package<'_> {
                 }
                 Ok(entries.into_values().collect())
             },
+            Self::Bun { graph, prefix: root } => {
+                budget.visit()?;
+                let prefix = if input.is_empty() { String::new() } else { format!("{input}/") };
+                let mut entries = BTreeMap::new();
+                for name in graph.names().filter_map(|name| name.strip_prefix(root)) {
+                    let Some(tail) = name.strip_prefix(&prefix).filter(|tail| !tail.is_empty()) else { continue; };
+                    budget.visit()?;
+                    let path = format!("{prefix}{}",tail.split('/').next().ok_or(())?);
+                    let directory = tail.contains('/');
+                    entries.entry(path.clone()).or_insert(Entry { path, directory, file:!directory });
+                    if entries.len() > MAX_ENTRIES { return Err(()); }
+                }
+                Ok(entries.into_values().collect())
+            },
         }
     }
 
@@ -111,6 +132,7 @@ impl Package<'_> {
         let input = local_path(input)?;
         match self {
             Self::Disk(root) => optional_json(root, &input, budget),
+            Self::Bun { graph, prefix } => graph.json(&format!("{prefix}{input}"),budget),
             Self::Archive { zip, members, .. } => {
                 budget.references += 1;
                 if budget.references > MAX_REFERENCES { return Err(()); }

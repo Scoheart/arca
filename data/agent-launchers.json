@@ -616,5 +616,12 @@
     "candidates": [
       "MCPJam Inspector"
     ]
+  },
+  "qoder-cli-cn": {
+    "kind": "cli",
+    "candidates": [
+      "qoderclicn"
+    ],
+    "args": []
   }
 }

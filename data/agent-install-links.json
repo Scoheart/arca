@@ -482,5 +482,9 @@
   "fx": {
     "url": "https://fx.sh/docs/getting-started/authentication",
     "label": "安装文档"
+  },
+  "qoder-cli-cn": {
+    "url": "https://qoder.cn/download",
+    "label": "官方下载"
   }
 }

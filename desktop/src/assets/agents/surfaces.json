@@ -53,5 +53,6 @@
   "chatgpt": "web",
   "postman": "desktop",
   "mcpjam": "desktop",
-  "mcp-use-inspector": "web"
+  "mcp-use-inspector": "web",
+  "qoder-cli-cn": "cli"
 }
