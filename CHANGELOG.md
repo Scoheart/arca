@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.39.0](https://github.com/Scoheart/arca/compare/v2.38.1...v2.39.0) (2026-10-28)
+
+### Changes
+
+* feat(chatgpt): observe built-in session MCP declarations ([3fc2afb](https://github.com/Scoheart/arca/commit/3fc2afb48ba22b267a2f90c5123f04db0848606d))
+
 ## [2.38.1](https://github.com/Scoheart/arca/compare/v2.38.0...v2.38.1) (2026-10-28)
 
 ### Changes
