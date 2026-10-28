@@ -477,5 +477,32 @@
         "presence": "local"
       }
     ]
+  },
+  {
+    "agent_id": "qoder-desktop",
+    "adapter": "qoder_desktop",
+    "docs_url": "https://docs.qoder.com/qoder/connectors",
+    "manifest_paths": [
+      ".qoder-app-plugin/plugin.json",
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Qoder.app",
+        "layout": "qoder_desktop_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Qoder.app",
+        "layout": "qoder_desktop_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

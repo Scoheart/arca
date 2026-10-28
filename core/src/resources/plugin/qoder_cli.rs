@@ -26,7 +26,7 @@ fn add(p: &Package<'_>, input: &str, kind: PluginComponentKind, name: Option<&st
     }
     Ok(())
 }
-fn files(p: &Package<'_>, input: &str, kind: PluginComponentKind, depth: usize, out: &mut Vec<PluginComponent>, budget: &mut ScanBudget) -> Result<(), ()> {
+pub(super) fn files(p: &Package<'_>, input: &str, kind: PluginComponentKind, depth: usize, out: &mut Vec<PluginComponent>, budget: &mut ScanBudget) -> Result<(), ()> {
     if depth > 8 { return Err(()); }
     if !input.is_empty() && p.file(input)? { return add(p, input, kind, None, out); }
     for e in p.children(input, budget)? {
@@ -81,20 +81,27 @@ fn hooks(p: &Package<'_>, value: &Value, source: &str, depth: usize, out: &mut V
         _ => Err(()),
     }
 }
-fn mcp(p: &Package<'_>, value: &Value, source: &str, depth: usize, servers: &mut BTreeMap<String, PluginComponent>, budget: &mut ScanBudget) -> Result<(), ()> {
+fn sdk_mcp(value: &Value) -> bool {
+    value.is_object()
+        && ["command", "url", "type"].iter().all(|key| value.get(*key).is_none_or(Value::is_string))
+        && value.get("args").is_none_or(|v| v.as_array().is_some_and(|items| items.iter().all(Value::is_string)))
+        && value.get("env").is_none_or(|v| v.as_object().is_some_and(|items| items.values().all(Value::is_string)))
+}
+fn mcp(p: &Package<'_>, value: &Value, source: &str, depth: usize, require_connection: bool, servers: &mut BTreeMap<String, PluginComponent>, budget: &mut ScanBudget) -> Result<(), ()> {
     if depth > 8 { return Err(()); }
     match value {
         Value::String(input) => {
             let doc = p.json(input, budget)?.ok_or(())?;
-            mcp(p, doc.get("mcpServers").unwrap_or(&doc), input, depth + 1, servers, budget)
+            mcp(p, doc.get("mcpServers").unwrap_or(&doc), input, depth + 1, require_connection, servers, budget)
         },
         Value::Array(values) if values.len() <= 64 => {
-            for value in values { mcp(p, value, source, depth + 1, servers, budget)?; } Ok(())
+            for value in values { mcp(p, value, source, depth + 1, require_connection, servers, budget)?; } Ok(())
         },
         Value::Object(values) if values.len() <= MAX_COMPONENTS => {
             for (name, value) in values {
                 let name = metadata_name(name).ok_or(())?;
-                if !value.is_object() || !["command", "url"].iter().any(|key| value.get(*key).and_then(Value::as_str).is_some_and(|v| !v.is_empty())) {
+                let accepted = if require_connection { value.is_object() && ["command", "url"].iter().any(|key| value.get(*key).and_then(Value::as_str).is_some_and(|v| !v.is_empty())) } else { sdk_mcp(value) };
+                if !accepted {
                     servers.remove(&name); continue;
                 }
                 servers.insert(name.clone(), PluginComponent { kind: PluginComponentKind::Mcp, name: name.clone(), source_path: p.path(source)?, native_id: Some(name) });
@@ -109,6 +116,14 @@ fn package(host: &Host, p: &Package<'_>, id: &str, presence: PluginPresence, pro
         let input = format!("{folder}/plugin.json");
         if let Some(value) = p.json(&input, &mut result.budget)? { manifest = Some((input, value)); break; }
     }
+    package_inner(host, p, id, presence, provenance, manifest, true, result)
+}
+
+pub(super) fn sdk_package(host: &Host, p: &Package<'_>, id: &str, presence: PluginPresence, provenance: &[String], manifest: Option<(String, Arc<Value>)>, result: &mut PluginScan) -> Result<NativePluginObservation, ()> {
+    package_inner(host, p, id, presence, provenance, manifest, false, result)
+}
+
+fn package_inner(host: &Host, p: &Package<'_>, id: &str, presence: PluginPresence, provenance: &[String], manifest: Option<(String, Arc<Value>)>, require_connection: bool, result: &mut PluginScan) -> Result<NativePluginObservation, ()> {
     // The CLI ignores root projection manifests and supports convention-only
     // packages. Installation identity remains the exact global ledger key.
     let (source, value) = manifest.unwrap_or_else(|| (String::new(), Arc::new(serde_json::json!({}))));
@@ -131,12 +146,12 @@ fn package(host: &Host, p: &Package<'_>, id: &str, presence: PluginPresence, pro
     // explicit declarations. This deliberately differs from the IDE adapter.
     for input in [".mcp.json", "mcp.json"] {
         if p.exists(input)? {
-            if mcp(p, &Value::String(input.into()), input, 0, &mut servers, &mut result.budget).is_err() { result.unavailable = true; }
+            if mcp(p, &Value::String(input.into()), input, 0, require_connection, &mut servers, &mut result.budget).is_err() { result.unavailable = true; }
             break;
         }
     }
     if let Some(v) = value.get("mcpServers") {
-        if mcp(p, v, &source, 0, &mut servers, &mut result.budget).is_err() { result.unavailable = true; }
+        if mcp(p, v, &source, 0, require_connection, &mut servers, &mut result.budget).is_err() { result.unavailable = true; }
     }
     out.extend(servers.into_values()); out.sort(); out.dedup();
     let mut sources = provenance.to_vec();

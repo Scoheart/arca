@@ -23,6 +23,7 @@ mod qoder;
 mod qoder_cli;
 mod electron_package;
 mod qoderwork;
+mod qoder_desktop;
 mod antigravity;
 mod zcode;
 mod vscode_extensions;
@@ -32,6 +33,9 @@ const MAX_COMPONENTS: usize = 4096;
 const MAX_SCAN_ENTRIES: usize = 32_768;
 const MAX_REFERENCES: usize = 2048;
 const MAX_READ_BYTES: usize = 64 * 1024 * 1024;
+// Hashing shipped runtimes has a separate bound from private metadata reads.
+// Multiple installed hosts must not exhaust each other's JSON read allowance.
+const MAX_VERIFIED_BYTES: usize = 256 * 1024 * 1024;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -64,6 +68,7 @@ struct ScanBudget {
     visited: usize,
     references: usize,
     bytes: usize,
+    verified_bytes: usize,
     json: BTreeMap<(PathBuf, DocumentFormat), Arc<Value>>,
 }
 impl ScanBudget {
@@ -91,17 +96,17 @@ pub(crate) fn text(path: &Path, limit: u64) -> Result<String, ()> {
     Ok(content)
 }
 
-fn verify_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budget: &mut ScanBudget) -> Result<(), ()> {
+fn verified_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budget: &mut ScanBudget) -> Result<fs::File, ()> {
     if !regular_metadata_file(path)? { return Err(()); }
     budget.visit()?;
-    if expected_bytes > MAX_READ_BYTES.saturating_sub(budget.bytes) as u64 { return Err(()); }
+    if expected_bytes > MAX_VERIFIED_BYTES.saturating_sub(budget.verified_bytes) as u64 { return Err(()); }
     let mut file = open_confined_file(path)?; let before = file.metadata().map_err(|_| ())?;
     if !before.is_file() || before.len() != expected_bytes { return Err(()); }
     let mut digest = Sha256::new(); let mut bytes = 0u64; let mut buffer = [0u8; 65_536];
     loop {
         let count = (&mut file).take(expected_bytes.saturating_sub(bytes)+1).read(&mut buffer).map_err(|_| ())?;
         if count == 0 { break; }
-        bytes += count as u64; budget.bytes += count;
+        bytes += count as u64; budget.verified_bytes += count;
         if bytes > expected_bytes { return Err(()); }
         digest.update(&buffer[..count]);
     }
@@ -112,7 +117,11 @@ fn verify_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budg
         use std::os::unix::fs::MetadataExt;
         if before.dev() != bound.dev() || before.ino() != bound.ino() || before.ctime() != after.ctime() || before.ctime_nsec() != after.ctime_nsec() { return Err(()); }
     }
-    Ok(())
+    Ok(file)
+}
+
+fn verify_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budget: &mut ScanBudget) -> Result<(), ()> {
+    verified_artifact(path, expected_bytes, expected_sha256, budget).map(|_| ())
 }
 
 
@@ -461,6 +470,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "qoder" { qoder::observe(host, &mut result); continue; }
         if host.adapter == "qoder_cli" { qoder_cli::observe(host, &mut result); continue; }
         if host.adapter == "qoderwork" { qoderwork::observe(host, &mut result); continue; }
+        if host.adapter == "qoder_desktop" { qoder_desktop::observe(host, &mut result); continue; }
         if host.adapter == "antigravity" { antigravity::observe(host, &mut result); continue; }
         if host.adapter == "zcode" { zcode::observe(host, &mut result); continue; }
         if host.adapter == "vscode_extensions" { vscode_extensions::observe(host, &mut result); continue; }
@@ -533,7 +543,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()

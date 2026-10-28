@@ -1,0 +1,135 @@
+[
+  {
+    "agent_id": "qoder-desktop",
+    "product_id": "qoder",
+    "version": "0.4.11",
+    "bundle_id": "com.qoder.app",
+    "product_name": "Qoder",
+    "config_directory": ".qoder",
+    "environment_prefix": "QODER",
+    "guards": [
+      {
+        "path": "package.json",
+        "bytes": 2367,
+        "sha256": "86235458133bb9840f3ba0fc1aa7621f020abc81aa0d48f11359db6e714724db"
+      },
+      {
+        "path": "out/main/index.js",
+        "bytes": 5146,
+        "sha256": "6b16e5ea90a21666a4602037209331e8ce40cc218664dffed056b8ed1bdcbd1e"
+      },
+      {
+        "path": "out/main/electronMain.js",
+        "bytes": 17823613,
+        "sha256": "a4a7d6794cdd025083a147aa755c8b1590d279a6b86e17886ff7fe82701d6297"
+      },
+      {
+        "path": "out/main/chunks/C69d5URO.js",
+        "bytes": 64545,
+        "sha256": "36854236858cc929be8819ec82dced6500c0a7cb44260341d552d80061232d87"
+      },
+      {
+        "path": "node_modules/@qoder-ai/qoder-agent-sdk/package.json",
+        "bytes": 969,
+        "sha256": "83739cc0c66c8f45a53152cd7f90df6ba00f9f853bf22057cabbaaddda96fe8f"
+      },
+      {
+        "path": "node_modules/@qoder-ai/qoder-agent-sdk/dist/index.js",
+        "bytes": 229307,
+        "sha256": "329c20e1146ff3253eb183c91ed8e4c9d68fbb31cdf8fe95faad378dec035499"
+      }
+    ],
+    "sdk_version": "1.0.56-alpha.6",
+    "sdk_worker": {
+      "path": "app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/qoder-worker-runtime.obf.mjs",
+      "bytes": 34389781,
+      "sha256": "a7ddf7176205357c7599fae7b38125fdf1028aa66ca3be59128439c4fe99d78b"
+    },
+    "bundled_manifest": {
+      "path": "bundled-resources/manifest.json",
+      "bytes": 12753,
+      "sha256": "b297e86938ab3701902043eac53822dca2571e7a9c12b3a54a3292513b4f4283"
+    },
+    "extension_catalog": {
+      "path": "extensions/catalog.v1.json",
+      "bytes": 884545,
+      "sha256": "194d141001c035a46b8235d402ae4132ff748866d407c8d7613d1ae416b0b9c0"
+    },
+    "builtin_mcps": [
+      {
+        "id": "builtin",
+        "name": "Qoder builtin tools"
+      },
+      {
+        "id": "qoder-settings",
+        "name": "Qoder settings"
+      },
+      {
+        "id": "browser-use",
+        "name": "Browser Use"
+      },
+      {
+        "id": "node-repl",
+        "name": "Node REPL"
+      },
+      {
+        "id": "collaboration",
+        "name": "Qoder collaboration"
+      },
+      {
+        "id": "thin-ssh-workspace",
+        "name": "Remote workspace tools"
+      }
+    ],
+    "extension_mcps": [
+      {
+        "plugin_id": "qoder.communication",
+        "source": {
+          "path": "dist/node/server.cjs",
+          "bytes": 775652,
+          "sha256": "82d36ec58b45d6f2d0434da68dd662ced19f952287d544f4a8d38283d3b17b13"
+        },
+        "servers": [],
+        "dynamic_reference": "Channel MCP name is supplied by each active channel"
+      },
+      {
+        "plugin_id": "qoder.knowledge.center",
+        "source": {
+          "path": "dist/node/main.cjs",
+          "bytes": 3618959,
+          "sha256": "5a7511ccf5cfacc627f615a8f1dc398119ec223fc0c13a44868abba46ca2b916"
+        },
+        "servers": [
+          "repowiki"
+        ],
+        "dynamic_reference": null
+      },
+      {
+        "plugin_id": "qoder.phone-use",
+        "source": {
+          "path": "dist/node/main.cjs",
+          "bytes": 434688,
+          "sha256": "526f4075235a82eaf05c0c32dec72f58cbb8b481057b34401e90d2d10cff3016"
+        },
+        "servers": [
+          "ios",
+          "android",
+          "mobile"
+        ],
+        "dynamic_reference": null
+      },
+      {
+        "plugin_id": "qoder.sites",
+        "source": {
+          "path": "dist/node/main.cjs",
+          "bytes": 2347994,
+          "sha256": "d024a72bfb9e665f2083d21cda8cd9234457e697d5f1ad0a4445ffe4e37c66e6"
+        },
+        "servers": [
+          "qoder_sites"
+        ],
+        "dynamic_reference": null
+      }
+    ]
+  }
+]

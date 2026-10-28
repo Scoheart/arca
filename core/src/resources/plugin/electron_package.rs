@@ -8,11 +8,21 @@ pub(super) struct Guard { pub path: String, pub bytes: u64, pub sha256: String }
 
 fn bytes(file: &mut fs::File, count: usize, budget: &mut ScanBudget) -> Result<Vec<u8>, ()> {
     budget.visit()?;
-    if count > MAX_READ_BYTES.saturating_sub(budget.bytes) { return Err(()); }
+    if count > MAX_VERIFIED_BYTES.saturating_sub(budget.verified_bytes) { return Err(()); }
     let mut data = vec![0; count];
     file.read_exact(&mut data).map_err(|_| ())?;
-    budget.bytes += count;
+    budget.verified_bytes += count;
     Ok(data)
+}
+
+/// Parse exactly the bytes whose digest was checked, without reopening a path.
+pub(super) fn guarded_json(path: &Path, guard: &Guard, budget: &mut ScanBudget) -> Result<Value, ()> {
+    if guard.bytes > 2_097_152 { return Err(()); }
+    let mut file = open_confined_file(path)?;
+    if file.metadata().map_err(|_| ())?.len() != guard.bytes { return Err(()); }
+    let data = bytes(&mut file, usize::try_from(guard.bytes).map_err(|_| ())?, budget)?;
+    if hex::encode(Sha256::digest(&data)) != guard.sha256 { return Err(()); }
+    serde_json::from_slice(&data).map_err(|_| ())
 }
 
 pub(super) fn app_version(app: &Path, bundle: &str, name: &str, budget: &mut ScanBudget) -> Result<String, ()> {
@@ -69,6 +79,14 @@ pub(super) fn guard_asar(path: &Path, guards: &[Guard], budget: &mut ScanBudget)
 mod tests {
     use super::*;
     use crate::testenv::TestHome;
+
+    #[test]
+    fn binary_verification_does_not_consume_metadata_allowance_and_remains_bounded() {
+        let home=TestHome::new("electron-verification-budget");let path=home.home.join("payload");fs::write(&path,b"data").unwrap();
+        let mut budget=ScanBudget{bytes:MAX_READ_BYTES,..Default::default()};let digest=hex::encode(Sha256::digest(b"data"));
+        verify_artifact(&path,4,&digest,&mut budget).unwrap();assert_eq!(budget.bytes,MAX_READ_BYTES);
+        budget.verified_bytes=MAX_VERIFIED_BYTES;assert!(verify_artifact(&path,4,&digest,&mut budget).is_err());
+    }
 
     #[test]
     fn asar_guards_reject_links_unpacked_payloads_out_of_bounds_and_wrong_digests() {
