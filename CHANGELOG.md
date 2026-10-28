@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.33.0](https://github.com/Scoheart/arca/compare/v2.32.0...v2.33.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe QoderWork CN native resources ([7f04a10](https://github.com/Scoheart/arca/commit/7f04a106ef3f770b5bf15f8a596c0c590857452c))
+
 ## [2.32.0](https://github.com/Scoheart/arca/compare/v2.31.0...v2.32.0) (2026-10-28)
 
 ### Changes
