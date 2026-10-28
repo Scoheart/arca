@@ -6,7 +6,7 @@ use super::electron_package::{app_version, guard_asar, Guard};
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Contract {
-    version: String, bundle_id: String, product_name: String, guards: Vec<Guard>,
+    agent_id: String, version: String, bundle_id: String, product_name: String, guards: Vec<Guard>,
     connectors: Vec<Connector>, legokits: Vec<Legokit>, blocked_plugins: Vec<String>,
     sdk_package: Guard, sdk_version: String,
 }
@@ -16,10 +16,11 @@ struct Connector { id: String, name: String }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Legokit { id: String, server_id: String, bundle: String }
-fn contract() -> &'static Contract {
-    static VALUE: OnceLock<Contract> = OnceLock::new();
+fn contracts() -> &'static [Contract] {
+    static VALUE: OnceLock<Vec<Contract>> = OnceLock::new();
     VALUE.get_or_init(|| serde_json::from_str(include_str!("../../../../data/native-plugin-qoderwork.json")).expect("audited QoderWork contract"))
 }
+fn contract(host: &Host) -> Result<&'static Contract, ()> { contracts().iter().find(|c|c.agent_id==host.agent_id).ok_or(()) }
 fn root(source: &Root) -> PathBuf {
     if source.path.starts_with("/Applications/") { crate::paths::system_probe_path(&source.path) } else { expand_tilde(&source.path) }
 }
@@ -67,7 +68,7 @@ fn mcps(root: &Path, directory: &str, out: &mut Vec<PluginComponent>, budget: &m
 fn package(host: &Host, path: &Path, presence: PluginPresence, revision: &str, result: &mut PluginScan) -> Result<(), ()> {
     checked_root(path)?;
     let directory = folder(path.file_name().and_then(|v| v.to_str()).ok_or(())?)?;
-    if contract().blocked_plugins.contains(&directory) { return Ok(()); }
+    if contract(host)?.blocked_plugins.contains(&directory) { return Ok(()); }
     let mut selected = None;
     for input in &host.manifest_paths {
         if let Some(value) = optional_json(path,input,&mut result.budget)? { selected=Some((input,value)); break; }
@@ -93,10 +94,10 @@ fn packages(host: &Host, path: &Path, presence: PluginPresence, revision: &str, 
     Ok(())
 }
 fn sdk_resources(host: &Host, resources: &Path, result: &mut PluginScan) -> Result<(), ()> {
-    let c=contract(); let package=relative(resources,&c.sdk_package.path)?;
+    let c=contract(host)?; let package=relative(resources,&c.sdk_package.path)?;
     verify_artifact(&package,c.sdk_package.bytes,&c.sdk_package.sha256,&mut result.budget)?;
     let worker=relative(package.parent().ok_or(())?,"dist/_worker")?;
-    let mut skills=snapshot(host,"@builtin/sdk-skills","QoderWork SDK builtin Skills",&c.sdk_version,PluginPresence::Bundled,&worker.join("builtin"),"shipped-sdk-resources");
+    let mut skills=snapshot(host,"@builtin/sdk-skills",&format!("{} SDK builtin Skills",c.product_name),&c.sdk_version,PluginPresence::Bundled,&worker.join("builtin"),"shipped-sdk-resources");
     features(&worker,"builtin",PluginComponentKind::Skill,&mut skills.components,&mut result.budget)?;
     if !skills.components.is_empty() { result.plugins.push(skills); }
     let root=relative(&worker,"vendor/qoder-security")?;
@@ -122,20 +123,20 @@ fn sdk_resources(host: &Host, resources: &Path, result: &mut PluginScan) -> Resu
     result.plugins.push(plugin); Ok(())
 }
 fn bundled(host: &Host, app: &Path, result: &mut PluginScan) -> Result<(), ()> {
-    let c=contract();
+    let c=contract(host)?;
     let version=app_version(app,&c.bundle_id,&c.product_name,&mut result.budget)?;
     if version != c.version { return Err(()); }
     let resources=relative(app,"Contents/Resources")?;
     let asar=resources.join("app.asar"); guard_asar(&asar,&c.guards,&mut result.budget)?;
     let source=PathBuf::from(format!("{}!/out/main/main.js",asar.to_string_lossy()));
-    let mut connectors=snapshot(host,"@builtin/connectors","QoderWork builtin connectors",&version,PluginPresence::Bundled,&source,"audited-native-factories");
+    let mut connectors=snapshot(host,"@builtin/connectors",&format!("{} builtin connectors",c.product_name),&version,PluginPresence::Bundled,&source,"audited-native-factories");
     for connector in &c.connectors { add(&source,PluginComponentKind::Mcp,&connector.name,Some(connector.id.clone()),&mut connectors.components)?; }
     result.plugins.push(connectors);
     for (id,name,folder,kind) in [
-        ("@builtin/skills","QoderWork builtin Skills","skills",PluginComponentKind::Skill),
-        ("@builtin/commands","QoderWork builtin commands","commands",PluginComponentKind::Command),
+        ("@builtin/skills","builtin Skills","skills",PluginComponentKind::Skill),
+        ("@builtin/commands","builtin commands","commands",PluginComponentKind::Command),
     ] {
-        let mut plugin=snapshot(host,id,name,&version,PluginPresence::Bundled,&resources.join(folder),"shipped-resources");
+        let mut plugin=snapshot(host,id,&format!("{} {name}",c.product_name),&version,PluginPresence::Bundled,&resources.join(folder),"shipped-resources");
         features(&resources,folder,kind,&mut plugin.components,&mut result.budget)?;
         if !plugin.components.is_empty() { result.plugins.push(plugin); }
     }
@@ -143,7 +144,7 @@ fn bundled(host: &Host, app: &Path, result: &mut PluginScan) -> Result<(), ()> {
         let path=relative(&resources,&format!("legokits/{}",folder(&kit.id)?))?;
         let bundle=relative(&path,&kit.bundle)?;
         if !regular_metadata_file(&bundle)? { return Err(()); }
-        let mut plugin=snapshot(host,&format!("@builtin/legokit:{}",kit.id),&format!("QoderWork {}",kit.id),&version,PluginPresence::Bundled,&bundle,"host-managed-runtime");
+        let mut plugin=snapshot(host,&format!("@builtin/legokit:{}",kit.id),&format!("{} {}",c.product_name,kit.id),&version,PluginPresence::Bundled,&bundle,"host-managed-runtime");
         add(&bundle,PluginComponentKind::Mcp,&kit.server_id,Some(kit.server_id.clone()),&mut plugin.components)?;
         for (folder,kind) in [("skills",PluginComponentKind::Skill),("agents",PluginComponentKind::Agent)] {
             if features(&path,folder,kind,&mut plugin.components,&mut result.budget).is_err() { result.unavailable=true; }
@@ -179,6 +180,7 @@ fn external_legokits(host: &Host, path: &Path, result: &mut PluginScan) -> Resul
     Ok(())
 }
 pub(super) fn observe(host: &Host, result: &mut PluginScan) {
+    if contract(host).is_err() { result.unavailable=true; return; }
     let mut selected=false;
     for source in &host.roots {
         let path=root(source);

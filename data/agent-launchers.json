@@ -345,6 +345,15 @@
       "com.qoder.app"
     ]
   },
+  "qoderwork-cn": {
+    "kind": "app",
+    "candidates": [
+      "QoderWork CN"
+    ],
+    "bundle_ids": [
+      "com.qoder.work.cn"
+    ]
+  },
   "qoderwork": {
     "kind": "app",
     "candidates": [

@@ -531,5 +531,45 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "qoderwork-cn",
+    "adapter": "qoderwork",
+    "docs_url": "https://docs.qoder.cn/",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "plugin:",
+    "roots": [
+      {
+        "path": "/Applications/QoderWork CN.app",
+        "layout": "qoderwork_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/QoderWork CN.app",
+        "layout": "qoderwork_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/.qoderworkcn/plugins",
+        "layout": "qoderwork_plugins",
+        "presence": "installed"
+      },
+      {
+        "path": "~/.qoderworkcn/plugins-custom",
+        "layout": "qoderwork_custom_plugins",
+        "presence": "local"
+      },
+      {
+        "path": "~/.qoderworkcn/legokits",
+        "layout": "qoderwork_legokits",
+        "presence": "local"
+      }
+    ]
   }
 ]

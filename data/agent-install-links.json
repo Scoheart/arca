@@ -207,6 +207,10 @@
     "url": "https://qoder.com/en/download",
     "label": "官方下载"
   },
+  "qoderwork-cn": {
+    "url": "https://qoder.cn/download",
+    "label": "官方下载"
+  },
   "qoderwork": {
     "url": "https://qoder.com/en/download",
     "label": "官方下载"
