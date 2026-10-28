@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.38.0](https://github.com/Scoheart/arca/compare/v2.37.0...v2.38.0) (2026-10-28)
+
+### Changes
+
+* feat(agents): observe OpenCode desktop native plugins ([184de69](https://github.com/Scoheart/arca/commit/184de694f83fe00cf7977d9013b7b315e5998cb6))
+
 ## [2.37.0](https://github.com/Scoheart/arca/compare/v2.36.0...v2.37.0) (2026-10-28)
 
 ### Changes
