@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.45.0](https://github.com/Scoheart/arca/compare/v2.44.0...v2.45.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Amp native plugin resources ([1f23d2e](https://github.com/Scoheart/arca/commit/1f23d2eb0746a023abc0aadf95bd833f55152741))
+
 ## [2.44.0](https://github.com/Scoheart/arca/compare/v2.43.0...v2.44.0) (2026-10-28)
 
 ### Changes
