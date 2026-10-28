@@ -12,6 +12,7 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 mod codex;
+pub(crate) mod codex_desktop;
 mod claude;
 mod claude_desktop;
 mod gemini;
