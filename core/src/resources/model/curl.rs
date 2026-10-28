@@ -9,14 +9,11 @@ use zeroize::Zeroizing;
 
 #[derive(Deserialize)]
 struct CurlTemplates {
-    reviewed_on: String,
     templates: BTreeMap<ModelProtocol, CurlTemplate>,
 }
 
 #[derive(Deserialize)]
 struct CurlTemplate {
-    sources: Vec<String>,
-    notes: Vec<String>,
     request: serde_json::Value,
 }
 
@@ -35,6 +32,9 @@ fn request_template(protocol: &ModelProtocol, model: &str) -> Result<serde_json:
             body.insert(field.into(), serde_json::Value::Null);
         }
     }
+    // Filter unset options in Core so the copied text is just one cURL command.
+    // Do not remove false, zero, empty collections or nested null values.
+    body.retain(|_, value| !value.is_null());
     Ok(request)
 }
 
@@ -54,26 +54,10 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
     if model.contains('\0') || url.contains('\0') {
         return Err("curl_invalid_input: NUL bytes are unsupported".into());
     }
-    let template = TEMPLATES.templates.get(protocol).ok_or("curl_template_missing: protocol has no request template")?;
     let body = serde_json::to_string_pretty(&request_template(protocol, model)?)
         .map_err(|_| "curl_serialization_failed")?;
-    let mut preamble = format!("# Arca complete top-level request template (reviewed {}).\n", TEMPLATES.reviewed_on);
-    preamble.push_str("# null = unset: omitted before sending; false, 0, empty arrays/objects and nested nulls are preserved.\n");
-    preamble.push_str("# 1024 is an editable Arca example output-token limit, not an API default. Requires curl and jq.\n");
-    preamble.push_str(match protocol {
-        ModelProtocol::GeminiGenerateContent => "# Non-streaming generateContent. Streaming uses streamGenerateContent?alt=sse instead; do not add a stream body field.\n",
-        ModelProtocol::AwsBedrockConverse => "# Non-streaming Converse. ConverseStream uses a separate /converse-stream endpoint and AWS event-stream, not JSON/SSE.\n",
-        _ => "# stream defaults to false for JSON output. For SSE, set stream=true and replace the final jq response formatter.\n",
-    });
-    for source in &template.sources { preamble.push_str(&format!("# Reference: {source}\n")); }
-    for note in &template.notes { preamble.push_str(&format!("# {note}\n")); }
-    // A quoted here-document keeps model names and example text literal. Scope
-    // the transient body to a subshell and stop before curl if JSON is invalid.
-    preamble.push_str("(\n  ARCA_REQUEST_BODY=$(\n    jq -ce 'with_entries(select(.value != null))' <<'ARCA_REQUEST_JSON'\n");
-    preamble.push_str(&body);
-    preamble.push_str("\nARCA_REQUEST_JSON\n  ) || exit\n");
-    let mut lines = vec![format!("  curl --request POST {}", quote(&url.replace("{model}", &url_component(model)))),
-        "    --header 'Content-Type: application/json'".into()];
+    let mut lines = vec![format!("curl --request POST {}", quote(&url.replace("{model}", &url_component(model)))),
+        "  --header 'Content-Type: application/json'".into()];
     let prefix = match protocol {
         ModelProtocol::AnthropicMessages => "x-api-key: ",
         ModelProtocol::GeminiGenerateContent | ModelProtocol::GeminiInteractions => "x-goog-api-key: ",
@@ -81,19 +65,19 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
     };
     match auth {
         CurlAuth::None => {},
-        CurlAuth::Placeholder => lines.push(format!("    --header \"{prefix}${{ARCA_API_KEY}}\"")),
+        CurlAuth::Placeholder => lines.push(format!("  --header \"{prefix}${{ARCA_API_KEY}}\"")),
         CurlAuth::Key(key) => {
             if key.is_empty() || key.contains(['\0', '\r', '\n']) {
                 return Err("credential_invalid: API Key must be one non-empty line".into());
             }
-            lines.push(format!("    --header {}", quote(&format!("{prefix}{key}"))));
+            lines.push(format!("  --header {}", quote(&format!("{prefix}{key}"))));
         }
     }
     if *protocol == ModelProtocol::AnthropicMessages {
-        lines.push("    --header 'anthropic-version: 2023-06-01'".into());
+        lines.push("  --header 'anthropic-version: 2023-06-01'".into());
     }
-    lines.push("    --data-raw \"$ARCA_REQUEST_BODY\"".into());
-    Ok(format!("{preamble}{} | jq -r\n)", lines.join(" \\\n")))
+    lines.push(format!("  --data-raw {}", quote(&body)));
+    Ok(lines.join(" \\\n"))
 }
 
 #[cfg(test)]
@@ -130,7 +114,7 @@ mod tests {
         let body = request_template(&ModelProtocol::AwsBedrockConverse,
             "arn:aws:bedrock:us-east-1:123456789012:prompt/ABCDEFGHIJ:1").unwrap();
         for key in ["system", "inferenceConfig", "toolConfig", "additionalModelRequestFields"] {
-            assert!(body[key].is_null(), "{key} cannot override a managed prompt");
+            assert!(body.get(key).is_none(), "{key} cannot override a managed prompt");
         }
         assert_eq!(body["messages"][0]["role"], "user");
         let ordinary = request_template(&ModelProtocol::AwsBedrockConverse, "anthropic.fixture").unwrap();
@@ -139,17 +123,23 @@ mod tests {
     }
 
     #[test]
-    fn model_text_cannot_escape_the_quoted_request_document() {
-        let model = "fixture'$(touch unwanted)\nARCA_REQUEST_JSON\nexit 7";
+    fn export_is_one_curl_command_with_a_literal_json_argument() {
+        let model = "fixture'$(touch unwanted)\nexit 7";
         let command = render(&ModelProtocol::OpenaiResponses,
             "https://example.invalid/responses", model, CurlAuth::None).unwrap();
-        assert_eq!(command.lines().filter(|line| *line == "ARCA_REQUEST_JSON").count(), 1);
-        let start = command.find("\n{\n").unwrap() + 1;
-        let end = command.find("\nARCA_REQUEST_JSON\n").unwrap();
-        let body: serde_json::Value = serde_json::from_str(&command[start..end]).unwrap();
+        assert!(command.starts_with("curl --request POST "));
+        assert!(!command.contains("ARCA_REQUEST_BODY"));
+        assert!(!command.contains("jq "));
+        assert!(!command.contains("<<"));
+        let argument = command.split_once("--data-raw ").unwrap().1;
+        let json = argument.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap()
+            .replace("'\\''", "'");
+        let body: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(body["model"], model);
         assert_eq!(body["input"], "Hello");
         assert!(body["instructions"].is_string());
+        assert!(body.get("temperature").is_none());
+        assert_eq!(body["stream"], false);
     }
 }
 
