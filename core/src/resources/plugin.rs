@@ -22,6 +22,7 @@ mod workbuddy;
 mod qoder;
 mod antigravity;
 mod zcode;
+mod vscode_extensions;
 
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
@@ -85,6 +86,30 @@ pub(crate) fn text(path: &Path, limit: u64) -> Result<String, ()> {
     file.take(limit + 1).read_to_string(&mut content).map_err(|_| ())?;
     if content.len() as u64 > limit { return Err(()); }
     Ok(content)
+}
+
+fn verify_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budget: &mut ScanBudget) -> Result<(), ()> {
+    if !regular_metadata_file(path)? { return Err(()); }
+    budget.visit()?;
+    if expected_bytes > MAX_READ_BYTES.saturating_sub(budget.bytes) as u64 { return Err(()); }
+    let mut file = open_confined_file(path)?; let before = file.metadata().map_err(|_| ())?;
+    if !before.is_file() || before.len() != expected_bytes { return Err(()); }
+    let mut digest = Sha256::new(); let mut bytes = 0u64; let mut buffer = [0u8; 65_536];
+    loop {
+        let count = (&mut file).take(expected_bytes.saturating_sub(bytes)+1).read(&mut buffer).map_err(|_| ())?;
+        if count == 0 { break; }
+        bytes += count as u64; budget.bytes += count;
+        if bytes > expected_bytes { return Err(()); }
+        digest.update(&buffer[..count]);
+    }
+    if bytes != expected_bytes || hex::encode(digest.finalize()) != expected_sha256 { return Err(()); }
+    let after = file.metadata().map_err(|_| ())?; let bound = fs::symlink_metadata(path).map_err(|_| ())?;
+    if !bound.file_type().is_file() || before.len() != after.len() || before.modified().map_err(|_| ())? != after.modified().map_err(|_| ())? { return Err(()); }
+    #[cfg(unix)] {
+        use std::os::unix::fs::MetadataExt;
+        if before.dev() != bound.dev() || before.ino() != bound.ino() || before.ctime() != after.ctime() || before.ctime_nsec() != after.ctime_nsec() { return Err(()); }
+    }
+    Ok(())
 }
 
 
@@ -433,6 +458,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "qoder" { qoder::observe(host, &mut result); continue; }
         if host.adapter == "antigravity" { antigravity::observe(host, &mut result); continue; }
         if host.adapter == "zcode" { zcode::observe(host, &mut result); continue; }
+        if host.adapter == "vscode_extensions" { vscode_extensions::observe(host, &mut result); continue; }
         if host.adapter != "cursor" { result.unavailable = true; continue; }
         for source in &host.roots {
             let root = expand_tilde(&source.path);
@@ -502,7 +528,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()

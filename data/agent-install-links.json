@@ -239,6 +239,10 @@
     "url": "https://theia-ide.org/docs/",
     "label": "安装文档"
   },
+  "trae-cn": {
+    "url": "https://docs.trae.cn/",
+    "label": "安装文档"
+  },
   "trae-ide": {
     "url": "https://docs.trae.ai/",
     "label": "安装文档"

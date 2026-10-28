@@ -333,25 +333,7 @@ fn runtime(host: &Host, path: &Path, artifact: &RuntimeArtifact, result: &mut Pl
     // Match the complete audited artifact before applying that association;
     // strings in an unknown release never become server declarations.
     if !regular_metadata_file(path)? { return Ok(()); }
-    result.budget.visit()?;
-    if artifact.bytes > MAX_READ_BYTES.saturating_sub(result.budget.bytes) as u64 { return Err(()); }
-    let mut file = open_confined_file(path)?; let before = file.metadata().map_err(|_| ())?;
-    if !before.is_file() || before.len() != artifact.bytes { return Err(()); }
-    let mut digest = Sha256::new(); let mut bytes = 0u64; let mut buffer = [0u8; 65_536];
-    loop {
-        let count = (&mut file).take(artifact.bytes.saturating_sub(bytes)+1).read(&mut buffer).map_err(|_| ())?;
-        if count == 0 { break; }
-        bytes += count as u64; result.budget.bytes += count;
-        if bytes > artifact.bytes { return Err(()); }
-        digest.update(&buffer[..count]);
-    }
-    if bytes != artifact.bytes || hex::encode(digest.finalize()) != artifact.sha256 { return Err(()); }
-    let after = file.metadata().map_err(|_| ())?; let bound = fs::symlink_metadata(path).map_err(|_| ())?;
-    if !bound.file_type().is_file() || before.len() != after.len() || before.modified().map_err(|_| ())? != after.modified().map_err(|_| ())? { return Err(()); }
-    #[cfg(unix)] {
-        use std::os::unix::fs::MetadataExt;
-        if before.dev() != bound.dev() || before.ino() != bound.ino() || before.ctime() != after.ctime() || before.ctime_nsec() != after.ctime_nsec() { return Err(()); }
-    }
+    verify_artifact(path,artifact.bytes,&artifact.sha256,&mut result.budget)?;
     let source = collapse_home(path);
     for plugin in result.plugins.iter_mut().filter(|plugin| plugin.agent_id == host.agent_id && plugin.presence != PluginPresence::Declared) {
         let component = if plugin.plugin_id == artifact.owner_plugin_id {

@@ -367,5 +367,27 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "trae-cn",
+    "adapter": "vscode_extensions",
+    "docs_url": "https://docs.trae.cn/",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Trae CN.app",
+        "layout": "vscode_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Trae CN.app",
+        "layout": "vscode_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]
