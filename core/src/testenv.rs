@@ -79,6 +79,7 @@ impl TestHome {
             ("CLAUDE_CONFIG_DIR", home.join(".claude")),
             ("CLAUDE_USER_DATA_DIR", home.join("claude-desktop")),
             ("GEMINI_CLI_HOME", home.clone()),
+            ("GOOSE_PATH_ROOT", home.join("goose-root")),
             ("QWEN_HOME", home.join(".qwen")),
             ("ZCODE_STORAGE_DIR", PathBuf::new()),
             ("KIRO_POWERS_HOME", home.join(".kiro/powers")),
