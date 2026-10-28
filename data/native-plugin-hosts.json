@@ -710,5 +710,27 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "mistral-vibe",
+    "adapter": "vibe",
+    "docs_url": "https://pypi.org/project/mistral-vibe/3.0.3/",
+    "manifest_paths": [
+      "plugin.json",
+      ".codex-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      "kimi.plugin.json",
+      ".kimi-plugin/plugin.json",
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.vibe/plugins",
+        "layout": "vibe_global_plugins",
+        "presence": "local"
+      }
+    ]
   }
 ]
