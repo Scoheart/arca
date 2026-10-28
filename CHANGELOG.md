@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.38.1](https://github.com/Scoheart/arca/compare/v2.38.0...v2.38.1) (2026-10-28)
+
+### Changes
+
+* fix(models): copy one standalone curl command ([46a8244](https://github.com/Scoheart/arca/commit/46a8244013ca3c529da263064e62b31cc6ad0942))
+
 ## [2.38.0](https://github.com/Scoheart/arca/compare/v2.37.0...v2.38.0) (2026-10-28)
 
 ### Changes
