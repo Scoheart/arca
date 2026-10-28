@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.43.0](https://github.com/Scoheart/arca/compare/v2.42.0...v2.43.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Kimi Code CLI native resources ([f7d6819](https://github.com/Scoheart/arca/commit/f7d6819bdbe956d2301b66e9d44a9e5fbcaae777))
+
 ## [2.42.0](https://github.com/Scoheart/arca/compare/v2.41.0...v2.42.0) (2026-10-28)
 
 ### Changes
