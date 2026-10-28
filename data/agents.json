@@ -134,5 +134,32 @@
         "path": "~/Applications/QoderWake.app"
       }
     ]
+  },
+  "qoderwake-cn": {
+    "global": null,
+    "project": null,
+    "format": "unknown",
+    "key": "",
+    "enabled": true,
+    "builtin": true,
+    "name": "QoderWake CN",
+    "docs": "https://docs.qoder.cn/",
+    "note": "只读展示独立 QoderWake CN 安装包及其随包 CLI、原生插件、MCP 声明、Agent Loop、事件源和 Skills。全局登记默认 ~/.qoderwake-cn；Memory 标识、地区门控及 CLI 命令按 CN 包核验。启用、账户、权限、初始化与连接状态由原生程序管理。",
+    "category": "desktop",
+    "evidence": "official",
+    "verified_at": "2026-10-28",
+    "codec": "standard",
+    "layout": "map",
+    "transports": [],
+    "probes": [
+      {
+        "kind": "path",
+        "path": "/Applications/QoderWake CN.app"
+      },
+      {
+        "kind": "path",
+        "path": "~/Applications/QoderWake CN.app"
+      }
+    ]
   }
 }

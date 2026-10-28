@@ -229,10 +229,11 @@ mod tests {
     use super::*;
     #[test]
     fn native_registry_identifiers_and_paths_remain_metadata_only() {
+        let home=crate::testenv::TestHome::new("qoderwake-registry-metadata");
         assert!(valid_name("qa-support-loop"));assert!(!valid_name("../outside"));assert!(!valid_name("a"));
         assert!(valid_version("1.2.4-cn"));assert!(!valid_version("1.2"));assert!(!valid_version("1/2/3"));
         assert!(absolute(PathBuf::from("~/plugins")).is_err());assert!(absolute(PathBuf::from("relative/plugins")).is_err());
-        assert!(absolute(expand_tilde("~/")).is_err());assert!(absolute(PathBuf::from("/")).is_err());
+        assert!(absolute(home.home.clone()).is_err());assert!(absolute(PathBuf::from("/")).is_err());
         let host=hosts().iter().find(|h|h.adapter=="qoder_wake").unwrap();
         let item=snapshot(host,"fixture","Fixture","1.0.0",PluginPresence::Declared,"registry.json").unwrap();
         let value=serde_json::to_value(item).unwrap();assert!(value.get("asset").is_none());assert!(value.get("available_actions").is_none());assert!(value["enabled"].is_null());

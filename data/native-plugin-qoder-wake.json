@@ -804,5 +804,806 @@
         }
       ]
     }
+  },
+  {
+    "agent_id": "qoderwake-cn",
+    "product_name": "QoderWake CN",
+    "bundle_id": "com.qoder.QoderWakeCN.MenuBar",
+    "shell_version": "0.1.19",
+    "version": "1.2.4-cn",
+    "home_directory": ".qoderwake-cn",
+    "backend": "payload/qoderwake-cn/qoderwake-cn",
+    "resources": "payload/qoderwake-cn/resources",
+    "installer": {
+      "path": "installer-manifest.json",
+      "bytes": 871,
+      "sha256": "d4c29714ab14d00a844f8b74792f59abc0d6df2dd825983f7476d1a8eecc83f3"
+    },
+    "bun": {
+      "binary_bytes": 175139104,
+      "table_sha256": "17d3168b00175cbade0b31c3b92d3b77d9ed6828d1d1a079d609efb1ce0ade5c",
+      "entry_name": "/$bunfs/root/build-entry.js",
+      "guards": [
+        {
+          "path": "/$bunfs/root/build-entry.js",
+          "bytes": 111963364,
+          "sha256": "ac563e3129961f6b69c34af376b95a2cb1af10526a6e1397316bb1802cdf33d0"
+        }
+      ],
+      "resources": {}
+    },
+    "native_plugins": [
+      {
+        "id": "@builtin/mcp",
+        "name": "QoderWake CN native MCP declarations",
+        "version": "1.2.4-cn",
+        "components": [
+          {
+            "kind": "mcp",
+            "name": "wake_cn_memory",
+            "native_id": "wake_cn_memory"
+          },
+          {
+            "kind": "mcp",
+            "name": "wake_im_channel",
+            "native_id": "wake_im_channel"
+          },
+          {
+            "kind": "mcp",
+            "name": "wake_mcp_adapter",
+            "native_id": "wake_mcp_adapter"
+          },
+          {
+            "kind": "mcp",
+            "name": "wake",
+            "native_id": "wake"
+          },
+          {
+            "kind": "mcp",
+            "name": "wake_wakerflow",
+            "native_id": "wake_wakerflow"
+          },
+          {
+            "kind": "mcp",
+            "name": "wake_im",
+            "native_id": "wake_im"
+          },
+          {
+            "kind": "mcp",
+            "name": "wake_im_chat_history",
+            "native_id": "wake_im_chat_history"
+          },
+          {
+            "kind": "mcp",
+            "name": "wake_qa_record",
+            "native_id": "wake_qa_record"
+          },
+          {
+            "kind": "mcp",
+            "name": "wake_team_context",
+            "native_id": "wake_team_context"
+          },
+          {
+            "kind": "mcp",
+            "name": "qoderwake_skill",
+            "native_id": "qoderwake_skill"
+          },
+          {
+            "kind": "mcp",
+            "name": "dingtalk-dws",
+            "native_id": "dingtalk-dws"
+          },
+          {
+            "kind": "mcp",
+            "name": "builtin_browser",
+            "native_id": "builtin_browser"
+          },
+          {
+            "kind": "mcp",
+            "name": "builtin_microsoft365",
+            "native_id": "builtin_microsoft365"
+          },
+          {
+            "kind": "mcp",
+            "name": "knowledge",
+            "native_id": "knowledge"
+          }
+        ]
+      },
+      {
+        "id": "qoderwake_permission_guard",
+        "name": "qoderwake_permission_guard",
+        "version": "0.1.0",
+        "components": [
+          {
+            "kind": "code",
+            "name": "Native plugin factory: qoderwake_permission_guard",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "PreToolUse",
+            "native_id": null
+          }
+        ]
+      },
+      {
+        "id": "qoderwake_change_tracker",
+        "name": "qoderwake_change_tracker",
+        "version": "0.2.0",
+        "components": [
+          {
+            "kind": "code",
+            "name": "Native plugin factory: qoderwake_change_tracker",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "PreToolUse",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "PostToolUse",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "PostToolUseFailure",
+            "native_id": null
+          }
+        ]
+      },
+      {
+        "id": "qoderwake_remote_input_files",
+        "name": "qoderwake_remote_input_files",
+        "version": "0.1.0",
+        "components": [
+          {
+            "kind": "code",
+            "name": "Native plugin factory: qoderwake_remote_input_files",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "UserPromptSubmit",
+            "native_id": null
+          }
+        ]
+      },
+      {
+        "id": "qoderwake_context_prepare",
+        "name": "qoderwake_context_prepare",
+        "version": "0.1.0",
+        "components": [
+          {
+            "kind": "code",
+            "name": "Native plugin factory: qoderwake_context_prepare",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "SessionStart",
+            "native_id": null
+          }
+        ]
+      },
+      {
+        "id": "qwake_cn_memory",
+        "name": "qwake_cn_memory",
+        "version": "0.1.0",
+        "components": [
+          {
+            "kind": "code",
+            "name": "Native plugin factory: qoderwake_memory",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "SessionStart",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "PostCompact",
+            "native_id": null
+          },
+          {
+            "kind": "hook",
+            "name": "PreToolUse: ask_user",
+            "native_id": null
+          },
+          {
+            "kind": "output_style",
+            "name": "qoderwake_memory.md",
+            "native_id": null
+          }
+        ]
+      },
+      {
+        "id": "qoderwake_session_artifacts",
+        "name": "qoderwake_session_artifacts",
+        "version": "1.0.0",
+        "components": [
+          {
+            "kind": "code",
+            "name": "Native plugin factory: qoderwake_session_artifacts",
+            "native_id": null
+          },
+          {
+            "kind": "output_style",
+            "name": "session-artifacts.md",
+            "native_id": null
+          }
+        ]
+      },
+      {
+        "id": "@runtime/group-collab",
+        "name": "QoderWake CN per-run group collaboration",
+        "version": "1.1.0",
+        "components": [
+          {
+            "kind": "mcp",
+            "name": "group_collab",
+            "native_id": "group_collab"
+          }
+        ]
+      },
+      {
+        "id": "@runtime/conversation-attachment",
+        "name": "QoderWake CN per-run conversation attachments",
+        "version": "1.0.0",
+        "components": [
+          {
+            "kind": "mcp",
+            "name": "conversation_attachment",
+            "native_id": "conversation_attachment"
+          }
+        ]
+      }
+    ],
+    "shipped_plugins": [
+      {
+        "path": "plugins/agent-loops/qa-support-loop/qoderwake-plugin.json",
+        "bytes": 1883,
+        "sha256": "a808ade66045c76b345f569596f9c74bc6451cd8cc29d51f6e9819c8070bdcc1"
+      },
+      {
+        "path": "plugins/trigger-event-sources/aone/qoderwake-plugin.json",
+        "bytes": 5327,
+        "sha256": "bfe5c2b9fed740f41f47af4e21c8e9b23c80b465a5747c73d28fd42f845bfc45"
+      },
+      {
+        "path": "plugins/trigger-event-sources/dingtalk/qoderwake-plugin.json",
+        "bytes": 7661,
+        "sha256": "92ad7f8528e21975b55bd27e0ba3b94223b6eea49e02c96d0350361aefd8c802"
+      },
+      {
+        "path": "plugins/trigger-event-sources/github-hook/qoderwake-plugin.json",
+        "bytes": 2559,
+        "sha256": "a68f153bab24eb746e141779933287953e0ab29e2ae7cd584abe3c38d690a2e9"
+      }
+    ],
+    "skills_manifest": {
+      "path": "builtin-skills/manifest.json",
+      "bytes": 5273,
+      "sha256": "2368cc4d604b48a8e14ee2b0b5557ed2ccd5861657c600fcdaf3815e81bd50df"
+    },
+    "cli_path": "payload/qodercli/qodercli-cn-wake",
+    "cli": {
+      "product_name": "Qoder CLI CN (bundled)",
+      "version": "1.1.76",
+      "bun": {
+        "binary_bytes": 163811120,
+        "table_sha256": "3df387bd2a626488c380bb66408272bd6048fdf997f92d851d8c60575e15854c",
+        "entry_name": "/$bunfs/root/qoderclicn",
+        "guards": [
+          {
+            "path": "/$bunfs/root/qoderclicn",
+            "bytes": 319,
+            "sha256": "9ecd16e7b7956bbadce632cb7d283164dd3782308aed3faa2c5368d857389faf"
+          },
+          {
+            "path": "/$bunfs/root/chunk-f9n0d81m.js",
+            "bytes": 656854,
+            "sha256": "30b24ecd6dcb6ffd6e809df027bcf142f4c36703dbb346f1be6dc3851fadb9db"
+          },
+          {
+            "path": "/$bunfs/root/chunk-016274p8.js",
+            "bytes": 3788027,
+            "sha256": "87701bda4229d2537c28dbfc3d291ff74264df546535805031c636abc5d9cb5e"
+          },
+          {
+            "path": "/$bunfs/root/chunk-teet2j5a.js",
+            "bytes": 169265,
+            "sha256": "7bdf04a54d47460b6a4e284ebcb3ebe280b7d13d028eb991b8703f6ae7989b66"
+          },
+          {
+            "path": "/$bunfs/root/chunk-cb41cyxg.js",
+            "bytes": 6757,
+            "sha256": "c5946f9cac3cb1a99039097ee10eca53cf5cb2058d345a85ae07a9d36fe61eec"
+          },
+          {
+            "path": "/$bunfs/root/chunk-p24wyxxw.js",
+            "bytes": 186,
+            "sha256": "9f0da983f8a272f0379c6ec7bae1b7cba03c0614fa744101168890c29887d191"
+          },
+          {
+            "path": "/$bunfs/root/chunk-w0d160kh.js",
+            "bytes": 7189,
+            "sha256": "affb0cf8acdc488f1d9e4f7fec8f66ca311fc1a19871724c2a29e91e7ee0d2d5"
+          },
+          {
+            "path": "/$bunfs/root/chunk-ed1zm2tt.js",
+            "bytes": 19648,
+            "sha256": "db562d93536493bde43a56e56b8015fcd45ea73601745027657aaf62535b21fc"
+          },
+          {
+            "path": "/$bunfs/root/artifact-dfr0d1fm.json",
+            "bytes": 26855,
+            "sha256": "03f26b7e691fdff59c79efaf53d4a41cab311165e376b47126bb7f32eb1824db"
+          },
+          {
+            "path": "/$bunfs/root/package-lock-q10cdsjm.json",
+            "bytes": 17371,
+            "sha256": "27618231738e676359662f1d091ea5b943abb9c113b03297cb19085b3b6c5bc9"
+          },
+          {
+            "path": "/$bunfs/root/package-mvvjrhbx.json",
+            "bytes": 323,
+            "sha256": "557688bd3c589486af1568862d1cd3b4dbf710e36bee7d2acbb12b549eaf3f1f"
+          },
+          {
+            "path": "/$bunfs/root/components-djsj374y.json",
+            "bytes": 421,
+            "sha256": "1fc0fc8a87ee1beafc78c7cef4767be45213de559dfd1aa3d2949441b8c9dd17"
+          },
+          {
+            "path": "/$bunfs/root/package-lock-bw95dpbd.json",
+            "bytes": 153015,
+            "sha256": "da41745f83440397ffcb4c8bdaa2afd9243a063c8a57225ba24a73c674173fbb"
+          },
+          {
+            "path": "/$bunfs/root/package-armzea0m.json",
+            "bytes": 1540,
+            "sha256": "7e256dc07b2cd10bc428c88450059751bb2beb1fc80320b37d24b47778133207"
+          },
+          {
+            "path": "/$bunfs/root/tsconfig-r1n9pwrz.json",
+            "bytes": 650,
+            "sha256": "7f1a16b68a5f51e3d4a32f5dfbe84f3eaf266f16a995de669bf7439c3b18a212"
+          },
+          {
+            "path": "/$bunfs/root/plugin-x6mdn772.json",
+            "bytes": 752,
+            "sha256": "71fc5e63dbb8c3feecc8187efb2e96fb58f409d666c74cd1891a55d44c6fc381"
+          },
+          {
+            "path": "/$bunfs/root/qoder-hooks-zdww60p0.json",
+            "bytes": 923,
+            "sha256": "14114331f8dc78a4520ff58dfe019f282d4357f002a21c97dc08e739c6501275"
+          },
+          {
+            "path": "/$bunfs/root/package-28v753az.json",
+            "bytes": 272,
+            "sha256": "9bae19929a1ec3f369046bffefb822b42ab937eb36ac9c3f81795752dec7208d"
+          }
+        ],
+        "resources": {
+          "vendor/qoder-sites/artifact.json": "/$bunfs/root/artifact-dfr0d1fm.json",
+          "vendor/qoder-sites/skills/sites-build-agent-app/SKILL.md": "/$bunfs/root/SKILL-vav25ecg.md",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/cloud-agents.mjs": "/$bunfs/root/cloud-agents-xdn13d60.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/conversation-stream.mjs": "/$bunfs/root/conversation-stream-s4w1phpr.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/qca-realtime.mjs": "/$bunfs/root/qca-realtime-vz207s5x.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/realtime-demo/handler.mjs": "/$bunfs/root/handler-7shvbbjr.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/realtime-demo/index.html": "/$bunfs/root/index-rv3d23r7.html",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/realtime-demo/local.ts": "/$bunfs/root/local-mbp4s55a.ts",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/dev/memory-service.mjs": "/$bunfs/root/memory-service-92ve5f5a.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/dev/server.mjs": "/$bunfs/root/server-tb82jgsc.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/export-example.mjs": "/$bunfs/root/export-example-kxv0dd85.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/function-entry.ts": "/$bunfs/root/function-entry-3vm4frgk.ts",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/handler.mjs": "/$bunfs/root/handler-btvehhxm.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/managed-transport.mjs": "/$bunfs/root/managed-transport-jjw54hh5.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/web/app.js": "/$bunfs/root/app-qzxzknzp.js",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/web/index.html": "/$bunfs/root/index-qwkg8jar.html",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse-chat/web/style.css": "/$bunfs/root/style-8betx3vt.css",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/sse.mjs": "/$bunfs/root/sse-1zv83rbf.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/assets/websocket.mjs": "/$bunfs/root/websocket-2pe73mnc.mjs",
+          "vendor/qoder-sites/skills/sites-build-agent-app/references/api.md": "/$bunfs/root/api-6j4abr9k.md",
+          "vendor/qoder-sites/skills/sites-build-agent-app/references/chat-example.md": "/$bunfs/root/chat-example-xxf37sx1.md",
+          "vendor/qoder-sites/skills/sites-build-agent-app/references/diagnostics.md": "/$bunfs/root/diagnostics-xa381hqg.md",
+          "vendor/qoder-sites/skills/sites-build-agent-app/references/initialization.md": "/$bunfs/root/initialization-yecs2yja.md",
+          "vendor/qoder-sites/skills/sites-build-agent-app/references/realtime.md": "/$bunfs/root/realtime-19nc7h33.md",
+          "vendor/qoder-sites/skills/sites-build-agent-app/references/streaming.md": "/$bunfs/root/streaming-6v3g6pnn.md",
+          "vendor/qoder-sites/skills/sites-build-agent-app/references/websocket.md": "/$bunfs/root/websocket-n27a9njw.md",
+          "vendor/qoder-sites/skills/sites-building/SKILL.md": "/$bunfs/root/SKILL-jy7e0b0d.md",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/README.md": "/$bunfs/root/README-8g55fzr4.md",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/business.mjs": "/$bunfs/root/business-vv6zcxra.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/dev/server.mjs": "/$bunfs/root/server-9yq7bw2c.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/diagnostics.mjs": "/$bunfs/root/diagnostics-rfvnsm16.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/introspection/auth.mjs": "/$bunfs/root/auth-pftfg20z.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/introspection/index.ts": "/$bunfs/root/index-ayhk9csj.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/oidc/auth.mjs": "/$bunfs/root/auth-mmcx1x57.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/oidc/build.mjs": "/$bunfs/root/build-qkg6r9yv.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/oidc/index.ts": "/$bunfs/root/index-vva4hygb.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/oidc/package-lock.json": "/$bunfs/root/package-lock-q10cdsjm.json",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/oidc/package.json": "/$bunfs/root/package-mvvjrhbx.json",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/oidc/test/flow.check.mjs": "/$bunfs/root/flow.check-zgmxvvmr.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/README.md": "/$bunfs/root/README-fbvaqedx.md",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/functions/http.mjs": "/$bunfs/root/http-xnkct8a0.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/functions/index.ts": "/$bunfs/root/index-qc9713yx.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/functions/limiter.mjs": "/$bunfs/root/limiter-xvcsttye.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/functions/passwords.mjs": "/$bunfs/root/passwords-rj40rts6.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/functions/router.mjs": "/$bunfs/root/router-vymgq2fh.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/functions/sessions.mjs": "/$bunfs/root/sessions-00czxdt1.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/functions/validate.mjs": "/$bunfs/root/validate-zdvaade4.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/schema.sql": "/$bunfs/root/schema-c935x690.sql",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/test/check.mjs": "/$bunfs/root/check-c9an370v.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/test/fake-db.mjs": "/$bunfs/root/fake-db-k05022ed.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/web/api.js": "/$bunfs/root/api-v652km6z.js",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/web/app.js": "/$bunfs/root/app-7697spke.js",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/web/index.html": "/$bunfs/root/index-kaax4kgd.html",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/password/web/styles.css": "/$bunfs/root/styles-y3172fgv.css",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/schema.sql": "/$bunfs/root/schema-tsae6j5s.sql",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/shared.mjs": "/$bunfs/root/shared-xvx89tmz.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/site-config.mjs": "/$bunfs/root/site-config-bnq6fv7n.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/web/app.mjs": "/$bunfs/root/app-5j2ejrqt.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/web/auth-forms.mjs": "/$bunfs/root/auth-forms-bdzkc0wp.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/application-auth/web/index.html": "/$bunfs/root/index-2ee4m72k.html",
+          "vendor/qoder-sites/skills/sites-building/assets/database-function/adapter.mjs": "/$bunfs/root/adapter-bb098xx8.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/database-function/handler.mjs": "/$bunfs/root/handler-df2y8806.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/database-function/index.ts": "/$bunfs/root/index-nj15j03e.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/database-preview/index.html": "/$bunfs/root/index-v9bq3g72.html",
+          "vendor/qoder-sites/skills/sites-building/assets/database-preview/server.mjs": "/$bunfs/root/server-5xc76gj4.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/database-react/App.tsx": "/$bunfs/root/App-ngf3vh3y.tsx",
+          "vendor/qoder-sites/skills/sites-building/assets/database-react/UserProfile.tsx": "/$bunfs/root/UserProfile-31vjhyra.tsx",
+          "vendor/qoder-sites/skills/sites-building/assets/database-react/api.ts": "/$bunfs/root/api-3jgc3tmz.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/Notes.tsx": "/$bunfs/root/Notes-wnry7gp1.tsx",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/README.md": "/$bunfs/root/README-gzs4jg08.md",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/api.ts": "/$bunfs/root/api-nh6rmqgp.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/dev/local.mjs": "/$bunfs/root/local-m4mmd1t7.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/dev/proxy.ts": "/$bunfs/root/proxy-xhrsct7p.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/index.ts": "/$bunfs/root/index-gx94x3ve.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/records.css": "/$bunfs/root/records-04bfkqkh.css",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/routes.mjs": "/$bunfs/root/routes-5nqkmwdj.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/schema.sql": "/$bunfs/root/schema-g210c8gs.sql",
+          "vendor/qoder-sites/skills/sites-building/assets/function-backend/setup.mjs": "/$bunfs/root/setup-wbrafxn7.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/function-profile/index.ts": "/$bunfs/root/index-4d1qk2me.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/function-profile/profile.mjs": "/$bunfs/root/profile-xv06txeg.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/function-profile/schema.sql": "/$bunfs/root/schema-wkzwe0x8.sql",
+          "vendor/qoder-sites/skills/sites-building/assets/function/handler.ts": "/$bunfs/root/handler-54jnacas.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/function/index.ts": "/$bunfs/root/index-av650x31.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/static/index.html": "/$bunfs/root/index-2v5af1rg.html",
+          "vendor/qoder-sites/skills/sites-building/assets/storage-validation.mjs": "/$bunfs/root/storage-validation-n3khsn0n.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/user-context/auth.mjs": "/$bunfs/root/auth-rjjas0w7.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/user-context/index.ts": "/$bunfs/root/index-86x4mhry.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/user-context/profile-index.ts": "/$bunfs/root/profile-index-jdvn0zkd.ts",
+          "vendor/qoder-sites/skills/sites-building/assets/user-context/profile.mjs": "/$bunfs/root/profile-9hmzxct3.mjs",
+          "vendor/qoder-sites/skills/sites-building/assets/user-preview/server.mjs": "/$bunfs/root/server-n0p8hrbm.mjs",
+          "vendor/qoder-sites/skills/sites-building/references/application-auth.md": "/$bunfs/root/application-auth-hsmte1gr.md",
+          "vendor/qoder-sites/skills/sites-building/references/database-migration.md": "/$bunfs/root/database-migration-qmj9j6mj.md",
+          "vendor/qoder-sites/skills/sites-building/references/database.md": "/$bunfs/root/database-p2d7rsa9.md",
+          "vendor/qoder-sites/skills/sites-building/references/environment.md": "/$bunfs/root/environment-6s5xmk91.md",
+          "vendor/qoder-sites/skills/sites-building/references/examples.md": "/$bunfs/root/examples-mvm56mx6.md",
+          "vendor/qoder-sites/skills/sites-building/references/function-backend.md": "/$bunfs/root/function-backend-qtygfedf.md",
+          "vendor/qoder-sites/skills/sites-building/references/functions.md": "/$bunfs/root/functions-mh745vvg.md",
+          "vendor/qoder-sites/skills/sites-building/references/records-example.md": "/$bunfs/root/records-example-aqs04he8.md",
+          "vendor/qoder-sites/skills/sites-building/references/runtime-acceptance.md": "/$bunfs/root/runtime-acceptance-3p0tggtc.md",
+          "vendor/qoder-sites/skills/sites-building/references/static-site.md": "/$bunfs/root/static-site-sevc20r1.md",
+          "vendor/qoder-sites/skills/sites-building/references/storage.md": "/$bunfs/root/storage-xzgerqfk.md",
+          "vendor/qoder-sites/skills/sites-building/references/user-profile.md": "/$bunfs/root/user-profile-3f5ng7s8.md",
+          "vendor/qoder-sites/skills/sites-building/references/visual-design.md": "/$bunfs/root/visual-design-fw90f6xx.md",
+          "vendor/qoder-sites/skills/sites-building/scripts/create-site.mjs": "/$bunfs/root/create-site-bav8pfzv.mjs",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/PROVENANCE.md": "/$bunfs/root/PROVENANCE-9ft1p4ta.md",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/README.md": "/$bunfs/root/README-9x0pnq6w.md",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components.json": "/$bunfs/root/components-djsj374y.json",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/accordion.tsx": "/$bunfs/root/accordion-ch56snh5.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/alert-dialog.tsx": "/$bunfs/root/alert-dialog-srj5an61.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/alert.tsx": "/$bunfs/root/alert-g1h7qpt3.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/aspect-ratio.tsx": "/$bunfs/root/aspect-ratio-2ty0zygd.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/attachment.tsx": "/$bunfs/root/attachment-r7eej354.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/avatar.tsx": "/$bunfs/root/avatar-gff38vxt.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/badge.tsx": "/$bunfs/root/badge-rx2je6kb.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/breadcrumb.tsx": "/$bunfs/root/breadcrumb-dpc69q3e.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/bubble.tsx": "/$bunfs/root/bubble-geha3egz.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/button-group.tsx": "/$bunfs/root/button-group-ccxfqgws.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/button.tsx": "/$bunfs/root/button-193rm9qv.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/calendar.tsx": "/$bunfs/root/calendar-cjj82bwv.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/card.tsx": "/$bunfs/root/card-nr4k1jv9.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/carousel.tsx": "/$bunfs/root/carousel-7zw15wq4.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/chart.tsx": "/$bunfs/root/chart-5fhhh65f.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/checkbox.tsx": "/$bunfs/root/checkbox-zcqybg3k.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/collapsible.tsx": "/$bunfs/root/collapsible-b2cry53p.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/combobox.tsx": "/$bunfs/root/combobox-k5kj1rwm.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/command.tsx": "/$bunfs/root/command-ycv5p41q.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/context-menu.tsx": "/$bunfs/root/context-menu-cfy2y8g3.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/dialog.tsx": "/$bunfs/root/dialog-0jdtaa9g.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/direction.tsx": "/$bunfs/root/direction-xs4d38bh.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/drawer.tsx": "/$bunfs/root/drawer-q56a21aa.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/dropdown-menu.tsx": "/$bunfs/root/dropdown-menu-nr2njezm.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/empty.tsx": "/$bunfs/root/empty-p9gq45t3.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/field.tsx": "/$bunfs/root/field-vwd7wrx8.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/form.tsx": "/$bunfs/root/form-4v413gx9.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/hover-card.tsx": "/$bunfs/root/hover-card-zz2k5nez.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/input-group.tsx": "/$bunfs/root/input-group-qcaw2fvq.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/input-otp.tsx": "/$bunfs/root/input-otp-dtf2jfww.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/input.tsx": "/$bunfs/root/input-0q0vwtzr.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/item.tsx": "/$bunfs/root/item-1qgpr24j.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/kbd.tsx": "/$bunfs/root/kbd-352gztw9.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/label.tsx": "/$bunfs/root/label-zb9nfw9n.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/marker.tsx": "/$bunfs/root/marker-4mtasjr9.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/menubar.tsx": "/$bunfs/root/menubar-1sh3d6kf.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/message-scroller.tsx": "/$bunfs/root/message-scroller-cx5aq428.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/message.tsx": "/$bunfs/root/message-2xajqan2.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/native-select.tsx": "/$bunfs/root/native-select-dcdddt6t.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/navigation-menu.tsx": "/$bunfs/root/navigation-menu-gept1b5z.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/pagination.tsx": "/$bunfs/root/pagination-89e0gke0.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/popover.tsx": "/$bunfs/root/popover-b15afr7r.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/progress.tsx": "/$bunfs/root/progress-kccr6ayq.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/radio-group.tsx": "/$bunfs/root/radio-group-r1bmbkah.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/resizable.tsx": "/$bunfs/root/resizable-b1mkqx4h.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/scroll-area.tsx": "/$bunfs/root/scroll-area-8cz02dea.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/select.tsx": "/$bunfs/root/select-71ma1f6p.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/separator.tsx": "/$bunfs/root/separator-4wf7h069.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/sheet.tsx": "/$bunfs/root/sheet-5envnwpr.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/sidebar.tsx": "/$bunfs/root/sidebar-7xpw7cmg.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/skeleton.tsx": "/$bunfs/root/skeleton-f8brkc34.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/slider.tsx": "/$bunfs/root/slider-tahhfbx9.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/sonner.tsx": "/$bunfs/root/sonner-1c35nhta.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/spinner.tsx": "/$bunfs/root/spinner-xj8mcmg3.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/switch.tsx": "/$bunfs/root/switch-pt7pqy6m.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/table.tsx": "/$bunfs/root/table-bnczdv46.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/tabs.tsx": "/$bunfs/root/tabs-3jwftzad.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/textarea.tsx": "/$bunfs/root/textarea-afxqhznb.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/toggle-group.tsx": "/$bunfs/root/toggle-group-2rj6yqra.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/toggle.tsx": "/$bunfs/root/toggle-w29rrh38.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/components/ui/tooltip.tsx": "/$bunfs/root/tooltip-xf20dt6r.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/dev/function-local.ts": "/$bunfs/root/function-local-j4yyv2nz.ts",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/functions/handler.ts": "/$bunfs/root/handler-54jnacas.ts",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/functions/index.ts": "/$bunfs/root/index-av650x31.ts",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/gitignore.template": "/$bunfs/root/gitignore-4n9sd2kz.template",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/hooks/use-mobile.ts": "/$bunfs/root/use-mobile-grzx2tsf.ts",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/index.html": "/$bunfs/root/index-fhaz6nmx.html",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/lib/utils.ts": "/$bunfs/root/utils-qbrbyxwy.ts",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/package-lock.json": "/$bunfs/root/package-lock-bw95dpbd.json",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/package.json": "/$bunfs/root/package-armzea0m.json",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/postcss.config.mjs": "/$bunfs/root/postcss.config-j4vh3yfm.mjs",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/scripts/build.mjs": "/$bunfs/root/build-drxb6x1q.mjs",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/scripts/check-node.mjs": "/$bunfs/root/check-node-d4hp8vq2.mjs",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/src/App.tsx": "/$bunfs/root/App-znadz69b.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/src/globals.css": "/$bunfs/root/globals-yy3aem46.css",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/src/main.tsx": "/$bunfs/root/main-w52gez60.tsx",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/src/vite-env.d.ts": "/$bunfs/root/vite-env.d-059jevgz.ts",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/tsconfig.json": "/$bunfs/root/tsconfig-r1n9pwrz.json",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/vendor/shadcn-tailwind-4.13.0.LICENSE.md": "/$bunfs/root/shadcn-tailwind-4.13.0.LICENSE-7ev9j30n.md",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/vendor/shadcn-tailwind-4.13.0.css": "/$bunfs/root/shadcn-tailwind-4.13.0-k4y77bgj.css",
+          "vendor/qoder-sites/skills/sites-building/templates/react-starter/vite.config.ts": "/$bunfs/root/vite.config-g4ycqzh0.ts",
+          "vendor/qoder-sites/skills/sites-hosting/SKILL.md": "/$bunfs/root/SKILL-yazfknw5.md",
+          "vendor/qoder-sites/skills/sites-hosting/references/deployment.md": "/$bunfs/root/deployment-mznmrrds.md",
+          "vendor/qoder-sites/skills/sites-hosting/references/limits.md": "/$bunfs/root/limits-hjnwrpe4.md",
+          "vendor/qoder-sites/skills/sites-hosting/references/workflow-examples.md": "/$bunfs/root/workflow-examples-cp5w3m8d.md",
+          "vendor/qoder-sites/skills/sites-management/SKILL.md": "/$bunfs/root/SKILL-a3q3wksh.md",
+          "vendor/qoder-sites/skills/sites-management/references/data-and-logs.md": "/$bunfs/root/data-and-logs-80gn60sy.md",
+          "packages/core/src/skills/builtin/agent-creator/SKILL.md": "/$bunfs/root/SKILL-syqf8n1n.md",
+          "packages/core/src/skills/builtin/hook-config/SKILL.md": "/$bunfs/root/SKILL-bmqj991m.md",
+          "packages/core/src/skills/builtin/sdk/SKILL.md": "/$bunfs/root/SKILL-8055sh7t.md",
+          "packages/core/src/skills/builtin/skill-creator/SKILL.md": "/$bunfs/root/SKILL-086w0bqx.md",
+          "packages/core/src/qoder/infer/model-transport/proto/chat.proto": "/$bunfs/root/chat-b8kcd35x.proto",
+          "vendor/qoder-security/.qoder-plugin/plugin.json": "/$bunfs/root/plugin-x6mdn772.json",
+          "vendor/qoder-security/.qoder-plugin/qoder-hooks.json": "/$bunfs/root/qoder-hooks-zdww60p0.json",
+          "vendor/qoder-security/assets/logo.svg": "/$bunfs/root/logo-ekcgj8k8.svg",
+          "vendor/qoder-security/bin/bootstrap.cmd": "/$bunfs/root/bootstrap-4kcewevm.cmd",
+          "vendor/qoder-security/bin/bootstrap.sh": "/$bunfs/root/bootstrap-qn48jqya.sh",
+          "vendor/qoder-security/bin/qodersec-launch.cmd": "/$bunfs/root/qodersec-launch-f6epy55e.cmd",
+          "vendor/qoder-security/bin/qodersec-launch.sh": "/$bunfs/root/qodersec-launch-wmpmpxs5.sh",
+          "vendor/qoder-security/bin/qodersec-update.cmd": "/$bunfs/root/qodersec-update-72rb46nf.cmd",
+          "vendor/qoder-security/bin/qodersec-update.sh": "/$bunfs/root/qodersec-update-wxpds3cc.sh",
+          "vendor/qoder-security/bin/security-scan-settings.cmd": "/$bunfs/root/security-scan-settings-4xyae2pa.cmd",
+          "vendor/qoder-security/bin/security-scan-settings.sh": "/$bunfs/root/security-scan-settings-522h4427.sh",
+          "vendor/qoder-security/config.yaml.example": "/$bunfs/root/config.yaml-3rv7ar3s.example",
+          "vendor/qoder-security/package.json": "/$bunfs/root/package-28v753az.json",
+          "vendor/qoder-security/scripts/postinstall.sh": "/$bunfs/root/postinstall-zz1vap0z.sh",
+          "vendor/qoder-security/security-patterns.yaml.example": "/$bunfs/root/security-patterns.yaml-bjm6p0sc.example",
+          "vendor/qoder-security/skills/security-scan/SKILL.md": "/$bunfs/root/SKILL-egyhfevc.md"
+        }
+      },
+      "skill_source": "/$bunfs/root/chunk-016274p8.js",
+      "code_skills": [
+        "simplify",
+        "debug",
+        "quest",
+        "memory-types",
+        "remember",
+        "batch",
+        "loop",
+        "mcp-config",
+        "run",
+        "verify",
+        "run-skill-generator",
+        "workflow-authoring"
+      ],
+      "builtin_plugins": [
+        {
+          "id": "ai-code-tracking",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: ai-code-tracking",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "PostToolUse: ai-code-tracking-post-tool-use",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "PreToolUse: ai-code-tracking-pre-tool-use",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "QueryEnd: ai-code-tracking-query-end",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "SessionEnd: ai-code-tracking-session-end",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "qoder-feedback",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: qoder-feedback",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "command",
+              "name": "feedback",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "qoder-security",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: qoder-security",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "command",
+              "name": "security-settings",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "qoder-codebase",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: qoder-codebase",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "UserPromptSubmit: codebase-request-start",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "QueryEnd: codebase-request-end",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "campaign-platform",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: campaign-platform",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "qoder-account",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: qoder-account",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "qoder-github",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: qoder-github",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "qoder-tools",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: qoder-tools",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "SessionStart: video-task-resume",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "skill",
+              "name": "imagegen",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "qoder-remote-control",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: qoder-remote-control",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "SessionStart: remote-control-tui-workspace-change",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "CwdChanged: remote-control-tui-cwd-change",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        },
+        {
+          "id": "qoder-sites",
+          "source": "/$bunfs/root/chunk-f9n0d81m.js",
+          "components": [
+            {
+              "kind": "code",
+              "name": "Packaged CLI factory: qoder-sites",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "SessionStart",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            },
+            {
+              "kind": "hook",
+              "name": "SessionEnd",
+              "source": "/$bunfs/root/chunk-f9n0d81m.js"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

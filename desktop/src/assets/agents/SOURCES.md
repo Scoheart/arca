@@ -120,3 +120,5 @@ Claude.ai and ChatGPT reuse the already sourced Claude/OpenAI marks. Their Web s
 - `qoder-cli-cn.png`: unchanged native Qoder CN icon reused for the independently signed Qoder CLI CN (`qoderclicn`); the surface catalog supplies its CLI marker.
 
 - `qoderwake.png`: PNG converted with macOS `sips` from the signed QoderWake native `AppIcon.icns` (`com.qoder.QoderWake.MenuBar`, shell 0.1.19/backend 1.2.4), acquired from the official `download.qoder.com/qoderwake/installers/1.2.4/` installer (2026-10-28). The surface catalog records its Desktop form.
+
+- `qoderwake-cn.png`: PNG converted with macOS `sips` from the independently signed QoderWake CN `AppIcon.icns` (`com.qoder.QoderWakeCN.MenuBar`, shell 0.1.19/backend 1.2.4-cn), acquired from `ide.qoder.com.cn/qoderwake-cn/installers/1.2.4-cn/` (2026-10-28). Its native artwork and Desktop form distinguish this independent product.

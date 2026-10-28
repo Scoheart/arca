@@ -629,5 +629,11 @@
     "candidates": [
       "QoderWake"
     ]
+  },
+  "qoderwake-cn": {
+    "kind": "app",
+    "candidates": [
+      "QoderWake CN"
+    ]
   }
 }

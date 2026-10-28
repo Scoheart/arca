@@ -55,5 +55,6 @@
   "mcpjam": "desktop",
   "mcp-use-inspector": "web",
   "qoder-cli-cn": "cli",
-  "qoderwake": "desktop"
+  "qoderwake": "desktop",
+  "qoderwake-cn": "desktop"
 }
