@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.30.0](https://github.com/Scoheart/arca/compare/v2.29.0...v2.30.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe QoderWork bundled and global resources ([cd209f0](https://github.com/Scoheart/arca/commit/cd209f0253d3c337fbb02b36202f0053763ea70a))
+
 ## [2.29.0](https://github.com/Scoheart/arca/compare/v2.28.0...v2.29.0) (2026-10-28)
 
 ### Changes
