@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.40.0](https://github.com/Scoheart/arca/compare/v2.39.0...v2.40.0) (2026-10-28)
+
+### Changes
+
+* feat(goose): observe desktop native extensions and plugins ([8f7b30e](https://github.com/Scoheart/arca/commit/8f7b30e24947f8b309e883e423916ec35300ebc2))
+
 ## [2.39.0](https://github.com/Scoheart/arca/compare/v2.38.1...v2.39.0) (2026-10-28)
 
 ### Changes
