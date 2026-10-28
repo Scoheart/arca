@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.36.0](https://github.com/Scoheart/arca/compare/v2.35.0...v2.36.0) (2026-10-28)
+
+### Changes
+
+* feat(agents): add independently verified QoderWake CN inventory ([70fe57b](https://github.com/Scoheart/arca/commit/70fe57b94cf3d53ae21a4c66232e6a3c0a20af51))
+
 ## [2.35.0](https://github.com/Scoheart/arca/compare/v2.34.0...v2.35.0) (2026-10-28)
 
 ### Changes
