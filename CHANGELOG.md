@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.54.0](https://github.com/Scoheart/arca/compare/v2.53.0...v2.54.0) (2026-10-29)
+
+### Changes
+
+* perf(assets): optimize images while preserving RGBA app icons ([1401ed6](https://github.com/Scoheart/arca/commit/1401ed628bc9da8c1d5f334c5f1aeedf9e6311f5))
+* feat(agents): catalog xgoose as a display-only Chrome extension ([30f3ffc](https://github.com/Scoheart/arca/commit/30f3ffc5299bf347141ac85bdeeeba739280617e))
+* feat(skills): show plugin-provided Skills in Agent tabs ([7738091](https://github.com/Scoheart/arca/commit/77380914e6a079d47b9764ea4f2ea981276f8f19))
+* feat(models): add decuff with stateless Responses exports ([01dad14](https://github.com/Scoheart/arca/commit/01dad14a65fe5f47659715b76eacc2ddb8ed0dee))
+* feat(agents): catalog QwenPaw as a display-only assistant ([ae4d5cf](https://github.com/Scoheart/arca/commit/ae4d5cfbe78a798a1aa46cb9c7639cf7a76ea181))
+* feat(models): add the Helmholtz Blablador provider ([58750f4](https://github.com/Scoheart/arca/commit/58750f414aef75c65be1a84ed53ac958f8488c78))
+* feat(models): add Token360 with stateless Responses exports ([1749ec6](https://github.com/Scoheart/arca/commit/1749ec6172fee28edaf02d53dae0723afe462f9a))
+* feat(models): add ASI Cloud general inference provider ([095d86e](https://github.com/Scoheart/arca/commit/095d86e57f152fa48a5240ad4c5a3dcb2e464b18))
+* Merge remote-tracking branch 'refs/remotes/source/plugin-skills-feature' ([231c4b8](https://github.com/Scoheart/arca/commit/231c4b8c24291665cbc300cb29de4a99fc29c6ac))
+
 ## [2.53.0](https://github.com/Scoheart/arca/compare/v2.52.0...v2.53.0) (2026-10-29)
 
 ### Changes
