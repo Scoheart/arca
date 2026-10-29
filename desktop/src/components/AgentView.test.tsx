@@ -14,11 +14,12 @@ import type {
   ModelProfileView,
 } from "../lib/types";
 import { assetOperationPlanFixture } from "../test/consumptionFixtures";
+import { nativeSkillFixture } from "../test/nativeSkillFixtures";
 import { AgentView } from "./AgentView";
 import { ToastProvider } from "./Toast";
 
 const apiMocks = vi.hoisted(() => ({
-  listNativeResources: vi.fn().mockResolvedValue({ native_plugin_agents: [], host_mcps: [], native_plugins: [], unavailable: false }),
+  listNativeResources: vi.fn().mockResolvedValue({ native_plugin_agents: [], host_mcps: [], native_plugins: [], native_skills: [], unavailable: false }),
   listModelAgents: vi.fn().mockResolvedValue([]),
   listModelProfiles: vi.fn().mockResolvedValue([]),
   setAgentCredentialDelivery: vi.fn().mockResolvedValue({ agent: "pi", profile: "" }),
@@ -144,6 +145,42 @@ const emptyConsumptionState = {
   },
   plan: null,
 } as unknown as ConsumptionState;
+
+it("keeps an Agent with only plugin Skills in the production workbench", async () => {
+  const nativeAgent: AgentInfo = { ...skillsOnlyAgent, id: "cursor", name: "Cursor", skills_global_dir: null };
+  apiMocks.listNativeResources.mockResolvedValueOnce({ native_plugin_agents: [], host_mcps: [], native_plugins: [],
+    native_skills: [nativeSkillFixture(), nativeSkillFixture({ id: "second:review", plugin_id: "second", plugin_name: "Second plugin" })], unavailable: false });
+  render(<AgentView state={{ ...state, agents: [nativeAgent] } as InstallState} skillsState={skillsState}
+    consumptionState={emptyConsumptionState} agentId="cursor" />);
+
+  const tab = await screen.findByRole("tab", { name: /Skills\s*2/ });
+  await userEvent.click(tab);
+  const panel = screen.getByRole("tabpanel", { name: /Skills/ });
+  expect(within(panel).getAllByRole("listitem")).toHaveLength(2);
+  expect(within(panel).queryByText("暂无 Skills")).not.toBeInTheDocument();
+  expect(within(panel).getByText("配置 0 项 · 插件内置 2 项")).toBeVisible();
+  expect(screen.getByRole("button", { name: "添加 Skills" })).toBeDisabled();
+  expect(within(panel).queryByRole("switch")).not.toBeInTheDocument();
+});
+
+it("includes native Skills in Agent tab counts alongside same-name managed and external Skills", async () => {
+  const row = { agent_id: skillsOnlyAgent.id, asset: { domain: "skill" as const, name: "review" }, ownership: "managed" as const,
+    desired: true, observed: true, enabled: true, status: "synced" as const, reason: null,
+    affected_agent_ids: [skillsOnlyAgent.id], available_actions: [] };
+  apiMocks.listNativeResources.mockResolvedValueOnce({ native_plugin_agents: [skillsOnlyAgent.id], host_mcps: [], native_plugins: [],
+    native_skills: [nativeSkillFixture({ agent_id: skillsOnlyAgent.id })], unavailable: false });
+  render(<AgentView state={state} skillsState={skillsState} consumptionState={{ ...emptyConsumptionState,
+    inventory: { ...emptyConsumptionState.inventory, consumptions: [row], external: [{ ...row, ownership: "external", desired: false, status: "external-added" }] },
+  } as ConsumptionState} agentId={skillsOnlyAgent.id} />);
+
+  const tab = await screen.findByRole("tab", { name: /Skills\s*3/ });
+  await userEvent.click(tab);
+  const panel = screen.getByRole("tabpanel", { name: /Skills/ });
+  expect(within(panel).getAllByRole("listitem")).toHaveLength(3);
+  expect(within(panel).getByText("配置 2 项 · 插件内置 1 项")).toBeVisible();
+  expect(within(panel).getAllByText("review")).toHaveLength(3);
+  expect(within(panel).getAllByRole("switch")).toHaveLength(1);
+});
 
 it("opens a projection-only Skills Agent without a legacy MCP-shaped row", async () => {
   const projectionOnlyState = {

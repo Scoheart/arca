@@ -154,10 +154,12 @@ pub fn list_native_resources(agent_id: &str) -> crate::domain::plugin::NativeRes
     let scope = InventoryScope { capability: Some(AssetCapability::Mcp), agent_ids: BTreeSet::from([agent_id.to_string()]) };
     project_host_resources(&mut inventory, &scope);
     sort_inventory(&mut inventory);
+    let native_skills = crate::resources::plugin::skill_observations(&inventory.native_plugins);
     crate::domain::plugin::NativeResourceInventory {
         native_plugin_agents: inventory.native_plugin_agents,
         host_mcps: inventory.host_mcps,
         native_plugins: inventory.native_plugins,
+        native_skills,
         unavailable: !inventory.capability_errors.is_empty(),
     }
 }

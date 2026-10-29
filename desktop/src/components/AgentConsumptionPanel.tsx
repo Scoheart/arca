@@ -1,7 +1,7 @@
 import { ResourceIcon } from "./resourcePresentation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { AssetRef, ConsumptionView, ConvergenceAction, HostMcpObservation } from "../lib/types";
-import { HostMcpCard } from "./NativePluginsPanel";
+import type { AssetRef, ConsumptionView, ConvergenceAction, HostMcpObservation, NativeSkillObservation } from "../lib/types";
+import { HostMcpCard, NativeSkillCard } from "./NativePluginsPanel";
 import { assetIdentity } from "../lib/consumption";
 import {
   DownloadIcon,
@@ -180,6 +180,7 @@ export function AgentConsumptionPanel({
   rows,
   external,
   hostMcps = [],
+  nativeSkills = [],
   externalMode = "summary",
   externalTitle = "外部配置",
   externalDescription = "尚未由 Arca 管理",
@@ -217,6 +218,7 @@ export function AgentConsumptionPanel({
   rows: ConsumptionView[];
   external: ConsumptionView[];
   hostMcps?: HostMcpObservation[];
+  nativeSkills?: NativeSkillObservation[];
   externalMode?: "summary" | "cards";
   externalTitle?: string;
   externalDescription?: string;
@@ -258,9 +260,11 @@ export function AgentConsumptionPanel({
 
   const needle = query.trim().toLocaleLowerCase();
   const hosts = domain === "mcp" ? hostMcps : [];
+  const skills = domain === "skill" ? nativeSkills : [];
   const filteredHosts = hosts.filter(item => !needle || `${item.name} ${item.server_id} ${item.provider}`.toLocaleLowerCase().includes(needle));
-  const total = items.length + hosts.length;
-  const visible = filteredHosts.length;
+  const filteredSkills = skills.filter(item => !needle || `${item.name} ${item.plugin_name} ${item.plugin_id}`.toLocaleLowerCase().includes(needle));
+  const total = items.length + hosts.length + skills.length;
+  const visible = filteredHosts.length + filteredSkills.length;
   const filtered = items.filter(({ item }) => {
     const presentation = present(item.asset);
     return !needle || `${presentation.name} ${presentation.description ?? ""} ${assetIdentity(item.asset)}`.toLocaleLowerCase().includes(needle);
@@ -348,6 +352,7 @@ export function AgentConsumptionPanel({
       ) : filtered.length + visible === 0 ? <p role="status" className="arca-consumption-empty">没有匹配的 {title}</p> : (
         <ul className="arca-consumption-list" data-columns={columns}>
           {filteredHosts.map(item => <HostMcpCard key={`${item.agent_id}:${item.source_fingerprint}`} item={item} />)}
+          {filteredSkills.map(item => <NativeSkillCard key={item.id} item={item} />)}
           {filtered.map(({ item, external: isExternal }) => {
             const presentation = present(item.asset);
             const presentationDescription = presentation.description?.trim();
