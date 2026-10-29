@@ -12,14 +12,58 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 mod codex;
+pub(crate) mod codex_desktop;
+pub(crate) mod goose_desktop;
+pub(crate) mod goose_cli;
+mod goose_plugins;
+mod vibe;
+mod kimi;
+mod kimi_desktop;
+mod amp;
+mod augment;
+mod factory_droid;
+mod factory_desktop;
+mod cline;
+mod pi;
+mod hermes;
+mod artifact_runtime;
+mod crush;
+mod continue_cli;
+mod trae_cli;
+#[cfg(test)]
+mod openhands_probe_tests;
+pub(crate) mod cursor_cli;
 mod claude;
+mod claude_desktop;
 mod gemini;
+mod opencode;
+mod opencode_desktop;
+mod copilot;
+mod qwen;
+mod kiro;
+mod workbuddy;
+mod qoder;
+mod qoder_cli;
+mod electron_package;
+mod bun_package;
+mod qoder_cn_cli;
+mod qoder_wake;
+mod qoderwork;
+mod qoder_desktop;
+mod antigravity;
+mod zcode;
+mod vscode_extensions;
 
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
 const MAX_SCAN_ENTRIES: usize = 32_768;
 const MAX_REFERENCES: usize = 2048;
 const MAX_READ_BYTES: usize = 64 * 1024 * 1024;
+// Hashing shipped runtimes has a separate bound from private metadata reads.
+// Multiple installed hosts must not exhaust each other's JSON read allowance.
+// Several independently installed desktop packages contain large standalone
+// runtimes. Keep full-member digest verification and a finite aggregate bound.
+const MAX_VERIFIED_BYTES: usize = 512 * 1024 * 1024;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -52,7 +96,8 @@ struct ScanBudget {
     visited: usize,
     references: usize,
     bytes: usize,
-    json: BTreeMap<PathBuf, Arc<Value>>,
+    verified_bytes: usize,
+    json: BTreeMap<(PathBuf, DocumentFormat), Arc<Value>>,
 }
 impl ScanBudget {
     fn visit(&mut self) -> Result<(), ()> {
@@ -77,6 +122,34 @@ pub(crate) fn text(path: &Path, limit: u64) -> Result<String, ()> {
     file.take(limit + 1).read_to_string(&mut content).map_err(|_| ())?;
     if content.len() as u64 > limit { return Err(()); }
     Ok(content)
+}
+
+fn verified_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budget: &mut ScanBudget) -> Result<fs::File, ()> {
+    if !regular_metadata_file(path)? { return Err(()); }
+    budget.visit()?;
+    if expected_bytes > MAX_VERIFIED_BYTES.saturating_sub(budget.verified_bytes) as u64 { return Err(()); }
+    let mut file = open_confined_file(path)?; let before = file.metadata().map_err(|_| ())?;
+    if !before.is_file() || before.len() != expected_bytes { return Err(()); }
+    let mut digest = Sha256::new(); let mut bytes = 0u64; let mut buffer = [0u8; 65_536];
+    loop {
+        let count = (&mut file).take(expected_bytes.saturating_sub(bytes)+1).read(&mut buffer).map_err(|_| ())?;
+        if count == 0 { break; }
+        bytes += count as u64; budget.verified_bytes += count;
+        if bytes > expected_bytes { return Err(()); }
+        digest.update(&buffer[..count]);
+    }
+    if bytes != expected_bytes || hex::encode(digest.finalize()) != expected_sha256 { return Err(()); }
+    let after = file.metadata().map_err(|_| ())?; let bound = fs::symlink_metadata(path).map_err(|_| ())?;
+    if !bound.file_type().is_file() || before.len() != after.len() || before.modified().map_err(|_| ())? != after.modified().map_err(|_| ())? { return Err(()); }
+    #[cfg(unix)] {
+        use std::os::unix::fs::MetadataExt;
+        if before.dev() != bound.dev() || before.ino() != bound.ino() || before.ctime() != after.ctime() || before.ctime_nsec() != after.ctime_nsec() { return Err(()); }
+    }
+    Ok(file)
+}
+
+fn verify_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budget: &mut ScanBudget) -> Result<(), ()> {
+    verified_artifact(path, expected_bytes, expected_sha256, budget).map(|_| ())
 }
 
 
@@ -142,10 +215,57 @@ fn relative(root: &Path, input: &str) -> Result<PathBuf, ()> {
 }
 
 fn optional_json(root: &Path, input: &str, budget: &mut ScanBudget) -> Result<Option<Arc<Value>>, ()> {
+    optional_document(root, input, DocumentFormat::Json, budget)
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum DocumentFormat { Json, JsonBom, Jsonc, Json5, Toml }
+
+// Bounds structural nesting before the recursive JSON5 deserializer. This is
+// only a resource bound; the library remains the syntax authority, including
+// single quotes, escaped line continuations and Unicode comment terminators.
+fn check_json5_depth(content: &str) -> Result<(), ()> {
+    #[derive(Clone, Copy)]
+    enum State { Code, String(char), Line, Block }
+    let mut state=State::Code;let mut escaped=false;let mut depth=0usize;
+    let mut chars=content.chars().peekable();
+    while let Some(ch)=chars.next() {
+        match state {
+            State::String(quote)=>if escaped {escaped=false;}else if ch=='\\' {escaped=true;}else if ch==quote {state=State::Code;},
+            State::Line=>if matches!(ch,'\n'|'\r'|'\u{2028}'|'\u{2029}') {state=State::Code;},
+            State::Block=>if ch=='*'&&chars.peek()==Some(&'/') {chars.next();state=State::Code;},
+            State::Code=>match ch {
+                '\''|'"'=>{state=State::String(ch);escaped=false;},
+                '/' if chars.peek()==Some(&'/')=>{chars.next();state=State::Line;},
+                '/' if chars.peek()==Some(&'*')=>{chars.next();state=State::Block;},
+                '{'|'['=>{depth+=1;if depth>128{return Err(());}},
+                '}'|']'=>depth=depth.checked_sub(1).ok_or(())?,_=>{},
+            },
+        }
+    }
+    if depth==0&&matches!(state,State::Code|State::Line) {Ok(())}else{Err(())}
+}
+
+fn check_jsonc_depth(content: &str) -> Result<(), ()> {
+    use jsonc_parser::tokens::Token;
+    let mut scanner = jsonc_parser::Scanner::new(content, &Default::default());
+    let mut depth = 0usize;
+    while let Some(token) = scanner.scan().map_err(|_| ())? {
+        match token {
+            Token::OpenBrace | Token::OpenBracket => { depth += 1; if depth > 128 { return Err(()); } },
+            Token::CloseBrace | Token::CloseBracket => depth = depth.checked_sub(1).ok_or(())?,
+            _ => {},
+        }
+    }
+    if depth == 0 { Ok(()) } else { Err(()) }
+}
+
+fn optional_document(root: &Path, input: &str, format: DocumentFormat, budget: &mut ScanBudget) -> Result<Option<Arc<Value>>, ()> {
     budget.references += 1;
     if budget.references > MAX_REFERENCES { return Err(()); }
     let path = relative(root, input)?;
-    if let Some(value) = budget.json.get(&path) { return Ok(Some(value.clone())); }
+    let key = (path.clone(), format);
+    if let Some(value) = budget.json.get(&key) { return Ok(Some(value.clone())); }
     match fs::symlink_metadata(&path) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(_) => Err(()),
@@ -162,8 +282,20 @@ fn optional_json(root: &Path, input: &str, budget: &mut ScanBudget) -> Result<Op
             read.map_err(|_| ())?;
             if content.len() > 2_097_152 || content.len() == remaining { return Err(()); }
             let content = std::str::from_utf8(&content).map_err(|_| ())?;
-            let value = Arc::new(serde_json::from_str::<Value>(content).map_err(|_| ())?);
-            budget.json.insert(path, value.clone());
+            let value = Arc::new(match format { DocumentFormat::Jsonc => {
+                check_jsonc_depth(content)?;
+                let options = jsonc_parser::ParseOptions { allow_comments: true, allow_trailing_commas: true,
+                    allow_loose_object_property_names: false, allow_missing_commas: false,
+                    allow_single_quoted_strings: false, allow_hexadecimal_numbers: false, allow_unary_plus_numbers: false };
+                jsonc_parser::parse_to_ast(content, &Default::default(), &options).map_err(|_| ())?.value.ok_or(())?.into()
+            }, DocumentFormat::Json5 => {
+                check_json5_depth(content)?;
+                json5::from_str::<Value>(content).map_err(|_| ())?
+            }, DocumentFormat::Json => serde_json::from_str::<Value>(content).map_err(|_| ())?,
+                DocumentFormat::JsonBom => serde_json::from_str::<Value>(content.strip_prefix('\u{feff}').unwrap_or(content)).map_err(|_| ())?,
+                DocumentFormat::Toml => serde_json::to_value(toml::from_str::<toml::Value>(content).map_err(|_| ())?).map_err(|_| ())?,
+            });
+            budget.json.insert(key, value.clone());
             Ok(Some(value))
         },
     }
@@ -214,6 +346,42 @@ fn dirs(path: &Path, budget: &mut ScanBudget) -> Result<Vec<PathBuf>, ()> {
 fn metadata_name(value: &str) -> Option<String> {
     let value = value.trim();
     (!value.is_empty() && value.len() <= 240 && !value.chars().any(char::is_control)).then(|| value.to_string())
+}
+
+fn regular_metadata_file(path: &Path) -> Result<bool, ()> {
+    checked_root(path)?;
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_file() => Ok(open_confined_file(path)?.metadata().map_err(|_| ())?.is_file()),
+        Ok(metadata) if metadata.file_type().is_dir() => Ok(false),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        _ => Err(()),
+    }
+}
+
+/// Supported Agent Plugins transport declaration shape. Native parsers still
+/// own semantic acceptance, path/URL resolution, permissions and activation.
+fn standard_mcp_declaration(value: &Value) -> bool {
+    let Some(server) = value.as_object() else { return false; };
+    let nonempty = |key: &str| server.get(key).and_then(Value::as_str).is_some_and(|value| !value.is_empty());
+    let string_map = |value: &Value| value.as_object().is_some_and(|object| object.values().all(Value::is_string));
+    match server.get("type").and_then(Value::as_str) {
+        Some("stdio") => {
+            if !nonempty("command") || server.keys().any(|key| !["type", "command", "args", "env", "cwd"].contains(&key.as_str())) { return false; }
+            if server.get("args").is_some_and(|args| !args.as_array().is_some_and(|args| args.iter().all(Value::is_string))) { return false; }
+            if server.get("env").is_some_and(|env| !string_map(env) || env.get("PLUGIN_ROOT").is_some() || env.get("PLUGIN_DATA").is_some()) { return false; }
+            if let Some(cwd) = server.get("cwd") {
+                let Some(cwd) = cwd.as_str() else { return false; };
+                let tail = if let Some(tail) = cwd.strip_prefix("./") { Some(tail) }
+                    else { ["${PLUGIN_ROOT}", "${PLUGIN_DATA}"].into_iter().find_map(|prefix| cwd.strip_prefix(prefix).filter(|tail| tail.is_empty() || tail.starts_with('/')).map(|tail| tail.strip_prefix('/').unwrap_or(tail))) };
+                if tail.is_none_or(|tail| Path::new(tail).components().any(|c| matches!(c, Component::ParentDir | Component::RootDir | Component::Prefix(_)))) { return false; }
+            }
+            true
+        },
+        Some("streamable-http" | "sse") => nonempty("url")
+            && server.keys().all(|key| ["type", "url", "headers"].contains(&key.as_str()))
+            && server.get("headers").is_none_or(string_map),
+        _ => false,
+    }
 }
 
 fn mcp_keys(value: &Value) -> Result<Vec<String>, ()> {
@@ -349,8 +517,37 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
     for host in hosts() {
         if !agents.get(&host.agent_id).is_some_and(|agent| agent.enabled) { continue; }
         if host.adapter == "codex" { codex::observe(host, &mut result); continue; }
+        if host.adapter == "goose_desktop" { goose_desktop::observe(host, &mut result); continue; }
+        if host.adapter == "goose_cli" { goose_cli::observe(host, &mut result); continue; }
+        if host.adapter == "vibe" { vibe::observe(host, &mut result); continue; }
+        if host.adapter == "kimi" { kimi::observe(host, &mut result); continue; }
+        if host.adapter == "kimi_desktop" { kimi_desktop::observe(host, &mut result); continue; }
+        if host.adapter == "amp" { amp::observe(host, &mut result); continue; }
+        if host.adapter == "augment" { augment::observe(host, &mut result); continue; }
+        if host.adapter == "factory_droid" { factory_droid::observe(host, &mut result); continue; }
+        if host.adapter == "factory_desktop" { factory_desktop::observe(host, &mut result); continue; }
+        if host.adapter == "cline" { cline::observe(host, &mut result); continue; }
+        if host.adapter == "pi" { pi::observe(host, &mut result); continue; }
+        if host.adapter == "hermes" { hermes::observe(host, &mut result); continue; }
+        if host.adapter == "cursor_cli" { cursor_cli::observe(host, &mut result); continue; }
         if host.adapter == "claude" { claude::observe(host, &mut result); continue; }
+        if host.adapter == "claude_desktop" { claude_desktop::observe(host, &mut result); continue; }
         if host.adapter == "gemini" { gemini::observe(host, &mut result); continue; }
+        if host.adapter == "opencode" { opencode::observe(host, &mut result); continue; }
+        if host.adapter == "opencode_desktop" { opencode_desktop::observe(host, &mut result); continue; }
+        if host.adapter == "copilot" { copilot::observe(host, &mut result); continue; }
+        if host.adapter == "qwen" { qwen::observe(host, &mut result); continue; }
+        if host.adapter == "kiro" { kiro::observe(host, &mut result); continue; }
+        if host.adapter == "workbuddy" { workbuddy::observe(host, &mut result); continue; }
+        if host.adapter == "qoder" { qoder::observe(host, &mut result); continue; }
+        if host.adapter == "qoder_cli" { qoder_cli::observe(host, &mut result); continue; }
+        if host.adapter == "qoder_cn_cli" { qoder_cn_cli::observe(host, &mut result); continue; }
+        if host.adapter == "qoder_wake" { qoder_wake::observe(host, &mut result); continue; }
+        if host.adapter == "qoderwork" { qoderwork::observe(host, &mut result); continue; }
+        if host.adapter == "qoder_desktop" { qoder_desktop::observe(host, &mut result); continue; }
+        if host.adapter == "antigravity" { antigravity::observe(host, &mut result); continue; }
+        if host.adapter == "zcode" { zcode::observe(host, &mut result); continue; }
+        if host.adapter == "vscode_extensions" { vscode_extensions::observe(host, &mut result); continue; }
         if host.adapter != "cursor" { result.unavailable = true; continue; }
         for source in &host.roots {
             let root = expand_tilde(&source.path);
@@ -420,10 +617,38 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "gemini" { gemini::watch_paths(host) } else {
-            host.roots.iter().map(|root| if host.adapter == "codex" { codex::cache_root(root) } else { expand_tilde(&root.path) }).collect()
+        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "augment" { augment::watch_paths(host) } else if host.adapter == "factory_droid" { factory_droid::watch_paths(host) } else if host.adapter == "factory_desktop" { factory_desktop::watch_paths(host) } else if host.adapter == "cline" { cline::watch_paths(host) } else if host.adapter == "pi" { pi::watch_paths(host) } else if host.adapter == "hermes" { hermes::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
+            host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()
+}
+
+/// Some audited native packages expose a version without executing their CLI.
+/// `Some(None)` means the passive contract did not match; do not fall back to
+/// launching an unverified executable merely to fill a version label.
+pub(crate) fn passive_runtime_version(agent_id: &str, path: &Path) -> Option<Option<String>> {
+    // These clients have no audited native plugin host. Their version probes
+    // still stay passive, including unsupported images and package versions.
+    if agent_id == "crush" { return Some(crush::runtime_version(path)); }
+    if agent_id == "continue-cli" { return Some(continue_cli::runtime_version(path)); }
+    if agent_id == "trae-cli" { return Some(trae_cli::runtime_version(path)); }
+    // OpenHands imports its SDK and reads cwd dotenv before argument parsing.
+    // No installed-wrapper identity is bound yet; keep its label unknown.
+    if agent_id == "openhands" { return Some(None); }
+    match hosts().iter().find(|host|host.agent_id==agent_id).map(|host|host.adapter.as_str()) {
+        Some("qoder_cn_cli") => Some(qoder_cn_cli::runtime_version(path)),
+        Some("goose_cli") => Some(goose_cli::runtime_version(path)),
+        Some("vibe") => Some(vibe::runtime_version(path)),
+        Some("kimi") => Some(kimi::runtime_version(path)),
+        Some("amp") => Some(amp::runtime_version(path)),
+        Some("augment") => Some(augment::runtime_version(path)),
+        Some("factory_droid") => Some(factory_droid::runtime_version(path)),
+        Some("cline") if agent_id == "cline-cli" => Some(cline::runtime_version(path)),
+        Some("pi") => Some(pi::runtime_version(path)),
+        Some("hermes") => Some(hermes::runtime_version(path)),
+        Some("cursor_cli") => Some(cursor_cli::runtime_version(path)),
+        _ => None,
+    }
 }
 
 pub(crate) fn supported_agents(agents: &BTreeMap<String, AgentDefinition>) -> Vec<String> {

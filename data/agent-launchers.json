@@ -121,6 +121,13 @@
     ],
     "host_name": "VS Code"
   },
+  "continue-cli": {
+    "kind": "cli",
+    "candidates": [
+      "cn"
+    ],
+    "args": []
+  },
   "copilot-cli": {
     "kind": "cli",
     "candidates": [
@@ -326,6 +333,15 @@
     ],
     "args": []
   },
+  "qoder-cn": {
+    "kind": "app",
+    "candidates": [
+      "Qoder CN"
+    ],
+    "bundle_ids": [
+      "com.qodercn.app"
+    ]
+  },
   "qoder-desktop": {
     "kind": "app",
     "candidates": [
@@ -334,6 +350,15 @@
     ],
     "bundle_ids": [
       "com.qoder.app"
+    ]
+  },
+  "qoderwork-cn": {
+    "kind": "app",
+    "candidates": [
+      "QoderWork CN"
+    ],
+    "bundle_ids": [
+      "com.qoder.work.cn"
     ]
   },
   "qoderwork": {
@@ -410,10 +435,29 @@
       "TheiaIDE"
     ]
   },
+  "trae-cli": {
+    "kind": "cli",
+    "candidates": [
+      "traecli"
+    ],
+    "args": []
+  },
+  "trae-cn": {
+    "kind": "app",
+    "candidates": [
+      "Trae CN"
+    ],
+    "bundle_ids": [
+      "cn.trae.app"
+    ]
+  },
   "trae-ide": {
     "kind": "app",
     "candidates": [
-      "TRAE"
+      "Trae"
+    ],
+    "bundle_ids": [
+      "com.trae.app"
     ]
   },
   "vscode": {
@@ -585,6 +629,25 @@
     "kind": "app",
     "candidates": [
       "MCPJam Inspector"
+    ]
+  },
+  "qoder-cli-cn": {
+    "kind": "cli",
+    "candidates": [
+      "qoderclicn"
+    ],
+    "args": []
+  },
+  "qoderwake": {
+    "kind": "app",
+    "candidates": [
+      "QoderWake"
+    ]
+  },
+  "qoderwake-cn": {
+    "kind": "app",
+    "candidates": [
+      "QoderWake CN"
     ]
   }
 }

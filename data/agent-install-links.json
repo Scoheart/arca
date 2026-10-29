@@ -195,12 +195,20 @@
     "url": "https://qoder.com/en/download",
     "label": "官方下载"
   },
+  "qoder-cn": {
+    "url": "https://qoder.cn/download",
+    "label": "官方下载"
+  },
   "qoder-desktop": {
     "url": "https://qoder.com/en/download",
     "label": "官方下载"
   },
   "qoder-cli": {
     "url": "https://qoder.com/en/download",
+    "label": "官方下载"
+  },
+  "qoderwork-cn": {
+    "url": "https://qoder.cn/download",
     "label": "官方下载"
   },
   "qoderwork": {
@@ -237,6 +245,10 @@
   },
   "theiaai-theiaide": {
     "url": "https://theia-ide.org/docs/",
+    "label": "安装文档"
+  },
+  "trae-cn": {
+    "url": "https://docs.trae.cn/",
     "label": "安装文档"
   },
   "trae-ide": {
@@ -469,6 +481,26 @@
   },
   "fx": {
     "url": "https://fx.sh/docs/getting-started/authentication",
+    "label": "安装文档"
+  },
+  "qoder-cli-cn": {
+    "url": "https://qoder.cn/download",
+    "label": "官方下载"
+  },
+  "qoderwake": {
+    "url": "https://download.qoder.com/qoderwake/installers/1.2.4/qoderwake_1.2.4_darwin_arm64.dmg",
+    "label": "官方安装包"
+  },
+  "qoderwake-cn": {
+    "url": "https://ide.qoder.com.cn/qoderwake-cn/installers/1.2.4-cn/qoderwake-cn_1.2.4-cn_darwin_arm64.dmg",
+    "label": "官方安装包"
+  },
+  "xgoose": {
+    "url": "https://xgoose.org/chrome/",
+    "label": "产品首页"
+  },
+  "qwenpaw": {
+    "url": "https://qwenpaw.agentscope.io/docs/quickstart",
     "label": "安装文档"
   }
 }

@@ -47,7 +47,8 @@ registered in new Kimi sessions; existing sessions do not automatically gain the
 If `KIMI_CODE_HOME` is customized, configure matching MCP and Skills paths in Arca.
 The default integration does not infer another application's shell environment.
 Project overlays, plugin-owned MCP/Skills, browser control and OAuth credentials
-remain managed by Kimi itself.
+remain managed by Kimi itself. The separate native-resource observer below exposes
+plugin metadata without taking over those resources.
 
 Models are guided deliberately: `api_key` and `[providers.<name>.env]` contain
 literal credentials; the latter is not a shell environment reference. The shipped
@@ -59,3 +60,54 @@ policy and audited writer. This integration advertises neither capability.
 Regression cases cover both identities, HTTP/SSE/stdio parsing, retained policies,
 disabled/malformed entries, shared-target removals, and guided Model boundaries.
 The repository's fast delivery mode retains these tests without running them by default.
+
+## Native resources: Desktop 1.2.0
+
+The native-resource contract was inspected on 2026-10-29 against the official
+macOS arm64 Desktop 1.2.0 package. This is a separate metadata audit; the existing
+writable integration audit above remains scoped to Desktop 1.0.1.
+
+The official DMG SHA-256 is
+`209414b7ab4c12c69636d7484c990e9c9d570c00f260f0837fce7c0914e11746`.
+Its installed bundle reports `com.kimi.code.desktop`, `Kimi Code`, version 1.2.0;
+the ASAR package is `kimi-code-app` 1.2.0 with entry `out/main.cjs`. Inspection
+validated the Developer ID signature, stapled notarization and package copy
+without launching the app, backend, native helpers, plugins or initializers.
+
+Arca independently checks the bundle identity/version and the complete digests
+of six packed ASAR members recorded in `data/native-plugin-kimi-desktop.json`:
+`package.json`, `out/main.cjs`, `out/app-DzioWUtH.cjs`,
+`out/protocol-BdnEEX3f.cjs`, `out/release-channel-Be3VBwaC.cjs` and
+`out/screenshot-CT9AOv7C.cjs`. The first existing app in the declared system/user
+Applications order must pass; a damaged or unsupported candidate cannot borrow
+a later app or the independently audited CLI package.
+
+The compiled catalog contains `mcp-config`, `import-from-cc-codex`, `update-config`,
+`custom-theme`, `write-goal`, `check-kimi-code-docs`, `sub-skill`,
+`sub-skill.review` and `sub-skill.consolidate`. Source markers point to
+`app.asar!out/screenshot-CT9AOv7C.cjs`, rather than invented filesystem Skill
+files. Five factories declare product-specific behavior, and `custom-theme`
+declares TUI scope. The observer does not resolve product/experiment flags,
+session membership or effective visibility. No builtin MCP server is inferred.
+
+The Desktop loader independently confirms the same global Kimi plugin format:
+`KIMI_CODE_HOME` or `~/.kimi-code`, exact roots from `plugins/installed.json`,
+root `kimi.plugin.json` ahead of `.kimi-plugin/plugin.json`, and inline MCPs
+with native `plugin-<registered-id>:<trimmed-server-name>` aliases. Arca shares
+this metadata reader with CLI while keeping each host's package gate and
+observations distinct. A missing or unverified Desktop package retains registry
+references without asserting runtime association. Effective enablement and
+connectivity remain unknown. Agent, Command, Hook and conditional component
+markers keep their authored types; private Markdown bodies are not read.
+This is Kimi's native format, not a claim of Agent Plugins 1.0 conformance.
+
+All 4,226 packed ASAR members matched their declared hashes in the inspected
+package. Seven unpacked node-pty native companions differed from ASAR-declared
+digests despite a valid signed/notarized bundle; the cause was not established.
+Those contradictions remain recorded, and this observer's gate covers only the
+six matching packed members. It does not establish native companion execution,
+whole-app behavior, current session activation or MCP connectivity. Official
+marketplace documentation alone does not establish installed plugins.
+
+Native resources remain read-only, with no delete, toggle, import or assignment
+action. This addition changes no writer, codec, account or credential handling.

@@ -835,6 +835,30 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://discovery-api.intern-ai.org.cn",
             },
         ],
+        "decuff" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.decuff.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.decuff.ai",
+            },
+        ],
+        "token360" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.token360.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.token360.ai",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://api.token360.ai/v1beta",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1466,9 +1490,30 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "decuff",
+        name: "decuff",
+        default_base_url: Some("https://api.decuff.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "helmholtz-blablador",
+        name: "Helmholtz Blablador",
+        default_base_url: Some("https://api.blablador.fz-juelich.de/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "token360",
+        name: "Token360",
+        default_base_url: Some("https://api.token360.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "asi-cloud",
         name: "ASI:Cloud",
-        default_base_url: Some("https://llm.a.singularitycompute.com/v1"),
+        default_base_url: Some("https://inference.asicloud.cudos.org/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2224,7 +2269,10 @@ pub fn infer_provider(base_url: &str) -> String {
         "www.whatstoken.ai" => "whatstoken",
         "discovery-api.intern-ai.org.cn" => "intern-inkstone",
         "api.swarms.world" => "swarms",
-        "llm.a.singularitycompute.com" => "asi-cloud",
+        "api.decuff.ai" => "decuff",
+        "api.blablador.fz-juelich.de" => "helmholtz-blablador",
+        "api.token360.ai" => "token360",
+        "inference.asicloud.cudos.org" => "asi-cloud",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7901,16 +7949,49 @@ mod tests {
             ("https://swarms.world/v1", "custom"),
             ("https://api.swarms.ai/v1", "custom"),
             ("https://api.swarms.world.evil.test/v1", "custom"),
-            ("https://llm.a.singularitycompute.com/v1", "asi-cloud"),
-            ("https://llm.a.singularitycompute.com/v1/chat/completions", "asi-cloud"),
-            ("https://llm.a.singularitycompute.com/v1/models", "asi-cloud"),
-            ("https://llm.a.singularitycompute.com/v1/systemone", "asi-cloud"),
+            ("https://api.decuff.ai/v1", "decuff"),
+            ("https://api.decuff.ai/v1/chat/completions", "decuff"),
+            ("https://api.decuff.ai/v1/responses", "decuff"),
+            ("https://api.decuff.ai/v1/models", "decuff"),
+            ("https://api.decuff.ai", "decuff"),
+            ("https://api.decuff.ai/v1/messages", "decuff"),
+            ("https://decuff.ai/v1", "custom"),
+            ("https://decuff.ai/account", "custom"),
+            ("https://decuff.ai/docs", "custom"),
+            ("https://www.decuff.ai/v1", "custom"),
+            ("https://api.decuffed.com/v1", "custom"),
+            ("https://api.decuff.ai.evil.test/v1", "custom"),
+            ("https://api.blablador.fz-juelich.de/v1", "helmholtz-blablador"),
+            ("https://api.blablador.fz-juelich.de/v1/chat/completions", "helmholtz-blablador"),
+            ("https://api.blablador.fz-juelich.de/v1/models", "helmholtz-blablador"),
+            ("https://blablador.fz-juelich.de/v1", "custom"),
+            ("http://blablador.fz-juelich.de", "custom"),
+            ("https://www.blablador.fz-juelich.de/v1", "custom"),
+            ("https://api.blablador.fz-juelich.de.evil.test/v1", "custom"),
+            ("https://api.token360.ai/v1", "token360"),
+            ("https://api.token360.ai/v1/chat/completions", "token360"),
+            ("https://api.token360.ai/v1/responses", "token360"),
+            ("https://api.token360.ai/v1/models", "token360"),
+            ("https://api.token360.ai", "token360"),
+            ("https://api.token360.ai/v1/messages", "token360"),
+            ("https://api.token360.ai/v1beta", "token360"),
+            ("https://api.token360.ai/v1beta/models/gemini-2.5-flash:generateContent", "token360"),
+            ("https://www.token360.ai/en-US", "custom"),
+            ("https://token360.ai/v1", "custom"),
+            ("https://admin.token360.ai/api-keys", "custom"),
+            ("https://api.token360.ai.evil.test/v1", "custom"),
+            ("https://inference.asicloud.cudos.org/v1", "asi-cloud"),
+            ("https://inference.asicloud.cudos.org/v1/chat/completions", "asi-cloud"),
+            ("https://inference.asicloud.cudos.org/v1/models", "asi-cloud"),
             ("https://asicloud.cudos.org/", "custom"),
-            ("https://inference.asicloud.cudos.org/v1", "custom"),
+            ("https://llm.a.singularitycompute.com/v1", "custom"),
+            ("https://llm.a.singularitycompute.com/v1/chat/completions", "custom"),
+            ("https://llm.a.singularitycompute.com/v1/systemone", "custom"),
             ("https://singularitycompute.com/v1", "custom"),
             ("https://www.singularitycompute.com/v1", "custom"),
             ("https://a.singularitycompute.com/v1", "custom"),
             ("https://llm.singularitycompute.com/v1", "custom"),
+            ("https://inference.asicloud.cudos.org.evil.test/v1", "custom"),
             ("https://llm.a.singularitycompute.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
@@ -7994,7 +8075,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 163);
+        assert_eq!(list_providers().len(), 166);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8265,19 +8346,61 @@ mod tests {
             .unwrap();
         let serialized = serde_json::to_value(inworld).unwrap();
         assert_eq!(serialized["model_discovery_supported"], false);
-        let asi_cloud = list_providers()
+        let decuff = list_providers()
             .iter()
-            .find(|provider| provider.id == "asi-cloud")
+            .find(|provider| provider.id == "decuff")
             .unwrap();
-        let serialized = serde_json::to_value(asi_cloud).unwrap();
-        assert_eq!(asi_cloud.name, "ASI:Cloud");
-        assert_eq!(asi_cloud.default_protocol, ModelProtocol::OpenaiCompletions);
-        assert_eq!(asi_cloud.category, "gateway");
+        let serialized = serde_json::to_value(decuff).unwrap();
+        assert_eq!(decuff.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(decuff.category, "gateway");
+        assert_eq!(decuff.default_base_url, Some("https://api.decuff.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.decuff.ai");
         assert_eq!(
-            asi_cloud.default_base_url,
-            Some("https://llm.a.singularitycompute.com/v1")
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
         );
-        assert_eq!(serialized["base_url"], "https://llm.a.singularitycompute.com/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.decuff.ai/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-responses"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://api.decuff.ai"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://decuff.ai/docs");
+        assert_eq!(serialized["portal"]["url"], "https://decuff.ai/account");
+        assert_eq!(serialized["portal"]["kind"], "console");
+        let blablador = list_providers()
+            .iter()
+            .find(|provider| provider.id == "helmholtz-blablador")
+            .unwrap();
+        let serialized = serde_json::to_value(blablador).unwrap();
+        assert_eq!(blablador.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(blablador.category, "gateway");
+        assert_eq!(
+            blablador.default_base_url,
+            Some("https://api.blablador.fz-juelich.de/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.blablador.fz-juelich.de/v1");
         assert_eq!(
             serialized["protocols"]["openai-completions"]["endpoint_path"],
             "/chat/completions"
@@ -8292,7 +8415,94 @@ mod tests {
         assert_eq!(serialized["model_discovery_supported"], true);
         assert_eq!(
             serialized["docs_url"],
-            "https://github.com/Singularity-Compute/super-decider/blob/main/docs/API.md"
+            "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://codebase.helmholtz.cloud/-/user_settings/personal_access_tokens"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let token360 = list_providers()
+            .iter()
+            .find(|provider| provider.id == "token360")
+            .unwrap();
+        let serialized = serde_json::to_value(token360).unwrap();
+        assert_eq!(token360.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(token360.category, "gateway");
+        assert_eq!(
+            token360.default_base_url,
+            Some("https://api.token360.ai/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.token360.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["protocols"]["gemini-generate-content"]["endpoint_path"],
+            "/v1beta/models/{model}:generateContent"
+        );
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.token360.ai/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(serialized["additional_endpoints"][1]["base_url"], "https://api.token360.ai");
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(
+            serialized["additional_endpoints"][2]["base_url"],
+            "https://api.token360.ai/v1beta"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][2]["protocol"],
+            "gemini-generate-content"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://www.token360.ai/en-US/docs/api-reference/overview"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://www.token360.ai/en-US");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let asi_cloud = list_providers()
+            .iter()
+            .find(|provider| provider.id == "asi-cloud")
+            .unwrap();
+        let serialized = serde_json::to_value(asi_cloud).unwrap();
+        assert_eq!(asi_cloud.name, "ASI:Cloud");
+        assert_eq!(asi_cloud.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(asi_cloud.category, "gateway");
+        assert_eq!(
+            asi_cloud.default_base_url,
+            Some("https://inference.asicloud.cudos.org/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://inference.asicloud.cudos.org/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.cudos.org/docs/asi-cloud/inference/quickstart"
         );
         assert_eq!(serialized["portal"]["url"], "https://asicloud.cudos.org/");
         assert_eq!(serialized["portal"]["kind"], "console");

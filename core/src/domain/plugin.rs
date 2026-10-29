@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
-pub enum PluginPresence { Bundled, Installed, Local, CacheOnly }
+pub enum PluginPresence { Bundled, Installed, Local, CacheOnly, Declared }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
@@ -11,7 +11,7 @@ pub enum HostResourceOrigin { Builtin, Plugin }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
-pub enum PluginComponentKind { Mcp, Skill, Rule, Agent, Command, Hook, App, Lsp, OutputStyle, Workflow, Theme, Monitor, Eval, Executable, TypeDeclaration, Channel, McpBundle, Context, Policy, Plan }
+pub enum PluginComponentKind { Mcp, McpReference, Skill, Rule, Agent, Command, Hook, App, Lsp, OutputStyle, Workflow, Theme, Monitor, Eval, Executable, TypeDeclaration, Channel, McpBundle, Context, Policy, Plan, Code, AuthProvider, Extension, PluginReference, Tool, Renderer }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PluginComponent {

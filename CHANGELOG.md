@@ -1,5 +1,252 @@
 # Changelog
 
+## [2.53.0](https://github.com/Scoheart/arca/compare/v2.52.0...v2.53.0) (2026-10-29)
+
+### Changes
+
+* feat(agents): identify TRAE CLI releases without target startup ([eb7dd30](https://github.com/Scoheart/arca/commit/eb7dd30fe092eee836cf8b6f585c3ed4944f9297))
+
+## [2.52.0](https://github.com/Scoheart/arca/compare/v2.51.0...v2.52.0) (2026-10-29)
+
+### Changes
+
+* feat(agents): observe Hermes native resources and passive CLI versions ([2a349d8](https://github.com/Scoheart/arca/commit/2a349d81e47dd97be1f525e452f07d7bff371130))
+
+## [2.51.0](https://github.com/Scoheart/arca/compare/v2.50.0...v2.51.0) (2026-10-29)
+
+### Changes
+
+* feat(pi): observe native extensions and global package resources ([ff070ac](https://github.com/Scoheart/arca/commit/ff070aca35d0c038d8a3dbc42b119bc54c2b8ea0))
+* fix(pi): isolate metadata reads from other agent budgets ([1d3c321](https://github.com/Scoheart/arca/commit/1d3c3219e99be837b47549721df4f347b91fe4a0))
+
+## [2.50.0](https://github.com/Scoheart/arca/compare/v2.49.0...v2.50.0) (2026-10-29)
+
+### Changes
+
+* feat(cline): observe native Desktop and CLI plugins ([5bab974](https://github.com/Scoheart/arca/commit/5bab974ebe9c5d28ac4b3a80353dc794d36677eb))
+
+## [2.49.0](https://github.com/Scoheart/arca/compare/v2.48.0...v2.49.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Factory Desktop native resources ([dcdb9e0](https://github.com/Scoheart/arca/commit/dcdb9e0d2044c7cc1455b0937506216904c53e27))
+
+## [2.48.0](https://github.com/Scoheart/arca/compare/v2.47.0...v2.48.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Factory Droid native registrations ([d816b60](https://github.com/Scoheart/arca/commit/d816b6078b116a364eafd14c4ef711afb9a2012c))
+
+## [2.47.0](https://github.com/Scoheart/arca/compare/v2.46.1...v2.47.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Auggie native marketplace metadata ([18b3922](https://github.com/Scoheart/arca/commit/18b392254124d9b424116522b69b16e1f001c64e))
+
+## [2.46.1](https://github.com/Scoheart/arca/compare/v2.46.0...v2.46.1) (2026-10-29)
+
+### Changes
+
+* docs(release): delegate routine Stable closeout to Luna ([5230704](https://github.com/Scoheart/arca/commit/5230704241c4d273118dbb6db369c28c78cadb14))
+
+## [2.46.0](https://github.com/Scoheart/arca/compare/v2.45.0...v2.46.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Cursor CLI native resources ([9ac1f30](https://github.com/Scoheart/arca/commit/9ac1f30369daa3e3baac1a726ef94abea3b7047c))
+
+## [2.45.0](https://github.com/Scoheart/arca/compare/v2.44.0...v2.45.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Amp native plugin resources ([1f23d2e](https://github.com/Scoheart/arca/commit/1f23d2eb0746a023abc0aadf95bd833f55152741))
+
+## [2.44.0](https://github.com/Scoheart/arca/compare/v2.43.0...v2.44.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Kimi Code Desktop native resources ([4ae55da](https://github.com/Scoheart/arca/commit/4ae55dafc97334ab0c41ef573811ec75a1018f5e))
+
+## [2.43.0](https://github.com/Scoheart/arca/compare/v2.42.0...v2.43.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Kimi Code CLI native resources ([f7d6819](https://github.com/Scoheart/arca/commit/f7d6819bdbe956d2301b66e9d44a9e5fbcaae777))
+
+## [2.42.0](https://github.com/Scoheart/arca/compare/v2.41.0...v2.42.0) (2026-10-28)
+
+### Changes
+
+* feat(vibe): observe bundled and global plugin resources ([c367b23](https://github.com/Scoheart/arca/commit/c367b23921152424c2f80020fb0ad88fa9e862aa))
+
+## [2.41.0](https://github.com/Scoheart/arca/compare/v2.40.1...v2.41.0) (2026-10-28)
+
+### Changes
+
+* feat(goose): observe standalone CLI native resources ([2cd6de4](https://github.com/Scoheart/arca/commit/2cd6de494dd5b86e59c970135c0405f5c70b6053))
+
+## [2.40.1](https://github.com/Scoheart/arca/compare/v2.40.0...v2.40.1) (2026-10-28)
+
+### Changes
+
+* fix(desktop): compact native resource cards and details ([fa9a89e](https://github.com/Scoheart/arca/commit/fa9a89e643aff7c77a7b26dc01e0d0671615c26b))
+
+## [2.40.0](https://github.com/Scoheart/arca/compare/v2.39.0...v2.40.0) (2026-10-28)
+
+### Changes
+
+* feat(goose): observe desktop native extensions and plugins ([8f7b30e](https://github.com/Scoheart/arca/commit/8f7b30e24947f8b309e883e423916ec35300ebc2))
+
+## [2.39.0](https://github.com/Scoheart/arca/compare/v2.38.1...v2.39.0) (2026-10-28)
+
+### Changes
+
+* feat(chatgpt): observe built-in session MCP declarations ([3fc2afb](https://github.com/Scoheart/arca/commit/3fc2afb48ba22b267a2f90c5123f04db0848606d))
+
+## [2.38.1](https://github.com/Scoheart/arca/compare/v2.38.0...v2.38.1) (2026-10-28)
+
+### Changes
+
+* fix(models): copy one standalone curl command ([46a8244](https://github.com/Scoheart/arca/commit/46a8244013ca3c529da263064e62b31cc6ad0942))
+
+## [2.38.0](https://github.com/Scoheart/arca/compare/v2.37.0...v2.38.0) (2026-10-28)
+
+### Changes
+
+* feat(agents): observe OpenCode desktop native plugins ([184de69](https://github.com/Scoheart/arca/commit/184de694f83fe00cf7977d9013b7b315e5998cb6))
+
+## [2.37.0](https://github.com/Scoheart/arca/compare/v2.36.0...v2.37.0) (2026-10-28)
+
+### Changes
+
+* feat(agents): observe Claude Desktop extensions and native MCPs ([34ea709](https://github.com/Scoheart/arca/commit/34ea7093e4c8e52b94121c7ad57b6d889bb8f3c6))
+
+## [2.36.0](https://github.com/Scoheart/arca/compare/v2.35.0...v2.36.0) (2026-10-28)
+
+### Changes
+
+* feat(agents): add independently verified QoderWake CN inventory ([70fe57b](https://github.com/Scoheart/arca/commit/70fe57b94cf3d53ae21a4c66232e6a3c0a20af51))
+
+## [2.35.0](https://github.com/Scoheart/arca/compare/v2.34.0...v2.35.0) (2026-10-28)
+
+### Changes
+
+* feat(agents): observe QoderWake native and bundled CLI resources ([af59e8e](https://github.com/Scoheart/arca/commit/af59e8e798023e72070bf4977d114a9c61f339e6))
+
+## [2.34.0](https://github.com/Scoheart/arca/compare/v2.33.0...v2.34.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Qoder CLI CN native resources ([cbf0d2a](https://github.com/Scoheart/arca/commit/cbf0d2ad6f424de359cd8c03d074f09cc3f65747))
+
+## [2.33.0](https://github.com/Scoheart/arca/compare/v2.32.0...v2.33.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe QoderWork CN native resources ([7f04a10](https://github.com/Scoheart/arca/commit/7f04a106ef3f770b5bf15f8a596c0c590857452c))
+
+## [2.32.0](https://github.com/Scoheart/arca/compare/v2.31.0...v2.32.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Qoder CN Desktop independently ([684d34b](https://github.com/Scoheart/arca/commit/684d34b926d711d9049c7b6811e3d3e50ab234eb))
+
+## [2.31.0](https://github.com/Scoheart/arca/compare/v2.30.0...v2.31.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Qoder Desktop native layers ([63426d1](https://github.com/Scoheart/arca/commit/63426d1811cb2dd44372bc69f5d2b12005adfaf6))
+
+## [2.30.0](https://github.com/Scoheart/arca/compare/v2.29.0...v2.30.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe QoderWork bundled and global resources ([cd209f0](https://github.com/Scoheart/arca/commit/cd209f0253d3c337fbb02b36202f0053763ea70a))
+
+## [2.29.0](https://github.com/Scoheart/arca/compare/v2.28.0...v2.29.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Qoder CLI packages and global registrations ([71bfd6b](https://github.com/Scoheart/arca/commit/71bfd6beb6896e4497217140e812d3c4f5e028f2))
+
+## [2.28.0](https://github.com/Scoheart/arca/compare/v2.27.0...v2.28.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Trae bundled extensions and native providers ([0ed4528](https://github.com/Scoheart/arca/commit/0ed45288f3661d3d0ed089a776ba41680c62a078))
+
+## [2.27.0](https://github.com/Scoheart/arca/compare/v2.26.0...v2.27.0) (2026-10-28)
+
+### Changes
+
+* feat(plugins): observe Trae CN bundled extensions and native providers ([8d02f31](https://github.com/Scoheart/arca/commit/8d02f312ab6996e359bdc6966db210ec2d11ec25))
+
+## [2.26.0](https://github.com/Scoheart/arca/compare/v2.25.0...v2.26.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe ZCode native packages and shared MCP ([18a8c5b](https://github.com/Scoheart/arca/commit/18a8c5b8a99e4474bc2068762325a3b758000d90))
+
+## [2.25.0](https://github.com/Scoheart/arca/compare/v2.24.0...v2.25.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe Antigravity App native packages ([44fd6a6](https://github.com/Scoheart/arca/commit/44fd6a6f0751e5f0e45298f05be7ad1fa35ca3a4))
+
+## [2.24.0](https://github.com/Scoheart/arca/compare/v2.23.0...v2.24.0) (2026-10-27)
+
+### Changes
+
+* feat(qoder): observe IDE native plugins and MCPs ([f86e9c9](https://github.com/Scoheart/arca/commit/f86e9c9bfa119f7b1211f9b872e335be30fe78e7))
+
+## [2.23.0](https://github.com/Scoheart/arca/compare/v2.22.0...v2.23.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose WorkBuddy native packages independently ([e905af0](https://github.com/Scoheart/arca/commit/e905af0884f85bdfed7cd96cdbad475dd02f42d1))
+
+## [2.22.0](https://github.com/Scoheart/arca/compare/v2.21.0...v2.22.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe WorkBuddy AI native packages read-only ([494a1f1](https://github.com/Scoheart/arca/commit/494a1f10fae72030820056a6011a94db8d6004b2))
+
+## [2.21.0](https://github.com/Scoheart/arca/compare/v2.20.0...v2.21.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Kiro registered Powers metadata ([48383e6](https://github.com/Scoheart/arca/commit/48383e60f9abed61cdeb9a46116ef723ec355cdc))
+
+## [2.20.0](https://github.com/Scoheart/arca/compare/v2.19.0...v2.20.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Qwen Code extensions and bundled Skills ([f663d7d](https://github.com/Scoheart/arca/commit/f663d7d32b54d399bebf496367e24cd9ea60a33d))
+
+## [2.19.0](https://github.com/Scoheart/arca/compare/v2.18.0...v2.19.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Copilot CLI native resources ([8311cdb](https://github.com/Scoheart/arca/commit/8311cdbccbcdc1c5e1f8a75bd631820bd8ec30b7))
+
+## [2.18.0](https://github.com/Scoheart/arca/compare/v2.17.0...v2.18.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Codex IDE global installations ([2858c8f](https://github.com/Scoheart/arca/commit/2858c8fac582d0ace42b34d1323e0e71bfd644dd))
+
+## [2.17.0](https://github.com/Scoheart/arca/compare/v2.16.0...v2.17.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): expose Codex Desktop bundled resources ([c5d3aca](https://github.com/Scoheart/arca/commit/c5d3aca7536cdfb9051909960975ab9e5fcb0491))
+
+## [2.16.0](https://github.com/Scoheart/arca/compare/v2.15.0...v2.16.0) (2026-10-27)
+
+### Changes
+
+* feat(plugins): observe OpenCode native plugins ([6b7c6b9](https://github.com/Scoheart/arca/commit/6b7c6b9f1db4710662baa25d1dd961d180260f67))
+
 ## [2.15.0](https://github.com/Scoheart/arca/compare/v2.14.0...v2.15.0) (2026-10-27)
 
 ### Changes

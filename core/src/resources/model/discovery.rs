@@ -221,6 +221,9 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "amd-token-factory"
         | "subq"
         | "swarms"
+        | "helmholtz-blablador"
+
+        | "token360"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -313,6 +316,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "anyrouter"
             | "blazerail"
             | "subq"
+            | "token360"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -883,12 +887,31 @@ mod tests {
     }
 
     #[test]
+    fn decuff_has_no_reviewed_catalog_spec_and_falls_back_to_the_openai_models_path() {
+        assert!(reviewed_discovery_spec("decuff").is_none());
+        assert!(model_discovery_supported("decuff"));
+        let config = provider(
+            "decuff",
+            "https://api.decuff.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.decuff.ai/v1/models"
+        );
+    }
+
+    #[test]
     fn asi_cloud_has_no_reviewed_catalog_spec_and_falls_back_to_the_openai_models_path() {
         assert!(reviewed_discovery_spec("asi-cloud").is_none());
         assert!(model_discovery_supported("asi-cloud"));
         let config = provider(
             "asi-cloud",
-            "https://llm.a.singularitycompute.com/v1",
+            "https://inference.asicloud.cudos.org/v1",
             ModelProtocol::OpenaiCompletions,
             "/chat/completions",
         );
@@ -897,7 +920,7 @@ mod tests {
         assert_eq!(spec.credential, CredentialPolicy::Optional);
         assert_eq!(
             discovery_url(&config, spec.adapter).unwrap().as_str(),
-            "https://llm.a.singularitycompute.com/v1/models"
+            "https://inference.asicloud.cudos.org/v1/models"
         );
     }
 
@@ -916,6 +939,23 @@ mod tests {
         assert_eq!(
             discovery_url(&config, spec.adapter).unwrap().as_str(),
             "https://model.inferx.net/v1/models"
+        );
+    }
+
+    #[test]
+    fn token360_discovers_the_public_openai_catalog() {
+        let config = provider(
+            "token360",
+            "https://api.token360.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.token360.ai/v1/models"
         );
     }
 
@@ -984,6 +1024,23 @@ mod tests {
         assert_eq!(
             discovery_url(&config, spec.adapter).unwrap().as_str(),
             "https://api.scnet.cn/api/llm/v1/models"
+        );
+    }
+
+    #[test]
+    fn helmholtz_blablador_discovers_openai_models_on_the_documented_catalog_path() {
+        let config = provider(
+            "helmholtz-blablador",
+            "https://api.blablador.fz-juelich.de/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.blablador.fz-juelich.de/v1/models"
         );
     }
 
@@ -1066,6 +1123,9 @@ mod tests {
         "amd-token-factory",
         "subq",
         "swarms",
+        "helmholtz-blablador",
+
+        "token360",
         "mistral",
         "deepseek",
         "groq",
@@ -1248,6 +1308,7 @@ mod tests {
             "anyrouter",
             "blazerail",
             "subq",
+            "token360",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -1255,7 +1316,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),

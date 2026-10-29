@@ -1,0 +1,12 @@
+{
+  "command": "amp",
+  "version": "0.0.1793217669-gb7b7f6",
+  "binary_bytes": 135922832,
+  "binary_sha256": "9ac1809d4b5fe21093c0562c9d4be5a82cd8a7c67ab69dbd3db9e91ab51d5675",
+  "entry_name": "/$bunfs/root/amp-darwin-arm64",
+  "builtin_plugins": [
+    "permissions",
+    "app-store-connect",
+    "thread-visibility"
+  ]
+}

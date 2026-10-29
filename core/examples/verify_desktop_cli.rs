@@ -88,7 +88,7 @@ fn main() {
     let key = "fixture-'$(printf should-not-run)`printf no`";
     for protocol in [ModelProtocol::OpenaiCompletions, ModelProtocol::OpenaiResponses,
         ModelProtocol::AnthropicMessages, ModelProtocol::GeminiGenerateContent] {
-        let command = curl::render(&protocol, "https://example.invalid/models/{model}:generate", "a/b model'", CurlAuth::Key(key)).unwrap();
+        let command = curl::render("custom", &protocol, "https://example.invalid/models/{model}:generate", "a/b model'", CurlAuth::Key(key)).unwrap();
         let output = Command::new("/bin/sh").args(["-c", &command]).output().unwrap();
         assert!(output.status.success());
         let arguments = output.stdout.split(|byte| *byte == 0).filter(|part| !part.is_empty())
@@ -100,6 +100,6 @@ fn main() {
         assert!(serde_json::from_str::<Value>(body).unwrap().is_object());
         assert!(arguments[2].contains("a%2Fb%20model'"));
     }
-    assert!(curl::render(&ModelProtocol::OpenaiCompletions, "https://example.invalid", "fixture", CurlAuth::Key("bad\nheader")).is_err());
+    assert!(curl::render("custom", &ModelProtocol::OpenaiCompletions, "https://example.invalid", "fixture", CurlAuth::Key("bad\nheader")).is_err());
     println!("PASS: shared settings, launch configuration/reset/dry-run, MCP bulk switches/icons, documentation, no-auth cURL, four protocol payloads and shell quoting");
 }
