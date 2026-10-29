@@ -21,6 +21,7 @@ mod kimi;
 mod kimi_desktop;
 mod amp;
 mod augment;
+mod factory_droid;
 pub(crate) mod cursor_cli;
 mod claude;
 mod claude_desktop;
@@ -208,7 +209,7 @@ fn optional_json(root: &Path, input: &str, budget: &mut ScanBudget) -> Result<Op
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum DocumentFormat { Json, Jsonc, Json5, Toml }
+enum DocumentFormat { Json, JsonBom, Jsonc, Json5, Toml }
 
 // Bounds structural nesting before the recursive JSON5 deserializer. This is
 // only a resource bound; the library remains the syntax authority, including
@@ -281,6 +282,7 @@ fn optional_document(root: &Path, input: &str, format: DocumentFormat, budget: &
                 check_json5_depth(content)?;
                 json5::from_str::<Value>(content).map_err(|_| ())?
             }, DocumentFormat::Json => serde_json::from_str::<Value>(content).map_err(|_| ())?,
+                DocumentFormat::JsonBom => serde_json::from_str::<Value>(content.strip_prefix('\u{feff}').unwrap_or(content)).map_err(|_| ())?,
                 DocumentFormat::Toml => serde_json::to_value(toml::from_str::<toml::Value>(content).map_err(|_| ())?).map_err(|_| ())?,
             });
             budget.json.insert(key, value.clone());
@@ -512,6 +514,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "kimi_desktop" { kimi_desktop::observe(host, &mut result); continue; }
         if host.adapter == "amp" { amp::observe(host, &mut result); continue; }
         if host.adapter == "augment" { augment::observe(host, &mut result); continue; }
+        if host.adapter == "factory_droid" { factory_droid::observe(host, &mut result); continue; }
         if host.adapter == "cursor_cli" { cursor_cli::observe(host, &mut result); continue; }
         if host.adapter == "claude" { claude::observe(host, &mut result); continue; }
         if host.adapter == "claude_desktop" { claude_desktop::observe(host, &mut result); continue; }
@@ -600,7 +603,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "augment" { augment::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "augment" { augment::watch_paths(host) } else if host.adapter == "factory_droid" { factory_droid::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()
@@ -617,6 +620,7 @@ pub(crate) fn passive_runtime_version(agent_id: &str, path: &Path) -> Option<Opt
         Some("kimi") => Some(kimi::runtime_version(path)),
         Some("amp") => Some(amp::runtime_version(path)),
         Some("augment") => Some(augment::runtime_version(path)),
+        Some("factory_droid") => Some(factory_droid::runtime_version(path)),
         Some("cursor_cli") => Some(cursor_cli::runtime_version(path)),
         _ => None,
     }
