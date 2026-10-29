@@ -469,3 +469,27 @@ APInex is currently exposed with Chat Completions and Anthropic Messages only;
 its public documentation does not establish a separate Responses endpoint.
 Model IDs remain dynamic and are loaded from each Provider's `/models` catalog
 when available rather than being hard-coded from social media posts.
+## Native protocol additions — 2026-10-26
+
+Google AI Studio supports [Interactions](https://ai.google.dev/gemini-api/docs/interactions-overview)
+at `POST /v1beta/interactions` (`model`, `input`, `x-goog-api-key`). New connections
+prefer this protocol while retaining generateContent. Arca's cURL examples opt
+out of stored interaction state with `store=false`; the Models catalog remains
+the Google `GET /v1beta/models` endpoint. Selecting `@ai-sdk/google` alone does
+not select the separate `google.interactions(...)` factory, so Arca's current
+Agent writers must reject Interactions assignment rather than emit generateContent.
+This boundary was checked against OpenCode's current stable
+[v1.19.4 provider loader](https://github.com/anomalyco/opencode/blob/v1.19.4/packages/opencode/src/provider/provider.ts),
+which calls `sdk.languageModel(...)`. Its dev-branch v2 native Interactions
+provider is not a supported stable-client contract.
+
+Amazon Bedrock [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html)
+uses the regional `https://bedrock-runtime.<region>.amazonaws.com` endpoint and
+`POST /model/{model}/converse`. Its content-block `messages` body has no `model`
+field. The [official API-key workflow](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html)
+supports Bearer authentication. Arca reuses its current Keychain/environment/file/helper
+credential sources for this key without adding IAM credential administration.
+The [Amazon Bedrock AI SDK provider](https://ai-sdk.dev/providers/ai-sdk-providers/amazon-bedrock)
+supports `baseURL` and Bearer `apiKey`, which are mapped by the OpenCode/Kilo writers.
+Converse model discovery is manual; it must not probe a fabricated `/models` route.
+

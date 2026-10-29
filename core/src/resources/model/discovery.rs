@@ -54,7 +54,7 @@ pub(super) fn model_discovery_supported(provider_type: &str) -> bool {
     // Chat API compatibility does not imply a Models API. Azure model names
     // are deployment aliases, not entries in the public model catalog.
     !matches!(provider_type,
-        "github-models" | "azure-openai" | "perplexity" | "volcengine" | "volcengine-coding-plan"
+        "amazon-bedrock" | "github-models" | "azure-openai" | "perplexity" | "volcengine" | "volcengine-coding-plan"
         | "baidu-qianfan" | "baidu-qianfan-coding-plan" | "zhipuai"
         | "stepfun" | "stepfun-global"
         | "featherless-ai" | "upstage" | "ai21" | "byteplus"
@@ -64,7 +64,8 @@ pub(super) fn model_discovery_supported(provider_type: &str) -> bool {
 }
 
 pub(super) fn provider_model_discovery_supported(provider: &ModelProviderConfig) -> bool {
-    provider.model_catalog_url.is_some() || model_discovery_supported(&provider.provider)
+    provider.model_catalog_url.is_some() || (model_discovery_supported(&provider.provider)
+        && provider.protocols.keys().any(|protocol| *protocol != ModelProtocol::AwsBedrockConverse))
 }
 
 /// Capture central inputs while the application read gate is held. External
@@ -340,6 +341,9 @@ fn discovery_spec_for_provider(provider: &ModelProviderConfig) -> Result<Discove
     if provider.provider == "cloudflare-workers-ai" && provider.model_catalog_url.is_some() {
         return Ok(DiscoverySpec { adapter: DiscoveryAdapter::OpenAi, credential: CredentialPolicy::Required });
     }
+    if provider.model_catalog_url.is_some() && provider.protocols.keys().all(|protocol| *protocol == ModelProtocol::AwsBedrockConverse) {
+        return Ok(DiscoverySpec { adapter: DiscoveryAdapter::OpenAi, credential: CredentialPolicy::Required });
+    }
     if let Some(spec) = reviewed_discovery_spec(&provider.provider) {
         return Ok(spec);
     }
@@ -359,6 +363,7 @@ fn discovery_spec_for_provider(provider: &ModelProviderConfig) -> Result<Discove
     } else if provider
         .protocols
         .contains_key(&ModelProtocol::GeminiGenerateContent)
+        || provider.protocols.contains_key(&ModelProtocol::GeminiInteractions)
     {
         DiscoveryAdapter::Gemini
     } else {
@@ -412,8 +417,10 @@ fn discovery_url(provider: &ModelProviderConfig, adapter: DiscoveryAdapter) -> R
             Ok(url)
         }
         DiscoveryAdapter::Gemini => {
-            let mut url =
-                derived_protocol_url(provider, ModelProtocol::GeminiGenerateContent, "/models")?;
+            let protocol = if provider.protocols.contains_key(&ModelProtocol::GeminiGenerateContent) {
+                ModelProtocol::GeminiGenerateContent
+            } else { ModelProtocol::GeminiInteractions };
+            let mut url = derived_protocol_url(provider, protocol, "/models")?;
             url.query_pairs_mut().append_pair("pageSize", "1000");
             Ok(url)
         }
@@ -767,6 +774,20 @@ fn next_page_url(mut url: Url, adapter: DiscoveryAdapter, token: &str) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn interactions_reuses_google_catalog_without_a_converse_models_probe() {
+        let google = provider("custom", "https://example.invalid", ModelProtocol::GeminiInteractions, "/tenant/v1beta/interactions");
+        let spec = discovery_spec_for_provider(&google).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::Gemini);
+        assert_eq!(discovery_url(&google, spec.adapter).unwrap().path(), "/tenant/v1beta/models");
+        let mut bedrock = provider("amazon-bedrock", "https://bedrock-runtime.eu-west-1.amazonaws.com",
+            ModelProtocol::AwsBedrockConverse, "/model/{model}/converse");
+        assert!(!provider_model_discovery_supported(&bedrock));
+        assert!(discovery_spec_for_provider(&bedrock).unwrap_err().contains("manually"));
+        bedrock.provider = "custom".into();
+        assert!(!provider_model_discovery_supported(&bedrock));
+    }
     use crate::domain::types::{ModelProtocol, ModelProviderProtocolConfig};
     use crate::testenv::TestHome;
     use std::collections::BTreeMap;

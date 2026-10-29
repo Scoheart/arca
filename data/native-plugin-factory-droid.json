@@ -1,0 +1,7 @@
+{
+  "agent_id": "factory-droid",
+  "command": "droid",
+  "version": "0.251.0",
+  "binary_bytes": 294010544,
+  "binary_sha256": "d3c0b87ff7cf942ee40a954ffa00204125d29241fe5e4ef458643622b74c25f9"
+}

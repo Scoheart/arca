@@ -1,0 +1,154 @@
+{
+  "agent_id": "hermes",
+  "command": "hermes",
+  "source_commit": "ff6a86cb529a372198b4b80d5e022e32a4a3f2cc",
+  "manifest_paths": [
+    "plugin.yaml",
+    "plugin.yml"
+  ],
+  "entrypoint_group": "hermes_agent.plugins",
+  "skill_marker": "SKILL.md",
+  "skill_excluded_dirs": [
+    ".git",
+    ".github",
+    ".hub"
+  ],
+  "memory_providers": [
+    {
+      "name": "byterover",
+      "path": "plugins/memory/byterover",
+      "version": "1.0.0",
+      "guards": [
+        {
+          "path": "plugins/memory/byterover/__init__.py",
+          "bytes": 13374,
+          "sha256": "ed5e9c4c7a2d892a947257fee9a5073c3032d402b64320ba7a678e7c1c7c21d8"
+        },
+        {
+          "path": "plugins/memory/byterover/plugin.yaml",
+          "bytes": 280,
+          "sha256": "0d4c042a1aaa1703d609c094c5fb6da9efabac658ab425671b315f70a013c488"
+        }
+      ]
+    },
+    {
+      "name": "hindsight",
+      "path": "plugins/memory/hindsight",
+      "version": "1.0.0",
+      "guards": [
+        {
+          "path": "plugins/memory/hindsight/__init__.py",
+          "bytes": 22483,
+          "sha256": "5350c93fc2fa0671cd430cee462a9491b55721c5097f1f19d7efd450a0b2eb05"
+        },
+        {
+          "path": "plugins/memory/hindsight/plugin.yaml",
+          "bytes": 267,
+          "sha256": "60654f841cf3cb607c05a2741b926f8eaf2e000e830f20c27284b95baa868c88"
+        }
+      ]
+    },
+    {
+      "name": "holographic",
+      "path": "plugins/memory/holographic",
+      "version": "0.1.0",
+      "guards": [
+        {
+          "path": "plugins/memory/holographic/__init__.py",
+          "bytes": 17093,
+          "sha256": "93f5ac1bdb9f31baf88bad71facc4a3a5aae8f00f188057981a5e3ef9f04e734"
+        },
+        {
+          "path": "plugins/memory/holographic/plugin.yaml",
+          "bytes": 193,
+          "sha256": "6a678c1af41756d85923750a786f5f21c0d5c2917433529212ee3a89afa11b8a"
+        }
+      ]
+    },
+    {
+      "name": "honcho",
+      "path": "plugins/memory/honcho",
+      "version": "1.0.0",
+      "guards": [
+        {
+          "path": "plugins/memory/honcho/__init__.py",
+          "bytes": 28943,
+          "sha256": "9790c6ece0ccbd13a6c7469af5ca133471bf656153994d3bcb67061bd9212294"
+        },
+        {
+          "path": "plugins/memory/honcho/plugin.yaml",
+          "bytes": 222,
+          "sha256": "bf592e7539f22d49abd149bd023bc03bd00f9efd574cec1d1c6500c5ad1f8572"
+        }
+      ]
+    },
+    {
+      "name": "mem0",
+      "path": "plugins/memory/mem0",
+      "version": "1.0.0",
+      "guards": [
+        {
+          "path": "plugins/memory/mem0/__init__.py",
+          "bytes": 14216,
+          "sha256": "368c2407d655822b55717bd40cca6ef33d6d5815f80748fcbf0b04bddab49105"
+        },
+        {
+          "path": "plugins/memory/mem0/plugin.yaml",
+          "bytes": 173,
+          "sha256": "2b97c23d977f68dd719d8cff1c785293d5c327ed4e43a0c303f43596bc85899e"
+        }
+      ]
+    },
+    {
+      "name": "openviking",
+      "path": "plugins/memory/openviking",
+      "version": "2.0.0",
+      "guards": [
+        {
+          "path": "plugins/memory/openviking/__init__.py",
+          "bytes": 23750,
+          "sha256": "f4cea01b83cb5d6caf13198eb631eda43c4d38da7c454f171ab9a6cd32431ee3"
+        },
+        {
+          "path": "plugins/memory/openviking/plugin.yaml",
+          "bytes": 280,
+          "sha256": "ec4088570f667d602fbc5cf23b4ddc8a57167dc2c3c79be938689e760c8e24af"
+        }
+      ]
+    },
+    {
+      "name": "retaindb",
+      "path": "plugins/memory/retaindb",
+      "version": "1.0.0",
+      "guards": [
+        {
+          "path": "plugins/memory/retaindb/__init__.py",
+          "bytes": 32799,
+          "sha256": "4159061fa3e87ee93c441c6aa343be0f31a70adb06e51d49178dc1308470561f"
+        },
+        {
+          "path": "plugins/memory/retaindb/plugin.yaml",
+          "bytes": 180,
+          "sha256": "03da77a4fa95ade1be4487cb45a872d3a45c0aa64dba2f38cdd106f5b531a223"
+        }
+      ]
+    },
+    {
+      "name": "supermemory",
+      "path": "plugins/memory/supermemory",
+      "version": "1.0.0",
+      "guards": [
+        {
+          "path": "plugins/memory/supermemory/__init__.py",
+          "bytes": 33417,
+          "sha256": "6d74914ff39c827d6cadd36f8792dc86495e6d5960c3e866956dc7599b9671ce"
+        },
+        {
+          "path": "plugins/memory/supermemory/plugin.yaml",
+          "bytes": 201,
+          "sha256": "23982d9d8960a8084bf310373cfa781b7244406d2058690c1fdb662b936822ac"
+        }
+      ]
+    }
+  ]
+}

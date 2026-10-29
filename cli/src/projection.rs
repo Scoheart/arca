@@ -94,6 +94,9 @@ pub fn safe_consumption_inventory(inventory: &ConsumptionInventory) -> Value {
     json!({
         "revision": inventory.revision,
         "observed_at": inventory.observed_at,
+        "native_plugin_agents": inventory.native_plugin_agents,
+        "host_mcps": inventory.host_mcps.iter().map(safe_host_mcp).collect::<Vec<_>>(),
+        "native_plugins": inventory.native_plugins.iter().map(safe_native_plugin).collect::<Vec<_>>(),
         "consumptions": inventory.consumptions.iter().map(safe_consumption_view).collect::<Vec<_>>(),
         "external": inventory.external.iter().map(safe_consumption_view).collect::<Vec<_>>(),
         "capability_errors": inventory.capability_errors.iter().map(|diagnostic| json!({
@@ -114,6 +117,29 @@ pub fn safe_target_incident(incident: &arca_core::application::assets::TargetInc
         "affected_agent_ids": incident.affected_agent_ids,
         "code": incident.code,
         "retryable": incident.retryable,
+    })
+}
+
+pub fn safe_host_mcp(item: &arca_core::domain::plugin::HostMcpObservation) -> Value {
+    json!({
+        "agent_id": item.agent_id, "server_id": item.server_id, "name": item.name,
+        "provider": item.provider, "origin": item.origin, "presence": item.presence,
+        "versions": item.versions, "source_paths": item.source_paths.iter().map(|path| safe_path(path)).collect::<Vec<_>>(),
+        "docs_url": item.docs_url, "source_fingerprint": item.source_fingerprint,
+    })
+}
+
+pub fn safe_native_plugin(item: &arca_core::domain::plugin::NativePluginObservation) -> Value {
+    json!({
+        "agent_id": item.agent_id, "plugin_id": item.plugin_id, "name": item.name,
+        "version": item.version, "revision": item.revision, "presence": item.presence,
+        "enabled": item.enabled,
+        "source_paths": item.source_paths.iter().map(|path| safe_path(path)).collect::<Vec<_>>(),
+        "components": item.components.iter().map(|component| json!({
+            "kind": component.kind, "name": component.name,
+            "source_path": safe_path(&component.source_path), "native_id": component.native_id,
+        })).collect::<Vec<_>>(),
+        "docs_url": item.docs_url, "source_fingerprint": item.source_fingerprint,
     })
 }
 

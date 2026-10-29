@@ -1443,6 +1443,58 @@ it("submits an independent custom Provider through the central asset plan", asyn
   });
 });
 
+it("uses the Google template default for new Models and saves an explicit protocol choice", async () => {
+  const protocols = {
+    "gemini-interactions": { endpoint_path: "/v1beta/interactions" },
+    "gemini-generate-content": { endpoint_path: "/v1beta/models/{model}:generateContent" },
+    "openai-completions": { endpoint_path: "/v1beta/openai/chat/completions" },
+  };
+  vi.mocked(api.listModelProviders).mockResolvedValue([{
+    id: "google", name: "Google AI Studio", base_url: "https://generativelanguage.googleapis.com",
+    default_base_url: "https://generativelanguage.googleapis.com/v1beta",
+    default_protocol: "gemini-interactions", protocols, additional_endpoints: [],
+    category: "official", model_discovery_supported: true,
+  }]);
+  vi.mocked(api.listModelProviderInstances).mockResolvedValue([{
+    id: "google-work", name: "Google Work", provider: "google", auth_requirement: "required",
+    base_url: "https://generativelanguage.googleapis.com", protocols,
+    credential_saved: false, model_count: 0, model_discovery_supported: false,
+  }]);
+  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "google-model" });
+  const user = userEvent.setup();
+  const view = render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate } as unknown as ConsumptionState} /></ToastProvider>);
+  const sidebar = within(view.container.querySelector(".arca-workspace-sidebar") as HTMLElement);
+  await user.click(await sidebar.findByTitle("Google Work"));
+  await user.click(screen.getByRole("button", { name: /手动添加 Model/ }));
+  expect(screen.getByRole("combobox", { name: "协议" })).toHaveTextContent("Gemini Interactions");
+  expect(screen.getByText("https://generativelanguage.googleapis.com/v1beta/interactions")).toBeVisible();
+  await chooseFormSelect(user, "协议", "Gemini generateContent");
+  await user.type(screen.getByRole("textbox", { name: "模型 ID" }), "gemini-example");
+  await user.click(screen.getByRole("button", { name: "添加" }));
+  await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
+    profile: expect.objectContaining({ protocol: "gemini-generate-content", provider_id: "google-work" }),
+  }), expect.anything()));
+});
+
+it("opens the Google Provider editor on its Interactions endpoint", async () => {
+  vi.mocked(api.listModelProviders).mockResolvedValue([{
+    id: "google", name: "Google AI Studio", base_url: "https://generativelanguage.googleapis.com",
+    default_base_url: "https://generativelanguage.googleapis.com/v1beta", default_protocol: "gemini-interactions",
+    protocols: {
+      "gemini-interactions": { endpoint_path: "/v1beta/interactions" },
+      "gemini-generate-content": { endpoint_path: "/v1beta/models/{model}:generateContent" },
+      "openai-completions": { endpoint_path: "/v1beta/openai/chat/completions" },
+    },
+    additional_endpoints: [], category: "official", model_discovery_supported: true,
+  }]);
+  const user = userEvent.setup();
+  render(<ToastProvider><ModelsView consumptionState={{ plan: null } as unknown as ConsumptionState} /></ToastProvider>);
+  await openProviderTemplate(user, "Google AI Studio");
+  expect(screen.getByLabelText("完整请求 URL")).toHaveTextContent(
+    "https://generativelanguage.googleapis.com/v1beta/interactions",
+  );
+});
+
 it("configures a Gemini native GenerateContent endpoint on a custom Provider", async () => {
   const user = userEvent.setup();
   const planUpdate = vi.fn().mockResolvedValue({ operation_id: "gemini-provider-plan" });
@@ -1458,10 +1510,10 @@ it("configures a Gemini native GenerateContent endpoint on a custom Provider", a
   fireEvent.change(screen.getByLabelText("Base URL"), {
     target: { value: "http://127.0.0.1:18080/v1beta" },
   });
-  const geminiSwitch = screen.getByRole("switch", { name: "Gemini GenerateContent" });
+  const geminiSwitch = screen.getByRole("switch", { name: "Gemini generateContent" });
   await user.click(geminiSwitch);
   const protocolRow = geminiSwitch.closest("article") as HTMLElement;
-  await user.click(within(protocolRow).getByRole("button", { name: /Gemini GenerateContent/ }));
+  await user.click(within(protocolRow).getByRole("button", { name: /Gemini generateContent/ }));
   expect(screen.getByLabelText("完整请求 URL")).toHaveTextContent(
     "http://127.0.0.1:18080/v1beta/models/{model}:generateContent",
   );

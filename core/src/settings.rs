@@ -381,6 +381,27 @@ pub fn load_settings() -> Settings {
     load_settings_strict().unwrap_or_default()
 }
 
+/// Read only Agent preferences. Native host discovery must not hydrate asset
+/// catalogs or depend on model credentials and catalog health.
+pub(crate) fn load_agent_preferences() -> std::io::Result<Settings> {
+    #[derive(Deserialize, Default)]
+    struct AgentPreferences {
+        version: Option<u32>,
+        agents: Option<BTreeMap<String, AgentDefinition>>,
+        agent_config_paths: Option<BTreeMap<String, AgentConfigPathOverride>>,
+    }
+    let path = settings_file();
+    let preferences: AgentPreferences = match read_optional(&path)? {
+        Some(content) => serde_json::from_str(&content).map_err(|error| invalid_document(&path, error))?,
+        None => AgentPreferences::default(),
+    };
+    if preferences.version.is_some_and(|version| version != SETTINGS_VERSION) {
+        return Err(Error::new(ErrorKind::InvalidData, "unsupported Agent preference schema"));
+    }
+    Ok(Settings { version: preferences.version, agents: preferences.agents,
+        agent_config_paths: preferences.agent_config_paths, ..Settings::default() })
+}
+
 fn read_optional(path: &Path) -> std::io::Result<Option<String>> {
     match fs::read_to_string(path) {
         Ok(content) => Ok(Some(content)),
@@ -867,6 +888,26 @@ mod tests {
     use crate::testenv::TestHome;
     use std::sync::mpsc;
     use std::time::Duration;
+
+    #[test]
+    fn host_agent_preferences_ignore_unrelated_catalog_damage_and_preserve_disablement() {
+        let _home = TestHome::new("native-agent-preferences");
+        let mut cursor = crate::agents::load_agents_from_settings(&Settings::default())["cursor"].clone();
+        cursor.enabled = false;
+        fs::create_dir_all(arca_dir()).unwrap();
+        fs::write(settings_file(), serde_json::to_vec(&serde_json::json!({
+            "version": SETTINGS_VERSION,
+            "agents": { "cursor": cursor }
+        })).unwrap()).unwrap();
+        fs::create_dir_all(model_catalog_file().parent().unwrap()).unwrap();
+        fs::write(model_catalog_file(), "invalid model catalog").unwrap();
+        let preferences = load_agent_preferences().unwrap();
+        assert!(preferences.model_profiles.is_none());
+        assert!(preferences.model_providers.is_none());
+        assert!(!crate::agents::load_agents_from_settings(&preferences)["cursor"].enabled);
+        fs::write(settings_file(), "invalid settings").unwrap();
+        assert!(load_agent_preferences().is_err());
+    }
 
     #[test]
     fn unknown_and_cli_sections_survive_roundtrip() {

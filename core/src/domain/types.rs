@@ -2,9 +2,10 @@
 
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use std::sync::OnceLock;
 
 /// Wire protocol used by a reusable model endpoint profile. These values match
-/// the provider identifiers supported by the first managed Agent set.
+/// the central endpoint contracts; native Agent support is checked separately.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "kebab-case")]
 pub enum ModelProtocol {
@@ -12,17 +13,51 @@ pub enum ModelProtocol {
     OpenaiResponses,
     OpenaiCompletions,
     GeminiGenerateContent,
+    GeminiInteractions,
+    AwsBedrockConverse,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ModelProtocolDefinition {
+    pub id: ModelProtocol,
+    pub label: String,
+    pub endpoint_path: String,
+}
+
+pub fn model_protocol_definitions() -> &'static [ModelProtocolDefinition] {
+    static DEFINITIONS: OnceLock<Vec<ModelProtocolDefinition>> = OnceLock::new();
+    DEFINITIONS.get_or_init(|| {
+        serde_json::from_str(include_str!("../../../data/model-protocols.json"))
+            .expect("embedded model protocol definitions must be valid")
+    })
+}
+
+#[cfg(test)]
+mod protocol_definition_tests {
+    use super::*;
+
+    #[test]
+    fn six_protocols_have_unique_typed_routes() {
+        let protocols = model_protocol_definitions();
+        let unique = protocols.iter().map(|definition| definition.id.clone())
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(protocols.len(), 6);
+        assert_eq!(unique.len(), protocols.len());
+        for definition in protocols {
+            let wire = serde_json::to_string(&definition.id).unwrap();
+            assert_eq!(serde_json::from_str::<ModelProtocol>(&wire).unwrap(), definition.id);
+            assert_eq!(definition.id.default_endpoint_path(), definition.endpoint_path);
+        }
+        assert_eq!(ModelProtocol::GeminiInteractions.default_endpoint_path(), "/interactions");
+        assert_eq!(ModelProtocol::AwsBedrockConverse.default_endpoint_path(), "/model/{model}/converse");
+    }
 }
 
 impl ModelProtocol {
     /// The request path appended by the protocol clients managed by Arca.
     pub fn default_endpoint_path(&self) -> &'static str {
-        match self {
-            Self::AnthropicMessages => "/v1/messages",
-            Self::OpenaiResponses => "/responses",
-            Self::OpenaiCompletions => "/chat/completions",
-            Self::GeminiGenerateContent => "/models/{model}:generateContent",
-        }
+        model_protocol_definitions().iter().find(|definition| &definition.id == self)
+            .expect("every model protocol must have one definition").endpoint_path.as_str()
     }
 }
 

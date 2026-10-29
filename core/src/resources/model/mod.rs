@@ -182,6 +182,7 @@ fn provider_setup(id: &str) -> Option<ModelProviderSetupView> {
     let (base_url_placeholder, hint) = match id {
         "azure-openai" => ("https://<resource>.openai.azure.com/openai/v1", "azure"),
         "amazon-bedrock-mantle" => ("https://bedrock-mantle.<region>.api.aws/v1", "bedrock"),
+        "amazon-bedrock" => ("https://bedrock-runtime.<region>.amazonaws.com", "bedrock-converse"),
         "cloudflare-workers-ai" => ("https://api.cloudflare.com/client/v4/accounts/<account-id>/ai/v1", "cloudflare"),
         "tinfoil-proxy" => ("http://127.0.0.1:3301/v1", "tinfoil"),
         _ => return None,
@@ -704,10 +705,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://qianfan.baidubce.com/anthropic/coding",
         }],
-        "google" => &[ModelProviderEndpointView {
-            protocol: OpenaiCompletions,
-            base_url: "https://generativelanguage.googleapis.com/v1beta/openai",
-        }],
+        "google" => &[
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://generativelanguage.googleapis.com/v1beta",
+            },
+            ModelProviderEndpointView {
+                protocol: OpenaiCompletions,
+                base_url: "https://generativelanguage.googleapis.com/v1beta/openai",
+            },
+        ],
         "zai-coding-plan" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.z.ai/api/anthropic",
@@ -1473,6 +1480,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "amazon-bedrock",
+        name: "Amazon Bedrock",
+        default_base_url: None,
+        default_protocol: ModelProtocol::AwsBedrockConverse,
+        category: "official",
+    },
+    ModelProviderView {
         id: "cloudflare-workers-ai",
         name: "Cloudflare Workers AI",
         default_base_url: None,
@@ -1616,7 +1630,7 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "google",
         name: "Google AI Studio",
         default_base_url: Some("https://generativelanguage.googleapis.com/v1beta"),
-        default_protocol: ModelProtocol::GeminiGenerateContent,
+        default_protocol: ModelProtocol::GeminiInteractions,
         category: "official",
     },
     ModelProviderView {
@@ -2094,6 +2108,10 @@ pub fn infer_provider(base_url: &str) -> String {
         .unwrap_or_default();
     let path = parsed.as_ref().map(|url| url.path()).unwrap_or("");
     let in_path = |prefix: &str| path == prefix || path.starts_with(&format!("{prefix}/"));
+    if host.starts_with("bedrock-runtime.")
+        && (host.ends_with(".amazonaws.com") || host.ends_with(".amazonaws.com.cn")) {
+        return "amazon-bedrock".into();
+    }
     if (host.ends_with(".openai.azure.com") || host.ends_with(".services.ai.azure.com"))
         && in_path("/openai/v1")
     {
@@ -4760,6 +4778,7 @@ fn managed_agent_view(
                 ModelProtocol::OpenaiResponses,
                 ModelProtocol::OpenaiCompletions,
                 ModelProtocol::GeminiGenerateContent,
+                ModelProtocol::AwsBedrockConverse,
             ],
             "qwen-code" | "crush" | "hermes" | "goose" => vec![
                 ModelProtocol::AnthropicMessages,
@@ -5214,16 +5233,19 @@ fn ensure_supported(agent_id: &str, protocol: &ModelProtocol) -> Result<(), Stri
         "claude-code" => matches!(protocol, ModelProtocol::AnthropicMessages),
         claude_desktop::AGENT_ID => matches!(protocol, ModelProtocol::AnthropicMessages),
         "codex" => matches!(protocol, ModelProtocol::OpenaiResponses),
-        "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => true,
-        "grok-build" | "pi" | "factory-droid" => {
-            !matches!(protocol, ModelProtocol::GeminiGenerateContent)
-        }
+        "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => matches!(protocol,
+            ModelProtocol::AnthropicMessages | ModelProtocol::OpenaiResponses
+            | ModelProtocol::OpenaiCompletions | ModelProtocol::GeminiGenerateContent
+            | ModelProtocol::AwsBedrockConverse),
+        "grok-build" | "pi" | "factory-droid" => matches!(protocol,
+            ModelProtocol::AnthropicMessages | ModelProtocol::OpenaiResponses | ModelProtocol::OpenaiCompletions),
         "qwen-code" | "crush" | "hermes" | "goose" => matches!(
             protocol,
             ModelProtocol::AnthropicMessages | ModelProtocol::OpenaiCompletions
         ),
         "mistral-vibe" | "zcode" => matches!(protocol, ModelProtocol::OpenaiCompletions),
-        "qoder-desktop" | "qoder-cli" => !matches!(protocol, ModelProtocol::GeminiGenerateContent),
+        "qoder-desktop" | "qoder-cli" => matches!(protocol,
+            ModelProtocol::AnthropicMessages | ModelProtocol::OpenaiResponses | ModelProtocol::OpenaiCompletions),
         "qoder" => {
             return Err(format!(
                 "Qoder custom models must be configured through Settings → Models; see {QODER_DOCS}"
@@ -5253,6 +5275,8 @@ fn protocol_name(protocol: &ModelProtocol) -> &'static str {
         ModelProtocol::OpenaiResponses => "openai-responses",
         ModelProtocol::OpenaiCompletions => "openai-completions",
         ModelProtocol::GeminiGenerateContent => "gemini-generate-content",
+        ModelProtocol::GeminiInteractions => "gemini-interactions",
+        ModelProtocol::AwsBedrockConverse => "aws-bedrock-converse",
     }
 }
 
@@ -6404,6 +6428,8 @@ pub(crate) fn generated_open_code_provider_id(
             ModelProtocol::OpenaiResponses => "responses",
             ModelProtocol::OpenaiCompletions => "openai",
             ModelProtocol::GeminiGenerateContent => "gemini",
+            ModelProtocol::GeminiInteractions => "interactions",
+            ModelProtocol::AwsBedrockConverse => "bedrock",
         };
         id = format!("{id}-{protocol}");
     }
@@ -6413,13 +6439,15 @@ pub(crate) fn generated_open_code_provider_id(
     id
 }
 
-fn grok_api_backend(protocol: &ModelProtocol) -> &'static str {
-    match protocol {
+fn grok_api_backend(protocol: &ModelProtocol) -> Result<&'static str, String> {
+    Ok(match protocol {
         ModelProtocol::AnthropicMessages => "messages",
         ModelProtocol::OpenaiResponses => "responses",
         ModelProtocol::OpenaiCompletions => "chat_completions",
         ModelProtocol::GeminiGenerateContent => "gemini",
-    }
+        ModelProtocol::GeminiInteractions | ModelProtocol::AwsBedrockConverse =>
+            return Err(format!("model_protocol_unsupported: Grok Build has no native {} backend", protocol_name(protocol))),
+    })
 }
 
 fn insert_optional_toml_integer(
@@ -6508,7 +6536,7 @@ fn upsert_grok_model(
     model.insert("name", toml_edit::value(&profile.name));
     model.insert(
         "api_backend",
-        toml_edit::value(grok_api_backend(&profile.protocol)),
+        toml_edit::value(grok_api_backend(&profile.protocol)?),
     );
     insert_optional_toml_integer(model, "context_window", profile.context_window)?;
     insert_optional_toml_integer(model, "max_completion_tokens", profile.max_output_tokens)?;
@@ -7257,6 +7285,35 @@ fn clear_all_pi(models_path: &Path, settings_path: &Path) -> Result<(), String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn new_protocols_do_not_bypass_native_agent_boundaries() {
+        for agent in ["claude-code", "codex", "pi", "grok-build", "factory-droid",
+            "qoder-desktop", "qoder-cli", "qwen-code", "crush", "hermes", "goose", "zcode"] {
+            assert!(ensure_supported(agent, &ModelProtocol::GeminiInteractions).is_err(), "{agent}");
+            assert!(ensure_supported(agent, &ModelProtocol::AwsBedrockConverse).is_err(), "{agent}");
+        }
+        for agent in ["opencode", "opencode-desktop", "kilo-code", "kilo-desktop"] {
+            assert!(ensure_supported(agent, &ModelProtocol::AwsBedrockConverse).is_ok());
+            assert!(ensure_supported(agent, &ModelProtocol::GeminiInteractions).is_err());
+        }
+    }
+
+    #[test]
+    fn new_native_templates_preserve_distinct_routes_and_regional_setup() {
+        let google = list_providers().iter().find(|provider| provider.id == "google").unwrap();
+        let value = serde_json::to_value(google).unwrap();
+        assert_eq!(value["protocols"]["gemini-interactions"]["endpoint_path"], "/v1beta/interactions");
+        assert_eq!(value["protocols"]["gemini-generate-content"]["endpoint_path"], "/v1beta/models/{model}:generateContent");
+        assert_eq!(value["protocols"]["openai-completions"]["endpoint_path"], "/v1beta/openai/chat/completions");
+        let bedrock = list_providers().iter().find(|provider| provider.id == "amazon-bedrock").unwrap();
+        let value = serde_json::to_value(bedrock).unwrap();
+        assert!(value["base_url"].is_null());
+        assert_eq!(value["protocols"]["aws-bedrock-converse"]["endpoint_path"], "/model/{model}/converse");
+        assert_eq!(value["model_discovery_supported"], false);
+        assert_eq!(infer_provider("https://bedrock-runtime.eu-west-1.amazonaws.com"), "amazon-bedrock");
+        assert_eq!(infer_provider("https://bedrock-runtime.eu-west-1.amazonaws.com.evil.test"), "custom");
+    }
     use crate::domain::assets::ApiKeyDelivery;
     use crate::testenv::TestHome;
     use std::sync::mpsc;
@@ -7917,8 +7974,8 @@ mod tests {
             .filter(|provider| provider.default_base_url.is_none())
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
-            BTreeSet::from(["azure-openai", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 161);
+            BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
+        assert_eq!(list_providers().len(), 162);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -7937,7 +7994,7 @@ mod tests {
         let serialized = serde_json::to_value(google).unwrap();
         assert_eq!(
             google.default_protocol,
-            ModelProtocol::GeminiGenerateContent
+            ModelProtocol::GeminiInteractions
         );
         assert_eq!(
             serialized["base_url"],
@@ -9982,7 +10039,7 @@ url = "https://example.test/mcp"
         assert_eq!(desktop.mode, "managed");
         assert!(desktop.supports_multiple && desktop.supports_global_selection);
         assert_eq!(desktop.config_paths, vec!["~/.config/opencode/opencode.json"]);
-        assert_eq!(desktop.supported_protocols.len(), 4);
+        assert_eq!(desktop.supported_protocols.len(), 5);
         assert_eq!(credential::select_delivery("opencode-desktop", &ApiKeySource::ArcaStore,
             &crate::domain::assets::ApiKeyDelivery::Auto).unwrap(), credential::PreparedCredentialRoute::OpenCodeAuthStore);
         for (agent, sibling) in [("opencode", "opencode-desktop"), ("opencode-desktop", "opencode")] {
