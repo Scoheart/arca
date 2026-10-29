@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.58.0](https://github.com/Scoheart/arca/compare/v2.57.1...v2.58.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Devin Desktop extensions and bundled Skills ([a5ea44b](https://github.com/Scoheart/arca/commit/a5ea44bfb7d0e6f03918db14fe834a95e6f4506b))
+* Merge remote-tracking branch 'origin/main' ([9e478d8](https://github.com/Scoheart/arca/commit/9e478d85c23dcb5f7aa69568041bbb78807eff19))
+
 ## [2.57.1](https://github.com/Scoheart/arca/compare/v2.57.0...v2.57.1) (2026-10-29)
 
 ### Changes
