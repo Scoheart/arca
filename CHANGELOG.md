@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.57.0](https://github.com/Scoheart/arca/compare/v2.56.0...v2.57.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe separate OpenClaw bundled resources ([3a06f15](https://github.com/Scoheart/arca/commit/3a06f15464495dcaf47648c07de9beddd26d3e4c))
+
 ## [2.56.0](https://github.com/Scoheart/arca/compare/v2.55.0...v2.56.0) (2026-10-29)
 
 ### Changes
