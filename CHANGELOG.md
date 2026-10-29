@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.59.0](https://github.com/Scoheart/arca/compare/v2.58.0...v2.59.0) (2026-10-29)
+
+### Changes
+
+* chore(sync): integrate current release metadata ([45f75a2](https://github.com/Scoheart/arca/commit/45f75a2d56dfb79395cc3bf3da96d6cc6ea0dff7))
+* fix(mcp): honor Junie CLI configuration and pause semantics ([8c66f06](https://github.com/Scoheart/arca/commit/8c66f06891c06c6d9cb7e0c3f9f11c2478831b9a))
+* Merge remote-tracking branch 'origin/main' ([f93b9a1](https://github.com/Scoheart/arca/commit/f93b9a118817495e47511e7af7988008e1b7598e))
+* feat(plugins): observe Junie CLI extensions and bundled Skills ([2b3bbf1](https://github.com/Scoheart/arca/commit/2b3bbf12fb4a49121e8e9753cf7ecf425ebcd7bf))
+
 ## [2.58.0](https://github.com/Scoheart/arca/compare/v2.57.1...v2.58.0) (2026-10-29)
 
 ### Changes
