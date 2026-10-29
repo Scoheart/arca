@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "bundle_id": "dev.warp.Warp-Stable",
+  "bundle_name": "Warp",
+  "executable": "stable",
+  "version": "0.2026.08.19.08.15.01",
+  "warp_version": "v0.2026.08.19.08.15.stable_01",
+  "info": {
+    "path": "Contents/Info.plist",
+    "bytes": 9318,
+    "sha256": "4c8e4ffa5b41afa74bce46a10d76dbda64fa5c2a88fc712adc86fff8fc4c6ffd"
+  },
+  "main": {
+    "path": "Contents/MacOS/stable",
+    "bytes": 414615504,
+    "sha256": "273206011d55499a63d12dcd87bc6634f18e541e02a4a72a368e8a5200f31fec"
+  },
+  "bundled_version": {
+    "path": "Contents/Resources/bundled/metadata/version.json",
+    "bytes": 54,
+    "sha256": "12ccda2064d97d90ac1b8b28b5b19e69f44a9a3ed8172eac5aff820d1ed07602"
+  },
+  "groups": [
+    {
+      "id": "@builtin/skills",
+      "name": "Warp 随包 Skills",
+      "root": "Contents/Resources/bundled/skills"
+    },
+    {
+      "id": "@builtin/mcp-skills/figma",
+      "name": "Figma 随包 Skills",
+      "root": "Contents/Resources/bundled/mcp_skills/figma"
+    }
+  ]
+}

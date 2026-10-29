@@ -158,7 +158,7 @@ it("keeps an Agent with only plugin Skills in the production workbench", async (
   const panel = screen.getByRole("tabpanel", { name: /Skills/ });
   expect(within(panel).getAllByRole("listitem")).toHaveLength(2);
   expect(within(panel).queryByText("暂无 Skills")).not.toBeInTheDocument();
-  expect(within(panel).getByText("配置 0 项 · 插件内置 2 项")).toBeVisible();
+  expect(within(panel).getByText("配置 0 项 · 内置 2 项")).toBeVisible();
   expect(screen.getByRole("button", { name: "添加 Skills" })).toBeDisabled();
   expect(within(panel).queryByRole("switch")).not.toBeInTheDocument();
 });
@@ -177,7 +177,7 @@ it("includes native Skills in Agent tab counts alongside same-name managed and e
   await userEvent.click(tab);
   const panel = screen.getByRole("tabpanel", { name: /Skills/ });
   expect(within(panel).getAllByRole("listitem")).toHaveLength(3);
-  expect(within(panel).getByText("配置 2 项 · 插件内置 1 项")).toBeVisible();
+  expect(within(panel).getByText("配置 2 项 · 内置 1 项")).toBeVisible();
   expect(within(panel).getAllByText("review")).toHaveLength(3);
   expect(within(panel).getAllByRole("switch")).toHaveLength(1);
 });

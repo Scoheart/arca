@@ -1,0 +1,16 @@
+{
+  "bundle_id": "com.microsoft.VSCode",
+  "product_name": "Code",
+  "data_folder": ".vscode",
+  "version": "1.106.3",
+  "environment": {
+    "path": "out/main.js",
+    "bytes": 912084,
+    "sha256": "a550521b973178b34ef8fa698a6c5536fd1629509e6b8acb46f2bca50e5b8070"
+  },
+  "workbench": {
+    "path": "out/vs/workbench/workbench.desktop.main.js",
+    "bytes": 12246933,
+    "sha256": "ab955705f930e8c3551f9ba5babdb93de6ee8ca28e49b715d2c7495cc16a6fcf"
+  }
+}

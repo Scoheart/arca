@@ -964,5 +964,51 @@
         "presence": "local"
       }
     ]
+  },
+  {
+    "agent_id": "vscode",
+    "adapter": "vscode",
+    "docs_url": "https://code.visualstudio.com/docs/copilot/chat/mcp-servers",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Visual Studio Code.app",
+        "layout": "vscode_app",
+        "presence": "bundled",
+        "complete_marker": null
+      },
+      {
+        "path": "~/Applications/Visual Studio Code.app",
+        "layout": "vscode_app",
+        "presence": "bundled",
+        "complete_marker": null
+      }
+    ]
+  },
+  {
+    "agent_id": "warp",
+    "adapter": "warp",
+    "docs_url": "https://docs.warp.dev/knowledge-and-collaboration/mcp",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Warp.app",
+        "layout": "warp_app",
+        "presence": "bundled",
+        "complete_marker": null
+      },
+      {
+        "path": "~/Applications/Warp.app",
+        "layout": "warp_app",
+        "presence": "bundled",
+        "complete_marker": null
+      }
+    ]
   }
 ]

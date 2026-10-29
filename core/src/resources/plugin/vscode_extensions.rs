@@ -26,11 +26,11 @@ fn profiles() -> &'static [Profile] {
         .expect("audited extension profiles must be valid"))
 }
 
-fn root_path(source: &Root) -> PathBuf {
+pub(super) fn root_path(source: &Root) -> PathBuf {
     if source.path.starts_with("/Applications/") { crate::paths::system_probe_path(&source.path) } else { expand_tilde(&source.path) }
 }
 
-fn select_app(host: &Host) -> Result<Option<PathBuf>, ()> {
+pub(super) fn select_app(host: &Host) -> Result<Option<PathBuf>, ()> {
     for source in &host.roots {
         if source.layout != "vscode_app" { return Err(()); }
         let path=root_path(source); checked_root(&path)?;
@@ -57,18 +57,18 @@ fn app_version(app: &Path, profile: &Profile, budget: &mut ScanBudget) -> Result
     value.get("CFBundleShortVersionString").and_then(plist::Value::as_string).and_then(metadata_name).ok_or(())
 }
 
-fn identifier(input: &str) -> Result<String, ()> {
+pub(super) fn identifier(input: &str) -> Result<String, ()> {
     if input.is_empty() || input.len()>256 || !input.bytes().all(|ch|ch.is_ascii_alphanumeric()||b"._-".contains(&ch)) { return Err(()); }
     Ok(input.into())
 }
 
-fn package_id(value: &Value) -> Result<String, ()> {
+pub(super) fn package_id(value: &Value) -> Result<String, ()> {
     let publisher=identifier(value.get("publisher").and_then(Value::as_str).ok_or(())?)?;
     let name=identifier(value.get("name").and_then(Value::as_str).ok_or(())?)?;
     identifier(&format!("{publisher}.{name}"))
 }
 
-fn entrypoint_path(root: &Path, input: &str) -> Result<Option<PathBuf>, ()> {
+pub(super) fn entrypoint_path(root: &Path, input: &str) -> Result<Option<PathBuf>, ()> {
     if input.chars().any(char::is_control) {return Err(());}
     let mut path=relative(root,input)?;
     if !regular_metadata_file(&path)? && path.extension().is_none() { path.set_extension("js"); }
@@ -79,7 +79,7 @@ fn entrypoint(root: &Path, input: &str) -> Result<PathBuf, ()> {
     entrypoint_path(root,input)?.ok_or(())
 }
 
-fn title(root: &Path, manifest: &Value, sources: &mut Vec<String>, result: &mut PluginScan) -> String {
+pub(super) fn title(root: &Path, manifest: &Value, sources: &mut Vec<String>, result: &mut PluginScan) -> String {
     let fallback=manifest.get("name").and_then(Value::as_str).unwrap_or("unknown");
     let input=manifest.get("displayName").and_then(Value::as_str).unwrap_or(fallback);
     if let Some(key)=input.strip_prefix('%').and_then(|value|value.strip_suffix('%')) {
