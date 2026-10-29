@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.49.0](https://github.com/Scoheart/arca/compare/v2.48.0...v2.49.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Factory Desktop native resources ([dcdb9e0](https://github.com/Scoheart/arca/commit/dcdb9e0d2044c7cc1455b0937506216904c53e27))
+
 ## [2.48.0](https://github.com/Scoheart/arca/compare/v2.47.0...v2.48.0) (2026-10-29)
 
 ### Changes
