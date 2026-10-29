@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.51.0](https://github.com/Scoheart/arca/compare/v2.50.0...v2.51.0) (2026-10-29)
+
+### Changes
+
+* feat(pi): observe native extensions and global package resources ([ff070ac](https://github.com/Scoheart/arca/commit/ff070aca35d0c038d8a3dbc42b119bc54c2b8ea0))
+* fix(pi): isolate metadata reads from other agent budgets ([1d3c321](https://github.com/Scoheart/arca/commit/1d3c3219e99be837b47549721df4f347b91fe4a0))
+
 ## [2.50.0](https://github.com/Scoheart/arca/compare/v2.49.0...v2.50.0) (2026-10-29)
 
 ### Changes
