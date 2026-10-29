@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.56.0](https://github.com/Scoheart/arca/compare/v2.55.0...v2.56.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Zed native extensions ([7b1d6ca](https://github.com/Scoheart/arca/commit/7b1d6caa2ae48164ae0a0e62c28e61af4d959f25))
+
 ## [2.55.0](https://github.com/Scoheart/arca/compare/v2.54.0...v2.55.0) (2026-10-29)
 
 ### Changes
