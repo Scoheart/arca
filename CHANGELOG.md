@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.52.0](https://github.com/Scoheart/arca/compare/v2.51.0...v2.52.0) (2026-10-29)
+
+### Changes
+
+* feat(agents): observe Hermes native resources and passive CLI versions ([2a349d8](https://github.com/Scoheart/arca/commit/2a349d81e47dd97be1f525e452f07d7bff371130))
+
 ## [2.51.0](https://github.com/Scoheart/arca/compare/v2.50.0...v2.51.0) (2026-10-29)
 
 ### Changes
