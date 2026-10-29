@@ -816,5 +816,23 @@
         "presence": "local"
       }
     ]
+  },
+  {
+    "agent_id": "augment",
+    "adapter": "augment",
+    "docs_url": "https://docs.augmentcode.com/cli/plugins",
+    "manifest_paths": [
+      ".augment-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [".mcp.json"],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.augment/plugins/marketplaces",
+        "layout": "marketplace_checkouts",
+        "presence": "local"
+      }
+    ]
   }
 ]

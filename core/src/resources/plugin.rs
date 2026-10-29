@@ -20,6 +20,7 @@ mod vibe;
 mod kimi;
 mod kimi_desktop;
 mod amp;
+mod augment;
 pub(crate) mod cursor_cli;
 mod claude;
 mod claude_desktop;
@@ -207,7 +208,32 @@ fn optional_json(root: &Path, input: &str, budget: &mut ScanBudget) -> Result<Op
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum DocumentFormat { Json, Jsonc, Toml }
+enum DocumentFormat { Json, Jsonc, Json5, Toml }
+
+// Bounds structural nesting before the recursive JSON5 deserializer. This is
+// only a resource bound; the library remains the syntax authority, including
+// single quotes, escaped line continuations and Unicode comment terminators.
+fn check_json5_depth(content: &str) -> Result<(), ()> {
+    #[derive(Clone, Copy)]
+    enum State { Code, String(char), Line, Block }
+    let mut state=State::Code;let mut escaped=false;let mut depth=0usize;
+    let mut chars=content.chars().peekable();
+    while let Some(ch)=chars.next() {
+        match state {
+            State::String(quote)=>if escaped {escaped=false;}else if ch=='\\' {escaped=true;}else if ch==quote {state=State::Code;},
+            State::Line=>if matches!(ch,'\n'|'\r'|'\u{2028}'|'\u{2029}') {state=State::Code;},
+            State::Block=>if ch=='*'&&chars.peek()==Some(&'/') {chars.next();state=State::Code;},
+            State::Code=>match ch {
+                '\''|'"'=>{state=State::String(ch);escaped=false;},
+                '/' if chars.peek()==Some(&'/')=>{chars.next();state=State::Line;},
+                '/' if chars.peek()==Some(&'*')=>{chars.next();state=State::Block;},
+                '{'|'['=>{depth+=1;if depth>128{return Err(());}},
+                '}'|']'=>depth=depth.checked_sub(1).ok_or(())?,_=>{},
+            },
+        }
+    }
+    if depth==0&&matches!(state,State::Code|State::Line) {Ok(())}else{Err(())}
+}
 
 fn check_jsonc_depth(content: &str) -> Result<(), ()> {
     use jsonc_parser::tokens::Token;
@@ -251,6 +277,9 @@ fn optional_document(root: &Path, input: &str, format: DocumentFormat, budget: &
                     allow_loose_object_property_names: false, allow_missing_commas: false,
                     allow_single_quoted_strings: false, allow_hexadecimal_numbers: false, allow_unary_plus_numbers: false };
                 jsonc_parser::parse_to_ast(content, &Default::default(), &options).map_err(|_| ())?.value.ok_or(())?.into()
+            }, DocumentFormat::Json5 => {
+                check_json5_depth(content)?;
+                json5::from_str::<Value>(content).map_err(|_| ())?
             }, DocumentFormat::Json => serde_json::from_str::<Value>(content).map_err(|_| ())?,
                 DocumentFormat::Toml => serde_json::to_value(toml::from_str::<toml::Value>(content).map_err(|_| ())?).map_err(|_| ())?,
             });
@@ -482,6 +511,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "kimi" { kimi::observe(host, &mut result); continue; }
         if host.adapter == "kimi_desktop" { kimi_desktop::observe(host, &mut result); continue; }
         if host.adapter == "amp" { amp::observe(host, &mut result); continue; }
+        if host.adapter == "augment" { augment::observe(host, &mut result); continue; }
         if host.adapter == "cursor_cli" { cursor_cli::observe(host, &mut result); continue; }
         if host.adapter == "claude" { claude::observe(host, &mut result); continue; }
         if host.adapter == "claude_desktop" { claude_desktop::observe(host, &mut result); continue; }
@@ -570,7 +600,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "augment" { augment::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()
@@ -586,6 +616,7 @@ pub(crate) fn passive_runtime_version(agent_id: &str, path: &Path) -> Option<Opt
         Some("vibe") => Some(vibe::runtime_version(path)),
         Some("kimi") => Some(kimi::runtime_version(path)),
         Some("amp") => Some(amp::runtime_version(path)),
+        Some("augment") => Some(augment::runtime_version(path)),
         Some("cursor_cli") => Some(cursor_cli::runtime_version(path)),
         _ => None,
     }
