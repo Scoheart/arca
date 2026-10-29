@@ -26,8 +26,12 @@ mod factory_desktop;
 mod cline;
 mod pi;
 mod hermes;
+mod artifact_runtime;
 mod crush;
 mod continue_cli;
+mod trae_cli;
+#[cfg(test)]
+mod openhands_probe_tests;
 pub(crate) mod cursor_cli;
 mod claude;
 mod claude_desktop;
@@ -627,6 +631,10 @@ pub(crate) fn passive_runtime_version(agent_id: &str, path: &Path) -> Option<Opt
     // still stay passive, including unsupported images and package versions.
     if agent_id == "crush" { return Some(crush::runtime_version(path)); }
     if agent_id == "continue-cli" { return Some(continue_cli::runtime_version(path)); }
+    if agent_id == "trae-cli" { return Some(trae_cli::runtime_version(path)); }
+    // OpenHands imports its SDK and reads cwd dotenv before argument parsing.
+    // No installed-wrapper identity is bound yet; keep its label unknown.
+    if agent_id == "openhands" { return Some(None); }
     match hosts().iter().find(|host|host.agent_id==agent_id).map(|host|host.adapter.as_str()) {
         Some("qoder_cn_cli") => Some(qoder_cn_cli::runtime_version(path)),
         Some("goose_cli") => Some(goose_cli::runtime_version(path)),

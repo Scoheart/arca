@@ -435,6 +435,13 @@
       "TheiaIDE"
     ]
   },
+  "trae-cli": {
+    "kind": "cli",
+    "candidates": [
+      "traecli"
+    ],
+    "args": []
+  },
   "trae-cn": {
     "kind": "app",
     "candidates": [
