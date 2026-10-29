@@ -9,7 +9,7 @@ pub struct FileEditor {
 #[tauri::command]
 pub async fn list_file_editors() -> Result<Vec<FileEditor>, String> {
     tauri::async_runtime::spawn_blocking(|| {
-        let names = ["Visual Studio Code", "Visual Studio Code - Insiders", "Cursor", "Windsurf", "Antigravity", "Qoder", "Qoder IDE", "ZCode", "Sublime Text", "Zed", "TextEdit", "BBEdit", "Nova", "CotEditor", "TextMate", "Xcode", "Android Studio", "IntelliJ IDEA", "IntelliJ IDEA CE", "WebStorm", "PyCharm", "PyCharm CE", "GoLand", "RustRover", "CLion", "PhpStorm", "Rider"];
+        let names = ["Visual Studio Code", "Visual Studio Code - Insiders", "Cursor", "Devin", "Antigravity", "Qoder", "Qoder IDE", "ZCode", "Sublime Text", "Zed", "TextEdit", "BBEdit", "Nova", "CotEditor", "TextMate", "Xcode", "Android Studio", "IntelliJ IDEA", "IntelliJ IDEA CE", "WebStorm", "PyCharm", "PyCharm CE", "GoLand", "RustRover", "CLion", "PhpStorm", "Rider"];
         let mut roots = vec![std::path::PathBuf::from("/Applications"), std::path::PathBuf::from("/System/Applications")];
         if let Some(home) = dirs::home_dir() { roots.push(home.join("Applications")); }
         let mut found = Vec::new();

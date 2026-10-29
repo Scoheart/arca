@@ -1,0 +1,1015 @@
+{
+  "schema_version": 1,
+  "bundle_id": "com.exafunction.windsurf",
+  "bundle_name": "Devin",
+  "executable": "Devin",
+  "version": "3.11.228",
+  "base_version": "1.126.0",
+  "commit": "053434014dbdb7a662a14e38752946a0dafb97f2",
+  "data_folder": ".devin",
+  "user_data": "Library/Application Support/Devin/User",
+  "package_main": "./out/main.js",
+  "guards": [
+    {
+      "path": "Contents/Info.plist",
+      "bytes": 28813,
+      "sha256": "fc91ade581337a7edd4b7015cdcd5762dc4c659424d4a8a38836938ec1e3a278"
+    },
+    {
+      "path": "Contents/MacOS/Devin",
+      "bytes": 52880,
+      "sha256": "0ab0aed6ab0156953e8de6eea8c7178e3d1a5c52d74422e133ec1c55fe994fcf"
+    },
+    {
+      "path": "Contents/Resources/app/package.json",
+      "bytes": 16553,
+      "sha256": "50e1c2a5009a754dbe3d84ed43a41e4529103c7c73d395182a19c6285d89bb9f"
+    },
+    {
+      "path": "Contents/Resources/app/product.json",
+      "bytes": 48410,
+      "sha256": "7ae546c88ee4c8498d8606d3b159d54bf4d3e0d7cfa2c48589dcec1dc7e16808"
+    },
+    {
+      "path": "Contents/Resources/app/out/main.js",
+      "bytes": 1928089,
+      "sha256": "3ff7a8acd49219c0a0c255dad5ffe14d7021af11b09194017ad2a47ba90876a3"
+    },
+    {
+      "path": "Contents/Resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js",
+      "bytes": 1157324,
+      "sha256": "c73fccbd6d3192229a9a146ad408839ee5680c7c8573ce1c23f70f2114a9680b"
+    },
+    {
+      "path": "Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js",
+      "bytes": 2561574,
+      "sha256": "10239ff045cb7e3aeea0b6850131ca315feef9ba42d223cfc78f6d6f511c2332"
+    },
+    {
+      "path": "Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js",
+      "bytes": 20248967,
+      "sha256": "f346f76b39a7a0435795bdc6a05dc7d2ebb23106fa3739d94755670851a78339"
+    },
+    {
+      "path": "Contents/Resources/app/out/vs/sessions/sessions.desktop.main.js",
+      "bytes": 40123597,
+      "sha256": "54d749272f1547b60bd5f63a409f557fd0505a3d17e64d8c6ae8ec8f25a8ff5c"
+    },
+    {
+      "path": "Contents/Resources/app/extensions/windsurf/package.json",
+      "bytes": 27771,
+      "sha256": "5132ce86c04df9315562c5aceca8fe753b179c14f10488063aa0ebd1aad1103a"
+    },
+    {
+      "path": "Contents/Resources/app/extensions/windsurf/dist/extension.js",
+      "bytes": 7010370,
+      "sha256": "fa7fbaba95815cb89c049ccdfb5d275d671fa775b9da39c4e4169ac2c0ff23e7"
+    },
+    {
+      "path": "Contents/Resources/app/extensions/windsurf-remote-devin/package.json",
+      "bytes": 1264,
+      "sha256": "0cc3d4ed08438dd8094ab9bea74b3c381d6c0c168d2e49f3e134c402b9687fc7"
+    }
+  ],
+  "builtin_extensions": [
+    {
+      "id": "vscode.bat",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/bat/package.json",
+        "bytes": 772,
+        "sha256": "66ffb8129d72bb99b7a80d030ff364e71c17439dd800a61aa76dcc0cce54d414"
+      }
+    },
+    {
+      "id": "vscode.clojure",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/clojure/package.json",
+        "bytes": 812,
+        "sha256": "55c2cebdaea83c14f4557bedeccc1fe13c56934f3bee19f1527aa6c400b37940"
+      }
+    },
+    {
+      "id": "vscode.coffeescript",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/coffeescript/package.json",
+        "bytes": 1020,
+        "sha256": "121e1b11cfbe47c821efd180e8f094162838166e00d69efd43497464d5917167"
+      }
+    },
+    {
+      "id": "vscode.configuration-editing",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/configuration-editing/package.json",
+        "bytes": 3558,
+        "sha256": "35ae0485d1deee8e7cb71802de69246239290810fdfbfbb4e8773275bab25951"
+      }
+    },
+    {
+      "id": "vscode.cpp",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/cpp/package.json",
+        "bytes": 1735,
+        "sha256": "3430bfe78dcd6df952522754d91511cd2b8700982d5ee52ba20c185e9a3de13e"
+      }
+    },
+    {
+      "id": "vscode.csharp",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/csharp/package.json",
+        "bytes": 1109,
+        "sha256": "2c3900dc42fe4ac5fcb75519155817ebdfecc82394604038ce13c9d05045d41a"
+      }
+    },
+    {
+      "id": "vscode.css",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/css/package.json",
+        "bytes": 740,
+        "sha256": "89c6d5ccc0a41361d7e5714ca36671f5262d8f516a4d73cfb9a0d97b7ca3b31b"
+      }
+    },
+    {
+      "id": "vscode.css-language-features",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/css-language-features/package.json",
+        "bytes": 17016,
+        "sha256": "c8e0b79937b8faf5905d73543e3780798f6ed0ec2110ba953cb02bc7d84ddbfb"
+      }
+    },
+    {
+      "id": "vscode.dart",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/dart/package.json",
+        "bytes": 596,
+        "sha256": "f58325879a6eb1e34d8af3f0089c9e8acf7ef05ee7f912909918b7a22b1b97c9"
+      }
+    },
+    {
+      "id": "vscode.debug-auto-launch",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/debug-auto-launch/package.json",
+        "bytes": 649,
+        "sha256": "81f5e17ab62513798ba55a151a23ea238bbea46ab197819ca4e7f7d4e9a58dde"
+      }
+    },
+    {
+      "id": "vscode.debug-server-ready",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/debug-server-ready/package.json",
+        "bytes": 4278,
+        "sha256": "948efd8eaaf8ebff6f430454619075df7cd58b7ef900f2bf3a7fcbc0058a26ca"
+      }
+    },
+    {
+      "id": "vscode.diff",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/diff/package.json",
+        "bytes": 611,
+        "sha256": "6d5741dd61ab3b385d2913f507ae53e13caa15320ad203db4088e1168acc638f"
+      }
+    },
+    {
+      "id": "vscode.docker",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/docker/package.json",
+        "bytes": 777,
+        "sha256": "78324ede79c21541d88a9b171895ee915119e2b6e8b40b36386314d99aaf9ede"
+      }
+    },
+    {
+      "id": "vscode.dotenv",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/dotenv/package.json",
+        "bytes": 766,
+        "sha256": "75c4e7e31c9606e1d17b70a60fbaa291549d9512d2ec2afaebe68067e0204f07"
+      }
+    },
+    {
+      "id": "vscode.emmet",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/emmet/package.json",
+        "bytes": 9935,
+        "sha256": "dba2538e2f900a9fd70b145234c3b7484b7e48d69f326b90e05e418f16b294b0"
+      }
+    },
+    {
+      "id": "vscode.extension-editing",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/extension-editing/package.json",
+        "bytes": 1026,
+        "sha256": "d6aebb05c3cc3ba7b7167c56f07ed1b2aeab31ab08044e635dc0643d1ef80d49"
+      }
+    },
+    {
+      "id": "vscode.fsharp",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/fsharp/package.json",
+        "bytes": 868,
+        "sha256": "9beaab63cea4945ba68d34a04e318b6d895e7ecddd9125a9e21282f152b9d0fb"
+      }
+    },
+    {
+      "id": "vscode.git",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/git/package.json",
+        "bytes": 93403,
+        "sha256": "0d7f68bc29df26dc33ced53f29dfae64f60c8461f8de07064fc08b72fb80493e"
+      }
+    },
+    {
+      "id": "vscode.git-base",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/git-base/package.json",
+        "bytes": 1601,
+        "sha256": "40070e223b059fa8f8716592b3da43795f37932f87d3e6a16a6509eecc8a049c"
+      }
+    },
+    {
+      "id": "vscode.github",
+      "version": "0.0.1",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/github/package.json",
+        "bytes": 5037,
+        "sha256": "c5ffc210b28668fdace07eacf5933d3b6cb55d645b697f3e83c201bda3887f19"
+      }
+    },
+    {
+      "id": "vscode.github-authentication",
+      "version": "0.0.2",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/github-authentication/package.json",
+        "bytes": 1560,
+        "sha256": "cbe87ebc0e2d1274c396b669794bec0f1f10c01985f9bb9ae6135f3af7ed97b7"
+      }
+    },
+    {
+      "id": "vscode.go",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/go/package.json",
+        "bytes": 711,
+        "sha256": "8660e6a868df27ff6bb33d3e3b17c059979bc1bd9dcfa854a32b89b7683c8465"
+      }
+    },
+    {
+      "id": "vscode.groovy",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/groovy/package.json",
+        "bytes": 903,
+        "sha256": "404932c33ec06899163d7e19683ac94ff83adc73caf61fe8d8b1176cdf9ef6d8"
+      }
+    },
+    {
+      "id": "vscode.grunt",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/grunt/package.json",
+        "bytes": 1066,
+        "sha256": "79e44495ac4d990a80d14b8b68151221b73e948e8923bf1de15308aff823fa9c"
+      }
+    },
+    {
+      "id": "vscode.gulp",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/gulp/package.json",
+        "bytes": 915,
+        "sha256": "4da621e31aa6a746dee84162cd49a904e5b122f01eaecd89736364822549f7a5"
+      }
+    },
+    {
+      "id": "vscode.handlebars",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/handlebars/package.json",
+        "bytes": 895,
+        "sha256": "1429a4d12d4a1c25010cc4e64f803a9883246d0b44b04a52d8f3894ab2ac48e3"
+      }
+    },
+    {
+      "id": "vscode.hlsl",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/hlsl/package.json",
+        "bytes": 725,
+        "sha256": "ff8a7d957c6d22d90571fd5e27c287e7617fb75e80f71904866e17791c8b0826"
+      }
+    },
+    {
+      "id": "vscode.html",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/html/package.json",
+        "bytes": 1320,
+        "sha256": "053502df0e3599d9937f58184dda3784f5d3df2b2bc3fa3c7db7cf25ae2e9299"
+      }
+    },
+    {
+      "id": "vscode.html-language-features",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/html-language-features/package.json",
+        "bytes": 5333,
+        "sha256": "241e2240a13e35b63320b6c7bfe825cfabda1c8ccc9227fd88c0e63e45d9e6b0"
+      }
+    },
+    {
+      "id": "vscode.ini",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/ini/package.json",
+        "bytes": 1095,
+        "sha256": "2618b7826d41b4b81e149ad93b4b0a04f6aa26edba13f77dd0f92e14c715c66c"
+      }
+    },
+    {
+      "id": "vscode.ipynb",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/ipynb/package.json",
+        "bytes": 2686,
+        "sha256": "a5d8c577745ec1594fbb1c1057e51242967ba5a466096a528b40400f8860fbd5"
+      }
+    },
+    {
+      "id": "vscode.jake",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/jake/package.json",
+        "bytes": 921,
+        "sha256": "96f61ba38c33694a95976f18cdbd0731f7abf547a7628e8884c61657c61ea806"
+      }
+    },
+    {
+      "id": "vscode.java",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/java/package.json",
+        "bytes": 774,
+        "sha256": "0a7d7405a22a5cc7587852d8b0139486a2286fa06a1ae53ab00f47677192e7ab"
+      }
+    },
+    {
+      "id": "vscode.javascript",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/javascript/package.json",
+        "bytes": 3057,
+        "sha256": "46497fcc12aaf67f4b6c5554250061f64b42f11711c2059960083f4e7bfb9f0b"
+      }
+    },
+    {
+      "id": "vscode.json",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/json/package.json",
+        "bytes": 1842,
+        "sha256": "6df3ed7d55d66db89c2c55ca612367098093a6d207ba743e6e0ea6d2dbadfcda"
+      }
+    },
+    {
+      "id": "vscode.json-language-features",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/json-language-features/package.json",
+        "bytes": 3562,
+        "sha256": "46caf3f432f0b8f73fae8f5317b562a02081241c17f0cb38ed06d64aec866231"
+      }
+    },
+    {
+      "id": "vscode.julia",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/julia/package.json",
+        "bytes": 1039,
+        "sha256": "372f535f84b1bedb59d5c638c0d35d0837849aa7a947138b42a266d1af59a034"
+      }
+    },
+    {
+      "id": "vscode.latex",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/latex/package.json",
+        "bytes": 2015,
+        "sha256": "3a03c9f44d869b0a4f2bb4a6030675accfc2382194e26acc51287c3249fa6f57"
+      }
+    },
+    {
+      "id": "vscode.less",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/less/package.json",
+        "bytes": 857,
+        "sha256": "417c62778b90f4493ba2d84cc2485ed6333db5d77d1f4fcf7cf7249270d06ceb"
+      }
+    },
+    {
+      "id": "vscode.log",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/log/package.json",
+        "bytes": 627,
+        "sha256": "d48d6ee89872ceaef31c123e9b4fc058f85291d2d62fdcfb730409c437f3b43a"
+      }
+    },
+    {
+      "id": "vscode.lua",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/lua/package.json",
+        "bytes": 712,
+        "sha256": "5d53744e0728b508f451b1b6505f7908d7ccfd9df6632b6cd0761e5e925b52ac"
+      }
+    },
+    {
+      "id": "vscode.make",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/make/package.json",
+        "bytes": 910,
+        "sha256": "527bf1e0b1bd20ee5d7b9cb2a57ffc7700033a67f2150dbc5af2a5f0b9daf718"
+      }
+    },
+    {
+      "id": "vscode.markdown",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/markdown-basics/package.json",
+        "bytes": 3027,
+        "sha256": "f5ffdf9a58fe16eccb04c3bc98486da6d2de39649a4c5edb93cf22b0c38d64f5"
+      }
+    },
+    {
+      "id": "vscode.markdown-language-features",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/markdown-language-features/package.json",
+        "bytes": 21340,
+        "sha256": "cd851c42541713e58d04e0a83c56b8212f66fa96ad6e3692e11a453f50c799c3"
+      }
+    },
+    {
+      "id": "vscode.markdown-math",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/markdown-math/package.json",
+        "bytes": 1993,
+        "sha256": "623c56e2cde59ca310e059f07929b25a5a1283e09803f37e531ccfa3eb58b474"
+      }
+    },
+    {
+      "id": "vscode.media-preview",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/media-preview/package.json",
+        "bytes": 2998,
+        "sha256": "ee9a69e90369450144bbfffc647bd05210fc2c0c5cad98c9b52fb37f5bf8ff71"
+      }
+    },
+    {
+      "id": "vscode.merge-conflict",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/merge-conflict/package.json",
+        "bytes": 3625,
+        "sha256": "b883f72adfa20729d54415fec5d2e0ce561ff7d774665ca94032f69ca7dc72fc"
+      }
+    },
+    {
+      "id": "vscode.mermaid-markdown-features",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/mermaid-markdown-features/package.json",
+        "bytes": 5716,
+        "sha256": "4e3ca72b22a3b751d3d1f7048c67cebbc38884fd325554749b60859c242707a7"
+      }
+    },
+    {
+      "id": "vscode.microsoft-authentication",
+      "version": "0.0.1",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/microsoft-authentication/package.json",
+        "bytes": 2923,
+        "sha256": "0001ddca244950a67ae9d2e4b574cf6b6ebb92ededdfd8d8e49cf037cd0ab883"
+      }
+    },
+    {
+      "id": "ms-vscode.js-debug",
+      "version": "1.117.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/ms-vscode.js-debug/package.json",
+        "bytes": 311173,
+        "sha256": "040d62ddaa7ca7e27091c76b10d84d7584721f482473bc77ebae771d4261a0cb"
+      }
+    },
+    {
+      "id": "ms-vscode.js-debug-companion",
+      "version": "1.1.3",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/ms-vscode.js-debug-companion/package.json",
+        "bytes": 1303,
+        "sha256": "44999350991f42897c4f81ae3ef66e26582f08fb66696119f1aaefdc7d63af77"
+      }
+    },
+    {
+      "id": "ms-vscode.vscode-js-profile-table",
+      "version": "1.0.10",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/package.json",
+        "bytes": 1787,
+        "sha256": "81cfb4e5ec2b68bc3b131560fc424029e2cce7e153819a90cf3343ce71104fd4"
+      }
+    },
+    {
+      "id": "vscode.builtin-notebook-renderers",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/notebook-renderers/package.json",
+        "bytes": 1231,
+        "sha256": "3e06c6ed139620b2c1c81df33157222ca1449681b43b7158587ae70863246573"
+      }
+    },
+    {
+      "id": "vscode.npm",
+      "version": "1.0.1",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/npm/package.json",
+        "bytes": 5883,
+        "sha256": "83b7c033eb2de68244491d4a91fefb4dcb22c74b8e8988be0e6e316fd7b8243a"
+      }
+    },
+    {
+      "id": "vscode.objective-c",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/objective-c/package.json",
+        "bytes": 827,
+        "sha256": "2237381cf95eb93926212edaa10cb68ee6f80bd627b2bb919c5d479e6e9682d8"
+      }
+    },
+    {
+      "id": "vscode.perl",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/perl/package.json",
+        "bytes": 1203,
+        "sha256": "c930d66c4c68f8dca9ba8a553cf1111f7b2c124100e3692fdfd2cb521b26aa88"
+      }
+    },
+    {
+      "id": "vscode.php",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/php/package.json",
+        "bytes": 991,
+        "sha256": "89ed11c388f6ed15c8812e83aceebf87e61f32aab639fb18f801bf67f566db01"
+      }
+    },
+    {
+      "id": "vscode.php-language-features",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/php-language-features/package.json",
+        "bytes": 1251,
+        "sha256": "f7fbf0081245bfd6f1ce146f6f86eedd9a73286c96098ef642a7728fe571c038"
+      }
+    },
+    {
+      "id": "vscode.powershell",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/powershell/package.json",
+        "bytes": 807,
+        "sha256": "2a2129c2b298def75800e96565665391ef3818274497e2b2b92dd615a1c6aa8f"
+      }
+    },
+    {
+      "id": "vscode.prompt",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/prompt-basics/package.json",
+        "bytes": 3356,
+        "sha256": "1805e488b226f5ba7f6f06f881736c2617cc1c095f2f0cbbaddf56a3984d6ceb"
+      }
+    },
+    {
+      "id": "vscode.pug",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/pug/package.json",
+        "bytes": 759,
+        "sha256": "2338d284300a8c7942ce4b9ffe1bd28588bc6e100a099e146da6433a7790b023"
+      }
+    },
+    {
+      "id": "vscode.python",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/python/package.json",
+        "bytes": 1116,
+        "sha256": "f773e6fe5de9ccfb23db98bf57ee99f8a1b721a43df94a6642300c83a44df48d"
+      }
+    },
+    {
+      "id": "vscode.r",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/r/package.json",
+        "bytes": 673,
+        "sha256": "2f967e508f7bb9fe4d3063c1a3e198b2b112d6f989898c616434f65e00fb868f"
+      }
+    },
+    {
+      "id": "vscode.razor",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/razor/package.json",
+        "bytes": 741,
+        "sha256": "ab672fbe405a449d1578c2eb09adaf3187ad2d772229efe01f902004b47818a3"
+      }
+    },
+    {
+      "id": "vscode.references-view",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/references-view/package.json",
+        "bytes": 8883,
+        "sha256": "d04adb5be56a8f87728b7850562399dfe020fce8ad7b631ff6476766ba2f0ac3"
+      }
+    },
+    {
+      "id": "vscode.restructuredtext",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/restructuredtext/package.json",
+        "bytes": 714,
+        "sha256": "0186942c4b2341803a579caf4ea06483184b75ebdb9378179e6a53476c335d22"
+      }
+    },
+    {
+      "id": "vscode.ruby",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/ruby/package.json",
+        "bytes": 1126,
+        "sha256": "56f84eacbf994cc977d6fe6a91d6007f58ff7675e00e617c87e9cdd9d204a1a4"
+      }
+    },
+    {
+      "id": "vscode.rust",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/rust/package.json",
+        "bytes": 573,
+        "sha256": "611d667bd28e5b95b70922524799572cd2cebf89fff2f0668c7cab37968ef943"
+      }
+    },
+    {
+      "id": "vscode.scss",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/scss/package.json",
+        "bytes": 1273,
+        "sha256": "3cc4aabbb9a4bc9870fd246936024b076fbec6484a346c431cc5c8387bf06d24"
+      }
+    },
+    {
+      "id": "vscode.search-result",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/search-result/package.json",
+        "bytes": 827,
+        "sha256": "a7a4fd20f8a2b9cb5ab12f7e4b4579e67dde2074a7befc657ba69a5e3669793d"
+      }
+    },
+    {
+      "id": "vscode.shaderlab",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/shaderlab/package.json",
+        "bytes": 716,
+        "sha256": "250dd8421fcb3bfc53e5f5ada671fae170a5ac3a12dc789f047d41821018b995"
+      }
+    },
+    {
+      "id": "vscode.shellscript",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/shellscript/package.json",
+        "bytes": 1610,
+        "sha256": "9de568c12f63ec2dc23e9e5c9da657e4cd4cba2bbc1ba447513fa9b72bfb2cc0"
+      }
+    },
+    {
+      "id": "vscode.simple-browser",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/simple-browser/package.json",
+        "bytes": 1177,
+        "sha256": "35bb00614cbc4a46410253ad799573b0268b1bcbb3c4fa447f0bbda32c726b17"
+      }
+    },
+    {
+      "id": "vscode.sql",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/sql/package.json",
+        "bytes": 580,
+        "sha256": "72c9a9c6d9a990e719dfff53c64105b22b6a0795178a26c99affe7c06b1ea660"
+      }
+    },
+    {
+      "id": "vscode.swift",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/swift/package.json",
+        "bytes": 754,
+        "sha256": "075334e1e4e28543ff436f7d5c7361b8db828651e57f5e771d2c718d980fa2ab"
+      }
+    },
+    {
+      "id": "vscode.terminal-suggest",
+      "version": "1.0.1",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/terminal-suggest/package.json",
+        "bytes": 788,
+        "sha256": "d1ddc9a8e92b6949157487eed00988f9ba15fb31fa487d78ce05b2080c91e2e4"
+      }
+    },
+    {
+      "id": "vscode.theme-abyss",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-abyss/package.json",
+        "bytes": 389,
+        "sha256": "19e6c781e9b7b9eee085af2b95ef4540db9f13ca29a89ee31f6309667cd1bf95"
+      }
+    },
+    {
+      "id": "vscode.theme-defaults",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-defaults/package.json",
+        "bytes": 1495,
+        "sha256": "1188ab40303da2345797c509f81c87c3e168249e50009bdec24a1ea28b515bb4"
+      }
+    },
+    {
+      "id": "vscode.theme-kimbie-dark",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-kimbie-dark/package.json",
+        "bytes": 407,
+        "sha256": "c223e1c42002741d612ed7b42cbf25fc21746d423d63a5f374a8c6e28fb3c873"
+      }
+    },
+    {
+      "id": "vscode.theme-monokai",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-monokai/package.json",
+        "bytes": 395,
+        "sha256": "62b76501fc7451fb009b240d063bc12f33de2e5ee32cce0195408889d7afbd78"
+      }
+    },
+    {
+      "id": "vscode.theme-monokai-dimmed",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-monokai-dimmed/package.json",
+        "bytes": 416,
+        "sha256": "2852f6f3b61fc96bed4772898afd7d19b3161b93a5d831689caafb5677a81fab"
+      }
+    },
+    {
+      "id": "vscode.theme-quietlight",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-quietlight/package.json",
+        "bytes": 400,
+        "sha256": "b1afbced1fd665f0be0dff41fb07e8dcc52401ce79fefccf48bd7250baef58ea"
+      }
+    },
+    {
+      "id": "vscode.theme-red",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-red/package.json",
+        "bytes": 383,
+        "sha256": "9c9d4ff4310d601f17caa87e10db29987729df8942d33589a40f1b0e5a563e69"
+      }
+    },
+    {
+      "id": "vscode.vscode-theme-seti",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-seti/package.json",
+        "bytes": 494,
+        "sha256": "4b2a385edf0c4adab91d44a35074519b7dc81cc5ae9ff4a43a52b279107792b0"
+      }
+    },
+    {
+      "id": "vscode.theme-solarized-dark",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-solarized-dark/package.json",
+        "bytes": 416,
+        "sha256": "cd52cde5ef26e07be97d4b4d421f478211464c489c0df11c67a191be118444a0"
+      }
+    },
+    {
+      "id": "vscode.theme-solarized-light",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-solarized-light/package.json",
+        "bytes": 414,
+        "sha256": "565dfd0cba01886978452fb84bfbb959fd269984e58910c45c35f5fdf101133e"
+      }
+    },
+    {
+      "id": "miguelsolorio.symbols",
+      "version": "0.0.21",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-symbols/package.json",
+        "bytes": 453,
+        "sha256": "4dbd2e2c73e40e0b60a5d313ed1b90845609452f0870f31b61f40744c056944f"
+      }
+    },
+    {
+      "id": "RobbOwen.synthwave-vscode",
+      "version": "0.1.17",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-synthwave/package.json",
+        "bytes": 478,
+        "sha256": "d337c96b1794e0e8bb81b04e3f4b7c22113f08421f31b8f5dcbe6eda50c684b6"
+      }
+    },
+    {
+      "id": "enkia.tokyo-night",
+      "version": "1.0.9",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-tokyo-night/package.json",
+        "bytes": 730,
+        "sha256": "ea26ad71915795779a35a51c4bfb3f12ae182c3506216f64f00271fe36ddfb7a"
+      }
+    },
+    {
+      "id": "vscode.theme-tomorrow-night-blue",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-tomorrow-night-blue/package.json",
+        "bytes": 431,
+        "sha256": "924a37ca984144ff11e2a9df900f2c38fe7d920ac10b48769b0e84988744a2fc"
+      }
+    },
+    {
+      "id": "windsurf.theme-windsurf",
+      "version": "0.1.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/theme-windsurf/package.json",
+        "bytes": 450,
+        "sha256": "1a114b55a9ea5f41fef7babeaf4f2a05bb73b5214dbb3423aa54a5fac684708a"
+      }
+    },
+    {
+      "id": "vscode.tunnel-forwarding",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/tunnel-forwarding/package.json",
+        "bytes": 854,
+        "sha256": "aca49d2eed066ec8ef1ade4ec852a3e18a4702101fa233f63bd68e881244c72a"
+      }
+    },
+    {
+      "id": "vscode.typescript",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/typescript-basics/package.json",
+        "bytes": 3517,
+        "sha256": "6f8e666d1c6d177439a03b0c94c05b101ff1eb97c673cbddfc855e0c1b12430d"
+      }
+    },
+    {
+      "id": "vscode.typescript-language-features",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/typescript-language-features/package.json",
+        "bytes": 84897,
+        "sha256": "d90a44e432293922260cecc97f0812f726728000bf3a94462f47176935bb0b4e"
+      }
+    },
+    {
+      "id": "vscode.vb",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/vb/package.json",
+        "bytes": 792,
+        "sha256": "181f21488384547e04abf7400367a1ad453089e50a874e9a8ab870b4bc91095a"
+      }
+    },
+    {
+      "id": "codeium.windsurf",
+      "version": "0.2.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/windsurf/package.json",
+        "bytes": 27771,
+        "sha256": "5132ce86c04df9315562c5aceca8fe753b179c14f10488063aa0ebd1aad1103a"
+      }
+    },
+    {
+      "id": "Codeium.windsurf-dev-containers",
+      "version": "0.0.1",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/windsurf-dev-containers/package.json",
+        "bytes": 10507,
+        "sha256": "430577f5a407d48c2e84cd6d51f154236f85be826a638371d690c216f1eb29f1"
+      }
+    },
+    {
+      "id": "codeium.windsurf-remote-devin",
+      "version": "0.0.1",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/windsurf-remote-devin/package.json",
+        "bytes": 1264,
+        "sha256": "0cc3d4ed08438dd8094ab9bea74b3c381d6c0c168d2e49f3e134c402b9687fc7"
+      }
+    },
+    {
+      "id": "codeium.windsurf-remote-openssh",
+      "version": "0.0.1",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/windsurf-remote-openssh/package.json",
+        "bytes": 12149,
+        "sha256": "f480e9d7125ade74d3764a0db4532715f188f7ca7843fb7935396f672e940a97"
+      }
+    },
+    {
+      "id": "codeium.windsurf-remote-wsl",
+      "version": "0.0.1",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/windsurf-remote-wsl/package.json",
+        "bytes": 6372,
+        "sha256": "ab7de088866aa92faf03b4e314cc463c103e1bae410ff2e6984b5f46cdceabfe"
+      }
+    },
+    {
+      "id": "vscode.xml",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/xml/package.json",
+        "bytes": 1518,
+        "sha256": "072e98c906b6fdade3f5cdbae9bea7e1908aaa01daf0c991ec97fe2d6258a410"
+      }
+    },
+    {
+      "id": "vscode.yaml",
+      "version": "10.0.0",
+      "manifest": {
+        "path": "Contents/Resources/app/extensions/yaml/package.json",
+        "bytes": 1881,
+        "sha256": "c25fbf7548ba848d167d114216db2e3d8440dab03f45ac4cdaadfd4ef2641e89"
+      }
+    }
+  ],
+  "session_skill_root": "Contents/Resources/app/out/vs/sessions/skills",
+  "session_skills": [
+    "act-on-feedback",
+    "code-review",
+    "commit",
+    "create-draft-pr",
+    "create-pr",
+    "fix-ci",
+    "generate-run-commands",
+    "merge",
+    "sync",
+    "sync-upstream",
+    "update-pr",
+    "update-skills"
+  ],
+  "evidence": {
+    "contract_sha256": "d46267f2925c6ec2e40bc9a16a2d16bbfe7715db8c68b2cc7cfbfb788745c498",
+    "archive_sha256": "30a2e5bc8b97d2c5ba94b09b98c0aed35734d87677bdbdf1760c3d0d3efd3ec7",
+    "rea_parent": "ev_f3e5bcaf31c833aa01b69490b0bc1f0b69a438925e96e8affccf9ed4953eca76",
+    "rea_summary": "ev_6dd70d3c16c8af07f4f5062dddc5dbc7deb749e5b63ed6375363e7b231e0785d"
+  }
+}

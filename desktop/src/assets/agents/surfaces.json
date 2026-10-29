@@ -58,5 +58,6 @@
   "qoderwake": "desktop",
   "qoderwake-cn": "desktop",
   "openclaw": "cli",
-  "openclaw-desktop": "desktop"
+  "openclaw-desktop": "desktop",
+  "windsurf": "ide"
 }

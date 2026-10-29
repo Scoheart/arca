@@ -27,5 +27,6 @@
   "kiro-cli": "kiro",
   "claude-ai": "claude",
   "chatgpt": "openai",
-  "openclaw-desktop": "openclaw"
+  "openclaw-desktop": "openclaw",
+  "windsurf": "devin"
 }

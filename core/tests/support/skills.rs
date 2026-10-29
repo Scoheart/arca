@@ -172,7 +172,7 @@ impl SkillsFixture {
                 "vscode" => home.home.join("Library/Application Support/Code"),
                 "vt-code" => home.home.join(".vtcode"),
                 "warp" => home.home.join(".warp"),
-                "windsurf" => home.home.join(".codeium/windsurf"),
+                "windsurf" => home.home.join("Applications/Devin.app"),
                 "zed" => home.home.join(".config/zed"),
                 "zencoder" => home.home.join("Applications/Zenflow.app"),
                 other => panic!("unknown verified Skill Agent fixture id: {other}"),
@@ -612,7 +612,7 @@ fn primary_agent_for_target(target_id: &str) -> &'static str {
         "stakpak-user" => "stakpak",
         "step-code-user" => "step-code",
         "warp-user" | "github-user" | "opencode-compat-user" => "warp",
-        "windsurf-user" => "windsurf",
+        "devin-desktop-user" => "windsurf",
         other => panic!("unknown verified Skill target fixture id: {other}"),
     }
 }

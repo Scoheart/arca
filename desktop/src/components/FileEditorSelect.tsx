@@ -24,7 +24,7 @@ const EDITOR_ICONS: Record<string, string> = {
 
 const STORAGE_KEY = "arca.file-editor";
 const EDITORS = ["Visual Studio Code", "Cursor", "Sublime Text", "Zed", "TextEdit"];
-const ICONS: Record<string, string> = { "Visual Studio Code": "vscode", Cursor: "cursor", Zed: "zed", Qoder: "qoder", "Qoder IDE": "qoder", Windsurf: "windsurf", Antigravity: "antigravity", ZCode: "zcode" };
+const ICONS: Record<string, string> = { "Visual Studio Code": "vscode", Cursor: "cursor", Zed: "zed", Qoder: "qoder", "Qoder IDE": "qoder", Devin: "windsurf", Antigravity: "antigravity", ZCode: "zcode" };
 function EditorIcon({ editor }: { editor: string }) {
   editor = editorLabel(editor);
   if (EDITOR_ICONS[editor]) return <img src={EDITOR_ICONS[editor]} alt="" aria-hidden="true" draggable={false}

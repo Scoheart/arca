@@ -1093,7 +1093,7 @@ fn builtin_global_paths_match_current_product_docs() {
         ("workbuddy", "~/.workbuddy-ai/mcp.json"),
         ("workbuddy-cn", "~/.workbuddy/mcp.json"),
         ("warp", "~/.warp/.mcp.json"),
-        ("windsurf", "~/.codeium/windsurf/mcp_config.json"),
+        ("windsurf", "~/.config/devin/mcp_config.json"),
         ("zed", "~/.config/zed/settings.json"),
     ];
 

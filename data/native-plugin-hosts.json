@@ -1077,5 +1077,25 @@
         "complete_marker": null
       }
     ]
+  },
+  {
+    "agent_id": "windsurf",
+    "adapter": "devin",
+    "docs_url": "https://docs.devin.ai/desktop/",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Devin.app",
+        "layout": "devin_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Devin.app",
+        "layout": "devin_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

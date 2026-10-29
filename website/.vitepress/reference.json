@@ -71,7 +71,7 @@
     {
       "id": "antigravity",
       "name": "Antigravity",
-      "category": "ide",
+      "category": "desktop",
       "docs": "https://antigravity.google/docs/mcp",
       "mcp": {
         "path": "~/.gemini/config/mcp_config.json",
@@ -587,6 +587,39 @@
       "model": null
     },
     {
+      "id": "windsurf",
+      "name": "Devin",
+      "category": "ide",
+      "docs": "https://docs.devin.ai/desktop/cascade/mcp",
+      "mcp": {
+        "path": "~/.config/devin/mcp_config.json",
+        "format": "json",
+        "key": "mcpServers",
+        "transports": [
+          "stdio",
+          "http"
+        ]
+      },
+      "skills": {
+        "path": "~/.config/devin/skills",
+        "aliases": [
+          {
+            "target_id": "agents-user",
+            "global_dir": "~/.agents/skills"
+          },
+          {
+            "target_id": "copilot-user",
+            "global_dir": "~/.copilot/skills"
+          },
+          {
+            "target_id": "claude-user",
+            "global_dir": "~/.claude/skills"
+          }
+        ]
+      },
+      "model": null
+    },
+    {
       "id": "dirac",
       "name": "Dirac",
       "category": "cli",
@@ -1067,7 +1100,8 @@
           "anthropic-messages",
           "openai-responses",
           "openai-completions",
-          "gemini-generate-content"
+          "gemini-generate-content",
+          "aws-bedrock-converse"
         ],
         "paths": [
           "~/Library/Application Support/Kilo Desktop/plugins/kilo-server/runtime/config/kilo/kilo.jsonc"
@@ -1121,7 +1155,8 @@
           "anthropic-messages",
           "openai-responses",
           "openai-completions",
-          "gemini-generate-content"
+          "gemini-generate-content",
+          "aws-bedrock-converse"
         ],
         "paths": [
           "~/.config/kilo/kilo.jsonc"
@@ -1382,6 +1417,15 @@
       "model": null
     },
     {
+      "id": "openclaw-desktop",
+      "name": "OpenClaw",
+      "category": "desktop",
+      "docs": "https://github.com/openclaw/openclaw/blob/39f4baf9968201ac9ae743eb314eab5686d8db64/apps/macos/Sources/OpenClaw/NodeMode/BundledNodeWorker.swift",
+      "mcp": null,
+      "skills": null,
+      "model": null
+    },
+    {
       "id": "opencode",
       "name": "OpenCode",
       "category": "cli",
@@ -1414,7 +1458,8 @@
           "anthropic-messages",
           "openai-responses",
           "openai-completions",
-          "gemini-generate-content"
+          "gemini-generate-content",
+          "aws-bedrock-converse"
         ],
         "paths": [
           "~/.config/opencode/opencode.json"
@@ -1457,7 +1502,8 @@
           "anthropic-messages",
           "openai-responses",
           "openai-completions",
-          "gemini-generate-content"
+          "gemini-generate-content",
+          "aws-bedrock-converse"
         ],
         "paths": [
           "~/.config/opencode/opencode.json"
@@ -1629,6 +1675,42 @@
       }
     },
     {
+      "id": "qoder-cli-cn",
+      "name": "Qoder CLI CN",
+      "category": "cli",
+      "docs": "https://docs.qoder.cn/",
+      "mcp": null,
+      "skills": null,
+      "model": null
+    },
+    {
+      "id": "qoder-cn",
+      "name": "Qoder CN",
+      "category": "desktop",
+      "docs": "https://docs.qoder.cn/",
+      "mcp": null,
+      "skills": null,
+      "model": null
+    },
+    {
+      "id": "qoderwake",
+      "name": "QoderWake",
+      "category": "desktop",
+      "docs": "https://docs.qoder.com/",
+      "mcp": null,
+      "skills": null,
+      "model": null
+    },
+    {
+      "id": "qoderwake-cn",
+      "name": "QoderWake CN",
+      "category": "desktop",
+      "docs": "https://docs.qoder.cn/",
+      "mcp": null,
+      "skills": null,
+      "model": null
+    },
+    {
       "id": "qoderwork",
       "name": "QoderWork",
       "category": "desktop",
@@ -1646,6 +1728,15 @@
         "path": "~/.qoderwork/skills",
         "aliases": []
       },
+      "model": null
+    },
+    {
+      "id": "qoderwork-cn",
+      "name": "QoderWork CN",
+      "category": "desktop",
+      "docs": "https://docs.qoder.cn/",
+      "mcp": null,
+      "skills": null,
       "model": null
     },
     {
@@ -1863,7 +1954,7 @@
     },
     {
       "id": "trae-ide",
-      "name": "TRAE",
+      "name": "Trae",
       "category": "ide",
       "docs": "https://docs.trae.ai/ide/skills",
       "mcp": null,
@@ -1886,6 +1977,15 @@
           "stdio"
         ]
       },
+      "skills": null,
+      "model": null
+    },
+    {
+      "id": "trae-cn",
+      "name": "Trae CN",
+      "category": "ide",
+      "docs": "https://docs.trae.cn/",
+      "mcp": null,
       "skills": null,
       "model": null
     },
@@ -1990,31 +2090,6 @@
           {
             "target_id": "opencode-compat-user",
             "global_dir": "~/.opencode/skills"
-          }
-        ]
-      },
-      "model": null
-    },
-    {
-      "id": "windsurf",
-      "name": "Windsurf",
-      "category": "ide",
-      "docs": "https://docs.windsurf.com/windsurf/cascade/mcp",
-      "mcp": {
-        "path": "~/.codeium/windsurf/mcp_config.json",
-        "format": "json",
-        "key": "mcpServers",
-        "transports": [
-          "stdio",
-          "http"
-        ]
-      },
-      "skills": {
-        "path": "~/.codeium/windsurf/skills",
-        "aliases": [
-          {
-            "target_id": "agents-user",
-            "global_dir": "~/.agents/skills"
           }
         ]
       },
@@ -2537,6 +2612,85 @@
       }
     },
     {
+      "id": "agnes-ai",
+      "name": "Agnes AI",
+      "category": "official",
+      "baseUrl": "https://apihub.agnes-ai.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://wiki.agnes-ai.com/en/docs/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://platform.agnes-ai.com/"
+      }
+    },
+    {
+      "id": "agnes-ai-cn",
+      "name": "Agnes AI (China)",
+      "category": "official",
+      "baseUrl": "https://api.agnes-ai.cn/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://wiki.agnes-ai.cn/zh-Hans/docs/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://platform.agnes-ai.cn/"
+      }
+    },
+    {
+      "id": "meta",
+      "name": "Meta Model API",
+      "category": "official",
+      "baseUrl": "https://api.meta.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://dev.meta.ai/docs/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://dev.meta.ai/"
+      }
+    },
+    {
+      "id": "maximo-ai",
+      "name": "Maximo AI",
+      "category": "official",
+      "baseUrl": "https://api.maximoai.co/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://maximoai.co/platform/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://maximoai.co/platform/keys"
+      }
+    },
+    {
+      "id": "krafton-raon",
+      "name": "KRAFTON Raon",
+      "category": "official",
+      "baseUrl": "https://raon-api.krafton.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://raon-mini.krafton.ai/en/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://raon-console.krafton.ai/api-keys"
+      }
+    },
+    {
       "id": "ollama-cloud",
       "name": "Ollama Cloud",
       "category": "official",
@@ -2644,6 +2798,795 @@
       }
     },
     {
+      "id": "flock",
+      "name": "FLock API Platform",
+      "category": "gateway",
+      "baseUrl": "https://api.flock.io/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.flock.io/flock-products/api-platform/api-endpoint",
+      "portal": {
+        "kind": "console",
+        "url": "https://platform.flock.io/"
+      }
+    },
+    {
+      "id": "codecraft",
+      "name": "CodeCraft API",
+      "category": "gateway",
+      "baseUrl": "https://codecraftapi.com/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://codecraftapi.com/docs",
+      "portal": {
+        "kind": "console",
+        "url": "https://codecraftapi.com/register"
+      }
+    },
+    {
+      "id": "beatapi",
+      "name": "BeatAPI",
+      "category": "gateway",
+      "baseUrl": "https://api.beatapi.io/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.beatapi.io/quick-guide",
+      "portal": {
+        "kind": "console",
+        "url": "https://beatapi.io/dashboard/get-started"
+      }
+    },
+    {
+      "id": "experiential-labs",
+      "name": "Experiential Labs",
+      "category": "gateway",
+      "baseUrl": "https://api.experientiallabs.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://platform.experientiallabs.ai/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.experientiallabs.ai/api-keys"
+      }
+    },
+    {
+      "id": "runanywhere",
+      "name": "RunAnywhere",
+      "category": "gateway",
+      "baseUrl": "https://inference.runanywhere.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.runanywhere.ai/wally-cloud/api",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.runanywhere.ai"
+      }
+    },
+    {
+      "id": "coralbricks",
+      "name": "Coral Bricks",
+      "category": "gateway",
+      "baseUrl": "https://inference.coralbricks.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://www.coralbricks.ai/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://www.coralbricks.ai/api-keys"
+      }
+    },
+    {
+      "id": "clean-apis",
+      "name": "Clean APIs",
+      "category": "gateway",
+      "baseUrl": "https://cleanapis.com/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://cleanapis.com/docs/getting-started",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://cleanapis.com/dashboard/api-keys"
+      }
+    },
+    {
+      "id": "dolphin",
+      "name": "Dolphin AI",
+      "category": "gateway",
+      "baseUrl": "https://lighthouse.dphn.ai/run/text-v/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://dphn.ai/docs/coupon-credits",
+      "portal": {
+        "kind": "console",
+        "url": "https://app.dphn.ai/"
+      }
+    },
+    {
+      "id": "iteracompute",
+      "name": "IteraCompute",
+      "category": "gateway",
+      "baseUrl": "https://api.iteracompute.com/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://iteracompute.com/docs.html",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.iteracompute.com/api-keys"
+      }
+    },
+    {
+      "id": "llmtr",
+      "name": "LLMTR",
+      "category": "gateway",
+      "baseUrl": "https://llmtr.com/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://llmtr.com/docs/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://llmtr.com/dashboard/api-keys"
+      }
+    },
+    {
+      "id": "munito",
+      "name": "Munito",
+      "category": "gateway",
+      "baseUrl": "https://api.munito.ai/inference/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.munito.ai/api",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.munito.ai/keys"
+      }
+    },
+    {
+      "id": "nous-portal",
+      "name": "Nous Portal",
+      "category": "gateway",
+      "baseUrl": "https://inference-api.nousresearch.com/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://portal.nousresearch.com/api-docs",
+      "portal": {
+        "kind": "console",
+        "url": "https://portal.nousresearch.com/"
+      }
+    },
+    {
+      "id": "ppq",
+      "name": "PayPerQ",
+      "category": "gateway",
+      "baseUrl": "https://api.ppq.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://ppq.ai/llms.txt",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://ppq.ai/api-docs"
+      }
+    },
+    {
+      "id": "river",
+      "name": "River AI",
+      "category": "gateway",
+      "baseUrl": "https://api.river.ai/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.river.ai/guides/inference/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.river.ai/api-keys"
+      }
+    },
+    {
+      "id": "trustedrouter",
+      "name": "TrustedRouter",
+      "category": "gateway",
+      "baseUrl": "https://api.trustedrouter.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://trustedrouter.com/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://trustedrouter.com/console/api-keys"
+      }
+    },
+    {
+      "id": "unorouter",
+      "name": "UnoRouter",
+      "category": "gateway",
+      "baseUrl": "https://api.unorouter.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "gemini-generate-content",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://unorouter.com/en/docs/platform/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://unorouter.com/en/token"
+      }
+    },
+    {
+      "id": "orcarouter",
+      "name": "OrcaRouter",
+      "category": "gateway",
+      "baseUrl": "https://api.orcarouter.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "gemini-generate-content",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.orcarouter.ai/getting-started/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://www.orcarouter.ai/console"
+      }
+    },
+    {
+      "id": "fikra",
+      "name": "Fikra API",
+      "category": "gateway",
+      "baseUrl": "https://api.fikraapi.co.ke/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.fikraapi.co.ke/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://fikraapi.co.ke/dashboard"
+      }
+    },
+    {
+      "id": "constellation-gate",
+      "name": "Constellation Gate",
+      "category": "gateway",
+      "baseUrl": "https://gateway.constellationgate.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://docs.constellationgate.ai/getting-started/authentication/",
+      "portal": {
+        "kind": "console",
+        "url": "https://app.constellationgate.ai"
+      }
+    },
+    {
+      "id": "ant-ling",
+      "name": "Ant Ling (蚂蚁百灵)",
+      "category": "official",
+      "baseUrl": "https://api.ant-ling.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://developer.ant-ling.com/en/docs/api-reference/openai/",
+      "portal": {
+        "kind": "console",
+        "url": "https://chat.ant-ling.com/open"
+      }
+    },
+    {
+      "id": "antdigital-dtmaas",
+      "name": "Ant Digital DTMaaS (蚂蚁数科)",
+      "category": "official",
+      "baseUrl": "https://maas-api.antdigital.com/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://maas.antdigital.com/dt-maas-docs/quick-access",
+      "portal": {
+        "kind": "console",
+        "url": "https://maas.antdigital.com/"
+      }
+    },
+    {
+      "id": "unisound",
+      "name": "Unisound MaaS (云知声)",
+      "category": "official",
+      "baseUrl": "https://maas-api.unisound.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://maas.unisound.com/docs/guide/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://maas.unisound.com/"
+      }
+    },
+    {
+      "id": "bilibili-index-translate",
+      "name": "Bilibili Index-Translate (哔哩哔哩)",
+      "category": "official",
+      "baseUrl": "https://index-translate.bilibili.com/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://github.com/bilibili/Index-Translate#option-1-free-online-api-zero-gpu-setup",
+      "portal": {
+        "kind": "setup",
+        "url": "https://index-translate.bilibili.com/"
+      }
+    },
+    {
+      "id": "sensenova",
+      "name": "SenseNova Token Plan (商汤日日新)",
+      "category": "official",
+      "baseUrl": "https://token.sensenova.cn/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://platform.sensenova.cn/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.sensenova.cn/console/keys"
+      }
+    },
+    {
+      "id": "akashml",
+      "name": "AkashML",
+      "category": "gateway",
+      "baseUrl": "https://api.akashml.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://akashml.com/docs/getting-started/introduction",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://playground.akashml.com/settings"
+      }
+    },
+    {
+      "id": "indicstack",
+      "name": "IndicStack",
+      "category": "gateway",
+      "baseUrl": "https://api.indicstack.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://indicstack.ai/blog/migrate-openai-to-india-hosted-api",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.indicstack.ai/signup"
+      }
+    },
+    {
+      "id": "0g-private-computer",
+      "name": "0G Private Computer",
+      "category": "gateway",
+      "baseUrl": "https://router-api.0g.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://pc.0g.ai/dashboard/api-keys"
+      }
+    },
+    {
+      "id": "gonkarouter",
+      "name": "GonkaRouter",
+      "category": "gateway",
+      "baseUrl": "https://api.gonkarouter.io/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://gonkarouter.io/docs",
+      "portal": {
+        "kind": "console",
+        "url": "https://gonkarouter.io/dashboard"
+      }
+    },
+    {
+      "id": "runinfra",
+      "name": "RunInfra",
+      "category": "gateway",
+      "baseUrl": "https://api.runinfra.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://runinfra.ai/settings/api-keys",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://runinfra.ai/settings/api-keys"
+      }
+    },
+    {
+      "id": "nomask",
+      "name": "NoMask",
+      "category": "gateway",
+      "baseUrl": "https://nomask.ai/api/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://nomask.ai/api/doc/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://nomask.ai/api/doc/quickstart"
+      }
+    },
+    {
+      "id": "anyrouter",
+      "name": "AnyRouter",
+      "category": "gateway",
+      "baseUrl": "https://anyrouter.dev/api/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.anyrouter.dev/getting-started/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://anyrouter.dev/dashboard/keys"
+      }
+    },
+    {
+      "id": "yeta",
+      "name": "Yeta",
+      "category": "gateway",
+      "baseUrl": "https://platform.yeta.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://platform.yeta.ai/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.yeta.ai/keys"
+      }
+    },
+    {
+      "id": "scnet",
+      "name": "SCNet (超算互联网)",
+      "category": "gateway",
+      "baseUrl": "https://api.scnet.cn/api/llm/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://www.scnet.cn/help/docs/mainsite/mass/tutorial/quickstart.html",
+      "portal": {
+        "kind": "console",
+        "url": "https://www.scnet.cn/ui/console"
+      }
+    },
+    {
+      "id": "oxion-ai",
+      "name": "Oxion AI",
+      "category": "gateway",
+      "baseUrl": "https://oxionai.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://oxionai.com/docs/getting-started",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://oxionai.com/dashboard/api-keys"
+      }
+    },
+    {
+      "id": "inferx",
+      "name": "InferX",
+      "category": "gateway",
+      "baseUrl": "https://model.inferx.net/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://inferx.net/docs/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://model.inferx.net/login"
+      }
+    },
+    {
+      "id": "blazerail",
+      "name": "BlazeRail",
+      "category": "gateway",
+      "baseUrl": "https://api.blazerail.com/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://www.blazerail.com/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://www.blazerail.com/dashboard/api-keys"
+      }
+    },
+    {
+      "id": "larprouter",
+      "name": "LarpRouter",
+      "category": "gateway",
+      "baseUrl": "https://larprouter.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://larprouter.com/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://larprouter.com/api-keys"
+      }
+    },
+    {
+      "id": "stark-relay",
+      "name": "Stark Relay",
+      "category": "gateway",
+      "baseUrl": "https://starkrelay.bond/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://app.notion.com/p/05-Start-using-your-API-key-3941472684838133afbfdbb70a0d82f4",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://starkrelay.bond/api-keys"
+      }
+    },
+    {
+      "id": "pojiaai",
+      "name": "Pojia AI",
+      "category": "gateway",
+      "baseUrl": "https://api.pojia.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://pojia.ai/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://pojia.ai/keys"
+      }
+    },
+    {
+      "id": "mango-inference",
+      "name": "Mango Inference",
+      "category": "gateway",
+      "baseUrl": "https://api.mangoboost.io/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://inference.mangoboost.io/docs/concepts/openai-compatibility/",
+      "portal": {
+        "kind": "console",
+        "url": "https://inference.mangoboost.io/"
+      }
+    },
+    {
+      "id": "darkbloom",
+      "name": "Darkbloom",
+      "category": "gateway",
+      "baseUrl": "https://api.darkbloom.dev/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.darkbloom.dev/quickstart-consumer",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.darkbloom.dev/api-console"
+      }
+    },
+    {
+      "id": "scaledown",
+      "name": "ScaleDown",
+      "category": "gateway",
+      "baseUrl": "https://api.scaledown.xyz/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.scaledown.ai/api-reference/openai-compatibility",
+      "portal": {
+        "kind": "console",
+        "url": "https://scaledown.ai/"
+      }
+    },
+    {
+      "id": "empero",
+      "name": "Empero",
+      "category": "gateway",
+      "baseUrl": "https://free.empero.org/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://free.empero.org/",
+      "portal": {
+        "kind": "setup",
+        "url": "https://free.empero.org/"
+      }
+    },
+    {
+      "id": "inworld",
+      "name": "Inworld",
+      "category": "gateway",
+      "baseUrl": "https://api.inworld.ai/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.inworld.ai/router/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.inworld.ai/api-keys"
+      }
+    },
+    {
+      "id": "amd-token-factory",
+      "name": "AMD Token Factory",
+      "category": "gateway",
+      "baseUrl": "https://developer.amd.com.cn/radeon/api/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://amd-aim.github.io/radeon-cloud-docs/guides/token-factory/",
+      "portal": {
+        "kind": "console",
+        "url": "https://developer.amd.com.cn/radeon/tokenfactory"
+      }
+    },
+    {
+      "id": "subq",
+      "name": "SubQ",
+      "category": "gateway",
+      "baseUrl": "https://api.subq.ai/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.subq.ai/",
+      "portal": {
+        "kind": "console",
+        "url": "https://subq.ai/"
+      }
+    },
+    {
+      "id": "whatstoken",
+      "name": "WhatsToken.AI",
+      "category": "gateway",
+      "baseUrl": "https://www.whatstoken.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://www.whatstoken.ai/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://www.whatstoken.ai/console/token"
+      }
+    },
+    {
+      "id": "intern-inkstone",
+      "name": "Intern InkStone (书生·端砚)",
+      "category": "gateway",
+      "baseUrl": "https://discovery-api.intern-ai.org.cn/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://discovery.intern-ai.org.cn/token-plan/home",
+      "portal": {
+        "kind": "console",
+        "url": "https://discovery.intern-ai.org.cn/token-plan/home"
+      }
+    },
+    {
+      "id": "swarms",
+      "name": "Swarms",
+      "category": "gateway",
+      "baseUrl": "https://api.swarms.world/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.swarms.ai/docs/documentation/capabilities/openai-compatible",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://swarms.world/platform/api-keys"
+      }
+    },
+    {
+      "id": "decuff",
+      "name": "decuff",
+      "category": "gateway",
+      "baseUrl": "https://api.decuff.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://decuff.ai/docs",
+      "portal": {
+        "kind": "console",
+        "url": "https://decuff.ai/account"
+      }
+    },
+    {
+      "id": "helmholtz-blablador",
+      "name": "Helmholtz Blablador",
+      "category": "gateway",
+      "baseUrl": "https://api.blablador.fz-juelich.de/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://codebase.helmholtz.cloud/-/user_settings/personal_access_tokens"
+      }
+    },
+    {
+      "id": "token360",
+      "name": "Token360",
+      "category": "gateway",
+      "baseUrl": "https://api.token360.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "gemini-generate-content",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://www.token360.ai/en-US/docs/api-reference/overview",
+      "portal": {
+        "kind": "console",
+        "url": "https://www.token360.ai/en-US"
+      }
+    },
+    {
+      "id": "asi-cloud",
+      "name": "ASI:Cloud",
+      "category": "gateway",
+      "baseUrl": "https://inference.asicloud.cudos.org/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.cudos.org/docs/asi-cloud/inference/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://asicloud.cudos.org/"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
@@ -2667,6 +3610,20 @@
         "openai-responses"
       ],
       "docs": "https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.aws.amazon.com/bedrock/home"
+      }
+    },
+    {
+      "id": "amazon-bedrock",
+      "name": "Amazon Bedrock",
+      "category": "official",
+      "baseUrl": null,
+      "protocols": [
+        "aws-bedrock-converse"
+      ],
+      "docs": "https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html",
       "portal": {
         "kind": "console",
         "url": "https://console.aws.amazon.com/bedrock/home"
@@ -2966,6 +3923,7 @@
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
       "protocols": [
         "gemini-generate-content",
+        "gemini-interactions",
         "openai-completions"
       ],
       "docs": "https://ai.google.dev/gemini-api/docs/models",
@@ -3000,6 +3958,50 @@
       "portal": {
         "kind": "api-key",
         "url": "https://admin.mistral.ai/plateforme/api-keys"
+      }
+    },
+    {
+      "id": "sarashina",
+      "name": "Sarashina",
+      "category": "official",
+      "baseUrl": "https://api.sarashina.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.sarashina.ai/introduction",
+      "portal": {
+        "kind": "console",
+        "url": "https://sarashina.ai/"
+      }
+    },
+    {
+      "id": "liquid-ai",
+      "name": "Liquid AI",
+      "category": "official",
+      "baseUrl": "https://inference.liquid.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.liquid.ai/",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.liquid.ai/"
+      }
+    },
+    {
+      "id": "atria",
+      "name": "Atria",
+      "category": "official",
+      "baseUrl": "https://api.atria-asi.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://api.atria-asi.ai/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://api.atria-asi.ai/console/keys"
       }
     },
     {
