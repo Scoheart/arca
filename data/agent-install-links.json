@@ -498,5 +498,9 @@
   "xgoose": {
     "url": "https://xgoose.org/chrome/",
     "label": "产品首页"
+  },
+  "qwenpaw": {
+    "url": "https://qwenpaw.agentscope.io/docs/quickstart",
+    "label": "安装文档"
   }
 }
