@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.46.1](https://github.com/Scoheart/arca/compare/v2.46.0...v2.46.1) (2026-10-29)
+
+### Changes
+
+* docs(release): delegate routine Stable closeout to Luna ([5230704](https://github.com/Scoheart/arca/commit/5230704241c4d273118dbb6db369c28c78cadb14))
+
 ## [2.46.0](https://github.com/Scoheart/arca/compare/v2.45.0...v2.46.0) (2026-10-29)
 
 ### Changes
