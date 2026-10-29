@@ -3899,7 +3899,7 @@
     "key": "",
     "enabled": true,
     "builtin": true,
-    "name": "TRAE",
+    "name": "Trae",
     "docs": "https://docs.trae.ai/ide/model-context-protocol",
     "note": "未确认稳定的用户级全局配置文件；Arca 仅展示，不写入。",
     "category": "ide",

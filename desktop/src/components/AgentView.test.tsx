@@ -18,6 +18,7 @@ import { AgentView } from "./AgentView";
 import { ToastProvider } from "./Toast";
 
 const apiMocks = vi.hoisted(() => ({
+  listNativeResources: vi.fn().mockResolvedValue({ native_plugin_agents: [], host_mcps: [], native_plugins: [], unavailable: false }),
   listModelAgents: vi.fn().mockResolvedValue([]),
   listModelProfiles: vi.fn().mockResolvedValue([]),
   setAgentCredentialDelivery: vi.fn().mockResolvedValue({ agent: "pi", profile: "" }),
@@ -1244,7 +1245,7 @@ it("plans one reviewed empty Model selection when clearing an Agent", async () =
         skillsState={taskSkillsState}
         consumptionState={{
           ...consumptionState,
-          inventory: { ...inventory, consumptions: [] },
+          inventory: { ...inventory, native_plugin_agents: [], host_mcps: [], native_plugins: [], consumptions: [] },
         }}
         agentId="pi"
       />

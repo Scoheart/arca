@@ -1,0 +1,966 @@
+[
+  {
+    "agent_id": "cursor",
+    "docs_url": "https://cursor.com/docs/plugins",
+    "manifest_paths": [
+      ".cursor-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "plugin-",
+    "roots": [
+      {
+        "path": "~/.cursor/plugins/cache",
+        "layout": "marketplace_cache",
+        "presence": "cache_only",
+        "complete_marker": ".cache-complete"
+      },
+      {
+        "path": "~/.cursor/plugins/local",
+        "layout": "flat",
+        "presence": "local"
+      }
+    ],
+    "adapter": "cursor"
+  },
+  {
+    "agent_id": "codex",
+    "adapter": "codex",
+    "docs_url": "https://developers.openai.com/plugins",
+    "manifest_paths": [
+      ".codex-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      ".cursor-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.codex/plugins/cache",
+        "layout": "codex_active_cache",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "claude-code",
+    "adapter": "claude",
+    "docs_url": "https://code.claude.com/docs/en/plugins-reference",
+    "manifest_paths": [
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "plugin:",
+    "roots": [
+      {
+        "path": "~/.claude/plugins",
+        "layout": "claude_installed_registry",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "gemini",
+    "adapter": "gemini",
+    "docs_url": "https://geminicli.com/docs/extensions/reference/",
+    "manifest_paths": [
+      "gemini-extension.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.gemini/extensions",
+        "layout": "gemini_extensions",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "opencode",
+    "adapter": "opencode",
+    "docs_url": "https://opencode.ai/docs/plugins/",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.config/opencode",
+        "layout": "opencode_global",
+        "presence": "declared"
+      },
+      {
+        "path": "~/.opencode/bin/opencode",
+        "layout": "opencode_bundled",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "opencode-desktop",
+    "adapter": "opencode_desktop",
+    "docs_url": "https://opencode.ai/v2/docs/plugins/",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/OpenCode.app",
+        "layout": "opencode_desktop_bundle",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "codex-desktop",
+    "adapter": "codex",
+    "docs_url": "https://developers.openai.com/plugins",
+    "manifest_paths": [
+      ".codex-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      ".cursor-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.codex/plugins/cache",
+        "layout": "codex_active_cache",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/ChatGPT.app/Contents/Resources",
+        "layout": "codex_bundled_resources",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/ChatGPT.app/Contents/Resources",
+        "layout": "codex_bundled_resources",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "codex-ide",
+    "adapter": "codex",
+    "docs_url": "https://developers.openai.com/plugins",
+    "manifest_paths": [
+      ".codex-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      ".cursor-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.codex/plugins/cache",
+        "layout": "codex_active_cache",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "copilot-cli",
+    "adapter": "copilot",
+    "docs_url": "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference",
+    "manifest_paths": [
+      ".plugin/plugin.json",
+      "plugin.json",
+      ".github/plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      ".github/mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.copilot",
+        "layout": "copilot_global",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "qwen-code",
+    "adapter": "qwen",
+    "docs_url": "https://qwenlm.github.io/qwen-code-docs/en/users/extension/introduction/",
+    "manifest_paths": [
+      "plugin.json",
+      "qwen-extension.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.qwen/extensions",
+        "layout": "qwen_extensions",
+        "presence": "installed"
+      },
+      {
+        "path": "qwen",
+        "layout": "qwen_bundled_skills",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "kiro",
+    "adapter": "kiro",
+    "docs_url": "https://kiro.dev/docs/powers/installation/",
+    "manifest_paths": [
+      "plugin.json",
+      "POWER.md"
+    ],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "power-",
+    "roots": [
+      {
+        "path": "~/.kiro/powers",
+        "layout": "kiro_powers",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "workbuddy",
+    "adapter": "workbuddy",
+    "docs_url": "https://www.workbuddy.ai/docs/workbuddy/Overview",
+    "manifest_paths": [
+      "plugin.json",
+      ".codebuddy-plugin/plugin.json",
+      ".workbuddy-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json",
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.workbuddy-ai",
+        "layout": "workbuddy_installed",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/WorkBuddy AI.app/Contents/Resources/app.asar.unpacked/resources/plugins/workbuddy-builtin",
+        "layout": "workbuddy_bundled",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "workbuddy-cn",
+    "adapter": "workbuddy",
+    "docs_url": "https://www.workbuddy.cn/docs/workbuddy/Overview",
+    "manifest_paths": [
+      "plugin.json",
+      ".codebuddy-plugin/plugin.json",
+      ".workbuddy-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json",
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.workbuddy",
+        "layout": "workbuddy_installed",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/resources/plugins/workbuddy-builtin",
+        "layout": "workbuddy_bundled",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoder",
+    "adapter": "qoder",
+    "docs_url": "https://docs.qoder.com/extensions/plugins",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json",
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.qoder",
+        "layout": "qoder_installed",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/Qoder IDE.app/Contents/Resources/app",
+        "layout": "qoder_resources",
+        "presence": "bundled"
+      },
+      {
+        "path": "/Applications/Qoder IDE.app/Contents/Resources/app/resources/bin/aarch64_darwin/qoder-computer-use-plugin-darwin-arm64.zip",
+        "layout": "qoder_computer_use_archive",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "antigravity",
+    "adapter": "antigravity",
+    "docs_url": "https://antigravity.google/docs/plugins",
+    "manifest_paths": [
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp_config.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.gemini/config",
+        "layout": "antigravity_global",
+        "presence": "installed"
+      },
+      {
+        "path": "~/.gemini/antigravity/builtin",
+        "layout": "antigravity_builtin",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "zcode",
+    "adapter": "zcode",
+    "docs_url": "https://zcode.z.ai/cn/docs/plugin",
+    "manifest_paths": [
+      ".zcode-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      ".codex-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "plugin:",
+    "roots": [
+      {
+        "path": "~/.zcode",
+        "layout": "zcode_global",
+        "presence": "installed"
+      },
+      {
+        "path": "/Applications/ZCode.app/Contents/Resources/glm/packages",
+        "layout": "zcode_bundled",
+        "presence": "bundled"
+      },
+      {
+        "path": "/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs",
+        "layout": "zcode_runtime",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "trae-cn",
+    "adapter": "vscode_extensions",
+    "docs_url": "https://docs.trae.cn/",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Trae CN.app",
+        "layout": "vscode_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Trae CN.app",
+        "layout": "vscode_app",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "trae-ide",
+    "adapter": "vscode_extensions",
+    "docs_url": "https://docs.trae.ai/ide/skills",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Trae.app",
+        "layout": "vscode_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Trae.app",
+        "layout": "vscode_app",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoder-cli",
+    "adapter": "qoder_cli",
+    "docs_url": "https://docs.qoder.com/cli/plugins",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.qoder",
+        "layout": "qoder_cli_global",
+        "presence": "installed"
+      },
+      {
+        "path": "~/.npm/_npx",
+        "layout": "qoder_cli_npm_cache",
+        "presence": "cache_only"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoderwork",
+    "adapter": "qoderwork",
+    "docs_url": "https://docs.qoder.com/qoderwork/connectors",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "plugin:",
+    "roots": [
+      {
+        "path": "/Applications/QoderWork.app",
+        "layout": "qoderwork_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/QoderWork.app",
+        "layout": "qoderwork_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/.qoderwork/plugins",
+        "layout": "qoderwork_plugins",
+        "presence": "installed"
+      },
+      {
+        "path": "~/.qoderwork/plugins-custom",
+        "layout": "qoderwork_custom_plugins",
+        "presence": "local"
+      },
+      {
+        "path": "~/.qoderwork/legokits",
+        "layout": "qoderwork_legokits",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoder-desktop",
+    "adapter": "qoder_desktop",
+    "docs_url": "https://docs.qoder.com/qoder/connectors",
+    "manifest_paths": [
+      ".qoder-app-plugin/plugin.json",
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Qoder.app",
+        "layout": "qoder_desktop_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Qoder.app",
+        "layout": "qoder_desktop_app",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoder-cn",
+    "adapter": "qoder_desktop",
+    "docs_url": "https://docs.qoder.cn/",
+    "manifest_paths": [
+      ".qoder-app-plugin/plugin.json",
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Qoder CN.app",
+        "layout": "qoder_desktop_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Qoder CN.app",
+        "layout": "qoder_desktop_app",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoderwork-cn",
+    "adapter": "qoderwork",
+    "docs_url": "https://docs.qoder.cn/",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "plugin:",
+    "roots": [
+      {
+        "path": "/Applications/QoderWork CN.app",
+        "layout": "qoderwork_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/QoderWork CN.app",
+        "layout": "qoderwork_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/.qoderworkcn/plugins",
+        "layout": "qoderwork_plugins",
+        "presence": "installed"
+      },
+      {
+        "path": "~/.qoderworkcn/plugins-custom",
+        "layout": "qoderwork_custom_plugins",
+        "presence": "local"
+      },
+      {
+        "path": "~/.qoderworkcn/legokits",
+        "layout": "qoderwork_legokits",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoder-cli-cn",
+    "adapter": "qoder_cn_cli",
+    "docs_url": "https://docs.qoder.cn/",
+    "manifest_paths": [
+      ".qoder-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.local/bin/qoderclicn",
+        "layout": "bun_standalone",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/.qoder-cn/plugins",
+        "layout": "qoder_cli_installed",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoderwake",
+    "adapter": "qoder_wake",
+    "docs_url": "https://docs.qoder.com/",
+    "manifest_paths": [
+      "qoderwake-plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/QoderWake.app",
+        "layout": "qoder_wake_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/QoderWake.app",
+        "layout": "qoder_wake_app",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "qoderwake-cn",
+    "adapter": "qoder_wake",
+    "docs_url": "https://docs.qoder.cn/",
+    "manifest_paths": [
+      "qoderwake-plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/QoderWake CN.app",
+        "layout": "qoder_wake_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/QoderWake CN.app",
+        "layout": "qoder_wake_app",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "goose",
+    "adapter": "goose_cli",
+    "docs_url": "https://github.com/aaif-goose/goose/tree/v1.56.0/crates/goose/src/plugins",
+    "manifest_paths": [
+      ".goose-plugin/plugin.json",
+      ".plugin/plugin.json",
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.agents/plugins",
+        "layout": "goose_global_plugins",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "goose-desktop",
+    "adapter": "goose_desktop",
+    "docs_url": "https://github.com/aaif-goose/goose/tree/v1.56.0/crates/goose/src/plugins",
+    "manifest_paths": [".goose-plugin/plugin.json", ".plugin/plugin.json", "plugin.json"],
+    "default_mcp_files": [".mcp.json"],
+    "mcp_id_prefix": "",
+    "roots": [{"path": "~/.agents/plugins", "layout": "goose_global_plugins", "presence": "local"}]
+  },
+  {
+    "agent_id": "claude-desktop",
+    "adapter": "claude_desktop",
+    "docs_url": "https://www.anthropic.com/research/desktop-extensions",
+    "manifest_paths": [
+      "manifest.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "extension:",
+    "roots": [
+      {
+        "path": "~/Library/Application Support/Claude",
+        "layout": "claude_desktop_standard",
+        "presence": "installed"
+      },
+      {
+        "path": "~/Library/Application Support/Claude-3p",
+        "layout": "claude_desktop_third_party",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "mistral-vibe",
+    "adapter": "vibe",
+    "docs_url": "https://pypi.org/project/mistral-vibe/3.0.3/",
+    "manifest_paths": [
+      "plugin.json",
+      ".codex-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      "kimi.plugin.json",
+      ".kimi-plugin/plugin.json",
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.vibe/plugins",
+        "layout": "vibe_global_plugins",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "kimi-code",
+    "adapter": "kimi",
+    "docs_url": "https://www.npmjs.com/package/@moonshot-ai/kimi-code/v/2.4.0",
+    "manifest_paths": [
+      "kimi.plugin.json",
+      ".kimi-plugin/plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "plugin-",
+    "roots": [
+      {
+        "path": "~/.kimi-code/plugins",
+        "layout": "kimi_registry",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "kimi-code-desktop",
+    "adapter": "kimi_desktop",
+    "docs_url": "https://www.kimi.com/code/docs/en/kimi-code-desktop/settings-and-extensions.html",
+    "manifest_paths": [
+      "kimi.plugin.json",
+      ".kimi-plugin/plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "plugin-",
+    "roots": [
+      {
+        "path": "~/.kimi-code/plugins",
+        "layout": "kimi_registry",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "amp",
+    "adapter": "amp",
+    "docs_url": "https://ampcode.com/docs/customize/plugins",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.config/amp/plugins",
+        "layout": "amp_system_plugins",
+        "presence": "local"
+      },
+      {
+        "path": "~/.cache/amp/global-plugins",
+        "layout": "amp_global_cache",
+        "presence": "cache_only"
+      }
+    ]
+  },
+  {
+    "agent_id": "cursor-cli",
+    "adapter": "cursor_cli",
+    "docs_url": "https://cursor.com/docs/plugins",
+    "manifest_paths": [
+      ".cursor-plugin/plugin.json",
+      ".claude-plugin/plugin.json",
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json",
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "plugin-",
+    "roots": [
+      {
+        "path": "~/.cursor/plugins/cache",
+        "layout": "marketplace_cache",
+        "presence": "cache_only",
+        "complete_marker": ".cache-complete"
+      },
+      {
+        "path": "~/.cursor/plugins/local",
+        "layout": "flat",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "augment",
+    "adapter": "augment",
+    "docs_url": "https://docs.augmentcode.com/cli/plugins",
+    "manifest_paths": [
+      ".augment-plugin/plugin.json",
+      ".claude-plugin/plugin.json"
+    ],
+    "default_mcp_files": [".mcp.json"],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.augment/plugins/marketplaces",
+        "layout": "marketplace_checkouts",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "factory-desktop",
+    "adapter": "factory_desktop",
+    "docs_url": "https://docs.factory.com/harness/plugins",
+    "manifest_paths": [],
+    "default_mcp_files": ["mcp.json"],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.factory/plugins",
+        "layout": "factory_installed_registry",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "factory-droid",
+    "adapter": "factory_droid",
+    "docs_url": "https://docs.factory.com/harness/plugins",
+    "manifest_paths": [],
+    "default_mcp_files": ["mcp.json"],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.factory/plugins",
+        "layout": "factory_installed_registry",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "cline-desktop",
+    "adapter": "cline",
+    "docs_url": "https://docs.cline.bot/usage/cline-desktop",
+    "manifest_paths": [
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.agents/plugins",
+        "layout": "cline_agent_plugins_v1",
+        "presence": "local"
+      },
+      {
+        "path": "~/.cline/plugins",
+        "layout": "cline_module_candidates",
+        "presence": "local"
+      },
+      {
+        "path": "~/Documents/Cline/Plugins",
+        "layout": "cline_module_candidates",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "cline-cli",
+    "adapter": "cline",
+    "docs_url": "https://docs.cline.bot/usage/cli-overview",
+    "manifest_paths": [
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.agents/plugins",
+        "layout": "cline_agent_plugins_v1",
+        "presence": "local"
+      },
+      {
+        "path": "~/.cline/plugins",
+        "layout": "cline_module_candidates",
+        "presence": "local"
+      },
+      {
+        "path": "~/Documents/Cline/Plugins",
+        "layout": "cline_module_candidates",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "pi",
+    "adapter": "pi",
+    "docs_url": "https://pi.dev/docs/latest/packages",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.pi/agent",
+        "layout": "pi_global_resources",
+        "presence": "local"
+      },
+      {
+        "path": "~/.agents/skills",
+        "layout": "pi_shared_skills",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "hermes",
+    "adapter": "hermes",
+    "docs_url": "https://github.com/NousResearch/hermes-agent/blob/ff6a86cb529a372198b4b80d5e022e32a4a3f2cc/hermes_cli/plugins.py",
+    "manifest_paths": [
+      "plugin.yaml",
+      "plugin.yml"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.hermes/plugins",
+        "layout": "hermes_python_plugins",
+        "presence": "local"
+      }
+    ]
+  }
+]

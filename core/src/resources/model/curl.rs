@@ -3,7 +3,40 @@ use super::{credential, normalize_endpoint_path, normalize_provider_base_url};
 use crate::domain::types::{ApiKeySource, AuthRequirement, ModelProtocol};
 use crate::settings::load_settings_strict;
 use serde_json::json;
+use serde::Deserialize;
+use std::{collections::BTreeMap, sync::LazyLock};
 use zeroize::Zeroizing;
+
+#[derive(Deserialize)]
+struct CurlTemplates {
+    templates: BTreeMap<ModelProtocol, CurlTemplate>,
+}
+
+#[derive(Deserialize)]
+struct CurlTemplate {
+    request: serde_json::Value,
+}
+
+static TEMPLATES: LazyLock<CurlTemplates> = LazyLock::new(|| {
+    serde_json::from_str(include_str!("../../../../data/model-curl-templates.json"))
+        .expect("embedded model cURL templates must be valid")
+});
+
+fn request_template(protocol: &ModelProtocol, model: &str) -> Result<serde_json::Value, String> {
+    let mut request = TEMPLATES.templates.get(protocol)
+        .ok_or("curl_template_missing: protocol has no request template")?.request.clone();
+    let body = request.as_object_mut().ok_or("curl_template_invalid: request must be an object")?;
+    if body.contains_key("model") { body.insert("model".into(), json!(model)); }
+    if *protocol == ModelProtocol::AwsBedrockConverse && model.starts_with("arn:") && model.contains(":prompt/") {
+        for field in ["system", "inferenceConfig", "toolConfig", "additionalModelRequestFields"] {
+            body.insert(field.into(), serde_json::Value::Null);
+        }
+    }
+    // Filter unset options in Core so the copied text is just one cURL command.
+    // Do not remove false, zero, empty collections or nested null values.
+    body.retain(|_, value| !value.is_null());
+    Ok(request)
+}
 
 fn quote(value: &str) -> String { format!("'{}'", value.replace('\'', "'\\''")) }
 
@@ -21,11 +54,13 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
     if model.contains('\0') || url.contains('\0') {
         return Err("curl_invalid_input: NUL bytes are unsupported".into());
     }
+    let body = serde_json::to_string_pretty(&request_template(protocol, model)?)
+        .map_err(|_| "curl_serialization_failed")?;
     let mut lines = vec![format!("curl --request POST {}", quote(&url.replace("{model}", &url_component(model)))),
         "  --header 'Content-Type: application/json'".into()];
     let prefix = match protocol {
         ModelProtocol::AnthropicMessages => "x-api-key: ",
-        ModelProtocol::GeminiGenerateContent => "x-goog-api-key: ",
+        ModelProtocol::GeminiGenerateContent | ModelProtocol::GeminiInteractions => "x-goog-api-key: ",
         _ => "Authorization: Bearer ",
     };
     match auth {
@@ -38,17 +73,74 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
             lines.push(format!("  --header {}", quote(&format!("{prefix}{key}"))));
         }
     }
-    let body = match protocol {
-        ModelProtocol::AnthropicMessages => {
-            lines.push("  --header 'anthropic-version: 2023-06-01'".into());
-            json!({"model": model, "max_tokens": 1024, "messages": [{"role": "user", "content": "Hello"}]})
+    if *protocol == ModelProtocol::AnthropicMessages {
+        lines.push("  --header 'anthropic-version: 2023-06-01'".into());
+    }
+    lines.push(format!("  --data-raw {}", quote(&body)));
+    Ok(lines.join(" \\\n"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn interactions_uses_google_auth_and_stateless_input() {
+        let command = render(&ModelProtocol::GeminiInteractions,
+            "https://example.invalid/v1beta/interactions", "gemini-fixture", CurlAuth::Placeholder).unwrap();
+        assert!(command.contains("x-goog-api-key: ${ARCA_API_KEY}"));
+        assert!(command.contains("\"input\": \"Hello\""));
+        assert!(command.contains("\"store\": false"));
+        assert!(!command.contains("\"contents\""));
+        assert!(!command.contains("Authorization: Bearer"));
+    }
+
+    #[test]
+    fn converse_escapes_model_path_and_uses_content_blocks() {
+        let model = "arn:aws:bedrock:us-east-1:123456789012:inference-profile/a/b";
+        let command = render(&ModelProtocol::AwsBedrockConverse,
+            "https://example.invalid/model/{model}/converse", model, CurlAuth::Placeholder).unwrap();
+        assert!(command.contains("/model/arn%3Aaws%3Abedrock%3Aus-east-1%3A123456789012%3Ainference-profile%2Fa%2Fb/converse"));
+        assert!(command.contains("Authorization: Bearer ${ARCA_API_KEY}"));
+        assert!(command.contains("\"text\": \"Hello\""));
+        assert!(!command.contains("\"model\":"));
+        assert!(!command.contains("{model}"));
+        assert!(render(&ModelProtocol::AwsBedrockConverse, "https://example.invalid/model/{model}/converse",
+            "model", CurlAuth::Key("fixture\r\nInjected: yes")).is_err());
+    }
+
+    #[test]
+    fn prompt_management_arns_do_not_override_the_managed_prompt() {
+        let body = request_template(&ModelProtocol::AwsBedrockConverse,
+            "arn:aws:bedrock:us-east-1:123456789012:prompt/ABCDEFGHIJ:1").unwrap();
+        for key in ["system", "inferenceConfig", "toolConfig", "additionalModelRequestFields"] {
+            assert!(body.get(key).is_none(), "{key} cannot override a managed prompt");
         }
-        ModelProtocol::GeminiGenerateContent => json!({"contents": [{"role": "user", "parts": [{"text": "Hello"}]}]}),
-        ModelProtocol::OpenaiResponses => json!({"model": model, "input": "Hello"}),
-        ModelProtocol::OpenaiCompletions => json!({"model": model, "messages": [{"role": "user", "content": "Hello"}]}),
-    };
-    lines.push(format!("  --data-raw {}", quote(&serde_json::to_string_pretty(&body).map_err(|_| "curl_serialization_failed")?)));
-    Ok(format!("{} | jq -r", lines.join(" \\\n")))
+        assert_eq!(body["messages"][0]["role"], "user");
+        let ordinary = request_template(&ModelProtocol::AwsBedrockConverse, "anthropic.fixture").unwrap();
+        assert!(ordinary["system"][0]["text"].is_string());
+        assert_eq!(ordinary["inferenceConfig"]["maxTokens"], 1024);
+    }
+
+    #[test]
+    fn export_is_one_curl_command_with_a_literal_json_argument() {
+        let model = "fixture'$(touch unwanted)\nexit 7";
+        let command = render(&ModelProtocol::OpenaiResponses,
+            "https://example.invalid/responses", model, CurlAuth::None).unwrap();
+        assert!(command.starts_with("curl --request POST "));
+        assert!(!command.contains("ARCA_REQUEST_BODY"));
+        assert!(!command.contains("jq "));
+        assert!(!command.contains("<<"));
+        let argument = command.split_once("--data-raw ").unwrap().1;
+        let json = argument.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap()
+            .replace("'\\''", "'");
+        let body: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(body["model"], model);
+        assert_eq!(body["input"], "Hello");
+        assert!(body["instructions"].is_string());
+        assert!(body.get("temperature").is_none());
+        assert_eq!(body["stream"], false);
+    }
 }
 
 /// The returned command may contain a secret only on explicit export. Never log,

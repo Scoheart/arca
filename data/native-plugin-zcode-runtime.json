@@ -1,0 +1,11 @@
+{
+  "version": "3.16.3",
+  "bytes": 15242397,
+  "sha256": "97490d0f06a7a225d54d47817acf4b4859cdb268b59f2490caaeda982bef063a",
+  "server_id": "node_repl",
+  "owner_plugin_id": "node-repl-host@zcode-plugins-official",
+  "consumer_plugin_ids": [
+    "browser-use@zcode-plugins-official",
+    "computer-use@zcode-plugins-official"
+  ]
+}

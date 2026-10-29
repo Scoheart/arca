@@ -1,0 +1,8 @@
+[
+  { "id": "anthropic-messages", "label": "Anthropic Messages", "endpoint_path": "/v1/messages" },
+  { "id": "openai-responses", "label": "OpenAI Responses", "endpoint_path": "/responses" },
+  { "id": "openai-completions", "label": "OpenAI Chat Completions", "endpoint_path": "/chat/completions" },
+  { "id": "gemini-interactions", "label": "Gemini Interactions", "endpoint_path": "/interactions" },
+  { "id": "gemini-generate-content", "label": "Gemini generateContent", "endpoint_path": "/models/{model}:generateContent" },
+  { "id": "aws-bedrock-converse", "label": "AWS Bedrock Converse", "endpoint_path": "/model/{model}/converse" }
+]

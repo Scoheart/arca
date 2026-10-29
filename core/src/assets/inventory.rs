@@ -106,6 +106,7 @@ fn list_consumption_inventory_inner(
     if scope.includes(AssetCapability::Mcp) {
         project_capability(&mut inventory, AssetCapability::Mcp, "mcp_observation_unavailable",
             |projection| project_mcps(&settings, projection, scope));
+        project_host_resources(&mut inventory, scope);
     }
     if scope.includes(AssetCapability::Model) {
         project_capability(&mut inventory, AssetCapability::Model, "model_observation_unavailable",
@@ -132,6 +133,8 @@ fn list_consumption_inventory_inner(
     }
     inventory.consumptions.retain(|row| scope.includes_agent(&row.agent_id));
     inventory.external.retain(|row| scope.includes_agent(&row.agent_id));
+    inventory.host_mcps.retain(|row| scope.includes_agent(&row.agent_id));
+    inventory.native_plugins.retain(|row| scope.includes_agent(&row.agent_id));
     sort_inventory(&mut inventory);
     finalize_observation(&mut inventory);
     if scope != &InventoryScope::default() {
@@ -146,6 +149,58 @@ fn list_consumption_inventory_inner(
 /// to discover malformed or concurrently changing Agent state, but it cannot
 /// leave partial rows behind or prevent the other two capabilities from being
 /// observed.
+pub fn list_native_resources(agent_id: &str) -> crate::domain::plugin::NativeResourceInventory {
+    let mut inventory = ConsumptionInventory::default();
+    let scope = InventoryScope { capability: Some(AssetCapability::Mcp), agent_ids: BTreeSet::from([agent_id.to_string()]) };
+    project_host_resources(&mut inventory, &scope);
+    sort_inventory(&mut inventory);
+    crate::domain::plugin::NativeResourceInventory {
+        native_plugin_agents: inventory.native_plugin_agents,
+        host_mcps: inventory.host_mcps,
+        native_plugins: inventory.native_plugins,
+        unavailable: !inventory.capability_errors.is_empty(),
+    }
+}
+
+fn project_host_resources(inventory: &mut ConsumptionInventory, scope: &InventoryScope) {
+    use crate::domain::plugin::{HostMcpObservation, HostResourceOrigin, PluginPresence, NativePluginObservation, PluginComponent, PluginComponentKind};
+    let preferences = match crate::settings::load_agent_preferences() {
+        Ok(preferences) => preferences,
+        Err(_) => {
+            inventory.capability_errors.push(CapabilityDiagnostic { capability: AssetCapability::Mcp, code: "mcp_host_observation_unavailable".into() });
+            return;
+        }
+    };
+    let mut agents = crate::agents::load_agents_from_settings(&preferences);
+    agents.retain(|id, _| scope.includes_agent(id));
+    inventory.native_plugin_agents = crate::resources::plugin::supported_agents(&agents);
+    let bundled = crate::resources::mcp::builtin::observe(&agents);
+    for item in bundled.items {
+        inventory.native_plugins.push(NativePluginObservation {
+            agent_id: item.agent_id.clone(), plugin_id: format!("builtin:{}", item.plugin_id),
+            name: item.name.clone(), version: item.plugin_version, revision: item.app_version.clone(),
+            presence: PluginPresence::Bundled, enabled: None, source_paths: vec![item.manifest_path],
+            components: vec![PluginComponent { kind: PluginComponentKind::Mcp, name: item.name.clone(), source_path: item.source_path.clone(), native_id: Some(item.server_id.clone()) }],
+            docs_url: item.docs_url.clone(), source_fingerprint: item.source_fingerprint.clone(),
+        });
+        inventory.host_mcps.push(HostMcpObservation {
+            agent_id: item.agent_id, server_id: item.server_id, name: item.name, provider: item.provider,
+            origin: HostResourceOrigin::Builtin, presence: PluginPresence::Bundled,
+            versions: vec![item.app_version], source_paths: vec![item.source_path],
+            docs_url: item.docs_url, source_fingerprint: item.source_fingerprint,
+        });
+    }
+    let plugins = crate::resources::plugin::observe(&agents);
+    inventory.native_plugins.extend(plugins.plugins);
+    inventory.host_mcps.extend(plugins.mcps);
+    if bundled.unavailable || plugins.unavailable {
+        inventory.capability_errors.push(CapabilityDiagnostic {
+            capability: AssetCapability::Mcp,
+            code: "mcp_host_observation_unavailable".into(),
+        });
+    }
+}
+
 fn project_capability(
     inventory: &mut ConsumptionInventory,
     capability: AssetCapability,
@@ -863,6 +918,10 @@ fn project_skills(
 }
 
 fn sort_inventory(inventory: &mut ConsumptionInventory) {
+    inventory.host_mcps.sort_by(|a, b| (&a.agent_id, &a.server_id, &a.presence).cmp(&(&b.agent_id, &b.server_id, &b.presence)));
+    inventory.host_mcps.dedup();
+    inventory.native_plugins.sort_by(|a, b| (&a.agent_id, &a.plugin_id, &a.version, &a.revision, &a.presence).cmp(&(&b.agent_id, &b.plugin_id, &b.version, &b.revision, &b.presence)));
+    inventory.native_plugins.dedup();
     let sort = |items: &mut Vec<ConsumptionView>| {
         items.sort_by(|left, right| {
             left.agent_id
@@ -930,6 +989,9 @@ fn finalize_observation(inventory: &mut ConsumptionInventory) {
         };
     }
     let bytes = serde_json::to_vec(&(
+        &inventory.native_plugin_agents,
+        &inventory.host_mcps,
+        &inventory.native_plugins,
         &inventory.consumptions,
         &inventory.external,
         &inventory.capability_errors,

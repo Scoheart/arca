@@ -372,7 +372,7 @@ function App() {
         && (consumptionState.inventory?.capability_errors ?? [])
           .filter((diagnostic) => diagnostic.capability !== "skill" || view.kind !== "skills")
           .map((diagnostic) => <ToastNotice kind="warning" key={`${diagnostic.capability}:${diagnostic.code}`}
-            message={`${t("observations.capabilityUnavailable", { capability: capabilityLabel(diagnostic.capability) })} · ${
+            message={diagnostic.code === "mcp_host_observation_unavailable" ? t("nativePlugins.scanUnavailable") : `${t("observations.capabilityUnavailable", { capability: capabilityLabel(diagnostic.capability) })} · ${
               diagnostic.code === "skill_inventory_unavailable" ? t("observations.skillInventoryUnavailable")
               : diagnostic.code === "skill_recovery_required" ? t("observations.skillRecoveryRequired")
               : t("observations.capabilityFallback")}`} />)}

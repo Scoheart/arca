@@ -1,0 +1,23 @@
+[
+  {
+    "agent_id": "cursor",
+    "app_roots": ["/Applications/Cursor.app", "~/Applications/Cursor.app"],
+    "product_name": "Cursor",
+    "providers": [
+      {
+        "server_id": "cursor-ide-browser",
+        "name": "Cursor Browser Automation",
+        "extension": "cursor-browser-automation",
+        "publisher": "cursor",
+        "docs_url": "https://cursor.com/docs/agent/tools/browser"
+      },
+      {
+        "server_id": "cursor-computer-use",
+        "name": "Cursor Computer Use",
+        "extension": "cursor-computer-use",
+        "publisher": "cursor",
+        "docs_url": "https://cursor.com/docs/agent/tools"
+      }
+    ]
+  }
+]

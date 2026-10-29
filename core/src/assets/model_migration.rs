@@ -893,6 +893,8 @@ fn extract_open_code(agent_id: &str, path: &Path) -> Result<Vec<ExtractedModel>,
             .and_then(Value::as_str)
             .unwrap_or_default()
         {
+            "@ai-sdk/amazon-bedrock" | "@opencode/ai/providers/amazon-bedrock" => ModelProtocol::AwsBedrockConverse,
+            "@opencode/ai/providers/google/interactions" => ModelProtocol::GeminiInteractions,
             value if value.contains("anthropic") => ModelProtocol::AnthropicMessages,
             value if value.contains("google") => ModelProtocol::GeminiGenerateContent,
             value if value.contains("openai-compatible") => ModelProtocol::OpenaiCompletions,
@@ -1671,6 +1673,8 @@ fn protocol_from_name(value: &str) -> ModelProtocol {
     match value {
         "anthropic-messages" | "anthropic" | "messages" => ModelProtocol::AnthropicMessages,
         "openai-responses" | "responses" => ModelProtocol::OpenaiResponses,
+        "gemini-interactions" | "google-interactions" => ModelProtocol::GeminiInteractions,
+        "aws-bedrock-converse" | "bedrock-converse" => ModelProtocol::AwsBedrockConverse,
         "gemini-generate-content" | "gemini" | "google" | "generate-content" => {
             ModelProtocol::GeminiGenerateContent
         }
@@ -1688,6 +1692,8 @@ fn protocol_name(protocol: &ModelProtocol) -> &'static str {
         ModelProtocol::OpenaiResponses => "openai-responses",
         ModelProtocol::OpenaiCompletions => "openai-completions",
         ModelProtocol::GeminiGenerateContent => "gemini-generate-content",
+        ModelProtocol::GeminiInteractions => "gemini-interactions",
+        ModelProtocol::AwsBedrockConverse => "aws-bedrock-converse",
     }
 }
 
@@ -1738,6 +1744,48 @@ mod tests {
     use super::*;
     use crate::assets::{commit_asset_operation, AssetCommitRequest};
     use crate::testenv::TestHome;
+
+    #[test]
+    fn bedrock_native_writes_round_trip_through_model_observation() {
+        use crate::resources::model::adapters;
+        let home = TestHome::new("bedrock-round-trip");
+        let profile = ModelProfile {
+            id: "bedrock-work".into(), provider_id: None, name: "Work Bedrock".into(),
+            provider: "amazon-bedrock".into(), model_vendor: None,
+            native_ids: Default::default(), protocol: ModelProtocol::AwsBedrockConverse,
+            base_url: "https://bedrock-runtime.eu-west-1.amazonaws.com".into(),
+            endpoint_path: String::new(), model: "vendor.model-v1:0".into(),
+            env_key: Some("BEDROCK_FIXTURE_KEY".into()),
+            context_window: Some(128_000), max_output_tokens: Some(8_192), reasoning: Some(true),
+        };
+        for agent_id in ["opencode", "opencode-desktop", "kilo-code", "kilo-desktop"] {
+            let path = home.home.join(format!("{agent_id}.jsonc"));
+            fs::write(&path, "{\n  // retain user policy\n  \"theme\": \"dark\",\n  \"provider\": {\"external\": {\"name\": \"Leave unchanged\"}}\n}\n").unwrap();
+            let paths = std::slice::from_ref(&path);
+            let prepared = adapters::prepare_apply(agent_id, paths, &profile, true).unwrap();
+            let content = prepared[0].content.as_deref().unwrap();
+            assert!(content.contains("// retain user policy"));
+            fs::write(&path, content).unwrap();
+            let rows = extract_open_code(agent_id, &path).unwrap();
+            assert_eq!(rows.len(), 1);
+            assert_eq!(rows[0].protocol, ModelProtocol::AwsBedrockConverse);
+            assert_eq!(rows[0].model, profile.model);
+            assert_eq!(rows[0].base_url, profile.base_url);
+            assert_eq!(rows[0].env_key, profile.env_key);
+            assert!(rows[0].active);
+            let profiles = BTreeMap::from([(profile.id.clone(), profile.clone())]);
+            assert_eq!(adapters::observe_active(agent_id, paths, &profiles),
+                adapters::ObservedActiveModel::Managed(profile.id.clone()));
+            assert_eq!(adapters::observe_prepared_files(adapters::prepare_apply(agent_id, paths, &profile, true)),
+                crate::resources::model::ModelObservedState::Synced);
+            let cleared = adapters::prepare_clear(agent_id, paths, &profile).unwrap();
+            let content = cleared[0].content.as_deref().unwrap();
+            assert!(content.contains("// retain user policy"));
+            assert!(content.contains("Leave unchanged"));
+            fs::write(&path, content).unwrap();
+            assert!(extract_open_code(agent_id, &path).unwrap().is_empty());
+        }
+    }
 
     #[test]
     fn qoder_cli_observes_selection_and_matches_its_distinct_native_identity() {
