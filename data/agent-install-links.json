@@ -494,5 +494,9 @@
   "qoderwake-cn": {
     "url": "https://ide.qoder.com.cn/qoderwake-cn/installers/1.2.4-cn/qoderwake-cn_1.2.4-cn_darwin_arm64.dmg",
     "label": "官方安装包"
+  },
+  "xgoose": {
+    "url": "https://xgoose.org/chrome/",
+    "label": "产品首页"
   }
 }

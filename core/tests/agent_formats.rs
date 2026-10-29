@@ -1114,10 +1114,10 @@ fn verified_and_catalog_definitions_have_auditable_boundaries() {
     let all_ids: std::collections::BTreeSet<_> =
         verified_ids.union(&catalog_ids).cloned().collect();
 
-    assert_eq!(verified.len(), 89);
-    assert_eq!(catalog.len(), 278);
+    assert_eq!(verified.len(), 95);
+    assert_eq!(catalog.len(), 279);
     assert_eq!(verified_ids.intersection(&catalog_ids).count(), 64);
-    assert_eq!(all_ids.len(), 303);
+    assert_eq!(all_ids.len(), 310);
     assert_eq!(
         verified
             .values()
