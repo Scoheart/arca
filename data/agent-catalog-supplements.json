@@ -319,5 +319,14 @@
     "note": "QwenPaw，与已有的 Qwen Code、QwenWork 不是同一产品。官方文档描述了默认工作目录下的 config.json、agent.json 与 workspace skills，以及独立密钥目录中的 providers.json，但路径可由环境变量改写；尚未核验可由 Arca 安全写入的用户级 MCP、Models 或 Skills 契约。Arca 仅展示，不写入。",
     "verified_at": "2026-10-27",
     "evidence": "official"
+  },
+  "openclaw-desktop": {
+    "name": "OpenClaw",
+    "category": "desktop",
+    "docs": "https://github.com/openclaw/openclaw/blob/39f4baf9968201ac9ae743eb314eab5686d8db64/apps/macos/Sources/OpenClaw/NodeMode/BundledNodeWorker.swift",
+    "note": "只读观察已核验桌面包的私有 worker 随包插件与其声明的 Skills；与独立 CLI、用户级 Skills 和本地/远端 Gateway 配置分离。启用、实际加载与用户安装 ledger 未观测。",
+    "verified_at": "2026-10-30",
+    "evidence": "official-source",
+    "source": "https://github.com/openclaw/openclaw/blob/39f4baf9968201ac9ae743eb314eab5686d8db64/apps/macos/Sources/OpenClaw/NodeMode/BundledNodeWorker.swift"
   }
 }

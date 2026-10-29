@@ -56,5 +56,7 @@
   "mcp-use-inspector": "web",
   "qoder-cli-cn": "cli",
   "qoderwake": "desktop",
-  "qoderwake-cn": "desktop"
+  "qoderwake-cn": "desktop",
+  "openclaw": "cli",
+  "openclaw-desktop": "desktop"
 }

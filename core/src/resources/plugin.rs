@@ -56,6 +56,7 @@ mod vscode_extensions;
 mod vscode;
 mod warp;
 mod zed;
+mod openclaw;
 mod skills;
 
 const MAX_ENTRIES: usize = 4096;
@@ -562,6 +563,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
         if host.adapter == "vscode" { vscode::observe(host, &mut result); continue; }
         if host.adapter == "warp" { warp::observe(host, &mut result); continue; }
         if host.adapter == "zed" { zed::observe(host, &mut result); continue; }
+        if host.adapter == "openclaw" { openclaw::observe(host, &mut result); continue; }
         if host.adapter != "cursor" { result.unavailable = true; continue; }
         for source in &host.roots {
             let root = expand_tilde(&source.path);
@@ -631,7 +633,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "augment" { augment::watch_paths(host) } else if host.adapter == "factory_droid" { factory_droid::watch_paths(host) } else if host.adapter == "factory_desktop" { factory_desktop::watch_paths(host) } else if host.adapter == "cline" { cline::watch_paths(host) } else if host.adapter == "pi" { pi::watch_paths(host) } else if host.adapter == "hermes" { hermes::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else if host.adapter == "vscode" { vscode::watch_paths(host) } else if host.adapter == "warp" { warp::watch_paths(host) } else if host.adapter == "zed" { zed::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "augment" { augment::watch_paths(host) } else if host.adapter == "factory_droid" { factory_droid::watch_paths(host) } else if host.adapter == "factory_desktop" { factory_desktop::watch_paths(host) } else if host.adapter == "cline" { cline::watch_paths(host) } else if host.adapter == "pi" { pi::watch_paths(host) } else if host.adapter == "hermes" { hermes::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else if host.adapter == "vscode" { vscode::watch_paths(host) } else if host.adapter == "warp" { warp::watch_paths(host) } else if host.adapter == "zed" { zed::watch_paths(host) } else if host.adapter == "openclaw" { openclaw::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()
@@ -641,11 +643,12 @@ pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<Pat
 /// `Some(None)` means the passive contract did not match; do not fall back to
 /// launching an unverified executable merely to fill a version label.
 pub(crate) fn passive_runtime_version(agent_id: &str, path: &Path) -> Option<Option<String>> {
-    // These clients have no audited native plugin host. Their version probes
-    // still stay passive, including unsupported images and package versions.
+    // Audited passive readers own version routing even for an unknown artifact.
+    // Unsupported images and versions must not trigger an execution fallback.
     if agent_id == "crush" { return Some(crush::runtime_version(path)); }
     if agent_id == "continue-cli" { return Some(continue_cli::runtime_version(path)); }
     if agent_id == "trae-cli" { return Some(trae_cli::runtime_version(path)); }
+    if agent_id == "openclaw" { return Some(openclaw::runtime_version(path)); }
     // OpenHands imports its SDK and reads cwd dotenv before argument parsing.
     // No installed-wrapper identity is bound yet; keep its label unknown.
     if agent_id == "openhands" { return Some(None); }

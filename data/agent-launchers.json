@@ -649,5 +649,14 @@
     "candidates": [
       "QoderWake CN"
     ]
+  },
+  "openclaw-desktop": {
+    "kind": "app",
+    "candidates": [
+      "OpenClaw"
+    ],
+    "bundle_ids": [
+      "ai.openclaw.mac"
+    ]
   }
 }

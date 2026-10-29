@@ -502,5 +502,9 @@
   "qwenpaw": {
     "url": "https://qwenpaw.agentscope.io/docs/quickstart",
     "label": "安装文档"
+  },
+  "openclaw-desktop": {
+    "url": "https://github.com/openclaw/openclaw/releases",
+    "label": "官方下载"
   }
 }

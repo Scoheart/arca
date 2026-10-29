@@ -22,6 +22,8 @@ it("distinguishes shared-brand product surfaces with localized names", () => {
     ["qoder", "Qoder IDE", "ide"],
     ["opencode", "OpenCode", "cli"],
     ["opencode-desktop", "OpenCode Desktop", "desktop"],
+    ["openclaw", "OpenClaw", "cli"],
+    ["openclaw-desktop", "OpenClaw", "desktop"],
     ["codex", "Codex CLI", "cli"],
     ["codex-desktop", "Codex Desktop", "desktop"],
     ["factory-droid", "Factory Droid", "cli"],

@@ -1035,5 +1035,47 @@
         "complete_marker": null
       }
     ]
+  },
+  {
+    "agent_id": "openclaw",
+    "adapter": "openclaw",
+    "docs_url": "https://github.com/openclaw/openclaw/blob/fc23bc864e4553c2d215e479eeec47b67a0bf943/src/plugins/manifest.ts",
+    "manifest_paths": [
+      "openclaw.plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.openclaw/tools/node",
+        "layout": "openclaw_cli",
+        "presence": "bundled",
+        "complete_marker": null
+      }
+    ]
+  },
+  {
+    "agent_id": "openclaw-desktop",
+    "adapter": "openclaw",
+    "docs_url": "https://github.com/openclaw/openclaw/blob/39f4baf9968201ac9ae743eb314eab5686d8db64/apps/macos/Sources/OpenClaw/NodeMode/BundledNodeWorker.swift",
+    "manifest_paths": [
+      "openclaw.plugin.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/OpenClaw.app",
+        "layout": "openclaw_app",
+        "presence": "bundled",
+        "complete_marker": null
+      },
+      {
+        "path": "~/Applications/OpenClaw.app",
+        "layout": "openclaw_app",
+        "presence": "bundled",
+        "complete_marker": null
+      }
+    ]
   }
 ]

@@ -4768,5 +4768,22 @@
     "codec": "standard",
     "layout": "map",
     "transports": []
+  },
+  "openclaw-desktop": {
+    "global": null,
+    "project": null,
+    "format": "unknown",
+    "key": "",
+    "enabled": true,
+    "builtin": true,
+    "name": "OpenClaw",
+    "docs": "https://github.com/openclaw/openclaw/blob/39f4baf9968201ac9ae743eb314eab5686d8db64/apps/macos/Sources/OpenClaw/NodeMode/BundledNodeWorker.swift",
+    "note": "只读观察已核验桌面包的私有 worker 随包插件与其声明的 Skills；与独立 CLI、用户级 Skills 和本地/远端 Gateway 配置分离。启用、实际加载与用户安装 ledger 未观测。",
+    "category": "desktop",
+    "evidence": "official-source",
+    "verified_at": "2026-10-30",
+    "codec": "standard",
+    "layout": "map",
+    "transports": []
   }
 }

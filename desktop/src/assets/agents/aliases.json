@@ -26,5 +26,6 @@
   "kilo-vscode": "kilo-code",
   "kiro-cli": "kiro",
   "claude-ai": "claude",
-  "chatgpt": "openai"
+  "chatgpt": "openai",
+  "openclaw-desktop": "openclaw"
 }
