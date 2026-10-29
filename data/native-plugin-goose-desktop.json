@@ -1,0 +1,22 @@
+{
+  "agent_id": "goose-desktop",
+  "version": "1.56.0",
+  "bundle_id": "com.electron.goose",
+  "product_name": "Goose",
+  "app_paths": ["/Applications/Goose.app", "~/Applications/Goose.app"],
+  "docs_url": "https://github.com/aaif-goose/goose/tree/v1.56.0",
+  "guards": [
+    {"path": ".vite/build/main.js", "bytes": 701180, "sha256": "6e31edc186e7e882a9dbf5ec1021b98e66497a0c1c3e9f684b8bab2638f5f02a"},
+    {"path": ".vite/renderer/main_window/assets/index-CgH9MvyF.js", "bytes": 773024, "sha256": "4fb337a958ca1e01b7df88793c8bb0d73a02792ee4dcda466bbe8195c98487c1"},
+    {"path": "package.json", "bytes": 7729, "sha256": "60cc0bf02cc994705e81e248b2d0aeafd9e0aa84326cf3d61782a4c4b5e66ea3"}
+  ],
+  "backend": {"path": "Contents/Resources/bin/goose", "bytes": 176497328, "sha256": "25fe36b6cbea257701925c26adc877292d156f279f1d0c6bc7b180b061860fb7"},
+  "catalog_member": ".vite/renderer/main_window/assets/index-CgH9MvyF.js",
+  "platform_extensions": [{"id": "developer", "name": "Developer"}],
+  "mcp_extensions": [
+    {"id": "autovisualiser", "name": "Auto Visualiser"},
+    {"id": "computercontroller", "name": "Computer Controller"},
+    {"id": "memory", "name": "Memory"},
+    {"id": "tutorial", "name": "Tutorial"}
+  ]
+}

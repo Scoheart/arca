@@ -34,6 +34,7 @@ pub struct TestHome {
     saved_arca_home: Option<OsString>,
     saved_path: Option<OsString>,
     saved_test_probe_root: Option<OsString>,
+    saved_native_plugin_homes: Vec<(&'static str, Option<OsString>)>,
     readiness: Option<crate::application::gate::TestReadyGuard>,
     _guard: MutexGuard<'static, ()>,
 }
@@ -70,6 +71,41 @@ impl TestHome {
         std::env::set_var("ARCA_HOME", home.join(".arca"));
         std::env::set_var("PATH", &bin);
         std::env::set_var("ARCA_TEST_PROBE_ROOT", &home);
+        // Native observers honor host-specific homes. Isolate those overrides
+        // too, so inherited CLI variables cannot escape the temporary HOME.
+        let saved_native_plugin_homes = [
+            ("CODEX_HOME", home.join(".codex")),
+            ("CODEX_ELECTRON_BUNDLED_PLUGINS_RESOURCES_PATH", home.join("codex-app-resources")),
+            ("CLAUDE_CONFIG_DIR", home.join(".claude")),
+            ("CLAUDE_USER_DATA_DIR", home.join("claude-desktop")),
+            ("GEMINI_CLI_HOME", home.clone()),
+            ("GOOSE_PATH_ROOT", home.join("goose-root")),
+            ("QWEN_HOME", home.join(".qwen")),
+            ("KIMI_CODE_HOME", home.join(".kimi-code")),
+            ("NODE_OPTIONS", PathBuf::new()),
+            ("NODE_PATH", PathBuf::new()),
+            ("ZCODE_STORAGE_DIR", PathBuf::new()),
+            ("KIRO_POWERS_HOME", home.join(".kiro/powers")),
+            ("WORKBUDDY_CONFIG_DIR", PathBuf::new()),
+            ("CODEBUDDY_CONFIG_DIR", PathBuf::new()),
+            ("XDG_CONFIG_HOME", home.join(".config")),
+            ("XDG_STATE_HOME", home.join(".local/state")),
+            ("OPENCODE_CONFIG", home.join(".config/opencode/opencode.json")),
+            ("OPENCODE_CONFIG_DIR", home.join(".config/opencode")),
+            ("OPENCODE_PLUGIN_META_FILE", home.join(".local/state/opencode/plugin-meta.json")),
+            ("OPENCODE_CONFIG_CONTENT", PathBuf::new()),
+            ("COPILOT_HOME", home.join(".copilot")),
+            ("COPILOT_CACHE_HOME", home.join("copilot-cache")),
+            ("COPILOT_PKG_CACHE_HOME", home.join("copilot-pkg-cache")),
+            ("COPILOT_CLI_DIST_DIR", home.join("copilot-dist")),
+            ("COPILOT_CLI_RESOLVED_DIST_DIR", home.join("copilot-resolved-dist")),
+            ("XDG_CACHE_HOME", home.join(".cache")),
+            ("LOCALAPPDATA", home.join("AppData/Local")),
+        ].into_iter().map(|(key, path)| {
+            let previous = std::env::var_os(key);
+            std::env::set_var(key, path);
+            (key, previous)
+        }).collect();
         let readiness = Some(crate::application::gate::TestReadyGuard::enter());
         TestHome {
             home,
@@ -77,6 +113,7 @@ impl TestHome {
             saved_arca_home,
             saved_path,
             saved_test_probe_root,
+            saved_native_plugin_homes,
             readiness,
             _guard: guard,
         }
@@ -107,6 +144,12 @@ impl Drop for TestHome {
         match &self.saved_test_probe_root {
             Some(v) => std::env::set_var("ARCA_TEST_PROBE_ROOT", v),
             None => std::env::remove_var("ARCA_TEST_PROBE_ROOT"),
+        }
+        for (key, previous) in &self.saved_native_plugin_homes {
+            match previous {
+                Some(value) => std::env::set_var(key, value),
+                None => std::env::remove_var(key),
+            }
         }
         let _ = std::fs::remove_dir_all(&self.home);
         // _guard releases after this body — env is consistent before the next

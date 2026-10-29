@@ -1,0 +1,38 @@
+[
+  {
+    "agent_id": "opencode",
+    "version": "1.3.17",
+    "module_offset": 76899540,
+    "module_length": 8730,
+    "module_sha256": "d804aabd801a30f31ea240fe787032b4f1be3e3b696e59cc5831ec4a29b26254",
+    "version_offset": 63221005,
+    "version_marker": "var VERSION = \"1.3.17\", CHANNEL = \"latest\";",
+    "providers": [
+      {
+        "id": "CodexAuthPlugin",
+        "name": "Codex"
+      },
+      {
+        "id": "CopilotAuthPlugin",
+        "name": "GitHub Copilot"
+      },
+      {
+        "id": "gitlabAuthPlugin",
+        "name": "GitLab"
+      },
+      {
+        "id": "PoeAuthPlugin",
+        "name": "Poe"
+      },
+      {
+        "id": "CloudflareWorkersAuthPlugin",
+        "name": "Cloudflare Workers AI"
+      },
+      {
+        "id": "CloudflareAIGatewayAuthPlugin",
+        "name": "Cloudflare AI Gateway"
+      }
+    ],
+    "magic_hex": "cffaedfe"
+  }
+]

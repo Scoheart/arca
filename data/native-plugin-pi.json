@@ -1,0 +1,53 @@
+{
+  "agent_id": "pi",
+  "command": "pi",
+  "version": "1.2.0",
+  "package_name": "@earendil-works/pi-coding-agent",
+  "entry_path": "dist/bundle/cli.js",
+  "config_dir": ".pi",
+  "guards": [
+    {
+      "path": "package.json",
+      "bytes": 3767,
+      "sha256": "d4231a02b6a2ccb357a8e9e420fab9c217490137ade958d4a45a12e169daad0c"
+    },
+    {
+      "path": "dist/bundle/cli.js",
+      "bytes": 160,
+      "sha256": "e79626f2dd6f94aa45d30f3fa63cd84319a6eefcd150b353cfaf274366926774"
+    },
+    {
+      "path": "dist/bundle/cli-runtime.js",
+      "bytes": 1015,
+      "sha256": "0a7ba07c94a89733a5ace8eac6bced09c20ed099d153b02cfaa878202b74878f"
+    },
+    {
+      "path": "dist/bundle/chunks/chunk-TJXZSVTD.js",
+      "bytes": 3510500,
+      "sha256": "3aced1320c6c7a36ff53be75b539099310971e9b54b15df5b1efba3d2be75c10"
+    },
+    {
+      "path": "dist/bundle/chunks/chunk-WJUNYZC5.js",
+      "bytes": 28659,
+      "sha256": "9ef22c5791095c0c720064c043da184f01e0d569598dd87d83b742e95a164d13"
+    }
+  ],
+  "builtin_extensions": [
+    {
+      "name": "llama.cpp",
+      "replaceable": false
+    },
+    {
+      "name": "codemode",
+      "replaceable": true
+    },
+    {
+      "name": "tool-search",
+      "replaceable": true
+    },
+    {
+      "name": "mcp",
+      "replaceable": true
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "agent_id": "factory-desktop",
+  "version": "0.208.0",
+  "bundle_id": "com.electron.factory",
+  "product_name": "Factory",
+  "app_paths": ["/Applications/Factory.app", "~/Applications/Factory.app"],
+  "guards": [
+    {
+      "path": "Contents/Resources/app.asar",
+      "bytes": 64207723,
+      "sha256": "4c8a57bf4782c7d2e1caa9a1970bb134a2167ec28f6e9509460f644545d234f4"
+    },
+    {
+      "path": "Contents/Resources/bin/droid",
+      "bytes": 292301504,
+      "sha256": "7cf155967a78b75a47de53c5ed99522b77c22a4abd1617e74f167d882c059cfa"
+    }
+  ]
+}

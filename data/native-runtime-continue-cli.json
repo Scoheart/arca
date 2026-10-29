@@ -1,0 +1,27 @@
+{
+  "package_name": "@continuedev/cli",
+  "version": "1.5.47",
+  "module_type": "module",
+  "command": "cn",
+  "entrypoint": "dist/cn.js",
+  "entry_import": "./index.js",
+  "entry_export": "runCli",
+  "sources": [
+    {
+      "path": "package.json",
+      "bytes": 5422,
+      "sha256": "854698a173d9324bd76dcde2e248a7f4a51deec04dbeea4d60b25312b1efc609"
+    },
+    {
+      "path": "dist/cn.js",
+      "bytes": 73,
+      "sha256": "8b9c1d5bff438d558b537e1e8436ae645728bd6f100fa6e7a2a810d01413e18f"
+    },
+    {
+      "path": "dist/index.js",
+      "bytes": 13308219,
+      "sha256": "500cf1ae9637ba397fcb5ae0856fdd31b9ad49ba45a32e277477452be196e5d6"
+    }
+  ]
+}
+

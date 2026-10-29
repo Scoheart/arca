@@ -348,3 +348,6 @@ export const checkSkillUpdates = (manual: boolean) =>
   invoke<UpdateCheckOutcome>("check_skill_updates", { manual });
 export const cancelSkillOperation = (operationId: string) =>
   invoke<void>("cancel_skill_operation", { operationId });
+
+export const listNativeResources = (agentId: string) =>
+  invoke<import("./types").NativeResourceInventory>("list_native_resources", { agentId });

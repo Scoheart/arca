@@ -112,3 +112,13 @@ Assets added 2026-10-16, original bytes:
 | `smithery-playground.svg` | [Smithery brand asset in Raycast's MCP registry extension](https://github.com/raycast/extensions/blob/c0eba1590385588f2b265cec8bdefb653f30816f/extensions/model-context-protocol-registry/assets/smithery.svg), reused unchanged from that MIT-licensed extension; this is a third-party copy of the brand asset, not a provider-hosted download |
 
 Claude.ai and ChatGPT reuse the already sourced Claude/OpenAI marks. Their Web surface badge distinguishes them from CLI and Desktop products.
+
+- `qoder-cn.png`: unchanged 128×128 PNG extracted by `iconutil` from the signed Qoder CN 0.4.11 App icon (`com.qodercn.app`), obtained from https://qoder.cn/download (2026-10-28). The native CN corner mark is preserved; no resampling. `surfaces.json` records the Desktop form.
+
+- `qoderwork-cn.png`: unchanged native 128×128 PNG extracted by `iconutil` from signed QoderWork CN 0.9.18 (`com.qoder.work.cn`), obtained from https://qoder.cn/download (2026-10-28). No resampling; Desktop form is recorded in `surfaces.json`.
+
+- `qoder-cli-cn.png`: unchanged native Qoder CN icon reused for the independently signed Qoder CLI CN (`qoderclicn`); the surface catalog supplies its CLI marker.
+
+- `qoderwake.png`: PNG converted with macOS `sips` from the signed QoderWake native `AppIcon.icns` (`com.qoder.QoderWake.MenuBar`, shell 0.1.19/backend 1.2.4), acquired from the official `download.qoder.com/qoderwake/installers/1.2.4/` installer (2026-10-28). The surface catalog records its Desktop form.
+
+- `qoderwake-cn.png`: PNG converted with macOS `sips` from the independently signed QoderWake CN `AppIcon.icns` (`com.qoder.QoderWakeCN.MenuBar`, shell 0.1.19/backend 1.2.4-cn), acquired from `ide.qoder.com.cn/qoderwake-cn/installers/1.2.4-cn/` (2026-10-28). Its native artwork and Desktop form distinguish this independent product.
