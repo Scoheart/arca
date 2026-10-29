@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.50.0](https://github.com/Scoheart/arca/compare/v2.49.0...v2.50.0) (2026-10-29)
+
+### Changes
+
+* feat(cline): observe native Desktop and CLI plugins ([5bab974](https://github.com/Scoheart/arca/commit/5bab974ebe9c5d28ac4b3a80353dc794d36677eb))
+
 ## [2.49.0](https://github.com/Scoheart/arca/compare/v2.48.0...v2.49.0) (2026-10-29)
 
 ### Changes
