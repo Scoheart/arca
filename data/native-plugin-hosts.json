@@ -922,5 +922,27 @@
         "presence": "local"
       }
     ]
+  },
+  {
+    "agent_id": "pi",
+    "adapter": "pi",
+    "docs_url": "https://pi.dev/docs/latest/packages",
+    "manifest_paths": [
+      "package.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.pi/agent",
+        "layout": "pi_global_resources",
+        "presence": "local"
+      },
+      {
+        "path": "~/.agents/skills",
+        "layout": "pi_shared_skills",
+        "presence": "local"
+      }
+    ]
   }
 ]
