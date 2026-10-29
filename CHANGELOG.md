@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.55.0](https://github.com/Scoheart/arca/compare/v2.54.0...v2.55.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe VS Code extensions and Warp Skills ([7ab0398](https://github.com/Scoheart/arca/commit/7ab0398979e7eb1016f93beb99792e654747ad73))
+
 ## [2.54.0](https://github.com/Scoheart/arca/compare/v2.53.0...v2.54.0) (2026-10-29)
 
 ### Changes
