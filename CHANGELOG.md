@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.46.0](https://github.com/Scoheart/arca/compare/v2.45.0...v2.46.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Cursor CLI native resources ([9ac1f30](https://github.com/Scoheart/arca/commit/9ac1f30369daa3e3baac1a726ef94abea3b7047c))
+
 ## [2.45.0](https://github.com/Scoheart/arca/compare/v2.44.0...v2.45.0) (2026-10-28)
 
 ### Changes
