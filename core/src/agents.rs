@@ -1014,11 +1014,11 @@ mod tests {
     #[test]
     fn builtin_catalog_and_transport_metadata_load() {
         let a = builtin_agents();
-        assert_eq!(audited_agents().len(), 89);
+        assert_eq!(audited_agents().len(), 95);
         let catalog: BTreeMap<String, AgentDefinition> =
             serde_json::from_str(CATALOG_AGENTS_JSON).unwrap();
-        assert_eq!(catalog.len(), 279);
-        assert_eq!(a.len(), 304);
+        assert_eq!(catalog.len(), 280);
+        assert_eq!(a.len(), 311);
         assert_eq!(a["claude-code"].key, "mcpServers");
         assert_eq!(a["codex"].format, "toml");
         assert_eq!(

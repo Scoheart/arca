@@ -613,6 +613,9 @@ export interface ConsumptionView {
 }
 
 export interface ConsumptionInventory {
+  native_plugin_agents: string[];
+  host_mcps: HostMcpObservation[];
+  native_plugins: NativePluginObservation[];
   revision: string;
   observed_at: string;
   consumptions: ConsumptionView[];
@@ -1024,4 +1027,27 @@ export interface SkillCommandError {
   message: string;
   retry_at?: string;
   findings_hash?: string;
+}
+
+export type PluginPresence = "bundled" | "installed" | "local" | "cache_only" | "declared";
+export type PluginComponentKind = "mcp" | "mcp_reference" | "skill" | "rule" | "agent" | "command" | "hook" | "app" | "lsp" | "output_style" | "workflow" | "theme" | "monitor" | "eval" | "executable" | "type_declaration" | "channel" | "mcp_bundle" | "context" | "policy" | "plan" | "code" | "auth_provider" | "extension" | "plugin_reference" | "tool" | "renderer";
+export interface PluginComponent {
+  kind: PluginComponentKind; name: string; source_path: string; native_id: string | null;
+}
+export interface NativePluginObservation {
+  agent_id: string; plugin_id: string; name: string; version: string; revision: string;
+  presence: PluginPresence; enabled: boolean | null; source_paths: string[];
+  components: PluginComponent[]; docs_url: string; source_fingerprint: string;
+}
+export interface HostMcpObservation {
+  agent_id: string; server_id: string; name: string; provider: string;
+  origin: "builtin" | "plugin"; presence: PluginPresence; versions: string[];
+  source_paths: string[]; docs_url: string; source_fingerprint: string;
+}
+
+export interface NativeResourceInventory {
+  native_plugin_agents: string[];
+  host_mcps: HostMcpObservation[];
+  native_plugins: NativePluginObservation[];
+  unavailable: boolean;
 }

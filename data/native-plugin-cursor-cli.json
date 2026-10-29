@@ -1,0 +1,64 @@
+{
+  "agent_id": "cursor-cli",
+  "command": "cursor-agent",
+  "profiles": [
+    {
+      "version": "2025.09.17-25b418f",
+      "mode": "passive_version_only",
+      "sources": [
+        {
+          "path": "cursor-agent",
+          "bytes": 327,
+          "sha256": "62a09a7c138b8da9ea00d886e5b96dc7425a2497abd1c5012367199260db903e"
+        },
+        {
+          "path": "index.js",
+          "bytes": 16965319,
+          "sha256": "ddbad037945fc81c8d75b3868a86d1434fbc731ef36c18d37fe7ea1b686b97be"
+        },
+        {
+          "path": "package.json",
+          "bytes": 84,
+          "sha256": "8171350c80416860a46c4561c2cf1dd6877fd61364bbd78373b908b4611637af"
+        }
+      ]
+    },
+    {
+      "version": "2026.10.22-27dcf5f",
+      "mode": "native_metadata",
+      "sources": [
+        {
+          "path": "cursor-agent",
+          "bytes": 1096,
+          "sha256": "2ccc9a8e167797641448b5e5c936f006ba137a2555f117f38c5eb76a5238a233"
+        },
+        {
+          "path": "index.js",
+          "bytes": 8087090,
+          "sha256": "943765eeedb4fe5d4ab6d95fc839c3eaf0c070e734577409badb9dea5b0ed293"
+        },
+        {
+          "path": "package.json",
+          "bytes": 327,
+          "sha256": "332fb765c02e98088e55626cdb185b0fd289723d191e5be77087305a9e613dc3"
+        },
+        {
+          "path": "3863.index.js",
+          "bytes": 66309,
+          "sha256": "c39239b4fc7e56c879d0c9618a08051661c74d380f730b4d5d5481cb61527118"
+        },
+        {
+          "path": "2478.index.js",
+          "bytes": 599433,
+          "sha256": "d82c180a07c92bcd56ea0cac8f75ac4f108d9bba89aedb16c9ece9604fbd3474"
+        }
+      ]
+    }
+  ],
+  "builtin_mcp": {
+    "id": "computer-use",
+    "source_file": "3863.index.js",
+    "source_module": "../computer-use-mac/dist/index.js",
+    "registration_module": "./src/shared/resources.ts"
+  }
+}

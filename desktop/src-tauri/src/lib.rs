@@ -96,6 +96,7 @@ pub fn run() {
             commands::commit_operation,
             commands::cancel_operation,
             commands::list_consumption_inventory,
+            commands::list_native_resources,
             commands::get_resource_observation,
             commands::list_model_adoption_candidates,
             commands::plan_set_agent_consumption,

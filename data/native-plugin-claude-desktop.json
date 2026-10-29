@@ -1,0 +1,237 @@
+{
+  "agent_id": "claude-desktop",
+  "version": "4.29.0",
+  "bundle_id": "com.anthropic.claudefordesktop",
+  "product_name": "Claude",
+  "app_path": "/Applications/Claude.app",
+  "guards": [
+    {
+      "path": ".vite/build/index.chunk-BaALgXPu.js",
+      "bytes": 805639,
+      "sha256": "e827a977ce212a86f421f5f87d67338ff8928dc60aa81bad17e8516f749408a9"
+    },
+    {
+      "path": ".vite/build/index.chunk-BbMIW0DP.js",
+      "bytes": 2347676,
+      "sha256": "378f4d76622567e8c9161222ec8a4a70b91629440af38da15b73c5d29d171ed3"
+    },
+    {
+      "path": ".vite/build/index.chunk-BfY_d4Pr.js",
+      "bytes": 11488,
+      "sha256": "595c52f467822924da5a0cc796ea25cba6a67c2f4db33313445b2b3818da012d"
+    },
+    {
+      "path": ".vite/build/index.chunk-C7NkbHFq.js",
+      "bytes": 6823617,
+      "sha256": "92e8f69fb04f151845edc56f4246a0d3a2d2f91b311cfdb26e4f64edc43819e0"
+    },
+    {
+      "path": ".vite/build/index.chunk-CIM80xU7.js",
+      "bytes": 24309,
+      "sha256": "dbc30c5955383b2ac46824f712a75a10f18c6053deb87fa55d79e050c33b29c7"
+    },
+    {
+      "path": ".vite/build/index.chunk-CJ8HBtVr.js",
+      "bytes": 40966,
+      "sha256": "2e94550b460f0a2637ce9f594b73cc3c322c703ac3d048040708aa0ce99c988b"
+    },
+    {
+      "path": ".vite/build/index.chunk-CrecSB3f.js",
+      "bytes": 146269,
+      "sha256": "9b40ffeff1ba841f17e80a7eac0e74b1d9f4e11da96aa3f33c7e43082668b063"
+    },
+    {
+      "path": ".vite/build/index.chunk-DNb3GJSY.js",
+      "bytes": 95206,
+      "sha256": "bb76dfd6fa73b974ea833a79125d2593dc038dc1f2a4d8415f30628862da64bb"
+    },
+    {
+      "path": ".vite/build/index.chunk-JNXX2nzx.js",
+      "bytes": 486586,
+      "sha256": "8a103fc034953fe42a0971bf842dcd7f52ccbe0550ebea293016e4c32cb67784"
+    },
+    {
+      "path": ".vite/build/index.chunk-k4Z2Gumi.js",
+      "bytes": 32779,
+      "sha256": "6aee0aa4d08ac846c1cec97473d58f696cfa35218c55ff2db91ae0b088cffef9"
+    },
+    {
+      "path": ".vite/build/index.pre.js",
+      "bytes": 1002540,
+      "sha256": "89716a69a48019df6d68336d56f870aadbce21b9b85b80b0c3bc82e456ce5104"
+    },
+    {
+      "path": "package.json",
+      "bytes": 1121,
+      "sha256": "8dda1c96860f3e0e09de95932951d80c9ccfeb2c817a9f0207cae7c86241d17f"
+    },
+    {
+      "path": "resources/bundled-skills/docx.skill",
+      "bytes": 163372,
+      "sha256": "b630f3a371ba488203de82b0eefde86f54e25455b2e1d28cd83d2c5a36c09702"
+    },
+    {
+      "path": "resources/bundled-skills/frontend-design.skill",
+      "bytes": 8125,
+      "sha256": "7b521f8204d1b57983ff34cee57042858fd0c15c2b3c5246ed086d71f105899d"
+    },
+    {
+      "path": "resources/bundled-skills/manifest.json",
+      "bytes": 4628,
+      "sha256": "0e0775150f7f8106c4d28be8eaace01ad2ec2a6d0f3d16a44c7ed1471a3f68c6"
+    },
+    {
+      "path": "resources/bundled-skills/pdf-reading.skill",
+      "bytes": 7997,
+      "sha256": "0662c344eafcfabe27a8478fcccb9e157e351580947f5b51c3ec194b64ee29ad"
+    },
+    {
+      "path": "resources/bundled-skills/pdf.skill",
+      "bytes": 21600,
+      "sha256": "3b4efa0fcc411caf15f68e9acacd9adf113fbff4223cd641cef1f3c03a183d10"
+    },
+    {
+      "path": "resources/bundled-skills/pptx.skill",
+      "bytes": 174842,
+      "sha256": "781eb78f89e18882ea2509e2e1705b385f7a9b30e00b9ac24401c49e7596e3f4"
+    },
+    {
+      "path": "resources/bundled-skills/xlsx.skill",
+      "bytes": 155709,
+      "sha256": "de589253244cb5d840c40d81a98aeaf0ac7bbebde092c729ba58b28936712ee6"
+    }
+  ],
+  "mcp_factories": [
+    {
+      "name": "claude-in-chrome",
+      "source": ".vite/build/index.chunk-BfY_d4Pr.js",
+      "factory": "b"
+    },
+    {
+      "name": "mcp-registry",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "XS"
+    },
+    {
+      "name": "plugins",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "eC"
+    },
+    {
+      "name": "skills",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "tC"
+    },
+    {
+      "name": "cowork-onboarding",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "iC"
+    },
+    {
+      "name": "Claude Code iOS Simulator",
+      "source": ".vite/build/index.chunk-CrecSB3f.js",
+      "factory": "vi.ios/_i"
+    },
+    {
+      "name": "Claude Code Android Emulator",
+      "source": ".vite/build/index.chunk-CrecSB3f.js",
+      "factory": "vi.android/_i"
+    },
+    {
+      "name": "computer-use",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "ba"
+    },
+    {
+      "name": "visualize",
+      "source": ".vite/build/index.chunk-JNXX2nzx.js",
+      "factory": "M"
+    },
+    {
+      "name": "Claude Browser",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "lC"
+    },
+    {
+      "name": "ccd_session",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "IS/LS"
+    },
+    {
+      "name": "ccd_directory",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "ws"
+    },
+    {
+      "name": "ccd_session_mgmt",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "Wp"
+    },
+    {
+      "name": "ccd_host",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "wu"
+    },
+    {
+      "name": "ccd_connectors",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "Xt"
+    },
+    {
+      "name": "ccd_pr",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "fh"
+    },
+    {
+      "name": "ccd_sidebar",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "dv"
+    },
+    {
+      "name": "ccd_turn",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "ar"
+    },
+    {
+      "name": "ccd_window",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "cx"
+    },
+    {
+      "name": "ccd_view",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "py"
+    },
+    {
+      "name": "ccd_settings",
+      "source": ".vite/build/index.chunk-BaALgXPu.js",
+      "factory": "Vg"
+    },
+    {
+      "name": "terminal",
+      "source": ".vite/build/index.chunk-k4Z2Gumi.js",
+      "factory": "me"
+    },
+    {
+      "name": "scheduled-tasks",
+      "source": ".vite/build/index.chunk-CJ8HBtVr.js",
+      "factory": "Y"
+    }
+  ],
+  "skills_manifest": "resources/bundled-skills/manifest.json",
+  "skills_ref": "1792795668",
+  "skills": [
+    "docx",
+    "pdf",
+    "pdf-reading",
+    "pptx",
+    "xlsx",
+    "frontend-design"
+  ],
+  "managed_connector_kinds": [
+    "websearch",
+    "microsoft365",
+    "github"
+  ],
+  "managed_factory_source": ".vite/build/index.chunk-C7NkbHFq.js#xg"
+}

@@ -40,14 +40,21 @@ pub fn observation_watch_targets() -> Vec<ObservationWatchTarget> {
     ] {
         targets.insert(ObservationWatchTarget { domain, path, recursive });
     }
-    for definition in crate::agents::load_agents().into_values() {
-        if let Some(path) = definition.global {
+    let agents = crate::agents::load_agents();
+    for definition in agents.values() {
+        if let Some(path) = &definition.global {
             targets.insert(ObservationWatchTarget {
                 domain: ObservationDomain::Mcp,
                 path: expand_tilde(&path),
                 recursive: false,
             });
         }
+    }
+    for path in crate::resources::mcp::builtin::watch_paths(&agents) {
+        targets.insert(ObservationWatchTarget { domain: ObservationDomain::Mcp, path, recursive: false });
+    }
+    for path in crate::resources::plugin::watch_paths(&agents) {
+        targets.insert(ObservationWatchTarget { domain: ObservationDomain::Mcp, path, recursive: true });
     }
     for agent in crate::resources::model::list_agents() {
         if agent.mode != "managed" {
