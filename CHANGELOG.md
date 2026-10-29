@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.47.0](https://github.com/Scoheart/arca/compare/v2.46.1...v2.47.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Auggie native marketplace metadata ([18b3922](https://github.com/Scoheart/arca/commit/18b392254124d9b424116522b69b16e1f001c64e))
+
 ## [2.46.1](https://github.com/Scoheart/arca/compare/v2.46.0...v2.46.1) (2026-10-29)
 
 ### Changes
