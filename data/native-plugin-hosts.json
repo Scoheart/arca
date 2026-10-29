@@ -864,5 +864,63 @@
         "presence": "installed"
       }
     ]
+  },
+  {
+    "agent_id": "cline-desktop",
+    "adapter": "cline",
+    "docs_url": "https://docs.cline.bot/usage/cline-desktop",
+    "manifest_paths": [
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.agents/plugins",
+        "layout": "cline_agent_plugins_v1",
+        "presence": "local"
+      },
+      {
+        "path": "~/.cline/plugins",
+        "layout": "cline_module_candidates",
+        "presence": "local"
+      },
+      {
+        "path": "~/Documents/Cline/Plugins",
+        "layout": "cline_module_candidates",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "cline-cli",
+    "adapter": "cline",
+    "docs_url": "https://docs.cline.bot/usage/cli-overview",
+    "manifest_paths": [
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.agents/plugins",
+        "layout": "cline_agent_plugins_v1",
+        "presence": "local"
+      },
+      {
+        "path": "~/.cline/plugins",
+        "layout": "cline_module_candidates",
+        "presence": "local"
+      },
+      {
+        "path": "~/Documents/Cline/Plugins",
+        "layout": "cline_module_candidates",
+        "presence": "local"
+      }
+    ]
   }
 ]
