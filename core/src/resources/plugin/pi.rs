@@ -379,11 +379,19 @@ fn scan_sources(host:&Host,paths:&HomePaths,result:&mut PluginScan) -> BTreeSet<
     let doc=doc.as_deref().filter(|v|v.is_object());
     registrations(host,paths,doc,result,&mut watches);global_resources(host,paths,doc,result,references,&mut watches);watches
 }
+fn append_bound(host:&Host,c:&Contract,root:&Path,paths:Result<HomePaths,()>,result:&mut PluginScan) {
+    // Full inventory includes other Agents before Pi; the per-Agent desktop
+    // query does not. Give this independently bounded adapter the same fresh
+    // metadata allowance in both scopes, without changing prior observers.
+    let mut scan=PluginScan::default();bundled(host,c,root,&mut scan);
+    match paths{Ok(paths)=>{scan_sources(host,&paths,&mut scan);},Err(())=>scan.unavailable=true}
+    result.plugins.extend(scan.plugins);result.unavailable|=scan.unavailable;
+}
 pub(super) fn observe(host:&Host,result:&mut PluginScan) {
     let c=contract();if host.agent_id!=c.agent_id{result.unavailable=true;return;}
     let Some(selected)=crate::application::agent_launch::find_command(&c.command)else{return;};let override_root=std::env::var_os("PI_PACKAGE_DIR");
     match verify_runtime(c,&selected,override_root.as_deref()) {
-        Ok(root)=>{bundled(host,c,&root,result);match native_paths(){Ok(paths)=>{scan_sources(host,&paths,result);},Err(())=>result.unavailable=true}},
+        Ok(root)=>append_bound(host,c,&root,native_paths(),result),
         Err(())=>result.unavailable=true,
     }
 }

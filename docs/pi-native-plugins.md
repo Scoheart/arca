@@ -153,7 +153,9 @@ component native IDs and session enablement remain unknown.
 
 The selected CLI path, all five complete public guard files, file identities
 and override binding are checked without bootstrap execution. Metadata
-reads are finite and confined; symlinks, escapes, invalid metadata and
+reads have an independent finite Pi budget in full and per-Agent queries,
+so unrelated preceding observers cannot change Pi package presence. Reads
+are confined; symlinks, escapes, invalid metadata and
 unsupported inputs remain unavailable references. One failed component or
 registration does not erase valid siblings. Runtime acceptance remains
 unknown even when a physical candidate exists.
@@ -166,5 +168,5 @@ does not walk sessions, accounts, credentials or unregistered caches.
 No private configuration or component body is copied into evidence or
 documentation. This integration changes no MCP/Model/Skill writer, central
 asset lifecycle, codec or frontend. Observations have no edit/delete action.
-Seventeen isolated regression cases are retained; fourteen preceded the
+Eighteen isolated regression cases are retained; fourteen preceded the
 implementation. Suites remain unexecuted under the project's fast mode.

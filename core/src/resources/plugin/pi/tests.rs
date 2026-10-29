@@ -151,3 +151,14 @@ fn automatic_extension_index_ts_has_native_priority_without_importing_either_fil
     let result=scan(&p);let code=result.plugins[0].components.iter().filter(|c|c.kind==PluginComponentKind::Code).collect::<Vec<_>>();
     assert_eq!(code.len(),1);assert!(code[0].source_path.ends_with("/index.ts"));assert!(!h.home.join("pi-executed-marker").exists());
 }
+
+#[test]
+fn another_agents_exhausted_metadata_budget_cannot_change_pi_package_presence() {
+    let h=TestHome::new("pi-independent-metadata-budget");let p=paths(&h);let(c,public_root)=runtime(&h);
+    let package=p.agent.join("npm/node_modules/pi-goal");local(&package,json!({"name":"pi-goal","version":"0.1.7","pi":{}}));settings(&p,json!({"packages":["npm:pi-goal"]}));
+    let mut result=PluginScan::default();result.budget.references=MAX_REFERENCES;result.budget.visited=MAX_SCAN_ENTRIES;result.budget.bytes=MAX_READ_BYTES;
+    append_bound(&host(),&c,&public_root,Ok(p),&mut result);
+    let goal=result.plugins.iter().find(|p|p.plugin_id=="npm:pi-goal").unwrap();assert_eq!(goal.presence,PluginPresence::Installed);assert_eq!(goal.version,"0.1.7");
+    assert_eq!(result.budget.references,MAX_REFERENCES);assert_eq!(result.budget.visited,MAX_SCAN_ENTRIES);assert_eq!(result.budget.bytes,MAX_READ_BYTES);
+    assert!(!h.home.join("pi-executed-marker").exists());
+}
