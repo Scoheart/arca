@@ -31,7 +31,7 @@ fn verified(c:&Contract,selected:&Path) -> Result<PathBuf,()> {
 fn version_for(c:&Contract,selected:&Path) -> Option<String> {verified(c,selected).ok().map(|_|c.version.clone())}
 pub(super) fn runtime_version(selected:&Path) -> Option<String> {version_for(contract(),selected)}
 
-fn base_from_env(home:Option<&OsStr>,fallback:Option<&Path>,home_override:Option<&OsStr>,environment:Option<&OsStr>) -> Result<PathBuf,()> {
+pub(super) fn base_from_env(home:Option<&OsStr>,fallback:Option<&Path>,home_override:Option<&OsStr>,environment:Option<&OsStr>) -> Result<PathBuf,()> {
     let directory=match environment.map(OsStr::to_str) {
         None|Some(Some("production"))=>".factory",Some(Some("development"))=>".factory-dev",_=>return Err(()),
     };
@@ -305,6 +305,11 @@ fn disambiguate(start:usize,result:&mut PluginScan) {
 }
 fn observe_at(host:&Host,c:&Contract,selected:&Path,base:&Path,result:&mut PluginScan) {
     if host.agent_id!=c.agent_id||verified(c,selected).is_err(){result.unavailable=true;return;}
+    observe_registered(host,base,result);
+}
+// Callers bind their own independently audited runtime before sharing only
+// the byte-identical installed-registry and component grammar.
+pub(super) fn observe_registered(host:&Host,base:&Path,result:&mut PluginScan) {
     let Ok(root)=registry_root(host,base)else{result.unavailable=true;return;};
     let registered=registrations(&root,&mut result.budget);let start=result.plugins.len();
     for path in registered.issues{registry_reference(host,&path,result);}
@@ -319,6 +324,11 @@ fn watch_at(host:&Host,c:&Contract,base:&Path) -> Vec<PathBuf> {
     let mut paths=crate::application::agent_launch::command_candidates(&c.command);
     let mut bound=false;
     if let Some(selected)=crate::application::agent_launch::find_command(&c.command){paths.push(selected.clone());if let Ok(p)=verified(c,&selected){paths.push(p);bound=true;}}
+    paths.extend(registry_watch_paths(host,base,bound));
+    paths.sort();paths.dedup();paths
+}
+pub(super) fn registry_watch_paths(host:&Host,base:&Path,bound:bool) -> Vec<PathBuf> {
+    let mut paths=Vec::new();
     if let Ok(root)=registry_root(host,base) {
         paths.extend([root.join("installed_plugins.json"),root.join("installed_plugins")]);
         if bound {

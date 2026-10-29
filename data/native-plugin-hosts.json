@@ -836,6 +836,21 @@
     ]
   },
   {
+    "agent_id": "factory-desktop",
+    "adapter": "factory_desktop",
+    "docs_url": "https://docs.factory.com/harness/plugins",
+    "manifest_paths": [],
+    "default_mcp_files": ["mcp.json"],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.factory/plugins",
+        "layout": "factory_installed_registry",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
     "agent_id": "factory-droid",
     "adapter": "factory_droid",
     "docs_url": "https://docs.factory.com/harness/plugins",
