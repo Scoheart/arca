@@ -57,6 +57,7 @@ mod vscode;
 mod warp;
 mod zed;
 mod openclaw;
+mod grok_build;
 mod skills;
 
 const MAX_ENTRIES: usize = 4096;
@@ -649,6 +650,7 @@ pub(crate) fn passive_runtime_version(agent_id: &str, path: &Path) -> Option<Opt
     if agent_id == "continue-cli" { return Some(continue_cli::runtime_version(path)); }
     if agent_id == "trae-cli" { return Some(trae_cli::runtime_version(path)); }
     if agent_id == "openclaw" { return Some(openclaw::runtime_version(path)); }
+    if agent_id == "grok-build" { return Some(grok_build::runtime_version(path)); }
     // OpenHands imports its SDK and reads cwd dotenv before argument parsing.
     // No installed-wrapper identity is bound yet; keep its label unknown.
     if agent_id == "openhands" { return Some(None); }
