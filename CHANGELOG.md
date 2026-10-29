@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.53.0](https://github.com/Scoheart/arca/compare/v2.52.0...v2.53.0) (2026-10-29)
+
+### Changes
+
+* feat(agents): identify TRAE CLI releases without target startup ([eb7dd30](https://github.com/Scoheart/arca/commit/eb7dd30fe092eee836cf8b6f585c3ed4944f9297))
+
 ## [2.52.0](https://github.com/Scoheart/arca/compare/v2.51.0...v2.52.0) (2026-10-29)
 
 ### Changes
