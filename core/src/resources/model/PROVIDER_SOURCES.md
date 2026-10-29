@@ -1,5 +1,13 @@
 # Provider Catalog sources
 
+## ASI:Cloud — 2026-10-29
+
+`asi-cloud` / `ASI:Cloud` is a gateway Provider for CUDOS / Singularity Compute's general inference service. The official [inference quickstart](https://docs.cudos.org/docs/asi-cloud/inference/quickstart) and [Chat Completions guide](https://docs.cudos.org/docs/asi-cloud/inference/tutorials/chat-completions) configure the OpenAI client with `https://inference.asicloud.cudos.org/v1`, use Bearer API-key authentication, and send ordinary conversational messages. Arca stores Chat Completions on that base URL with `/chat/completions`. The guides use model IDs such as `asi1-mini`; model IDs and promotional quotas are not hard-coded in the Provider template. Responses, Anthropic Messages and Gemini formats are not registered without their own reviewed service contract.
+
+The [Super Decider introduction](https://docs.cudos.org/docs/asi-cloud/inference/super-decider/introduction) and [API contract](https://github.com/Singularity-Compute/super-decider/blob/main/docs/API.md) describe a separate decision service at `https://llm.a.singularitycompute.com/v1`. It expects a JSON question schema and JSON state in exactly two messages, and returns structured answers rather than general conversational prose. That host is not the ASI:Cloud chat template and remains `custom`.
+
+The successful authenticated `GET /v1/models` JSON body on the general inference service has not been verified. No reviewed discovery spec or fixed model list is registered; discovery retains the existing OpenAI `/v1/models` fallback. This does not claim the private catalog shape was observed. Only the exact documented host `inference.asicloud.cudos.org` is mapped to `asi-cloud`; the console, marketing sites, Super Decider endpoint and lookalikes remain `custom`. The portal is the [ASI:Cloud console](https://asicloud.cudos.org/) with kind `console`, because a stable direct key-list URL has not been verified.
+
 ## Helmholtz Blablador — 2026-10-27
 
 `helmholtz-blablador` / `Helmholtz Blablador` is a gateway Provider for [Blablador](http://blablador.fz-juelich.de) (AI@JSC). The [API access](https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/) guide says Blablador lets researchers add models to an authenticated web interface and also offers a REST API. That page sets the endpoint to `https://api.blablador.fz-juelich.de/v1/` and says the endpoints are compatible with the OpenAI Python API. It says each model provides endpoints according to its own capabilities, and names chat completions, text completions, and embeddings. Arca uses Chat Completions on `https://api.blablador.fz-juelich.de/v1` (that base plus `/chat/completions`). The guide does not print the `POST /v1/chat/completions` path itself. Text completions and embeddings are outside Arca chat models. The guide does not document an OpenAI Responses API, Anthropic Messages, or a Gemini format, so none is stored.
@@ -505,6 +513,7 @@ protocol requirements.
 | `decuff` | `https://api.decuff.ai/v1` (Chat Completions default, Responses) | `https://api.decuff.ai` | [Docs](https://decuff.ai/docs), [Models](https://decuff.ai/models), [Account](https://decuff.ai/account) |
 
 | `token360` | `https://api.token360.ai/v1` (Chat Completions default, Responses) | `https://api.token360.ai` (Gemini: `https://api.token360.ai/v1beta`) | [Overview](https://www.token360.ai/en-US/docs/api-reference/overview), [List models](https://www.token360.ai/en-US/docs/api-reference/models/list-models), [Console](https://www.token360.ai/en-US) |
+| `asi-cloud` | `https://inference.asicloud.cudos.org/v1` (Chat Completions only) | — | [Inference quickstart](https://docs.cudos.org/docs/asi-cloud/inference/quickstart), [ASI:Cloud console](https://asicloud.cudos.org/) |
 
 APInex is currently exposed with Chat Completions and Anthropic Messages only;
 its public documentation does not establish a separate Responses endpoint.

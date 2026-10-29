@@ -1146,5 +1146,12 @@
       "url": "https://www.token360.ai/en-US",
       "kind": "console"
     }
+  },
+  "asi-cloud": {
+    "docs_url": "https://docs.cudos.org/docs/asi-cloud/inference/quickstart",
+    "portal": {
+      "url": "https://asicloud.cudos.org/",
+      "kind": "console"
+    }
   }
 }
