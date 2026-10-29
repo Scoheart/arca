@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.57.1](https://github.com/Scoheart/arca/compare/v2.57.0...v2.57.1) (2026-10-29)
+
+### Changes
+
+* fix(agents): inspect Grok Build version without execution ([164541a](https://github.com/Scoheart/arca/commit/164541a3d26c34a7638c044aa68041f092ea023b))
+* Merge remote-tracking branch 'origin/main' ([31a5e35](https://github.com/Scoheart/arca/commit/31a5e35311a138b9f0c7b62e5ef18b80debdf6e9))
+* fix(models): keep resource observation responsive during credential unlock ([d45371e](https://github.com/Scoheart/arca/commit/d45371e16026f7a048ded500e871cdca2adb2b3e))
+
 ## [2.57.0](https://github.com/Scoheart/arca/compare/v2.56.0...v2.57.0) (2026-10-29)
 
 ### Changes
