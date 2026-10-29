@@ -197,6 +197,14 @@ impl JsonAdapter {
         path: &Path,
         create: bool,
     ) -> Result<Option<CstObject>, String> {
+        // Junie's current parser selects mcpServers when present, otherwise
+        // the root map. Keep an existing direct map in place: introducing a
+        // wrapper beside its entries would hide them from the native loader.
+        if self.codec == Codec::JunieCli && !self.key_path && self.key == "mcpServers"
+            && root.get("mcpServers").is_none()
+            && (!create || !root.properties().is_empty()) {
+            return Ok(Some(root));
+        }
         let mut current = root;
         let mut context = "$root".to_string();
         let components = if self.key_path {
@@ -289,6 +297,14 @@ impl JsonAdapter {
         Value::Object(fields)
     }
 
+    fn validate_junie_section_schema(&self, section: &CstObject) -> Result<(), String> {
+        for property in section.properties() {
+            let value = property.to_serde_value().ok_or("Junie CLI MCP entry has no valid JSON value")?;
+            self.codec.validate_existing_entry(&value)?;
+        }
+        Ok(())
+    }
+
     /// Reject incompatible shared formats before any mutation. ChatMCP stores
     /// OAuth material beside MCP connection metadata. A normal
     /// whole-file backup would copy those external credentials into Arca's
@@ -299,9 +315,10 @@ impl JsonAdapter {
         section: &CstObject,
         path: &Path,
     ) -> Result<(), String> {
-        if !matches!(self.codec, Codec::ChatMcp | Codec::IbmBob) {
+        if !matches!(self.codec, Codec::ChatMcp | Codec::IbmBob | Codec::JunieCli) {
             return Ok(());
         }
+        if self.codec == Codec::JunieCli { self.validate_junie_section_schema(section)?; }
         for property in section.properties() {
             let value = property.to_serde_value().ok_or_else(|| {
                 format!(
@@ -311,6 +328,12 @@ impl JsonAdapter {
             })?;
             if self.codec == Codec::IbmBob && value.get("httpURL").is_none() {
                 continue;
+            }
+            // Native McpOAuthConfig includes a literal clientSecret. Do not
+            // duplicate such external credentials into whole-file backups.
+            if self.codec == Codec::JunieCli && value.pointer("/oauth/clientSecret")
+                .is_some_and(|secret| !secret.is_null() && secret.as_str().is_none_or(|value| !value.is_empty())) {
+                return Err("Junie CLI credential-bearing OAuth configuration must be managed in Junie".into());
             }
             self.codec
                 .validate_existing_entry(&value)
@@ -337,6 +360,10 @@ impl Adapter for JsonAdapter {
         let Ok(Some(section)) = self.section_object(object, path, false) else {
             return BTreeMap::new();
         };
+        // McpJsonParser decodes the whole map before publishing any entries.
+        if self.codec == Codec::JunieCli && self.validate_junie_section_schema(&section).is_err() {
+            return BTreeMap::new();
+        }
         section
             .properties()
             .into_iter()
@@ -354,7 +381,7 @@ impl Adapter for JsonAdapter {
     }
 
     fn supports_native_enabled(&self) -> bool {
-        matches!(self.codec, Codec::WorkBuddy | Codec::Pi | Codec::Jan)
+        matches!(self.codec, Codec::WorkBuddy | Codec::Pi | Codec::Jan | Codec::JunieCli)
     }
 
     fn set_enabled(&self, path: &Path, name: &str, enabled: bool, snapshot: &Value) -> Result<(), String> {
@@ -365,6 +392,7 @@ impl Adapter for JsonAdapter {
         let object = root.object_value().ok_or("MCP root is not an object")?;
         let section = self.section_object(object, path, false)?.ok_or("MCP section is missing")?;
         Self::ensure_unique_keys(&section, path, &self.key)?;
+        self.validate_section_mutation_policy(&section, path)?;
         let property = section.get(name).ok_or("MCP entry is missing")?;
         let value = property.value().ok_or("MCP entry has no value")?;
         Self::ensure_unique_nested_keys(&value, path, &format!("{}.{}", self.key, name))?;
@@ -376,7 +404,7 @@ impl Adapter for JsonAdapter {
         if current_enabled == enabled { return Ok(()); }
         let target = property.object_value().ok_or("MCP entry is not an object")?;
         let (field, value) = match self.codec {
-            Codec::Pi => ("enabled", enabled),
+            Codec::Pi | Codec::JunieCli => ("enabled", enabled),
             Codec::Jan => ("active", enabled),
             _ => ("disabled", !enabled),
         };
@@ -399,6 +427,11 @@ impl Adapter for JsonAdapter {
                 path.display()
             )
         })?;
+        if self.codec == Codec::JunieCli && !self.key_path && self.key == "mcpServers"
+            && name == "mcpServers" && object.get("mcpServers").is_none()
+            && !object.properties().is_empty() {
+            return Err("Junie CLI direct MCP map cannot use the reserved wrapper name 'mcpServers'".into());
+        }
         if original.is_none() {
             for (field, value) in &self.root_defaults {
                 if object.get(field).is_none() {

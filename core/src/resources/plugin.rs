@@ -653,6 +653,9 @@ pub(crate) fn passive_runtime_version(agent_id: &str, path: &Path) -> Option<Opt
     if agent_id == "trae-cli" { return Some(trae_cli::runtime_version(path)); }
     if agent_id == "openclaw" { return Some(openclaw::runtime_version(path)); }
     if agent_id == "grok-build" { return Some(grok_build::runtime_version(path)); }
+    // Informational Junie flags can sanitize update state, write upgrade logs
+    // and still execute the JVM launcher. Never execute an unknown selection.
+    if agent_id == "junie-cli" { return Some(None); }
     // OpenHands imports its SDK and reads cwd dotenv before argument parsing.
     // No installed-wrapper identity is bound yet; keep its label unknown.
     if agent_id == "openhands" { return Some(None); }

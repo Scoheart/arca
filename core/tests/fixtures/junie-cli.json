@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "local": {
+      "command": "node",
+      "args": ["original.mjs"],
+      "env": {"MODE": "fixture"},
+      "enabled": true,
+      "type": "ignored-native-field",
+      "cwd": "/fixture-native-unknown",
+      "oauth": null
+    },
+    "remote": {
+      "url": "https://original.example.test/mcp",
+      "headers": {"X-Fixture": "original"},
+      "enabled": true,
+      "oauth": null
+    }
+  },
+  "ui": {"keep": true}
+}

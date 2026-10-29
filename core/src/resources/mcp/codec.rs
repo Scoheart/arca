@@ -120,6 +120,7 @@ const VIBE_FIELDS: &[&str] = &[
 ];
 const AGENTKUBE_FIELDS: &[&str] = &["transport", "command", "args", "env", "url"];
 const CHATMCP_FIELDS: &[&str] = &["type", "command", "args", "env"];
+const JUNIE_CLI_FIELDS: &[&str] = &["command", "args", "env", "url", "headers"];
 const HEADERS_FIELD: &[&str] = &["headers"];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -129,6 +130,7 @@ pub enum Codec {
     ClaudeDesktop,
     ExplicitType,
     UrlInferred,
+    JunieCli,
     Pi,
     VsCode,
     Codex,
@@ -182,7 +184,8 @@ pub fn for_agent(agent_id: &str) -> Codec {
         "workbuddy" | "workbuddy-cn" => Codec::WorkBuddy,
         "claude-desktop" => Codec::ClaudeDesktop,
         "claude-code" | "amazon-q" => Codec::ExplicitType,
-        "cursor" | "zed" | "kiro" | "kiro-cli" | "junie" | "junie-cli" => Codec::UrlInferred,
+        "cursor" | "zed" | "kiro" | "kiro-cli" | "junie" => Codec::UrlInferred,
+        "junie-cli" => Codec::JunieCli,
         "pi" => Codec::Pi,
         "vscode" => Codec::VsCode,
         "codex" | "codex-desktop" | "codex-ide" => Codec::Codex,
@@ -215,6 +218,7 @@ pub fn from_name(name: Option<&str>, agent_id: &str) -> Codec {
         Some("claude_desktop") => Codec::ClaudeDesktop,
         Some("explicit_type") => Codec::ExplicitType,
         Some("url_inferred") => Codec::UrlInferred,
+        Some("junie_cli") => Codec::JunieCli,
         Some("pi") => Codec::Pi,
         Some("vscode") => Codec::VsCode,
         Some("codex") => Codec::Codex,
@@ -318,6 +322,7 @@ impl Codec {
                     return Err("Pi MCP supports stdio and Streamable HTTP, not legacy SSE".into());
                 }
             },
+            Codec::JunieCli => validate_junie_cli(object)?,
             Codec::QwenWork => {
                 validate_active_field(object.get("enabled"), true, "enabled")?;
                 if object.contains_key("_builtinId")
@@ -344,6 +349,8 @@ impl Codec {
     pub fn validate_update(self, value: &Value, config: &McpConfig) -> Result<(), String> {
         if self == Codec::WorkBuddy {
             self.decode_with_enabled(value).ok_or("invalid WorkBuddy MCP entry")?;
+        } else if self == Codec::JunieCli {
+            self.decode_with_enabled(value).ok_or("invalid Junie CLI MCP entry")?;
         } else {
             self.validate_existing_entry(value)?;
         }
@@ -355,7 +362,7 @@ impl Codec {
         let enabled = match self {
             Codec::WorkBuddy => !value.as_object()?.get("disabled")
                 .and_then(Value::as_bool).unwrap_or(false),
-            Codec::Pi => value.as_object()?.get("enabled")
+            Codec::Pi | Codec::JunieCli => value.as_object()?.get("enabled")
                 .map(Value::as_bool).unwrap_or(Some(true))?,
             Codec::Jan => value.as_object()?.get("active")
                 .map(Value::as_bool).unwrap_or(Some(true))?,
@@ -368,7 +375,7 @@ impl Codec {
     pub fn decode(self, value: &Value) -> Option<McpConfig> {
         self.validate_existing_entry(value).ok()?;
         if (self == Codec::WorkBuddy && value.get("disabled") == Some(&Value::Bool(true)))
-            || (self == Codec::Pi && value.get("enabled") == Some(&Value::Bool(false)))
+            || (matches!(self, Codec::Pi | Codec::JunieCli) && value.get("enabled") == Some(&Value::Bool(false)))
             || (self == Codec::Jan && value.get("active") == Some(&Value::Bool(false))) {
             return None;
         }
@@ -382,6 +389,25 @@ impl Codec {
 
     fn decode_flat(self, value: &Value) -> Option<McpConfig> {
         let object = value.as_object()?;
+        if self == Codec::JunieCli {
+            // The actual McpServerBean branches on non-null url before command.
+            // Its nullable collection values are filtered by the native loader.
+            let strings = |key: &str| -> Option<HashMap<String, String>> {
+                Some(object.get(key)?.as_object()?.iter().filter_map(|(key,value)| {
+                    value.as_str().map(|value| (key.clone(), value.to_string()))
+                }).collect())
+            };
+            if let Some(url) = object.get("url").and_then(Value::as_str) {
+                return Some(McpConfig::Http(HttpConfig { kind:"http".into(), url:url.into(), headers:strings("headers") }));
+            }
+            return Some(McpConfig::Stdio(StdioConfig {
+                command:object.get("command")?.as_str()?.to_string(),
+                args:object.get("args").and_then(Value::as_array).map(|values| {
+                    values.iter().filter_map(Value::as_str).map(str::to_string).collect()
+                }),
+                env:strings("env"), cwd:None,
+            }));
+        }
         if self == Codec::ChatMcp {
             let kind = match object.get("type").and_then(Value::as_str) {
                 Some("sse") => Some("sse"),
@@ -506,6 +532,10 @@ impl Codec {
         let mut object_patches = Vec::new();
         match config {
             McpConfig::Stdio(stdio) => match self {
+                Codec::JunieCli => {
+                    reject_cwd(stdio, "Junie CLI")?;
+                    push_stdio_fields(&mut fields, stdio, "cwd");
+                }
                 Codec::ExplicitType | Codec::ZCode | Codec::Qoder | Codec::QoderWork | Codec::QwenWork | Codec::Jan => {
                     fields.push(("type".into(), Value::String("stdio".into())));
                     push_stdio_fields(&mut fields, stdio, "cwd");
@@ -640,6 +670,10 @@ impl Codec {
                     push_http_fields(&mut fields, http, "url", "headers");
                 }
                 Codec::UrlInferred => push_http_fields(&mut fields, http, "url", "headers"),
+                Codec::JunieCli => {
+                    require_http_kind(http, "Junie CLI", &["http", "streamable-http", "sse"])?;
+                    push_http_fields(&mut fields, http, "url", "headers");
+                }
                 Codec::Pi => {
                     require_http_kind(http, "Pi", &["http", "streamable-http"])?;
                     push_http_fields(&mut fields, http, "url", "headers");
@@ -902,9 +936,37 @@ impl Codec {
             Codec::VtCode => VTCODE_FIELDS,
             Codec::AgentKube => AGENTKUBE_FIELDS,
             Codec::ChatMcp => CHATMCP_FIELDS,
+            Codec::JunieCli => JUNIE_CLI_FIELDS,
             _ => STANDARD_FIELDS,
         }
     }
+}
+
+// Junie CLI 3893.6 McpServerBean has seven fields; OAuth and enabled are
+// native policy. Reject malformed known fields, preserving all unknown keys.
+fn validate_junie_cli(object: &Map<String, Value>) -> Result<(), String> {
+    for field in ["command", "url"] {
+        if object.get(field).is_some_and(|value| !value.is_null() && !value.is_string()) {
+            return Err(format!("Junie CLI MCP field '{field}' is not a nullable string"));
+        }
+    }
+    if object.get("args").is_some_and(|value| !value.is_null()
+        && !value.as_array().is_some_and(|values| values.iter().all(|value| value.is_null() || value.is_string()))) {
+        return Err("Junie CLI MCP field 'args' is not a nullable string array".into());
+    }
+    for field in ["env", "headers"] {
+        if object.get(field).is_some_and(|value| !value.is_null()
+            && !value.as_object().is_some_and(|values| values.values().all(|value| value.is_null() || value.is_string()))) {
+            return Err(format!("Junie CLI MCP field '{field}' is not a nullable string map"));
+        }
+    }
+    if object.get("enabled").is_some_and(|value| !value.is_boolean()) {
+        return Err("Junie CLI MCP switch 'enabled' is not a boolean".into());
+    }
+    if object.get("oauth").is_some_and(|value| !value.is_null() && !value.is_object()) {
+        return Err("Junie CLI MCP policy 'oauth' is not a nullable object".into());
+    }
+    Ok(())
 }
 
 fn validate_active_field(
@@ -1044,6 +1106,39 @@ fn push_optional<T: serde::Serialize>(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn junie_cli_url_precedes_command_and_native_enabled_is_not_inferred_from_type() {
+        let raw = serde_json::json!({"command":"ignored", "url":"https://example.invalid/mcp",
+            "type":"unknown-native-field", "enabled":false, "headers":{"X-Test":"value","X-Null":null}});
+        let (config, enabled) = Codec::JunieCli.decode_with_enabled(&raw).unwrap();
+        assert!(!enabled);
+        assert!(matches!(config, McpConfig::Http(ref http) if http.kind == "http"
+            && http.headers.as_ref().unwrap().len() == 1));
+        assert!(Codec::JunieCli.decode(&raw).is_none());
+        let local = serde_json::json!({"command":"tool","url":null,"args":[null,"one"],"env":{"KEEP":"value","OMIT":null}});
+        assert!(matches!(Codec::JunieCli.decode(&local), Some(McpConfig::Stdio(ref stdio))
+            if stdio.args.as_ref().unwrap() == &["one"] && stdio.env.as_ref().unwrap().len() == 1));
+        for invalid in [serde_json::json!({"command":"tool","enabled":null}),
+            serde_json::json!({"command":"tool","args":[1]}),
+            serde_json::json!({"command":"tool","env":{"BAD":false}})] {
+            assert!(Codec::JunieCli.decode_with_enabled(&invalid).is_none());
+        }
+    }
+
+    #[test]
+    fn junie_cli_owns_only_native_connection_fields_and_rejects_unsupported_cwd() {
+        let local = StdioConfig { command:"tool".into(), args:None, env:None, cwd:Some("/fixture".into()) };
+        assert!(Codec::JunieCli.patch(&McpConfig::Stdio(local)).is_err());
+        let remote = McpConfig::Http(HttpConfig { kind:"sse".into(), url:"https://example.invalid/sse".into(), headers:None });
+        let patch = Codec::JunieCli.patch(&remote).unwrap();
+        assert!(patch.fields.iter().all(|(key,_)| key != "type"));
+        for field in ["enabled", "oauth", "type", "cwd", "timeout"] {
+            assert!(!patch.controlled.contains(&field));
+        }
+        assert_eq!(for_agent("junie-cli"), Codec::JunieCli);
+        assert_eq!(for_agent("junie"), Codec::UrlInferred);
+    }
 
     #[test]
     fn opencode_local_roundtrip_uses_command_array() {

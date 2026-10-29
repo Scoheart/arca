@@ -707,6 +707,21 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
+    fn junie_unknown_official_cli_selection_never_runs_a_version_subprocess() {
+        use std::os::unix::fs::PermissionsExt;
+        let home = crate::testenv::TestHome::new("junie-no-version-exec");
+        let marker = home.home.join("unexpected-version-execution");
+        let command = home.home.join("bin/junie");
+        fs::write(&command, format!("#!/bin/sh\n: > '{}'\n", marker.display())).unwrap();
+        fs::set_permissions(&command, fs::Permissions::from_mode(0o755)).unwrap();
+        let launch = info("junie-cli").unwrap();
+        assert!(launch.available && launch.configured_target.is_none());
+        assert_eq!(runtime_version("junie-cli").unwrap(), None);
+        assert!(!marker.exists());
+    }
+
+    #[test]
     fn version_discovery_reads_bundle_metadata_and_bounded_cli_output() {
         let home = crate::testenv::TestHome::new("agent-version-discovery");
         let app = home.home.join("Applications/Versioned.app");

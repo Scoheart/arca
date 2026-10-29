@@ -27,7 +27,8 @@ fn fixture(name: &str) -> &'static str {
         "jan-desktop" | "jan-cli" => include_str!("fixtures/jan.json"),
         "anythingllm" => include_str!("fixtures/anythingllm.json"),
         "ibm-bob" => include_str!("fixtures/ibm-bob.json"),
-        "kiro-cli" | "junie-cli" => include_str!("fixtures/shared-surfaces.json"),
+        "kiro-cli" => include_str!("fixtures/shared-surfaces.json"),
+        "junie-cli" => include_str!("fixtures/junie-cli.json"),
         "goose-desktop" => include_str!("fixtures/goose-desktop.yaml"),
         "cline-cli" => include_str!("fixtures/cline.json"),
         "codex-ide" => include_str!("fixtures/codex.toml"),
@@ -151,7 +152,9 @@ fn new_native_switch_and_shared_format_guards_fail_closed() {
         assert!(adapter.upsert(&path, "local", &unsupported).is_err());
         assert!(!path.exists());
     }
-    for (id, sibling) in [("kiro-cli", "kiro"), ("junie-cli", "junie"),
+    assert_eq!(agents["junie-cli"].global, agents["junie"].global);
+    assert!(agents["junie"].skills.is_none());
+    for (id, sibling) in [("kiro-cli", "kiro"),
         ("cline-cli", "cline"), ("goose-desktop", "goose"), ("kilo-vscode", "kilo-code"),
         ("codex-ide", "codex"), ("jan-cli", "jan-desktop")] {
         assert_eq!(agents[id].global, agents[sibling].global);
@@ -197,6 +200,93 @@ fn workbuddy_editions_keep_independent_paths_launchers_and_native_pause_state() 
     let overseas = get_agent_adapter_for(&agents["workbuddy"], "workbuddy");
     overseas.remove(&paths[0], &["docs".into()]).unwrap();
     assert_eq!(std::fs::read(&paths[1]).unwrap(), domestic_before);
+}
+
+#[test]
+fn junie_cli_native_pause_preserves_unknown_policy_and_rejects_stale_snapshots() {
+    let home = arca_core::testenv::TestHome::new("junie-cli-native-pause");
+    let path = home.home.join("mcp.json");
+    std::fs::write(&path, fixture("junie-cli")).unwrap();
+    let agents = builtin_agents();
+    let adapter = get_agent_adapter_for(&agents["junie-cli"], "junie-cli");
+    assert!(adapter.supports_native_enabled());
+    #[cfg(unix)]
+    let inode = {
+        use std::os::unix::fs::MetadataExt;
+        std::fs::metadata(&path).unwrap().ino()
+    };
+    let snapshot = adapter.snapshot(&path, "local").unwrap().unwrap();
+    adapter.set_enabled(&path, "local", false, &snapshot).unwrap();
+    assert!(!adapter.read(&path).contains_key("local"));
+    assert!(!adapter.read_with_enabled(&path)["local"].1);
+    assert!(adapter.set_enabled(&path, "local", true, &snapshot).is_err());
+    let paused = adapter.snapshot(&path, "local").unwrap().unwrap();
+    let config = McpConfig::Stdio(StdioConfig { command:"updated".into(), args:None, env:None, cwd:None });
+    adapter.upsert(&path, "local", &config).unwrap();
+    let updated = adapter.snapshot(&path, "local").unwrap().unwrap();
+    for field in ["enabled", "oauth", "type", "cwd"] {
+        assert_eq!(updated[field], paused[field]);
+    }
+    assert!(adapter.set_enabled(&path, "local", true, &paused).is_err());
+    adapter.set_enabled(&path, "local", true, &updated).unwrap();
+    assert!(adapter.read_with_enabled(&path)["local"].1);
+    let mut unsupported = config;
+    if let McpConfig::Stdio(ref mut local) = unsupported { local.cwd = Some("/unsupported".into()); }
+    let before = std::fs::read(&path).unwrap();
+    assert!(adapter.upsert(&path, "local", &unsupported).is_err());
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    #[cfg(unix)] {
+        use std::os::unix::fs::MetadataExt;
+        assert_eq!(std::fs::metadata(&path).unwrap().ino(), inode);
+    }
+}
+
+#[test]
+fn junie_cli_preserves_direct_map_and_rejects_a_malformed_sibling_without_rewrapping() {
+    let home = arca_core::testenv::TestHome::new("junie-cli-direct-map");
+    let path = home.home.join("direct.json");
+    let source = "{\n // retain native map\n \"existing\":{\"command\":\"old\",\"enabled\":false,\"oauth\":null}\n}";
+    std::fs::write(&path, source).unwrap();
+    let agents = builtin_agents();
+    let adapter = get_agent_adapter_for(&agents["junie-cli"], "junie-cli");
+    assert!(!adapter.read_with_enabled(&path)["existing"].1);
+    let config = McpConfig::Stdio(StdioConfig { command:"new".into(), args:None, env:None, cwd:None });
+    adapter.upsert(&path, "added", &config).unwrap();
+    let updated = std::fs::read_to_string(&path).unwrap();
+    assert!(updated.contains("retain native map"));
+    let value: Value = serde_json::from_str(&updated.replace("// retain native map", "")).unwrap();
+    assert!(value.get("mcpServers").is_none());
+    assert_eq!(value["existing"]["enabled"], false);
+    assert!(adapter.upsert(&path, "mcpServers", &config).is_err());
+    adapter.remove(&path, &["added".into()]).unwrap();
+    assert!(adapter.read_with_enabled(&path).contains_key("existing"));
+
+    let malformed = r#"{"valid":{"command":"old"},"broken":{"command":17}}"#;
+    std::fs::write(&path, malformed).unwrap();
+    assert!(adapter.read_with_enabled(&path).is_empty());
+    assert!(adapter.upsert(&path, "valid", &config).is_err());
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), malformed);
+}
+
+#[test]
+fn junie_cli_external_oauth_credentials_remain_readable_without_being_copied_by_writes() {
+    let home = arca_core::testenv::TestHome::new("junie-cli-oauth-boundary");
+    let path = home.home.join("oauth.json");
+    let source = r#"{"mcpServers":{"remote":{"url":"https://example.invalid/mcp","oauth":{"clientSecret":"SYNTHETIC_OAUTH_SECRET"}}}}"#;
+    std::fs::write(&path, source).unwrap();
+    let agents = builtin_agents();
+    let adapter = get_agent_adapter_for(&agents["junie-cli"], "junie-cli");
+    assert!(adapter.read_with_enabled(&path).contains_key("remote"));
+    let config = McpConfig::Stdio(StdioConfig { command:"tool".into(), args:None, env:None, cwd:None });
+    let error = adapter.upsert(&path, "added", &config).unwrap_err();
+    assert!(!error.contains("SYNTHETIC_OAUTH_SECRET"));
+    assert!(adapter.remove(&path, &["remote".into()]).is_err());
+    assert!(adapter.clear(&path).is_err());
+    assert!(adapter.snapshot(&path, "remote").is_err());
+    let snapshot: Value = serde_json::from_str(source).unwrap();
+    assert!(adapter.set_enabled(&path, "remote", false, &snapshot["mcpServers"]["remote"]).is_err());
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), source);
+    assert!(!home.home.join(".arca/backups").exists());
 }
 
 #[test]
@@ -1114,10 +1204,10 @@ fn verified_and_catalog_definitions_have_auditable_boundaries() {
     let all_ids: std::collections::BTreeSet<_> =
         verified_ids.union(&catalog_ids).cloned().collect();
 
-    assert_eq!(verified.len(), 95);
-    assert_eq!(catalog.len(), 280);
-    assert_eq!(verified_ids.intersection(&catalog_ids).count(), 64);
-    assert_eq!(all_ids.len(), 311);
+    assert_eq!(verified.len(), 96);
+    assert_eq!(catalog.len(), 281);
+    assert_eq!(verified_ids.intersection(&catalog_ids).count(), 65);
+    assert_eq!(all_ids.len(), 312);
     assert_eq!(
         verified
             .values()
@@ -1138,6 +1228,7 @@ fn verified_and_catalog_definitions_have_auditable_boundaries() {
                         | "claude_desktop"
                         | "explicit_type"
                         | "url_inferred"
+                        | "junie_cli"
                         | "pi"
                         | "vscode"
                         | "codex"
