@@ -109,6 +109,8 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> BuiltinMcpS
     scan.items.extend(goose.items); scan.unavailable |= goose.unavailable;
     let goose_cli = crate::resources::plugin::goose_cli::builtin_observe(agents);
     scan.items.extend(goose_cli.items); scan.unavailable |= goose_cli.unavailable;
+    let cursor_cli = crate::resources::plugin::cursor_cli::builtin_observe(agents);
+    scan.items.extend(cursor_cli.items); scan.unavailable |= cursor_cli.unavailable;
     for host in hosts() {
         if !agents.get(&host.agent_id).is_some_and(|agent| agent.enabled) { continue; }
         // Respect the same system-before-user app search order as the host's
@@ -142,6 +144,7 @@ pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<Pat
     let mut paths = crate::resources::plugin::codex_desktop::watch_paths(agents);
     paths.extend(crate::resources::plugin::goose_desktop::builtin_watch_paths(agents));
     paths.extend(crate::resources::plugin::goose_cli::builtin_watch_paths(agents));
+    paths.extend(crate::resources::plugin::cursor_cli::builtin_watch_paths(agents));
     for host in hosts() {
         if !agents.get(&host.agent_id).is_some_and(|agent| agent.enabled) { continue; }
         for root in &host.app_roots {
