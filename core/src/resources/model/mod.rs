@@ -835,6 +835,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://discovery-api.intern-ai.org.cn",
             },
         ],
+        "decuff" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.decuff.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.decuff.ai",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1462,6 +1472,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "swarms",
         name: "Swarms",
         default_base_url: Some("https://api.swarms.world/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "decuff",
+        name: "decuff",
+        default_base_url: Some("https://api.decuff.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2217,6 +2234,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "www.whatstoken.ai" => "whatstoken",
         "discovery-api.intern-ai.org.cn" => "intern-inkstone",
         "api.swarms.world" => "swarms",
+        "api.decuff.ai" => "decuff",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7893,6 +7911,18 @@ mod tests {
             ("https://swarms.world/v1", "custom"),
             ("https://api.swarms.ai/v1", "custom"),
             ("https://api.swarms.world.evil.test/v1", "custom"),
+            ("https://api.decuff.ai/v1", "decuff"),
+            ("https://api.decuff.ai/v1/chat/completions", "decuff"),
+            ("https://api.decuff.ai/v1/responses", "decuff"),
+            ("https://api.decuff.ai/v1/models", "decuff"),
+            ("https://api.decuff.ai", "decuff"),
+            ("https://api.decuff.ai/v1/messages", "decuff"),
+            ("https://decuff.ai/v1", "custom"),
+            ("https://decuff.ai/account", "custom"),
+            ("https://decuff.ai/docs", "custom"),
+            ("https://www.decuff.ai/v1", "custom"),
+            ("https://api.decuffed.com/v1", "custom"),
+            ("https://api.decuff.ai.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -7975,7 +8005,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 162);
+        assert_eq!(list_providers().len(), 163);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8246,6 +8276,49 @@ mod tests {
             .unwrap();
         let serialized = serde_json::to_value(inworld).unwrap();
         assert_eq!(serialized["model_discovery_supported"], false);
+        let decuff = list_providers()
+            .iter()
+            .find(|provider| provider.id == "decuff")
+            .unwrap();
+        let serialized = serde_json::to_value(decuff).unwrap();
+        assert_eq!(decuff.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(decuff.category, "gateway");
+        assert_eq!(decuff.default_base_url, Some("https://api.decuff.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.decuff.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.decuff.ai/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-responses"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://api.decuff.ai"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://decuff.ai/docs");
+        assert_eq!(serialized["portal"]["url"], "https://decuff.ai/account");
+        assert_eq!(serialized["portal"]["kind"], "console");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(

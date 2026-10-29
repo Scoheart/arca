@@ -883,6 +883,25 @@ mod tests {
     }
 
     #[test]
+    fn decuff_has_no_reviewed_catalog_spec_and_falls_back_to_the_openai_models_path() {
+        assert!(reviewed_discovery_spec("decuff").is_none());
+        assert!(model_discovery_supported("decuff"));
+        let config = provider(
+            "decuff",
+            "https://api.decuff.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.decuff.ai/v1/models"
+        );
+    }
+
+    #[test]
     fn inferx_has_no_reviewed_catalog_spec_and_falls_back_to_the_openai_models_path() {
         assert!(reviewed_discovery_spec("inferx").is_none());
         let config = provider(

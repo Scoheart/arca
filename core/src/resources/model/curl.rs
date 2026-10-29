@@ -9,6 +9,7 @@ use zeroize::Zeroizing;
 
 #[derive(Deserialize)]
 struct CurlTemplates {
+    provider_overrides: BTreeMap<String, BTreeMap<ModelProtocol, BTreeMap<String, serde_json::Value>>>,
     templates: BTreeMap<ModelProtocol, CurlTemplate>,
 }
 
@@ -22,10 +23,14 @@ static TEMPLATES: LazyLock<CurlTemplates> = LazyLock::new(|| {
         .expect("embedded model cURL templates must be valid")
 });
 
-fn request_template(protocol: &ModelProtocol, model: &str) -> Result<serde_json::Value, String> {
+fn request_template(provider_type: &str, protocol: &ModelProtocol, model: &str) -> Result<serde_json::Value, String> {
     let mut request = TEMPLATES.templates.get(protocol)
         .ok_or("curl_template_missing: protocol has no request template")?.request.clone();
     let body = request.as_object_mut().ok_or("curl_template_invalid: request must be an object")?;
+    if let Some(overrides) = TEMPLATES.provider_overrides.get(provider_type)
+        .and_then(|templates| templates.get(protocol)) {
+        body.extend(overrides.clone());
+    }
     if body.contains_key("model") { body.insert("model".into(), json!(model)); }
     if *protocol == ModelProtocol::AwsBedrockConverse && model.starts_with("arn:") && model.contains(":prompt/") {
         for field in ["system", "inferenceConfig", "toolConfig", "additionalModelRequestFields"] {
@@ -50,11 +55,11 @@ fn url_component(value: &str) -> String {
 
 pub enum CurlAuth<'a> { None, Placeholder, Key(&'a str) }
 
-pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'_>) -> Result<String, String> {
+pub fn render(provider_type: &str, protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'_>) -> Result<String, String> {
     if model.contains('\0') || url.contains('\0') {
         return Err("curl_invalid_input: NUL bytes are unsupported".into());
     }
-    let body = serde_json::to_string_pretty(&request_template(protocol, model)?)
+    let body = serde_json::to_string_pretty(&request_template(provider_type, protocol, model)?)
         .map_err(|_| "curl_serialization_failed")?;
     let mut lines = vec![format!("curl --request POST {}", quote(&url.replace("{model}", &url_component(model)))),
         "  --header 'Content-Type: application/json'".into()];
@@ -85,8 +90,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn responses_exports_follow_reviewed_provider_storage_contracts() {
+        for (provider, store) in [("decuff", false), ("openai", true), ("custom", true), ("decuff-other", true)] {
+            let command = render(provider, &ModelProtocol::OpenaiResponses,
+                "https://example.invalid/v1/responses", "fixture-model", CurlAuth::Placeholder).unwrap();
+            let body = command.split_once("--data-raw '").unwrap().1.strip_suffix('\'').unwrap();
+            let body: serde_json::Value = serde_json::from_str(body).unwrap();
+            assert_eq!(body["store"], store, "{provider}");
+            assert_eq!(body["model"], "fixture-model");
+            assert_eq!(body["input"], "Hello");
+            assert!(body.get("previous_response_id").is_none());
+            assert!(body.get("conversation").is_none());
+        }
+    }
+
+    #[test]
+    fn responses_storage_overrides_do_not_leak_to_other_protocols() {
+        let body = request_template("decuff", &ModelProtocol::AnthropicMessages, "fixture-model").unwrap();
+        assert!(body.get("store").is_none());
+        assert_eq!(body["messages"][0]["role"], "user");
+        assert_eq!(body["model"], "fixture-model");
+    }
+
+    #[test]
     fn interactions_uses_google_auth_and_stateless_input() {
-        let command = render(&ModelProtocol::GeminiInteractions,
+        let command = render("custom", &ModelProtocol::GeminiInteractions,
             "https://example.invalid/v1beta/interactions", "gemini-fixture", CurlAuth::Placeholder).unwrap();
         assert!(command.contains("x-goog-api-key: ${ARCA_API_KEY}"));
         assert!(command.contains("\"input\": \"Hello\""));
@@ -98,26 +126,26 @@ mod tests {
     #[test]
     fn converse_escapes_model_path_and_uses_content_blocks() {
         let model = "arn:aws:bedrock:us-east-1:123456789012:inference-profile/a/b";
-        let command = render(&ModelProtocol::AwsBedrockConverse,
+        let command = render("custom", &ModelProtocol::AwsBedrockConverse,
             "https://example.invalid/model/{model}/converse", model, CurlAuth::Placeholder).unwrap();
         assert!(command.contains("/model/arn%3Aaws%3Abedrock%3Aus-east-1%3A123456789012%3Ainference-profile%2Fa%2Fb/converse"));
         assert!(command.contains("Authorization: Bearer ${ARCA_API_KEY}"));
         assert!(command.contains("\"text\": \"Hello\""));
         assert!(!command.contains("\"model\":"));
         assert!(!command.contains("{model}"));
-        assert!(render(&ModelProtocol::AwsBedrockConverse, "https://example.invalid/model/{model}/converse",
+        assert!(render("custom", &ModelProtocol::AwsBedrockConverse, "https://example.invalid/model/{model}/converse",
             "model", CurlAuth::Key("fixture\r\nInjected: yes")).is_err());
     }
 
     #[test]
     fn prompt_management_arns_do_not_override_the_managed_prompt() {
-        let body = request_template(&ModelProtocol::AwsBedrockConverse,
+        let body = request_template("custom", &ModelProtocol::AwsBedrockConverse,
             "arn:aws:bedrock:us-east-1:123456789012:prompt/ABCDEFGHIJ:1").unwrap();
         for key in ["system", "inferenceConfig", "toolConfig", "additionalModelRequestFields"] {
             assert!(body.get(key).is_none(), "{key} cannot override a managed prompt");
         }
         assert_eq!(body["messages"][0]["role"], "user");
-        let ordinary = request_template(&ModelProtocol::AwsBedrockConverse, "anthropic.fixture").unwrap();
+        let ordinary = request_template("custom", &ModelProtocol::AwsBedrockConverse, "anthropic.fixture").unwrap();
         assert!(ordinary["system"][0]["text"].is_string());
         assert_eq!(ordinary["inferenceConfig"]["maxTokens"], 1024);
     }
@@ -125,7 +153,7 @@ mod tests {
     #[test]
     fn export_is_one_curl_command_with_a_literal_json_argument() {
         let model = "fixture'$(touch unwanted)\nexit 7";
-        let command = render(&ModelProtocol::OpenaiResponses,
+        let command = render("custom", &ModelProtocol::OpenaiResponses,
             "https://example.invalid/responses", model, CurlAuth::None).unwrap();
         assert!(command.starts_with("curl --request POST "));
         assert!(!command.contains("ARCA_REQUEST_BODY"));
@@ -154,6 +182,7 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     if profile.provider_id.is_some() && provider.is_none() {
         return Err("model_provider_not_found: this Profile references a missing Provider".into());
     }
+    let provider_type = provider.map(|provider| provider.provider.as_str()).unwrap_or(profile.provider.as_str());
     let (base, endpoint) = if let Some(provider) = provider {
         let route = provider.protocols.get(&profile.protocol)
             .ok_or("model_protocol_unavailable: Provider no longer supports this protocol")?;
@@ -164,7 +193,7 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     let url = format!("{}{}", normalize_provider_base_url(base)?, normalize_endpoint_path(endpoint)?);
     let auth_requirement = provider.map(|provider| &provider.auth_requirement).unwrap_or(&AuthRequirement::Required);
     if *auth_requirement == AuthRequirement::None {
-        return render(&profile.protocol, &url, &profile.model, CurlAuth::None);
+        return render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None);
     }
     let configured_source = if let Some(provider) = provider { provider.api_key_source.clone() }
         else { profile.env_key.as_ref().map(|name| ApiKeySource::Env { name: name.clone() }) };
@@ -172,7 +201,7 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
         let auth = if *auth_requirement == AuthRequirement::Optional && configured_source.is_none() {
             CurlAuth::None
         } else { CurlAuth::Placeholder };
-        return render(&profile.protocol, &url, &profile.model, auth);
+        return render(provider_type, &profile.protocol, &url, &profile.model, auth);
     }
     let stored = if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore)) {
         if let Some(provider) = provider {
@@ -181,10 +210,10 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     } else { None };
     if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore))
         && stored.is_none() && *auth_requirement == AuthRequirement::Optional {
-        return render(&profile.protocol, &url, &profile.model, CurlAuth::None);
+        return render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None);
     }
     let resolved = credential::resolve_source(&configured_source.unwrap_or(ApiKeySource::ArcaStore), stored)?;
     let key = Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
         .map_err(|_| "credential_invalid: API Key must be UTF-8")?);
-    render(&profile.protocol, &url, &profile.model, CurlAuth::Key(&key))
+    render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::Key(&key))
 }
