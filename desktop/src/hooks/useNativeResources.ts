@@ -23,7 +23,7 @@ export function useNativeResources(agentId: string) {
     const subscription = listen<ObservationChange>("asset-observation-changed", event => {
       if (!active) return;
       const domains = event.payload?.domains;
-      if (domains?.length && !domains.includes("mcp") && !domains.includes("central")) return;
+      if (domains?.length && !domains.includes("mcp") && !domains.includes("skill") && !domains.includes("central")) return;
       clearTimeout(timer);
       timer = setTimeout(refresh, 200);
     });

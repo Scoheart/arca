@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({ read: vi.fn(), listen: vi.fn().mockResolvedVal
 vi.mock("../lib/api", () => ({ listNativeResources: mocks.read }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: mocks.listen }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
-const inventory = (id: string): NativeResourceInventory => ({ native_plugin_agents: [id], native_plugins: [], host_mcps: [], unavailable: false });
+const inventory = (id: string): NativeResourceInventory => ({ native_plugin_agents: [id], native_plugins: [], host_mcps: [], native_skills: [], unavailable: false });
 
 it("reads host metadata independently and discards a previous Agent's late response", async () => {
   let finishFirst!: (value: NativeResourceInventory) => void;

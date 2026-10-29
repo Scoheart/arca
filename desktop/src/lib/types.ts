@@ -1045,9 +1045,26 @@ export interface HostMcpObservation {
   source_paths: string[]; docs_url: string; source_fingerprint: string;
 }
 
+export interface NativeSkillObservation {
+  id: string;
+  agent_id: string;
+  name: string;
+  plugin_id: string;
+  plugin_name: string;
+  plugin_version: string;
+  plugin_revision: string;
+  plugin_enabled: boolean | null;
+  presence: PluginPresence;
+  source_path: string;
+  native_id: string | null;
+  source_fingerprint: string;
+  docs_url: string;
+}
+
 export interface NativeResourceInventory {
   native_plugin_agents: string[];
   host_mcps: HostMcpObservation[];
   native_plugins: NativePluginObservation[];
+  native_skills: NativeSkillObservation[];
   unavailable: boolean;
 }

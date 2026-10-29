@@ -6,9 +6,11 @@
   border-radius: var(--radius-region); background: var(--surface-section);
 }
 .arca-native-plugin-card { min-width: 0; border-radius: var(--radius-row); background: var(--surface-asset); }
-/* The host row shares the asset list, but owns its compact button layout. */
+/* Host resources share the asset list and own their compact read-only layout. */
 .arca-consumption-list > .arca-host-mcp-card,
-.arca-agent-workbench .arca-consumption-list > li.arca-host-mcp-card[data-domain="mcp"] { display: block; min-height: 0; padding: 0; }
+.arca-consumption-list > .arca-native-skill-card,
+.arca-agent-workbench .arca-consumption-list > li.arca-host-mcp-card[data-domain="mcp"],
+.arca-agent-workbench .arca-consumption-list > li.arca-native-skill-card[data-domain="skill"] { display: block; min-height: 0; padding: 0; }
 .arca-native-row {
   display: flex; width: 100%; min-width: 0; min-height: 64px; height: 100%;
   align-items: center; gap: 10px; padding: 10px 12px;
@@ -29,6 +31,8 @@
 .arca-native-row-meta { display: flex; min-width: 0; align-items: center; gap: 7px; margin-top: 3px; font-size: 10px; line-height: 1.5; color: var(--text-secondary); }
 .arca-native-presence { display: inline-block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--text-secondary); }
 .arca-native-row-meta > .arca-native-presence { flex-shrink: 0; max-width: 55%; }
+.arca-native-skill-builtin { flex: 0 0 auto; color: var(--text-secondary); }
+.arca-native-skill-card .arca-native-row-meta > .arca-native-presence { max-width: 36%; }
 .arca-native-row-context { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .arca-native-row-context::before { content: "·"; margin-right: 7px; color: var(--text-tertiary); }
 .arca-native-row-meta > code { font-family: var(--font-mono); font-size: 10px; }

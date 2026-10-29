@@ -258,6 +258,7 @@ export function AgentView({
   const nativeResources = useNativeResources(agentId);
   const hostMcps = nativeResources.inventory?.host_mcps ?? [];
   const nativePlugins = nativeResources.inventory?.native_plugins ?? [];
+  const nativeSkills = nativeResources.inventory?.native_skills ?? [];
   const nativePluginSupported = nativeResources.inventory?.native_plugin_agents.includes(agentId) ?? false;
   const nativePluginCount = new Set(nativePlugins.map(item => item.plugin_id)).size;
   useEffect(() => {
@@ -345,7 +346,7 @@ export function AgentView({
 
   if (!agent) return <div className="arca-agent-state">未找到该 Agent</div>;
 
-  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent && !agent.has_instructions && hostMcps.length === 0 && !nativePluginSupported) {
+  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent && !agent.has_instructions && hostMcps.length === 0 && nativeSkills.length === 0 && !nativePluginSupported) {
     return (
       <div className="arca-agent-page">
         <div className="arca-agent-shell">
@@ -674,7 +675,7 @@ export function AgentView({
           counts={{
             mcps: mcpRows.length + mcpExternal.length + hostMcps.length,
             models: modelVisibleCount,
-            skills: skillRows.length + skillExternal.length,
+            skills: skillRows.length + skillExternal.length + nativeSkills.length,
           }}
         >
           {consumptionState.plan?.kind === "clear-models" && !preparingChange && (
@@ -870,11 +871,14 @@ export function AgentView({
             <AgentConsumptionPanel
               domain="skill"
               title={RESOURCE_PRESENTATION.skill.label}
-              description={`${skillRows.length} 项`}
+              description={nativeSkills.length > 0
+                ? t("nativePlugins.skillCounts", { configured: skillRows.length + skillExternal.length, builtin: nativeSkills.length })
+                : `${skillRows.length} 项`}
               manageLabel="添加 Skills"
               rows={displayedSkillRows}
               columns={3}
               external={skillExternal}
+              nativeSkills={nativeSkills}
               externalMode="cards"
               onManage={() => setPickerDomain("skill")}
               onOpenAsset={openAsset}

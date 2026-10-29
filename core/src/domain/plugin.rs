@@ -51,11 +51,31 @@ pub struct HostMcpObservation {
     pub source_fingerprint: String,
 }
 
+/// A plugin's Skill declaration, independent of managed Skill assets and
+/// consumption write plans. Plugin enablement does not prove Skill activation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct NativeSkillObservation {
+    pub id: String,
+    pub agent_id: String,
+    pub name: String,
+    pub plugin_id: String,
+    pub plugin_name: String,
+    pub plugin_version: String,
+    pub plugin_revision: String,
+    pub plugin_enabled: Option<bool>,
+    pub presence: PluginPresence,
+    pub source_path: String,
+    pub native_id: Option<String>,
+    pub source_fingerprint: String,
+    pub docs_url: String,
+}
+
 /// Host metadata has its own read path; it never waits for model credentials.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NativeResourceInventory {
     pub native_plugin_agents: Vec<String>,
     pub host_mcps: Vec<HostMcpObservation>,
     pub native_plugins: Vec<NativePluginObservation>,
+    pub native_skills: Vec<NativeSkillObservation>,
     pub unavailable: bool,
 }

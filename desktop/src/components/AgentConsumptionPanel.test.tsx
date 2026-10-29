@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ConsumptionView } from "../lib/types";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
+import { nativeSkillFixture } from "../test/nativeSkillFixtures";
 
 afterEach(cleanup);
 
@@ -286,4 +287,62 @@ it("filters Agent resources while keeping resource-specific action names", async
   await userEvent.type(screen.getByRole("searchbox", { name: "搜索当前 MCPs" }), "second");
   expect(screen.queryByRole("button", { name: /收录 Arca：computer-use/ })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "收录 Arca：second · http" })).toBeVisible();
+});
+
+it("counts plugin Skills without exposing central asset operations or the empty state", () => {
+  const mutate = vi.fn();
+  const present = vi.fn(() => ({ name: "unexpected central asset" }));
+  render(<AgentConsumptionPanel domain="skill" title="Skills" manageLabel="添加 Skills"
+    rows={[]} external={[]} nativeSkills={[nativeSkillFixture()]} present={present} onManage={vi.fn()}
+    emptyTitle="暂无 Skills" onOpenAsset={mutate} onRemove={mutate} onEnabledChange={mutate}
+    onConverge={mutate} renderAction={mutate} onBulkRemove={mutate} bulkRemoveLabel="移除全部 Skills"
+    onBulkEnabledChange={mutate} bulkToggleLabel="全部" bulkEnabled />);
+
+  const card = screen.getByRole("button", { name: "查看 review 详情" }).closest("li")!;
+  expect(card).toHaveAttribute("data-native-skill-id", "cursor:fixture:revision-a:review");
+  expect(within(card).getByText("内置")).toBeVisible();
+  expect(within(card).getByText("来自 Review tools")).toBeVisible();
+  expect(within(card).getByText("插件缓存")).toBeVisible();
+  expect(screen.getByRole("status")).toHaveTextContent("1 项");
+  expect(screen.queryByText("暂无 Skills")).not.toBeInTheDocument();
+  expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "移除全部 Skills" })).not.toBeInTheDocument();
+  expect(present).not.toHaveBeenCalled();
+  expect(mutate).not.toHaveBeenCalled();
+});
+
+it("retains same-name central, external and plugin Skill identities in one searchable list", async () => {
+  const central: ConsumptionView = { ...syncedRow, asset: { domain: "skill", name: "review" } };
+  const external: ConsumptionView = { ...externalRow, asset: central.asset, available_actions: [] };
+  const first = nativeSkillFixture();
+  const second = nativeSkillFixture({ id: "other-plugin:review", plugin_id: "second@marketplace", plugin_name: "Second plugin" });
+  render(<AgentConsumptionPanel domain="skill" title="Skills" manageLabel="添加 Skills" rows={[central]}
+    external={[external]} externalMode="cards" nativeSkills={[first, second]}
+    present={() => ({ name: "review", description: "Central or external metadata" })} onManage={vi.fn()}
+    onEnabledChange={vi.fn()} onOpenAsset={vi.fn()} onRemove={vi.fn()} />);
+
+  expect(screen.getAllByRole("listitem")).toHaveLength(4);
+  expect(screen.getByRole("status")).toHaveTextContent("4 项");
+  expect(screen.getAllByRole("switch")).toHaveLength(1);
+  const query = screen.getByRole("searchbox", { name: "搜索当前 Skills" });
+  await userEvent.type(query, "second@marketplace");
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
+  expect(screen.getByText("来自 Second plugin")).toBeVisible();
+  expect(screen.getByRole("status")).toHaveTextContent("1 / 4 项");
+  await userEvent.clear(query);
+  await userEvent.type(query, "review");
+  expect(screen.getAllByRole("listitem")).toHaveLength(4);
+  await userEvent.clear(query);
+  await userEvent.type(query, "missing");
+  expect(screen.getByText("没有匹配的 Skills")).toBeVisible();
+  expect(screen.getAllByRole("status")[0]).toHaveTextContent("0 / 4 项");
+});
+
+it.each(["mcp", "model"] as const)("does not mix plugin Skills into the %s panel", domain => {
+  render(<AgentConsumptionPanel domain={domain} title="Other resources" manageLabel="添加"
+    rows={[]} external={[]} nativeSkills={[nativeSkillFixture()]} present={() => ({ name: "unused" })}
+    onManage={vi.fn()} emptyTitle="No resources" />);
+  expect(screen.getByText("No resources")).toBeVisible();
+  expect(screen.queryByText("review")).not.toBeInTheDocument();
+  expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
 });

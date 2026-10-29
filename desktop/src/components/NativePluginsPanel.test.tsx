@@ -1,10 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import type { HostMcpObservation, NativePluginObservation } from "../lib/types";
-import { NativePluginsPanel } from "./NativePluginsPanel";
+import { NativePluginsPanel, NativeSkillCard } from "./NativePluginsPanel";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
+import { nativeSkillFixture } from "../test/nativeSkillFixtures";
 
-vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, values?: { name?: string }) => values?.name ? `${key}:${values.name}` : key }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, values?: { name?: string; plugin?: string }) => values?.name ? `${key}:${values.name}` : values?.plugin ? `${key}:${values.plugin}` : key }) }));
 afterEach(cleanup);
 const mcp: HostMcpObservation = {
   agent_id: "cursor", server_id: "plugin-fixture-example", name: "example", provider: "fixture",
@@ -64,4 +65,51 @@ it("disambiguates same-name plugins by searchable native ID and keeps App declar
   fireEvent.click(screen.getByRole("button", { name: "nativePlugins.viewDetails:Same" }));
   expect(within(screen.getByRole("dialog", { name: "Same" })).getByText("nativePlugins.kind_app")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /delete|remove|install|删除|移除|安装/i })).not.toBeInTheDocument();
+});
+
+it("opens only plugin Skill metadata and keeps plugin enablement separate from Skill loading", async () => {
+  const item = nativeSkillFixture();
+  render(<ul><NativeSkillCard item={item} /></ul>);
+  expect(screen.getByText("nativePlugins.builtInSkill")).toBeVisible();
+  expect(screen.getByText("nativePlugins.skillFromPlugin:Review tools")).toBeVisible();
+  expect(screen.queryByText(item.source_path)).not.toBeInTheDocument();
+  const trigger = screen.getByRole("button", { name: "nativePlugins.viewDetails:review" });
+  fireEvent.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "review" });
+  expect(within(dialog).getByText("nativePlugins.skillRuntime")).toBeVisible();
+  expect(within(dialog).getByText("nativePlugins.skillCacheRuntime")).toBeVisible();
+  expect(within(dialog).getByText("nativePlugins.pluginEnabled")).toBeVisible();
+  for (const metadata of [item.plugin_id, item.plugin_version, item.plugin_revision, item.source_path, item.native_id!]) {
+    expect(within(dialog).getByText(metadata)).toBeVisible();
+  }
+  expect(within(dialog).queryByRole("switch")).not.toBeInTheDocument();
+  expect(within(dialog).getAllByRole("button")).toHaveLength(2);
+  expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
+  fireEvent.keyDown(document, { key: "Escape" });
+  await waitFor(() => expect(trigger).toHaveFocus());
+});
+
+it.each([false, null] as const)("preserves declared Skill and plugin enablement metadata (%s)", enabled => {
+  render(<ul><NativeSkillCard item={nativeSkillFixture({ presence: "declared", plugin_enabled: enabled, native_id: null })} /></ul>);
+  expect(screen.getByText("nativePlugins.presence_declared")).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "nativePlugins.viewDetails:review" }));
+  const dialog = screen.getByRole("dialog", { name: "review" });
+  expect(within(dialog).getByText("nativePlugins.skillDeclaredRuntime")).toBeVisible();
+  expect(within(dialog).getByText(enabled === null ? "nativePlugins.pluginEnablementUnknown" : "nativePlugins.pluginDisabled")).toBeVisible();
+  expect(within(dialog).getByText("nativePlugins.skillRuntime")).toBeVisible();
+  expect(within(dialog).queryByRole("switch")).not.toBeInTheDocument();
+});
+
+it("updates an open Skill metadata dialog from the current observation", () => {
+  const first = nativeSkillFixture();
+  const view = render(<ul><NativeSkillCard item={first} /></ul>);
+  fireEvent.click(screen.getByRole("button", { name: "nativePlugins.viewDetails:review" }));
+  const latest = { ...first, plugin_revision: "revision-current", plugin_version: "2.0.0", plugin_enabled: false, presence: "installed" as const };
+  view.rerender(<ul><NativeSkillCard item={latest} /></ul>);
+  const dialog = screen.getByRole("dialog", { name: "review" });
+  expect(within(dialog).getByText("revision-current")).toBeVisible();
+  expect(within(dialog).getByText("2.0.0")).toBeVisible();
+  expect(within(dialog).getByText("nativePlugins.pluginDisabled")).toBeVisible();
+  expect(within(dialog).queryByText("revision-a")).not.toBeInTheDocument();
+  expect(within(dialog).queryByText("nativePlugins.skillCacheRuntime")).not.toBeInTheDocument();
 });

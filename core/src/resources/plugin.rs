@@ -53,6 +53,7 @@ mod qoder_desktop;
 mod antigravity;
 mod zcode;
 mod vscode_extensions;
+mod skills;
 
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
@@ -75,6 +76,9 @@ struct Host {
     default_mcp_files: Vec<String>,
     mcp_id_prefix: String,
     roots: Vec<Root>,
+    /// Observer groups for standalone global resources, not plugin ownership.
+    #[serde(default)]
+    resource_groups: Vec<String>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -89,6 +93,10 @@ fn hosts() -> &'static [Host] {
     static HOSTS: OnceLock<Vec<Host>> = OnceLock::new();
     HOSTS.get_or_init(|| serde_json::from_str(include_str!("../../../data/native-plugin-hosts.json"))
         .expect("audited native plugin descriptors must be valid"))
+}
+
+pub(crate) fn skill_observations(plugins: &[NativePluginObservation]) -> Vec<NativeSkillObservation> {
+    skills::observations(plugins)
 }
 
 #[derive(Default)]

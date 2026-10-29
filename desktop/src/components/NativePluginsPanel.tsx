@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { HostMcpObservation, NativePluginObservation, PluginComponent, PluginPresence } from "../lib/types";
+import type { HostMcpObservation, NativePluginObservation, NativeSkillObservation, PluginComponent, PluginPresence } from "../lib/types";
 import { SearchBar } from "./ui";
 import { ResourceIcon } from "./resourcePresentation";
 import { DialogShell } from "./DialogShell";
@@ -28,6 +28,42 @@ export function HostMcpCard({ item }: { item: HostMcpObservation }) {
         <Fact label={t("nativePlugins.sourceState")}><Presence values={[item.presence]} /></Fact>
       </dl>
       <SourcePaths paths={item.source_paths} />
+    </DialogShell>}
+  </li>;
+}
+
+export function NativeSkillCard({ item }: { item: NativeSkillObservation }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const pluginName = item.plugin_name || item.plugin_id;
+  const sourceLabel = t("nativePlugins.skillFromPlugin", { plugin: pluginName });
+  return <li data-domain="skill" data-host-managed="true" data-native-skill-id={item.id} className="arca-native-skill-card">
+    <ResourceRow name={item.name} icon={<ResourceIcon domain="skill" className="w-6 h-6" />}
+      onOpen={() => setOpen(true)} open={open}>
+      <span className="arca-native-skill-builtin">{t("nativePlugins.builtInSkill")}</span>
+      <span className="arca-native-row-context" title={sourceLabel}>{sourceLabel}</span>
+      {item.presence !== "bundled" && <Presence values={[item.presence]} />}
+    </ResourceRow>
+    {open && <DialogShell kind="review" size="wide" className="arca-native-dialog" title={item.name}
+      leading={<ResourceIcon domain="skill" className="w-6 h-6" />} subtitle={t("nativePlugins.skillDetails")}
+      onClose={() => setOpen(false)}
+      footerEnd={<button type="button" className="btn-ghost" onClick={() => setOpen(false)}>{t("common.close")}</button>}>
+      <p className="arca-native-notice">{t("nativePlugins.skillRuntime")}</p>
+      {item.presence === "cache_only" && <p className="arca-native-notice">{t("nativePlugins.skillCacheRuntime")}</p>}
+      {item.presence === "declared" && <p className="arca-native-notice">{t("nativePlugins.skillDeclaredRuntime")}</p>}
+      <dl className="arca-native-facts">
+        <Fact label={t("nativePlugins.sourcePlugin")}>{pluginName}</Fact>
+        <Fact label={t("nativePlugins.skillPluginId")}><code>{item.plugin_id}</code></Fact>
+        <Fact label={t("nativePlugins.versions")}>{item.plugin_version || "—"}</Fact>
+        <Fact label={t("nativePlugins.revision")}><code>{item.plugin_revision || "—"}</code></Fact>
+        <Fact label={t("nativePlugins.sourceState")}><Presence values={[item.presence]} /></Fact>
+        <Fact label={t("nativePlugins.pluginEnablement")}>{t(item.plugin_enabled === null
+          ? "nativePlugins.pluginEnablementUnknown"
+          : item.plugin_enabled ? "nativePlugins.pluginEnabled" : "nativePlugins.pluginDisabled")}</Fact>
+        {item.native_id && <Fact label={t("nativePlugins.skillId")}><code>{item.native_id}</code></Fact>}
+        <Fact label={t("nativePlugins.sourceFingerprint")}><code>{item.source_fingerprint}</code></Fact>
+      </dl>
+      <SourcePaths paths={[item.source_path]} />
     </DialogShell>}
   </li>;
 }

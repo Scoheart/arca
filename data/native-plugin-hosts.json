@@ -925,6 +925,7 @@
   },
   {
     "agent_id": "pi",
+    "resource_groups": ["@global/resources"],
     "adapter": "pi",
     "docs_url": "https://pi.dev/docs/latest/packages",
     "manifest_paths": [
@@ -947,6 +948,7 @@
   },
   {
     "agent_id": "hermes",
+    "resource_groups": ["@global/resources"],
     "adapter": "hermes",
     "docs_url": "https://github.com/NousResearch/hermes-agent/blob/ff6a86cb529a372198b4b80d5e022e32a4a3f2cc/hermes_cli/plugins.py",
     "manifest_paths": [
