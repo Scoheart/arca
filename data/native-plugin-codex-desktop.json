@@ -1,0 +1,30 @@
+{
+  "agent_id": "codex-desktop",
+  "version": "26.1016.61520",
+  "bundle_id": "com.openai.codex",
+  "product_name": "ChatGPT",
+  "app_paths": ["/Applications/ChatGPT.app", "~/Applications/ChatGPT.app"],
+  "docs_url": "https://developers.openai.com/codex",
+  "guards": [
+    {
+      "path": ".vite/build/main-JI9qDiXp.js",
+      "bytes": 4080713,
+      "sha256": "b8c5d07cc3c30fbf0abe729b05434e7d1ffa19ee6c4daa818ae8f855be66d1e1"
+    },
+    {
+      "path": ".vite/build/src-CSKkIr_z.js",
+      "bytes": 207355,
+      "sha256": "4a939ae29c4f4010a62a7890797813363d4d2300afb43df4101872246cc7f0d6"
+    },
+    {
+      "path": "package.json",
+      "bytes": 4619,
+      "sha256": "dd2125ff7b4638936e304ecd9adee3b40c898c54a700f5d02416bb84e7941133"
+    }
+  ],
+  "declarations": [
+    {"id": "artifact-session", "server_id": "artifact_session", "name": "Artifact Session", "member": ".vite/build/main-JI9qDiXp.js", "symbol": "Xi"},
+    {"id": "node-repl", "server_id": "node_repl", "name": "Node REPL", "member": ".vite/build/main-JI9qDiXp.js", "symbol": "zre"},
+    {"id": "cua-repl", "server_id": "cua_repl", "name": "CUA REPL", "member": ".vite/build/main-JI9qDiXp.js", "symbol": "ja"}
+  ]
+}

@@ -1,5 +1,17 @@
 {
   "reviewed_on": "2026-10-27",
+  "provider_overrides": {
+    "decuff": {
+      "openai-responses": {
+        "store": false
+      }
+    },
+    "token360": {
+      "openai-responses": {
+        "store": false
+      }
+    }
+  },
   "templates": {
     "openai-completions": {
       "sources": [

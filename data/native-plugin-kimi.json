@@ -1,0 +1,29 @@
+{
+  "command": "kimi",
+  "package_name": "@moonshot-ai/kimi-code",
+  "version": "2.4.0",
+  "entry": "dist/main.mjs",
+  "builtin_skills": [
+    "mcp-config",
+    "import-from-cc-codex",
+    "update-config",
+    "custom-theme",
+    "write-goal",
+    "check-kimi-code-docs",
+    "sub-skill",
+    "sub-skill.review",
+    "sub-skill.consolidate"
+  ],
+  "members": [
+    {
+      "path": "dist/main.mjs",
+      "bytes": 23026801,
+      "sha256": "c42ac981607ae36ffc96110db6a901529c9e1a0c22fae58aaf3ee45912f7be33"
+    },
+    {
+      "path": "package.json",
+      "bytes": 4616,
+      "sha256": "4c1a8e83bbf43c84ad9fa9b53f9fd1aee63989d9f7af618f892eb53a4f707061"
+    }
+  ]
+}

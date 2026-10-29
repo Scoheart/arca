@@ -193,6 +193,12 @@ pub struct ConsumptionView {
 /// callers cannot accidentally treat discovery as ownership.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ConsumptionInventory {
+    #[serde(default)]
+    pub native_plugin_agents: Vec<String>,
+    #[serde(default)]
+    pub host_mcps: Vec<crate::domain::plugin::HostMcpObservation>,
+    #[serde(default)]
+    pub native_plugins: Vec<crate::domain::plugin::NativePluginObservation>,
     /// Hash of the normalized desired/observed projection. Convergence plans
     /// bind to this revision and re-scan before committing.
     #[serde(default)]

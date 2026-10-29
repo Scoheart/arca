@@ -48,8 +48,10 @@
   "pi": "https://pi.dev/docs/latest",
   "poolside": "https://github.com/poolsideai/pool",
   "qoder": "https://docs.qoder.com/",
+  "qoder-cn": "https://docs.qoder.cn/",
   "qoder-desktop": "https://docs.qoder.com/",
   "qoder-cli": "https://docs.qoder.com/",
+  "qoderwork-cn": "https://docs.qoder.cn/",
   "qoderwork": "https://docs.qoder.com/",
   "qwen-code": "https://qwenlm.github.io/qwen-code-docs/en/",
   "raycast": "https://manual.raycast.com/",
@@ -59,6 +61,7 @@
   "step-code": "https://platform.stepfun.com/docs/zh/step-code/quickstart",
   "tabnine": "https://docs.tabnine.com/",
   "theiaai-theiaide": "https://theia-ide.org/docs/",
+  "trae-cn": "https://docs.trae.cn/",
   "trae-ide": "https://docs.trae.ai/",
   "trae-cli": "https://docs.trae.cn/",
   "vt-code": "https://github.com/vinhnx/VTCode",
@@ -98,5 +101,8 @@
   "mcp-use-inspector": "https://mcp-use.com/docs/inspector",
   "smithery-playground": "https://smithery.ai/playground",
   "copilotkit": "https://docs.copilotkit.ai/",
-  "ag-ui": "https://docs.ag-ui.com/"
+  "ag-ui": "https://docs.ag-ui.com/",
+  "qoder-cli-cn": "https://docs.qoder.cn/",
+  "qoderwake": "https://docs.qoder.com/",
+  "qoderwake-cn": "https://docs.qoder.cn/"
 }

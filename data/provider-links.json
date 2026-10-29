@@ -622,10 +622,10 @@
       "kind": "api-key"
     }
   },
-  "token360": {
-    "docs_url": "https://www.token360.ai/en-US/docs/api-reference/overview",
+  "decuff": {
+    "docs_url": "https://decuff.ai/docs",
     "portal": {
-      "url": "https://www.token360.ai/en-US",
+      "url": "https://decuff.ai/account",
       "kind": "console"
     }
   },
@@ -1131,6 +1131,20 @@
     "portal": {
       "url": "https://docs.vllm.ai/en/latest/serving/openai_compatible_server/",
       "kind": "setup"
+    }
+  },
+  "helmholtz-blablador": {
+    "docs_url": "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/",
+    "portal": {
+      "url": "https://codebase.helmholtz.cloud/-/user_settings/personal_access_tokens",
+      "kind": "api-key"
+    }
+  },
+  "token360": {
+    "docs_url": "https://www.token360.ai/en-US/docs/api-reference/overview",
+    "portal": {
+      "url": "https://www.token360.ai/en-US",
+      "kind": "console"
     }
   }
 }

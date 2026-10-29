@@ -229,6 +229,12 @@ pub async fn list_consumption_inventory() -> Result<ConsumptionInventory, AssetC
     asset_blocking(arca_core::application::assets::list_inventory).await
 }
 
+// Credential-independent host metadata query.
+#[tauri::command]
+pub async fn list_native_resources(agent_id: String) -> CoreResult<arca_core::domain::plugin::NativeResourceInventory> {
+    core_blocking(move || Ok(arca_core::application::assets::list_native_resources(&agent_id))).await
+}
+
 #[tauri::command]
 pub async fn list_model_adoption_candidates(
 ) -> Result<Vec<ModelAdoptionCandidate>, AssetCommandError> {

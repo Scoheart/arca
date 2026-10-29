@@ -1,0 +1,506 @@
+{
+  "agent_id": "opencode-desktop",
+  "version": "2.2.0",
+  "bundle_id": "ai.opencode.desktop",
+  "product_name": "OpenCode",
+  "app_path": "/Applications/OpenCode.app",
+  "asar_guards": [
+    {
+      "path": "out/main/desktop-D6DD1hwO.js",
+      "bytes": 184289,
+      "sha256": "89046acccfe534de1bb7966975532b6b5bdff363aaea4e60d3f17fb34092528d"
+    },
+    {
+      "path": "out/main/host-BMOmfBiu.js",
+      "bytes": 68941,
+      "sha256": "c1920fd77cdfb78ee5a18b91967ae83c438179ef451bf7327b25697a593829f2"
+    },
+    {
+      "path": "out/main/index.js",
+      "bytes": 56505,
+      "sha256": "f548aea8e1f22a4dc0564666f0a7c7e0403e7e308d8f72c0085da5a8d18e35f5"
+    },
+    {
+      "path": "out/main/service-iKT67Ovq.js",
+      "bytes": 9221,
+      "sha256": "5519109bc9424bc4a0667db9808cb1c7f7d820422b2e53595cec5b3294065d72"
+    },
+    {
+      "path": "package.json",
+      "bytes": 835,
+      "sha256": "2980462b38c9cb8de3f6cd6dac212c9fc6e3cfebfe3f916fbe9fb29e77c65992"
+    }
+  ],
+  "runtime": {
+    "binary_bytes": 220825648,
+    "table_sha256": "b0c1932cea30867d9dbb5039a39f52ab59efd5c08218e9435ad4b7d26f38a7d0",
+    "entry_name": "/$bunfs/root/opencode",
+    "guards": [
+      {
+        "path": "/$bunfs/root/chunk-7yh1veak.js",
+        "bytes": 1674,
+        "sha256": "dc6f843257f147ff20043149ded9cb11d4e7746fefaf1070e1c27394aa88ac51"
+      },
+      {
+        "path": "/$bunfs/root/chunk-tba4grsj.js",
+        "bytes": 8365,
+        "sha256": "940d923875e0c42326864c4600374ff73128c0d8ff6aaa3609f9c3c5b4333f0c"
+      },
+      {
+        "path": "/$bunfs/root/opencode",
+        "bytes": 12620,
+        "sha256": "c50e8bac6800ce41dab85703ace9a98fbdde94f1b071d33bb6557f05d7a88e25"
+      },
+      {
+        "path": "/$bunfs/root/chunk-5gg83pn7.js",
+        "bytes": 11559,
+        "sha256": "d3bd7005dfcd06fb283960cebb030584ad4d72a86888b867eba92c64fe673564"
+      },
+      {
+        "path": "/$bunfs/root/chunk-sf2cnfc6.js",
+        "bytes": 1326,
+        "sha256": "63c39ed6c0260e207709d73270360e0f6c9c54b8d5d6879d2de8032270182f37"
+      },
+      {
+        "path": "/$bunfs/root/chunk-p00mt17c.js",
+        "bytes": 139,
+        "sha256": "cbec5e9559c8f18ee2ad2a3c01ba5ed5b881e50231eb0c5b7cebe5c008a0b365"
+      },
+      {
+        "path": "/$bunfs/root/chunk-r1qey5an.js",
+        "bytes": 450279,
+        "sha256": "a2273bef32535aeba57e5cc357d93162d672a63d06e39d2ad581750deb05fe56"
+      },
+      {
+        "path": "/$bunfs/root/chunk-xn382c9v.js",
+        "bytes": 661680,
+        "sha256": "fbf0e27c54869b5fa60c325d20338ec6c0cdebd76e039210d444dd1df0369a73"
+      }
+    ],
+    "resources": {}
+  },
+  "server_member": "/$bunfs/root/chunk-xn382c9v.js",
+  "gui_member": "out/main/host-BMOmfBiu.js",
+  "server_plugins": [
+    {
+      "id": "opencode.tool.input.repair",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.config.worktree",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.config.mcp",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.mcp.codemode.defaults",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.wellknown",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.vcs.git",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.agent",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.plan",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.command",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.skill",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.vcs.hg",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.models.dev",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.amazon.bedrock",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.azure",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.cerebras",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.chatgpt",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.cloudflare.ai.gateway",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.cloudflare.workers.ai",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.cohere",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.databricks",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.digitalocean",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.github.copilot",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.gitlab",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.google.vertex",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.kilo",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.llmgateway",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.lmstudio",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.modal",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.neon",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.nvidia",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.ollama",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.opencode",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.snowflake.cortex",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.openai",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.openai-context-caps",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.openrouter",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.perplexity",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.poe",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.prompt-cache-key",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.sap.ai.core",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.vercel",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.vllm",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.xai",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.zenmux",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.provider.dynamic",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.websearch.exa",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.websearch.firecrawl",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.websearch.parallel",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.websearch.tavily",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.websearch.tinyfish",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.patch",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.prompt.openai",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.prompt.anthropic",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.prompt.kimi",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.prompt.arcee",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.prompt.meta",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.prompt.verbosity",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.prompt.identity",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.edit",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.glob",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.grep",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tools",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tools.mcp-resources",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.question",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.read",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.shell",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.skill",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.subagent",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.todo",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.webfetch",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.websearch",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.tool.write",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.warming",
+      "phase": "pre"
+    },
+    {
+      "id": "opencode.config.instruction",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.reference",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.agent",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.browser",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.command",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.compaction",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.formatter",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.image",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.location-watcher",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.shell",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.snapshot",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.tool-output",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.compatibility",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.skill",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.provider",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.websearch",
+      "phase": "post"
+    },
+    {
+      "id": "opencode.config.policy",
+      "phase": "post"
+    }
+  ],
+  "gui_plugins": [
+    {
+      "id": "context",
+      "platforms": []
+    },
+    {
+      "id": "btw",
+      "platforms": []
+    },
+    {
+      "id": "debug",
+      "platforms": []
+    },
+    {
+      "id": "terminal",
+      "platforms": []
+    },
+    {
+      "id": "file",
+      "platforms": []
+    },
+    {
+      "id": "review",
+      "platforms": []
+    },
+    {
+      "id": "details",
+      "platforms": []
+    },
+    {
+      "id": "browser",
+      "platforms": []
+    },
+    {
+      "id": "pairing",
+      "platforms": []
+    },
+    {
+      "id": "updater",
+      "platforms": []
+    },
+    {
+      "id": "ssh",
+      "platforms": []
+    },
+    {
+      "id": "wsl",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "microsoft-office",
+      "platforms": []
+    },
+    {
+      "id": "sources",
+      "platforms": []
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "package": "@qoder-ai/qodercli",
+  "version": "1.1.68",
+  "entry": "bundle/qodercli.js",
+  "bytes": 33089434,
+  "sha256": "3a9c63fd186c3d393ad39f378c72a9105f5d6a0593cb0ca36bf8cb8b4d0ab8ce"
+}

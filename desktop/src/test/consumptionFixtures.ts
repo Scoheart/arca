@@ -4,6 +4,7 @@ export const consumptionInventoryFixture = (): ConsumptionInventory => ({
   revision: "fixture-revision",
   observed_at: "2026-08-04T00:00:00Z",
   target_incidents: [],
+  native_plugin_agents: [], host_mcps: [], native_plugins: [],
   consumptions: [
     {
       agent_id: "claude-code",

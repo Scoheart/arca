@@ -1,0 +1,181 @@
+{
+  "schema": "hermes-passive-source-binding/1",
+  "agent_id": "hermes",
+  "command": "hermes",
+  "source_commit": "ff6a86cb529a372198b4b80d5e022e32a4a3f2cc",
+  "source_version": "0.8.0",
+  "packaging_version": "0.7.0",
+  "site_packages": "lib/python3.11/site-packages",
+  "metadata": {
+    "path": "hermes_agent-0.7.0.dist-info/METADATA",
+    "bytes": 15106,
+    "sha256": "2b0d938152b11be93761a73a9db4d8b7e7369274b1a0bef437bf61c0133d2829"
+  },
+  "entry_points": {
+    "path": "hermes_agent-0.7.0.dist-info/entry_points.txt",
+    "bytes": 114,
+    "sha256": "7c350e4a7ddc48a552560234fcfe1103a23fc3522e6837376aff49edd0dba17a"
+  },
+  "direct_url_path": "hermes_agent-0.7.0.dist-info/direct_url.json",
+  "pth_path": "__editable__.hermes_agent-0.7.0.pth",
+  "finder_path": "__editable___hermes_agent_0_7_0_finder.py",
+  "finder_module": "__editable___hermes_agent_0_7_0_finder",
+  "finder_placeholder_prefix": "__editable__.hermes_agent-0.7.0.finder",
+  "entry": {
+    "text": "#!${VENV_ROOT}/bin/python3\n# -*- coding: utf-8 -*-\nimport sys\nfrom hermes_cli.main import main\nif __name__ == \"__main__\":\n    if sys.argv[0].endswith(\"-script.pyw\"):\n        sys.argv[0] = sys.argv[0][:-11]\n    elif sys.argv[0].endswith(\".exe\"):\n        sys.argv[0] = sys.argv[0][:-4]\n    sys.exit(main())\n",
+    "bytes": 305,
+    "sha256": "cac94946e8ce988c6687f995351639d86f13160e59bad0a9d6596f369ae69868"
+  },
+  "pth": {
+    "text": "import ${FINDER_MODULE}; ${FINDER_MODULE}.install()",
+    "bytes": 51,
+    "sha256": "87bcc42cf00e1fe6a7acc2e7453dc2e9325ffa60a13ce63c4275352cca887931"
+  },
+  "finder": {
+    "text": "from __future__ import annotations\nimport sys\nfrom importlib.machinery import ModuleSpec, PathFinder\nfrom importlib.machinery import all_suffixes as module_suffixes\nfrom importlib.util import spec_from_file_location\nfrom itertools import chain\nfrom pathlib import Path\n\nMAPPING: dict[str, str] = {'acp_adapter': '${REGISTERED_SOURCE_ROOT}/acp_adapter', 'agent': '${REGISTERED_SOURCE_ROOT}/agent', 'batch_runner': '${REGISTERED_SOURCE_ROOT}/batch_runner', 'cli': '${REGISTERED_SOURCE_ROOT}/cli', 'cron': '${REGISTERED_SOURCE_ROOT}/cron', 'gateway': '${REGISTERED_SOURCE_ROOT}/gateway', 'hermes_cli': '${REGISTERED_SOURCE_ROOT}/hermes_cli', 'hermes_constants': '${REGISTERED_SOURCE_ROOT}/hermes_constants', 'hermes_logging': '${REGISTERED_SOURCE_ROOT}/hermes_logging', 'hermes_state': '${REGISTERED_SOURCE_ROOT}/hermes_state', 'hermes_time': '${REGISTERED_SOURCE_ROOT}/hermes_time', 'model_tools': '${REGISTERED_SOURCE_ROOT}/model_tools', 'plugins': '${REGISTERED_SOURCE_ROOT}/plugins', 'rl_cli': '${REGISTERED_SOURCE_ROOT}/rl_cli', 'run_agent': '${REGISTERED_SOURCE_ROOT}/run_agent', 'tools': '${REGISTERED_SOURCE_ROOT}/tools', 'toolset_distributions': '${REGISTERED_SOURCE_ROOT}/toolset_distributions', 'toolsets': '${REGISTERED_SOURCE_ROOT}/toolsets', 'trajectory_compressor': '${REGISTERED_SOURCE_ROOT}/trajectory_compressor', 'utils': '${REGISTERED_SOURCE_ROOT}/utils'}\nNAMESPACES: dict[str, list[str]] = {'tools.neutts_samples': ['${REGISTERED_SOURCE_ROOT}/tools/neutts_samples']}\nPATH_PLACEHOLDER = '${FINDER_PLACEHOLDER_PREFIX}' + \".__path_hook__\"\n\n\nclass _EditableFinder:  # MetaPathFinder\n    @classmethod\n    def find_spec(cls, fullname: str, path=None, target=None) -> ModuleSpec | None:  # type: ignore\n        # Top-level packages and modules (we know these exist in the FS)\n        if fullname in MAPPING:\n            pkg_path = MAPPING[fullname]\n            return cls._find_spec(fullname, Path(pkg_path))\n\n        # Handle immediate children modules (required for namespaces to work)\n        # To avoid problems with case sensitivity in the file system we delegate\n        # to the importlib.machinery implementation.\n        parent, _, child = fullname.rpartition(\".\")\n        if parent and parent in MAPPING:\n            return PathFinder.find_spec(fullname, path=[MAPPING[parent]])\n\n        # Other levels of nesting should be handled automatically by importlib\n        # using the parent path.\n        return None\n\n    @classmethod\n    def _find_spec(cls, fullname: str, candidate_path: Path) -> ModuleSpec | None:\n        init = candidate_path / \"__init__.py\"\n        candidates = (candidate_path.with_suffix(x) for x in module_suffixes())\n        for candidate in chain([init], candidates):\n            if candidate.exists():\n                return spec_from_file_location(fullname, candidate)\n        return None\n\n\nclass _EditableNamespaceFinder:  # PathEntryFinder\n    @classmethod\n    def _path_hook(cls, path) -> type[_EditableNamespaceFinder]:\n        if path == PATH_PLACEHOLDER:\n            return cls\n        raise ImportError\n\n    @classmethod\n    def _paths(cls, fullname: str) -> list[str]:\n        paths = NAMESPACES[fullname]\n        if not paths and fullname in MAPPING:\n            paths = [MAPPING[fullname]]\n        # Always add placeholder, for 2 reasons:\n        # 1. __path__ cannot be empty for the spec to be considered namespace.\n        # 2. In the case of nested namespaces, we need to force\n        #    import machinery to query _EditableNamespaceFinder again.\n        return [*paths, PATH_PLACEHOLDER]\n\n    @classmethod\n    def find_spec(cls, fullname: str, target=None) -> ModuleSpec | None:  # type: ignore\n        if fullname in NAMESPACES:\n            spec = ModuleSpec(fullname, None, is_package=True)\n            spec.submodule_search_locations = cls._paths(fullname)\n            return spec\n        return None\n\n    @classmethod\n    def find_module(cls, _fullname) -> None:\n        return None\n\n\ndef install():\n    if not any(finder == _EditableFinder for finder in sys.meta_path):\n        sys.meta_path.append(_EditableFinder)\n\n    if not NAMESPACES:\n        return\n\n    if not any(hook == _EditableNamespaceFinder._path_hook for hook in sys.path_hooks):\n        # PathEntryFinder is needed to create NamespaceSpec without private APIS\n        sys.path_hooks.append(_EditableNamespaceFinder._path_hook)\n    if PATH_PLACEHOLDER not in sys.path:\n        sys.path.append(PATH_PLACEHOLDER)  # Used just to trigger the path hook\n",
+    "bytes": 4481,
+    "sha256": "40fce86f517b5c05fbd4a32f43c870f4d0264cd435835d5102a6990044f7a717"
+  },
+  "direct_url": {
+    "text": "{\"url\":\"file://${REGISTERED_SOURCE_ROOT}\",\"dir_info\":{\"editable\":true}}",
+    "bytes": 71,
+    "sha256": "2f15bd30489706e8198227574c3645067f21136e9824afa72c3631caf4f6f2b5"
+  },
+  "guards": [
+    {
+      "path": "agent/prompt_builder.py",
+      "bytes": 42364,
+      "sha256": "9c7f561ada7f1ec615f5b1869d6c8de657669fdd1222428a0be09c1a9d8b06d6"
+    },
+    {
+      "path": "agent/skill_commands.py",
+      "bytes": 13627,
+      "sha256": "ea1b44d64ff44dc6efdd3d5b5ffd417984d0acf86a5ecb2112bb5f981b9f4470"
+    },
+    {
+      "path": "agent/skill_utils.py",
+      "bytes": 15333,
+      "sha256": "64e74823e92ada6948ac6b5b1b5459fee3589a33ab3dfe05796f5cf45d338bf5"
+    },
+    {
+      "path": "cli.py",
+      "bytes": 390319,
+      "sha256": "8a71a709c388629222abcadf85918ce725433d1d8a6393214dc16d52bd06885b"
+    },
+    {
+      "path": "gateway/hooks.py",
+      "bytes": 6427,
+      "sha256": "0f31d9e46d19bcff4192f32aba47af1f342f29cba53a4c5e1797a59b97c85913"
+    },
+    {
+      "path": "gateway/run.py",
+      "bytes": 351377,
+      "sha256": "f434aff91dbad60e7b49c72f6a33d39db86e2a0e77f7a3a101944dfd7bd7be6b"
+    },
+    {
+      "path": "hermes_cli/__init__.py",
+      "bytes": 504,
+      "sha256": "f14f6bb05ad1b2dd93962d9be806f2f556874f32dd5c3d10f380ee7871fa9977"
+    },
+    {
+      "path": "hermes_cli/commands.py",
+      "bytes": 41290,
+      "sha256": "04e50c8902209b26de1ed4d35718189c8c1ec7799e86448c95849ada6cc12c01"
+    },
+    {
+      "path": "hermes_cli/config.py",
+      "bytes": 106927,
+      "sha256": "30af70e3290b4f705f8dad07babdc8cb17840a11f32aab878a73b853a2d06c0c"
+    },
+    {
+      "path": "hermes_cli/env_loader.py",
+      "bytes": 1478,
+      "sha256": "a097b6505bd676aa51a3cfabc0eb8544060e5490bfa291442687492c20665d08"
+    },
+    {
+      "path": "hermes_cli/main.py",
+      "bytes": 224931,
+      "sha256": "287cf718d148e14fdd71639f5f9cc22e1f6025756a6e2f8c8df50ff55c6c7a5e"
+    },
+    {
+      "path": "hermes_cli/plugins.py",
+      "bytes": 22280,
+      "sha256": "1e482557df762c5c6c52b9eb6c967ba12c574aecd22ccb04d8eeffeff0b79b38"
+    },
+    {
+      "path": "hermes_cli/plugins_cmd.py",
+      "bytes": 22585,
+      "sha256": "010beb47bdf729a0eec04c3effde44164e8e704365f1bbd91dc1fe7d353b5a87"
+    },
+    {
+      "path": "hermes_cli/profiles.py",
+      "bytes": 36413,
+      "sha256": "0b50732eb3a89dd09f75ef8b2211ff6cf38e990f89d06b1c1110ec949f1f031a"
+    },
+    {
+      "path": "hermes_cli/tools_config.py",
+      "bytes": 74478,
+      "sha256": "4332fb62e8876c4014d35428de1afed4bd720fb59a4a6f59c072b8a9b8ff8ec5"
+    },
+    {
+      "path": "hermes_constants.py",
+      "bytes": 3551,
+      "sha256": "f07b9765a6ee9ced41cf91826187b62e8884edd78ae2cc61c1c971fa0bca320a"
+    },
+    {
+      "path": "model_tools.py",
+      "bytes": 22968,
+      "sha256": "69ddc6e01bc9e8902e06973154560e0bf7b8ad25eeee17f27504ae3177af0ff4"
+    },
+    {
+      "path": "plugins/memory/__init__.py",
+      "bytes": 11041,
+      "sha256": "a7cd60c092bbdeba8b85b49aa85a279cd20cfc2f20aea87e1898f317e23d72e2"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 4160,
+      "sha256": "5fda5558427ab2f9f25697e4a7b1bae6f382956a10bf5d4c1780d5fd3bc0e968"
+    },
+    {
+      "path": "run_agent.py",
+      "bytes": 477047,
+      "sha256": "b18ea233cb2816cfc2d02e2ea5a8430507a976f35ad8de3588b218d58625cccf"
+    },
+    {
+      "path": "tools/mcp_tool.py",
+      "bytes": 83875,
+      "sha256": "b5c2bd1cdf92f85e84ef921236d0e79a7de31a5ed0bb3554aa24eb04d3a6c9e1"
+    },
+    {
+      "path": "tools/memory_tool.py",
+      "bytes": 22638,
+      "sha256": "5c0dfaff18451cc46f4b509a40dca5b4d1f54d0bcca825e9298ee1ec4a495112"
+    },
+    {
+      "path": "tools/registry.py",
+      "bytes": 12990,
+      "sha256": "a85268f04e75a00be4cf3100585ca55c397ea1c1607a1a4f133c5abc0c119c43"
+    },
+    {
+      "path": "tools/skills_sync.py",
+      "bytes": 10792,
+      "sha256": "9ab452dedd78c33abc84598941c4a981e5e466d72828727ceb783090a609f8aa"
+    },
+    {
+      "path": "tools/skills_tool.py",
+      "bytes": 49641,
+      "sha256": "20adfa34a4eb97b0015e1eed8e4574d9036f432d17b80c4e31711fb28d717c8e"
+    },
+    {
+      "path": "toolsets.py",
+      "bytes": 20610,
+      "sha256": "ca28951f624aefb97b7472c5dd8b888c5d1020e94b7b9388138c1556d6e21d69"
+    },
+    {
+      "path": "utils.py",
+      "bytes": 3866,
+      "sha256": "a5ea471979e9a2e1fa75533f2dd53cd5b7ebb52b7424e2d704f8be99ea6f643c"
+    }
+  ]
+}

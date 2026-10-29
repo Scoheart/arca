@@ -94,11 +94,16 @@ fn application_matching(names: &[String], bundle_ids: &[String]) -> Option<PathB
         }))
 }
 
-fn find_command(name: &str) -> Option<PathBuf> {
+pub(crate) fn find_command(name: &str) -> Option<PathBuf> {
+    command_candidates(name).into_iter().find(|p| executable(p))
+}
+
+/// Same ordered candidates for passive observers and their installation watches.
+pub(crate) fn command_candidates(name: &str) -> Vec<PathBuf> {
     let direct = expand(name);
-    if direct.is_absolute() { return executable(&direct).then_some(direct); }
+    if direct.is_absolute() { return vec![direct]; }
     if name.is_empty() || name.starts_with('-') || name.contains(['/', '\\']) || name.chars().any(char::is_whitespace) {
-        return None;
+        return Vec::new();
     }
     let mut paths = std::env::var_os("PATH").map(|value| std::env::split_paths(&value).collect::<Vec<_>>()).unwrap_or_default();
     if let Ok(home) = home() {
@@ -115,7 +120,7 @@ fn find_command(name: &str) -> Option<PathBuf> {
         }
     }
     paths.extend(["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"].map(crate::paths::system_probe_path));
-    paths.into_iter().filter(|p| p.is_absolute()).map(|p| p.join(name)).find(|p| executable(p))
+    paths.into_iter().filter(|p| p.is_absolute()).map(|p| p.join(name)).collect()
 }
 
 fn validate_environment(env: &BTreeMap<String, String>) -> Result<(), String> {
@@ -337,7 +342,9 @@ pub fn runtime_version(agent_id: &str) -> Result<Option<String>, String> {
     if !launch.available { return Ok(None); }
     Ok(match launch.resolved_target.as_ref() {
         Some(LaunchTarget::App { path, .. }) => cached_version(&Path::new(path).join("Contents/Info.plist"), || app_version(path)),
-        Some(LaunchTarget::Cli { command, .. }) if launch.configured_target.is_none() => cached_version(Path::new(command), || cli_version(command)),
+        Some(LaunchTarget::Cli { command, .. }) if launch.configured_target.is_none() => cached_version(Path::new(command), || {
+            crate::resources::plugin::passive_runtime_version(agent_id,Path::new(command)).unwrap_or_else(||cli_version(command))
+        }),
         _ => None,
     })
 }
