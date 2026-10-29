@@ -1139,5 +1139,12 @@
       "url": "https://codebase.helmholtz.cloud/-/user_settings/personal_access_tokens",
       "kind": "api-key"
     }
+  },
+  "token360": {
+    "docs_url": "https://www.token360.ai/en-US/docs/api-reference/overview",
+    "portal": {
+      "url": "https://www.token360.ai/en-US",
+      "kind": "console"
+    }
   }
 }

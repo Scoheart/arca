@@ -845,6 +845,20 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.decuff.ai",
             },
         ],
+        "token360" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.token360.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.token360.ai",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://api.token360.ai/v1beta",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1486,6 +1500,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "helmholtz-blablador",
         name: "Helmholtz Blablador",
         default_base_url: Some("https://api.blablador.fz-juelich.de/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "token360",
+        name: "Token360",
+        default_base_url: Some("https://api.token360.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2243,6 +2264,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.swarms.world" => "swarms",
         "api.decuff.ai" => "decuff",
         "api.blablador.fz-juelich.de" => "helmholtz-blablador",
+        "api.token360.ai" => "token360",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -7938,6 +7960,18 @@ mod tests {
             ("http://blablador.fz-juelich.de", "custom"),
             ("https://www.blablador.fz-juelich.de/v1", "custom"),
             ("https://api.blablador.fz-juelich.de.evil.test/v1", "custom"),
+            ("https://api.token360.ai/v1", "token360"),
+            ("https://api.token360.ai/v1/chat/completions", "token360"),
+            ("https://api.token360.ai/v1/responses", "token360"),
+            ("https://api.token360.ai/v1/models", "token360"),
+            ("https://api.token360.ai", "token360"),
+            ("https://api.token360.ai/v1/messages", "token360"),
+            ("https://api.token360.ai/v1beta", "token360"),
+            ("https://api.token360.ai/v1beta/models/gemini-2.5-flash:generateContent", "token360"),
+            ("https://www.token360.ai/en-US", "custom"),
+            ("https://token360.ai/v1", "custom"),
+            ("https://admin.token360.ai/api-keys", "custom"),
+            ("https://api.token360.ai.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -8020,7 +8054,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 164);
+        assert_eq!(list_providers().len(), 165);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8367,6 +8401,58 @@ mod tests {
             "https://codebase.helmholtz.cloud/-/user_settings/personal_access_tokens"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let token360 = list_providers()
+            .iter()
+            .find(|provider| provider.id == "token360")
+            .unwrap();
+        let serialized = serde_json::to_value(token360).unwrap();
+        assert_eq!(token360.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(token360.category, "gateway");
+        assert_eq!(
+            token360.default_base_url,
+            Some("https://api.token360.ai/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.token360.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["protocols"]["gemini-generate-content"]["endpoint_path"],
+            "/v1beta/models/{model}:generateContent"
+        );
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.token360.ai/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(serialized["additional_endpoints"][1]["base_url"], "https://api.token360.ai");
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(
+            serialized["additional_endpoints"][2]["base_url"],
+            "https://api.token360.ai/v1beta"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][2]["protocol"],
+            "gemini-generate-content"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://www.token360.ai/en-US/docs/api-reference/overview"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://www.token360.ai/en-US");
+        assert_eq!(serialized["portal"]["kind"], "console");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(

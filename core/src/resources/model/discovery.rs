@@ -222,6 +222,8 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "subq"
         | "swarms"
         | "helmholtz-blablador"
+
+        | "token360"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -314,6 +316,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "anyrouter"
             | "blazerail"
             | "subq"
+            | "token360"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -921,6 +924,23 @@ mod tests {
     }
 
     #[test]
+    fn token360_discovers_the_public_openai_catalog() {
+        let config = provider(
+            "token360",
+            "https://api.token360.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.token360.ai/v1/models"
+        );
+    }
+
+    #[test]
     fn blazerail_discovers_the_public_openai_catalog() {
         let config = provider(
             "blazerail",
@@ -1085,6 +1105,8 @@ mod tests {
         "subq",
         "swarms",
         "helmholtz-blablador",
+
+        "token360",
         "mistral",
         "deepseek",
         "groq",
@@ -1267,6 +1289,7 @@ mod tests {
             "anyrouter",
             "blazerail",
             "subq",
+            "token360",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),

@@ -12,7 +12,7 @@ Required fields and basic text examples have concrete values. Output-token limit
 
 Responses explicitly uses its documented `store=true` default. Chat Completions uses `store=false`; Interactions retains Arca's stateless `store=false` example. Where the protocol has a `stream` field, it defaults to false. To enable SSE, set the supported streaming options and optionally add cURL's `--no-buffer`. generateContent requires the separate `streamGenerateContent?alt=sse` endpoint; Converse uses a separate `/converse-stream` endpoint with AWS event-stream, not SSE. Neither accepts a `stream` request-body field.
 
-Reviewed service restrictions are declared in `provider_overrides`, keyed by the stored Provider type and protocol. These replace whole top-level request values before model selection and unset-field filtering; protocol defaults remain unchanged for other providers. decuff's stateless Responses endpoint exports `store=false`, as required by its [documentation](https://decuff.ai/docs).
+Reviewed service restrictions are declared in `provider_overrides`, keyed by the stored Provider type and protocol. These replace whole top-level request values before model selection and unset-field filtering; protocol defaults remain unchanged for other providers. The stateless Responses endpoints for [decuff](https://decuff.ai/docs) and [Token360](https://www.token360.ai/en-US/docs/api-reference/overview) export `store=false` as required by their documentation.
 
 ## Protocol coverage
 

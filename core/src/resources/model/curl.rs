@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn responses_exports_follow_reviewed_provider_storage_contracts() {
-        for (provider, store) in [("decuff", false), ("openai", true), ("custom", true), ("decuff-other", true)] {
+        for (provider, store) in [("decuff", false), ("token360", false), ("openai", true), ("custom", true), ("decuff-other", true)] {
             let command = render(provider, &ModelProtocol::OpenaiResponses,
                 "https://example.invalid/v1/responses", "fixture-model", CurlAuth::Placeholder).unwrap();
             let body = command.split_once("--data-raw '").unwrap().1.strip_suffix('\'').unwrap();

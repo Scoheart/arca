@@ -5,6 +5,11 @@
       "openai-responses": {
         "store": false
       }
+    },
+    "token360": {
+      "openai-responses": {
+        "store": false
+      }
     }
   },
   "templates": {
