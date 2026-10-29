@@ -1,0 +1,254 @@
+{
+  "command": "vibe",
+  "version": "3.0.3",
+  "launcher_body_sha256": "4aafad9897c49eeb92f65b222514a575e604e67cd331234fd7b6778fb8af2eec",
+  "server_launcher_body_sha256": "9ca8b4d4badeaf3d4b2102c59677dbf033d4b1e625be5c3ea4b270d1900d8814",
+  "builtin": {
+    "path": "vibe/plugins/builtins/vibe",
+    "name": "vibe",
+    "version": "1.0.0",
+    "skills": [
+      "create-plugin",
+      "skill-creator",
+      "vibe",
+      "worktree"
+    ]
+  },
+  "members": [
+    {
+      "path": "mistral_vibe-3.0.3.dist-info/METADATA",
+      "bytes": 83466,
+      "sha256": "565e466144a808a46b2f33ae00d7a5820c72f26e56e16a01da9f404d5470afb8"
+    },
+    {
+      "path": "mistralai_vibe_local_harness/_native.abi3.so",
+      "bytes": 84175216,
+      "sha256": "a0c74567bb7a643b0f5eb038a51e0418b50f95723e5f23d7e0b432896a0bee1e"
+    },
+    {
+      "path": "vibe/__init__.py",
+      "bytes": 431,
+      "sha256": "d877a4efeb0098ce56f4a67d26193e368b26fcbe848e57291046953a974fb6c9"
+    },
+    {
+      "path": "vibe/_bin/vibe-rs",
+      "bytes": 28211320,
+      "sha256": "d5e6af4c547732a4fe1d353c56cc5e5eb3ba7bb41b7af4afd874894a1b936db8"
+    },
+    {
+      "path": "vibe/app_server/_plugins.py",
+      "bytes": 46393,
+      "sha256": "05a7daf671664d97159f430bedfab97415692be1c2ea690f8f2a36b0aca512fc"
+    },
+    {
+      "path": "vibe/app_server/_runtime.py",
+      "bytes": 114503,
+      "sha256": "57d1628fb4eaa3f4245422fd3b0906b91a30b6032341ee026953805c309e2f71"
+    },
+    {
+      "path": "vibe/app_server/plugin_catalog.py",
+      "bytes": 6319,
+      "sha256": "2cf30a2795611b021e8dba2d1a351be743fbb7699dd5cee6a9233afcdc953c68"
+    },
+    {
+      "path": "vibe/app_server/stdio.py",
+      "bytes": 7865,
+      "sha256": "da1db6bd7a0353db6094c15aec9cc9c67dfa7369207f384aad1a352b034b04a0"
+    },
+    {
+      "path": "vibe/cli/launcher.py",
+      "bytes": 3032,
+      "sha256": "8903c0fc8749ae8b4724a016ab6e2d258446b389915b8a62de96ef07bb21fac7"
+    },
+    {
+      "path": "vibe/core/config/harness_files/__init__.py",
+      "bytes": 1518,
+      "sha256": "a96e1cee1a1fadf9ec1664a691a4313e76596bf4d06cef60cb28f3b46c52ac17"
+    },
+    {
+      "path": "vibe/core/config/harness_files/_harness_manager.py",
+      "bytes": 11398,
+      "sha256": "d58a0f1a0502e442728642bc8daabc6a3188363803d1896efed442ebb4729051"
+    },
+    {
+      "path": "vibe/core/config/harness_files/_paths.py",
+      "bytes": 609,
+      "sha256": "69ad49c3179b889b8e50ca9c9ab038d1ef6d323ef8db91ca8c444758f97cf950"
+    },
+    {
+      "path": "vibe/core/hooks/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vibe/core/hooks/config.py",
+      "bytes": 3690,
+      "sha256": "8f304f988412b6ef1c708ae50a772af16e9191420734f75c886891e5e99b0628"
+    },
+    {
+      "path": "vibe/core/hooks/models.py",
+      "bytes": 3970,
+      "sha256": "bcc42ce7c2e1cf4604abf9bdd90ad8da0412d9c4e0472c76033ad7cf2cd79180"
+    },
+    {
+      "path": "vibe/core/paths/__init__.py",
+      "bytes": 1407,
+      "sha256": "9c98633a23fa402a66322ec24011e12000182f7dbc54ced41f678380d131e6c7"
+    },
+    {
+      "path": "vibe/core/paths/_agents_home.py",
+      "bytes": 271,
+      "sha256": "33562eb31cf7e87d9bab05a8aa615cda2bfae2d88d7c9b77321ef1af6d524d59"
+    },
+    {
+      "path": "vibe/core/paths/_local_config_files.py",
+      "bytes": 3279,
+      "sha256": "74d51c552163e7df9579ece83c553ca2328a29ea74aff7fdc6f7b0667c76df7e"
+    },
+    {
+      "path": "vibe/core/paths/_vibe_home.py",
+      "bytes": 3130,
+      "sha256": "301a88993f4f7e11da2b938c18df031dd2b4746df0af208e92d72f03c4f37785"
+    },
+    {
+      "path": "vibe/core/paths/conventions.py",
+      "bytes": 69,
+      "sha256": "3eb495567ede117e9eaa273d03a0d529abeaf2d8252de50bef4d34f887653d4b"
+    },
+    {
+      "path": "vibe/core/plugins/__init__.py",
+      "bytes": 5949,
+      "sha256": "5ee44599439450947d322f63f11938153ba9f0d9fbd99534adfafc2c05c3cd5a"
+    },
+    {
+      "path": "vibe/core/plugins/_adapter.py",
+      "bytes": 10261,
+      "sha256": "a1666daf533d1f9633b6f7ddb7a36d02d7a365dc500ec2500392b56a000466b0"
+    },
+    {
+      "path": "vibe/core/plugins/_canonical.py",
+      "bytes": 1399,
+      "sha256": "786c1b2fdc99ed2ffe9a6a4d0bdaac994685fa91ce06254fa5a987aaafc8c01f"
+    },
+    {
+      "path": "vibe/core/plugins/_catalog.py",
+      "bytes": 20923,
+      "sha256": "fea73aab743be64282429b8051c175e88fb68e18c797a915ecefed5e4d857544"
+    },
+    {
+      "path": "vibe/core/plugins/_claude.py",
+      "bytes": 28833,
+      "sha256": "c3e150c6f800e70f5079d13abe60f4f3b29f3ec52b77d7209be4b8e59efa5831"
+    },
+    {
+      "path": "vibe/core/plugins/_codex.py",
+      "bytes": 28618,
+      "sha256": "35be3a1d0b7e737a3cfbd945d85c1b888eb44ccd4ba2cac0fee710b8df5c59e8"
+    },
+    {
+      "path": "vibe/core/plugins/_compatibility.py",
+      "bytes": 10410,
+      "sha256": "d9ba50956527eea0ef04638b54635ee8b718a65b23503df1d3285fdd384097ad"
+    },
+    {
+      "path": "vibe/core/plugins/_content.py",
+      "bytes": 2490,
+      "sha256": "1a143de29c9b78d258d6d7ec04c04186e1492aab4be68ded3320b6eb3f112630"
+    },
+    {
+      "path": "vibe/core/plugins/_diagnostics.py",
+      "bytes": 4614,
+      "sha256": "6dc4120520ecbcfb9e6bbbce4d755f5e8080879c5e2fddd336d0d87448aa375e"
+    },
+    {
+      "path": "vibe/core/plugins/_drift.py",
+      "bytes": 5623,
+      "sha256": "59350da6a023a6633bc1f1bb84ccfc889d23ed70d027e9bf3827b6886127f99e"
+    },
+    {
+      "path": "vibe/core/plugins/_foreign.py",
+      "bytes": 45712,
+      "sha256": "c09abdc86d73846a058ee00bdedd1120af7df07adde6f586c0225a5460c5e7ae"
+    },
+    {
+      "path": "vibe/core/plugins/_kimi.py",
+      "bytes": 19523,
+      "sha256": "e43ed5aee1b2bc375b5c12ebaff7b469598cc7a0a83876658aac3f145694dab0"
+    },
+    {
+      "path": "vibe/core/plugins/_materialize.py",
+      "bytes": 14723,
+      "sha256": "fb65341f65e9626863586db6cb2a282b6aa3f5a5f351b80af4167a27bdced68d"
+    },
+    {
+      "path": "vibe/core/plugins/_naming.py",
+      "bytes": 3285,
+      "sha256": "8bd51684ec0d48d253232f4b357f6c62dd541a85ff60b289dab1b26c8fc4832c"
+    },
+    {
+      "path": "vibe/core/plugins/_native.py",
+      "bytes": 84620,
+      "sha256": "148fcdefdc174e381cf077410263c29d46f8ab88bfc9403fe89121d4628a9b02"
+    },
+    {
+      "path": "vibe/core/plugins/_paths.py",
+      "bytes": 1961,
+      "sha256": "8126e56b5e92370cb6dc97fed3ddcefefb4981f1d8fa119ba91093cc8dce954f"
+    },
+    {
+      "path": "vibe/core/plugins/_redaction.py",
+      "bytes": 3932,
+      "sha256": "ace4e4ef7a7b3950813806f02197f70233ea3cb68be703a3d7d70a33c895eef5"
+    },
+    {
+      "path": "vibe/core/plugins/_snapshot.py",
+      "bytes": 8780,
+      "sha256": "ffacabc961a79bfb4764c8703b49eead3b5bff1c9e55f0e302fddbf405504580"
+    },
+    {
+      "path": "vibe/core/plugins/inspection.py",
+      "bytes": 16996,
+      "sha256": "a1661c694ca611e21e31d46a80768559d9850aca69cbe2d0df7bba325e9ce019"
+    },
+    {
+      "path": "vibe/core/plugins/upstream_fixtures.py",
+      "bytes": 10689,
+      "sha256": "78c094d7d51f9629440367ecf703a3e6e22938f4e8fa367d3492a5c9dac88a1c"
+    },
+    {
+      "path": "vibe/core/skills/__init__.py",
+      "bytes": 1145,
+      "sha256": "dcb3e5e5b38634cb5a2d26301a4293e469f05f7320100f30d2a3dfd4040bf9b7"
+    },
+    {
+      "path": "vibe/core/skills/manager.py",
+      "bytes": 15278,
+      "sha256": "b0071fff9972587dfb42bca8ab38176be1dc704261b52035b450d17df4b2111e"
+    },
+    {
+      "path": "vibe/core/skills/models.py",
+      "bytes": 4922,
+      "sha256": "8fc4abb8fb76897692dc9bf5f2ec90f94b6b2d408a3a29b299301293fd0c2174"
+    },
+    {
+      "path": "vibe/core/skills/parser.py",
+      "bytes": 4578,
+      "sha256": "7bab20fdaa083c699f9a1224e2043fa47cacea0746292b613d8ad3020b610982"
+    },
+    {
+      "path": "vibe/plugins/builtins/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vibe/plugins/builtins/vibe/plugin.json",
+      "bytes": 341,
+      "sha256": "6c288482b77047b21056653f3264d014090f4b7987ad19deacb0e95b01bf2ce3"
+    },
+    {
+      "path": "vibe/utils/vibe_home.py",
+      "bytes": 362,
+      "sha256": "df7191d3ea02bf2e7db1de8263c0f17016482338705622f07ef4384b35f423df"
+    }
+  ]
+}

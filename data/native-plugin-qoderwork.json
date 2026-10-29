@@ -1,0 +1,266 @@
+[
+  {
+    "agent_id": "qoderwork",
+    "version": "0.9.18",
+    "bundle_id": "com.qoder.work",
+    "product_name": "QoderWork",
+    "guards": [
+      {
+        "path": "package.json",
+        "bytes": 2953,
+        "sha256": "3c320353f6e7ff849c95544c31ba3fef78f45fa59a5b6c2ca41d6a4327e906f4"
+      },
+      {
+        "path": "out/main/index.js",
+        "bytes": 8860,
+        "sha256": "265084c8c322981f8666a22cd0052cdd0b1c1994518b376c7d15ee5afc33abbe"
+      },
+      {
+        "path": "out/main/main.js",
+        "bytes": 4382618,
+        "sha256": "9dbf980274310f0ebdf4c2e742106298fa00937b4f586a14bbaccd2192b12e69"
+      },
+      {
+        "path": "out/main/chunks/constants-ACTtwGOG.js",
+        "bytes": 1858,
+        "sha256": "76e03e71dbcc342629e8b54ffc4df259096963bf6409a8c4f8a87a7dc5b5f106"
+      },
+      {
+        "path": "out/main/chunks/constants-Bg_L0oFU.js",
+        "bytes": 6174,
+        "sha256": "874887c1b613b12ebdd24c9c9a05b6b9bddfe4229a3f3a76eade164e82ccdfd4"
+      },
+      {
+        "path": "out/main/chunks/constants-CwqW4VAj.js",
+        "bytes": 3681,
+        "sha256": "f0f66daf35c6c8721aecf95e93d7f87ecb89e789d8765dbab50e6a11982af5d5"
+      }
+    ],
+    "connectors": [
+      {
+        "id": "slack",
+        "name": "Slack"
+      },
+      {
+        "id": "line",
+        "name": "LINE"
+      },
+      {
+        "id": "figma",
+        "name": "Figma"
+      },
+      {
+        "id": "google-calendar",
+        "name": "Google Calendar"
+      },
+      {
+        "id": "google-maps",
+        "name": "Google Maps"
+      },
+      {
+        "id": "builtin_computer_use",
+        "name": "Computer Use"
+      },
+      {
+        "id": "builtin_browser",
+        "name": "Browser Relay"
+      },
+      {
+        "id": "builtin_ms365",
+        "name": "Microsoft 365"
+      },
+      {
+        "id": "builtin_google",
+        "name": "Google Workspace"
+      },
+      {
+        "id": "wecom-mcp",
+        "name": "WeCom"
+      },
+      {
+        "id": "qw",
+        "name": "QoderWork"
+      },
+      {
+        "id": "builtin_apple_reminders",
+        "name": "Apple Reminders"
+      },
+      {
+        "id": "builtin_apple_calendar",
+        "name": "Apple Calendar"
+      },
+      {
+        "id": "builtin_apple_notes",
+        "name": "Apple Notes"
+      },
+      {
+        "id": "builtin_apple_mail",
+        "name": "Apple Mail"
+      },
+      {
+        "id": "builtin_apple_contacts",
+        "name": "Apple Contacts"
+      }
+    ],
+    "legokits": [
+      {
+        "id": "canvas",
+        "server_id": "builtin_canvas",
+        "bundle": "canvas-mcp.cjs"
+      },
+      {
+        "id": "ai-slides",
+        "server_id": "builtin_ai_slides",
+        "bundle": "ai-slides-mcp.cjs"
+      },
+      {
+        "id": "writing",
+        "server_id": "builtin_writing",
+        "bundle": "writing-mcp.cjs"
+      }
+    ],
+    "blocked_plugins": [
+      "员工管理",
+      "招聘管理",
+      "薪酬绩效"
+    ],
+    "sdk_version": "1.0.25",
+    "sdk_package": {
+      "path": "app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/package.json",
+      "bytes": 952,
+      "sha256": "3c521f9248295897ba3038fbd9d30cb0ba74893de1ac574794e3b1a942de338b"
+    }
+  },
+  {
+    "agent_id": "qoderwork-cn",
+    "version": "0.9.18",
+    "bundle_id": "com.qoder.work.cn",
+    "product_name": "QoderWork CN",
+    "guards": [
+      {
+        "path": "package.json",
+        "bytes": 2956,
+        "sha256": "e848b871991e988a6ef2e37b8b37e3a3dd333f7ca26f476a586315decb5d03a8"
+      },
+      {
+        "path": "out/main/index.js",
+        "bytes": 8861,
+        "sha256": "eb271b15cbc1a32454a2e336459c005eb4037bcb73bd64acbcf42e9765e76e02"
+      },
+      {
+        "path": "out/main/main.js",
+        "bytes": 4381831,
+        "sha256": "04f188eb91261e3c79c3efa911385f3ddc03259bb1b0856f978f89997d22aad6"
+      },
+      {
+        "path": "out/main/chunks/constants-C_tGlnNZ.js",
+        "bytes": 784,
+        "sha256": "e2754aaefbe105d98eb570615d467dce45140b7ce471eefee10c7b2f93974da6"
+      },
+      {
+        "path": "out/main/chunks/constants-DrlprGB5.js",
+        "bytes": 6179,
+        "sha256": "2b6a9bf656b1c4d58387c5175106fa546896cc635fdfe37c3929e1f7e32bd0fa"
+      },
+      {
+        "path": "out/main/chunks/constants-CwqW4VAj.js",
+        "bytes": 3681,
+        "sha256": "f0f66daf35c6c8721aecf95e93d7f87ecb89e789d8765dbab50e6a11982af5d5"
+      }
+    ],
+    "connectors": [
+      {
+        "id": "slack",
+        "name": "Slack"
+      },
+      {
+        "id": "line",
+        "name": "LINE"
+      },
+      {
+        "id": "figma",
+        "name": "Figma"
+      },
+      {
+        "id": "google-calendar",
+        "name": "Google Calendar"
+      },
+      {
+        "id": "google-maps",
+        "name": "Google Maps"
+      },
+      {
+        "id": "builtin_computer_use",
+        "name": "Computer Use"
+      },
+      {
+        "id": "builtin_browser",
+        "name": "Browser Relay"
+      },
+      {
+        "id": "builtin_ms365",
+        "name": "Microsoft 365"
+      },
+      {
+        "id": "builtin_google",
+        "name": "Google Workspace"
+      },
+      {
+        "id": "wecom-mcp",
+        "name": "WeCom"
+      },
+      {
+        "id": "qw",
+        "name": "QoderWork"
+      },
+      {
+        "id": "builtin_apple_reminders",
+        "name": "Apple Reminders"
+      },
+      {
+        "id": "builtin_apple_calendar",
+        "name": "Apple Calendar"
+      },
+      {
+        "id": "builtin_apple_notes",
+        "name": "Apple Notes"
+      },
+      {
+        "id": "builtin_apple_mail",
+        "name": "Apple Mail"
+      },
+      {
+        "id": "builtin_apple_contacts",
+        "name": "Apple Contacts"
+      }
+    ],
+    "legokits": [
+      {
+        "id": "canvas",
+        "server_id": "builtin_canvas",
+        "bundle": "canvas-mcp.cjs"
+      },
+      {
+        "id": "ai-slides",
+        "server_id": "builtin_ai_slides",
+        "bundle": "ai-slides-mcp.cjs"
+      },
+      {
+        "id": "writing",
+        "server_id": "builtin_writing",
+        "bundle": "writing-mcp.cjs"
+      }
+    ],
+    "blocked_plugins": [
+      "员工管理",
+      "招聘管理",
+      "薪酬绩效"
+    ],
+    "sdk_version": "1.0.25",
+    "sdk_package": {
+      "path": "app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/package.json",
+      "bytes": 952,
+      "sha256": "3c521f9248295897ba3038fbd9d30cb0ba74893de1ac574794e3b1a942de338b"
+    }
+  }
+]

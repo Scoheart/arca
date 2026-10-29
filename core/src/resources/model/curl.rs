@@ -9,14 +9,12 @@ use zeroize::Zeroizing;
 
 #[derive(Deserialize)]
 struct CurlTemplates {
-    reviewed_on: String,
+    provider_overrides: BTreeMap<String, BTreeMap<ModelProtocol, BTreeMap<String, serde_json::Value>>>,
     templates: BTreeMap<ModelProtocol, CurlTemplate>,
 }
 
 #[derive(Deserialize)]
 struct CurlTemplate {
-    sources: Vec<String>,
-    notes: Vec<String>,
     request: serde_json::Value,
 }
 
@@ -25,16 +23,23 @@ static TEMPLATES: LazyLock<CurlTemplates> = LazyLock::new(|| {
         .expect("embedded model cURL templates must be valid")
 });
 
-fn request_template(protocol: &ModelProtocol, model: &str) -> Result<serde_json::Value, String> {
+fn request_template(provider_type: &str, protocol: &ModelProtocol, model: &str) -> Result<serde_json::Value, String> {
     let mut request = TEMPLATES.templates.get(protocol)
         .ok_or("curl_template_missing: protocol has no request template")?.request.clone();
     let body = request.as_object_mut().ok_or("curl_template_invalid: request must be an object")?;
+    if let Some(overrides) = TEMPLATES.provider_overrides.get(provider_type)
+        .and_then(|templates| templates.get(protocol)) {
+        body.extend(overrides.clone());
+    }
     if body.contains_key("model") { body.insert("model".into(), json!(model)); }
     if *protocol == ModelProtocol::AwsBedrockConverse && model.starts_with("arn:") && model.contains(":prompt/") {
         for field in ["system", "inferenceConfig", "toolConfig", "additionalModelRequestFields"] {
             body.insert(field.into(), serde_json::Value::Null);
         }
     }
+    // Filter unset options in Core so the copied text is just one cURL command.
+    // Do not remove false, zero, empty collections or nested null values.
+    body.retain(|_, value| !value.is_null());
     Ok(request)
 }
 
@@ -50,30 +55,14 @@ fn url_component(value: &str) -> String {
 
 pub enum CurlAuth<'a> { None, Placeholder, Key(&'a str) }
 
-pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'_>) -> Result<String, String> {
+pub fn render(provider_type: &str, protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'_>) -> Result<String, String> {
     if model.contains('\0') || url.contains('\0') {
         return Err("curl_invalid_input: NUL bytes are unsupported".into());
     }
-    let template = TEMPLATES.templates.get(protocol).ok_or("curl_template_missing: protocol has no request template")?;
-    let body = serde_json::to_string_pretty(&request_template(protocol, model)?)
+    let body = serde_json::to_string_pretty(&request_template(provider_type, protocol, model)?)
         .map_err(|_| "curl_serialization_failed")?;
-    let mut preamble = format!("# Arca complete top-level request template (reviewed {}).\n", TEMPLATES.reviewed_on);
-    preamble.push_str("# null = unset: omitted before sending; false, 0, empty arrays/objects and nested nulls are preserved.\n");
-    preamble.push_str("# 1024 is an editable Arca example output-token limit, not an API default. Requires curl and jq.\n");
-    preamble.push_str(match protocol {
-        ModelProtocol::GeminiGenerateContent => "# Non-streaming generateContent. Streaming uses streamGenerateContent?alt=sse instead; do not add a stream body field.\n",
-        ModelProtocol::AwsBedrockConverse => "# Non-streaming Converse. ConverseStream uses a separate /converse-stream endpoint and AWS event-stream, not JSON/SSE.\n",
-        _ => "# stream defaults to false for JSON output. For SSE, set stream=true and replace the final jq response formatter.\n",
-    });
-    for source in &template.sources { preamble.push_str(&format!("# Reference: {source}\n")); }
-    for note in &template.notes { preamble.push_str(&format!("# {note}\n")); }
-    // A quoted here-document keeps model names and example text literal. Scope
-    // the transient body to a subshell and stop before curl if JSON is invalid.
-    preamble.push_str("(\n  ARCA_REQUEST_BODY=$(\n    jq -ce 'with_entries(select(.value != null))' <<'ARCA_REQUEST_JSON'\n");
-    preamble.push_str(&body);
-    preamble.push_str("\nARCA_REQUEST_JSON\n  ) || exit\n");
-    let mut lines = vec![format!("  curl --request POST {}", quote(&url.replace("{model}", &url_component(model)))),
-        "    --header 'Content-Type: application/json'".into()];
+    let mut lines = vec![format!("curl --request POST {}", quote(&url.replace("{model}", &url_component(model)))),
+        "  --header 'Content-Type: application/json'".into()];
     let prefix = match protocol {
         ModelProtocol::AnthropicMessages => "x-api-key: ",
         ModelProtocol::GeminiGenerateContent | ModelProtocol::GeminiInteractions => "x-goog-api-key: ",
@@ -81,19 +70,19 @@ pub fn render(protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'
     };
     match auth {
         CurlAuth::None => {},
-        CurlAuth::Placeholder => lines.push(format!("    --header \"{prefix}${{ARCA_API_KEY}}\"")),
+        CurlAuth::Placeholder => lines.push(format!("  --header \"{prefix}${{ARCA_API_KEY}}\"")),
         CurlAuth::Key(key) => {
             if key.is_empty() || key.contains(['\0', '\r', '\n']) {
                 return Err("credential_invalid: API Key must be one non-empty line".into());
             }
-            lines.push(format!("    --header {}", quote(&format!("{prefix}{key}"))));
+            lines.push(format!("  --header {}", quote(&format!("{prefix}{key}"))));
         }
     }
     if *protocol == ModelProtocol::AnthropicMessages {
-        lines.push("    --header 'anthropic-version: 2023-06-01'".into());
+        lines.push("  --header 'anthropic-version: 2023-06-01'".into());
     }
-    lines.push("    --data-raw \"$ARCA_REQUEST_BODY\"".into());
-    Ok(format!("{preamble}{} | jq -r\n)", lines.join(" \\\n")))
+    lines.push(format!("  --data-raw {}", quote(&body)));
+    Ok(lines.join(" \\\n"))
 }
 
 #[cfg(test)]
@@ -101,8 +90,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn responses_exports_follow_reviewed_provider_storage_contracts() {
+        for (provider, store) in [("decuff", false), ("openai", true), ("custom", true), ("decuff-other", true)] {
+            let command = render(provider, &ModelProtocol::OpenaiResponses,
+                "https://example.invalid/v1/responses", "fixture-model", CurlAuth::Placeholder).unwrap();
+            let body = command.split_once("--data-raw '").unwrap().1.strip_suffix('\'').unwrap();
+            let body: serde_json::Value = serde_json::from_str(body).unwrap();
+            assert_eq!(body["store"], store, "{provider}");
+            assert_eq!(body["model"], "fixture-model");
+            assert_eq!(body["input"], "Hello");
+            assert!(body.get("previous_response_id").is_none());
+            assert!(body.get("conversation").is_none());
+        }
+    }
+
+    #[test]
+    fn responses_storage_overrides_do_not_leak_to_other_protocols() {
+        let body = request_template("decuff", &ModelProtocol::AnthropicMessages, "fixture-model").unwrap();
+        assert!(body.get("store").is_none());
+        assert_eq!(body["messages"][0]["role"], "user");
+        assert_eq!(body["model"], "fixture-model");
+    }
+
+    #[test]
     fn interactions_uses_google_auth_and_stateless_input() {
-        let command = render(&ModelProtocol::GeminiInteractions,
+        let command = render("custom", &ModelProtocol::GeminiInteractions,
             "https://example.invalid/v1beta/interactions", "gemini-fixture", CurlAuth::Placeholder).unwrap();
         assert!(command.contains("x-goog-api-key: ${ARCA_API_KEY}"));
         assert!(command.contains("\"input\": \"Hello\""));
@@ -114,42 +126,48 @@ mod tests {
     #[test]
     fn converse_escapes_model_path_and_uses_content_blocks() {
         let model = "arn:aws:bedrock:us-east-1:123456789012:inference-profile/a/b";
-        let command = render(&ModelProtocol::AwsBedrockConverse,
+        let command = render("custom", &ModelProtocol::AwsBedrockConverse,
             "https://example.invalid/model/{model}/converse", model, CurlAuth::Placeholder).unwrap();
         assert!(command.contains("/model/arn%3Aaws%3Abedrock%3Aus-east-1%3A123456789012%3Ainference-profile%2Fa%2Fb/converse"));
         assert!(command.contains("Authorization: Bearer ${ARCA_API_KEY}"));
         assert!(command.contains("\"text\": \"Hello\""));
         assert!(!command.contains("\"model\":"));
         assert!(!command.contains("{model}"));
-        assert!(render(&ModelProtocol::AwsBedrockConverse, "https://example.invalid/model/{model}/converse",
+        assert!(render("custom", &ModelProtocol::AwsBedrockConverse, "https://example.invalid/model/{model}/converse",
             "model", CurlAuth::Key("fixture\r\nInjected: yes")).is_err());
     }
 
     #[test]
     fn prompt_management_arns_do_not_override_the_managed_prompt() {
-        let body = request_template(&ModelProtocol::AwsBedrockConverse,
+        let body = request_template("custom", &ModelProtocol::AwsBedrockConverse,
             "arn:aws:bedrock:us-east-1:123456789012:prompt/ABCDEFGHIJ:1").unwrap();
         for key in ["system", "inferenceConfig", "toolConfig", "additionalModelRequestFields"] {
-            assert!(body[key].is_null(), "{key} cannot override a managed prompt");
+            assert!(body.get(key).is_none(), "{key} cannot override a managed prompt");
         }
         assert_eq!(body["messages"][0]["role"], "user");
-        let ordinary = request_template(&ModelProtocol::AwsBedrockConverse, "anthropic.fixture").unwrap();
+        let ordinary = request_template("custom", &ModelProtocol::AwsBedrockConverse, "anthropic.fixture").unwrap();
         assert!(ordinary["system"][0]["text"].is_string());
         assert_eq!(ordinary["inferenceConfig"]["maxTokens"], 1024);
     }
 
     #[test]
-    fn model_text_cannot_escape_the_quoted_request_document() {
-        let model = "fixture'$(touch unwanted)\nARCA_REQUEST_JSON\nexit 7";
-        let command = render(&ModelProtocol::OpenaiResponses,
+    fn export_is_one_curl_command_with_a_literal_json_argument() {
+        let model = "fixture'$(touch unwanted)\nexit 7";
+        let command = render("custom", &ModelProtocol::OpenaiResponses,
             "https://example.invalid/responses", model, CurlAuth::None).unwrap();
-        assert_eq!(command.lines().filter(|line| *line == "ARCA_REQUEST_JSON").count(), 1);
-        let start = command.find("\n{\n").unwrap() + 1;
-        let end = command.find("\nARCA_REQUEST_JSON\n").unwrap();
-        let body: serde_json::Value = serde_json::from_str(&command[start..end]).unwrap();
+        assert!(command.starts_with("curl --request POST "));
+        assert!(!command.contains("ARCA_REQUEST_BODY"));
+        assert!(!command.contains("jq "));
+        assert!(!command.contains("<<"));
+        let argument = command.split_once("--data-raw ").unwrap().1;
+        let json = argument.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap()
+            .replace("'\\''", "'");
+        let body: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(body["model"], model);
         assert_eq!(body["input"], "Hello");
         assert!(body["instructions"].is_string());
+        assert!(body.get("temperature").is_none());
+        assert_eq!(body["stream"], false);
     }
 }
 
@@ -164,6 +182,7 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     if profile.provider_id.is_some() && provider.is_none() {
         return Err("model_provider_not_found: this Profile references a missing Provider".into());
     }
+    let provider_type = provider.map(|provider| provider.provider.as_str()).unwrap_or(profile.provider.as_str());
     let (base, endpoint) = if let Some(provider) = provider {
         let route = provider.protocols.get(&profile.protocol)
             .ok_or("model_protocol_unavailable: Provider no longer supports this protocol")?;
@@ -174,7 +193,7 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     let url = format!("{}{}", normalize_provider_base_url(base)?, normalize_endpoint_path(endpoint)?);
     let auth_requirement = provider.map(|provider| &provider.auth_requirement).unwrap_or(&AuthRequirement::Required);
     if *auth_requirement == AuthRequirement::None {
-        return render(&profile.protocol, &url, &profile.model, CurlAuth::None);
+        return render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None);
     }
     let configured_source = if let Some(provider) = provider { provider.api_key_source.clone() }
         else { profile.env_key.as_ref().map(|name| ApiKeySource::Env { name: name.clone() }) };
@@ -182,7 +201,7 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
         let auth = if *auth_requirement == AuthRequirement::Optional && configured_source.is_none() {
             CurlAuth::None
         } else { CurlAuth::Placeholder };
-        return render(&profile.protocol, &url, &profile.model, auth);
+        return render(provider_type, &profile.protocol, &url, &profile.model, auth);
     }
     let stored = if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore)) {
         if let Some(provider) = provider {
@@ -191,10 +210,10 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     } else { None };
     if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore))
         && stored.is_none() && *auth_requirement == AuthRequirement::Optional {
-        return render(&profile.protocol, &url, &profile.model, CurlAuth::None);
+        return render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None);
     }
     let resolved = credential::resolve_source(&configured_source.unwrap_or(ApiKeySource::ArcaStore), stored)?;
     let key = Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
         .map_err(|_| "credential_invalid: API Key must be UTF-8")?);
-    render(&profile.protocol, &url, &profile.model, CurlAuth::Key(&key))
+    render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::Key(&key))
 }

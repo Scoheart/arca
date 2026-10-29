@@ -70,6 +70,13 @@ pub fn list_inventory_scoped(scope: InventoryScope) -> Result<ConsumptionInvento
     super::gate::read(|| crate::assets::inventory::list_consumption_inventory_scoped(&scope))
 }
 
+/// Host package metadata is independent of central transactions and secrets.
+/// Do not acquire the workspace gate: a pending credential prompt in a Model
+/// reader or writer must not prevent read-only host package discovery.
+pub fn list_native_resources(agent_id: &str) -> crate::domain::plugin::NativeResourceInventory {
+    crate::assets::inventory::list_native_resources(agent_id)
+}
+
 /// Both projections share one Skill scan, but retain independent failures so a
 /// broken Skill directory cannot hide otherwise readable MCP/Model relations.
 #[derive(serde::Serialize)]

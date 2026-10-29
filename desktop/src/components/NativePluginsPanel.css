@@ -1,0 +1,72 @@
+.arca-native-plugins { min-width: 0; }
+.arca-native-intro { margin: 0 0 12px; color: var(--text-secondary); font-size: 11px; line-height: 1.5; }
+.arca-native-plugin-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 6px; margin: 0; padding: 6px; list-style: none;
+  border-radius: var(--radius-region); background: var(--surface-section);
+}
+.arca-native-plugin-card { min-width: 0; border-radius: var(--radius-row); background: var(--surface-asset); }
+/* The host row shares the asset list, but owns its compact button layout. */
+.arca-consumption-list > .arca-host-mcp-card,
+.arca-agent-workbench .arca-consumption-list > li.arca-host-mcp-card[data-domain="mcp"] { display: block; min-height: 0; padding: 0; }
+.arca-native-row {
+  display: flex; width: 100%; min-width: 0; min-height: 64px; height: 100%;
+  align-items: center; gap: 10px; padding: 10px 12px;
+  border: 0; border-radius: inherit; background: transparent; color: var(--text-primary);
+  text-align: left; cursor: pointer; transition: background-color .14s ease;
+}
+.arca-native-row:hover { background: color-mix(in srgb, var(--surface-selected) 38%, var(--surface-asset)); }
+.arca-native-row:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.arca-native-row-icon {
+  display: inline-flex; width: 28px; height: 28px; flex: 0 0 28px;
+  align-items: center; justify-content: center; color: var(--text-secondary);
+}
+.arca-native-row-copy { display: block; flex: 1; min-width: 0; }
+.arca-native-row-copy > strong {
+  display: block; overflow: hidden; color: var(--text-primary); font-size: 12px;
+  font-weight: 650; line-height: 1.5; white-space: nowrap; text-overflow: ellipsis;
+}
+.arca-native-row-meta { display: flex; min-width: 0; align-items: center; gap: 7px; margin-top: 3px; font-size: 10px; line-height: 1.5; color: var(--text-secondary); }
+.arca-native-presence { display: inline-block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--text-secondary); }
+.arca-native-row-meta > .arca-native-presence { flex-shrink: 0; max-width: 55%; }
+.arca-native-row-context { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.arca-native-row-context::before { content: "·"; margin-right: 7px; color: var(--text-tertiary); }
+.arca-native-row-meta > code { font-family: var(--font-mono); font-size: 10px; }
+.arca-native-row-affordance { display: flex; flex: 0 0 auto; align-items: center; gap: 5px; color: var(--text-tertiary); }
+.arca-native-row-affordance > svg { width: 12px; height: 12px; }
+.arca-native-row-affordance > .arca-native-row-chevron { width: 14px; height: 14px; transform: rotate(-90deg); }
+.arca-native-dialog { color: var(--text-primary); }
+.arca-native-dialog .arca-dialog-shell-heading { min-width: 0; }
+.arca-native-dialog .arca-dialog-shell-heading h2 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.arca-native-notice, .arca-native-muted { color: var(--text-secondary); font-size: 11px; line-height: 1.6; }
+.arca-native-notice { margin: 0 0 12px; }
+.arca-native-dialog code { font: 11px/1.6 var(--font-mono); overflow-wrap: anywhere; white-space: pre-wrap; user-select: text; }
+.arca-native-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; margin: 0 0 18px; }
+.arca-native-facts > div { min-width: 0; }
+.arca-native-facts dt { margin: 0 0 4px; color: var(--text-secondary); font-size: 10px; }
+.arca-native-facts dd { margin: 0; color: var(--text-primary); font-size: 12px; overflow-wrap: anywhere; }
+.arca-native-facts code { display: block; }
+.arca-native-detail-section { min-width: 0; margin-top: 18px; }
+.arca-native-detail-section > h3 { margin: 0 0 8px; color: var(--text-primary); font-size: 12px; font-weight: 650; }
+.arca-native-source-list { margin: 0; padding: 0; list-style: none; }
+.arca-native-source-list > li { padding: 6px 0; }
+.arca-native-source-list code { display: block; color: var(--text-secondary); }
+.arca-native-version { min-width: 0; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border-subtle); }
+.arca-native-version > header { display: flex; min-width: 0; align-items: center; gap: 10px; font-size: 12px; }
+.arca-native-version > header strong { min-width: 0; overflow-wrap: anywhere; }
+.arca-native-version > header .arca-native-presence { font-size: 10px; }
+.arca-native-version > .arca-native-muted { margin: 6px 0 14px; }
+.arca-native-component-group { min-width: 0; margin-top: 10px; overflow: hidden; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); }
+.arca-native-component-source { display: block; padding: 8px 10px; background: var(--surface-quiet); color: var(--text-secondary); }
+.arca-native-component-group > ul { margin: 0; padding: 0 10px; list-style: none; }
+.arca-native-component-group li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 8px 0; font-size: 12px; }
+.arca-native-component-group li + li { border-top: 1px solid var(--border-subtle); }
+.arca-native-component-kind { flex: 0 1 auto; color: var(--text-secondary); font-size: 10px; overflow-wrap: anywhere; }
+.arca-native-component-name { min-width: 0; overflow-wrap: anywhere; }
+.arca-native-component-group li > code { flex-basis: 100%; color: var(--text-secondary); }
+@media (max-width: 540px) {
+  .arca-native-facts { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arca-native-row { transition: none; }
+}

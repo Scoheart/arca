@@ -11,23 +11,26 @@ export function AgentResourceActions({ children }: { children: ReactNode }) {
   return target ? createPortal(children, target) : null;
 }
 
-export type AgentResourceTab = ResourceCategoryId | "instructions";
+export type AgentResourceTab = ResourceCategoryId | "instructions" | "plugins";
 
 export function AgentResourcePanel({
   value,
   onChange,
   counts,
   instructions = false,
+  plugins,
   children,
 }: {
   value: AgentResourceTab;
   onChange: (value: AgentResourceTab) => void;
   counts: Record<ResourceCategoryId, number>;
   instructions?: boolean;
+  plugins?: number;
   children: ReactNode;
 }) {
   const TABS: Array<{ id: AgentResourceTab; label: string; Icon: typeof DocumentIcon }> = [...RESOURCE_CATEGORIES,
-    ...(instructions ? [{ id: "instructions" as const, label: "Instructions", Icon: DocumentIcon }] : [])];
+    ...(instructions ? [{ id: "instructions" as const, label: "Instructions", Icon: DocumentIcon }] : []),
+    ...(plugins !== undefined ? [{ id: "plugins" as const, label: "Plugins", Icon: DocumentIcon }] : [])];
   const id = useId();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const selectedIndex = TABS.findIndex((tab) => tab.id === value);
@@ -66,7 +69,7 @@ export function AgentResourcePanel({
             >
               <span className="arca-agent-resource-tab-icon" aria-hidden="true"><tab.Icon className="w-4 h-4" /></span>
               <span className="arca-agent-resource-tab-label">{tab.label}</span>
-              {tab.id !== "instructions" && <span className="arca-agent-resource-tab-count">{counts[tab.id]}</span>}
+              {tab.id !== "instructions" && <span className="arca-agent-resource-tab-count">{tab.id === "plugins" ? plugins : counts[tab.id]}</span>}
             </button>
           ))}
         </div>

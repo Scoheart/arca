@@ -9,11 +9,14 @@
   "cline-desktop": "desktop",
   "qoder-cli": "cli",
   "qoder": "ide",
+  "qoderwork-cn": "desktop",
+  "qoder-cn": "desktop",
   "qoder-desktop": "desktop",
-  "antigravity": "ide",
+  "antigravity": "desktop",
   "antigravity-cli": "cli",
   "continue": "plugin",
   "continue-cli": "cli",
+  "trae-cn": "ide",
   "trae-ide": "ide",
   "trae-cli": "cli",
   "zcode": "desktop",
@@ -50,5 +53,8 @@
   "chatgpt": "web",
   "postman": "desktop",
   "mcpjam": "desktop",
-  "mcp-use-inspector": "web"
+  "mcp-use-inspector": "web",
+  "qoder-cli-cn": "cli",
+  "qoderwake": "desktop",
+  "qoderwake-cn": "desktop"
 }

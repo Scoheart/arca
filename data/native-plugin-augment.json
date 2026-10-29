@@ -1,0 +1,19 @@
+{
+  "agent_id": "augment",
+  "command": "auggie",
+  "entrypoint": "augment.mjs",
+  "version": "0.36.0",
+  "runtime_version": "0.36.0 (commit 7c61e5bb)",
+  "sources": [
+    {
+      "path": "augment.mjs",
+      "bytes": 13256802,
+      "sha256": "6229e1685a5c4f9305ad333d76cd1a05c4315e6a9c8af3bbc75170b524005306"
+    },
+    {
+      "path": "package.json",
+      "bytes": 492,
+      "sha256": "0800a1c082237d4b497bc8e7c01fade746553b9f29e8ac1c5dbede45a7108b03"
+    }
+  ]
+}
