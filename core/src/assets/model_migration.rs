@@ -1548,7 +1548,7 @@ fn managed_profile_matches(
 
 fn managed_credential_identity(agent_id: &str, profile: &ModelProfile) -> Result<String, String> {
     if matches!(agent_id, "claude-code" | "codex" | "pi") {
-        return Ok(crate::resources::model::credential_snapshot(&profile.id)?
+        return Ok(crate::resources::model::credential_snapshot_for_observation(&profile.id)?
             .map(|value| format!("literal:{}", hash(&value)))
             .unwrap_or_else(|| "none".into()));
     }

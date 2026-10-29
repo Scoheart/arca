@@ -3334,6 +3334,11 @@ fn profile_credential_shell_command(profile: &ModelProfile) -> String {
 
 #[cfg(target_os = "macos")]
 fn read_credential_service_checked(service: &str) -> Result<Option<Vec<u8>>, String> {
+    read_credential_service_with_authorization(service, true)
+}
+
+#[cfg(target_os = "macos")]
+fn read_credential_service_with_authorization(service: &str, authorize: bool) -> Result<Option<Vec<u8>>, String> {
     #[cfg(any(test, debug_assertions))]
     {
         if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
@@ -3349,9 +3354,10 @@ fn read_credential_service_checked(service: &str) -> Result<Option<Vec<u8>>, Str
         }
     }
     if credential_session::managed(service) {
-        credential_session_native::password(service)
+        if authorize { credential_session_native::password(service) }
+        else { credential_session_native::observe_password(service) }
     } else {
-        keychain::password(service, KEYCHAIN_ACCOUNT)
+        keychain::password_with_ui(service, KEYCHAIN_ACCOUNT, authorize)
     }
 }
 
@@ -3864,6 +3870,20 @@ pub(crate) fn save_provider_bundle(
 }
 
 pub(crate) fn credential_snapshot(profile_id: &str) -> Result<Option<Vec<u8>>, String> {
+    read_credential_checked(profile_id)
+}
+
+/// Inventory comparisons may use cached credentials, but cannot acquire an
+/// authorization session or wait for its interactive owner.
+pub(crate) fn credential_snapshot_for_observation(profile_id: &str) -> Result<Option<Vec<u8>>, String> {
+    #[cfg(target_os = "macos")]
+    {
+        let service = keychain_service(profile_id);
+        if let Some(value) = read_credential_service_with_authorization(&service, false)? { return Ok(Some(value)); }
+        let legacy = legacy_keychain_service(profile_id);
+        if legacy != service { read_credential_service_with_authorization(&legacy, false) } else { Ok(None) }
+    }
+    #[cfg(not(target_os = "macos"))]
     read_credential_checked(profile_id)
 }
 
@@ -5026,7 +5046,7 @@ pub fn observe_profile(
             let models = observe_prepared(prepare_pi_models_with_api_key(
                 &paths[0],
                 &profile,
-                pi_api_key_value(&profile, has_credential)?,
+                pi_api_key_value_with_credential(&profile, has_credential, credential_snapshot_for_observation)?,
             ));
             let settings = observe_prepared(prepare_pi_settings(&paths[1], &profile));
             combine_observed(models, settings)
@@ -5077,7 +5097,7 @@ pub fn observe_profile_consumption(
         "pi" => observe_prepared(prepare_pi_models_with_api_key(
             &paths[0],
             &profile,
-            pi_api_key_value(&profile, has_credential)?,
+            pi_api_key_value_with_credential(&profile, has_credential, credential_snapshot_for_observation)?,
         )),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
         | "factory-droid" | "goose" => Ok(adapters::observe_prepared_files(
@@ -6963,12 +6983,20 @@ fn pi_api_key_value(
     profile: &ModelProfile,
     has_credential: bool,
 ) -> Result<Option<String>, String> {
+    pi_api_key_value_with_credential(profile, has_credential, read_credential_checked)
+}
+
+fn pi_api_key_value_with_credential(
+    profile: &ModelProfile,
+    has_credential: bool,
+    read: fn(&str) -> Result<Option<Vec<u8>>, String>,
+) -> Result<Option<String>, String> {
     match credential_route_for("pi", profile, has_credential)? {
         Some((source, credential::PreparedCredentialRoute::Plaintext)) => {
             let resolved = credential::resolve_source(
                 &source,
                 matches!(source, ApiKeySource::ArcaStore)
-                    .then(|| read_credential_checked(&profile.id))
+                    .then(|| read(&profile.id))
                     .transpose()?.flatten(),
             )?;
             String::from_utf8(resolved.expose_for_delivery().to_vec())
@@ -6997,7 +7025,7 @@ fn prepare_observed_native_files(
             let resolved = credential::resolve_source(
                 &source,
                 matches!(source, ApiKeySource::ArcaStore)
-                    .then(|| read_credential_checked(&profile.id))
+                    .then(|| credential_snapshot_for_observation(&profile.id))
                     .transpose()?.flatten(),
             )?;
             return Ok(vec![adapters::prepare_apply_plaintext(

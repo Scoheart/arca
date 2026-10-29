@@ -74,6 +74,18 @@ pub(super) struct Session {
     expires_wall: Option<SystemTime>,
     failure: Option<String>,
 }
+
+/// Resource observation must never wait for an interactive unlock while it
+/// holds the workspace read gate. Only use an existing, revision-checked
+/// session; explicit authorization and transaction reads keep their own path.
+pub(super) fn observe(session: &std::sync::Mutex<Session>, backend: &impl Backend, service: &str, now: Instant) -> ReadResult {
+    let mut state = session.try_lock().map_err(|error| match error {
+        std::sync::TryLockError::WouldBlock => "credential_session_busy: Credential authorization is pending".to_string(),
+        std::sync::TryLockError::Poisoned(_) => "credential_session_unavailable: Credential session failed".to_string(),
+    })?;
+    state.read(backend, service, now)
+}
+
 impl Session {
     pub(super) fn clear(&mut self) { *self = Self::default(); }
     pub(super) fn forget(&mut self, service: &str) {

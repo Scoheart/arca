@@ -153,6 +153,27 @@ fn malformed_and_scope() {
     assert!(!managed(VAULT_SERVICE));
 }
 
+#[test]
+fn observation_never_waits_for_unlock_or_loads_a_vault() {
+    let backend = Memory::fixture();
+    let session = Mutex::new(Session::default());
+    let guard = session.lock().unwrap();
+    assert!(observe(&session, &backend, A, Instant::now()).unwrap_err().contains("busy"));
+    drop(guard);
+    assert!(observe(&session, &backend, A, Instant::now()).unwrap_err().contains("locked"));
+    assert_eq!(backend.vault_reads.load(Ordering::SeqCst), 0);
+    assert_eq!(backend.item_reads.load(Ordering::SeqCst), 0);
+    assert_eq!(backend.vault_writes.load(Ordering::SeqCst), 0);
+
+    session.lock().unwrap().unlock(&backend, &Memory::sources(), Instant::now(), false).unwrap();
+    let reads = backend.vault_reads.load(Ordering::SeqCst);
+    assert_eq!(observe(&session, &backend, A, Instant::now()).unwrap().unwrap(), b"fixture-alpha");
+    backend.put(A, b"fixture-rotated");
+    assert!(observe(&session, &backend, A, Instant::now()).unwrap_err().contains("refresh_required"));
+    assert_eq!(backend.vault_reads.load(Ordering::SeqCst), reads);
+    assert_eq!(backend.item_reads.load(Ordering::SeqCst), 2);
+}
+
 pub(super) fn run_checks() {
     lifecycle_and_concurrency();
     failures_and_external_changes();

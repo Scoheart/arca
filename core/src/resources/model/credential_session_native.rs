@@ -94,6 +94,17 @@ pub(super) fn password(service: &str) -> Result<Option<Vec<u8>>, String> {
     check_closing(&mut state)?;
     state.read(&Native, service, Instant::now())
 }
+pub(super) fn observe_password(service: &str) -> Result<Option<Vec<u8>>, String> {
+    if CLOSING.load(Ordering::SeqCst) { return Err("credential_session_locked: Arca is exiting".into()); }
+    let Some(session) = SESSION.get() else {
+        // Attribute-only absence is observable without creating or unlocking a
+        // session. An existing secret still requires explicit authorization.
+        return if Native.revision(service)?.is_none() { Ok(None) }
+            else { Err("credential_session_locked: Unlock Arca credentials to continue".into()) };
+    };
+    let session = session.as_ref().map_err(Clone::clone)?;
+    super::credential_session::observe(session, &Native, service, Instant::now())
+}
 fn sync(state: &mut Session, service: &str, value: Option<&[u8]>) {
     let deferred = state.synchronize(&Native, service, value, Instant::now()).is_err();
     // A later unrelated save cannot prove an earlier missing entry was repaired.
