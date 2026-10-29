@@ -1,0 +1,6 @@
+{
+  "bundle_id": "dev.zed.Zed",
+  "bundle_name": "Zed",
+  "audited_version": "1.25.3",
+  "installed_root": "~/Library/Application Support/Zed/extensions/installed"
+}

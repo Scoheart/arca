@@ -1010,5 +1010,30 @@
         "complete_marker": null
       }
     ]
+  },
+  {
+    "agent_id": "zed",
+    "adapter": "zed",
+    "docs_url": "https://github.com/zed-industries/zed/blob/8dd255c3eafb5231056fe4e6f601cedd011f1c93/crates/extension/src/extension_manifest.rs",
+    "manifest_paths": [
+      "extension.toml",
+      "extension.json"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Zed.app",
+        "layout": "zed_app",
+        "presence": "installed",
+        "complete_marker": null
+      },
+      {
+        "path": "~/Applications/Zed.app",
+        "layout": "zed_app",
+        "presence": "installed",
+        "complete_marker": null
+      }
+    ]
   }
 ]

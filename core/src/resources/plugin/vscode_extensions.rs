@@ -31,8 +31,12 @@ pub(super) fn root_path(source: &Root) -> PathBuf {
 }
 
 pub(super) fn select_app(host: &Host) -> Result<Option<PathBuf>, ()> {
+    select_app_for_layout(host, "vscode_app")
+}
+
+pub(super) fn select_app_for_layout(host: &Host, layout: &str) -> Result<Option<PathBuf>, ()> {
     for source in &host.roots {
-        if source.layout != "vscode_app" { return Err(()); }
+        if source.layout != layout { return Err(()); }
         let path=root_path(source); checked_root(&path)?;
         match fs::symlink_metadata(&path) {
             Ok(metadata) if metadata.is_dir() => return Ok(Some(path)),
