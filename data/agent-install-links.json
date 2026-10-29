@@ -348,8 +348,8 @@
     "label": "安装文档"
   },
   "junie-cli": {
-    "url": "https://junie.jetbrains.com/docs/junie-cli.html",
-    "label": "安装文档"
+    "url": "https://github.com/JetBrains/junie/releases",
+    "label": "官方下载"
   },
   "kilo-vscode": {
     "url": "https://kilo.ai/docs/getting-started/installing",

@@ -1980,10 +1980,10 @@
     "builtin": true,
     "name": "Junie CLI",
     "docs": "https://junie.jetbrains.com/docs/junie-cli-mcp-configuration.html",
-    "note": "未确认稳定的用户级全局配置文件；Arca 仅展示，不写入。",
+    "note": "Junie CLI 官方分发；当前配置与资源能力由已核验的 Agent 定义提供。",
     "category": "cli",
-    "evidence": "official",
-    "verified_at": "2026-10-04",
+    "evidence": "official-source",
+    "verified_at": "2026-10-30",
     "codec": "standard",
     "layout": "map",
     "transports": []

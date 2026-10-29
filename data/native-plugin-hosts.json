@@ -1097,5 +1097,20 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "junie-cli",
+    "adapter": "junie_cli",
+    "docs_url": "https://github.com/JetBrains/junie",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.local/bin/junie",
+        "layout": "junie_shim",
+        "presence": "installed"
+      }
+    ]
   }
 ]

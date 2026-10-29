@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "version": "3893.6",
+  "bundle_id": "com.intellij.ml.llm.matterhorn.ej.app.cli.standalone",
+  "bundle_name": "junie",
+  "main_class": "com.intellij.ml.llm.matterhorn.ej.app.cli.standalone.MainKt",
+  "shim": {
+    "path": "shim/junie.sh",
+    "bytes": 32167,
+    "sha256": "f9e9a3e646e45ce86aefe0df4d98a16728e28e4ce33d5f0f45d21c8c53f90ecf"
+  },
+  "guards": [
+    {
+      "path": "channel",
+      "bytes": 8,
+      "sha256": "3933e3274b63dc01fd286d6d939a626867c83a4603fc4347e0f8b8856f1b98fd"
+    },
+    {
+      "path": "junie",
+      "bytes": 124,
+      "sha256": "9ea28455a883e9be30bd4f023cb4afd3c409c6e8259a2a73bd57f340cc983d45"
+    },
+    {
+      "path": "Applications/junie.app/Contents/Info.plist",
+      "bytes": 1373,
+      "sha256": "c68404023471130e78220154bb768faa8df3ded0d34406e63b11fbdcdf204218"
+    },
+    {
+      "path": "Applications/junie.app/Contents/MacOS/junie",
+      "bytes": 198928,
+      "sha256": "ad170c6a31c6b9f079d70bc5973438f7eb88062c0a692122efb4df4b467ca4d8"
+    },
+    {
+      "path": "Applications/junie.app/Contents/app/junie.cfg",
+      "bytes": 247,
+      "sha256": "c9b95aeb3f1c9ec7e0b162870d9e7a628d1b362d3e1407bbb79402efc171846e"
+    },
+    {
+      "path": "Applications/junie.app/Contents/app/.jpackage.xml",
+      "bytes": 308,
+      "sha256": "72140fca8d285a9c76361f4afbac439dcedc2d9142735e9cf68d340d2cea0b4d"
+    },
+    {
+      "path": "Applications/junie.app/Contents/app/junie-release-3893.6-macos-aarch64.jar",
+      "bytes": 181320085,
+      "sha256": "5dc2661da07d056d9acad08f908a321d05ff32009f7f9074edb1429545ff6b02"
+    }
+  ],
+  "zip": {
+    "entries": 86176,
+    "central_offset": 169394899,
+    "central_bytes": 11925088,
+    "eocd_offset": 181320063
+  },
+  "skills": [
+    {
+      "name": "session-history",
+      "entry": "agent-skills/session-history/SKILL.md",
+      "bytes": 5964,
+      "compressed_bytes": 2579,
+      "crc32": 1955519926,
+      "header_offset": 70335094
+    },
+    {
+      "name": "demo-setup",
+      "entry": "agent-skills/demo-setup/SKILL.md",
+      "bytes": 12448,
+      "compressed_bytes": 5347,
+      "crc32": 1515101278,
+      "header_offset": 70337850
+    }
+  ],
+  "evidence": {
+    "contract_sha256": "869dc97df65a1390a8e4f56d56eb80f2743847befdf36baa8a92b7c83da6dea4",
+    "archive_sha256": "917bd6a481f0e0c0dd18abfeb5a6da3e23d5c9c529beeddffbb61742a925ff49"
+  }
+}
