@@ -121,6 +121,13 @@
     ],
     "host_name": "VS Code"
   },
+  "continue-cli": {
+    "kind": "cli",
+    "candidates": [
+      "cn"
+    ],
+    "args": []
+  },
   "copilot-cli": {
     "kind": "cli",
     "candidates": [

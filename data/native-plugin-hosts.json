@@ -944,5 +944,23 @@
         "presence": "local"
       }
     ]
+  },
+  {
+    "agent_id": "hermes",
+    "adapter": "hermes",
+    "docs_url": "https://github.com/NousResearch/hermes-agent/blob/ff6a86cb529a372198b4b80d5e022e32a4a3f2cc/hermes_cli/plugins.py",
+    "manifest_paths": [
+      "plugin.yaml",
+      "plugin.yml"
+    ],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.hermes/plugins",
+        "layout": "hermes_python_plugins",
+        "presence": "local"
+      }
+    ]
   }
 ]
