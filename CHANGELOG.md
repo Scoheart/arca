@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.48.0](https://github.com/Scoheart/arca/compare/v2.47.0...v2.48.0) (2026-10-29)
+
+### Changes
+
+* feat(plugins): observe Factory Droid native registrations ([d816b60](https://github.com/Scoheart/arca/commit/d816b6078b116a364eafd14c4ef711afb9a2012c))
+
 ## [2.47.0](https://github.com/Scoheart/arca/compare/v2.46.1...v2.47.0) (2026-10-29)
 
 ### Changes
