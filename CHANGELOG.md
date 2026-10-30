@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.63.0](https://github.com/Scoheart/arca/compare/v2.62.0...v2.63.0) (2026-10-30)
+
+### Changes
+
+* feat(qwenwork): expose native Skills provenance and constrain CN writers ([f0e017e](https://github.com/Scoheart/arca/commit/f0e017e814c79075d0cc45eee0b12828e6dfc214))
+* fix(qwenwork): bound metadata descriptors for desktop scans ([b96a638](https://github.com/Scoheart/arca/commit/b96a6381cc36246181fb00def233a5343b7eb50b))
+
 ## [2.62.0](https://github.com/Scoheart/arca/compare/v2.61.0...v2.62.0) (2026-10-30)
 
 ### Changes
