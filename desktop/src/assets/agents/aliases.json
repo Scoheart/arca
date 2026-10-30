@@ -28,5 +28,6 @@
   "claude-ai": "claude",
   "chatgpt": "openai",
   "openclaw-desktop": "openclaw",
-  "windsurf": "devin"
+  "windsurf": "devin",
+  "codebuddy-cn-ide": "codebuddy-code"
 }

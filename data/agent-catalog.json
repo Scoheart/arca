@@ -875,10 +875,10 @@
     "builtin": true,
     "name": "CodeBuddy CLI",
     "docs": "https://www.codebuddy.cn/cli/",
-    "note": "ACP Registry 已确认该启动身份与分发方式，但尚未确认稳定的用户级 MCP、Models 或 Skills 写入契约；Arca 仅展示，不写入。",
+    "note": "当前官方 npm 分发与用户级配置契约已按独立 CLI 源码核验；能力来自已审核 Agent 定义。",
     "category": "coding-agent",
-    "evidence": "acp-registry",
-    "verified_at": "2026-10-04",
+    "evidence": "official-source",
+    "verified_at": "2026-10-30",
     "codec": "standard",
     "layout": "map",
     "transports": []

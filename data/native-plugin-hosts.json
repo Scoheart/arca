@@ -684,10 +684,22 @@
     "agent_id": "goose-desktop",
     "adapter": "goose_desktop",
     "docs_url": "https://github.com/aaif-goose/goose/tree/v1.56.0/crates/goose/src/plugins",
-    "manifest_paths": [".goose-plugin/plugin.json", ".plugin/plugin.json", "plugin.json"],
-    "default_mcp_files": [".mcp.json"],
+    "manifest_paths": [
+      ".goose-plugin/plugin.json",
+      ".plugin/plugin.json",
+      "plugin.json"
+    ],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
     "mcp_id_prefix": "",
-    "roots": [{"path": "~/.agents/plugins", "layout": "goose_global_plugins", "presence": "local"}]
+    "roots": [
+      {
+        "path": "~/.agents/plugins",
+        "layout": "goose_global_plugins",
+        "presence": "local"
+      }
+    ]
   },
   {
     "agent_id": "claude-desktop",
@@ -825,7 +837,9 @@
       ".augment-plugin/plugin.json",
       ".claude-plugin/plugin.json"
     ],
-    "default_mcp_files": [".mcp.json"],
+    "default_mcp_files": [
+      ".mcp.json"
+    ],
     "mcp_id_prefix": "",
     "roots": [
       {
@@ -840,7 +854,9 @@
     "adapter": "factory_desktop",
     "docs_url": "https://docs.factory.com/harness/plugins",
     "manifest_paths": [],
-    "default_mcp_files": ["mcp.json"],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
     "mcp_id_prefix": "",
     "roots": [
       {
@@ -855,7 +871,9 @@
     "adapter": "factory_droid",
     "docs_url": "https://docs.factory.com/harness/plugins",
     "manifest_paths": [],
-    "default_mcp_files": ["mcp.json"],
+    "default_mcp_files": [
+      "mcp.json"
+    ],
     "mcp_id_prefix": "",
     "roots": [
       {
@@ -925,7 +943,9 @@
   },
   {
     "agent_id": "pi",
-    "resource_groups": ["@global/resources"],
+    "resource_groups": [
+      "@global/resources"
+    ],
     "adapter": "pi",
     "docs_url": "https://pi.dev/docs/latest/packages",
     "manifest_paths": [
@@ -948,7 +968,9 @@
   },
   {
     "agent_id": "hermes",
-    "resource_groups": ["@global/resources"],
+    "resource_groups": [
+      "@global/resources"
+    ],
     "adapter": "hermes",
     "docs_url": "https://github.com/NousResearch/hermes-agent/blob/ff6a86cb529a372198b4b80d5e022e32a4a3f2cc/hermes_cli/plugins.py",
     "manifest_paths": [
@@ -1110,6 +1132,61 @@
         "path": "~/.local/bin/junie",
         "layout": "junie_shim",
         "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "codebuddy-code",
+    "adapter": "codebuddy_cli",
+    "docs_url": "https://cnb.cool/codebuddy/codebuddy-code",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.codebuddy/plugins/installed_plugins.json",
+        "layout": "codebuddy_installed_registry",
+        "presence": "installed"
+      }
+    ]
+  },
+  {
+    "agent_id": "codebuddy-ide",
+    "adapter": "codebuddy_desktop",
+    "docs_url": "https://www.codebuddy.ai/docs/ide/Features/Skills",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/CodeBuddy.app",
+        "layout": "codebuddy_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/CodeBuddy.app",
+        "layout": "codebuddy_app",
+        "presence": "bundled"
+      }
+    ]
+  },
+  {
+    "agent_id": "codebuddy-cn-ide",
+    "adapter": "codebuddy_desktop",
+    "docs_url": "https://www.codebuddy.cn/docs/ide/Features/Skills",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/CodeBuddy CN.app",
+        "layout": "codebuddy_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/CodeBuddy CN.app",
+        "layout": "codebuddy_app",
+        "presence": "bundled"
       }
     ]
   }

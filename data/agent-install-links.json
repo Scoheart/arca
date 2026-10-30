@@ -506,5 +506,9 @@
   "openclaw-desktop": {
     "url": "https://github.com/openclaw/openclaw/releases",
     "label": "官方下载"
+  },
+  "codebuddy-cn-ide": {
+    "url": "https://www.codebuddy.cn/docs/ide/Getting-Started/Installation",
+    "label": "安装文档"
   }
 }

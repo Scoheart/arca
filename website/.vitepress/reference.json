@@ -337,7 +337,23 @@
       "category": "ide",
       "docs": "https://www.codebuddy.ai/docs/ide/User-guide/MCP",
       "mcp": null,
-      "skills": null,
+      "skills": {
+        "path": "~/.codebuddy/skills",
+        "aliases": [
+          {
+            "target_id": "claude-user",
+            "global_dir": "~/.claude/skills"
+          },
+          {
+            "target_id": "agents-user",
+            "global_dir": "~/.agents/skills"
+          },
+          {
+            "target_id": "openclaw-user",
+            "global_dir": "~/.openclaw/skills"
+          }
+        ]
+      },
       "model": null
     },
     {
@@ -357,6 +373,31 @@
       "skills": {
         "path": "~/.codebuddy/skills",
         "aliases": []
+      },
+      "model": null
+    },
+    {
+      "id": "codebuddy-cn-ide",
+      "name": "CodeBuddy CN",
+      "category": "ide",
+      "docs": "https://www.codebuddy.cn/docs/ide/User-guide/MCP",
+      "mcp": null,
+      "skills": {
+        "path": "~/.codebuddy/skills",
+        "aliases": [
+          {
+            "target_id": "claude-user",
+            "global_dir": "~/.claude/skills"
+          },
+          {
+            "target_id": "agents-user",
+            "global_dir": "~/.agents/skills"
+          },
+          {
+            "target_id": "openclaw-user",
+            "global_dir": "~/.openclaw/skills"
+          }
+        ]
       },
       "model": null
     },

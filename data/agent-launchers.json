@@ -90,6 +90,9 @@
     "kind": "app",
     "candidates": [
       "CodeBuddy"
+    ],
+    "bundle_ids": [
+      "com.tencent.codebuddy"
     ]
   },
   "codewhale": {
@@ -112,7 +115,9 @@
     "candidates": [
       "ChatGPT"
     ],
-    "bundle_ids": ["com.openai.codex"]
+    "bundle_ids": [
+      "com.openai.codex"
+    ]
   },
   "continue": {
     "kind": "app",
@@ -154,7 +159,9 @@
     "candidates": [
       "Cursor"
     ],
-    "bundle_ids": ["com.todesktop.230313mzl4w4u92"]
+    "bundle_ids": [
+      "com.todesktop.230313mzl4w4u92"
+    ]
   },
   "cursor-cli": {
     "kind": "cli",
@@ -323,7 +330,9 @@
       "Qoder IDE",
       "Qoder"
     ],
-    "bundle_ids": ["com.qoder.ide"]
+    "bundle_ids": [
+      "com.qoder.ide"
+    ]
   },
   "qoder-cli": {
     "kind": "cli",
@@ -657,6 +666,15 @@
     ],
     "bundle_ids": [
       "ai.openclaw.mac"
+    ]
+  },
+  "codebuddy-cn-ide": {
+    "kind": "app",
+    "candidates": [
+      "CodeBuddy CN"
+    ],
+    "bundle_ids": [
+      "com.tencent.codebuddycn"
     ]
   }
 }

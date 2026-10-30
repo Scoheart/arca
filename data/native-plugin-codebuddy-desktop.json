@@ -1,0 +1,2085 @@
+{
+  "schema_version": 1,
+  "version": "4.12.2",
+  "release_label": "4.12.2.41207131",
+  "base_version": "1.106.1",
+  "genie_version": "3.10.0",
+  "commit": "425ab70e0139db0a8f17377172fed0c4376b4343",
+  "executable": "Electron",
+  "package_main": "./out/main.js",
+  "native_default_folder": ".codebuddy",
+  "skill_scan_dirs": [
+    ".codebuddy",
+    ".workbuddy",
+    ".claude",
+    ".agents",
+    ".openclaw"
+  ],
+  "profiles": [
+    {
+      "agent_id": "codebuddy-ide",
+      "app_name": "CodeBuddy.app",
+      "bundle_id": "com.tencent.codebuddy",
+      "bundle_name": "CodeBuddy",
+      "application_name": "buddy",
+      "data_folder": ".codebuddy",
+      "archive_sha256": "4c1a424958eeb3ee4068b363acd062849699f4d48b1cf5adba56209831569491",
+      "guards": [
+        {
+          "path": "Contents/Info.plist",
+          "bytes": 42403,
+          "sha256": "43202d55efaa20590e1a76bb36e03e93cf5d2580efe46d8748c8988ed8d1806a"
+        },
+        {
+          "path": "Contents/MacOS/Electron",
+          "bytes": 69584,
+          "sha256": "f90d1a9516229ef80d667fc9c165a293b4474c76ad4e19261114aaf57285ba99"
+        },
+        {
+          "path": "Contents/Resources/app/package.json",
+          "bytes": 11841,
+          "sha256": "b4b9bccfee3fb7c8ae3e13e489f58a52e606c5b619e130b0a7491b83db8eb9a0"
+        },
+        {
+          "path": "Contents/Resources/app/product.json",
+          "bytes": 17010,
+          "sha256": "0801a0dd27e8f64f0fd14a6896335b2e04987d9b1659b5cff7016d13de7e0ad2"
+        },
+        {
+          "path": "Contents/Resources/app/out/main.js",
+          "bytes": 1840163,
+          "sha256": "a1ad12b84844d6cfc66a13aa4baa10e88c62c76fdb75a1b25f0de72407558fcd"
+        },
+        {
+          "path": "Contents/Resources/app/extensions/genie/package.json",
+          "bytes": 33765,
+          "sha256": "2d5ab2f10b262d0a31892d92111a9eaa6f2c9d121a327b91cf42711fa51a6518"
+        },
+        {
+          "path": "Contents/Resources/app/extensions/genie/product.json",
+          "bytes": 299661,
+          "sha256": "6520dfdce48c9d3be1652d74640287f3e8cab72bc54365bede71c1241a3a52c0"
+        },
+        {
+          "path": "Contents/Resources/app/extensions/genie/out/extension/index.js",
+          "bytes": 21365905,
+          "sha256": "d8833f7b86e0c59c798aee800a5ce3e3053f7e919e6bd28290448b2b47ecd72b"
+        },
+        {
+          "path": "Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js",
+          "bytes": 14807321,
+          "sha256": "92991736847f46ee0924689878be80511c61a467a5a1945de934cc9ddbfa1315"
+        },
+        {
+          "path": "Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js",
+          "bytes": 1935290,
+          "sha256": "597088073e9779f50af7d0e7523d82b1112c8e3d53ccb3cfb10ffeac6477f18b"
+        }
+      ],
+      "builtin_extensions": [
+        {
+          "id": "vscode.bat",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/bat/package.json",
+            "bytes": 771,
+            "sha256": "42c92eb0bbba2d51399d75efe2fa103e07a4adc63fa55ce71a07485f772be40f"
+          }
+        },
+        {
+          "id": "vscode.clojure",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/clojure/package.json",
+            "bytes": 811,
+            "sha256": "e841f4905101662239dad6063ded97ba4c00b221db48a3abd1ac3c1b14abe169"
+          }
+        },
+        {
+          "id": "vscode.coffeescript",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/coffeescript/package.json",
+            "bytes": 1019,
+            "sha256": "e3d014ec621a29650091c550c4f478da349184dc0d478ba56a10b7d68e141da3"
+          }
+        },
+        {
+          "id": "vscode.configuration-editing",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/configuration-editing/package.json",
+            "bytes": 3407,
+            "sha256": "4005021868a05661de6ad55a274d263efc0d2117631d2757cac13ac40eb930a7"
+          }
+        },
+        {
+          "id": "vscode.cpp",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/cpp/package.json",
+            "bytes": 1734,
+            "sha256": "6a2aae1ca30cb8d1dc75068f0e59d77ea378969d1288be4239922d6b614c3d16"
+          }
+        },
+        {
+          "id": "vscode.csharp",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/csharp/package.json",
+            "bytes": 1108,
+            "sha256": "77d76eeff9527a341fb2f0d16ef203c37de496a25368a2042fc87f084ff1a27a"
+          }
+        },
+        {
+          "id": "vscode.css",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/css/package.json",
+            "bytes": 739,
+            "sha256": "a56810c715aa462cec304dd9b7d1c21422dc2c711776461a2a8d394bb5f0434a"
+          }
+        },
+        {
+          "id": "vscode.css-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/css-language-features/package.json",
+            "bytes": 17024,
+            "sha256": "dfb1b5600d806c8ff192ac2046b1d486143f4216892277ba0838e95f546dfb90"
+          }
+        },
+        {
+          "id": "vscode.dart",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/dart/package.json",
+            "bytes": 595,
+            "sha256": "3152275d736be77861f04e1734cdbb969efb15725dc590c33dc564d1551bdc1c"
+          }
+        },
+        {
+          "id": "vscode.debug-auto-launch",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/debug-auto-launch/package.json",
+            "bytes": 648,
+            "sha256": "b9bdaf8d16ff9d30bfa531c96aee55694cf6d78fcaad5beeb8f0c589219771ab"
+          }
+        },
+        {
+          "id": "vscode.debug-server-ready",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/debug-server-ready/package.json",
+            "bytes": 4189,
+            "sha256": "cdcee793baf6290e86ee7e5810579af25b5cb67ba83233cfda35d963848a601a"
+          }
+        },
+        {
+          "id": "vscode.diff",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/diff/package.json",
+            "bytes": 610,
+            "sha256": "4ba17dfccd272fdb23650134bbc78bfa1f4a0af6eac436e5a3bd8290e625f0ce"
+          }
+        },
+        {
+          "id": "vscode.docker",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/docker/package.json",
+            "bytes": 776,
+            "sha256": "c00b880bee016ef00599afb1f01503100ee869082e6010c82142b87896fc8883"
+          }
+        },
+        {
+          "id": "vscode.dotenv",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/dotenv/package.json",
+            "bytes": 765,
+            "sha256": "c13aeba2c68203e475487e3450d04d368216a31809bc45d8fcc8e52c7be73dc7"
+          }
+        },
+        {
+          "id": "vscode.emmet",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/emmet/package.json",
+            "bytes": 9582,
+            "sha256": "921b7db1172b7f11db5d488674938de3d8eb9f5795b6ff8e7fdccfd260ed681c"
+          }
+        },
+        {
+          "id": "vscode.extension-editing",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/extension-editing/package.json",
+            "bytes": 1025,
+            "sha256": "2424ae5bf8cac8259e1d9bfdefb5c38e071f1b570a3144704b49491bd5084608"
+          }
+        },
+        {
+          "id": "vscode.fsharp",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/fsharp/package.json",
+            "bytes": 867,
+            "sha256": "b806920dc488ee6a651fb2c3034cc2ab3d9a6401493f42527bbcc2b18418abdc"
+          }
+        },
+        {
+          "id": "Tencent-Cloud.coding-copilot",
+          "version": "3.10.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/genie/package.json",
+            "bytes": 33765,
+            "sha256": "2d5ab2f10b262d0a31892d92111a9eaa6f2c9d121a327b91cf42711fa51a6518"
+          }
+        },
+        {
+          "id": "CodeBuddy.codebuddy-dev-containers",
+          "version": "0.1.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/genie-dev-container/package.json",
+            "bytes": 10365,
+            "sha256": "5185faafba8d45a609d2df1451caefe07c5900495b1241d028e688ae76001b47"
+          }
+        },
+        {
+          "id": "CodeBuddy.codebuddy-open-wsl",
+          "version": "0.0.5",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/genie-open-wsl/package.json",
+            "bytes": 7898,
+            "sha256": "c14d5d15372aacf0c4cf52b498d9b4bf32d6844237bb8082c7a9ccca8599d09a"
+          }
+        },
+        {
+          "id": "vscode.git",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/git/package.json",
+            "bytes": 85935,
+            "sha256": "b0c5aad689fe78f12b01a6d571f61ab84354755e4145d06f8b4b53407c608e28"
+          }
+        },
+        {
+          "id": "vscode.git-base",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/git-base/package.json",
+            "bytes": 1600,
+            "sha256": "b4b5029a0477ede13c63f0ac32a14c957e353428aeceebc85f9d7a8696d27922"
+          }
+        },
+        {
+          "id": "vscode.github",
+          "version": "0.0.1",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/github/package.json",
+            "bytes": 4725,
+            "sha256": "b737544510357701c570065c00bf3ca2f94aaff6b711aac87225499a166d76ba"
+          }
+        },
+        {
+          "id": "vscode.github-authentication",
+          "version": "0.0.2",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/github-authentication/package.json",
+            "bytes": 1560,
+            "sha256": "cbe87ebc0e2d1274c396b669794bec0f1f10c01985f9bb9ae6135f3af7ed97b7"
+          }
+        },
+        {
+          "id": "vscode.go",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/go/package.json",
+            "bytes": 710,
+            "sha256": "ffdd6b7bb2c88a3979a7afe05bc714ea9cb770857b12de6e447142311f926301"
+          }
+        },
+        {
+          "id": "vscode.groovy",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/groovy/package.json",
+            "bytes": 902,
+            "sha256": "2bdfef3eed4bcba86b08e9b6af86f14c6e096c4a52b3429d49295c642685f0b3"
+          }
+        },
+        {
+          "id": "vscode.grunt",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/grunt/package.json",
+            "bytes": 1065,
+            "sha256": "5495c7b7f664fb4e345f315b6c9e4a7c83cef75596e69bc8fc6ef31de72b9552"
+          }
+        },
+        {
+          "id": "vscode.gulp",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/gulp/package.json",
+            "bytes": 914,
+            "sha256": "70248878bc87a9f040a15ef5514f5bff6a00e9ab23b927b4dd97b7190b55a8c6"
+          }
+        },
+        {
+          "id": "vscode.handlebars",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/handlebars/package.json",
+            "bytes": 894,
+            "sha256": "f764c67ab3d11726b35d191fce15fa310b57d48f6d1e1772fdeacb628e9d5af8"
+          }
+        },
+        {
+          "id": "vscode.hlsl",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/hlsl/package.json",
+            "bytes": 724,
+            "sha256": "7e5bbc9a9c42a6720373840b97955ad32cbfb51e21f7ac6a02a19c07f7794493"
+          }
+        },
+        {
+          "id": "vscode.html",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/html/package.json",
+            "bytes": 1319,
+            "sha256": "83b08e0404d84c8707d3e34db10ac19eedb58b2fc2924ec5306b0886f8852c46"
+          }
+        },
+        {
+          "id": "vscode.html-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/html-language-features/package.json",
+            "bytes": 5332,
+            "sha256": "815f66165ed01e4d1f834f48aa1ce89b3e6ff376fa12dc8cf68346748cc2cb2d"
+          }
+        },
+        {
+          "id": "vscode.ini",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ini/package.json",
+            "bytes": 1094,
+            "sha256": "0ac3f65d56a99a1b885ec91b02df17e61077f68c3f39219419e42142a860e878"
+          }
+        },
+        {
+          "id": "vscode.ipynb",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ipynb/package.json",
+            "bytes": 2981,
+            "sha256": "777720a3c86e79b4bc0f19ea01e831ead9308028f28a7624c054719b2d7fb1ef"
+          }
+        },
+        {
+          "id": "vscode.jake",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/jake/package.json",
+            "bytes": 920,
+            "sha256": "b23cb9d0f2429cdd8777a874e153e9f1d1f4d8d3c433fb4eec99a9591ee9e35d"
+          }
+        },
+        {
+          "id": "vscode.java",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/java/package.json",
+            "bytes": 773,
+            "sha256": "2ee764283cf5669051ce3b7702e2278a6e46c2127ed1dc7ea0f18731a3e04c0b"
+          }
+        },
+        {
+          "id": "vscode.javascript",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/javascript/package.json",
+            "bytes": 3056,
+            "sha256": "23991b736817641579fe24ead83697082158f35807cf82df1833a14a8a997d8a"
+          }
+        },
+        {
+          "id": "vscode.json",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/json/package.json",
+            "bytes": 1794,
+            "sha256": "f799d4132d1866c2ad48a1fdc6cb8fd1a506975c3a6284d42b382daa0d615d53"
+          }
+        },
+        {
+          "id": "vscode.json-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/json-language-features/package.json",
+            "bytes": 2955,
+            "sha256": "7b0a856e73e5959fbbc34d72097e01cac1de4f9da5631a7fbf71be75c8284362"
+          }
+        },
+        {
+          "id": "vscode.julia",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/julia/package.json",
+            "bytes": 1038,
+            "sha256": "493fe6b69bbedfe64c44982544009ee9f277aea81a7bb1ebf182e2046b9891dc"
+          }
+        },
+        {
+          "id": "vscode.latex",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/latex/package.json",
+            "bytes": 2014,
+            "sha256": "bb9d225db225de5141872bd19cc3ad6b615336d7b8e276b8534c3f7b95e96f0c"
+          }
+        },
+        {
+          "id": "vscode.less",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/less/package.json",
+            "bytes": 856,
+            "sha256": "e0a58c85b93448136c54b258c8e3810916e25b8c604916f89c6cbfb83c8de9a6"
+          }
+        },
+        {
+          "id": "vscode.lexical-markdown-editor",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/lexical-markdown-editor/package.json",
+            "bytes": 2081,
+            "sha256": "b12e42f1c5d617e1713af55d061d97970e417a77ce881cc7ba69556bf1a89a86"
+          }
+        },
+        {
+          "id": "vscode.log",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/log/package.json",
+            "bytes": 626,
+            "sha256": "7c53f01edd892f51402bd88f9099fc93c63a1e9167ebeabf18a56f8a6f5dbcd7"
+          }
+        },
+        {
+          "id": "vscode.lua",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/lua/package.json",
+            "bytes": 711,
+            "sha256": "3afcc17b1a30952cdb14a1d874a56f303739c663d1db514f84d8ac61d8741748"
+          }
+        },
+        {
+          "id": "vscode.make",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/make/package.json",
+            "bytes": 909,
+            "sha256": "c2c15f9141eba92f301d0b1b1e0325228ca2cf996915ed016627acc6831adc06"
+          }
+        },
+        {
+          "id": "vscode.markdown",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/markdown-basics/package.json",
+            "bytes": 2954,
+            "sha256": "2d8c769b087eca862fc6035435d97f5c288b6cf8795e5c1c59b2c5ad18de6104"
+          }
+        },
+        {
+          "id": "vscode.markdown-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/markdown-language-features/package.json",
+            "bytes": 20847,
+            "sha256": "f6d460a0184f63098f9a271e6cd694a1588dfc7df9cf4bd23dffa9b596b1147e"
+          }
+        },
+        {
+          "id": "vscode.markdown-math",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/markdown-math/package.json",
+            "bytes": 1992,
+            "sha256": "f8fbb9cfbb84d2a5a3e8fa4334c7c6866d55d893ac913b4dd1dcdffbde301aab"
+          }
+        },
+        {
+          "id": "vscode.media-preview",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/media-preview/package.json",
+            "bytes": 2993,
+            "sha256": "48b3ed953fc6d40bc1fe216c3017d8b51ab3cf9bc168e020f6172962a11b0080"
+          }
+        },
+        {
+          "id": "vscode.merge-conflict",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/merge-conflict/package.json",
+            "bytes": 3624,
+            "sha256": "63675601058802f2e3281fe5d6b6a9a4aac37d1a8ec9c559260cf310ac915a0a"
+          }
+        },
+        {
+          "id": "vscode.mermaid-chat-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/mermaid-chat-features/package.json",
+            "bytes": 1447,
+            "sha256": "20bd9d7db0a47b1362c0b5c34ce63590b4ed848ce961ce2559d76de9afb7caae"
+          }
+        },
+        {
+          "id": "vscode.microsoft-authentication",
+          "version": "0.0.1",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/microsoft-authentication/package.json",
+            "bytes": 3042,
+            "sha256": "e02ceadce4ba2a8481b9a80feec1303b1e9cc4719a0a5d45211ed6e606bcc434"
+          }
+        },
+        {
+          "id": "ms-vscode.js-debug",
+          "version": "1.102.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ms-vscode.js-debug/package.json",
+            "bytes": 249214,
+            "sha256": "089a783c3db4221b211db39af13c5f7612cb499633c5d708a0248d3a2b28ce3d"
+          }
+        },
+        {
+          "id": "ms-vscode.js-debug-companion",
+          "version": "1.1.3",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ms-vscode.js-debug-companion/package.json",
+            "bytes": 1303,
+            "sha256": "44999350991f42897c4f81ae3ef66e26582f08fb66696119f1aaefdc7d63af77"
+          }
+        },
+        {
+          "id": "ms-vscode.vscode-js-profile-table",
+          "version": "1.0.10",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/package.json",
+            "bytes": 1787,
+            "sha256": "81cfb4e5ec2b68bc3b131560fc424029e2cce7e153819a90cf3343ce71104fd4"
+          }
+        },
+        {
+          "id": "vscode.builtin-notebook-renderers",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/notebook-renderers/package.json",
+            "bytes": 1222,
+            "sha256": "e4202d3841d6c4275188a78a0d4cf37a240873d654c8040539c6883c4f98d71d"
+          }
+        },
+        {
+          "id": "vscode.npm",
+          "version": "1.0.1",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/npm/package.json",
+            "bytes": 5818,
+            "sha256": "0121569fe73cad8759d246394336b23d268caebf99c873682cbccfc38776ccce"
+          }
+        },
+        {
+          "id": "vscode.objective-c",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/objective-c/package.json",
+            "bytes": 826,
+            "sha256": "868d830df4d0283415ac898a65e24e6049ac737141b01f38c965518b10dfd6ba"
+          }
+        },
+        {
+          "id": "CodeBuddy.codebuddy-remote-ssh",
+          "version": "0.0.50",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/open-remote-ssh/package.json",
+            "bytes": 19282,
+            "sha256": "1fccde282cbd096e714d7548501c7b00cad53bb99b9cff318c000bfd93c701d2"
+          }
+        },
+        {
+          "id": "vscode.perl",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/perl/package.json",
+            "bytes": 1202,
+            "sha256": "6cc35018069863a92cbf84c412fea28b92af0cefc499d2c1d1b54ccd1d02d43c"
+          }
+        },
+        {
+          "id": "vscode.php",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/php/package.json",
+            "bytes": 990,
+            "sha256": "829e0617dc93ac5e6befbcadfa0c9ba03383fcc87d9f3985e55f37a0714ac751"
+          }
+        },
+        {
+          "id": "vscode.php-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/php-language-features/package.json",
+            "bytes": 1250,
+            "sha256": "3738b66e6d65399a07cb85f5da25bacb16cbde8a3219a978dba497cdad999d8d"
+          }
+        },
+        {
+          "id": "vscode.powershell",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/powershell/package.json",
+            "bytes": 806,
+            "sha256": "5baaee973a0ca6cf7114af943bc1d86ea399506fc66486cf40f5a64e34acf626"
+          }
+        },
+        {
+          "id": "vscode.prompt",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/prompt-basics/package.json",
+            "bytes": 2515,
+            "sha256": "359c9c4e3e9f9bda4ddf1d49fd81bb8d12d0cbee68fd58692ee7c1aec97d000f"
+          }
+        },
+        {
+          "id": "vscode.pug",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/pug/package.json",
+            "bytes": 758,
+            "sha256": "2a971f7fd220778ccd64f7e4987a46e0b775a9fc2b3d34fe56a126ba50770fa1"
+          }
+        },
+        {
+          "id": "vscode.python",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/python/package.json",
+            "bytes": 1115,
+            "sha256": "5b8c00253a0915500e515bf0ad2c99b8f3b66501a11e3dfd62ebb5c42774830d"
+          }
+        },
+        {
+          "id": "vscode.r",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/r/package.json",
+            "bytes": 672,
+            "sha256": "fb194dcef27a75bd36764ac8ace604722ba7d4472c2434eaef1e7107ac2200d1"
+          }
+        },
+        {
+          "id": "vscode.razor",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/razor/package.json",
+            "bytes": 740,
+            "sha256": "ee5985a134e4a10839676b994a7bbcdb3d077ca6300af3750f1a0eefb13ff712"
+          }
+        },
+        {
+          "id": "vscode.references-view",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/references-view/package.json",
+            "bytes": 8877,
+            "sha256": "5ef51395edfa43308d61369f1de991e5898a5034881a46da28c6d885fd7629e8"
+          }
+        },
+        {
+          "id": "vscode.restructuredtext",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/restructuredtext/package.json",
+            "bytes": 713,
+            "sha256": "e42b74f3c8b1d55ae5b2df26c3eb89a19a95858b404f4aeaad75bb18890ba5aa"
+          }
+        },
+        {
+          "id": "vscode.ruby",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ruby/package.json",
+            "bytes": 1125,
+            "sha256": "16b2d075dd4ad0420bfd7e54b571cb1a1263474163c0d8e3672cfddf9adce853"
+          }
+        },
+        {
+          "id": "vscode.rust",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/rust/package.json",
+            "bytes": 572,
+            "sha256": "a31d27137da13d79b5b99d7551ced0cce69dcb94e4e67bd73758bf109d1ddb8c"
+          }
+        },
+        {
+          "id": "vscode.scss",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/scss/package.json",
+            "bytes": 1272,
+            "sha256": "2454571025bbd53ecca04adf15ba24ae7ab74b02336248578962515fcc7d2285"
+          }
+        },
+        {
+          "id": "vscode.search-result",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/search-result/package.json",
+            "bytes": 821,
+            "sha256": "b7d937e581cf6ff0a38e8c7548bd6052571c383f7c4650c2423f4f0c603469f9"
+          }
+        },
+        {
+          "id": "vscode.shaderlab",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/shaderlab/package.json",
+            "bytes": 715,
+            "sha256": "d932ec9498d712c8afb2acbd91119e248c734e5a5fa09e09b368d5be9a772cbf"
+          }
+        },
+        {
+          "id": "vscode.shellscript",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/shellscript/package.json",
+            "bytes": 1609,
+            "sha256": "d2ef55acb12745356601eff61a4a1baa56478b41124255bf90e40ae5d4a85f8e"
+          }
+        },
+        {
+          "id": "vscode.simple-browser",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/simple-browser/package.json",
+            "bytes": 1099,
+            "sha256": "68af0651564951968bafbcea7e51414ed4430e84eea7d30de8793a4a227eb00f"
+          }
+        },
+        {
+          "id": "vscode.sql",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/sql/package.json",
+            "bytes": 579,
+            "sha256": "de751675afebe88995547442c2d60bd94f78a02ae48de3e500869d8a015800a8"
+          }
+        },
+        {
+          "id": "vscode.swift",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/swift/package.json",
+            "bytes": 753,
+            "sha256": "7c0a9833ec2b564a64686890c01986e5a7083a1baf2ab2ef7db90e5301ef56b0"
+          }
+        },
+        {
+          "id": "vscode.terminal-suggest",
+          "version": "1.0.1",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/terminal-suggest/package.json",
+            "bytes": 792,
+            "sha256": "955c746c38fd09122b7a50ffe82e4690e802fe8e1ed8ebd0df9e1a5094238784"
+          }
+        },
+        {
+          "id": "vscode.theme-abyss",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-abyss/package.json",
+            "bytes": 388,
+            "sha256": "23ab6893f6c2f9ad819b067ce2277f5136c005075923c526ad098d424f87a5f5"
+          }
+        },
+        {
+          "id": "vscode.theme-defaults",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-defaults/package.json",
+            "bytes": 1322,
+            "sha256": "88c4ea2f92e146ffe9e0706e6b5804488715dad323eeacd1f8c0919f35108286"
+          }
+        },
+        {
+          "id": "vscode.theme-genie-dark",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-genie/package.json",
+            "bytes": 987,
+            "sha256": "48780fc855f7f66f53d53e21eeef72b30c72d236f31432747535a35027d6b0f8"
+          }
+        },
+        {
+          "id": "vscode.theme-kimbie-dark",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-kimbie-dark/package.json",
+            "bytes": 406,
+            "sha256": "1a1f91dfb9d6db0cdcaf7eedcd1c3ef48363423be0bb61d6ab4608c9e82e82fe"
+          }
+        },
+        {
+          "id": "vscode.theme-monokai",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-monokai/package.json",
+            "bytes": 394,
+            "sha256": "915b194d28675233a6b7e625bb45420e2882faf4ebb7675ab1b0289556f09d0c"
+          }
+        },
+        {
+          "id": "vscode.theme-monokai-dimmed",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-monokai-dimmed/package.json",
+            "bytes": 415,
+            "sha256": "e8af75585e34d347f5b156274d3f3e25c9e602d17abb593500c04d0b23b9bbf9"
+          }
+        },
+        {
+          "id": "vscode.theme-quietlight",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-quietlight/package.json",
+            "bytes": 399,
+            "sha256": "ac028b3889c295234af18663faed4dd8125cf5d3872115376baf2f049f5e33d0"
+          }
+        },
+        {
+          "id": "vscode.theme-red",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-red/package.json",
+            "bytes": 382,
+            "sha256": "8505ded849e27a21f7c49043ca19dc46c57c1d5d1c05c83db568f9b9a263744b"
+          }
+        },
+        {
+          "id": "vscode.vscode-theme-seti",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-seti/package.json",
+            "bytes": 493,
+            "sha256": "492e3d98bf86b51c96612ea6db1cbc43375d76d60b7be7e9d211958fccab3ef5"
+          }
+        },
+        {
+          "id": "vscode.theme-solarized-dark",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-solarized-dark/package.json",
+            "bytes": 415,
+            "sha256": "dca6b5ece7f88fc80ba488b96083c097011e5f24122c9a069e4ce0562d0106ff"
+          }
+        },
+        {
+          "id": "vscode.theme-solarized-light",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-solarized-light/package.json",
+            "bytes": 413,
+            "sha256": "4e3861092029da2394cd3732f3f2145f8092cb310cd11e4afe72822062016ca7"
+          }
+        },
+        {
+          "id": "vscode.theme-tomorrow-night-blue",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-tomorrow-night-blue/package.json",
+            "bytes": 430,
+            "sha256": "fbaa15110dbb936c87b896f81773a178cce741972ec815dad6f53a8172f00864"
+          }
+        },
+        {
+          "id": "vscode.tunnel-forwarding",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/tunnel-forwarding/package.json",
+            "bytes": 853,
+            "sha256": "80e05ffba1e7cf0d8269ae043e3b6bff3866a6930079b6b2791313245c20067b"
+          }
+        },
+        {
+          "id": "vscode.typescript",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/typescript-basics/package.json",
+            "bytes": 3472,
+            "sha256": "bdaf5d0733e42f557f0662a26a460c8bfde505d668c988347a374d2924942680"
+          }
+        },
+        {
+          "id": "vscode.typescript-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/typescript-language-features/package.json",
+            "bytes": 44185,
+            "sha256": "83ca1869b30ef550ec8f9c5d3f2f84baccaefe556a33ec7129c2e9df132749b8"
+          }
+        },
+        {
+          "id": "vscode.vb",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/vb/package.json",
+            "bytes": 791,
+            "sha256": "d30c1434c5517f1ee4bda3fc5e96ad519bcff9826357cec5399f612d8569b4cd"
+          }
+        },
+        {
+          "id": "MS-CEINTL.vscode-language-pack-zh-hans-inside",
+          "version": "1.102.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/vscode-language-pack-zh-hans/package.json",
+            "bytes": 8789,
+            "sha256": "283d42728e66154cdca7c8c8de281958f57fa66805f68d7bfd6add0933b50373"
+          }
+        },
+        {
+          "id": "vscode.xml",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/xml/package.json",
+            "bytes": 1506,
+            "sha256": "e5e479acaac2a73687c8687537c1b29e17b0b9e22730480fdd4b0e379525a725"
+          }
+        },
+        {
+          "id": "vscode.yaml",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/yaml/package.json",
+            "bytes": 1880,
+            "sha256": "1e1edda0a910a068b47d49f0ac28b681ed2ad91d60ca76a2d2c41b2f2635e1d2"
+          }
+        }
+      ]
+    },
+    {
+      "agent_id": "codebuddy-cn-ide",
+      "app_name": "CodeBuddy CN.app",
+      "bundle_id": "com.tencent.codebuddycn",
+      "bundle_name": "CodeBuddy CN",
+      "application_name": "buddycn",
+      "data_folder": ".codebuddycn",
+      "archive_sha256": "acbf4321ca93fd9d3a3982d8cde76444235232f1d73362d1ddb1ba09d014c96c",
+      "guards": [
+        {
+          "path": "Contents/Info.plist",
+          "bytes": 42425,
+          "sha256": "214279e27dd111e4662554b9501280068d0e305370bd375eb8a505376db5bfb9"
+        },
+        {
+          "path": "Contents/MacOS/Electron",
+          "bytes": 69584,
+          "sha256": "2f28ba2096aad0243b6e86efe4d2b05ad8b43b381245458af021a00216cf13a0"
+        },
+        {
+          "path": "Contents/Resources/app/package.json",
+          "bytes": 11844,
+          "sha256": "7a8e58d16780ec7a88c7bf452488f2980e0ca240212384f1f89789dfe9926f42"
+        },
+        {
+          "path": "Contents/Resources/app/product.json",
+          "bytes": 17078,
+          "sha256": "51d3f5ac6dcaf99ca6dc0eeaffc64a4795f6bd221a5ec894c9caea56fbc70c6a"
+        },
+        {
+          "path": "Contents/Resources/app/out/main.js",
+          "bytes": 1840166,
+          "sha256": "9aa23ab83a5414f549258909f8cc8a58b825cebc689c83b1fb706b76d66ac69a"
+        },
+        {
+          "path": "Contents/Resources/app/extensions/genie/package.json",
+          "bytes": 34265,
+          "sha256": "2eb46232f9a74f1ec287f4668d5ab19d002f287ff8f21d372163a4a30123b1fe"
+        },
+        {
+          "path": "Contents/Resources/app/extensions/genie/product.json",
+          "bytes": 259518,
+          "sha256": "da976be8cc901b738cd4eb3c0395d08c91c40f0bc949e6411f0937b0be5e081c"
+        },
+        {
+          "path": "Contents/Resources/app/extensions/genie/out/extension/index.js",
+          "bytes": 21365905,
+          "sha256": "b8fad5cc96e9919841ef9d01d17943bd5bc879d563508f52d9b822dc84cc7934"
+        },
+        {
+          "path": "Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js",
+          "bytes": 14807321,
+          "sha256": "92991736847f46ee0924689878be80511c61a467a5a1945de934cc9ddbfa1315"
+        },
+        {
+          "path": "Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js",
+          "bytes": 1935290,
+          "sha256": "597088073e9779f50af7d0e7523d82b1112c8e3d53ccb3cfb10ffeac6477f18b"
+        }
+      ],
+      "builtin_extensions": [
+        {
+          "id": "vscode.bat",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/bat/package.json",
+            "bytes": 771,
+            "sha256": "42c92eb0bbba2d51399d75efe2fa103e07a4adc63fa55ce71a07485f772be40f"
+          }
+        },
+        {
+          "id": "vscode.clojure",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/clojure/package.json",
+            "bytes": 811,
+            "sha256": "e841f4905101662239dad6063ded97ba4c00b221db48a3abd1ac3c1b14abe169"
+          }
+        },
+        {
+          "id": "vscode.coffeescript",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/coffeescript/package.json",
+            "bytes": 1019,
+            "sha256": "e3d014ec621a29650091c550c4f478da349184dc0d478ba56a10b7d68e141da3"
+          }
+        },
+        {
+          "id": "vscode.configuration-editing",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/configuration-editing/package.json",
+            "bytes": 3407,
+            "sha256": "4005021868a05661de6ad55a274d263efc0d2117631d2757cac13ac40eb930a7"
+          }
+        },
+        {
+          "id": "vscode.cpp",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/cpp/package.json",
+            "bytes": 1734,
+            "sha256": "6a2aae1ca30cb8d1dc75068f0e59d77ea378969d1288be4239922d6b614c3d16"
+          }
+        },
+        {
+          "id": "vscode.csharp",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/csharp/package.json",
+            "bytes": 1108,
+            "sha256": "77d76eeff9527a341fb2f0d16ef203c37de496a25368a2042fc87f084ff1a27a"
+          }
+        },
+        {
+          "id": "vscode.css",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/css/package.json",
+            "bytes": 739,
+            "sha256": "a56810c715aa462cec304dd9b7d1c21422dc2c711776461a2a8d394bb5f0434a"
+          }
+        },
+        {
+          "id": "vscode.css-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/css-language-features/package.json",
+            "bytes": 17024,
+            "sha256": "dfb1b5600d806c8ff192ac2046b1d486143f4216892277ba0838e95f546dfb90"
+          }
+        },
+        {
+          "id": "vscode.dart",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/dart/package.json",
+            "bytes": 595,
+            "sha256": "3152275d736be77861f04e1734cdbb969efb15725dc590c33dc564d1551bdc1c"
+          }
+        },
+        {
+          "id": "vscode.debug-auto-launch",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/debug-auto-launch/package.json",
+            "bytes": 648,
+            "sha256": "b9bdaf8d16ff9d30bfa531c96aee55694cf6d78fcaad5beeb8f0c589219771ab"
+          }
+        },
+        {
+          "id": "vscode.debug-server-ready",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/debug-server-ready/package.json",
+            "bytes": 4189,
+            "sha256": "cdcee793baf6290e86ee7e5810579af25b5cb67ba83233cfda35d963848a601a"
+          }
+        },
+        {
+          "id": "vscode.diff",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/diff/package.json",
+            "bytes": 610,
+            "sha256": "4ba17dfccd272fdb23650134bbc78bfa1f4a0af6eac436e5a3bd8290e625f0ce"
+          }
+        },
+        {
+          "id": "vscode.docker",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/docker/package.json",
+            "bytes": 776,
+            "sha256": "c00b880bee016ef00599afb1f01503100ee869082e6010c82142b87896fc8883"
+          }
+        },
+        {
+          "id": "vscode.dotenv",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/dotenv/package.json",
+            "bytes": 765,
+            "sha256": "c13aeba2c68203e475487e3450d04d368216a31809bc45d8fcc8e52c7be73dc7"
+          }
+        },
+        {
+          "id": "vscode.emmet",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/emmet/package.json",
+            "bytes": 9582,
+            "sha256": "921b7db1172b7f11db5d488674938de3d8eb9f5795b6ff8e7fdccfd260ed681c"
+          }
+        },
+        {
+          "id": "vscode.extension-editing",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/extension-editing/package.json",
+            "bytes": 1025,
+            "sha256": "2424ae5bf8cac8259e1d9bfdefb5c38e071f1b570a3144704b49491bd5084608"
+          }
+        },
+        {
+          "id": "vscode.fsharp",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/fsharp/package.json",
+            "bytes": 867,
+            "sha256": "b806920dc488ee6a651fb2c3034cc2ab3d9a6401493f42527bbcc2b18418abdc"
+          }
+        },
+        {
+          "id": "Tencent-Cloud.coding-copilot",
+          "version": "3.10.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/genie/package.json",
+            "bytes": 34265,
+            "sha256": "2eb46232f9a74f1ec287f4668d5ab19d002f287ff8f21d372163a4a30123b1fe"
+          }
+        },
+        {
+          "id": "CodeBuddy.codebuddy-dev-containers",
+          "version": "0.1.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/genie-dev-container/package.json",
+            "bytes": 10365,
+            "sha256": "5185faafba8d45a609d2df1451caefe07c5900495b1241d028e688ae76001b47"
+          }
+        },
+        {
+          "id": "CodeBuddy.codebuddy-open-wsl",
+          "version": "0.0.5",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/genie-open-wsl/package.json",
+            "bytes": 7898,
+            "sha256": "c14d5d15372aacf0c4cf52b498d9b4bf32d6844237bb8082c7a9ccca8599d09a"
+          }
+        },
+        {
+          "id": "vscode.git",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/git/package.json",
+            "bytes": 85935,
+            "sha256": "b0c5aad689fe78f12b01a6d571f61ab84354755e4145d06f8b4b53407c608e28"
+          }
+        },
+        {
+          "id": "vscode.git-base",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/git-base/package.json",
+            "bytes": 1600,
+            "sha256": "b4b5029a0477ede13c63f0ac32a14c957e353428aeceebc85f9d7a8696d27922"
+          }
+        },
+        {
+          "id": "vscode.github",
+          "version": "0.0.1",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/github/package.json",
+            "bytes": 4725,
+            "sha256": "b737544510357701c570065c00bf3ca2f94aaff6b711aac87225499a166d76ba"
+          }
+        },
+        {
+          "id": "vscode.github-authentication",
+          "version": "0.0.2",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/github-authentication/package.json",
+            "bytes": 1560,
+            "sha256": "cbe87ebc0e2d1274c396b669794bec0f1f10c01985f9bb9ae6135f3af7ed97b7"
+          }
+        },
+        {
+          "id": "vscode.go",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/go/package.json",
+            "bytes": 710,
+            "sha256": "ffdd6b7bb2c88a3979a7afe05bc714ea9cb770857b12de6e447142311f926301"
+          }
+        },
+        {
+          "id": "vscode.groovy",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/groovy/package.json",
+            "bytes": 902,
+            "sha256": "2bdfef3eed4bcba86b08e9b6af86f14c6e096c4a52b3429d49295c642685f0b3"
+          }
+        },
+        {
+          "id": "vscode.grunt",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/grunt/package.json",
+            "bytes": 1065,
+            "sha256": "5495c7b7f664fb4e345f315b6c9e4a7c83cef75596e69bc8fc6ef31de72b9552"
+          }
+        },
+        {
+          "id": "vscode.gulp",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/gulp/package.json",
+            "bytes": 914,
+            "sha256": "70248878bc87a9f040a15ef5514f5bff6a00e9ab23b927b4dd97b7190b55a8c6"
+          }
+        },
+        {
+          "id": "vscode.handlebars",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/handlebars/package.json",
+            "bytes": 894,
+            "sha256": "f764c67ab3d11726b35d191fce15fa310b57d48f6d1e1772fdeacb628e9d5af8"
+          }
+        },
+        {
+          "id": "vscode.hlsl",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/hlsl/package.json",
+            "bytes": 724,
+            "sha256": "7e5bbc9a9c42a6720373840b97955ad32cbfb51e21f7ac6a02a19c07f7794493"
+          }
+        },
+        {
+          "id": "vscode.html",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/html/package.json",
+            "bytes": 1319,
+            "sha256": "83b08e0404d84c8707d3e34db10ac19eedb58b2fc2924ec5306b0886f8852c46"
+          }
+        },
+        {
+          "id": "vscode.html-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/html-language-features/package.json",
+            "bytes": 5332,
+            "sha256": "815f66165ed01e4d1f834f48aa1ce89b3e6ff376fa12dc8cf68346748cc2cb2d"
+          }
+        },
+        {
+          "id": "vscode.ini",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ini/package.json",
+            "bytes": 1094,
+            "sha256": "0ac3f65d56a99a1b885ec91b02df17e61077f68c3f39219419e42142a860e878"
+          }
+        },
+        {
+          "id": "vscode.ipynb",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ipynb/package.json",
+            "bytes": 2981,
+            "sha256": "777720a3c86e79b4bc0f19ea01e831ead9308028f28a7624c054719b2d7fb1ef"
+          }
+        },
+        {
+          "id": "vscode.jake",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/jake/package.json",
+            "bytes": 920,
+            "sha256": "b23cb9d0f2429cdd8777a874e153e9f1d1f4d8d3c433fb4eec99a9591ee9e35d"
+          }
+        },
+        {
+          "id": "vscode.java",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/java/package.json",
+            "bytes": 773,
+            "sha256": "2ee764283cf5669051ce3b7702e2278a6e46c2127ed1dc7ea0f18731a3e04c0b"
+          }
+        },
+        {
+          "id": "vscode.javascript",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/javascript/package.json",
+            "bytes": 3056,
+            "sha256": "23991b736817641579fe24ead83697082158f35807cf82df1833a14a8a997d8a"
+          }
+        },
+        {
+          "id": "vscode.json",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/json/package.json",
+            "bytes": 1794,
+            "sha256": "f799d4132d1866c2ad48a1fdc6cb8fd1a506975c3a6284d42b382daa0d615d53"
+          }
+        },
+        {
+          "id": "vscode.json-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/json-language-features/package.json",
+            "bytes": 2955,
+            "sha256": "7b0a856e73e5959fbbc34d72097e01cac1de4f9da5631a7fbf71be75c8284362"
+          }
+        },
+        {
+          "id": "vscode.julia",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/julia/package.json",
+            "bytes": 1038,
+            "sha256": "493fe6b69bbedfe64c44982544009ee9f277aea81a7bb1ebf182e2046b9891dc"
+          }
+        },
+        {
+          "id": "vscode.latex",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/latex/package.json",
+            "bytes": 2014,
+            "sha256": "bb9d225db225de5141872bd19cc3ad6b615336d7b8e276b8534c3f7b95e96f0c"
+          }
+        },
+        {
+          "id": "vscode.less",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/less/package.json",
+            "bytes": 856,
+            "sha256": "e0a58c85b93448136c54b258c8e3810916e25b8c604916f89c6cbfb83c8de9a6"
+          }
+        },
+        {
+          "id": "vscode.lexical-markdown-editor",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/lexical-markdown-editor/package.json",
+            "bytes": 2081,
+            "sha256": "b12e42f1c5d617e1713af55d061d97970e417a77ce881cc7ba69556bf1a89a86"
+          }
+        },
+        {
+          "id": "vscode.log",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/log/package.json",
+            "bytes": 626,
+            "sha256": "7c53f01edd892f51402bd88f9099fc93c63a1e9167ebeabf18a56f8a6f5dbcd7"
+          }
+        },
+        {
+          "id": "vscode.lua",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/lua/package.json",
+            "bytes": 711,
+            "sha256": "3afcc17b1a30952cdb14a1d874a56f303739c663d1db514f84d8ac61d8741748"
+          }
+        },
+        {
+          "id": "vscode.make",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/make/package.json",
+            "bytes": 909,
+            "sha256": "c2c15f9141eba92f301d0b1b1e0325228ca2cf996915ed016627acc6831adc06"
+          }
+        },
+        {
+          "id": "vscode.markdown",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/markdown-basics/package.json",
+            "bytes": 2954,
+            "sha256": "2d8c769b087eca862fc6035435d97f5c288b6cf8795e5c1c59b2c5ad18de6104"
+          }
+        },
+        {
+          "id": "vscode.markdown-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/markdown-language-features/package.json",
+            "bytes": 20847,
+            "sha256": "f6d460a0184f63098f9a271e6cd694a1588dfc7df9cf4bd23dffa9b596b1147e"
+          }
+        },
+        {
+          "id": "vscode.markdown-math",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/markdown-math/package.json",
+            "bytes": 1992,
+            "sha256": "f8fbb9cfbb84d2a5a3e8fa4334c7c6866d55d893ac913b4dd1dcdffbde301aab"
+          }
+        },
+        {
+          "id": "vscode.media-preview",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/media-preview/package.json",
+            "bytes": 2993,
+            "sha256": "48b3ed953fc6d40bc1fe216c3017d8b51ab3cf9bc168e020f6172962a11b0080"
+          }
+        },
+        {
+          "id": "vscode.merge-conflict",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/merge-conflict/package.json",
+            "bytes": 3624,
+            "sha256": "63675601058802f2e3281fe5d6b6a9a4aac37d1a8ec9c559260cf310ac915a0a"
+          }
+        },
+        {
+          "id": "vscode.mermaid-chat-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/mermaid-chat-features/package.json",
+            "bytes": 1447,
+            "sha256": "20bd9d7db0a47b1362c0b5c34ce63590b4ed848ce961ce2559d76de9afb7caae"
+          }
+        },
+        {
+          "id": "vscode.microsoft-authentication",
+          "version": "0.0.1",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/microsoft-authentication/package.json",
+            "bytes": 3042,
+            "sha256": "e02ceadce4ba2a8481b9a80feec1303b1e9cc4719a0a5d45211ed6e606bcc434"
+          }
+        },
+        {
+          "id": "ms-vscode.js-debug",
+          "version": "1.102.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ms-vscode.js-debug/package.json",
+            "bytes": 249214,
+            "sha256": "089a783c3db4221b211db39af13c5f7612cb499633c5d708a0248d3a2b28ce3d"
+          }
+        },
+        {
+          "id": "ms-vscode.js-debug-companion",
+          "version": "1.1.3",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ms-vscode.js-debug-companion/package.json",
+            "bytes": 1303,
+            "sha256": "44999350991f42897c4f81ae3ef66e26582f08fb66696119f1aaefdc7d63af77"
+          }
+        },
+        {
+          "id": "ms-vscode.vscode-js-profile-table",
+          "version": "1.0.10",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/package.json",
+            "bytes": 1787,
+            "sha256": "81cfb4e5ec2b68bc3b131560fc424029e2cce7e153819a90cf3343ce71104fd4"
+          }
+        },
+        {
+          "id": "vscode.builtin-notebook-renderers",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/notebook-renderers/package.json",
+            "bytes": 1222,
+            "sha256": "e4202d3841d6c4275188a78a0d4cf37a240873d654c8040539c6883c4f98d71d"
+          }
+        },
+        {
+          "id": "vscode.npm",
+          "version": "1.0.1",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/npm/package.json",
+            "bytes": 5818,
+            "sha256": "0121569fe73cad8759d246394336b23d268caebf99c873682cbccfc38776ccce"
+          }
+        },
+        {
+          "id": "vscode.objective-c",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/objective-c/package.json",
+            "bytes": 826,
+            "sha256": "868d830df4d0283415ac898a65e24e6049ac737141b01f38c965518b10dfd6ba"
+          }
+        },
+        {
+          "id": "CodeBuddy.codebuddy-remote-ssh",
+          "version": "0.0.50",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/open-remote-ssh/package.json",
+            "bytes": 19282,
+            "sha256": "1fccde282cbd096e714d7548501c7b00cad53bb99b9cff318c000bfd93c701d2"
+          }
+        },
+        {
+          "id": "vscode.perl",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/perl/package.json",
+            "bytes": 1202,
+            "sha256": "6cc35018069863a92cbf84c412fea28b92af0cefc499d2c1d1b54ccd1d02d43c"
+          }
+        },
+        {
+          "id": "vscode.php",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/php/package.json",
+            "bytes": 990,
+            "sha256": "829e0617dc93ac5e6befbcadfa0c9ba03383fcc87d9f3985e55f37a0714ac751"
+          }
+        },
+        {
+          "id": "vscode.php-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/php-language-features/package.json",
+            "bytes": 1250,
+            "sha256": "3738b66e6d65399a07cb85f5da25bacb16cbde8a3219a978dba497cdad999d8d"
+          }
+        },
+        {
+          "id": "vscode.powershell",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/powershell/package.json",
+            "bytes": 806,
+            "sha256": "5baaee973a0ca6cf7114af943bc1d86ea399506fc66486cf40f5a64e34acf626"
+          }
+        },
+        {
+          "id": "vscode.prompt",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/prompt-basics/package.json",
+            "bytes": 2515,
+            "sha256": "359c9c4e3e9f9bda4ddf1d49fd81bb8d12d0cbee68fd58692ee7c1aec97d000f"
+          }
+        },
+        {
+          "id": "vscode.pug",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/pug/package.json",
+            "bytes": 758,
+            "sha256": "2a971f7fd220778ccd64f7e4987a46e0b775a9fc2b3d34fe56a126ba50770fa1"
+          }
+        },
+        {
+          "id": "vscode.python",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/python/package.json",
+            "bytes": 1115,
+            "sha256": "5b8c00253a0915500e515bf0ad2c99b8f3b66501a11e3dfd62ebb5c42774830d"
+          }
+        },
+        {
+          "id": "vscode.r",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/r/package.json",
+            "bytes": 672,
+            "sha256": "fb194dcef27a75bd36764ac8ace604722ba7d4472c2434eaef1e7107ac2200d1"
+          }
+        },
+        {
+          "id": "vscode.razor",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/razor/package.json",
+            "bytes": 740,
+            "sha256": "ee5985a134e4a10839676b994a7bbcdb3d077ca6300af3750f1a0eefb13ff712"
+          }
+        },
+        {
+          "id": "vscode.references-view",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/references-view/package.json",
+            "bytes": 8877,
+            "sha256": "5ef51395edfa43308d61369f1de991e5898a5034881a46da28c6d885fd7629e8"
+          }
+        },
+        {
+          "id": "vscode.restructuredtext",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/restructuredtext/package.json",
+            "bytes": 713,
+            "sha256": "e42b74f3c8b1d55ae5b2df26c3eb89a19a95858b404f4aeaad75bb18890ba5aa"
+          }
+        },
+        {
+          "id": "vscode.ruby",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/ruby/package.json",
+            "bytes": 1125,
+            "sha256": "16b2d075dd4ad0420bfd7e54b571cb1a1263474163c0d8e3672cfddf9adce853"
+          }
+        },
+        {
+          "id": "vscode.rust",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/rust/package.json",
+            "bytes": 572,
+            "sha256": "a31d27137da13d79b5b99d7551ced0cce69dcb94e4e67bd73758bf109d1ddb8c"
+          }
+        },
+        {
+          "id": "vscode.scss",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/scss/package.json",
+            "bytes": 1272,
+            "sha256": "2454571025bbd53ecca04adf15ba24ae7ab74b02336248578962515fcc7d2285"
+          }
+        },
+        {
+          "id": "vscode.search-result",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/search-result/package.json",
+            "bytes": 821,
+            "sha256": "b7d937e581cf6ff0a38e8c7548bd6052571c383f7c4650c2423f4f0c603469f9"
+          }
+        },
+        {
+          "id": "vscode.shaderlab",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/shaderlab/package.json",
+            "bytes": 715,
+            "sha256": "d932ec9498d712c8afb2acbd91119e248c734e5a5fa09e09b368d5be9a772cbf"
+          }
+        },
+        {
+          "id": "vscode.shellscript",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/shellscript/package.json",
+            "bytes": 1609,
+            "sha256": "d2ef55acb12745356601eff61a4a1baa56478b41124255bf90e40ae5d4a85f8e"
+          }
+        },
+        {
+          "id": "vscode.simple-browser",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/simple-browser/package.json",
+            "bytes": 1099,
+            "sha256": "68af0651564951968bafbcea7e51414ed4430e84eea7d30de8793a4a227eb00f"
+          }
+        },
+        {
+          "id": "vscode.sql",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/sql/package.json",
+            "bytes": 579,
+            "sha256": "de751675afebe88995547442c2d60bd94f78a02ae48de3e500869d8a015800a8"
+          }
+        },
+        {
+          "id": "vscode.swift",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/swift/package.json",
+            "bytes": 753,
+            "sha256": "7c0a9833ec2b564a64686890c01986e5a7083a1baf2ab2ef7db90e5301ef56b0"
+          }
+        },
+        {
+          "id": "vscode.terminal-suggest",
+          "version": "1.0.1",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/terminal-suggest/package.json",
+            "bytes": 792,
+            "sha256": "955c746c38fd09122b7a50ffe82e4690e802fe8e1ed8ebd0df9e1a5094238784"
+          }
+        },
+        {
+          "id": "vscode.theme-abyss",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-abyss/package.json",
+            "bytes": 388,
+            "sha256": "23ab6893f6c2f9ad819b067ce2277f5136c005075923c526ad098d424f87a5f5"
+          }
+        },
+        {
+          "id": "vscode.theme-defaults",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-defaults/package.json",
+            "bytes": 1322,
+            "sha256": "88c4ea2f92e146ffe9e0706e6b5804488715dad323eeacd1f8c0919f35108286"
+          }
+        },
+        {
+          "id": "vscode.theme-genie-dark",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-genie/package.json",
+            "bytes": 987,
+            "sha256": "48780fc855f7f66f53d53e21eeef72b30c72d236f31432747535a35027d6b0f8"
+          }
+        },
+        {
+          "id": "vscode.theme-kimbie-dark",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-kimbie-dark/package.json",
+            "bytes": 406,
+            "sha256": "1a1f91dfb9d6db0cdcaf7eedcd1c3ef48363423be0bb61d6ab4608c9e82e82fe"
+          }
+        },
+        {
+          "id": "vscode.theme-monokai",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-monokai/package.json",
+            "bytes": 394,
+            "sha256": "915b194d28675233a6b7e625bb45420e2882faf4ebb7675ab1b0289556f09d0c"
+          }
+        },
+        {
+          "id": "vscode.theme-monokai-dimmed",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-monokai-dimmed/package.json",
+            "bytes": 415,
+            "sha256": "e8af75585e34d347f5b156274d3f3e25c9e602d17abb593500c04d0b23b9bbf9"
+          }
+        },
+        {
+          "id": "vscode.theme-quietlight",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-quietlight/package.json",
+            "bytes": 399,
+            "sha256": "ac028b3889c295234af18663faed4dd8125cf5d3872115376baf2f049f5e33d0"
+          }
+        },
+        {
+          "id": "vscode.theme-red",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-red/package.json",
+            "bytes": 382,
+            "sha256": "8505ded849e27a21f7c49043ca19dc46c57c1d5d1c05c83db568f9b9a263744b"
+          }
+        },
+        {
+          "id": "vscode.vscode-theme-seti",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-seti/package.json",
+            "bytes": 493,
+            "sha256": "492e3d98bf86b51c96612ea6db1cbc43375d76d60b7be7e9d211958fccab3ef5"
+          }
+        },
+        {
+          "id": "vscode.theme-solarized-dark",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-solarized-dark/package.json",
+            "bytes": 415,
+            "sha256": "dca6b5ece7f88fc80ba488b96083c097011e5f24122c9a069e4ce0562d0106ff"
+          }
+        },
+        {
+          "id": "vscode.theme-solarized-light",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-solarized-light/package.json",
+            "bytes": 413,
+            "sha256": "4e3861092029da2394cd3732f3f2145f8092cb310cd11e4afe72822062016ca7"
+          }
+        },
+        {
+          "id": "vscode.theme-tomorrow-night-blue",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/theme-tomorrow-night-blue/package.json",
+            "bytes": 430,
+            "sha256": "fbaa15110dbb936c87b896f81773a178cce741972ec815dad6f53a8172f00864"
+          }
+        },
+        {
+          "id": "vscode.tunnel-forwarding",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/tunnel-forwarding/package.json",
+            "bytes": 853,
+            "sha256": "80e05ffba1e7cf0d8269ae043e3b6bff3866a6930079b6b2791313245c20067b"
+          }
+        },
+        {
+          "id": "vscode.typescript",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/typescript-basics/package.json",
+            "bytes": 3472,
+            "sha256": "bdaf5d0733e42f557f0662a26a460c8bfde505d668c988347a374d2924942680"
+          }
+        },
+        {
+          "id": "vscode.typescript-language-features",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/typescript-language-features/package.json",
+            "bytes": 44185,
+            "sha256": "83ca1869b30ef550ec8f9c5d3f2f84baccaefe556a33ec7129c2e9df132749b8"
+          }
+        },
+        {
+          "id": "vscode.vb",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/vb/package.json",
+            "bytes": 791,
+            "sha256": "d30c1434c5517f1ee4bda3fc5e96ad519bcff9826357cec5399f612d8569b4cd"
+          }
+        },
+        {
+          "id": "MS-CEINTL.vscode-language-pack-zh-hans-inside",
+          "version": "1.102.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/vscode-language-pack-zh-hans/package.json",
+            "bytes": 8789,
+            "sha256": "283d42728e66154cdca7c8c8de281958f57fa66805f68d7bfd6add0933b50373"
+          }
+        },
+        {
+          "id": "vscode.xml",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/xml/package.json",
+            "bytes": 1506,
+            "sha256": "e5e479acaac2a73687c8687537c1b29e17b0b9e22730480fdd4b0e379525a725"
+          }
+        },
+        {
+          "id": "vscode.yaml",
+          "version": "1.0.0",
+          "manifest": {
+            "path": "Contents/Resources/app/extensions/yaml/package.json",
+            "bytes": 1880,
+            "sha256": "1e1edda0a910a068b47d49f0ac28b681ed2ad91d60ca76a2d2c41b2f2635e1d2"
+          }
+        }
+      ]
+    }
+  ],
+  "skill_groups": [
+    {
+      "id": "@builtin/skills",
+      "label": "Builtin Skills",
+      "root": "Contents/Resources/app/extensions/genie/out/extension/builtin",
+      "gate": "availability-only",
+      "skills": [
+        {
+          "name": "buddy-multimodal-generation",
+          "bytes": 13259
+        },
+        {
+          "name": "skill-creator",
+          "bytes": 12350
+        },
+        {
+          "name": "lsp-code-analysis",
+          "bytes": 14377
+        }
+      ],
+      "tools": []
+    },
+    {
+      "id": "@builtin/wecom-skills",
+      "label": "WeCom resources",
+      "root": "Contents/Resources/app/extensions/genie/out/extension/wecom-skills",
+      "gate": "isWecomAiBot-request-unknown",
+      "skills": [
+        {
+          "name": "wecom-doc-manager",
+          "bytes": 3598
+        },
+        {
+          "name": "wecom-meeting-query",
+          "bytes": 15574
+        },
+        {
+          "name": "wecom-msg",
+          "bytes": 5037
+        },
+        {
+          "name": "wecom-get-todo-detail",
+          "bytes": 6398
+        },
+        {
+          "name": "wecom-get-todo-list",
+          "bytes": 7127
+        },
+        {
+          "name": "wecom-edit-todo",
+          "bytes": 10348
+        },
+        {
+          "name": "wecom-smartsheet-data",
+          "bytes": 4075
+        },
+        {
+          "name": "wecom-smartsheet-schema",
+          "bytes": 4135
+        },
+        {
+          "name": "wecom-schedule",
+          "bytes": 7864
+        },
+        {
+          "name": "wecom-contact-lookup",
+          "bytes": 5227
+        },
+        {
+          "name": "wecom-meeting-create",
+          "bytes": 7456
+        },
+        {
+          "name": "wecom-meeting-manage",
+          "bytes": 4608
+        }
+      ],
+      "tools": [
+        {
+          "name": "wecom_mcp",
+          "source": "Contents/Resources/app/extensions/genie/out/extension/index.js",
+          "gate": "isWecomAiBot-request-unknown"
+        }
+      ]
+    }
+  ],
+  "declared_plugins": [
+    {
+      "name": "pptx",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": true
+    },
+    {
+      "name": "pdf",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": true
+    },
+    {
+      "name": "docx",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": true
+    },
+    {
+      "name": "xlsx",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": true
+    },
+    {
+      "name": "agent-browser",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": true
+    },
+    {
+      "name": "playwright-cli",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": true
+    },
+    {
+      "name": "hotskills",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": false
+    },
+    {
+      "name": "skills-sec-audit",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": true
+    },
+    {
+      "name": "find-skills",
+      "marketplace": "codebuddy-plugins-official",
+      "auto_enable": true
+    }
+  ],
+  "evidence": {
+    "contract_sha256": "23aeea7f6fb3b7d013ea03e52631f17b9bfa36f9b3bb53ad5f6f15a75dd3cfb5",
+    "source_index_sha256": "5883f48ffe69fa6ecca477374b3eeae748f64a69130ad8c665caa4b3a39abd35",
+    "rea_parent": "ev_fc504a7c919b0530b56eef9e5a42a5e2f159f7ae536321f2382cfe60bcdbb281",
+    "rea_summary": "ev_76ab6a6a162a52eb5046a614cbc20dd67e31593acaec4509da5401a55f24ef0d"
+  }
+}

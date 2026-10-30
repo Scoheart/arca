@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "agent_id": "codebuddy-code",
+  "command": "codebuddy",
+  "package_name": "@tencent-ai/codebuddy-code",
+  "version": "2.178.1",
+  "entry": "bin/codebuddy",
+  "guards": [
+    {
+      "path": "package.json",
+      "bytes": 2970,
+      "sha256": "13b03da9a85863a02e4c1ff7d7f3b95373c73194eafa4312e070bab9f552a45c"
+    },
+    {
+      "path": "bin/codebuddy",
+      "bytes": 17002,
+      "sha256": "30dc3c8d3d688fa42f5e4ee45a94df9daea39b48a91982fc28702e6febf12e4e"
+    },
+    {
+      "path": "dist/codebuddy.js",
+      "bytes": 32573778,
+      "sha256": "032191737e2ff681e1223798613c0ca61343c9f008675872d6b0b119161fd16d"
+    },
+    {
+      "path": "dist/codebuddy-headless.js",
+      "bytes": 28132432,
+      "sha256": "acc6d7b8e811613e42fdea960c24c2ce255b939cfc94f861bcae011cc2c03bd3"
+    },
+    {
+      "path": "dist/codebuddy-lite-wb.mjs",
+      "bytes": 13119421,
+      "sha256": "a7b12ae443c700cd69e57d59612021baac6065edaa893217f7ce1f22e1ac20fd"
+    },
+    {
+      "path": "product.json",
+      "bytes": 370849,
+      "sha256": "664a953bb68b4fee6d7feb8c168586d9f997551eba9f4605c8c76af21c2c7d38"
+    },
+    {
+      "path": "product.cloudhosted.json",
+      "bytes": 21448,
+      "sha256": "ee3b3cd3231273bf67cbef8690c20c786057fec8aac0e03ecdbc094982eadfe6"
+    },
+    {
+      "path": "product.internal.json",
+      "bytes": 29473,
+      "sha256": "5a7140d7d25d08ec9caf28f21c6230d74f972bb27360a02bb8728bcfbc6820a2"
+    },
+    {
+      "path": "product.ioa.json",
+      "bytes": 42234,
+      "sha256": "d3df4bb853c3611f5bd071a15d5ff0a71bf26ab2bc8bacc4d89718661a65a240"
+    },
+    {
+      "path": "product.selfhosted.json",
+      "bytes": 10097,
+      "sha256": "6cbfa240bfcf0e86cf880f0c492cf819712549d1c0488b520c2087a39eb3dd53"
+    }
+  ],
+  "builtin_skills": [
+    {
+      "name": "mods-create",
+      "path": "builtin/skills/mods-create/SKILL.md",
+      "bytes": 11671
+    }
+  ],
+  "evidence": {
+    "archive_sha256": "fd3c38175b142920228ef6cf3b69f7b6d81d57a2b746da6c9bc68e87fd6ec934",
+    "research_sha256": "42fce27bfa2ac05c64f75d82f30b998d7434c215faa014bbf1b6fb56e0926c45"
+  }
+}

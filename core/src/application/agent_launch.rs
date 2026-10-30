@@ -341,10 +341,12 @@ pub fn runtime_version(agent_id: &str) -> Result<Option<String>, String> {
     let launch = info(agent_id)?;
     if !launch.available { return Ok(None); }
     Ok(match launch.resolved_target.as_ref() {
-        Some(LaunchTarget::App { path, .. }) => cached_version(&Path::new(path).join("Contents/Info.plist"), || app_version(path)),
-        Some(LaunchTarget::Cli { command, .. }) if launch.configured_target.is_none() => cached_version(Path::new(command), || {
-            crate::resources::plugin::passive_runtime_version(agent_id,Path::new(command)).unwrap_or_else(||cli_version(command))
-        }),
+        Some(LaunchTarget::App { path, .. }) => crate::resources::plugin::fresh_passive_runtime_version(agent_id,Path::new(path))
+            .unwrap_or_else(|| cached_version(&Path::new(path).join("Contents/Info.plist"), || app_version(path))),
+        Some(LaunchTarget::Cli { command, .. }) if launch.configured_target.is_none() =>
+            crate::resources::plugin::fresh_passive_runtime_version(agent_id,Path::new(command)).unwrap_or_else(|| {
+                cached_version(Path::new(command), || crate::resources::plugin::passive_runtime_version(agent_id,Path::new(command)).unwrap_or_else(||cli_version(command)))
+            }),
         _ => None,
     })
 }
@@ -708,17 +710,32 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
-    fn junie_unknown_official_cli_selection_never_runs_a_version_subprocess() {
+    fn audited_cli_guards_never_execute_an_unknown_official_selection() {
         use std::os::unix::fs::PermissionsExt;
-        let home = crate::testenv::TestHome::new("junie-no-version-exec");
-        let marker = home.home.join("unexpected-version-execution");
-        let command = home.home.join("bin/junie");
-        fs::write(&command, format!("#!/bin/sh\n: > '{}'\n", marker.display())).unwrap();
-        fs::set_permissions(&command, fs::Permissions::from_mode(0o755)).unwrap();
-        let launch = info("junie-cli").unwrap();
-        assert!(launch.available && launch.configured_target.is_none());
-        assert_eq!(runtime_version("junie-cli").unwrap(), None);
-        assert!(!marker.exists());
+        for (agent, executable) in [("junie-cli", "junie"), ("codebuddy-code", "codebuddy")] {
+            let home = crate::testenv::TestHome::new("native-cli-no-version-exec");
+            let marker = home.home.join("unexpected-version-execution");
+            let command = home.home.join("bin").join(executable);
+            fs::write(&command, format!("#!/bin/sh\n: > '{}'\n", marker.display())).unwrap();
+            fs::set_permissions(&command, fs::Permissions::from_mode(0o755)).unwrap();
+            let launch = info(agent).unwrap();
+            assert!(launch.available && launch.configured_target.is_none());
+            assert_eq!(runtime_version(agent).unwrap(), None);
+            assert!(!marker.exists());
+        }
+    }
+
+    #[test]
+    fn codebuddy_app_versions_do_not_fall_back_to_an_unguarded_plist_label() {
+        let home = crate::testenv::TestHome::new("codebuddy-app-version-guard");
+        for (agent, name, bundle) in [("codebuddy-ide", "CodeBuddy", "com.tencent.codebuddy"),
+            ("codebuddy-cn-ide", "CodeBuddy CN", "com.tencent.codebuddycn")] {
+            let app = home.home.join("Applications").join(format!("{name}.app"));
+            fs::create_dir_all(app.join("Contents")).unwrap();
+            fs::write(app.join("Contents/Info.plist"), format!("<?xml version=\"1.0\"?><plist version=\"1.0\"><dict><key>CFBundleIdentifier</key><string>{bundle}</string><key>CFBundleName</key><string>{name}</string><key>CFBundleShortVersionString</key><string>99.0.0</string></dict></plist>")).unwrap();
+            assert!(info(agent).unwrap().available);
+            assert_eq!(runtime_version(agent).unwrap(), None);
+        }
     }
 
     #[test]

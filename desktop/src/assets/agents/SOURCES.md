@@ -113,6 +113,8 @@ Assets added 2026-10-16, original bytes:
 
 Claude.ai and ChatGPT reuse the already sourced Claude/OpenAI marks. Their Web surface badge distinguishes them from CLI and Desktop products.
 
+CodeBuddy CN reuses the sourced CodeBuddy mark through an explicit alias. Its independent App identity retains the IDE surface marker and the actual `CodeBuddy CN` name.
+
 - `qoder-cn.png`: unchanged 128×128 PNG extracted by `iconutil` from the signed Qoder CN 0.4.11 App icon (`com.qodercn.app`), obtained from https://qoder.cn/download (2026-10-28). The native CN corner mark is preserved; no resampling. `surfaces.json` records the Desktop form.
 
 - `qoderwork-cn.png`: unchanged native 128×128 PNG extracted by `iconutil` from signed QoderWork CN 0.9.18 (`com.qoder.work.cn`), obtained from https://qoder.cn/download (2026-10-28). No resampling; Desktop form is recorded in `surfaces.json`.

@@ -39,6 +39,8 @@ const VERIFIED_SKILL_AGENT_IDS: &[&str] = &[
     "claude-code",
     "cline",
     "codebuddy-code",
+    "codebuddy-ide",
+    "codebuddy-cn-ide",
     "codewhale",
     "codex",
     "copilot-cli",
@@ -110,7 +112,22 @@ impl SkillsFixture {
                 "augment" => home.home.join(".augment"),
                 "claude-code" => home.home.join(".claude"),
                 "cline" => home.home.join(".cline"),
-                "codebuddy-code" => home.home.join(".codebuddy"),
+                "codebuddy-code" => {
+                    let command = home.home.join("bin/codebuddy");
+                    fs::create_dir_all(command.parent().unwrap()).unwrap();
+                    fs::write(&command, "#!/bin/sh\n").unwrap();
+                    #[cfg(unix)]
+                    fs::set_permissions(&command, fs::Permissions::from_mode(0o755)).unwrap();
+                    home.home.join(".codebuddy")
+                }
+                "codebuddy-ide" | "codebuddy-cn-ide" => {
+                    let (name, bundle) = if *id == "codebuddy-ide" { ("CodeBuddy", "com.tencent.codebuddy") }
+                        else { ("CodeBuddy CN", "com.tencent.codebuddycn") };
+                    let app = home.home.join("Applications").join(format!("{name}.app"));
+                    fs::create_dir_all(app.join("Contents")).unwrap();
+                    fs::write(app.join("Contents/Info.plist"), format!("<?xml version=\"1.0\"?><plist version=\"1.0\"><dict><key>CFBundleIdentifier</key><string>{bundle}</string><key>CFBundleName</key><string>{name}</string></dict></plist>")).unwrap();
+                    app
+                }
                 "codewhale" => home.home.join(".codewhale"),
                 "codex" => home.home.join(".codex"),
                 "copilot-cli" => home.home.join(".copilot"),
