@@ -88,7 +88,7 @@ That five-file follow-up (1,805 bytes) retained parent Evidence
 `ev_a0f7bc497bb7d18d6639e1532dd038391a2fea69752d1b7a857cd9f310938a12`
 and 117 semantic unknowns in its separately exported complete ledger.
 
-Eleven isolated regression cases cover ownership/candidate counts, preferred
+Twelve isolated regression cases cover ownership/candidate counts, preferred
 manifest failure, one-level opaque discovery, custom precedence, Hook/MCP alias
 handling, symlinks/hardlinks, concurrent replacement, passive unknown routing
 preservation of settings while withholding stale CN writers, and independent
@@ -96,3 +96,5 @@ Command discovery when a Skill directory or leaf is rejected.
 They are retained unrun under the project's fast delivery mode. Production
 CLI/frontend/native compilation and actual-HOME metadata acceptance are recorded
 separately from this static source contract.
+
+GUI acceptance reproduced a descriptor-limit difference with the exact same CLI: under an isolated process-local `RLIMIT_NOFILE=256`, the original snapshot returned zero QwenWork rows while passive version1.0.4 still resolved. Metadata snapshots now retain parent/file stamps instead of one FD per directory; enumeration and JSON reads bind an operation-local FD and revalidate it before closing, and final path/ancestor CAS remains. No system or application descriptor limit is raised. A retained isolated subprocess case covers400 metadata candidates with27 guard descriptors under a128-FD child limit; suites remain unrun in fast mode.

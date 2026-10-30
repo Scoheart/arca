@@ -100,3 +100,24 @@ fn unsafe_skill_leaf_does_not_hide_independent_native_commands(){
     assert!(s.incomplete);assert_eq!(row.components.iter().filter(|v|v.kind==PluginComponentKind::Command).count(),1);assert_eq!(row.components.iter().filter(|v|v.kind==PluginComponentKind::Skill).count(),0);
     assert!(!serde_json::to_string(&row).unwrap().contains("opaque Skill body"));
 }
+#[cfg(unix)]
+#[test]
+fn many_metadata_candidates_fit_a_desktop_process_descriptor_limit(){
+    use std::os::unix::process::CommandExt;
+    if std::env::var_os("ARCA_TEST_QWENWORK_FD_CASE").as_deref()!=Some(std::ffi::OsStr::new("1")){
+        let _home=TestHome::new("qwenwork-fd-parent");
+        let mut command=std::process::Command::new(std::env::current_exe().unwrap());
+        command.args(["--exact","resources::plugin::qwenwork::tests::many_metadata_candidates_fit_a_desktop_process_descriptor_limit","--test-threads=1","--nocapture"])
+            .env("ARCA_TEST_QWENWORK_FD_CASE","1");
+        // Change only the isolated child, never the test runner or system limit.
+        unsafe{command.pre_exec(||rustix::process::setrlimit(rustix::process::Resource::Nofile,rustix::process::Rlimit{current:Some(128),maximum:Some(128)}).map_err(|e|std::io::Error::from_raw_os_error(e.raw_os_error())));}
+        let output=command.output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert!(String::from_utf8_lossy(&output.stdout).contains("qwenwork-low-fd-case:400"));return;
+    }
+    let home=TestHome::new("qwenwork-fd-child");let root=home.home.join("candidates");
+    write(&root,"guard.bin","opaque guard fixture");
+    for i in 0..400{write(&root,&format!("skill-{i}/SKILL.md"),"opaque Skill fixture");write(&root,&format!("metadata/{i}.json"),r#"{"name":"candidate"}"#);}
+    let guards=(0..27).map(|_|fs::File::open(root.join("guard.bin")).unwrap()).collect::<Vec<_>>();
+    let mut s=Snapshot::default();for i in 0..400{assert!(s.stat(&root.join(format!("skill-{i}/SKILL.md"))).unwrap().unwrap().file);assert!(s.json(&root.join(format!("metadata/{i}.json"))).unwrap().is_some());}
+    assert_eq!(s.entries(&root).unwrap().len(),402);s.revalidate().unwrap();assert!(!s.fingerprint().unwrap().is_empty());assert_eq!(guards.len(),27);
+    println!("qwenwork-low-fd-case:400");
+}

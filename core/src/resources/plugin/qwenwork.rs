@@ -98,11 +98,11 @@ fn signature(path:&Path)->Result<Option<Leaf>,()>{
 }
 #[derive(Default)]
 struct Snapshot{
-    budget:Budget,bound:BTreeMap<PathBuf,Bound>,leaves:BTreeMap<PathBuf,Option<Leaf>>,documents:BTreeMap<PathBuf,Arc<Value>>,
+    budget:Budget,leaves:BTreeMap<PathBuf,Option<Leaf>>,documents:BTreeMap<PathBuf,Arc<Value>>,
     directories:BTreeMap<PathBuf,Vec<(PathBuf,bool,bool)>>,watches:BTreeSet<PathBuf>,incomplete:bool,
 }
 impl Snapshot{
-    fn limit(&self)->Result<(),()>{if self.bound.len()+self.leaves.len()>=PIN_LIMIT{Err(())}else{Ok(())}}
+    fn limit(&self)->Result<(),()>{if self.leaves.len()>=PIN_LIMIT{Err(())}else{Ok(())}}
     fn remember(&mut self,path:&Path)->Result<Option<Leaf>,()>{
         self.budget.visit()?;self.limit()?;let v=signature(path)?;
         if let Some(before)=self.leaves.get(path){if before!=&v{return Err(());}}else{self.leaves.insert(path.into(),v.clone());}Ok(v)
@@ -112,23 +112,28 @@ impl Snapshot{
         while let Some(p)=next{self.budget.visit()?;if parents.len()>=PATH_DEPTH{return Err(());}parents.push(p.to_path_buf());next=p.parent();}
         let home=expand_tilde("~/");
         for p in parents.into_iter().rev(){
-            if p==Path::new("/")||p==home{if self.remember(&p)?.is_none_or(|v|!v.directory){return Err(());}continue;}
-            if let Some(b)=self.bound.get(&p){b.revalidate()?;continue;}
-            self.limit()?;match signature(&p)?{None=>{self.remember(&p)?;},Some(v)if v.directory=>{let b=Bound::capture(p.clone(),true,&mut self.budget)?;self.bound.insert(p,b);},_=>return Err(())}
+            let meta=self.remember(&p)?;
+            if p==Path::new("/")||p==home{if meta.is_none_or(|v|!v.directory){return Err(());}}
+            else if meta.is_some_and(|v|!v.directory){return Err(());}
         }Ok(())
     }
     fn pin(&mut self,path:&Path,directory:bool)->Result<bool,()>{
         self.budget.visit()?;self.parents(path)?;self.limit()?;
-        if let Some(b)=self.bound.get(path){if b.directory!=directory{return Err(());}b.revalidate()?;return Ok(true);}
-        match signature(path)?{None=>{self.remember(path)?;Ok(false)},Some(v)=>{
-            if if directory{!v.directory}else{!v.file}{return Err(());}let b=Bound::capture(path.into(),directory,&mut self.budget)?;self.bound.insert(path.into(),b);Ok(true)
+        match self.remember(path)?{None=>Ok(false),Some(v)=>{
+            if if directory{!v.directory}else{!v.file}{return Err(());}Ok(true)
         }}
     }
     fn stat(&mut self,path:&Path)->Result<Option<Leaf>,()>{self.watches.insert(path.into());self.parents(path)?;self.remember(path)}
     fn json(&mut self,path:&Path)->Result<Option<Arc<Value>>,()>{
         if path.extension().and_then(|v|v.to_str())!=Some("json"){return Err(());}self.watches.insert(path.into());
         if !self.pin(path,false)?{return Ok(None);}if let Some(v)=self.documents.get(path){return Ok(Some(v.clone()));}
-        let b=self.bound.get_mut(path).ok_or(())?.small(&mut self.budget)?;let v=Arc::new(serde_json::from_slice::<Value>(&b).map_err(|_|())?);
+        // Keep only immutable stamps between operations. GUI processes can
+        // have a 256-FD limit; hundreds of component parents must not retain
+        // one open descriptor each. The actual read still binds FD and path.
+        let mut bound=Bound::capture(path.into(),false,&mut self.budget)?;
+        if self.leaves.get(path).and_then(Option::as_ref).is_none_or(|m|m.stamp!=bound.stamp){return Err(());}
+        let b=bound.small(&mut self.budget)?;bound.revalidate()?;self.remember(path)?;
+        let v=Arc::new(serde_json::from_slice::<Value>(&b).map_err(|_|())?);
         self.documents.insert(path.into(),v.clone());Ok(Some(v))
     }
     fn entries(&mut self,path:&Path)->Result<Vec<(PathBuf,bool,bool)>,()>{
@@ -136,18 +141,20 @@ impl Snapshot{
         let mut rows=Vec::new();
         #[cfg(unix)]{
             use rustix::fs::{Dir,statat,AtFlags,FileType};
-            let bound=self.bound.get(path).ok_or(())?;let mut iter=Dir::read_from(&bound.file).map_err(|_|())?;
+            let bound=Bound::capture(path.into(),true,&mut self.budget)?;
+            if self.leaves.get(path).and_then(Option::as_ref).is_none_or(|m|m.stamp!=bound.stamp){return Err(());}
+            let mut iter=Dir::read_from(&bound.file).map_err(|_|())?;
             for item in &mut iter{let item=item.map_err(|_|())?;let name=item.file_name();if matches!(name.to_bytes(),b"."|b".."){continue;}
                 self.budget.visit()?;if rows.len()>=ENTRY_LIMIT{return Err(());}let name=std::str::from_utf8(name.to_bytes()).map_err(|_|())?;
                 let m=statat(&bound.file,std::ffi::OsStr::new(name),AtFlags::SYMLINK_NOFOLLOW).map_err(|_|())?;let kind=FileType::from_raw_mode(m.st_mode);
                 rows.push((path.join(name),kind==FileType::Directory,kind==FileType::RegularFile));
-            }bound.revalidate()?;
+            }bound.revalidate()?;self.remember(path)?;
         }
         #[cfg(not(unix))]{return Err(());}
         rows.sort();self.directories.insert(path.into(),rows.clone());Ok(rows)
     }
-    fn revalidate(&self)->Result<(),()>{for b in self.bound.values(){b.revalidate()?;}for(p,v)in &self.leaves{if &signature(p)?!=v{return Err(());}}Ok(())}
-    fn fingerprint(&self)->Result<String,()>{self.revalidate()?;let files=self.bound.iter().map(|(p,b)|(p,&b.stamp)).collect::<Vec<_>>();Ok(hex::encode(Sha256::digest(serde_json::to_vec(&(files,&self.leaves)).map_err(|_|())?)))}
+    fn revalidate(&self)->Result<(),()>{for(p,v)in &self.leaves{if &signature(p)?!=v{return Err(());}}Ok(())}
+    fn fingerprint(&self)->Result<String,()>{self.revalidate()?;Ok(hex::encode(Sha256::digest(serde_json::to_vec(&self.leaves).map_err(|_|())?)))}
 }
 fn roots(host:&Host)->Result<Vec<PathBuf>,()>{
     if host.agent_id!="qwenwork"||host.adapter!="qwenwork"||host.roots.len()!=2{return Err(());}

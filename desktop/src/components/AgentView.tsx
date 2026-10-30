@@ -666,6 +666,10 @@ export function AgentView({
             <AgentLaunchAction key={agent.id} agentId={agent.id} showLabel />
           </>} />
 
+          {!agent.has_global && !agent.skills_global_dir && agent.note && (
+            <p className="arca-agent-scope-note">{agent.note}</p>
+          )}
+
         <AgentResourcePanel
           key={agent.id}
           value={resourceTab}
