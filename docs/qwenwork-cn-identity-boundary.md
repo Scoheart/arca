@@ -46,3 +46,8 @@ The new PluginCatalog, enterprise generation packages and multiple engine
 manifests are retained as separate research. Their presence does not identify
 the active engine, account, loaded plugin or runtime enablement. No CN plugin
 observer or generic directory alias is fabricated from the international one.
+
+The independent [CN public native resource observer](qwenwork-cn-native-resources.md)
+now covers published App/profile Skill metadata and optional bundled market
+installation sources. These read-only observations do not restore identity-scoped
+writers or establish an active engine, account, installation ledger or session.

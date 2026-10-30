@@ -1,0 +1,1341 @@
+{
+  "schema_version": 1,
+  "agent_id": "qwenwork-cn",
+  "app_name": "QwenWorkCN.app",
+  "bundle_id": "cn.qwenwork.desktop.mac",
+  "version": "1.4.0",
+  "build": "26102705",
+  "package_name": "qwen-work-cn",
+  "package_main": "out/main/index.js",
+  "guards": [
+    {
+      "path": "Contents/Info.plist",
+      "bytes": 4739,
+      "sha256": "43b5f546f1545b4da18f5dc6a27500daafe2953fd21d0624fa7d2a7fe8e30eec"
+    },
+    {
+      "path": "Contents/MacOS/QwenWorkCN",
+      "bytes": 53616,
+      "sha256": "8168e226ef82a418482bcb5f408814ae073cd1e2cb2561ac35ecfacf3c7e8797"
+    },
+    {
+      "path": "Contents/Resources/app.asar",
+      "bytes": 291118182,
+      "sha256": "be9726be0b529084a6c670dfe2a2d5014371e9e014ebc18d7639b0f55655c594"
+    }
+  ],
+  "asar": {
+    "path": "Contents/Resources/app.asar",
+    "header_json_bytes": 8854756,
+    "payload_offset": 8854772,
+    "header_sha256": "eeeb7f8ac6b24b568a66016ef196f4293e0a0d6c0cca239025c2306d3e92f9c7",
+    "members": [
+      {
+        "path": "package.json",
+        "offset": 291113599,
+        "bytes": 4583,
+        "sha256": "e6fed1f4c6a5e5c9c42d66e88fc9a3d0111047ec8d16fdb70e75af0d8c1e3fe4"
+      },
+      {
+        "path": "out/main/index.js",
+        "offset": 14479496,
+        "bytes": 2212,
+        "sha256": "5f6c37745214d7f4056d7e9d108420d0a3c89f4ff3a7910ac320dfed5921ef32"
+      },
+      {
+        "path": "out/main/entry-app.js",
+        "offset": 14356861,
+        "bytes": 15910,
+        "sha256": "02ec7da9c15883fa294f303f11f08f6bec0c68b7fb6dbe452d46347d42aabf57"
+      },
+      {
+        "path": "out/main/local-identity-bootstrap.cjs",
+        "offset": 14488810,
+        "bytes": 2476624,
+        "sha256": "cef49dcea7f02870c8f3164d205870a586d0e72c993a1b4f3feb51a9af747a28"
+      },
+      {
+        "path": "out/main/main.js",
+        "offset": 16965434,
+        "bytes": 14369573,
+        "sha256": "1d7868f3c163c352d90609fd2c38cf358080ccc97843e3ace7f4b67840bcc42d"
+      },
+      {
+        "path": "out/main/chunks/constants-BlnG02eZ.js",
+        "offset": 12410773,
+        "bytes": 60376,
+        "sha256": "0cee34795d2e185abb43135e1fd546f39ca3834d157d59d48d768e85b2dc3707"
+      },
+      {
+        "path": "out/main/chunks/constants-CuIDBbnm.js",
+        "offset": 12471149,
+        "bytes": 14199,
+        "sha256": "89df6e64edf2fb37a48fab146b9a91481bc1eff1bafc2a92166059b4c9690d13"
+      }
+    ]
+  },
+  "index": {
+    "guard": {
+      "path": "Contents/Resources/builtin-skill-metadata-index.json",
+      "bytes": 18117,
+      "sha256": "2747053c306a8e62d750cc6e965fc0bc9a077a3803b3cd9d6442a1695734da16"
+    },
+    "format": 3,
+    "payload_digest": "7bb184d1af8218ce3f036fa7e673bf39e3d5da46a7d1473c23070b56df8035f8",
+    "records": [
+      {
+        "source": "skills",
+        "folder": "create-skill",
+        "bytes": 21305,
+        "mode": 33188,
+        "name": "create-skill",
+        "version": "1.2.1"
+      },
+      {
+        "source": "skills",
+        "folder": "docx",
+        "bytes": 9242,
+        "mode": 33188,
+        "name": "docx",
+        "version": "2.0.2"
+      },
+      {
+        "source": "skills",
+        "folder": "environment-packages",
+        "bytes": 7651,
+        "mode": 33188,
+        "name": "environment-packages",
+        "version": "1.0.0"
+      },
+      {
+        "source": "skills",
+        "folder": "find-skills",
+        "bytes": 24383,
+        "mode": 33188,
+        "name": "find-skills",
+        "version": "1.0.6"
+      },
+      {
+        "source": "skills",
+        "folder": "media-generation",
+        "bytes": 13369,
+        "mode": 33188,
+        "name": "media-generation",
+        "version": "1.4.0"
+      },
+      {
+        "source": "skills",
+        "folder": "media-generation-premium",
+        "bytes": 9579,
+        "mode": 33188,
+        "name": "media-generation-premium",
+        "version": "1.2.0"
+      },
+      {
+        "source": "skills",
+        "folder": "media-read",
+        "bytes": 1327,
+        "mode": 33188,
+        "name": "media-read",
+        "version": null
+      },
+      {
+        "source": "skills",
+        "folder": "pdf",
+        "bytes": 25914,
+        "mode": 33188,
+        "name": "pdf",
+        "version": "1.0.5"
+      },
+      {
+        "source": "skills",
+        "folder": "plugin-creator",
+        "bytes": 43202,
+        "mode": 33188,
+        "name": "plugin-creator",
+        "version": "1.8.2"
+      },
+      {
+        "source": "skills",
+        "folder": "pptx",
+        "bytes": 31457,
+        "mode": 33188,
+        "name": "pptx",
+        "version": "2.3.4"
+      },
+      {
+        "source": "skills",
+        "folder": "qw-pages",
+        "bytes": 6835,
+        "mode": 33188,
+        "name": "qw-pages",
+        "version": null
+      },
+      {
+        "source": "skills",
+        "folder": "qw-pages-supabase",
+        "bytes": 2029,
+        "mode": 33188,
+        "name": "qw-pages-supabase",
+        "version": null
+      },
+      {
+        "source": "skills",
+        "folder": "qwenwork-guidance",
+        "bytes": 23295,
+        "mode": 33188,
+        "name": "qwenwork-guidance",
+        "version": "1.0.8"
+      },
+      {
+        "source": "skills",
+        "folder": "web-search",
+        "bytes": 1056,
+        "mode": 33188,
+        "name": "web-search",
+        "version": null
+      },
+      {
+        "source": "skills",
+        "folder": "xlsx",
+        "bytes": 11060,
+        "mode": 33188,
+        "name": "xlsx",
+        "version": "1.0.3"
+      },
+      {
+        "source": "profile-skills",
+        "folder": "media-generation-ecommerce",
+        "bytes": 25771,
+        "mode": 33188,
+        "name": "media-generation-ecommerce",
+        "version": "1.10.0"
+      }
+    ]
+  },
+  "catalog": {
+    "guard": {
+      "path": "Contents/Resources/plugin-market-data.json",
+      "bytes": 197226,
+      "sha256": "3acc488685aea685461befb91bf8714cf5a75193f6c6effb403d9b1e99b2f6f7"
+    },
+    "entries": [
+      {
+        "folder": "1688买家助手",
+        "catalog_id": "ali1688-buyer-assistant",
+        "name": "ali1688-buyer-assistant",
+        "version": "1.0.0",
+        "root": "Contents/Resources/plugins-example/1688买家助手",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/1688买家助手/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/1688买家助手/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/1688买家助手/.qoder-plugin/plugin.json",
+              "bytes": 1027,
+              "sha256": "b6f645c1db345ad3fcb4e36450032a5a8026a0ba28e6edabe7c24f26ffb317fd"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/1688买家助手/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "1688-distribution",
+            "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-distribution/SKILL.md",
+            "bytes": 10663
+          },
+          {
+            "name": "1688-product-find",
+            "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-product-find/SKILL.md",
+            "bytes": 10424
+          },
+          {
+            "name": "1688-source-suppliers",
+            "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-source-suppliers/SKILL.md",
+            "bytes": 8427
+          },
+          {
+            "name": "1688-sourcing-inquiry",
+            "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-sourcing-inquiry/SKILL.md",
+            "bytes": 8452
+          },
+          {
+            "name": "1688-syt",
+            "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-syt/SKILL.md",
+            "bytes": 34952
+          }
+        ]
+      },
+      {
+        "folder": "1688商家助手",
+        "catalog_id": "ali1688-seller-assistant",
+        "name": "ali1688-seller-assistant",
+        "version": "1.0.0",
+        "root": "Contents/Resources/plugins-example/1688商家助手",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/1688商家助手/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/1688商家助手/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/1688商家助手/.qoder-plugin/plugin.json",
+              "bytes": 842,
+              "sha256": "b97fb0488fb0f9caabcf01c46885360a6669f66a220fc96ca4c03f7a09a6f82f"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/1688商家助手/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "1688-product-manage",
+            "path": "Contents/Resources/plugins-example/1688商家助手/skills/1688-product-manage/SKILL.md",
+            "bytes": 21707
+          },
+          {
+            "name": "1688-shop-operate",
+            "path": "Contents/Resources/plugins-example/1688商家助手/skills/1688-shop-operate/SKILL.md",
+            "bytes": 10382
+          }
+        ]
+      },
+      {
+        "folder": "中国民商事诉讼工具箱",
+        "catalog_id": "qoder-for-cn-litigation",
+        "name": "qoder-for-cn-litigation",
+        "version": "1.0.0",
+        "root": "Contents/Resources/plugins-example/中国民商事诉讼工具箱",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/.qoder-plugin/plugin.json",
+              "bytes": 6866,
+              "sha256": "4bac14c2854168768074c2f594abe392c85de20eb62ce8ca05c072929b1d21cd"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "主诉诉状",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/主诉诉状/SKILL.md",
+            "bytes": 11265
+          },
+          {
+            "name": "代理词",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/代理词/SKILL.md",
+            "bytes": 11809
+          },
+          {
+            "name": "冷启动访谈",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/冷启动访谈/SKILL.md",
+            "bytes": 4925
+          },
+          {
+            "name": "庭审提纲",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/庭审提纲/SKILL.md",
+            "bytes": 9460
+          },
+          {
+            "name": "新法解读",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/新法解读/SKILL.md",
+            "bytes": 20303
+          },
+          {
+            "name": "案件事实梳理",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/案件事实梳理/SKILL.md",
+            "bytes": 28714
+          },
+          {
+            "name": "案件复盘",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/案件复盘/SKILL.md",
+            "bytes": 9738
+          },
+          {
+            "name": "案件管家",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/案件管家/SKILL.md",
+            "bytes": 10779
+          },
+          {
+            "name": "法律核验",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/法律核验/SKILL.md",
+            "bytes": 14190
+          },
+          {
+            "name": "法律研究报告",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/法律研究报告/SKILL.md",
+            "bytes": 17905
+          },
+          {
+            "name": "程序性文书系列",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/程序性文书系列/SKILL.md",
+            "bytes": 11728
+          },
+          {
+            "name": "自定义",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/自定义/SKILL.md",
+            "bytes": 2612
+          },
+          {
+            "name": "被诉答辩状",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/被诉答辩状/SKILL.md",
+            "bytes": 13716
+          },
+          {
+            "name": "要件攻防分析",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/要件攻防分析/SKILL.md",
+            "bytes": 11161
+          },
+          {
+            "name": "证据目录",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/证据目录/SKILL.md",
+            "bytes": 7924
+          },
+          {
+            "name": "诉讼可视化",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/诉讼可视化/SKILL.md",
+            "bytes": 11156
+          },
+          {
+            "name": "诉讼套件中枢",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/诉讼套件中枢/SKILL.md",
+            "bytes": 4198
+          },
+          {
+            "name": "诉讼知识库",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/诉讼知识库/SKILL.md",
+            "bytes": 8242
+          },
+          {
+            "name": "财产线索调查",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/财产线索调查/SKILL.md",
+            "bytes": 7762
+          },
+          {
+            "name": "质证意见",
+            "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/质证意见/SKILL.md",
+            "bytes": 14981
+          }
+        ]
+      },
+      {
+        "folder": "产品管理",
+        "catalog_id": "product-management",
+        "name": "product-management",
+        "version": "1.1.1",
+        "root": "Contents/Resources/plugins-example/产品管理",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/产品管理/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/产品管理/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/产品管理/.qoder-plugin/plugin.json",
+              "bytes": 1704,
+              "sha256": "b148a8aca66580c9638e47b225d3a6001332b8a7b19d9967936ddf974d25485c"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/产品管理/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "PRD生成",
+            "path": "Contents/Resources/plugins-example/产品管理/skills/PRD生成/SKILL.md",
+            "bytes": 10707
+          },
+          {
+            "name": "产品指标复盘",
+            "path": "Contents/Resources/plugins-example/产品管理/skills/产品指标复盘/SKILL.md",
+            "bytes": 15311
+          },
+          {
+            "name": "产品脑暴",
+            "path": "Contents/Resources/plugins-example/产品管理/skills/产品脑暴/SKILL.md",
+            "bytes": 10753
+          },
+          {
+            "name": "用户反馈分析",
+            "path": "Contents/Resources/plugins-example/产品管理/skills/用户反馈分析/SKILL.md",
+            "bytes": 14827
+          },
+          {
+            "name": "用户故事拆解",
+            "path": "Contents/Resources/plugins-example/产品管理/skills/用户故事拆解/SKILL.md",
+            "bytes": 8612
+          },
+          {
+            "name": "竞品分析",
+            "path": "Contents/Resources/plugins-example/产品管理/skills/竞品分析/SKILL.md",
+            "bytes": 12878
+          },
+          {
+            "name": "路线图更新",
+            "path": "Contents/Resources/plugins-example/产品管理/skills/路线图更新/SKILL.md",
+            "bytes": 10148
+          },
+          {
+            "name": "需求优先级排序",
+            "path": "Contents/Resources/plugins-example/产品管理/skills/需求优先级排序/SKILL.md",
+            "bytes": 10008
+          }
+        ]
+      },
+      {
+        "folder": "产品设计",
+        "catalog_id": "product-design",
+        "name": "product-design",
+        "version": "0.5.10",
+        "root": "Contents/Resources/plugins-example/产品设计",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/产品设计/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/产品设计/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/产品设计/.qoder-plugin/plugin.json",
+              "bytes": 2396,
+              "sha256": "2588373c2b8fa4569983727c07c1e7d66b6d2a5c1de9d7c5808d634270458e2c"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/产品设计/.claude-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/产品设计/.claude-plugin/plugin.json",
+              "bytes": 2396,
+              "sha256": "2588373c2b8fa4569983727c07c1e7d66b6d2a5c1de9d7c5808d634270458e2c"
+            }
+          }
+        ],
+        "skills": [
+          {
+            "name": "access",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/access/SKILL.md",
+            "bytes": 31044
+          },
+          {
+            "name": "audit",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/audit/SKILL.md",
+            "bytes": 30754
+          },
+          {
+            "name": "avatar",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/avatar/SKILL.md",
+            "bytes": 51091
+          },
+          {
+            "name": "bench",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/bench/SKILL.md",
+            "bytes": 37863
+          },
+          {
+            "name": "board",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/board/SKILL.md",
+            "bytes": 29384
+          },
+          {
+            "name": "brief",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/brief/SKILL.md",
+            "bytes": 67901
+          },
+          {
+            "name": "chart",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/chart/SKILL.md",
+            "bytes": 51695
+          },
+          {
+            "name": "check",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/check/SKILL.md",
+            "bytes": 28392
+          },
+          {
+            "name": "edge",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/edge/SKILL.md",
+            "bytes": 26162
+          },
+          {
+            "name": "extract",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/extract/SKILL.md",
+            "bytes": 49659
+          },
+          {
+            "name": "flow-mobile",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/flow-mobile/SKILL.md",
+            "bytes": 29935
+          },
+          {
+            "name": "flow-web",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/flow-web/SKILL.md",
+            "bytes": 67539
+          },
+          {
+            "name": "frame",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/frame/SKILL.md",
+            "bytes": 45633
+          },
+          {
+            "name": "journey",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/journey/SKILL.md",
+            "bytes": 30831
+          },
+          {
+            "name": "metric",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/metric/SKILL.md",
+            "bytes": 28981
+          },
+          {
+            "name": "motion-apply",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/motion-apply/SKILL.md",
+            "bytes": 83389
+          },
+          {
+            "name": "motion-plan",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/motion-plan/SKILL.md",
+            "bytes": 26131
+          },
+          {
+            "name": "pitch",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/pitch/SKILL.md",
+            "bytes": 30444
+          },
+          {
+            "name": "poster",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/poster/SKILL.md",
+            "bytes": 12778
+          },
+          {
+            "name": "prd",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/prd/SKILL.md",
+            "bytes": 29480
+          },
+          {
+            "name": "probe",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/probe/SKILL.md",
+            "bytes": 35175
+          },
+          {
+            "name": "qa",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/qa/SKILL.md",
+            "bytes": 25805
+          },
+          {
+            "name": "retro",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/retro/SKILL.md",
+            "bytes": 30658
+          },
+          {
+            "name": "scope",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/scope/SKILL.md",
+            "bytes": 25875
+          },
+          {
+            "name": "signal",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/signal/SKILL.md",
+            "bytes": 33410
+          },
+          {
+            "name": "sitemap",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/sitemap/SKILL.md",
+            "bytes": 23532
+          },
+          {
+            "name": "stories",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/stories/SKILL.md",
+            "bytes": 23757
+          },
+          {
+            "name": "test",
+            "path": "Contents/Resources/plugins-example/产品设计/skills/test/SKILL.md",
+            "bytes": 44633
+          }
+        ]
+      },
+      {
+        "folder": "企业法务",
+        "catalog_id": "corporate-legal",
+        "name": "corporate-legal",
+        "version": "1.1.2",
+        "root": "Contents/Resources/plugins-example/企业法务",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/企业法务/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/企业法务/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/企业法务/.qoder-plugin/plugin.json",
+              "bytes": 1678,
+              "sha256": "9ef5b31b576eb835dd6afe36396a9f2f59f184dc1ec860f327f0d86dc369ecfa"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/企业法务/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "企业背景调查",
+            "path": "Contents/Resources/plugins-example/企业法务/skills/企业背景调查/SKILL.md",
+            "bytes": 10051
+          },
+          {
+            "name": "公司决议",
+            "path": "Contents/Resources/plugins-example/企业法务/skills/公司决议/SKILL.md",
+            "bytes": 10533
+          },
+          {
+            "name": "合规审查",
+            "path": "Contents/Resources/plugins-example/企业法务/skills/合规审查/SKILL.md",
+            "bytes": 20728
+          },
+          {
+            "name": "查案例",
+            "path": "Contents/Resources/plugins-example/企业法务/skills/查案例/SKILL.md",
+            "bytes": 11875
+          },
+          {
+            "name": "法务日报",
+            "path": "Contents/Resources/plugins-example/企业法务/skills/法务日报/SKILL.md",
+            "bytes": 7631
+          },
+          {
+            "name": "法律文书",
+            "path": "Contents/Resources/plugins-example/企业法务/skills/法律文书/SKILL.md",
+            "bytes": 9399
+          },
+          {
+            "name": "电子签发起",
+            "path": "Contents/Resources/plugins-example/企业法务/skills/电子签发起/SKILL.md",
+            "bytes": 11649
+          },
+          {
+            "name": "风险评估",
+            "path": "Contents/Resources/plugins-example/企业法务/skills/风险评估/SKILL.md",
+            "bytes": 10582
+          }
+        ]
+      },
+      {
+        "folder": "企业财税",
+        "catalog_id": "corporate-finance-tax",
+        "name": "corporate-finance-tax",
+        "version": "1.1.1",
+        "root": "Contents/Resources/plugins-example/企业财税",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/企业财税/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/企业财税/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/企业财税/.qoder-plugin/plugin.json",
+              "bytes": 2140,
+              "sha256": "66daf3bdbaab45acbb2722eaaaad673d7803a529a02b87f1427350e9cbe3ad3f"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/企业财税/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "做凭证",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/做凭证/SKILL.md",
+            "bytes": 13358
+          },
+          {
+            "name": "内部审计",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/内部审计/SKILL.md",
+            "bytes": 15022
+          },
+          {
+            "name": "凭证编制参考",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/凭证编制参考/SKILL.md",
+            "bytes": 10932
+          },
+          {
+            "name": "增值税管理",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/增值税管理/SKILL.md",
+            "bytes": 11796
+          },
+          {
+            "name": "月结检查清单",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/月结检查清单/SKILL.md",
+            "bytes": 14893
+          },
+          {
+            "name": "汇算清缴",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/汇算清缴/SKILL.md",
+            "bytes": 12908
+          },
+          {
+            "name": "财务分析",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/财务分析/SKILL.md",
+            "bytes": 11912
+          },
+          {
+            "name": "财务报表编制",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/财务报表编制/SKILL.md",
+            "bytes": 11773
+          },
+          {
+            "name": "预算分析",
+            "path": "Contents/Resources/plugins-example/企业财税/skills/预算分析/SKILL.md",
+            "bytes": 10530
+          }
+        ]
+      },
+      {
+        "folder": "合同管理",
+        "catalog_id": "contract-management",
+        "name": "contract-management",
+        "version": "1.1.1",
+        "root": "Contents/Resources/plugins-example/合同管理",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/合同管理/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/合同管理/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/合同管理/.qoder-plugin/plugin.json",
+              "bytes": 997,
+              "sha256": "87bf82326d4a5b9de40d8ec63bc0fe8c5aad6ddb5b636b60be6b8160890e862a"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/合同管理/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "NDA快筛",
+            "path": "Contents/Resources/plugins-example/合同管理/skills/NDA快筛/SKILL.md",
+            "bytes": 8255
+          },
+          {
+            "name": "合同台账提醒",
+            "path": "Contents/Resources/plugins-example/合同管理/skills/合同台账提醒/SKILL.md",
+            "bytes": 8235
+          },
+          {
+            "name": "合同对比",
+            "path": "Contents/Resources/plugins-example/合同管理/skills/合同对比/SKILL.md",
+            "bytes": 8940
+          },
+          {
+            "name": "审查合同",
+            "path": "Contents/Resources/plugins-example/合同管理/skills/审查合同/SKILL.md",
+            "bytes": 9753
+          },
+          {
+            "name": "法条速查",
+            "path": "Contents/Resources/plugins-example/合同管理/skills/法条速查/SKILL.md",
+            "bytes": 8715
+          },
+          {
+            "name": "起草合同",
+            "path": "Contents/Resources/plugins-example/合同管理/skills/起草合同/SKILL.md",
+            "bytes": 19639
+          }
+        ]
+      },
+      {
+        "folder": "咨询交付",
+        "catalog_id": "consulting-delivery",
+        "name": "consulting-delivery",
+        "version": "1.1.1",
+        "root": "Contents/Resources/plugins-example/咨询交付",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/咨询交付/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/咨询交付/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/咨询交付/.qoder-plugin/plugin.json",
+              "bytes": 796,
+              "sha256": "22d391bb17d546e2c5d69df0f37949805a40eb4e50f811b6afadf75f44d366a2"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/咨询交付/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "CEO汇报",
+            "path": "Contents/Resources/plugins-example/咨询交付/skills/CEO汇报/SKILL.md",
+            "bytes": 16206
+          },
+          {
+            "name": "写报告",
+            "path": "Contents/Resources/plugins-example/咨询交付/skills/写报告/SKILL.md",
+            "bytes": 15195
+          },
+          {
+            "name": "方案框架",
+            "path": "Contents/Resources/plugins-example/咨询交付/skills/方案框架/SKILL.md",
+            "bytes": 15834
+          },
+          {
+            "name": "标杆对比",
+            "path": "Contents/Resources/plugins-example/咨询交付/skills/标杆对比/SKILL.md",
+            "bytes": 14129
+          },
+          {
+            "name": "桌面调研",
+            "path": "Contents/Resources/plugins-example/咨询交付/skills/桌面调研/SKILL.md",
+            "bytes": 15818
+          },
+          {
+            "name": "访谈纪要",
+            "path": "Contents/Resources/plugins-example/咨询交付/skills/访谈纪要/SKILL.md",
+            "bytes": 12837
+          },
+          {
+            "name": "项目周报",
+            "path": "Contents/Resources/plugins-example/咨询交付/skills/项目周报/SKILL.md",
+            "bytes": 12192
+          }
+        ]
+      },
+      {
+        "folder": "市场营销",
+        "catalog_id": "marketing",
+        "name": "marketing",
+        "version": "1.1.1",
+        "root": "Contents/Resources/plugins-example/市场营销",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/市场营销/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/市场营销/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/市场营销/.qoder-plugin/plugin.json",
+              "bytes": 1140,
+              "sha256": "a0f157c9b55a1ef516e71c79e8f6749c40c083249b8d5f1985478f33d610c251"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/市场营销/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "SEO内容优化",
+            "path": "Contents/Resources/plugins-example/市场营销/skills/SEO内容优化/SKILL.md",
+            "bytes": 17957
+          },
+          {
+            "name": "品牌调性审查",
+            "path": "Contents/Resources/plugins-example/市场营销/skills/品牌调性审查/SKILL.md",
+            "bytes": 13075
+          },
+          {
+            "name": "广告合规检查",
+            "path": "Contents/Resources/plugins-example/市场营销/skills/广告合规检查/SKILL.md",
+            "bytes": 11244
+          },
+          {
+            "name": "活动策划",
+            "path": "Contents/Resources/plugins-example/市场营销/skills/活动策划/SKILL.md",
+            "bytes": 16262
+          },
+          {
+            "name": "社媒热点追踪",
+            "path": "Contents/Resources/plugins-example/市场营销/skills/社媒热点追踪/SKILL.md",
+            "bytes": 13944
+          },
+          {
+            "name": "竞品追踪",
+            "path": "Contents/Resources/plugins-example/市场营销/skills/竞品追踪/SKILL.md",
+            "bytes": 13900
+          },
+          {
+            "name": "营销效果分析",
+            "path": "Contents/Resources/plugins-example/市场营销/skills/营销效果分析/SKILL.md",
+            "bytes": 14659
+          },
+          {
+            "name": "营销文案",
+            "path": "Contents/Resources/plugins-example/市场营销/skills/营销文案/SKILL.md",
+            "bytes": 12278
+          }
+        ]
+      },
+      {
+        "folder": "投研分析",
+        "catalog_id": "equity-research",
+        "name": "equity-research",
+        "version": "1.1.2",
+        "root": "Contents/Resources/plugins-example/投研分析",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/投研分析/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/投研分析/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/投研分析/.qoder-plugin/plugin.json",
+              "bytes": 1320,
+              "sha256": "1d8be057032e230c2906ac58dc2610d1b66f919c6f8dde0ea8e75a73f3ada740"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/投研分析/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "业绩快评",
+            "path": "Contents/Resources/plugins-example/投研分析/skills/业绩快评/SKILL.md",
+            "bytes": 8201
+          },
+          {
+            "name": "可比公司分析",
+            "path": "Contents/Resources/plugins-example/投研分析/skills/可比公司分析/SKILL.md",
+            "bytes": 11614
+          },
+          {
+            "name": "晨会纪要",
+            "path": "Contents/Resources/plugins-example/投研分析/skills/晨会纪要/SKILL.md",
+            "bytes": 6375
+          },
+          {
+            "name": "深度报告",
+            "path": "Contents/Resources/plugins-example/投研分析/skills/深度报告/SKILL.md",
+            "bytes": 8452
+          },
+          {
+            "name": "研报摘要",
+            "path": "Contents/Resources/plugins-example/投研分析/skills/研报摘要/SKILL.md",
+            "bytes": 7705
+          },
+          {
+            "name": "行业研究",
+            "path": "Contents/Resources/plugins-example/投研分析/skills/行业研究/SKILL.md",
+            "bytes": 7881
+          },
+          {
+            "name": "读年报",
+            "path": "Contents/Resources/plugins-example/投研分析/skills/读年报/SKILL.md",
+            "bytes": 8536
+          },
+          {
+            "name": "调研纪要",
+            "path": "Contents/Resources/plugins-example/投研分析/skills/调研纪要/SKILL.md",
+            "bytes": 7832
+          }
+        ]
+      },
+      {
+        "folder": "投行业务",
+        "catalog_id": "investment-banking",
+        "name": "investment-banking",
+        "version": "1.1.2",
+        "root": "Contents/Resources/plugins-example/投行业务",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/投行业务/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/投行业务/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/投行业务/.qoder-plugin/plugin.json",
+              "bytes": 1708,
+              "sha256": "6f5a487409dd427e672393f1e011eff101fc60056ae94203171523aadf120d15"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/投行业务/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "债券募集",
+            "path": "Contents/Resources/plugins-example/投行业务/skills/债券募集/SKILL.md",
+            "bytes": 11937
+          },
+          {
+            "name": "并购方案",
+            "path": "Contents/Resources/plugins-example/投行业务/skills/并购方案/SKILL.md",
+            "bytes": 11451
+          },
+          {
+            "name": "招股书",
+            "path": "Contents/Resources/plugins-example/投行业务/skills/招股书/SKILL.md",
+            "bytes": 10496
+          },
+          {
+            "name": "财务建模",
+            "path": "Contents/Resources/plugins-example/投行业务/skills/财务建模/SKILL.md",
+            "bytes": 11178
+          },
+          {
+            "name": "路演材料",
+            "path": "Contents/Resources/plugins-example/投行业务/skills/路演材料/SKILL.md",
+            "bytes": 11038
+          },
+          {
+            "name": "问询回复",
+            "path": "Contents/Resources/plugins-example/投行业务/skills/问询回复/SKILL.md",
+            "bytes": 10392
+          }
+        ]
+      },
+      {
+        "folder": "科技服务助手",
+        "catalog_id": "yqx-tech-service-suite",
+        "name": "yqx-tech-service-suite",
+        "version": "1.1.0",
+        "root": "Contents/Resources/plugins-example/科技服务助手",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/科技服务助手/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/科技服务助手/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/科技服务助手/.qoder-plugin/plugin.json",
+              "bytes": 3045,
+              "sha256": "59927712d37b133bdadaeeba118a9efeff10705a0f66a3c16907a3c067abc3f8"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/科技服务助手/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "产品定义与规划",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/产品定义与规划/SKILL.md",
+            "bytes": 11152
+          },
+          {
+            "name": "产品机会发现",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/产品机会发现/SKILL.md",
+            "bytes": 11143
+          },
+          {
+            "name": "原型验证规划",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/原型验证规划/SKILL.md",
+            "bytes": 11448
+          },
+          {
+            "name": "商业化策略",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/商业化策略/SKILL.md",
+            "bytes": 12384
+          },
+          {
+            "name": "对接方案生成",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/对接方案生成/SKILL.md",
+            "bytes": 11321
+          },
+          {
+            "name": "成果搜索与匹配",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/成果搜索与匹配/SKILL.md",
+            "bytes": 12065
+          },
+          {
+            "name": "技术价值评估",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/技术价值评估/SKILL.md",
+            "bytes": 12544
+          },
+          {
+            "name": "技术方案论证",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/技术方案论证/SKILL.md",
+            "bytes": 11435
+          },
+          {
+            "name": "技术需求挖掘",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/技术需求挖掘/SKILL.md",
+            "bytes": 11317
+          },
+          {
+            "name": "政策与资金匹配",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/政策与资金匹配/SKILL.md",
+            "bytes": 11825
+          },
+          {
+            "name": "融资准备",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/融资准备/SKILL.md",
+            "bytes": 12882
+          },
+          {
+            "name": "设计验证与量产规划",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/设计验证与量产规划/SKILL.md",
+            "bytes": 11951
+          },
+          {
+            "name": "项目跟进管理",
+            "path": "Contents/Resources/plugins-example/科技服务助手/skills/项目跟进管理/SKILL.md",
+            "bytes": 12421
+          }
+        ]
+      },
+      {
+        "folder": "股权投资",
+        "catalog_id": "pe-vc-investment",
+        "name": "pe-vc-investment",
+        "version": "1.1.2",
+        "root": "Contents/Resources/plugins-example/股权投资",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/股权投资/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/股权投资/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/股权投资/.qoder-plugin/plugin.json",
+              "bytes": 1054,
+              "sha256": "be2eed3bab0746526b98c4b2d9a37658e55f90f04fd699c6cc169612d05edf5c"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/股权投资/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "审条款",
+            "path": "Contents/Resources/plugins-example/股权投资/skills/审条款/SKILL.md",
+            "bytes": 7006
+          },
+          {
+            "name": "尽调清单",
+            "path": "Contents/Resources/plugins-example/股权投资/skills/尽调清单/SKILL.md",
+            "bytes": 8448
+          },
+          {
+            "name": "投决备忘录",
+            "path": "Contents/Resources/plugins-example/股权投资/skills/投决备忘录/SKILL.md",
+            "bytes": 6125
+          },
+          {
+            "name": "测收益",
+            "path": "Contents/Resources/plugins-example/股权投资/skills/测收益/SKILL.md",
+            "bytes": 7241
+          },
+          {
+            "name": "筛项目",
+            "path": "Contents/Resources/plugins-example/股权投资/skills/筛项目/SKILL.md",
+            "bytes": 9401
+          },
+          {
+            "name": "退出分析",
+            "path": "Contents/Resources/plugins-example/股权投资/skills/退出分析/SKILL.md",
+            "bytes": 6647
+          }
+        ]
+      },
+      {
+        "folder": "财富管理",
+        "catalog_id": "wealth-management",
+        "name": "wealth-management",
+        "version": "1.1.2",
+        "root": "Contents/Resources/plugins-example/财富管理",
+        "manifests": [
+          {
+            "path": "Contents/Resources/plugins-example/财富管理/.qwenwork-plugin/plugin.json",
+            "guard": null
+          },
+          {
+            "path": "Contents/Resources/plugins-example/财富管理/.qoder-plugin/plugin.json",
+            "guard": {
+              "path": "Contents/Resources/plugins-example/财富管理/.qoder-plugin/plugin.json",
+              "bytes": 1059,
+              "sha256": "838cd5f3ae3f77804e352e046afec5d887ce49e1812f3ee9010550c527fa5731"
+            }
+          },
+          {
+            "path": "Contents/Resources/plugins-example/财富管理/.claude-plugin/plugin.json",
+            "guard": null
+          }
+        ],
+        "skills": [
+          {
+            "name": "基金分析",
+            "path": "Contents/Resources/plugins-example/财富管理/skills/基金分析/SKILL.md",
+            "bytes": 6937
+          },
+          {
+            "name": "客户报告",
+            "path": "Contents/Resources/plugins-example/财富管理/skills/客户报告/SKILL.md",
+            "bytes": 6190
+          },
+          {
+            "name": "市场速览",
+            "path": "Contents/Resources/plugins-example/财富管理/skills/市场速览/SKILL.md",
+            "bytes": 8929
+          },
+          {
+            "name": "理财规划",
+            "path": "Contents/Resources/plugins-example/财富管理/skills/理财规划/SKILL.md",
+            "bytes": 7545
+          },
+          {
+            "name": "税务筹划",
+            "path": "Contents/Resources/plugins-example/财富管理/skills/税务筹划/SKILL.md",
+            "bytes": 7268
+          },
+          {
+            "name": "资产配置",
+            "path": "Contents/Resources/plugins-example/财富管理/skills/资产配置/SKILL.md",
+            "bytes": 7117
+          }
+        ]
+      }
+    ]
+  },
+  "evidence": {
+    "carrier_sha256": "c1b3d54257a338edf518a34df2a23a5a469be5a8597b8f90bc08bc4d88b73568",
+    "frozen_contract_sha256": "bab9236fc6c4609539a7ea91a02c0031b6afb40b65089ea0708f9c9b9fe3dee2",
+    "implementation_contract_sha256": "aae8e30b8a62ad5de7e9157328df82d4359f42d459ad51835b97f633aac70279",
+    "rea_parent": "ev_8832779a114435c1b1d7fad04b9b5312824f0277157b16e0f5d2d0ee8a6d920a",
+    "rea_export_sha256": "fd15c137946e56784d35acd42f9440944a13520ff7204d910b335a853a847a85"
+  }
+}

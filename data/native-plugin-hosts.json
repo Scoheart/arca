@@ -1284,5 +1284,25 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "qwenwork-cn",
+    "adapter": "qwenwork_cn",
+    "docs_url": "https://qwenwork.cn/docs/features/connectors",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/QwenWorkCN.app",
+        "layout": "qwenwork_cn_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/QwenWorkCN.app",
+        "layout": "qwenwork_cn_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]
