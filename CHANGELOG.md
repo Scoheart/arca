@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.62.0](https://github.com/Scoheart/arca/compare/v2.61.0...v2.62.0) (2026-10-30)
+
+### Changes
+
+* feat(plugins): observe independent CoCo CLI and Cortex Code resources ([38c5e99](https://github.com/Scoheart/arca/commit/38c5e998f33f92815dc68d06e0fd6d0850573c81))
+
 ## [2.61.0](https://github.com/Scoheart/arca/compare/v2.60.0...v2.61.0) (2026-10-30)
 
 ### Changes
