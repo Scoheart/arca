@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "agent_id": "kilo-code",
+  "runtime": {
+    "version": "7.8.18",
+    "package_name": "@kilocode/cli",
+    "wrapper_guards": [
+      {
+        "path": "package.json",
+        "bytes": 1249,
+        "sha256": "1c6dbf341bfddef74f3892c1d86dfe8b0a7dd72c798e73c92a28cbc4bece299b"
+      },
+      {
+        "path": "bin/kilo",
+        "bytes": 6307,
+        "sha256": "9a87f9e371c52fdc3259841fd8c79c8ed540b3fb00bb6998e3626a58b5407767"
+      },
+      {
+        "path": "postinstall.mjs",
+        "bytes": 6996,
+        "sha256": "fc2ee208f8969f4ffb41e2c95c3cf6869380bfa7e2bcf5f965fe7e001758db9e"
+      }
+    ],
+    "carrier": {
+      "path": "kilo",
+      "bytes": 238593506,
+      "sha256": "73e6626784cb314308e035f11b8cb8ab251624a593c2a110abeb94869514a237"
+    },
+    "wrapper_archive_sha256": "7e8357fb0521517556be6263e41daa325ad4dc1b3e1bb6c5bb27ff2fb5bbdfaa",
+    "carrier_archive_sha256": "1ea2285a2f45ec27b7fa3b644f92700adf4a91fd671aaf18ba0cb8f26c795df5",
+    "compiled_version_binding_sha256": "38e33419f99aeb1f9017db598d4747ca2bdd7c9db544e17d5c68b4fab8c62c0a",
+    "compiled_version_symbol": "Bf",
+    "compiled_version_offset": 90167652
+  },
+  "bun": {
+    "section_offset": 88227840,
+    "section_bytes": 148275338,
+    "graph_bytes": 148275330,
+    "table_offset": 236497814,
+    "table_bytes": 4888,
+    "table_sha256": "1aadbf84664cbc3d5a89d73ea6433ba576bfb64dd277e3c3a23c0b3dc4ba41c5",
+    "entry": {
+      "index": 0,
+      "name": "/$bunfs/root/kilo",
+      "offset": 88227848,
+      "bytes": 72310774,
+      "encoding": 2
+    },
+    "builtin_skill": {
+      "name": "kilo-config",
+      "member": {
+        "index": 11,
+        "name": "/$bunfs/root/kilo-config-nz04pg0h.md",
+        "offset": 224445302,
+        "bytes": 34588,
+        "encoding": 2
+      }
+    }
+  },
+  "research_sha256": "eab8aedefb6460ad693834d4c85f7d06a42a3d779711f167f3a22df4b3dde42a",
+  "sdk": {
+    "offset": 141811144,
+    "bytes": 314,
+    "sha256": "999f3207f92e691f2bc0e4423ed409fb61ec90a80eca4a9f50cd9714f13204ad",
+    "callbacks": [
+      "Kilo gateway",
+      "Atomic Chat",
+      "Desktop integration",
+      "OpenAI Codex",
+      "GitHub Copilot",
+      "Modal",
+      "GitLab",
+      "Poe",
+      "Cloudflare Workers",
+      "Cloudflare AI Gateway",
+      "Azure",
+      "DigitalOcean",
+      "Snowflake Cortex",
+      "xAI",
+      "Cerebras"
+    ]
+  },
+  "authority_sha256": "76c227e648194cd0d8b4476a5a9bcffb4e96b3b8c22f309f7c5d88c61f82dff1"
+}

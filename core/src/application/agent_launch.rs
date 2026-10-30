@@ -712,7 +712,7 @@ mod tests {
     #[cfg(unix)]
     fn audited_cli_guards_never_execute_an_unknown_official_selection() {
         use std::os::unix::fs::PermissionsExt;
-        for (agent, executable) in [("junie-cli", "junie"), ("codebuddy-code", "codebuddy")] {
+        for (agent, executable) in [("junie-cli", "junie"), ("codebuddy-code", "codebuddy"), ("kilo-code", "kilo")] {
             let home = crate::testenv::TestHome::new("native-cli-no-version-exec");
             let marker = home.home.join("unexpected-version-execution");
             let command = home.home.join("bin").join(executable);

@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "agent_id": "kilo-desktop",
+  "app_name": "Kilo.app",
+  "bundle_id": "ai.kilo.desktop",
+  "version": "0.1.14",
+  "package_name": "@kilo-desktop/desktop",
+  "child_version": "7.8.17",
+  "child_version_offset": 90167678,
+  "guards": [
+    {
+      "path": "Contents/Info.plist",
+      "bytes": 3008,
+      "sha256": "80edf82b14dc5789aab42687e299ba6e4b05aeb0e5f1f70eac86dca772acfd83"
+    },
+    {
+      "path": "Contents/MacOS/Kilo",
+      "bytes": 53328,
+      "sha256": "a72761b0a0a2d49b7a814877f2f15f83e7258997a831222250700609230cd0ee"
+    },
+    {
+      "path": "Contents/Resources/app.asar",
+      "bytes": 444963232,
+      "sha256": "d4a57a08c927247dc7b5ffbe230f483091bebbd47d54721c08a71c9c2f914892"
+    },
+    {
+      "path": "Contents/Resources/kilo/darwin-arm64/bin/kilo",
+      "bytes": 236536400,
+      "sha256": "28823161786fa39aca8fbfab64b92e2284fa62248c6fab0ac4e7481e07f32a75"
+    }
+  ],
+  "header": {
+    "pickle_bytes": 16397048,
+    "utf8_bytes": 16397038,
+    "sha256": "d81972a41dd9554c4f77e554c83ec9f6ed4319e311d3966a0cafcf12752503f8"
+  },
+  "package": {
+    "path": "package.json",
+    "offset": 444960924,
+    "bytes": 2308,
+    "sha256": "11ac47b0af72130c4e9eacfb1ade5cd013a0c548199a4a5adba342ebc18a6724"
+  },
+  "main": {
+    "path": ".vite/build/main.js",
+    "offset": 16618641,
+    "bytes": 2159592,
+    "sha256": "8ffa3b4e9d50c0caf6e161350d54d709aa24078d045d23fe59101fa5ff8fa3c4"
+  },
+  "plugins": [
+    {
+      "id": "anaconda-account",
+      "name": "Anaconda Account",
+      "version": "0.1.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-anaconda-account/plugin.json",
+        "offset": 84238025,
+        "bytes": 341,
+        "sha256": "bcb3959c5f7c0eb3f251a2d9e321c724783fac7ef1c3258e68cf22a0c9d20a35"
+      }
+    },
+    {
+      "id": "browser",
+      "name": "Browser",
+      "version": "1.0.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-browser/plugin.json",
+        "offset": 84239678,
+        "bytes": 766,
+        "sha256": "cd8cecf7658daeab87fd8ef5b0b2aa825bcec92fe3b474d98e6a1191aa28cb8e"
+      }
+    },
+    {
+      "id": "environments",
+      "name": "Conda Environments",
+      "version": "0.1.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-environments/plugin.json",
+        "offset": 84242801,
+        "bytes": 493,
+        "sha256": "59779987af0046fdbccceb21e2dbcffe939a28ac431f1d0a450d0e217fe900a3"
+      }
+    },
+    {
+      "id": "files",
+      "name": "Files",
+      "version": "1.0.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-files/plugin.json",
+        "offset": 84247074,
+        "bytes": 969,
+        "sha256": "0f386b7595ecf5bc2bcb558937945e1045f12771be7e0e1ef66aeb71d959ac90"
+      }
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "version": "1.0.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-git/plugin.json",
+        "offset": 84267104,
+        "bytes": 1885,
+        "sha256": "c444e355eac66870c364bdb31ff6fef0a93bad98786762f076c7e3b2f84ede70"
+      }
+    },
+    {
+      "id": "kilo-marketplace",
+      "name": "Kilo Marketplace",
+      "version": "0.1.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-kilo-marketplace/plugin.json",
+        "offset": 84270964,
+        "bytes": 499,
+        "sha256": "c113f0ca6015e283ffa0a31ed66c34b2e225cdd77a560e567cbef90611b28f0c"
+      }
+    },
+    {
+      "id": "kilo-server",
+      "name": "Kilo Server",
+      "version": "1.0.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-kilo-server/plugin.json",
+        "offset": 84273887,
+        "bytes": 742,
+        "sha256": "1b8e79bbb5ac2da9757e73e6cd05ca532e8bc23b1d06cc95ad7d76d786031256"
+      }
+    },
+    {
+      "id": "kilo-ui",
+      "name": "Kilo UI",
+      "version": "1.0.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-kilo-ui/plugin.json",
+        "offset": 84284645,
+        "bytes": 2327,
+        "sha256": "8577a09d34cbc124f72ee24d41aa972121178b296e9f0384d1a90a916669502d"
+      }
+    },
+    {
+      "id": "local-inference",
+      "name": "Local Inference",
+      "version": "0.1.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-local-inference/plugin.json",
+        "offset": 84288983,
+        "bytes": 622,
+        "sha256": "065b670d920fa109a31fc4ffbb01f2c6926fec49f0434ea68b16c1b87bc75376"
+      }
+    },
+    {
+      "id": "notebook",
+      "name": "Notebook",
+      "version": "1.0.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-notebook/plugin.json",
+        "offset": 84292368,
+        "bytes": 830,
+        "sha256": "e87d14ca51e79edefb5f42f32df7a1e8ec1c6bba1c1cfe6110247ab04768dd66"
+      }
+    },
+    {
+      "id": "terminal",
+      "name": "Terminal",
+      "version": "1.0.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-terminal/plugin.json",
+        "offset": 85460408,
+        "bytes": 553,
+        "sha256": "81c6b89dfddb60c40e45a6e020d1e18745bf6e07370e3698dedb6b783b0cfad3"
+      }
+    },
+    {
+      "id": "todos",
+      "name": "Todos",
+      "version": "1.0.0",
+      "member": {
+        "path": "node_modules/@kilo-desktop/plugin-todos/plugin.json",
+        "offset": 85462799,
+        "bytes": 364,
+        "sha256": "76adf608811ce56d037efe093e94aec707a403e6fe264863549e76653d725966"
+      }
+    }
+  ],
+  "skill": {
+    "name": "kilo-config",
+    "resource_path": "/$bunfs/root/kilo-config-nz04pg0h.md",
+    "offset": 223758968,
+    "bytes": 34588
+  },
+  "mcp_references": [
+    {
+      "plugin_id": "kilo-server",
+      "name": "desktop",
+      "gate": "endpoint/configuration/feature/sign-in policy unknown"
+    }
+  ],
+  "evidence": {
+    "archive_sha256": "6dffef597c0c7a68ea0d960700bdccf469a77f47f56a86c980b4c83c6f3ea7ce",
+    "contract_sha256": "e6dec36bf629e7c9ff3836020e5df8463be5d3e9f94e8f8f817ff499ef752b8d",
+    "source_index_sha256": "cca0f182ac17fafd3ce05db4f029a47aa8d457590fd56bf897bf36ebab296df5",
+    "global_authority_sha256": "62df9f5ef09e9f0735f807bc9599c24aaf97a11266c08f85b388d6d00c491ce6"
+  },
+  "managed_sdk_directory": "~/Library/Application Support/Kilo Desktop/plugins/kilo-server/runtime/kilo-plugins"
+}

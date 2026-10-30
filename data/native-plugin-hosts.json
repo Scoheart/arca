@@ -1189,5 +1189,40 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "kilo-code",
+    "adapter": "kilo_cli",
+    "docs_url": "https://kilo.ai/docs/customize/plugins",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.config/kilo",
+        "layout": "kilo_cli_global",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "kilo-desktop",
+    "adapter": "kilo_desktop",
+    "docs_url": "https://kilo.ai/docs/desktop/overview",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Kilo.app",
+        "layout": "kilo_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Kilo.app",
+        "layout": "kilo_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

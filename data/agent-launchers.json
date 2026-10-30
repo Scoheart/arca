@@ -626,6 +626,9 @@
     "kind": "app",
     "candidates": [
       "Kilo"
+    ],
+    "bundle_ids": [
+      "ai.kilo.desktop"
     ]
   },
   "postman": {
