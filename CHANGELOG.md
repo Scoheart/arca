@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.64.0](https://github.com/Scoheart/arca/compare/v2.63.0...v2.64.0) (2026-10-30)
+
+### Changes
+
+* feat(plugins): observe QwenWorkCN bundled skill sources ([182072b](https://github.com/Scoheart/arca/commit/182072bbfc2163aeea931136cc55d28da57f4021))
+
 ## [2.63.0](https://github.com/Scoheart/arca/compare/v2.62.0...v2.63.0) (2026-10-30)
 
 ### Changes
