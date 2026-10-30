@@ -22,7 +22,7 @@ Within the 68 audited definitions, 60 previously had an image and 8 used monogra
 
 | Added asset | Retrieved source | Identity |
 |---|---|---|
-| `cortex-code.svg` | <https://docs.snowflake.com/images/favicon/favicon.svg> | Snowflake mark linked by the Cortex Code documentation |
+| `cortex-code.svg` | <https://docs.snowflake.com/images/favicon/favicon.svg> | Snowflake mark linked by the Cortex Code documentation; shared by CoCo CLI and Cortex Code Desktop through its icon alias |
 | `dirac.svg` | <https://github.com/dirac-run/dirac/blob/master/agent-registry/dirac/icon.svg> | Product's own ACP entry mark |
 | `docker-agent.png` | <https://www.docker.com/app/uploads/2024/02/cropped-docker-logo-favicon-192x192.png> | Docker vendor mark |
 | `minion-code.svg` | <https://github.com/agentclientprotocol/registry/blob/main/minion-code/icon.svg> | ACP Registry entry points to `femto/minion-code`; the product repository itself has no image logo |

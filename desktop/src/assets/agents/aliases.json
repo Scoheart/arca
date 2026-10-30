@@ -29,5 +29,6 @@
   "chatgpt": "openai",
   "openclaw-desktop": "openclaw",
   "windsurf": "devin",
-  "codebuddy-cn-ide": "codebuddy-code"
+  "codebuddy-cn-ide": "codebuddy-code",
+  "cortex-code-desktop": "cortex-code"
 }

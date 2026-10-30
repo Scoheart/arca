@@ -147,6 +147,15 @@
     ],
     "args": []
   },
+  "cortex-code-desktop": {
+    "kind": "app",
+    "candidates": [
+      "Cortex Code"
+    ],
+    "bundle_ids": [
+      "com.snowflake.coco"
+    ]
+  },
   "crush": {
     "kind": "cli",
     "candidates": [

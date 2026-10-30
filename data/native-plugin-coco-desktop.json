@@ -1,0 +1,559 @@
+{
+  "schema_version": 1,
+  "agent_id": "cortex-code-desktop",
+  "app_name": "Cortex Code.app",
+  "bundle_id": "com.snowflake.coco",
+  "version": "1.23.1",
+  "package_name": "Cortex Code",
+  "package_main": "./out/bootstrap-main.js",
+  "engine_version": "1.110.1",
+  "product_application_name": "coco",
+  "product_data_folder": ".cortexcode",
+  "product_commit": "ba895eca6729beb2d90232cb2b403d4391714be3",
+  "guards": [
+    {
+      "path": "Contents/Info.plist",
+      "bytes": 35265,
+      "sha256": "eeb759c5fb5d8d52b66704fbd50c8b82f3c0636ac47996a9e860488015f8dec5"
+    },
+    {
+      "path": "Contents/MacOS/Cortex Code",
+      "bytes": 52880,
+      "sha256": "4647e32ea659c0884f54d9cc3d658b65e904cbf3039460b058756b84649fbf62"
+    },
+    {
+      "path": "Contents/Resources/app/package.json",
+      "bytes": 14154,
+      "sha256": "eaf49fe6c4b52ba4c927b382a06937ed1102a7523f986ad651ce93fb407a7aaf"
+    },
+    {
+      "path": "Contents/Resources/app/product.json",
+      "bytes": 8807,
+      "sha256": "6dc214f6848b489a91e40a550d98c1c15dc10d10311f6e66677014189a7920ea"
+    },
+    {
+      "path": "Contents/Resources/app/out/bootstrap-main.js",
+      "bytes": 35494,
+      "sha256": "df822dc31071053688256be3f2b360cde694d158e4888f50f4718fc2adc32f80"
+    },
+    {
+      "path": "Contents/Resources/app/out/main.js",
+      "bytes": 1265544,
+      "sha256": "eca43d6d7469093560ed819091369dfd0cf2c1dc63114a8f348e6bcf3e8ac552"
+    },
+    {
+      "path": "Contents/Resources/app/out/vs/code/electron-browser/workbench/workbench.html",
+      "bytes": 1473,
+      "sha256": "79d21425806e8726088b2fd0273da7aaf473a7e4abd221385f009292728fd4ec"
+    },
+    {
+      "path": "Contents/Resources/app/out/vs/code/electron-browser/workbench/workbench.js",
+      "bytes": 13132,
+      "sha256": "60f8c07d252d00dcaf5a6a70a924c4f154b7262f4a20635b348c45a98c53ae7a"
+    },
+    {
+      "path": "Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js",
+      "bytes": 17728198,
+      "sha256": "8023db56d7485ccdd466056f98510043fed78cfc0420c3f05145ae1dd04b2a8d"
+    }
+  ],
+  "manifest_paths": [
+    ".cortex-plugin/plugin.json",
+    ".claude-plugin/plugin.json"
+  ],
+  "default_snowflake_home": "~/.snowflake",
+  "snowflake_home_env": "SNOWFLAKE_HOME",
+  "registry_file": "cortex/plugins/registry.json",
+  "settings_file": "cortex/settings.json",
+  "plugins_directory": "cortex/plugins",
+  "stage_directory": "cortex/stage_cache",
+  "bundled_plugins_directory": "Contents/Resources/app/resources/snowflake/plugins",
+  "skills": [
+    {
+      "name": "agent_optimization",
+      "path": "Contents/Resources/app/resources/snowflake/skills/agent_optimization/SKILL.md",
+      "bytes": 5083
+    },
+    {
+      "name": "access-troubleshooter",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/access-troubleshooter/SKILL.md",
+      "bytes": 10819
+    },
+    {
+      "name": "agent-studio",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/agent-studio/SKILL.md",
+      "bytes": 4388
+    },
+    {
+      "name": "ai-data-share",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/ai-data-share/SKILL.md",
+      "bytes": 5036
+    },
+    {
+      "name": "ai-functions-pipeline-builder",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/ai-functions-pipeline-builder/SKILL.md",
+      "bytes": 21099
+    },
+    {
+      "name": "ai-readiness-score",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/ai-readiness-score/SKILL.md",
+      "bytes": 3427
+    },
+    {
+      "name": "alert",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/alert/SKILL.md",
+      "bytes": 2707
+    },
+    {
+      "name": "attach-ai-products-to-share",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/attach-ai-products-to-share/SKILL.md",
+      "bytes": 11142
+    },
+    {
+      "name": "automation",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/automation/SKILL.md",
+      "bytes": 32843
+    },
+    {
+      "name": "billing",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/billing/SKILL.md",
+      "bytes": 1851
+    },
+    {
+      "name": "build-app",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/build-app/SKILL.md",
+      "bytes": 17303
+    },
+    {
+      "name": "business-ontology",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/business-ontology/SKILL.md",
+      "bytes": 39930
+    },
+    {
+      "name": "certified-data-product-discovery",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/certified-data-product-discovery/SKILL.md",
+      "bytes": 18305
+    },
+    {
+      "name": "certify-object",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/certify-object/SKILL.md",
+      "bytes": 4122
+    },
+    {
+      "name": "ci-cd",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/ci-cd/SKILL.md",
+      "bytes": 6060
+    },
+    {
+      "name": "copy-load",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/copy-load/SKILL.md",
+      "bytes": 14433
+    },
+    {
+      "name": "cortex-ai-function-studio",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/cortex-ai-function-studio/SKILL.md",
+      "bytes": 22692
+    },
+    {
+      "name": "cortex-code-guide",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/cortex-code-guide/SKILL.md",
+      "bytes": 24035
+    },
+    {
+      "name": "cortex-sense",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/cortex-sense/SKILL.md",
+      "bytes": 18910
+    },
+    {
+      "name": "cost-intelligence",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/cost-intelligence/SKILL.md",
+      "bytes": 7269
+    },
+    {
+      "name": "data-cleanrooms",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/data-cleanrooms/SKILL.md",
+      "bytes": 22654
+    },
+    {
+      "name": "data-governance",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/data-governance/SKILL.md",
+      "bytes": 5698
+    },
+    {
+      "name": "data-products",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/data-products/SKILL.md",
+      "bytes": 37826
+    },
+    {
+      "name": "data-quality",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/data-quality/SKILL.md",
+      "bytes": 11546
+    },
+    {
+      "name": "data-scopes",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/data-scopes/SKILL.md",
+      "bytes": 13125
+    },
+    {
+      "name": "data-sharing",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/data-sharing/SKILL.md",
+      "bytes": 15441
+    },
+    {
+      "name": "dbt-projects-on-snowflake",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/dbt-projects-on-snowflake/SKILL.md",
+      "bytes": 15458
+    },
+    {
+      "name": "dcm",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/dcm/SKILL.md",
+      "bytes": 30771
+    },
+    {
+      "name": "declarative-sharing",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/declarative-sharing/SKILL.md",
+      "bytes": 30135
+    },
+    {
+      "name": "deploy-to-spcs",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/deploy-to-spcs/SKILL.md",
+      "bytes": 7167
+    },
+    {
+      "name": "developing-with-streamlit-in-snowflake",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/developing-with-streamlit-in-snowflake/SKILL.md",
+      "bytes": 4454
+    },
+    {
+      "name": "document-intelligence",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/document-intelligence/SKILL.md",
+      "bytes": 8676
+    },
+    {
+      "name": "dsc-auth",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/dsc-auth/SKILL.md",
+      "bytes": 14858
+    },
+    {
+      "name": "dynamic-tables",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/dynamic-tables/SKILL.md",
+      "bytes": 24075
+    },
+    {
+      "name": "dynamic-tables-apply-recommendations",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/dynamic-tables-apply-recommendations/SKILL.md",
+      "bytes": 61887
+    },
+    {
+      "name": "entity-resolution",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/entity-resolution/SKILL.md",
+      "bytes": 8502
+    },
+    {
+      "name": "error-tables-ops",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/error-tables-ops/SKILL.md",
+      "bytes": 28402
+    },
+    {
+      "name": "event-table",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/event-table/SKILL.md",
+      "bytes": 4199
+    },
+    {
+      "name": "find-skill-and-plugin",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/find-skill-and-plugin/SKILL.md",
+      "bytes": 24301
+    },
+    {
+      "name": "get-marketplace-listing-details",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/get-marketplace-listing-details/SKILL.md",
+      "bytes": 36239
+    },
+    {
+      "name": "html-authoring",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/html-authoring/SKILL.md",
+      "bytes": 16153
+    },
+    {
+      "name": "iceberg",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/iceberg/SKILL.md",
+      "bytes": 22272
+    },
+    {
+      "name": "integrations",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/integrations/SKILL.md",
+      "bytes": 5164
+    },
+    {
+      "name": "intent-driven-governance",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/intent-driven-governance/SKILL.md",
+      "bytes": 20102
+    },
+    {
+      "name": "interactive",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/interactive/SKILL.md",
+      "bytes": 11365
+    },
+    {
+      "name": "interactive-benchmark",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/interactive-benchmark/SKILL.md",
+      "bytes": 46519
+    },
+    {
+      "name": "investigation",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/investigation/SKILL.md",
+      "bytes": 7212
+    },
+    {
+      "name": "key-and-secret-management",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/key-and-secret-management/SKILL.md",
+      "bytes": 2642
+    },
+    {
+      "name": "lineage",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/lineage/SKILL.md",
+      "bytes": 41916
+    },
+    {
+      "name": "listing-observability",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/listing-observability/SKILL.md",
+      "bytes": 4331
+    },
+    {
+      "name": "machine-learning",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/machine-learning/SKILL.md",
+      "bytes": 27774
+    },
+    {
+      "name": "manage-authentication-policy",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/manage-authentication-policy/SKILL.md",
+      "bytes": 15861
+    },
+    {
+      "name": "manage-zerocopy-salesforce",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/manage-zerocopy-salesforce/SKILL.md",
+      "bytes": 10804
+    },
+    {
+      "name": "manage-zerocopy-sapbdc",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/manage-zerocopy-sapbdc/SKILL.md",
+      "bytes": 8030
+    },
+    {
+      "name": "marketplace-search",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/marketplace-search/SKILL.md",
+      "bytes": 37153
+    },
+    {
+      "name": "metadata-connections",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/metadata-connections/SKILL.md",
+      "bytes": 7641
+    },
+    {
+      "name": "migration-guide",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/migration-guide/SKILL.md",
+      "bytes": 6165
+    },
+    {
+      "name": "multi-account-search-and-query",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/multi-account-search-and-query/SKILL.md",
+      "bytes": 41466
+    },
+    {
+      "name": "native-app-consumer",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/native-app-consumer/SKILL.md",
+      "bytes": 5123
+    },
+    {
+      "name": "native-app-provider",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/native-app-provider/SKILL.md",
+      "bytes": 12765
+    },
+    {
+      "name": "network-security",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/network-security/SKILL.md",
+      "bytes": 13310
+    },
+    {
+      "name": "notification",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/notification/SKILL.md",
+      "bytes": 3805
+    },
+    {
+      "name": "openflow",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/openflow/SKILL.md",
+      "bytes": 28061
+    },
+    {
+      "name": "openflow-observability",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/openflow-observability/SKILL.md",
+      "bytes": 58532
+    },
+    {
+      "name": "organization-management",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/organization-management/SKILL.md",
+      "bytes": 5648
+    },
+    {
+      "name": "provider-onboarding-v2",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/provider-onboarding-v2/SKILL.md",
+      "bytes": 15977
+    },
+    {
+      "name": "recommend-object",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/recommend-object/SKILL.md",
+      "bytes": 11824
+    },
+    {
+      "name": "restricted-session-scope",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/restricted-session-scope/SKILL.md",
+      "bytes": 11190
+    },
+    {
+      "name": "sar-actions-desktop",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/sar-actions-desktop/SKILL.md",
+      "bytes": 7749
+    },
+    {
+      "name": "setup-snowflake-sso",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/setup-snowflake-sso/SKILL.md",
+      "bytes": 10834
+    },
+    {
+      "name": "share-skill-and-plugin",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/share-skill-and-plugin/SKILL.md",
+      "bytes": 21810
+    },
+    {
+      "name": "sharing",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/sharing/SKILL.md",
+      "bytes": 9464
+    },
+    {
+      "name": "skill_development",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/skill_development/SKILL.md",
+      "bytes": 4595
+    },
+    {
+      "name": "snowflake-apps",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/snowflake-apps/SKILL.md",
+      "bytes": 11749
+    },
+    {
+      "name": "snowflake-notebooks",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/snowflake-notebooks/SKILL.md",
+      "bytes": 31403
+    },
+    {
+      "name": "snowflake-postgres",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/snowflake-postgres/SKILL.md",
+      "bytes": 24539
+    },
+    {
+      "name": "snowflake-publish-report",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/snowflake-publish-report/SKILL.md",
+      "bytes": 3999
+    },
+    {
+      "name": "snowflake-tasks",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/snowflake-tasks/SKILL.md",
+      "bytes": 24902
+    },
+    {
+      "name": "snowpark",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/snowpark/SKILL.md",
+      "bytes": 10610
+    },
+    {
+      "name": "snowpipe",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/snowpipe/SKILL.md",
+      "bytes": 13708
+    },
+    {
+      "name": "snowpipe-streaming",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/snowpipe-streaming/SKILL.md",
+      "bytes": 5243
+    },
+    {
+      "name": "spark-migration",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/spark-migration/SKILL.md",
+      "bytes": 35331
+    },
+    {
+      "name": "sql-author",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/sql-author/SKILL.md",
+      "bytes": 5085
+    },
+    {
+      "name": "storage-lifecycle-policy",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/storage-lifecycle-policy/SKILL.md",
+      "bytes": 14240
+    },
+    {
+      "name": "suggest-sv-materializations",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/suggest-sv-materializations/SKILL.md",
+      "bytes": 2342
+    },
+    {
+      "name": "tableau-to-streamlit-in-snowflake",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/tableau-to-streamlit-in-snowflake/SKILL.md",
+      "bytes": 28974
+    },
+    {
+      "name": "trust-center",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/trust-center/SKILL.md",
+      "bytes": 3975
+    },
+    {
+      "name": "warehouse",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/warehouse/SKILL.md",
+      "bytes": 10407
+    },
+    {
+      "name": "workload-performance-analysis",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/workload-performance-analysis/SKILL.md",
+      "bytes": 21723
+    },
+    {
+      "name": "workspaces",
+      "path": "Contents/Resources/app/resources/snowflake/skills/cortex-code-skills/workspaces/SKILL.md",
+      "bytes": 11194
+    },
+    {
+      "name": "github-plugin-installer",
+      "path": "Contents/Resources/app/resources/snowflake/skills/github-plugin-installer/SKILL.md",
+      "bytes": 17599
+    },
+    {
+      "name": "introduce-coco-desktop",
+      "path": "Contents/Resources/app/resources/snowflake/skills/introduce-coco-desktop/SKILL.md",
+      "bytes": 12813
+    },
+    {
+      "name": "local-plugin-installer",
+      "path": "Contents/Resources/app/resources/snowflake/skills/local-plugin-installer/SKILL.md",
+      "bytes": 15534
+    },
+    {
+      "name": "plugin-creator",
+      "path": "Contents/Resources/app/resources/snowflake/skills/plugin-creator/SKILL.md",
+      "bytes": 15999
+    },
+    {
+      "name": "search_optimization",
+      "path": "Contents/Resources/app/resources/snowflake/skills/search_optimization/SKILL.md",
+      "bytes": 14268
+    },
+    {
+      "name": "verification-skill",
+      "path": "Contents/Resources/app/resources/snowflake/skills/verification-skill/SKILL.md",
+      "bytes": 4033
+    }
+  ],
+  "evidence": {
+    "carrier_sha256": "896b525239cc755d8404e0f21ef53ad7604b9630d48fb3daabfff96f772ae8fc",
+    "contract_sha256": "3a2b58b761203fb76460737ef19479e05f127beca28f17061ce107f86724a7a7",
+    "source_index_sha256": "a563ece5625a0e600be9a28df61f509d9831f769e37eea9eb0137ab6c3faa5d3",
+    "resource_inventory_sha256": "916d951722c03b18dd0151b77913a0d334483d74bc95949d9b17792e2054ca11"
+  }
+}

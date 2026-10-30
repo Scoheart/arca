@@ -1224,5 +1224,40 @@
         "presence": "bundled"
       }
     ]
+  },
+  {
+    "agent_id": "cortex-code",
+    "adapter": "coco_cli",
+    "docs_url": "https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-plugins",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "~/.snowflake/cortex",
+        "layout": "coco_cli_global",
+        "presence": "local"
+      }
+    ]
+  },
+  {
+    "agent_id": "cortex-code-desktop",
+    "adapter": "coco_desktop",
+    "docs_url": "https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-desktop/plugins",
+    "manifest_paths": [],
+    "default_mcp_files": [],
+    "mcp_id_prefix": "",
+    "roots": [
+      {
+        "path": "/Applications/Cortex Code.app",
+        "layout": "coco_app",
+        "presence": "bundled"
+      },
+      {
+        "path": "~/Applications/Cortex Code.app",
+        "layout": "coco_app",
+        "presence": "bundled"
+      }
+    ]
   }
 ]

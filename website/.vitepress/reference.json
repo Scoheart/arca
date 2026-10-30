@@ -332,6 +332,23 @@
       "model": null
     },
     {
+      "id": "cortex-code",
+      "name": "CoCo CLI",
+      "category": "cli",
+      "docs": "https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code",
+      "mcp": null,
+      "skills": {
+        "path": "~/.snowflake/cortex/skills",
+        "aliases": [
+          {
+            "target_id": "claude-user",
+            "global_dir": "~/.claude/skills"
+          }
+        ]
+      },
+      "model": null
+    },
+    {
       "id": "codebuddy-ide",
       "name": "CodeBuddy",
       "category": "ide",
@@ -512,6 +529,15 @@
           "http"
         ]
       },
+      "skills": null,
+      "model": null
+    },
+    {
+      "id": "cortex-code-desktop",
+      "name": "Cortex Code",
+      "category": "desktop",
+      "docs": "https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-desktop/plugins",
+      "mcp": null,
       "skills": null,
       "model": null
     },
@@ -1897,23 +1923,6 @@
           {
             "target_id": "agents-user",
             "global_dir": "~/.agents/skills"
-          }
-        ]
-      },
-      "model": null
-    },
-    {
-      "id": "cortex-code",
-      "name": "Snowflake Cortex Code",
-      "category": "cli",
-      "docs": "https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code",
-      "mcp": null,
-      "skills": {
-        "path": "~/.snowflake/cortex/skills",
-        "aliases": [
-          {
-            "target_id": "claude-user",
-            "global_dir": "~/.claude/skills"
           }
         ]
       },
