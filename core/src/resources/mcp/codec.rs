@@ -201,7 +201,7 @@ pub fn for_agent(agent_id: &str) -> Codec {
         "windsurf" => Codec::Windsurf,
         "qoder" | "qoder-cli" | "qoder-desktop" => Codec::Qoder,
         "qoderwork" => Codec::QoderWork,
-        "qwenwork" | "qwenwork-cn" => Codec::QwenWork,
+        "qwenwork" => Codec::QwenWork,
         "step-code" => Codec::StepCode,
         "copilot-cli" => Codec::Copilot,
         "cline" | "cline-cli" => Codec::Cline,

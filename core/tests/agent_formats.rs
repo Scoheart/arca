@@ -1011,12 +1011,11 @@ fn qoder_desktop_round_trip_preserves_shared_cli_settings() {
 }
 
 #[test]
-fn qwenwork_editions_keep_separate_paths_and_round_trip_custom_mcp() {
+fn qwenwork_international_keeps_its_native_paths_and_round_trips_custom_mcp() {
     let home = arca_core::testenv::TestHome::new("qwenwork-formats");
     let agents = builtin_agents();
     for (id, directory, app) in [
         ("qwenwork", ".qwenwork", "QwenWork"),
-        ("qwenwork-cn", ".qwenworkcn", "QwenWorkCN"),
     ] {
         let definition = &agents[id];
         assert_eq!(definition.global, Some(format!("~/{directory}/mcp.json")));
@@ -1166,7 +1165,6 @@ fn builtin_global_paths_match_current_product_docs() {
         ("qoderwork", "~/.qoderwork/mcp.json"),
         ("qwen-code", "~/.qwen/settings.json"),
         ("qwenwork", "~/.qwenwork/mcp.json"),
-        ("qwenwork-cn", "~/.qwenworkcn/mcp.json"),
         (
             "roo-code",
             "~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json",

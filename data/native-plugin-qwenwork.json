@@ -1,0 +1,1831 @@
+{
+  "schema_version": 1,
+  "agent_id": "qwenwork",
+  "app_name": "QwenWork.app",
+  "bundle_id": "com.qwenwork.desktop.mac",
+  "version": "1.0.4",
+  "build": "26090501",
+  "package_name": "qwen-work",
+  "package_main": "out/main/index.js",
+  "home": ".qwenwork",
+  "guards": [
+    {
+      "path": "Contents/Info.plist",
+      "bytes": 4242,
+      "sha256": "a17a162fffa6e36c11569560aa9e13a5aced93a1f74145ba1b94153edb8f0e1e"
+    },
+    {
+      "path": "Contents/MacOS/QwenWork",
+      "bytes": 70032,
+      "sha256": "57ca1612f4e8ed96e51fae43244e3dfcd60f56fb5d1dd0e42e0fa795fc6e2e2d"
+    },
+    {
+      "path": "Contents/Resources/app.asar",
+      "bytes": 217201424,
+      "sha256": "a302843479d6b123c06b9af5b3bb6173b8c9eb7f80adf3d6dce88e84303db4d4"
+    },
+    {
+      "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/package.json",
+      "bytes": 949,
+      "sha256": "a68554a5c4233192cb9bf9ea6c3b585ed782bfa78a26ed17eb860af659e9139f"
+    },
+    {
+      "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/index.js",
+      "bytes": 215686,
+      "sha256": "37d37b0d8a1027ffd07cbc0b1f04811c3c7d763ccfa838444ecb5088af566ea0"
+    },
+    {
+      "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/runtime-manifest.json",
+      "bytes": 490,
+      "sha256": "3a14d2cb57a295185aaae746996e4670cea31cb287707370ef8629031b2237b7"
+    },
+    {
+      "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/runtime-info.json",
+      "bytes": 2699,
+      "sha256": "9c3a5d27e05e0b8175b0e3f359289590ff6bcc8256b72000acf6b747d576fd6a"
+    },
+    {
+      "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/qoder-worker-runtime.obf.mjs",
+      "bytes": 31520644,
+      "sha256": "13633e9f4324d2bfa230cce798c934a262b5c35e964030e6b55321f8c7929814"
+    },
+    {
+      "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/vendor/qoder-security/.qoder-plugin/plugin.json",
+      "bytes": 752,
+      "sha256": "ea499201d21ef8f37b16c7c6f605cd874303cabb761009c2a8016e90a7705e6f"
+    },
+    {
+      "path": "Contents/Resources/legokits/canvas/canvas-mcp.cjs",
+      "bytes": 12915362,
+      "sha256": "41ec6ed735f037ef8c8e6b0ea00e657da32fb74e53549c3aa11e586cb7c8b6bc"
+    },
+    {
+      "path": "Contents/Resources/legokits/ai-slides/ai-slides-mcp.cjs",
+      "bytes": 5268193,
+      "sha256": "b0f8bcf5aa56b0db7cfe9b5be0a97308c589bd73f2331775c5940860ef479cb2"
+    },
+    {
+      "path": "Contents/Resources/legokits/writing/writing-mcp.cjs",
+      "bytes": 751181,
+      "sha256": "e93cec6cf73a4ce91f3fc6ac1bfc09b560f391df367a46428f71b3f79cf43516"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/1688买家助手/.qoder-plugin/plugin.json",
+      "bytes": 1027,
+      "sha256": "b6f645c1db345ad3fcb4e36450032a5a8026a0ba28e6edabe7c24f26ffb317fd"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/1688商家助手/.qoder-plugin/plugin.json",
+      "bytes": 842,
+      "sha256": "b97fb0488fb0f9caabcf01c46885360a6669f66a220fc96ca4c03f7a09a6f82f"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/.qoder-plugin/plugin.json",
+      "bytes": 6866,
+      "sha256": "4bac14c2854168768074c2f594abe392c85de20eb62ce8ca05c072929b1d21cd"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/产品管理/.qoder-plugin/plugin.json",
+      "bytes": 1704,
+      "sha256": "b148a8aca66580c9638e47b225d3a6001332b8a7b19d9967936ddf974d25485c"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/产品设计/.qoder-plugin/plugin.json",
+      "bytes": 2396,
+      "sha256": "2588373c2b8fa4569983727c07c1e7d66b6d2a5c1de9d7c5808d634270458e2c"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/企业法务/.qoder-plugin/plugin.json",
+      "bytes": 1678,
+      "sha256": "9ef5b31b576eb835dd6afe36396a9f2f59f184dc1ec860f327f0d86dc369ecfa"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/企业财税/.qoder-plugin/plugin.json",
+      "bytes": 2140,
+      "sha256": "66daf3bdbaab45acbb2722eaaaad673d7803a529a02b87f1427350e9cbe3ad3f"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/合同管理/.qoder-plugin/plugin.json",
+      "bytes": 997,
+      "sha256": "87bf82326d4a5b9de40d8ec63bc0fe8c5aad6ddb5b636b60be6b8160890e862a"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/咨询交付/.qoder-plugin/plugin.json",
+      "bytes": 796,
+      "sha256": "22d391bb17d546e2c5d69df0f37949805a40eb4e50f811b6afadf75f44d366a2"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/市场营销/.qoder-plugin/plugin.json",
+      "bytes": 1140,
+      "sha256": "a0f157c9b55a1ef516e71c79e8f6749c40c083249b8d5f1985478f33d610c251"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/投研分析/.qoder-plugin/plugin.json",
+      "bytes": 1320,
+      "sha256": "1d8be057032e230c2906ac58dc2610d1b66f919c6f8dde0ea8e75a73f3ada740"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/投行业务/.qoder-plugin/plugin.json",
+      "bytes": 1708,
+      "sha256": "6f5a487409dd427e672393f1e011eff101fc60056ae94203171523aadf120d15"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/科技服务助手/.qoder-plugin/plugin.json",
+      "bytes": 3045,
+      "sha256": "59927712d37b133bdadaeeba118a9efeff10705a0f66a3c16907a3c067abc3f8"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/股权投资/.qoder-plugin/plugin.json",
+      "bytes": 1054,
+      "sha256": "be2eed3bab0746526b98c4b2d9a37658e55f90f04fd699c6cc169612d05edf5c"
+    },
+    {
+      "path": "Contents/Resources/plugins-example/财富管理/.qoder-plugin/plugin.json",
+      "bytes": 1059,
+      "sha256": "838cd5f3ae3f77804e352e046afec5d887ce49e1812f3ee9010550c527fa5731"
+    }
+  ],
+  "groups": [
+    {
+      "id": "@builtin/skills",
+      "name": "QwenWork 内置 Skills",
+      "version": "1.0.4",
+      "source": "Contents/Resources/skills",
+      "role": "app-owned-availability",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "create-skill",
+          "path": "Contents/Resources/skills/create-skill/SKILL.md",
+          "bytes": 20503,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "docx",
+          "path": "Contents/Resources/skills/docx/SKILL.md",
+          "bytes": 7699,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "find-skills",
+          "path": "Contents/Resources/skills/find-skills/SKILL.md",
+          "bytes": 24383,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "media-generation",
+          "path": "Contents/Resources/skills/media-generation/SKILL.md",
+          "bytes": 10239,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "pdf",
+          "path": "Contents/Resources/skills/pdf/SKILL.md",
+          "bytes": 23308,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "plugin-creator",
+          "path": "Contents/Resources/skills/plugin-creator/SKILL.md",
+          "bytes": 42736,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "pptx",
+          "path": "Contents/Resources/skills/pptx/SKILL.md",
+          "bytes": 27756,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "qw-pages",
+          "path": "Contents/Resources/skills/qw-pages/SKILL.md",
+          "bytes": 6459,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "qw-pages-supabase",
+          "path": "Contents/Resources/skills/qw-pages-supabase/SKILL.md",
+          "bytes": 2029,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "qwenwork-guidance",
+          "path": "Contents/Resources/skills/qwenwork-guidance/SKILL.md",
+          "bytes": 22935,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "xlsx",
+          "path": "Contents/Resources/skills/xlsx/SKILL.md",
+          "bytes": 9501,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@builtin/commands",
+      "name": "QwenWork 内置命令",
+      "version": "1.0.4",
+      "source": "Contents/Resources/commands",
+      "role": "app-owned-availability",
+      "components": [
+        {
+          "kind": "command",
+          "name": "create-command",
+          "path": "Contents/Resources/commands/create-command.md",
+          "bytes": 2391,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@builtin/sdk-skills",
+      "name": "QwenWork SDK 内置 Skills",
+      "version": "1.0.28",
+      "source": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/builtin",
+      "role": "shipped-sdk-availability;worker-activation-unobserved",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "agent-creator",
+          "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/builtin/agent-creator/SKILL.md",
+          "bytes": 10028,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "hook-config",
+          "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/builtin/hook-config/SKILL.md",
+          "bytes": 22249,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "sdk",
+          "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/builtin/sdk/SKILL.md",
+          "bytes": 10449,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "skill-creator",
+          "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/builtin/skill-creator/SKILL.md",
+          "bytes": 10529,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "security-scan@qoder-bundler",
+      "name": "Qoder Security",
+      "version": "0.8.9",
+      "source": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/vendor/qoder-security/.qoder-plugin/plugin.json",
+      "role": "native-vendor-manifest;worker-activation-unobserved",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "security-scan",
+          "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/vendor/qoder-security/skills/security-scan/SKILL.md",
+          "bytes": 15528,
+          "native_id": null
+        },
+        {
+          "kind": "hook",
+          "name": "Hook declaration",
+          "path": "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk/dist/_worker/vendor/qoder-security/.qoder-plugin/qoder-hooks.json",
+          "bytes": 587,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@builtin/legokit:canvas",
+      "name": "QwenWork canvas",
+      "version": "unknown",
+      "source": "Contents/Resources/legokits/canvas",
+      "role": "app-owned-LegoKit-availability;effective-mode-and-runtime-unknown",
+      "components": [
+        {
+          "kind": "mcp_reference",
+          "name": "builtin_canvas",
+          "path": "Contents/Resources/legokits/canvas/canvas-mcp.cjs",
+          "bytes": 12915362,
+          "native_id": "builtin_canvas"
+        },
+        {
+          "kind": "skill",
+          "name": "blog-post",
+          "path": "Contents/Resources/legokits/canvas/skills/blog-post/SKILL.md",
+          "bytes": 2749,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "critique",
+          "path": "Contents/Resources/legokits/canvas/skills/critique/SKILL.md",
+          "bytes": 9684,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "dashboard",
+          "path": "Contents/Resources/legokits/canvas/skills/dashboard/SKILL.md",
+          "bytes": 4439,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "dating-web",
+          "path": "Contents/Resources/legokits/canvas/skills/dating-web/SKILL.md",
+          "bytes": 3919,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "design-brief",
+          "path": "Contents/Resources/legokits/canvas/skills/design-brief/SKILL.md",
+          "bytes": 13396,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "digital-eguide",
+          "path": "Contents/Resources/legokits/canvas/skills/digital-eguide/SKILL.md",
+          "bytes": 3423,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "docs-page",
+          "path": "Contents/Resources/legokits/canvas/skills/docs-page/SKILL.md",
+          "bytes": 3920,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "email-marketing",
+          "path": "Contents/Resources/legokits/canvas/skills/email-marketing/SKILL.md",
+          "bytes": 4764,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "eng-runbook",
+          "path": "Contents/Resources/legokits/canvas/skills/eng-runbook/SKILL.md",
+          "bytes": 1540,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "finance-report",
+          "path": "Contents/Resources/legokits/canvas/skills/finance-report/SKILL.md",
+          "bytes": 3888,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "gamified-app",
+          "path": "Contents/Resources/legokits/canvas/skills/gamified-app/SKILL.md",
+          "bytes": 4455,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "guizang-ppt",
+          "path": "Contents/Resources/legokits/canvas/skills/guizang-ppt/SKILL.md",
+          "bytes": 15807,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "hatch-pet",
+          "path": "Contents/Resources/legokits/canvas/skills/hatch-pet/SKILL.md",
+          "bytes": 23851,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "hr-onboarding",
+          "path": "Contents/Resources/legokits/canvas/skills/hr-onboarding/SKILL.md",
+          "bytes": 1547,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt/SKILL.md",
+          "bytes": 15050,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-course-module",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-course-module/SKILL.md",
+          "bytes": 4233,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-dir-key-nav-minimal",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-dir-key-nav-minimal/SKILL.md",
+          "bytes": 4426,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-graphify-dark-graph",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-graphify-dark-graph/SKILL.md",
+          "bytes": 4357,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-hermes-cyber-terminal",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-hermes-cyber-terminal/SKILL.md",
+          "bytes": 4401,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-knowledge-arch-blueprint",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-knowledge-arch-blueprint/SKILL.md",
+          "bytes": 4401,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-obsidian-claude-gradient",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-obsidian-claude-gradient/SKILL.md",
+          "bytes": 4448,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-pitch-deck",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-pitch-deck/SKILL.md",
+          "bytes": 4245,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-presenter-mode-reveal",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-presenter-mode-reveal/SKILL.md",
+          "bytes": 4444,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-product-launch",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-product-launch/SKILL.md",
+          "bytes": 4235,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-tech-sharing",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-tech-sharing/SKILL.md",
+          "bytes": 4249,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-testing-safety-alert",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-testing-safety-alert/SKILL.md",
+          "bytes": 4411,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-weekly-report",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-weekly-report/SKILL.md",
+          "bytes": 4218,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-xhs-pastel-card",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-xhs-pastel-card/SKILL.md",
+          "bytes": 4402,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-xhs-post",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-xhs-post/SKILL.md",
+          "bytes": 4176,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "html-ppt-xhs-white-editorial",
+          "path": "Contents/Resources/legokits/canvas/skills/html-ppt-xhs-white-editorial/SKILL.md",
+          "bytes": 4340,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "image-poster",
+          "path": "Contents/Resources/legokits/canvas/skills/image-poster/SKILL.md",
+          "bytes": 3474,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "invoice",
+          "path": "Contents/Resources/legokits/canvas/skills/invoice/SKILL.md",
+          "bytes": 1396,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "kanban-board",
+          "path": "Contents/Resources/legokits/canvas/skills/kanban-board/SKILL.md",
+          "bytes": 3420,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "magazine-poster",
+          "path": "Contents/Resources/legokits/canvas/skills/magazine-poster/SKILL.md",
+          "bytes": 3581,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "meeting-notes",
+          "path": "Contents/Resources/legokits/canvas/skills/meeting-notes/SKILL.md",
+          "bytes": 1307,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "mobile-app",
+          "path": "Contents/Resources/legokits/canvas/skills/mobile-app/SKILL.md",
+          "bytes": 5300,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "mobile-onboarding",
+          "path": "Contents/Resources/legokits/canvas/skills/mobile-onboarding/SKILL.md",
+          "bytes": 1481,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "motion-frames",
+          "path": "Contents/Resources/legokits/canvas/skills/motion-frames/SKILL.md",
+          "bytes": 3708,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "pm-spec",
+          "path": "Contents/Resources/legokits/canvas/skills/pm-spec/SKILL.md",
+          "bytes": 1555,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "pricing-page",
+          "path": "Contents/Resources/legokits/canvas/skills/pricing-page/SKILL.md",
+          "bytes": 4214,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "replit-deck",
+          "path": "Contents/Resources/legokits/canvas/skills/replit-deck/SKILL.md",
+          "bytes": 11816,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "saas-landing",
+          "path": "Contents/Resources/legokits/canvas/skills/saas-landing/SKILL.md",
+          "bytes": 6496,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "simple-deck",
+          "path": "Contents/Resources/legokits/canvas/skills/simple-deck/SKILL.md",
+          "bytes": 5490,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "social-carousel",
+          "path": "Contents/Resources/legokits/canvas/skills/social-carousel/SKILL.md",
+          "bytes": 5041,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "sprite-animation",
+          "path": "Contents/Resources/legokits/canvas/skills/sprite-animation/SKILL.md",
+          "bytes": 4255,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "team-okrs",
+          "path": "Contents/Resources/legokits/canvas/skills/team-okrs/SKILL.md",
+          "bytes": 1316,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "tweaks",
+          "path": "Contents/Resources/legokits/canvas/skills/tweaks/SKILL.md",
+          "bytes": 9608,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "web-prototype",
+          "path": "Contents/Resources/legokits/canvas/skills/web-prototype/SKILL.md",
+          "bytes": 5875,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "weekly-update",
+          "path": "Contents/Resources/legokits/canvas/skills/weekly-update/SKILL.md",
+          "bytes": 1519,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "wireframe-sketch",
+          "path": "Contents/Resources/legokits/canvas/skills/wireframe-sketch/SKILL.md",
+          "bytes": 4030,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@builtin/legokit:ai-slides",
+      "name": "QwenWork ai-slides",
+      "version": "unknown",
+      "source": "Contents/Resources/legokits/ai-slides",
+      "role": "app-owned-LegoKit-availability;effective-mode-and-runtime-unknown",
+      "components": [
+        {
+          "kind": "mcp_reference",
+          "name": "builtin_ai_slides",
+          "path": "Contents/Resources/legokits/ai-slides/ai-slides-mcp.cjs",
+          "bytes": 5268193,
+          "native_id": "builtin_ai_slides"
+        }
+      ]
+    },
+    {
+      "id": "@builtin/legokit:writing",
+      "name": "QwenWork writing",
+      "version": "unknown",
+      "source": "Contents/Resources/legokits/writing",
+      "role": "app-owned-LegoKit-availability;effective-mode-and-runtime-unknown",
+      "components": [
+        {
+          "kind": "mcp_reference",
+          "name": "builtin_writing",
+          "path": "Contents/Resources/legokits/writing/writing-mcp.cjs",
+          "bytes": 751181,
+          "native_id": "builtin_writing"
+        }
+      ]
+    },
+    {
+      "id": "@example/1688买家助手",
+      "name": "1688买家助手",
+      "version": "1.0.0",
+      "source": "Contents/Resources/plugins-example/1688买家助手/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "1688-distribution",
+          "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-distribution/SKILL.md",
+          "bytes": 10663,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "1688-product-find",
+          "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-product-find/SKILL.md",
+          "bytes": 10424,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "1688-source-suppliers",
+          "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-source-suppliers/SKILL.md",
+          "bytes": 8427,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "1688-sourcing-inquiry",
+          "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-sourcing-inquiry/SKILL.md",
+          "bytes": 8452,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "1688-syt",
+          "path": "Contents/Resources/plugins-example/1688买家助手/skills/1688-syt/SKILL.md",
+          "bytes": 34952,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/1688商家助手",
+      "name": "1688商家助手",
+      "version": "1.0.0",
+      "source": "Contents/Resources/plugins-example/1688商家助手/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "1688-product-manage",
+          "path": "Contents/Resources/plugins-example/1688商家助手/skills/1688-product-manage/SKILL.md",
+          "bytes": 21707,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "1688-shop-operate",
+          "path": "Contents/Resources/plugins-example/1688商家助手/skills/1688-shop-operate/SKILL.md",
+          "bytes": 10382,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/中国民商事诉讼工具箱",
+      "name": "中国民商事诉讼工具箱",
+      "version": "1.0.0",
+      "source": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "主诉诉状",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/主诉诉状/SKILL.md",
+          "bytes": 11265,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "代理词",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/代理词/SKILL.md",
+          "bytes": 11809,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "冷启动访谈",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/冷启动访谈/SKILL.md",
+          "bytes": 4927,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "庭审提纲",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/庭审提纲/SKILL.md",
+          "bytes": 9460,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "新法解读",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/新法解读/SKILL.md",
+          "bytes": 20305,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "案件事实梳理",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/案件事实梳理/SKILL.md",
+          "bytes": 28714,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "案件复盘",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/案件复盘/SKILL.md",
+          "bytes": 9742,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "案件管家",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/案件管家/SKILL.md",
+          "bytes": 10783,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "法律核验",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/法律核验/SKILL.md",
+          "bytes": 14192,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "法律研究报告",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/法律研究报告/SKILL.md",
+          "bytes": 17907,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "程序性文书系列",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/程序性文书系列/SKILL.md",
+          "bytes": 11730,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "自定义",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/自定义/SKILL.md",
+          "bytes": 2614,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "被诉答辩状",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/被诉答辩状/SKILL.md",
+          "bytes": 13716,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "要件攻防分析",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/要件攻防分析/SKILL.md",
+          "bytes": 11165,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "证据目录",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/证据目录/SKILL.md",
+          "bytes": 7924,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "诉讼可视化",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/诉讼可视化/SKILL.md",
+          "bytes": 11156,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "诉讼套件中枢",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/诉讼套件中枢/SKILL.md",
+          "bytes": 4202,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "诉讼知识库",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/诉讼知识库/SKILL.md",
+          "bytes": 8244,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "财产线索调查",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/财产线索调查/SKILL.md",
+          "bytes": 7764,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "质证意见",
+          "path": "Contents/Resources/plugins-example/中国民商事诉讼工具箱/skills/质证意见/SKILL.md",
+          "bytes": 14981,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/产品管理",
+      "name": "产品管理",
+      "version": "1.1.1",
+      "source": "Contents/Resources/plugins-example/产品管理/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "PRD生成",
+          "path": "Contents/Resources/plugins-example/产品管理/skills/PRD生成/SKILL.md",
+          "bytes": 10707,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "产品指标复盘",
+          "path": "Contents/Resources/plugins-example/产品管理/skills/产品指标复盘/SKILL.md",
+          "bytes": 15311,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "产品脑暴",
+          "path": "Contents/Resources/plugins-example/产品管理/skills/产品脑暴/SKILL.md",
+          "bytes": 10753,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "用户反馈分析",
+          "path": "Contents/Resources/plugins-example/产品管理/skills/用户反馈分析/SKILL.md",
+          "bytes": 14827,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "用户故事拆解",
+          "path": "Contents/Resources/plugins-example/产品管理/skills/用户故事拆解/SKILL.md",
+          "bytes": 8612,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "竞品分析",
+          "path": "Contents/Resources/plugins-example/产品管理/skills/竞品分析/SKILL.md",
+          "bytes": 12878,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "路线图更新",
+          "path": "Contents/Resources/plugins-example/产品管理/skills/路线图更新/SKILL.md",
+          "bytes": 10148,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "需求优先级排序",
+          "path": "Contents/Resources/plugins-example/产品管理/skills/需求优先级排序/SKILL.md",
+          "bytes": 10008,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/产品设计",
+      "name": "产品设计",
+      "version": "0.5.10",
+      "source": "Contents/Resources/plugins-example/产品设计/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "access",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/access/SKILL.md",
+          "bytes": 31044,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "audit",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/audit/SKILL.md",
+          "bytes": 30754,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "avatar",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/avatar/SKILL.md",
+          "bytes": 50847,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "bench",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/bench/SKILL.md",
+          "bytes": 37863,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "board",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/board/SKILL.md",
+          "bytes": 29243,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "brief",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/brief/SKILL.md",
+          "bytes": 67901,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "chart",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/chart/SKILL.md",
+          "bytes": 51695,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "check",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/check/SKILL.md",
+          "bytes": 28392,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "edge",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/edge/SKILL.md",
+          "bytes": 26162,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "extract",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/extract/SKILL.md",
+          "bytes": 49659,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "flow-mobile",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/flow-mobile/SKILL.md",
+          "bytes": 29935,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "flow-web",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/flow-web/SKILL.md",
+          "bytes": 67529,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "frame",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/frame/SKILL.md",
+          "bytes": 45583,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "journey",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/journey/SKILL.md",
+          "bytes": 30831,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "metric",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/metric/SKILL.md",
+          "bytes": 28981,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "motion-apply",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/motion-apply/SKILL.md",
+          "bytes": 83389,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "motion-plan",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/motion-plan/SKILL.md",
+          "bytes": 26131,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "pitch",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/pitch/SKILL.md",
+          "bytes": 30444,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "poster",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/poster/SKILL.md",
+          "bytes": 12749,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "prd",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/prd/SKILL.md",
+          "bytes": 29480,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "probe",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/probe/SKILL.md",
+          "bytes": 35175,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "qa",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/qa/SKILL.md",
+          "bytes": 25805,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "retro",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/retro/SKILL.md",
+          "bytes": 30658,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "scope",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/scope/SKILL.md",
+          "bytes": 25875,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "signal",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/signal/SKILL.md",
+          "bytes": 33410,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "sitemap",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/sitemap/SKILL.md",
+          "bytes": 23532,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "stories",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/stories/SKILL.md",
+          "bytes": 23757,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "test",
+          "path": "Contents/Resources/plugins-example/产品设计/skills/test/SKILL.md",
+          "bytes": 44633,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/企业法务",
+      "name": "企业法务",
+      "version": "1.1.2",
+      "source": "Contents/Resources/plugins-example/企业法务/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "企业背景调查",
+          "path": "Contents/Resources/plugins-example/企业法务/skills/企业背景调查/SKILL.md",
+          "bytes": 10051,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "公司决议",
+          "path": "Contents/Resources/plugins-example/企业法务/skills/公司决议/SKILL.md",
+          "bytes": 10533,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "合规审查",
+          "path": "Contents/Resources/plugins-example/企业法务/skills/合规审查/SKILL.md",
+          "bytes": 20728,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "查案例",
+          "path": "Contents/Resources/plugins-example/企业法务/skills/查案例/SKILL.md",
+          "bytes": 11875,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "法务日报",
+          "path": "Contents/Resources/plugins-example/企业法务/skills/法务日报/SKILL.md",
+          "bytes": 7631,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "法律文书",
+          "path": "Contents/Resources/plugins-example/企业法务/skills/法律文书/SKILL.md",
+          "bytes": 9399,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "电子签发起",
+          "path": "Contents/Resources/plugins-example/企业法务/skills/电子签发起/SKILL.md",
+          "bytes": 11649,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "风险评估",
+          "path": "Contents/Resources/plugins-example/企业法务/skills/风险评估/SKILL.md",
+          "bytes": 10582,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/企业财税",
+      "name": "企业财税",
+      "version": "1.1.1",
+      "source": "Contents/Resources/plugins-example/企业财税/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "做凭证",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/做凭证/SKILL.md",
+          "bytes": 13358,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "内部审计",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/内部审计/SKILL.md",
+          "bytes": 15012,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "凭证编制参考",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/凭证编制参考/SKILL.md",
+          "bytes": 10932,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "增值税管理",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/增值税管理/SKILL.md",
+          "bytes": 11786,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "月结检查清单",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/月结检查清单/SKILL.md",
+          "bytes": 14893,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "汇算清缴",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/汇算清缴/SKILL.md",
+          "bytes": 12898,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "财务分析",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/财务分析/SKILL.md",
+          "bytes": 11902,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "财务报表编制",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/财务报表编制/SKILL.md",
+          "bytes": 11773,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "预算分析",
+          "path": "Contents/Resources/plugins-example/企业财税/skills/预算分析/SKILL.md",
+          "bytes": 10530,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/合同管理",
+      "name": "合同管理",
+      "version": "1.1.1",
+      "source": "Contents/Resources/plugins-example/合同管理/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "NDA快筛",
+          "path": "Contents/Resources/plugins-example/合同管理/skills/NDA快筛/SKILL.md",
+          "bytes": 8255,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "合同台账提醒",
+          "path": "Contents/Resources/plugins-example/合同管理/skills/合同台账提醒/SKILL.md",
+          "bytes": 8235,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "合同对比",
+          "path": "Contents/Resources/plugins-example/合同管理/skills/合同对比/SKILL.md",
+          "bytes": 8940,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "审查合同",
+          "path": "Contents/Resources/plugins-example/合同管理/skills/审查合同/SKILL.md",
+          "bytes": 9753,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "法条速查",
+          "path": "Contents/Resources/plugins-example/合同管理/skills/法条速查/SKILL.md",
+          "bytes": 8715,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "起草合同",
+          "path": "Contents/Resources/plugins-example/合同管理/skills/起草合同/SKILL.md",
+          "bytes": 19639,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/咨询交付",
+      "name": "咨询交付",
+      "version": "1.1.1",
+      "source": "Contents/Resources/plugins-example/咨询交付/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "CEO汇报",
+          "path": "Contents/Resources/plugins-example/咨询交付/skills/CEO汇报/SKILL.md",
+          "bytes": 16196,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "写报告",
+          "path": "Contents/Resources/plugins-example/咨询交付/skills/写报告/SKILL.md",
+          "bytes": 15185,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "方案框架",
+          "path": "Contents/Resources/plugins-example/咨询交付/skills/方案框架/SKILL.md",
+          "bytes": 15824,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "标杆对比",
+          "path": "Contents/Resources/plugins-example/咨询交付/skills/标杆对比/SKILL.md",
+          "bytes": 14109,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "桌面调研",
+          "path": "Contents/Resources/plugins-example/咨询交付/skills/桌面调研/SKILL.md",
+          "bytes": 15798,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "访谈纪要",
+          "path": "Contents/Resources/plugins-example/咨询交付/skills/访谈纪要/SKILL.md",
+          "bytes": 12827,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "项目周报",
+          "path": "Contents/Resources/plugins-example/咨询交付/skills/项目周报/SKILL.md",
+          "bytes": 12182,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/市场营销",
+      "name": "市场营销",
+      "version": "1.1.1",
+      "source": "Contents/Resources/plugins-example/市场营销/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "SEO内容优化",
+          "path": "Contents/Resources/plugins-example/市场营销/skills/SEO内容优化/SKILL.md",
+          "bytes": 17957,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "品牌调性审查",
+          "path": "Contents/Resources/plugins-example/市场营销/skills/品牌调性审查/SKILL.md",
+          "bytes": 13075,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "广告合规检查",
+          "path": "Contents/Resources/plugins-example/市场营销/skills/广告合规检查/SKILL.md",
+          "bytes": 11244,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "活动策划",
+          "path": "Contents/Resources/plugins-example/市场营销/skills/活动策划/SKILL.md",
+          "bytes": 16262,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "社媒热点追踪",
+          "path": "Contents/Resources/plugins-example/市场营销/skills/社媒热点追踪/SKILL.md",
+          "bytes": 13944,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "竞品追踪",
+          "path": "Contents/Resources/plugins-example/市场营销/skills/竞品追踪/SKILL.md",
+          "bytes": 13900,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "营销效果分析",
+          "path": "Contents/Resources/plugins-example/市场营销/skills/营销效果分析/SKILL.md",
+          "bytes": 14659,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "营销文案",
+          "path": "Contents/Resources/plugins-example/市场营销/skills/营销文案/SKILL.md",
+          "bytes": 12278,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/投研分析",
+      "name": "投研分析",
+      "version": "1.1.2",
+      "source": "Contents/Resources/plugins-example/投研分析/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "业绩快评",
+          "path": "Contents/Resources/plugins-example/投研分析/skills/业绩快评/SKILL.md",
+          "bytes": 8201,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "可比公司分析",
+          "path": "Contents/Resources/plugins-example/投研分析/skills/可比公司分析/SKILL.md",
+          "bytes": 11614,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "晨会纪要",
+          "path": "Contents/Resources/plugins-example/投研分析/skills/晨会纪要/SKILL.md",
+          "bytes": 6375,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "深度报告",
+          "path": "Contents/Resources/plugins-example/投研分析/skills/深度报告/SKILL.md",
+          "bytes": 8452,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "研报摘要",
+          "path": "Contents/Resources/plugins-example/投研分析/skills/研报摘要/SKILL.md",
+          "bytes": 7705,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "行业研究",
+          "path": "Contents/Resources/plugins-example/投研分析/skills/行业研究/SKILL.md",
+          "bytes": 7881,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "读年报",
+          "path": "Contents/Resources/plugins-example/投研分析/skills/读年报/SKILL.md",
+          "bytes": 8536,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "调研纪要",
+          "path": "Contents/Resources/plugins-example/投研分析/skills/调研纪要/SKILL.md",
+          "bytes": 7832,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/投行业务",
+      "name": "投行业务",
+      "version": "1.1.2",
+      "source": "Contents/Resources/plugins-example/投行业务/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "债券募集",
+          "path": "Contents/Resources/plugins-example/投行业务/skills/债券募集/SKILL.md",
+          "bytes": 11937,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "并购方案",
+          "path": "Contents/Resources/plugins-example/投行业务/skills/并购方案/SKILL.md",
+          "bytes": 11451,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "招股书",
+          "path": "Contents/Resources/plugins-example/投行业务/skills/招股书/SKILL.md",
+          "bytes": 10496,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "财务建模",
+          "path": "Contents/Resources/plugins-example/投行业务/skills/财务建模/SKILL.md",
+          "bytes": 11178,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "路演材料",
+          "path": "Contents/Resources/plugins-example/投行业务/skills/路演材料/SKILL.md",
+          "bytes": 11038,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "问询回复",
+          "path": "Contents/Resources/plugins-example/投行业务/skills/问询回复/SKILL.md",
+          "bytes": 10392,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/科技服务助手",
+      "name": "科技服务助手",
+      "version": "1.1.0",
+      "source": "Contents/Resources/plugins-example/科技服务助手/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "产品定义与规划",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/产品定义与规划/SKILL.md",
+          "bytes": 11152,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "产品机会发现",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/产品机会发现/SKILL.md",
+          "bytes": 11143,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "原型验证规划",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/原型验证规划/SKILL.md",
+          "bytes": 11448,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "商业化策略",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/商业化策略/SKILL.md",
+          "bytes": 12384,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "对接方案生成",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/对接方案生成/SKILL.md",
+          "bytes": 11321,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "成果搜索与匹配",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/成果搜索与匹配/SKILL.md",
+          "bytes": 12065,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "技术价值评估",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/技术价值评估/SKILL.md",
+          "bytes": 12544,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "技术方案论证",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/技术方案论证/SKILL.md",
+          "bytes": 11435,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "技术需求挖掘",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/技术需求挖掘/SKILL.md",
+          "bytes": 11317,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "政策与资金匹配",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/政策与资金匹配/SKILL.md",
+          "bytes": 11825,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "融资准备",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/融资准备/SKILL.md",
+          "bytes": 12882,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "设计验证与量产规划",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/设计验证与量产规划/SKILL.md",
+          "bytes": 11951,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "项目跟进管理",
+          "path": "Contents/Resources/plugins-example/科技服务助手/skills/项目跟进管理/SKILL.md",
+          "bytes": 12421,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/股权投资",
+      "name": "股权投资",
+      "version": "1.1.2",
+      "source": "Contents/Resources/plugins-example/股权投资/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "审条款",
+          "path": "Contents/Resources/plugins-example/股权投资/skills/审条款/SKILL.md",
+          "bytes": 7006,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "尽调清单",
+          "path": "Contents/Resources/plugins-example/股权投资/skills/尽调清单/SKILL.md",
+          "bytes": 8448,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "投决备忘录",
+          "path": "Contents/Resources/plugins-example/股权投资/skills/投决备忘录/SKILL.md",
+          "bytes": 6125,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "测收益",
+          "path": "Contents/Resources/plugins-example/股权投资/skills/测收益/SKILL.md",
+          "bytes": 7241,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "筛项目",
+          "path": "Contents/Resources/plugins-example/股权投资/skills/筛项目/SKILL.md",
+          "bytes": 9401,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "退出分析",
+          "path": "Contents/Resources/plugins-example/股权投资/skills/退出分析/SKILL.md",
+          "bytes": 6647,
+          "native_id": null
+        }
+      ]
+    },
+    {
+      "id": "@example/财富管理",
+      "name": "财富管理",
+      "version": "1.1.2",
+      "source": "Contents/Resources/plugins-example/财富管理/.qoder-plugin/plugin.json",
+      "role": "bundled-install-source;not-installed-state",
+      "components": [
+        {
+          "kind": "skill",
+          "name": "基金分析",
+          "path": "Contents/Resources/plugins-example/财富管理/skills/基金分析/SKILL.md",
+          "bytes": 6937,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "客户报告",
+          "path": "Contents/Resources/plugins-example/财富管理/skills/客户报告/SKILL.md",
+          "bytes": 6190,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "市场速览",
+          "path": "Contents/Resources/plugins-example/财富管理/skills/市场速览/SKILL.md",
+          "bytes": 8929,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "理财规划",
+          "path": "Contents/Resources/plugins-example/财富管理/skills/理财规划/SKILL.md",
+          "bytes": 7545,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "税务筹划",
+          "path": "Contents/Resources/plugins-example/财富管理/skills/税务筹划/SKILL.md",
+          "bytes": 7268,
+          "native_id": null
+        },
+        {
+          "kind": "skill",
+          "name": "资产配置",
+          "path": "Contents/Resources/plugins-example/财富管理/skills/资产配置/SKILL.md",
+          "bytes": 7117,
+          "native_id": null
+        }
+      ]
+    }
+  ],
+  "evidence": {
+    "carrier_sha256": "bc4b95d136627117534693303bfe27d4c735d9db2e04f7ae22bd74f64608a51a",
+    "source_index_sha256": "09bd400b1bb7e459506a5b4a971de2493850cc4047ee258d9360e83485a32b6f",
+    "view_index_sha256": "130fab0e4e2dae86dfec8c1216f123fbbdf55aaee9758d9814eb73abe5713776",
+    "rea_parent": "ev_db30b167a4284bdfa7a28816b37ac2713432a3a3611083c6b804dd8c3ef085e3"
+  }
+}

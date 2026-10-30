@@ -1863,19 +1863,8 @@
       "name": "QwenWorkCN",
       "category": "desktop",
       "docs": "https://qwenwork.cn/docs/features/connectors",
-      "mcp": {
-        "path": "~/.qwenworkcn/mcp.json",
-        "format": "json",
-        "key": "mcpServers",
-        "transports": [
-          "stdio",
-          "http"
-        ]
-      },
-      "skills": {
-        "path": "~/.qwenworkcn/skills",
-        "aliases": []
-      },
+      "mcp": null,
+      "skills": null,
       "model": null
     },
     {
