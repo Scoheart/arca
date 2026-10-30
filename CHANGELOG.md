@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.61.0](https://github.com/Scoheart/arca/compare/v2.60.0...v2.61.0) (2026-10-30)
+
+### Changes
+
+* feat(plugins): observe native Kilo CLI and Desktop resources ([8a53539](https://github.com/Scoheart/arca/commit/8a5353903c1ccafcc728ba2dcb987cff1b58b45e))
+
 ## [2.60.0](https://github.com/Scoheart/arca/compare/v2.59.0...v2.60.0) (2026-10-30)
 
 ### Changes
