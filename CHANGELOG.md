@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.60.0](https://github.com/Scoheart/arca/compare/v2.59.0...v2.60.0) (2026-10-30)
+
+### Changes
+
+* feat(plugins): observe CodeBuddy CLI and regional desktop resources ([a0c5244](https://github.com/Scoheart/arca/commit/a0c52445d7fe68472b0bd2971e5fe3ba8d3ee32f))
+
 ## [2.59.0](https://github.com/Scoheart/arca/compare/v2.58.0...v2.59.0) (2026-10-29)
 
 ### Changes
