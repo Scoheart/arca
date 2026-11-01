@@ -28,24 +28,121 @@ function LineIcon({ children }: { children: ReactNode }) {
 
 export function McpIconGlyph({ id }: { id: McpIconId }) {
   const paths: Record<McpIconId, ReactNode> = {
-    mcp: <><path d="M8 8h8v8H8z" /><path d="M12 3v5M12 16v5M3 12h5M16 12h5" /><circle cx="12" cy="3" r="1" /><circle cx="12" cy="21" r="1" /><circle cx="3" cy="12" r="1" /><circle cx="21" cy="12" r="1" /></>,
-    search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></>,
-    browser: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 8h18" /><circle cx="6" cy="6" r=".5" /><circle cx="9" cy="6" r=".5" /></>,
-    document: <><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 12h6M9 16h6" /></>,
-    knowledge: <><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H11v18H7.5A3.5 3.5 0 0 0 4 23z" /><path d="M20 5.5A3.5 3.5 0 0 0 16.5 2H13v18h3.5A3.5 3.5 0 0 1 20 23z" /></>,
-    files: <><path d="M3 7h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M3 7V5a2 2 0 0 1 2-2h5l2 2h4" /></>,
-    database: <><ellipse cx="12" cy="5" rx="7" ry="3" /><path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7" /></>,
-    terminal: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="m7 9 3 3-3 3M13 15h4" /></>,
-    code: <><path d="m9 6-6 6 6 6M15 6l6 6-6 6M13 4l-2 16" /></>,
-    api: <><circle cx="5" cy="12" r="2" /><circle cx="19" cy="6" r="2" /><circle cx="19" cy="18" r="2" /><path d="m7 11 10-4M7 13l10 4" /></>,
-    cloud: <><path d="M6 19h12a4 4 0 0 0 .7-7.9A7 7 0 0 0 5.2 9 5 5 0 0 0 6 19Z" /></>,
-    automation: <><path d="M7 7h10v10H7z" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></>,
-    observability: <><path d="M3 13h4l2-7 4 13 2-6h6" /></>,
-    map: <><path d="M12 22s7-6.1 7-13A7 7 0 1 0 5 9c0 6.9 7 13 7 13Z" /><circle cx="12" cy="9" r="2.5" /></>,
-    communication: <><path d="M4 4h16v12H9l-5 4z" /><path d="M8 9h8M8 12h5" /></>,
-    media: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8" cy="9" r="1.5" /><path d="m4 17 5-5 3 3 2-2 6 5" /></>,
-    security: <><path d="M12 3 4.5 6v5.5c0 4.7 3 8.1 7.5 9.5 4.5-1.4 7.5-4.8 7.5-9.5V6z" /><path d="m9 12 2 2 4-5" /></>,
-    ai: <><path d="m12 3-1.7 5.3A3 3 0 0 1 8.3 10L3 12l5.3 1.7a3 3 0 0 1 2 2L12 21l1.7-5.3a3 3 0 0 1 2-2L21 12l-5.3-1.7a3 3 0 0 1-2-2Z" /></>,
+    mcp: (
+      <>
+        <rect x="5" y="5" width="14" height="14" rx="3" />
+        <path d="M9 9h6v6H9z" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+      </>
+    ),
+    search: (
+      <>
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-4.35-4.35" />
+      </>
+    ),
+    browser: (
+      <>
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M3 9h18" />
+        <circle cx="6.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
+        <circle cx="9.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
+        <circle cx="12.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
+      </>
+    ),
+    document: (
+      <>
+        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+        <path d="M10 9H8M16 13H8M16 17H8" />
+      </>
+    ),
+    knowledge: (
+      <>
+        <path d="M2 4a2 2 0 0 1 2-2h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 4a2 2 0 0 0-2-2h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+      </>
+    ),
+    files: (
+      <>
+        <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+      </>
+    ),
+    database: (
+      <>
+        <ellipse cx="12" cy="5" rx="9" ry="3" />
+        <path d="M3 5v14a9 3 0 0 0 18 0V5" />
+        <path d="M3 12a9 3 0 0 0 18 0" />
+      </>
+    ),
+    terminal: (
+      <>
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="m7 9 3 3-3 3M13 15h4" />
+      </>
+    ),
+    code: (
+      <>
+        <path d="m16 18 6-6-6-6M8 6l-6 6 6 6" />
+        <path d="m14 4-4 16" />
+      </>
+    ),
+    api: (
+      <>
+        <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2" />
+        <path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06l3.19 5.74c.48.95 1.47 1.2 2.29 1.2" />
+        <circle cx="12" cy="12" r="2" />
+      </>
+    ),
+    cloud: (
+      <>
+        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+      </>
+    ),
+    automation: (
+      <>
+        <rect width="8" height="8" x="3" y="3" rx="2" />
+        <path d="M7 11v4a2 2 0 0 0 2 2h4" />
+        <rect width="8" height="8" x="13" y="13" rx="2" />
+        <path d="M17 9V5a2 2 0 0 0-2-2h-4" />
+      </>
+    ),
+    observability: (
+      <>
+        <path d="M3 12h3.5l2.5-7 4 14 3-9 2 4H21" />
+      </>
+    ),
+    map: (
+      <>
+        <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0Z" />
+        <circle cx="12" cy="10" r="3" />
+      </>
+    ),
+    communication: (
+      <>
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </>
+    ),
+    media: (
+      <>
+        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+        <circle cx="9" cy="9" r="2" />
+        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+      </>
+    ),
+    security: (
+      <>
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+        <path d="m9 12 2 2 4-4" />
+      </>
+    ),
+    ai: (
+      <>
+        <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
+        <path d="M20 3v4" />
+        <path d="M22 5h-4" />
+      </>
+    ),
   };
   return <span className="arca-mcp-icon-glyph" data-mcp-icon={id}><LineIcon>{paths[id]}</LineIcon></span>;
 }

@@ -1,11 +1,13 @@
-.arca-settings-trigger { display: inline-flex; align-items: center; gap: 7px; position: relative; flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-control); color: var(--text-secondary); font: inherit; font-size: 12px; cursor: pointer; }
-.arca-settings-trigger:hover { background: var(--surface-section); color: var(--text-primary); }
+.arca-settings-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 7px; position: relative; flex-shrink: 0; height: 36px; padding: 0 12px; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-raised); color: var(--text-secondary); font: inherit; font-size: 12px; font-weight: 560; line-height: 1.2; box-shadow: var(--shadow-card); cursor: pointer; transition: background .14s ease, border-color .14s ease, color .14s ease; }
+.arca-settings-trigger > svg { width: 14px; height: 14px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+.arca-settings-trigger > span { display: inline-flex; align-items: center; line-height: 1.2; }
+.arca-settings-trigger:hover { background: var(--surface-control); border-color: color-mix(in srgb, var(--color-blue) 32%, var(--border-hairline)); color: var(--text-primary); }
 .arca-settings-trigger:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
 .arca-settings-update-dot { position: absolute; right: 6px; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--color-blue); }
 .arca-settings-section + .arca-settings-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
 .arca-settings-row { display: grid; grid-template-columns: minmax(112px, 1fr) minmax(0, 190px); align-items: center; gap: 20px; min-height: 48px; }
 .arca-settings-label { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-primary); }
-.arca-settings-label > svg { color: var(--text-secondary); flex-shrink: 0; }
+.arca-settings-label > svg { width: 15px; height: 15px; color: var(--text-secondary); flex-shrink: 0; }
 .arca-settings-row > .arca-seg { justify-self: end; }
 .arca-editor-selected-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: left; }
 .arca-workspace-settings .arca-editor-menu { width: min(260px, 75vw); max-height: 240px; }
@@ -13,6 +15,7 @@
 .arca-settings-status { width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); }
 .arca-settings-status[data-active="true"] { background: var(--color-green); }
 .arca-settings-action { width: 100%; display: flex; align-items: center; gap: 10px; padding: 11px 8px; border: 0; border-radius: 8px; background: transparent; color: var(--text-primary); font: inherit; font-size: 12px; cursor: pointer; text-align: left; }
+.arca-settings-action > svg { width: 15px; height: 15px; color: var(--text-secondary); flex-shrink: 0; }
 .arca-settings-action:hover { background: var(--surface-section); }
 .arca-settings-action small { margin-left: auto; color: var(--text-tertiary); }
 .arca-settings-action:disabled { opacity: .5; cursor: default; }

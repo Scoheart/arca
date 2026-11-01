@@ -1,3 +1,5 @@
+import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 import { ResourceIcon } from "./resourcePresentation";
 import { type ReactNode, useMemo, useState } from "react";
 import type { InstallState } from "../hooks/useInstallState";
@@ -44,6 +46,7 @@ export function SourcesSidebar({
   onCreate: () => void;
   footer?: ReactNode;
 }) {
+  useTranslation();
   const { sources, catalog } = state;
   const toast = useToast();
   const [subscribeOpen, setSubscribeOpen] = useState(false);
@@ -61,9 +64,9 @@ export function SourcesSidebar({
   const pickLocal = async () => {
     try {
       const v = await state.pickLocalSource();
-      if (v) toast.show({ kind: "success", msg: `已导入 ${v.name} · ${v.server_count} 项` });
+      if (v) toast.show({ kind: "success", msg: i18n.t("desktop.sourcesSidebar.importedItems", { value0: v.name, value1: v.server_count }) });
     } catch (e) {
-      toast.show({ kind: "error", msg: "导入失败：" + formatError(e) });
+      toast.show({ kind: "error", msg: i18n.t("desktop.sourcesSidebar.importFailed") + formatError(e) });
     }
   };
 
@@ -72,13 +75,13 @@ export function SourcesSidebar({
     try {
       if (s.id === "discovered") {
         await state.rescanDiscovered();
-        toast.show({ kind: "success", msg: "已重新探索各 Agent 配置" });
+        toast.show({ kind: "success", msg: i18n.t("desktop.sourcesSidebar.agentConfigurationsRediscovered") });
       } else {
         await state.refreshOneSource(s.id);
-        toast.show({ kind: "success", msg: `已刷新：${s.name}` });
+        toast.show({ kind: "success", msg: i18n.t("desktop.sourcesSidebar.refreshed", { value0: s.name }) });
       }
     } catch (e) {
-      toast.show({ kind: "error", msg: "刷新失败：" + formatError(e) });
+      toast.show({ kind: "error", msg: i18n.t("desktop.sourcesSidebar.refreshFailed") + formatError(e) });
     } finally {
       setBusyId(null);
     }
@@ -90,9 +93,9 @@ export function SourcesSidebar({
       await state.deleteSource(s.id);
       if (selectedId === s.id) onSelect(null);
       setDeleteReview(null);
-      toast.show({ kind: "success", msg: `已删除来源：${s.name}` });
+      toast.show({ kind: "success", msg: i18n.t("desktop.sourcesSidebar.sourceDeleted", { value0: s.name }) });
     } catch (e) {
-      toast.show({ kind: "error", msg: "删除失败：" + formatError(e) });
+      toast.show({ kind: "error", msg: i18n.t("desktop.sourcesSidebar.deleteFailed") + formatError(e) });
       throw e;
     } finally {
       setBusyId(null);
@@ -105,30 +108,27 @@ export function SourcesSidebar({
       actions={<>
         <button className="btn-primary" type="button" onClick={onCreate}>
           <PlusIcon className="w-4 h-4" />
-          添加 MCPs
-        </button>
+          <span>{i18n.t("desktop.sourcesSidebar.addMCPs")}</span></button>
         <div className="arca-sidebar-action-pair">
           <button className="btn-secondary" type="button" onClick={() => setSubscribeOpen(true)}>
             <CloudIcon className="w-4 h-4" />
-            添加订阅
-          </button>
+            <span>{i18n.t("desktop.sourcesSidebar.addSubscription")}</span></button>
           <button className="btn-secondary" type="button" onClick={pickLocal}>
             <FolderIcon className="w-4 h-4" />
-            导入配置
-          </button>
+            <span>{i18n.t("desktop.sourcesSidebar.importConfiguration")}</span></button>
         </div>
       </>}
     >
-      <SidebarSection title="来源">
+      <SidebarSection title={i18n.t("desktop.sourcesSidebar.source")}>
         <SidebarItem
           active={selectedId === null}
           icon={<ResourceIcon domain="mcp" className="w-3.5 h-3.5" />}
-          label="全部来源"
+          label={i18n.t("desktop.sourcesSidebar.allSources")}
           count={catalog.length}
           onClick={() => onSelect(null)}
         />
         {sorted.length === 0 ? (
-          <div className="arca-sidebar-empty">暂无来源</div>
+          <div className="arca-sidebar-empty">{i18n.t("desktop.sourcesSidebar.noSources")}</div>
         ) : (
           sorted.map((source) => (
             <SidebarItem
@@ -142,7 +142,7 @@ export function SourcesSidebar({
                 <>
                   {(source.kind === "remote" || !source.managed || source.id === "discovered") && (
                     <IconButton
-                      title={source.id === "discovered" ? "重新探索" : "刷新来源"}
+                      title={source.id === "discovered" ? i18n.t("desktop.sourcesSidebar.rediscover") : i18n.t("desktop.sourcesSidebar.refreshSource")}
                       onClick={() => doRefresh(source)}
                       disabled={busyId === source.id}
                     >
@@ -150,7 +150,7 @@ export function SourcesSidebar({
                     </IconButton>
                   )}
                   {!source.managed && (
-                    <IconButton title="删除来源" onClick={() => setDeleteReview(source)} disabled={busyId === source.id}>
+                    <IconButton title={i18n.t("desktop.sourcesSidebar.deleteSource")} onClick={() => setDeleteReview(source)} disabled={busyId === source.id}>
                       <TrashIcon className="w-3.5 h-3.5" />
                     </IconButton>
                   )}
@@ -170,13 +170,13 @@ export function SourcesSidebar({
     </WorkspaceSidebar>
     {deleteReview && (
       <ReviewDialog
-        title="删除来源"
+        title={i18n.t("desktop.sourcesSidebar.deleteSource")}
         subtitle={deleteReview.name}
-        confirmLabel="删除来源"
+        confirmLabel={i18n.t("desktop.sourcesSidebar.deleteSource")}
         onClose={() => setDeleteReview(null)}
         onConfirm={() => doRemove(deleteReview)}
       >
-        <p>将删除来源记录与本地缓存；已安装到 Agent 的 MCP 配置保持不变。</p>
+        <p>{i18n.t("desktop.sourcesSidebar.deletesTheSourceRecordAndLocalCacheMCP")}</p>
       </ReviewDialog>
     )}
     </>

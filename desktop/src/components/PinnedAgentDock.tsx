@@ -1,3 +1,5 @@
+import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AgentLaunchAction } from "./AgentLaunchAction";
@@ -20,6 +22,7 @@ export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, dis
   onEmpty?(): void;
   onReorder(ids: string[], movedId: string): void;
 }) {
+  useTranslation();
   const [context, setContext] = useState<{ id: string; x: number; y: number; opener: HTMLButtonElement } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -47,10 +50,10 @@ export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, dis
     const buttons = Array.from(dock.current?.querySelectorAll<HTMLElement>(":scope > button[data-pin-slot][data-agent-id]") ?? []);
     const measured = buttons.map((button) => ({ button, id: button.dataset.agentId!, left: button.offsetLeft }));
     const motions: Animation[] = [];
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)").matches : false;
     for (const { button, id, left } of measured) {
       const before = positions.current.get(id);
-      if (!reduced && before !== undefined && before !== left) {
+      if (!reduced && before !== undefined && before !== left && typeof button.animate === "function") {
         motions.push(button.animate([{ transform: `translateX(${before - left}px)` }, { transform: "none" }], {
           duration: 170, easing: "cubic-bezier(.2,.8,.2,1)",
         }));
@@ -62,17 +65,17 @@ export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, dis
 
   const clearDrag = () => { dragged.current = null; previewRef.current = null; setPreview(null); };
   return <><nav ref={dock} className={`arca-pinned-agent-bar${expanded ? " arca-hand-dock" : ""}`}
-    aria-label="置顶 Agent" data-replacing={replacementName ? "true" : undefined}
+    aria-label={i18n.t("desktop.pinnedAgentDock.pinnedAgents")} data-replacing={replacementName ? "true" : undefined}
     onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPreview(null); }}>
     {Array.from({ length: expanded ? MAX_PINNED_AGENTS : order.length }, (_, index) => {
       const id = order[index];
       const agent = agents.find((agent) => agent.id === id);
-      const label = replacementName ? `用 ${replacementName} 替换 ${agent?.name ?? "空位"}` : agent?.name ?? "空置顶位";
+      const label = replacementName ? i18n.t("desktop.pinnedAgentDock.replaceWith", { value0: replacementName, value1: agent?.name ?? i18n.t("desktop.pinnedAgentDock.emptySlot") }) : agent?.name ?? i18n.t("desktop.pinnedAgentDock.emptyPinSlot");
       return <button key={id ?? `empty-${index}`} type="button" className="arca-pinned-agent"
         data-agent-id={id} data-pin-slot={index} data-empty={!agent || undefined}
         data-active={selectedId === id ? "true" : undefined}
         aria-current={selectedId === id ? "page" : undefined}
-        aria-label={label} title={replacementName ? label : agent ? `${agent.name} · 拖动排序，Option + 左右方向键调整` : label}
+        aria-label={label} title={replacementName ? label : agent ? i18n.t("desktop.pinnedAgentDock.dragToReorderOrUseOptionLeftRight", { value0: agent.name }) : label}
         aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight" disabled={disabled}
         draggable={Boolean(agent) && !disabled && !replacementName}
         onContextMenu={(event) => {
@@ -119,7 +122,7 @@ export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, dis
       </button>;
     })}
   </nav>
-    {context && createPortal(<div ref={menuRef} className="arca-agent-launch-context" role="menu" aria-label="Agent 操作" tabIndex={-1}
+    {context && createPortal(<div ref={menuRef} className="arca-agent-launch-context" role="menu" aria-label={i18n.t("desktop.pinnedAgentDock.agentActions")} tabIndex={-1}
       style={{ left: context.x, top: context.y }} onKeyDown={(event) => {
         if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); context.opener.focus(); setContext(null); return; }
         if (["ArrowDown", "ArrowUp", "Home", "End", "Tab"].includes(event.key)) {

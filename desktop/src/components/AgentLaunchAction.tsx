@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getAgentLaunchInfo, getAgentRuntimeVersion, type AgentLaunchInfo } from "../lib/agentLaunch";
@@ -50,21 +51,21 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
   }, [expanded, contextMenu]);
   const busy = launcher.busyId !== null;
   const missing = info && !info.available && info.kind && info.install_url && !info.configured_target;
-  const label = !info ? error ? "重试" : "检测中…" : !info.supported ? "暂不支持" : missing ? "下载安装"
-    : !info.available ? "设置启动方式" : info.host_name ? `打开 ${info.host_name}` : "打开 Agent";
+  const label = !info ? error ? i18n.t("desktop.agentLaunchAction.retry") : i18n.t("desktop.agentLaunchAction.detecting") : !info.supported ? i18n.t("desktop.agentLaunchAction.notSupportedYet") : missing ? i18n.t("desktop.agentLaunchAction.downloadAndInstall")
+    : !info.available ? i18n.t("desktop.agentLaunchAction.configureLaunchMethod") : info.host_name ? i18n.t("desktop.agentLaunchAction.open", { value0: info.host_name }) : i18n.t("desktop.agentLaunchAction.openAgent");
   const pending = launcher.busyId === agentId || (!info && !error);
-  const actionLabel = launcher.busyId === agentId ? "正在打开…" : label;
+  const actionLabel = launcher.busyId === agentId ? i18n.t("desktop.agentLaunchAction.opening") : label;
   const ready = Boolean(info?.available);
   const runtimeName = info?.host_name ?? (info?.configured_target ? t("agentRuntime.customEntry") : info?.name);
   const runtimeStatus = info?.host_name ? t("agentRuntime.hostAvailable")
     : info?.installed === true && !info.configured_target ? t("agentRuntime.installed") : t("agentRuntime.entryAvailable");
   const installUrl = info?.install_url ?? (installLinks as Record<string, { url: string }>)[agentId]?.url;
-  const installationStatus = !info ? error ? "状态未知" : "检测中…" : ready ? "启动入口可用" : "未检测到启动程序";
+  const installationStatus = !info ? error ? i18n.t("desktop.agentLaunchAction.statusUnknown") : i18n.t("desktop.agentLaunchAction.detecting") : ready ? i18n.t("desktop.agentLaunchAction.launchEntryAvailable") : i18n.t("desktop.agentLaunchAction.launcherNotDetected");
   const canChooseDirectory = info?.kind === "cli" && info.available;
   const installedPath = info?.resolved_target?.kind === "app" ? info.resolved_target.path
     : info?.resolved_target?.kind === "cli" ? info.resolved_target.command : null;
   const hasMenu = Boolean(info?.kind);
-  const shortLabel = pending ? "稍候" : !info && error ? "重试" : info?.supported === false ? "不支持" : ready ? info?.host_name ?? "运行" : missing ? "安装" : "设置";
+  const shortLabel = pending ? i18n.t("desktop.agentLaunchAction.wait") : !info && error ? i18n.t("desktop.agentLaunchAction.retry") : info?.supported === false ? i18n.t("desktop.agentLaunchAction.unsupported") : ready ? info?.host_name ?? i18n.t("desktop.agentLaunchAction.run") : missing ? i18n.t("desktop.agentLaunchAction.install") : i18n.t("desktop.agentLaunchAction.settings");
   const choose = (action: () => void) => { setExpanded(false); onChosen?.(); action(); };
   const configure = () => { void launcher.configure(agentId); };
   const launch = () => choose(() => { void launcher.launch(agentId); });
@@ -79,29 +80,28 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
     return <button type="button" className={contextMenu ? undefined : "btn-secondary"}
       role={contextMenu ? "menuitem" : undefined} onClick={() => choose(() => {
         void openUrl(docsUrl).catch((failure) => show({ kind: "error", msg: formatError(failure) }));
-      })}><ExternalLinkIcon className="w-4 h-4" />配置指南</button>;
+      })}><ExternalLinkIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.setupGuide")}</button>;
   }
   const menu = <>
     {contextMenu && <button type="button" role="menuitem" disabled={busy || (!info && !error) || info?.supported === false} onClick={launch}>
       {missing ? <DownloadIcon className="w-4 h-4" /> : <ExternalLinkIcon className="w-4 h-4" />}{label}</button>}
     {canChooseDirectory && <button type="button" role="menuitem" disabled={busy} title={info?.directory ?? undefined}
-      onClick={() => choose(() => { void launcher.launch(agentId, true); })}><FolderIcon className="w-4 h-4" />在其他目录打开…</button>}
+      onClick={() => choose(() => { void launcher.launch(agentId, true); })}><FolderIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.openInAnotherFolder")}</button>}
     {contextMenu && installUrl && !missing && <button type="button" role="menuitem" disabled={busy} onClick={() => choose(openInstallation)}>
-      <DownloadIcon className="w-4 h-4" />安装文档</button>}
+      <DownloadIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.installationDocumentation")}</button>}
     <button type="button" role="menuitem" disabled={busy} onClick={() => choose(configure)}>
-      <EditIcon className="w-4 h-4" />启动设置…</button>
+      <EditIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.launchSettings")}</button>
   </>;
   return <>
     {!contextMenu && version && info?.available && info.supported && <span className="arca-launch-version" role="status"
-      aria-label={t("agentRuntime.status", { name: runtimeName, status: runtimeStatus,
+      aria-label={t("agentRuntime.status", { name: runtimeName ?? agentId, status: runtimeStatus,
         version: version ? t("agentRuntime.version", { version }) : t("agentRuntime.unknownVersion") })}
       title={`${runtimeName}${version ? ` · v${version}` : ` · ${runtimeStatus}`}${installedPath ? `\n${installedPath}` : ""}`}>
       v{version}
     </span>}
     {!contextMenu && installUrl && <button type="button" className="arca-launch-install btn-secondary" onClick={openInstallation}
-      title={`安装文档 · ${installationStatus}`} aria-label={`${info?.name ?? agentId} 安装文档，${installationStatus}`}>
-      <DownloadIcon className="w-3.5 h-3.5" />安装文档
-      <span className="arca-launch-install-status" data-ready={ready || undefined} aria-hidden="true" />
+      title={i18n.t("desktop.agentLaunchAction.installationDocumentation2", { value0: installationStatus })} aria-label={i18n.t("desktop.agentLaunchAction.installationDocumentation3", { value0: info?.name ?? agentId, value1: installationStatus })}>
+      <DownloadIcon className="w-3.5 h-3.5" /><span>{i18n.t("desktop.agentLaunchAction.installationDocumentation")}</span><span className="arca-launch-install-status" data-ready={ready || undefined} aria-hidden="true" />
     </button>}
     <div ref={root} className={contextMenu ? "arca-launch-menu-content" : "arca-launch-action"}
     data-ready={ready || undefined} data-labeled={showLabel || undefined} data-split={hasMenu} aria-busy={pending} onKeyDown={(event) => {
@@ -125,9 +125,9 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
         {showLabel && <span className="arca-launch-caption" aria-hidden="true">{shortLabel}</span>}
         {ready && !pending && !showLabel && <i className="arca-launch-ready-dot" aria-hidden="true" />}
       </button>
-      {hasMenu && <button ref={trigger} type="button" className="arca-launch-more" aria-label="Agent 启动选项" aria-haspopup="menu" aria-expanded={expanded}
+      {hasMenu && <button ref={trigger} type="button" className="arca-launch-more" aria-label={i18n.t("desktop.agentLaunchAction.agentLaunchOptions")} aria-haspopup="menu" aria-expanded={expanded}
         disabled={busy} onClick={() => setExpanded((value) => !value)}><ChevronDownIcon className="w-3.5 h-3.5" /></button>}
-      {hasMenu && expanded && <div className="arca-launch-menu" role="menu" aria-label="Agent 启动选项">{menu}</div>}
+      {hasMenu && expanded && <div className="arca-launch-menu" role="menu" aria-label={i18n.t("desktop.agentLaunchAction.agentLaunchOptions")}>{menu}</div>}
     </>}
     </div>
   </>;
