@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.65.0](https://github.com/Scoheart/arca/compare/v2.64.0...v2.65.0) (2026-11-01)
+
+### Changes
+
+* feat(desktop): redesign visual system, color palette, card layouts and agent picker ([e386f3b](https://github.com/Scoheart/arca/commit/e386f3bc09f27ea62deff33c1aa7203a7e79ae35))
+
 ## [2.64.0](https://github.com/Scoheart/arca/compare/v2.63.0...v2.64.0) (2026-10-30)
 
 ### Changes
