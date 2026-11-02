@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.65.1](https://github.com/Scoheart/arca/compare/v2.65.0...v2.65.1) (2026-11-02)
+
+### Changes
+
+* fix(desktop): clean skill card status dot, double labels, and lift agent capability restrictions ([b20aedc](https://github.com/Scoheart/arca/commit/b20aedcaa3a989a1a22c4215b1001610d0785b7d))
+
 ## [2.65.0](https://github.com/Scoheart/arca/compare/v2.64.0...v2.65.0) (2026-11-01)
 
 ### Changes
