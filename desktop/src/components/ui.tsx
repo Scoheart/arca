@@ -20,7 +20,7 @@ export function Avatar({
   seed: string;
   label?: string;
   mono?: boolean;
-  kind?: "mcp" | "model" | "skill";
+  kind?: "mcp" | "model" | "skill" | "subagent";
   icon?: ReactNode;
   size?: number;
 }) {

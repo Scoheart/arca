@@ -163,7 +163,17 @@ function fallbackColor(id: string): string {
  * Square brand badge for an agent: the real logo on a white tile when available,
  * otherwise a brand-coloured monogram.
  */
-export function AgentGlyph({ id, name, size = 26 }: { id: string; name?: string; size?: number }) {
+export function AgentGlyph({
+  id,
+  name,
+  size = 26,
+  hideSurfaceBadge = false,
+}: {
+  id: string;
+  name?: string;
+  size?: number;
+  hideSurfaceBadge?: boolean;
+}) {
   const { t } = useTranslation();
   const logo = LOGOS[resolvedLogoKey(id)];
   const brandColor = AGENT_COLORS[id];
@@ -241,7 +251,7 @@ export function AgentGlyph({ id, name, size = 26 }: { id: string; name?: string;
     );
   }
 
-  const surface = logo ? visibleSurface(id) : null;
+  const surface = (!hideSurfaceBadge && logo) ? visibleSurface(id) : null;
   const accessibleName = surface ? `${displayName} · ${t(`agentSurfaces.${surface}`)}` : undefined;
   return (
     <span className="arca-agent-glyph" data-agent-id={id} style={{ width: size, height: size }}

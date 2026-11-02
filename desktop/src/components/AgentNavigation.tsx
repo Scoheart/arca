@@ -1,3 +1,5 @@
+import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 import { isImeKey } from "./ImeInput";
 import { ToastNotice } from "./Toast";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -5,7 +7,7 @@ import type { AgentInfo } from "../lib/types";
 import { buildAgentPickerSections, MAX_PINNED_AGENTS } from "../lib/pinnedAgents";
 import { usePinnedAgents } from "../hooks/usePinnedAgents";
 import { AgentGlyph, isAgentVisible, isAgentEntryVisible } from "./brandIcons";
-import { ChevronDownIcon, PackageIcon } from "./icons";
+import { AgentIcon, ChevronDownIcon } from "./icons";
 import { PinnedAgentDock } from "./PinnedAgentDock";
 import { MODAL_DIALOG_SELECTOR } from "./ui";
 import { AgentHandPicker } from "./AgentHandPicker";
@@ -16,8 +18,11 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
   onSelectAgent(id: string): void;
   onAddAgent?: () => void;
 }) {
+  useTranslation();
   const [open, setOpen] = useState(false);
-  const [announcement, setAnnouncement] = useState("");
+  const [notice, setNotice] = useState<{ message: string; kind: "success" | "warning" }>({ message: "", kind: "success" });
+  const announcement = notice.message;
+  const setAnnouncement = (message: string, kind: "success" | "warning" = "success") => setNotice({ message, kind });
   const anchorRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const pinned = usePinnedAgents();
@@ -48,7 +53,7 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
     });
     const next = [...ids, ...hidden];
     if (next.length > MAX_PINNED_AGENTS) {
-      setAnnouncement("置顶位置已满，隐藏 Agent 的置顶记录仍然保留。");
+      setAnnouncement(i18n.t("desktop.agentNavigation.allPinSlotsAreFullHiddenAgentsRetain"), "warning");
       return false;
     }
     return pinned.commit(next);
@@ -56,21 +61,33 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
   const saveOrder = async (ids: string[], movedId: string) => {
     if (!pinned.ready || pinned.saving || ids.join("\0") === pinnedIds.join("\0")) return;
     if (await saveVisiblePins(ids)) {
-      setAnnouncement(`${agents.find(({ id }) => id === movedId)?.name ?? movedId} 已移动到第 ${ids.indexOf(movedId) + 1} 位`);
+      setAnnouncement(i18n.t("desktop.agentNavigation.movedToPosition", { value0: agents.find(({ id }) => id === movedId)?.name ?? movedId, value1: ids.indexOf(movedId) + 1 }));
     }
   };
 
   return <div className="arca-agent-navigation">
-    <ToastNotice kind={announcement.includes("已满") ? "warning" : "success"} message={announcement} />
+    <ToastNotice kind={notice.kind} message={announcement} />
     <div className="arca-agent-picker-cluster" ref={anchorRef}>
-      {pinnedIds.length > 0 && <PinnedAgentDock agents={agents} ids={pinnedIds} selectedId={selectedAgentId}
-        disabled={!pinned.ready || pinned.saving} onSelect={onSelectAgent} onReorder={(ids, id) => void saveOrder(ids, id)} />}
+      {pinnedIds.length > 0 && (
+        <>
+          <PinnedAgentDock
+            agents={agents}
+            ids={pinnedIds}
+            selectedId={selectedAgentId}
+            disabled={!pinned.ready || pinned.saving}
+            onSelect={onSelectAgent}
+            onReorder={(ids, id) => void saveOrder(ids, id)}
+          />
+          <span className="arca-agent-dock-divider" aria-hidden="true" />
+        </>
+      )}
       <div className="arca-agent-picker-anchor">
         <button ref={triggerRef} type="button" className="arca-agent-picker-trigger" data-active={selected ? "true" : undefined}
           data-open={open ? "true" : undefined} aria-haspopup="dialog" aria-expanded={open}
-          aria-label={selected ? `选择 Agent，当前：${selected.name}` : "选择 Agent"} aria-keyshortcuts="Meta+K Control+K" title="选择 Agent · ⌘K / Ctrl+K" onClick={() => setOpen(true)}>
-          {selected ? <AgentGlyph id={selected.id} name={selected.name} size={24} /> : <PackageIcon className="w-5 h-5 flex-shrink-0" />}
-          <span className="arca-agent-picker-trigger-name">{selected?.name ?? "选择 Agent"}</span>
+          aria-label={selected ? i18n.t("desktop.agentNavigation.chooseAgentCurrent", { value0: selected.name }) : i18n.t("desktop.agentNavigation.chooseAgent")} aria-keyshortcuts="Meta+K Control+K" title={i18n.t("desktop.agentNavigation.chooseAgentKCtrlK")} onClick={() => setOpen(true)}>
+          {selected ? <AgentGlyph id={selected.id} name={selected.name} size={22} hideSurfaceBadge={true} /> : <AgentIcon className="w-4 h-4 flex-shrink-0" />}
+          <span className="arca-agent-picker-trigger-name">{selected?.name ?? i18n.t("desktop.agentNavigation.chooseAgent")}</span>
+          <kbd className="arca-kbd" aria-hidden="true">⌘K</kbd>
           <ChevronDownIcon className="arca-agent-picker-chevron" />
         </button>
       </div>

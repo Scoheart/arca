@@ -75,7 +75,7 @@ fn hosted_cache_preserves_scopes_and_versions_without_guessing_active_packages()
     assert!(!cache.iter().any(|p|p.components[0].source_path.ends_with("index.ts")||p.components[0].source_path.ends_with("index.js")));
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "macos")))]
 #[test]
 fn linked_and_special_entries_stay_references_and_still_mask_same_stem_directories() {
     use std::os::unix::fs::symlink;

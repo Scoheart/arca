@@ -1137,6 +1137,38 @@ pub async fn preview_install(req: InstallRequest) -> Result<Vec<PlannedWrite>, S
     }).await?
 }
 
+#[tauri::command]
+pub async fn list_subagents() -> Result<Vec<arca_core::domain::subagent::SubagentDefinition>, AssetCommandError> {
+    asset_blocking(arca_core::resources::subagent::list_central_subagents).await
+}
+
+#[tauri::command]
+pub async fn get_subagent(
+    name: String,
+) -> Result<Option<arca_core::domain::subagent::SubagentDefinition>, AssetCommandError> {
+    asset_blocking(move || arca_core::resources::subagent::get_central_subagent(&name)).await
+}
+
+#[tauri::command]
+pub async fn save_subagent(
+    definition: arca_core::domain::subagent::SubagentDefinition,
+) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::resources::subagent::save_central_subagent(definition)).await
+}
+
+#[tauri::command]
+pub async fn delete_subagent(name: String) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::resources::subagent::delete_central_subagent(&name)).await
+}
+
+#[tauri::command]
+pub async fn adopt_subagent(
+    agent_id: String,
+    name: String,
+) -> Result<arca_core::domain::subagent::SubagentDefinition, AssetCommandError> {
+    asset_blocking(move || arca_core::resources::subagent::adopt_subagent(&agent_id, &name)).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

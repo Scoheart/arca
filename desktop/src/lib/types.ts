@@ -37,6 +37,7 @@ export interface AgentInfo {
   /** Derived from WorkspaceSnapshot; absent on the legacy MCP-shaped wire. */
   has_model?: boolean;
   has_instructions?: boolean;
+  has_subagents?: boolean;
   supported_transports: Array<"stdio" | "http">;
   /** Raw stored config paths (e.g. `~/Library/Application Support/…/mcp.json`). */
   global: string | null; project: string | null;
@@ -94,6 +95,11 @@ export interface AgentCapabilityView {
       global_dir: string;
       alias_dirs: string[];
       affected_agent_ids: string[];
+    } | null;
+    subagent?: {
+      target_id: string;
+      global_dir: string;
+      format: string;
     } | null;
   };
 }
@@ -356,7 +362,9 @@ export type ResourceNavigationRequest =
   | { domain: "mcp"; kind: "create" }
   | { domain: "model"; kind: "detail"; profileId: string }
   | { domain: "model"; kind: "create" }
-  | { domain: "skill"; kind: "detail"; skillName: string };
+  | { domain: "skill"; kind: "detail"; skillName: string }
+  | { domain: "subagent"; kind: "detail"; name: string }
+  | { domain: "subagent"; kind: "create" };
 
 export type ResourceNavigationIntent = ResourceNavigationRequest & { id: number };
 export type SkillNavigationRequest = Extract<ResourceNavigationRequest, { domain: "skill" }>;
@@ -368,7 +376,8 @@ export type View =
   | { kind: "registry"; intent?: Extract<ResourceNavigationIntent, { domain: "mcp" }> }
   | { kind: "models"; intent?: Extract<ResourceNavigationIntent, { domain: "model" }> }
   | { kind: "skills"; intent?: SkillNavigationIntent }
-  | { kind: "agent"; id: string; tab?: "skills" }
+  | { kind: "subagents"; intent?: Extract<ResourceNavigationIntent, { domain: "subagent" }> }
+  | { kind: "agent"; id: string; tab?: "skills" | "subagents" }
   | { kind: "capture"; agentId: string }
   | { kind: "traces"; agentId?: string };
 
@@ -571,11 +580,26 @@ export interface SkillsInventory {
   recovery_error: string | null;
 }
 
+export interface SubagentDefinition {
+  name: string;
+  display_name: string;
+  description: string;
+  system_prompt: string;
+  model?: string;
+  tools?: string[];
+  mcp_dependencies?: string[];
+  readonly?: boolean;
+  allow_subagents?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type AssetRef =
   | { domain: "mcp"; key: string }
   | { domain: "model"; profile_id: string }
   | { domain: "model-provider"; provider_id: string }
-  | { domain: "skill"; name: string };
+  | { domain: "skill"; name: string }
+  | { domain: "subagent"; name: string };
 
 export type ConsumptionStatus =
   | "synced"
@@ -641,7 +665,8 @@ export interface TargetIncident {
 export type AgentConsumptionSelection =
   | { domain: "mcp"; asset_keys: string[] }
   | { domain: "model"; profile_ids: string[] }
-  | { domain: "skill"; names: string[] };
+  | { domain: "skill"; names: string[] }
+  | { domain: "subagent"; names: string[] };
 
 export type RelationshipAction = "add" | "remove";
 

@@ -25,12 +25,13 @@ import type {
   ModelProfileView,
   OperationPlan,
   ResourceNavigationRequest,
+  SubagentDefinition,
 } from "../lib/types";
 import { formatError } from "../lib/format";
 import { keyOf, transportOf } from "../lib/mcp";
 import { consumptionsForAgent, externalForAgent } from "../lib/consumption";
 import { requiresAgentReview } from "../lib/agentOperation";
-import { listModelAgents, listModelProfiles } from "../lib/api";
+import { listModelAgents, listModelProfiles, listSubagents } from "../lib/api";
 import {
   EditIcon,
   ChevronDownIcon,
@@ -61,7 +62,7 @@ import { McpAvatar } from "./McpIcon";
 import { NativePluginsPanel } from "./NativePluginsPanel";
 import { InstructionsEditor } from "./InstructionsEditor";
 
-type PickerDomain = "mcp" | "model" | "skill";
+type PickerDomain = "mcp" | "model" | "skill" | "subagent";
 type ConfigLocationKind = "file" | "folder";
 
 function absoluteConfigLocation(path: string, home: string) {
@@ -261,13 +262,27 @@ export function AgentView({
   useEffect(() => {
     if (nativeResources.inventory && resourceTab === "plugins" && !nativePluginSupported) setResourceTab("mcps");
   }, [agentId, nativeResources.inventory, resourceTab, nativePluginSupported]);
-  const { mcpRows, modelRows, skillRows, mcpExternal, skillExternal, modelExternal } = useMemo(() => ({
+  const [subagents, setSubagents] = useState<SubagentDefinition[]>([]);
+  useEffect(() => {
+    let active = true;
+    listSubagents().then((list) => {
+      if (active) setSubagents(list);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+  const subagentsByName = useMemo(
+    () => new Map(subagents.map((s) => [s.name, s])),
+    [subagents],
+  );
+  const { mcpRows, modelRows, skillRows, subagentRows, mcpExternal, skillExternal, modelExternal, subagentExternal } = useMemo(() => ({
     mcpRows: consumptionsForAgent(inventory, agentId, "mcp"),
     modelRows: consumptionsForAgent(inventory, agentId, "model"),
     skillRows: consumptionsForAgent(inventory, agentId, "skill"),
+    subagentRows: consumptionsForAgent(inventory, agentId, "subagent"),
     mcpExternal: externalForAgent(inventory, agentId, "mcp"),
     skillExternal: externalForAgent(inventory, agentId, "skill"),
     modelExternal: externalForAgent(inventory, agentId, "model"),
+    subagentExternal: externalForAgent(inventory, agentId, "subagent"),
   }), [inventory, agentId]);
   const displayedMcpRows = useMemo(
     () => mcpRows.map((item) => (
@@ -438,6 +453,28 @@ export function AgentView({
               reason: undefined,
             };
           }),
+      };
+    }
+    if (domain === "subagent") {
+      const assigned = new Set(
+        subagentRows.map((item) => (item.asset.domain === "subagent" ? item.asset.name : "")),
+      );
+      return {
+        title: "添加 Subagents",
+        mode: "multiple",
+        actionLabel: "添加 Subagents",
+        busyLabel: "添加中…",
+        emptyMessage: "没有可添加的 Subagent",
+        searchPlaceholder: "搜索 Subagents",
+        options: subagents
+          .filter((item) => !assigned.has(item.name))
+          .map((item) => ({
+            id: item.name,
+            name: item.display_name || item.name,
+            description: item.description,
+            icon: <Avatar seed={item.name} kind="subagent" size={24} />,
+            meta: item.model ? <Badge tone="neutral">{item.model}</Badge> : null,
+          })),
       };
     }
     return {
@@ -643,6 +680,8 @@ export function AgentView({
       navigateResource({ domain: "model", kind: "detail", profileId: asset.profile_id });
     } else if (asset.domain === "skill") {
       navigateResource({ domain: "skill", kind: "detail", skillName: asset.name });
+    } else if (asset.domain === "subagent") {
+      navigateResource({ domain: "subagent", kind: "detail", name: asset.name });
     }
   };
 
@@ -670,11 +709,13 @@ export function AgentView({
           value={resourceTab}
           onChange={setResourceTab}
           instructions={agent.has_instructions}
+          subagents={agent.has_subagents}
           plugins={nativePluginSupported ? nativePluginCount : undefined}
           counts={{
             mcps: mcpRows.length + mcpExternal.length + hostMcps.length,
             models: modelVisibleCount,
             skills: skillRows.length + skillExternal.length + nativeSkills.length,
+            subagents: subagentRows.length + subagentExternal.length,
           }}
         >
           {consumptionState.plan?.kind === "clear-models" && !preparingChange && (
@@ -851,6 +892,39 @@ export function AgentView({
                   }}
                 />
               )
+          ) : resourceTab === "subagents" ? (
+            <AgentConsumptionPanel
+              domain="subagent"
+              title={RESOURCE_PRESENTATION.subagent.label}
+              description={`${subagentRows.length} 项`}
+              manageLabel="添加 Subagents"
+              rows={subagentRows}
+              external={subagentExternal}
+              externalMode="cards"
+              onManage={() => setPickerDomain("subagent")}
+              onOpenAsset={openAsset}
+              emptyTitle="暂无 Subagents"
+              emptyDescription={`从 Subagents 资产库添加到 ${agent.name}。`}
+              emptyAction={
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => navigateResource({ domain: "subagent", kind: "create" })}
+                >
+                  <PlusIcon className="w-4 h-4" />新建 Subagents
+                </button>
+              }
+              present={(asset) => {
+                const name = asset.domain === "subagent" ? asset.name : "";
+                const subagent = subagentsByName.get(name);
+                return {
+                  name: subagent?.display_name || name,
+                  description: subagent?.description || "Subagent 资产",
+                  icon: <Avatar seed={name} kind="subagent" size={28} />,
+                  meta: subagent?.model ? <Badge tone="neutral">{subagent.model}</Badge> : null,
+                };
+              }}
+            />
           ) : (
             <AgentConsumptionPanel
               domain="skill"

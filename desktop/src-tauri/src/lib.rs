@@ -198,6 +198,11 @@ pub fn run() {
             commands::update_agent,
             commands::scan_installed,
             commands::preview_install,
+            commands::list_subagents,
+            commands::get_subagent,
+            commands::save_subagent,
+            commands::delete_subagent,
+            commands::adopt_subagent,
             cli_tool::cli_status,
             cli_tool::install_cli,
             updater_guard::update_environment

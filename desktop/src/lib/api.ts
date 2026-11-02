@@ -48,6 +48,7 @@ import type {
   CatalogItem,
   ConsumptionInventory,
   CommitOperationRequest,
+  SubagentDefinition,
   CredentialValidationView,
   CancelOperationRequest,
   InstalledMcp,
@@ -351,3 +352,13 @@ export const cancelSkillOperation = (operationId: string) =>
 
 export const listNativeResources = (agentId: string) =>
   invoke<import("./types").NativeResourceInventory>("list_native_resources", { agentId });
+
+export const listSubagents = () => invoke<SubagentDefinition[]>("list_subagents");
+export const getSubagent = (name: string) =>
+  invoke<SubagentDefinition | null>("get_subagent", { name });
+export const saveSubagent = (definition: SubagentDefinition) =>
+  invoke<void>("save_subagent", { definition });
+export const deleteSubagent = (name: string) =>
+  invoke<void>("delete_subagent", { name });
+export const adoptSubagent = (agentId: string, name: string) =>
+  invoke<SubagentDefinition>("adopt_subagent", { agentId, name });

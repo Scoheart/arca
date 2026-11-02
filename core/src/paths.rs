@@ -53,6 +53,14 @@ pub fn skill_contents_dir() -> PathBuf {
     skill_assets_dir().join("items")
 }
 
+pub fn subagent_assets_dir() -> PathBuf {
+    assets_dir().join("subagents")
+}
+
+pub fn central_subagent_file(name: &str) -> PathBuf {
+    subagent_assets_dir().join(format!("{name}.json"))
+}
+
 pub fn mcp_catalog_file() -> PathBuf {
     mcp_assets_dir().join("catalog.json")
 }

@@ -60,6 +60,11 @@ const SkillsView = lazy(() =>
     default: module.SkillsView,
   })),
 );
+const SubagentsView = lazy(() =>
+  import("./components/SubagentsView").then((module) => ({
+    default: module.SubagentsView,
+  })),
+);
 
 const CaptureView = lazy(() => import("./components/CaptureView").then(module => ({ default: module.CaptureView })));
 const TraceView = lazy(() => import("./components/TraceView").then(module => ({ default: module.TraceView })));
@@ -295,6 +300,7 @@ function App() {
       onSelectRegistry={() => setView({ kind: "registry" })}
       onSelectModels={() => setView({ kind: "models" })}
       onSelectSkills={() => setView({ kind: "skills" })}
+      onSelectSubagents={() => setView({ kind: "subagents" })}
       onSelectAgent={(id) => setView({ kind: "agent", id })}
       onAddAgent={() => setAddAgentOpen(true)}
       onRescan={() => refreshObservedTasks(ALL_OBSERVATION_TASK_IDS)}
@@ -314,6 +320,13 @@ function App() {
             consumptionState={consumptionState}
             intent={view.intent}
             onIntentConsumed={consumeResourceIntent}
+          />
+        ) : view.kind === "subagents" ? (
+          <SubagentsView
+            consumptionState={consumptionState}
+            intent={view.intent}
+            onIntentConsumed={consumeResourceIntent}
+            onOpenAgent={(id) => setView({ kind: "agent", id, tab: "subagents" })}
           />
         ) : view.kind === "agent" ? (
           <AgentView

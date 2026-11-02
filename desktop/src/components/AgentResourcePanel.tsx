@@ -19,16 +19,19 @@ export function AgentResourcePanel({
   counts,
   instructions = false,
   plugins,
+  subagents = false,
   children,
 }: {
   value: AgentResourceTab;
   onChange: (value: AgentResourceTab) => void;
-  counts: Record<ResourceCategoryId, number>;
+  counts: Partial<Record<ResourceCategoryId, number>>;
   instructions?: boolean;
   plugins?: number;
+  subagents?: boolean;
   children: ReactNode;
 }) {
-  const TABS: Array<{ id: AgentResourceTab; label: string; Icon: typeof DocumentIcon }> = [...RESOURCE_CATEGORIES,
+  const TABS: Array<{ id: AgentResourceTab; label: string; Icon: typeof DocumentIcon }> = [
+    ...RESOURCE_CATEGORIES.filter((category) => category.id !== "subagents" || subagents),
     ...(instructions ? [{ id: "instructions" as const, label: "Instructions", Icon: DocumentIcon }] : []),
     ...(plugins !== undefined ? [{ id: "plugins" as const, label: "Plugins", Icon: DocumentIcon }] : [])];
   const id = useId();
@@ -69,7 +72,7 @@ export function AgentResourcePanel({
             >
               <span className="arca-agent-resource-tab-icon" aria-hidden="true"><tab.Icon className="w-4 h-4" /></span>
               <span className="arca-agent-resource-tab-label">{tab.label}</span>
-              {tab.id !== "instructions" && <span className="arca-agent-resource-tab-count">{tab.id === "plugins" ? plugins : counts[tab.id]}</span>}
+              {tab.id !== "instructions" && <span className="arca-agent-resource-tab-count">{tab.id === "plugins" ? plugins : (counts[tab.id] ?? 0)}</span>}
             </button>
           ))}
         </div>
