@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.66.0](https://github.com/Scoheart/arca/compare/v2.65.1...v2.66.0) (2026-11-02)
+
+### Changes
+
+* feat(desktop): add central subagents asset and refine navigation & card layouts ([523d88f](https://github.com/Scoheart/arca/commit/523d88f115744fe82bf008b3c14eadd99bb12030))
+
 ## [2.65.1](https://github.com/Scoheart/arca/compare/v2.65.0...v2.65.1) (2026-11-02)
 
 ### Changes
