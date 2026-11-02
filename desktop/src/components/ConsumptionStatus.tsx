@@ -10,6 +10,7 @@ export function ConsumptionStatus({
   reason?: string | null;
   compact?: boolean;
 }) {
+  if (status === "synced" && compact) return null;
   const { t } = useTranslation();
   const labels: Record<Status, string> = {
     synced: t("observations.statuses.synced"),

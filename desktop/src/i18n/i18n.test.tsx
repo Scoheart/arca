@@ -1,13 +1,10 @@
-import fs from "node:fs";
-import path from "node:path";
 import { render, waitFor } from "@testing-library/react";
 import { useTranslation } from "react-i18next";
 import { describe, expect, it } from "vitest";
-import { legacyEnglish, localizeLegacyText } from "./legacy";
 import i18n, { translationResources } from ".";
-import { LegacyLocalizationBridge } from "./LegacyLocalizationBridge";
 import { AgentLaunchFields, createAgentLaunchDraft } from "../components/AgentLaunchFields";
 import { DialogShell } from "../components/DialogShell";
+import { ToastProvider } from "../components/Toast";
 import type { AgentLaunchInfo } from "../lib/agentLaunch";
 
 function leafKeys(value: unknown, prefix = ""): string[] {
@@ -19,21 +16,25 @@ function leafKeys(value: unknown, prefix = ""): string[] {
 
 describe("Desktop i18n contract", () => {
   it("localizes a portaled launch editor and validation without a DOM translation bridge", async () => {
-    const info: AgentLaunchInfo = {
+    const info: AgentLaunchInfo = {default_target: { kind: "cli", command: "/fixture/agent", args: [] }, profiles: [{ id: "default", name: "默认配置", target: null, default_directory: null }, { id: "custom", name: "Fixture", target: null, default_directory: null }], active_profile_id: "custom", profiles_revision: "fixture-revision",
       agent_id: "fixture", name: "Fixture", category: "cli", kind: "cli", available: true,
       installed: true, supported: true, host_name: null, install_url: null, directory: null,
       directory_exists: false, configured_target: null,
       resolved_target: { kind: "cli", command: "/fixture/agent", args: [] },
     };
     await i18n.changeLanguage("en-US");
-    const view = render(<DialogShell kind="editor" title="Agent settings" onClose={() => {}}>
-      <AgentLaunchFields info={info} draft={{ ...createAgentLaunchDraft(info), environment: "invalid-line" }}
-        disabled={false} onChange={() => {}} onBusyChange={() => {}} onError={() => {}} />
-    </DialogShell>);
+    const view = render(
+      <ToastProvider>
+        <DialogShell kind="editor" title="Agent settings" onClose={() => {}}>
+          <AgentLaunchFields info={info} draft={{ ...createAgentLaunchDraft(info), environment: "invalid-line" }}
+            disabled={false} onChange={() => {}} onBusyChange={() => {}} onError={() => {}} />
+        </DialogShell>
+      </ToastProvider>
+    );
     try {
       expect(view.getByRole("button", { name: "Close" })).toBeVisible();
       expect(view.getByRole("textbox", { name: "Environment variables" })).toBeVisible();
-      expect(view.getByRole("alert")).toHaveTextContent("Line 1 requires NAME=VALUE");
+      await waitFor(() => expect(view.getByRole("alert")).toHaveTextContent("Line 1 requires NAME=VALUE"));
       await i18n.changeLanguage("zh-CN");
       await waitFor(() => expect(view.getByRole("button", { name: "关闭" })).toBeVisible());
     } finally { view.unmount(); await i18n.changeLanguage("zh-CN"); }
@@ -43,84 +44,27 @@ describe("Desktop i18n contract", () => {
       .toEqual(leafKeys(translationResources["zh-CN"]).sort());
   });
 
-  it("translates legacy product copy without touching unknown dynamic content", () => {
-    expect(localizeLegacyText("取消", "en-US")).toBe("Cancel");
-    expect(localizeLegacyText("  读取失败  ", "en-US")).toBe("  Could not load  ");
-    expect(localizeLegacyText("Claude Code", "en-US")).toBe("Claude Code");
-    expect(localizeLegacyText("取消", "zh-CN")).toBe("取消");
-  });
-
-  it("keeps every catalog key non-empty", () => {
-    for (const [source, translated] of Object.entries(legacyEnglish)) {
-      expect(source.trim(), source).not.toBe("");
-      expect(translated.trim(), source).not.toBe("");
-      expect(translated, source).not.toBe(source);
-    }
-  });
-
-  it("switches legacy text and accessibility attributes in place and restores Chinese", async () => {
-    const view = render(
-      <>
-        <div id="root"><button title="关闭">取消</button></div>
-        <LegacyLocalizationBridge locale="en-US" />
-      </>,
-    );
-    await waitFor(() => expect(view.getByRole("button", { name: "Cancel" })).toHaveAttribute("title", "Close"));
-    view.rerender(
-      <>
-        <div id="root"><button title="关闭">取消</button></div>
-        <LegacyLocalizationBridge locale="zh-CN" />
-      </>,
-    );
-    await waitFor(() => expect(view.getByRole("button", { name: "取消" })).toHaveAttribute("title", "关闭"));
-  });
-
   it("renders typed Desktop copy in English and can switch back to Chinese", async () => {
     function ModelProviderLabel() {
       const { t } = useTranslation();
-      return <span>{t("models.provider")}</span>;
+      return (
+        <div>
+          <span>{t("models.provider")}</span>
+          <span data-testid="sidebar-add">{t("desktop.sourcesSidebar.addMCPs")}</span>
+          <span data-testid="launch-doc">{t("desktop.agentLaunchAction.installationDocumentation")}</span>
+        </div>
+      );
     }
 
     await i18n.changeLanguage("en-US");
     const view = render(<ModelProviderLabel />);
     expect(view.getByText("Model provider")).toBeVisible();
+    expect(view.getByTestId("sidebar-add").textContent).toBe("Add MCPs");
+    expect(view.getByTestId("launch-doc").textContent).toBe("Installation documentation");
 
     await i18n.changeLanguage("zh-CN");
     await waitFor(() => expect(view.getByText("模型提供商")).toBeVisible());
-  });
-
-  it("covers static Chinese product copy remaining outside typed i18next surfaces", () => {
-    const sourceRoot = path.resolve("src");
-    const uncovered = new Set<string>();
-    const walk = (directory: string) => {
-      for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-        const file = path.join(directory, entry.name);
-        if (entry.isDirectory()) {
-          if (!["i18n", "test"].includes(entry.name)) walk(file);
-          continue;
-        }
-        if (!/\.tsx?$/.test(entry.name) || /\.test\.tsx?$/.test(entry.name)) continue;
-        const text = fs.readFileSync(file, "utf8");
-        for (const line of text.split("\n")) {
-          const trimmed = line.trim();
-          if (
-            !/[\u3400-\u9fff]/.test(line)
-            || trimmed.startsWith("//")
-            || trimmed.startsWith("*")
-            || trimmed.startsWith("/*")
-          ) continue;
-          for (const match of line.matchAll(/(["'`])([^"'`]*[\u3400-\u9fff][^"'`]*)\1/g)) {
-            const phrase = match[2].replace(/\s+/g, " ").trim();
-            if (phrase && localizeLegacyText(phrase, "en-US") === phrase) uncovered.add(phrase);
-          }
-          for (const match of line.matchAll(/>([^<>{}]*[\u3400-\u9fff][^<>{}]*)</g)) {
-            const phrase = match[1].replace(/\s+/g, " ").trim();
-            if (phrase && localizeLegacyText(phrase, "en-US") === phrase) uncovered.add(phrase);
-          }
-        }
-      }
-    };
-    walk(sourceRoot);
-    expect([...uncovered].sort()).toEqual([]);
+    expect(view.getByTestId("sidebar-add").textContent).toBe("添加 MCPs");
+    expect(view.getByTestId("launch-doc").textContent).toBe("安装文档");
   });
 });

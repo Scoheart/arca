@@ -1,3 +1,4 @@
+import { desktopZhCN, desktopEnUS } from "./desktopCopy";
 import { instructionsEnUS, instructionsZhCN } from '../lib/instructionCopy';
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -13,6 +14,7 @@ export function systemLocale(): SupportedLocale {
 }
 
 const zhCN = {
+  desktop: desktopZhCN,
   agentSurfaces: { cli: "命令行", desktop: "桌面应用", ide: "IDE 编辑器", plugin: "IDE 插件", web: "Web 应用" },
   mcpEditor: mcpEditorZhCN,
   agentConfiguration: agentConfigurationZhCN,
@@ -507,6 +509,7 @@ type TranslationShape<T> = {
 };
 
 const enUS: TranslationShape<typeof zhCN> = {
+  desktop: desktopEnUS,
   agentSurfaces: { cli: "Command line", desktop: "Desktop app", ide: "IDE editor", plugin: "IDE extension", web: "Web app" },
   mcpEditor: mcpEditorEnUS,
   agentConfiguration: agentConfigurationEnUS,

@@ -312,7 +312,7 @@ export function AgentConsumptionPanel({
             onClick={onManage}
           >
             {manageIcon}
-            <span className="arca-consumption-manage-label">{manageLabel}</span><span className="arca-consumption-manage-short" aria-hidden="true">添加</span>
+            <span className="arca-consumption-manage-label">{manageLabel}</span>
           </button>
         </div></AgentResourceActions>
       </div>
@@ -380,7 +380,7 @@ export function AgentConsumptionPanel({
                     <strong title={presentation.name}>{presentation.name}</strong>
                   </span>
                   {domain === "mcp" && <span className="arca-consumption-secondary">
-                    <ConsumptionStatus status={item.status} reason={item.reason} compact />
+                    {!isExternal && <ConsumptionStatus status={item.status} reason={item.reason} compact />}
                     {presentation.meta && <span className="arca-consumption-meta">{presentation.meta}</span>}
                     {presentationDescription && <small title={presentationDescription}>{presentationDescription}</small>}
                   </span>}

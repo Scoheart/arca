@@ -37,7 +37,6 @@ import {
   DocumentIcon,
   ExternalLinkIcon,
   FolderIcon,
-  LinkIcon,
   PlusIcon,
   RefreshIcon,
   NetworkIcon,
@@ -245,9 +244,7 @@ export function AgentView({
     () => modelAgents.find((item) => item.id === agentId) ?? null,
     [modelAgents, agentId],
   );
-  const canEditConfiguration = Boolean(
-    agent?.has_global || modelAgent !== null || agent?.skills_global_dir,
-  );
+  const canEditConfiguration = true;
   const compatibleProfiles = useMemo(
     () => modelAgent
       ? modelProfiles.filter((profile) => modelCompatibilityReason(profile, modelAgent) === null)
@@ -346,7 +343,7 @@ export function AgentView({
 
   if (!agent) return <div className="arca-agent-state">未找到该 Agent</div>;
 
-  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent && !agent.has_instructions && hostMcps.length === 0 && nativeSkills.length === 0 && !nativePluginSupported) {
+  if (false as boolean) {
     return (
       <div className="arca-agent-page">
         <div className="arca-agent-shell">
@@ -374,7 +371,6 @@ export function AgentView({
     );
   }
 
-  const runtimeSkillAgent = skillsState.inventory?.agents.find((item) => item.id === agentId) ?? null;
 
   const currentIds = (domain: PickerDomain): string[] => {
     if (domain === "mcp") {
@@ -406,7 +402,7 @@ export function AgentView({
         emptyMessage: "没有可添加的 MCP",
         searchPlaceholder: "搜索 MCPs",
         options: entries
-          .filter((entry) => agent?.supported_transports.includes(transportOf(entry)) && !assigned.has(keyOf(entry)))
+          .filter((entry) => !assigned.has(keyOf(entry)))
           .map((entry) => ({
             id: keyOf(entry),
             name: entry.name,
@@ -427,20 +423,19 @@ export function AgentView({
         mode: modelAgent?.supports_multiple ? "multiple" : "single",
         actionLabel: "添加 Models",
         busyLabel: "添加中…",
-        emptyMessage: "没有可添加的兼容 Model",
+        emptyMessage: "没有可添加的 Model",
         searchPlaceholder: "搜索 Models",
         options: modelProfiles
           .filter((profile) => !assigned.has(profile.id))
           .map((profile) => {
-            const reason = modelCompatibilityReason(profile, modelAgent);
             return {
               id: profile.id,
               name: profile.name,
               description: profile.model,
               icon: modelProviderIcon(profile.provider, profile.name),
               meta: <TransportMark transport={modelProtocolLabel(profile.protocol)} />,
-              disabled: reason !== null,
-              reason: reason ?? undefined,
+              disabled: false,
+              reason: undefined,
             };
           }),
       };
@@ -718,9 +713,7 @@ export function AgentView({
           <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
             message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
           <ToastNotice kind="warning" noticeKey={`native-plugins:${agent.id}`} message={nativeResources.error || nativeResources.inventory?.unavailable ? t("nativePlugins.scanUnavailable") : null} />
-          {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global && hostMcps.length === 0 ? (
-            <div className="arca-agent-inline-state">{nativePluginSupported ? t("nativePlugins.hostEmpty") : "此 Agent 未接入 MCP。"}</div>
-          ) : (
+          {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? (
             <AgentConsumptionPanel
               domain="mcp"
               title={RESOURCE_PRESENTATION.mcp.label}
@@ -732,7 +725,7 @@ export function AgentView({
               external={mcpExternal}
               externalMode="cards"
               onManage={() => setPickerDomain("mcp")}
-              manageDisabled={!agent.has_global || preparingChange}
+              manageDisabled={preparingChange}
               bulkRemoveLabel={t("nativePlugins.removeConfigured")}
               bulkRemoveTitle={t("nativePlugins.removeConfiguredNote", { agent: agent.name })}
               bulkRemoveDisabled={preparingChange || togglingAllMcp !== null || mcpRows.length + mcpExternal.length === 0}
@@ -769,47 +762,35 @@ export function AgentView({
               }}
             />
           ) : resourceTab === "models" ? (
-            modelAgent?.mode === "guided" ? (
-              <section className="arca-agent-section arca-agent-resource-content">
-                <div className="arca-agent-guided-model">
-                  <div><strong>由 Agent 管理</strong><span>{modelAgent.note || `请在 ${agent.name} 内切换。`}</span></div>
-                  <button type="button" className="btn-secondary" onClick={() => openUrl(modelAgent.docs)}>
-                    <LinkIcon className="w-4 h-4" />打开设置文档
-                  </button>
-                </div>
-              </section>
+            modelsLoading ? (
+              <div className="arca-agent-inline-state">正在读取 Model…</div>
+            ) : modelsError ? (
+              <div className="arca-agent-inline-state">Model 读取失败：{modelsError}</div>
             ) : (
-              modelsLoading ? (
-                <div className="arca-agent-inline-state">正在读取 Model…</div>
-              ) : modelsError ? (
-                <div className="arca-agent-inline-state">Model 读取失败：{modelsError}</div>
-              ) : !modelAgent ? (
-                <div className="arca-agent-inline-state">此 Agent 尚未接入 Models。</div>
-              ) : (
-                <AgentConsumptionPanel
-                  domain="model"
-                  title={RESOURCE_PRESENTATION.model.label}
-                  description={modelAgent.storage_authority === "native-registry"
-                    ? `配置中 ${modelVisibleCount} 个${modelAgent.supports_global_selection === false ? ` · 重启 ${agent.name} 后在会话中选用` : modelAgent.supports_multiple ? " · 同一时间使用其中一个" : ""}`
-                    : `Arca 管理 ${modelVisibleCount} 个`}
-                  manageLabel="添加 Models"
-                  rows={displayedModelRows}
-                  columns={3}
-                  external={modelAgent.storage_authority === "native-registry" ? modelExternal : []}
-                  externalMode="cards"
-                  bulkRemoveLabel="清空全部 Models"
-                  bulkRemoveTitle={modelAgent.storage_authority === "native-registry"
-                    ? `清空 ${agent.name} 真实配置中的全部 Model，包括外部和手工配置；中央资产与凭据保留`
-                    : `清空 ${agent.name} 的全部 Arca Model 映射；中央资产与凭据保留`}
-                  bulkRemoveDisabled={modelVisibleCount === 0
-                    || preparingChange
-                    || consumptionState.committing
-                    || changingModel !== null}
-                  onBulkRemove={() => void clearModels()}
-                  onManage={() => setPickerDomain("model")}
-                  manageDisabled={preparingChange || compatibleProfiles.length === 0}
-                  onOpenAsset={openAsset}
-                  onEnabledChange={modelAgent.supports_global_selection === false ? undefined : switchActiveModel}
+              <AgentConsumptionPanel
+                domain="model"
+                title={RESOURCE_PRESENTATION.model.label}
+                description={modelAgent?.storage_authority === "native-registry"
+                  ? `配置中 ${modelVisibleCount} 个${modelAgent.supports_global_selection === false ? ` · 重启 ${agent.name} 后在会话中选用` : modelAgent.supports_multiple ? " · 同一时间使用其中一个" : ""}`
+                  : `Arca 管理 ${modelVisibleCount} 个`}
+                manageLabel="添加 Models"
+                rows={displayedModelRows}
+                columns={3}
+                external={modelAgent?.storage_authority === "native-registry" ? modelExternal : []}
+                externalMode="cards"
+                bulkRemoveLabel="清空全部 Models"
+                bulkRemoveTitle={modelAgent?.storage_authority === "native-registry"
+                  ? `清空 ${agent.name} 真实配置中的全部 Model，包括外部和手工配置；中央资产与凭据保留`
+                  : `清空 ${agent.name} 的全部 Arca Model 映射；中央资产与凭据保留`}
+                bulkRemoveDisabled={modelVisibleCount === 0
+                  || preparingChange
+                  || consumptionState.committing
+                  || changingModel !== null}
+                onBulkRemove={() => void clearModels()}
+                onManage={() => setPickerDomain("model")}
+                manageDisabled={preparingChange}
+                onOpenAsset={openAsset}
+                onEnabledChange={modelAgent?.supports_global_selection === false ? undefined : switchActiveModel}
                   toggleKind="current"
                   enabledChangeDisabled={(item) => changingModel !== null
                     || item.status === "ambiguous"}
@@ -870,7 +851,6 @@ export function AgentView({
                   }}
                 />
               )
-            )
           ) : (
             <AgentConsumptionPanel
               domain="skill"
@@ -886,7 +866,7 @@ export function AgentView({
               externalMode="cards"
               onManage={() => setPickerDomain("skill")}
               onOpenAsset={openAsset}
-              manageDisabled={!runtimeSkillAgent || preparingChange}
+              manageDisabled={preparingChange}
               onEnabledChange={(item, enabled) => void toggleSkillEnabled(item, enabled)}
               enabledChangeDisabled={(item) => togglingSkill?.name === (item.asset.domain === "skill" ? item.asset.name : "")
                 || item.status !== "synced"}

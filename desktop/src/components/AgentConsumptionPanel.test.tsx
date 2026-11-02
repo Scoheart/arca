@@ -104,7 +104,8 @@ describe("AgentConsumptionPanel", () => {
     expect(screen.queryByText("已同步")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("switch", { name: "停用 GitHub" }));
     expect(onEnabledChange).toHaveBeenCalledWith(syncedRow, false);
-    await userEvent.click(screen.getByRole("button", { name: "从 Codex 移除 GitHub" }));
+    await userEvent.click(screen.getByRole("button", { name: "GitHub 操作" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "从 Codex 移除 GitHub" }));
     expect(onRemove).toHaveBeenCalledWith(syncedRow.asset);
   });
 
