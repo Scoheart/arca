@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.66.1](https://github.com/Scoheart/arca/compare/v2.66.0...v2.66.1) (2026-11-03)
+
+### Changes
+
+* fix(desktop): left-align model cards and move agent search input to header actions ([18848aa](https://github.com/Scoheart/arca/commit/18848aac010ecb77606d8c3035a00fcede9ff5c4))
+
 ## [2.66.0](https://github.com/Scoheart/arca/compare/v2.65.1...v2.66.0) (2026-11-02)
 
 ### Changes
