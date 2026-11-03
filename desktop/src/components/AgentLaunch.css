@@ -77,23 +77,33 @@
 /* Configuration and launch dialogs share compact, aligned fields. */
 :is(.arca-dialog-agent-config, .arca-dialog-agent-launch) .arca-dialog-shell-header { padding-top: 16px; padding-bottom: 14px; }
 :is(.arca-dialog-agent-config, .arca-dialog-agent-launch) .arca-dialog-shell-body { padding-top: 20px; padding-bottom: 20px; }
-.arca-dialog-agent-config .arca-agent-config-fields { gap: 16px; }
+.arca-dialog-agent-config .arca-agent-config-fields { gap: 14px; }
+.arca-agent-config-sections { display: flex; flex-direction: column; gap: 14px; }
+.arca-agent-config-section { display: flex; flex-direction: column; gap: 12px; padding: 13px 15px 14px; border: 1px solid var(--border-hairline); border-radius: var(--radius-mac-lg, 12px); background: var(--surface-item, rgba(255, 255, 255, 0.6)); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02); transition: border-color .15s ease, background-color .15s ease; }
+.arca-agent-config-section:hover { border-color: color-mix(in srgb, var(--border-hairline) 60%, var(--color-blue) 40%); }
+.arca-agent-config-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 24px; padding-bottom: 2px; }
+.arca-agent-config-section-title { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.arca-agent-config-section-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: var(--surface-raised, rgba(0, 0, 0, 0.04)); color: var(--text-secondary); }
+.arca-agent-config-section-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 500; background: var(--surface-control, rgba(0, 0, 0, 0.04)); color: var(--text-tertiary); }
+.arca-agent-config-section-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--color-blue); font-size: 11px; font-weight: 600; cursor: pointer; transition: background-color .14s ease; }
+.arca-agent-config-section-action-btn:hover { background: color-mix(in srgb, var(--color-blue) 10%, transparent); }
+.arca-agent-config-section-body { display: flex; flex-direction: column; gap: 10px; }
 .arca-agent-config-mcp { display: grid; grid-template-columns: minmax(0, 1fr) 152px; gap: 12px; }
-.arca-agent-instruction-paths { display: grid; gap: 14px; min-width: 0; }
-.arca-agent-instruction-path { display: grid; gap: 12px; min-width: 0; }
+.arca-agent-instruction-paths { min-width: 0; }
+.arca-agent-instruction-path { display: grid; gap: 10px; min-width: 0; }
 .arca-agent-path-patterns { color: var(--text-tertiary); font: 10px var(--font-mono); overflow-wrap: anywhere; }
 .arca-agent-instruction-hint { margin: 0; color: var(--text-tertiary); font-size: 11px; line-height: 1.6; }
-.arca-dialog-agent-config .arca-agent-config-field { display: flex; flex-direction: column; align-items: stretch; gap: 7px; }
-.arca-agent-field-caption { display: inline-flex; align-items: center; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
-.arca-agent-field-caption svg { width: 15px; height: 15px; color: var(--text-tertiary); flex-shrink: 0; }
+.arca-dialog-agent-config .arca-agent-config-field { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.arca-agent-field-caption { display: inline-flex; align-items: center; gap: 7px; color: var(--text-secondary); font-size: 11.5px; font-weight: 500; }
+.arca-agent-field-caption svg { width: 14px; height: 14px; color: var(--text-tertiary); flex-shrink: 0; }
 .arca-agent-field-control { display: flex; align-items: center; min-width: 0; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-control); }
 .arca-agent-field-control:focus-within { outline: 2px solid color-mix(in srgb, var(--color-blue) 45%, transparent); outline-offset: 1px; }
-.arca-agent-field-control > input.arca-model-field { flex: 1; min-width: 0; width: 0; min-height: 36px; border: 0; background: transparent; box-shadow: none; outline: none; font-size: 12px; }
+.arca-agent-field-control > input.arca-model-field { flex: 1; min-width: 0; width: 0; min-height: 34px; border: 0; background: transparent; box-shadow: none; outline: none; font-size: 11.5px; }
 .arca-agent-config-field-actions { padding-right: 5px; }
 .arca-dialog-agent-config .arca-agent-config-remove { width: 28px; height: 28px; border: 0; background: transparent; }
 .arca-agent-config-unavailable { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; font-size: 11px; color: var(--text-tertiary); }
 .arca-dialog-agent-config .arca-agent-config-add { margin-left: 0; justify-self: start; padding: 0; }
-.arca-agent-config-credential { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
+.arca-agent-config-credential { border-top: 1px solid var(--border-hairline); }
 .arca-agent-config-credential-row { display: grid; grid-template-columns: 1fr minmax(150px, 220px); align-items: center; gap: 12px; }
 .arca-dialog-shell.arca-dialog-agent-launch { height: min(620px, calc(100dvh - 80px)); max-height: min(620px, calc(100dvh - 80px)); }
 .arca-dialog-agent-launch .arca-dialog-shell-header { padding-block: 12px; }

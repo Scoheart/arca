@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { RESOURCE_CATEGORIES, ResourceIcon } from "./resourcePresentation";
-import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { ResourceIcon } from "./resourcePresentation";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
   AgentConfigurationPatch,
   AgentInfo,
@@ -327,127 +327,231 @@ export function AgentConfigurationDialog({
         <span>{t("agentConfiguration.codex.title")}</span>
         <button type="button" className="btn-secondary" disabled={busy || browsing} onClick={() => setEditingCodex(true)}>{t("agentConfiguration.codex.editConfiguration")}</button>
       </div>}
-      <fieldset className="arca-agent-config-form arca-agent-config-fields" disabled={busy || browsing}>
-        {RESOURCE_CATEGORIES.map((resource) => <Fragment key={resource.id}>
-          {resource.id === "models" && <>
-        {modelPaths.length > 0 ? modelPaths.map((path, index) => (
-          <ConfigField
-            key={index}
-            icon={<ResourceIcon domain="model" />}
-            label={modelPaths.length > 1 ? `${resource.label} ${index + 1}` : resource.label}
-            value={path}
-            openKind="file"
-            onChange={(value) => updateModelPath(index, value)}
-          />
-        )) : (
-          <ConfigField
-            icon={<ResourceIcon domain="model" />}
-            label={resource.label}
-            value={t("agentConfiguration.unavailable")}
-            disabled
-          />
-        )}
-          </>}
-          {resource.id === "mcps" && <>
-        {hasMcp ? (
-          <div className="arca-agent-config-mcp">
-            <ConfigField
-              icon={<ResourceIcon domain="mcp" />}
-              label={resource.label}
-              openKind="file"
-              value={mcpPath}
-              onChange={setMcpPath}
-            />
-            <ConfigField
-              icon={null}
-              label={t("agentConfiguration.configKey")}
-              value={mcpKey}
-              onChange={setMcpKey}
-            />
+      <fieldset className="arca-agent-config-form arca-agent-config-fields arca-agent-config-sections" disabled={busy || browsing}>
+        {/* Models Section */}
+        <div className="arca-agent-config-section" aria-label="Models">
+          <div className="arca-agent-config-section-head">
+            <div className="arca-agent-config-section-title">
+              <span className="arca-agent-config-section-icon"><ResourceIcon domain="model" /></span>
+              <strong>Models</strong>
+              <span className="arca-agent-config-section-badge">
+                {modelPaths.length > 0 ? `${modelPaths.length} 个文件` : t("agentConfiguration.unavailable")}
+              </span>
+            </div>
           </div>
-        ) : (
-          <ConfigField
-            icon={<ResourceIcon domain="mcp" />}
-            label={resource.label}
-            value={t("agentConfiguration.unavailable")}
-            disabled
-          />
-        )}
-          </>}
-          {resource.id === "skills" && <>
-        {skillsPaths.length > 0 ? skillsPaths.map((path, index) => (
-          <ConfigField
-            key={index}
-            icon={<ResourceIcon domain="skill" />}
-            label={skillsPaths.length > 1 ? `${resource.label} ${index + 1}` : resource.label}
-            value={path}
-            openKind="folder"
-            onChange={(value) => updateSkillsPath(index, value)}
-            action={index > 0 ? (
+          <div className="arca-agent-config-section-body">
+            {modelPaths.length > 0 ? modelPaths.map((path, index) => (
+              <ConfigField
+                key={index}
+                icon={null}
+                label={modelPaths.length > 1 ? `Model ${index + 1}` : "Model"}
+                ariaLabel={modelPaths.length > 1 ? `Model ${index + 1}` : "Model"}
+                value={path}
+                openKind="file"
+                onChange={(value) => updateModelPath(index, value)}
+              />
+            )) : (
+              <ConfigField
+                icon={null}
+                label="Model"
+                ariaLabel="Model"
+                value={t("agentConfiguration.unavailable")}
+                disabled
+              />
+            )}
+          </div>
+        </div>
+
+        {/* MCPs Section */}
+        <div className="arca-agent-config-section" aria-label="MCPs">
+          <div className="arca-agent-config-section-head">
+            <div className="arca-agent-config-section-title">
+              <span className="arca-agent-config-section-icon"><ResourceIcon domain="mcp" /></span>
+              <strong>MCPs</strong>
+              <span className="arca-agent-config-section-badge">
+                {hasMcp ? t("agentConfiguration.connected", "已接入") : t("agentConfiguration.unavailable")}
+              </span>
+            </div>
+          </div>
+          <div className="arca-agent-config-section-body">
+            {hasMcp ? (
+              <div className="arca-agent-config-mcp">
+                <ConfigField
+                  icon={null}
+                  label={t("agentConfiguration.filePath", "文件路径")}
+                  ariaLabel="MCP 文件路径"
+                  openKind="file"
+                  value={mcpPath}
+                  onChange={setMcpPath}
+                />
+                <ConfigField
+                  icon={null}
+                  label={t("agentConfiguration.configKey", "配置键")}
+                  ariaLabel="MCP 配置键"
+                  value={mcpKey}
+                  onChange={setMcpKey}
+                />
+              </div>
+            ) : (
+              <ConfigField
+                icon={null}
+                label="MCP"
+                ariaLabel="MCP"
+                value={t("agentConfiguration.unavailable")}
+                disabled
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Skills Section */}
+        <div className="arca-agent-config-section" aria-label="Skills">
+          <div className="arca-agent-config-section-head">
+            <div className="arca-agent-config-section-title">
+              <span className="arca-agent-config-section-icon"><ResourceIcon domain="skill" /></span>
+              <strong>Skills</strong>
+              <span className="arca-agent-config-section-badge">
+                {skillsPaths.length > 0 ? `${skillsPaths.length} 个目录` : t("agentConfiguration.unavailable")}
+              </span>
+            </div>
+            {skillsPaths.length > 0 && skillsPaths.length < 16 && (
               <button
                 type="button"
-                className="arca-agent-config-remove"
-                aria-label={t("agentConfiguration.removeSkillsDirectory", { index: index + 1 })}
-                onClick={() => setSkillsPaths((current) => current.filter((_, candidate) => candidate !== index))}
+                className="arca-agent-config-section-action-btn"
+                onClick={() => setSkillsPaths((current) => [...current, ""])}
               >
-                <TrashIcon className="w-4 h-4" />
+                <PlusIcon className="w-3.5 h-3.5" />
+                {t("agentConfiguration.addSkillsDirectory")}
               </button>
-            ) : null}
-          />
-        )) : (
-          <ConfigField
-            icon={<ResourceIcon domain="skill" />}
-            label={resource.label}
-            value={t("agentConfiguration.unavailable")}
-            disabled
-          />
-        )}
-        {skillsPaths.length > 0 && skillsPaths.length < 16 && (
-          <button
-            type="button"
-            className="arca-agent-config-add"
-            onClick={() => setSkillsPaths((current) => [...current, ""])}
-          >
-            <PlusIcon className="w-3.5 h-3.5" />{t("agentConfiguration.addSkillsDirectory")}
-          </button>
-        )}
-          </>}
-        </Fragment>)}
-        {agent.has_instructions && <section className="arca-agent-instruction-paths" aria-label="Instructions">
-          {instructionLoading ? <p className="arca-launch-hint" role="status">{t("agentConfiguration.reading")}</p>
-            : instructionPaths?.sources.map((source, index) => {
-              const value = source.id in instructionEdits ? instructionEdits[source.id] ?? source.default_path ?? "" : source.path;
-              return <div key={source.id} className="arca-agent-instruction-path">
-                <ConfigField icon={<DocumentIcon className="w-4 h-4" />} label={t("agentConfiguration.instructionsDirectory", { index: index + 1 })}
-                  value={value} openKind="folder" hint={source.kind === "files" ? undefined : `${source.kind === 'mode-rules' ? 'rules-*/ · ' : ''}${source.patterns.join(' · ')}`}
-                  onChange={path => updateInstructionPath(source.id, path)}
-                  action={<>
-                    <button type="button" className="arca-agent-config-remove" title={t("agentConfiguration.selectInstructionsDirectory")} aria-label={t("agentConfiguration.selectInstructionsDirectoryLabel", { index: index + 1 })}
-                      onClick={event => { event.preventDefault(); void browseInstructionPath(source.id, value); }}><FolderIcon className="w-4 h-4" /></button>
-                    <button type="button" className="arca-agent-config-remove" title={t("agentConfiguration.restoreDefault")} aria-label={t("agentConfiguration.resetInstructionsDirectory", { index: index + 1 })}
-                      disabled={!source.overridden && !(source.id in instructionEdits)} onClick={event => { event.preventDefault(); updateInstructionPath(source.id, null); }}><RefreshIcon className="w-4 h-4" /></button>
-                  </>} />
-                {source.kind === "files" && source.patterns.map(filename => (
-                  <ConfigField key={filename} icon={<DocumentIcon className="w-4 h-4" />} label={filename}
-                    value={value.trim() ? `${value.trim().replace(/\/+$/, "")}/${filename}` : ""}
-                    readOnly openKind="file" />
-                ))}
-              </div>;
-            })}
-          {instructionPaths && <p className="arca-agent-instruction-hint">{t("agentConfiguration.instructionsPathHint")}</p>}
-          {instructionError && <ToastNotice message={instructionError} action={<button type="button" className="btn-ghost" onClick={() => setInstructionRequest(value => value + 1)}>{t("common.retry")}</button>} />}
-        </section>}
-      </fieldset>
-      {hasDelivery && (
-        <section className="arca-agent-config-credential" aria-label={t("agentConfiguration.credentials")}>
-          <div className="arca-agent-config-credential-row">
-            <span className="arca-agent-field-caption"><KeyIcon className="w-4 h-4" />{t("agentConfiguration.delivery")}</span>
-            <FormSelect ariaLabel={t("agentConfiguration.delivery")} value={delivery} disabled={busy || browsing}
-              options={(modelAgent?.available_deliveries ?? []).map((value) => ({ value, label: t(deliveryLabel(value)) }))}
-              onChange={(value) => { setDelivery(value as ApiKeyDelivery); plaintextApproved.current = false; }} />
+            )}
           </div>
-        </section>
-      )}
+          <div className="arca-agent-config-section-body">
+            {skillsPaths.length > 0 ? skillsPaths.map((path, index) => (
+              <ConfigField
+                key={index}
+                icon={null}
+                label={index === 0 ? "Skills 1 (主目录)" : `Skills ${index + 1}`}
+                ariaLabel={skillsPaths.length > 1 ? `Skills ${index + 1}` : "Skills"}
+                value={path}
+                openKind="folder"
+                onChange={(value) => updateSkillsPath(index, value)}
+                action={index > 0 ? (
+                  <button
+                    type="button"
+                    className="arca-agent-config-remove"
+                    aria-label={t("agentConfiguration.removeSkillsDirectory", { index: index + 1 })}
+                    onClick={() => setSkillsPaths((current) => current.filter((_, candidate) => candidate !== index))}
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                ) : null}
+              />
+            )) : (
+              <ConfigField
+                icon={null}
+                label="Skills"
+                ariaLabel="Skills"
+                value={t("agentConfiguration.unavailable")}
+                disabled
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Instructions Section */}
+        {agent.has_instructions && (
+          <div className="arca-agent-config-section arca-agent-instruction-paths" aria-label="Instructions">
+            <div className="arca-agent-config-section-head">
+              <div className="arca-agent-config-section-title">
+                <span className="arca-agent-config-section-icon"><DocumentIcon className="w-4 h-4" /></span>
+                <strong>Instructions</strong>
+                <span className="arca-agent-config-section-badge">
+                  {t("agentConfiguration.rulesAndPrompts", "规则与提示词")}
+                </span>
+              </div>
+            </div>
+            <div className="arca-agent-config-section-body">
+              {instructionLoading ? (
+                <p className="arca-launch-hint" role="status">{t("agentConfiguration.reading")}</p>
+              ) : instructionPaths?.sources.map((source, index) => {
+                const value = source.id in instructionEdits ? instructionEdits[source.id] ?? source.default_path ?? "" : source.path;
+                return (
+                  <div key={source.id} className="arca-agent-instruction-path">
+                    <ConfigField
+                      icon={null}
+                      label={t("agentConfiguration.instructionsDirectory", { index: index + 1 })}
+                      value={value}
+                      openKind="folder"
+                      hint={source.kind === "files" ? undefined : `${source.kind === 'mode-rules' ? 'rules-*/ · ' : ''}${source.patterns.join(' · ')}`}
+                      onChange={(path) => updateInstructionPath(source.id, path)}
+                      action={
+                        <>
+                          <button
+                            type="button"
+                            className="arca-agent-config-remove"
+                            title={t("agentConfiguration.selectInstructionsDirectory")}
+                            aria-label={t("agentConfiguration.selectInstructionsDirectoryLabel", { index: index + 1 })}
+                            onClick={(event) => { event.preventDefault(); void browseInstructionPath(source.id, value); }}
+                          >
+                            <FolderIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            className="arca-agent-config-remove"
+                            title={t("agentConfiguration.restoreDefault")}
+                            aria-label={t("agentConfiguration.resetInstructionsDirectory", { index: index + 1 })}
+                            disabled={!source.overridden && !(source.id in instructionEdits)}
+                            onClick={(event) => { event.preventDefault(); updateInstructionPath(source.id, null); }}
+                          >
+                            <RefreshIcon className="w-4 h-4" />
+                          </button>
+                        </>
+                      }
+                    />
+                    {source.kind === "files" && source.patterns.map((filename) => (
+                      <ConfigField
+                        key={filename}
+                        icon={null}
+                        label={filename}
+                        value={value.trim() ? `${value.trim().replace(/\/+$/, "")}/${filename}` : ""}
+                        readOnly
+                        openKind="file"
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+              {instructionPaths && <p className="arca-agent-instruction-hint">{t("agentConfiguration.instructionsPathHint")}</p>}
+              {instructionError && <ToastNotice message={instructionError} action={<button type="button" className="btn-ghost" onClick={() => setInstructionRequest((value) => value + 1)}>{t("common.retry")}</button>} />}
+            </div>
+          </div>
+        )}
+
+        {/* Credentials Section */}
+        {hasDelivery && (
+          <div className="arca-agent-config-section arca-agent-config-credential" aria-label={t("agentConfiguration.credentials")}>
+            <div className="arca-agent-config-section-head">
+              <div className="arca-agent-config-section-title">
+                <span className="arca-agent-config-section-icon"><KeyIcon className="w-4 h-4" /></span>
+                <strong>{t("agentConfiguration.credentials", "凭据配置")}</strong>
+                <span className="arca-agent-config-section-badge">API Key</span>
+              </div>
+            </div>
+            <div className="arca-agent-config-section-body">
+              <div className="arca-agent-config-credential-row">
+                <span className="arca-agent-field-caption">{t("agentConfiguration.delivery")}</span>
+                <FormSelect
+                  ariaLabel={t("agentConfiguration.delivery")}
+                  value={delivery}
+                  disabled={busy || browsing}
+                  options={(modelAgent?.available_deliveries ?? []).map((value) => ({ value, label: t(deliveryLabel(value)) }))}
+                  onChange={(value) => { setDelivery(value as ApiKeyDelivery); plaintextApproved.current = false; }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </fieldset>
       {error && <ToastNotice message={t("agentConfiguration.saveFailed", { error })} />}
     </DialogShell>
   );
@@ -463,8 +567,9 @@ function ConfigField({
   action,
   openKind,
   hint,
+  ariaLabel,
 }: {
-  icon: ReactNode;
+  icon?: ReactNode;
   label: string;
   value: string;
   disabled?: boolean;
@@ -473,6 +578,7 @@ function ConfigField({
   action?: ReactNode;
   openKind?: "file" | "folder";
   hint?: string;
+  ariaLabel?: string;
 }) {
   const toast = useToast();
   const { t } = useTranslation();
@@ -486,16 +592,27 @@ function ConfigField({
       if (editor) await openPath(absolute, editor); else await openPath(absolute);
     } catch (error) { toast.show({ kind: "error", msg: t("agentConfiguration.openFailed", { error: formatError(error) }) }); }
   };
-  if (disabled) return <div className="arca-agent-config-unavailable">
-    <span className="arca-agent-field-caption">{icon}{label}</span><span>{t("agentConfiguration.unavailable")}</span>
-  </div>;
+  if (disabled) return (
+    <label data-path-field={openKind || undefined} className="arca-agent-config-field" data-disabled="true">
+      <span className="arca-agent-field-caption">{icon}{label}</span>
+      <span className="arca-agent-field-control">
+        <input
+          className="arca-model-field"
+          aria-label={ariaLabel ?? label}
+          value={value}
+          disabled
+          readOnly
+        />
+      </span>
+    </label>
+  );
   return (
     <label data-path-field={openKind || undefined} className="arca-agent-config-field" data-disabled={disabled || undefined}>
       <span className="arca-agent-field-caption">{icon}{label}</span>
       <span className="arca-agent-field-control">
       <input
         className="arca-model-field"
-        aria-label={label}
+        aria-label={ariaLabel ?? label}
         value={value}
         disabled={disabled}
         readOnly={readOnly}
@@ -505,7 +622,7 @@ function ConfigField({
       />
       {(openKind || action) && <span className="arca-agent-config-field-actions">
         {openKind && <button type="button" className="arca-agent-config-remove" disabled={disabled || !value.trim()}
-          title={t(openKind === "file" ? "agentConfiguration.openEditor" : "agentConfiguration.openFolder")} aria-label={t("agentConfiguration.openLabel", { label })}
+          title={t(openKind === "file" ? "agentConfiguration.openEditor" : "agentConfiguration.openFolder")} aria-label={t("agentConfiguration.openLabel", { label: ariaLabel ?? label })}
           onClick={(event) => { event.preventDefault(); void openLocation(); }}><ExternalLinkIcon className="w-4 h-4" /></button>}
         {action}
       </span>}

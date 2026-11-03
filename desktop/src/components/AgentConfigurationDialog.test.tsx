@@ -209,8 +209,9 @@ it("commits the reviewed Agent configuration through the unified asset envelope"
     />,
   );
 
+  fireEvent.change(screen.getByLabelText("MCP 配置键"), { target: { value: "amp.mcpServers.updated" } });
   await userEvent.click(screen.getByRole("button", { name: "继续" }));
-  await userEvent.click(await screen.findByRole("button", { name: "添加 MCP" }));
+  await userEvent.click(await screen.findByRole("button", { name: "添加 MCPs" }));
 
   await waitFor(() => {
     expect(apiMocks.commitOperation).toHaveBeenCalledWith({
@@ -236,6 +237,7 @@ it("cancels the reviewed Agent configuration through the unified asset envelope"
     />,
   );
 
+  fireEvent.change(screen.getByLabelText("MCP 配置键"), { target: { value: "amp.mcpServers.updated" } });
   await userEvent.click(screen.getByRole("button", { name: "继续" }));
   await userEvent.click(await screen.findByRole("button", { name: "返回编辑" }));
 

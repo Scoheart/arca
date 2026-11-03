@@ -365,9 +365,13 @@ pub fn observe_active(
         .values()
         .filter(|profile| match agent_id {
             "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => {
-                selected == format!("{}/{}", provider_id_for(agent_id, profile), profile.model)
-                    || (agent_id == "opencode"
-                        && selected == format!("{}/{}", provider_id(&profile.id), profile.model))
+                let current_id = provider_id_for(agent_id, profile);
+                let legacy_id = provider_id(&profile.id);
+                let desktop_legacy_id = format!("mux_desktop_{}", &legacy_id[4..]);
+                selected == format!("{current_id}/{}", profile.model)
+                    || (matches!(agent_id, "opencode" | "opencode-desktop")
+                        && (selected == format!("{legacy_id}/{}", profile.model)
+                            || selected == format!("{desktop_legacy_id}/{}", profile.model)))
             }
             "qwen-code" => selected == format!("{}::{}", qwen_auth_type(profile), profile.model),
             "factory-droid" => selected == profile.model,
@@ -415,12 +419,16 @@ fn provider_id_for(agent_id: &str, profile: &ModelProfile) -> String {
         .native_ids
         .get(agent_id)
         .cloned()
-        .filter(|id| agent_id != "opencode" || id != &provider_id(&profile.id))
+        .filter(|id| {
+            if matches!(agent_id, "opencode" | "opencode-desktop") {
+                id != &provider_id(&profile.id) && !id.starts_with("mux_desktop_")
+            } else {
+                true
+            }
+        })
         .unwrap_or_else(|| {
-            if agent_id == "opencode" {
+            if matches!(agent_id, "opencode" | "opencode-desktop") {
                 super::generated_open_code_provider_id(&crate::settings::load_settings(), profile)
-            } else if agent_id == "opencode-desktop" {
-                format!("mux_desktop_{}", &provider_id(&profile.id)[4..])
             } else if agent_id == "kilo-desktop" {
                 format!("mux_kilo_desktop_{}", &provider_id(&profile.id)[4..])
             } else if agent_id == "qoder-cli" {
@@ -645,9 +653,17 @@ fn open_code_provider(
         model.remove("limit");
     }
     models.insert(profile.model.clone(), Value::Object(model));
-    provider.insert("name".into(), Value::String(
-        profile.native_ids.get("__mux_provider_name").unwrap_or(&profile.name).clone(),
-    ));
+    let provider_name = profile.native_ids.get("__mux_provider_name")
+        .cloned()
+        .or_else(|| {
+            if !profile.provider.is_empty() && profile.provider != "custom" {
+                Some(profile.provider.clone())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| profile.name.clone());
+    provider.insert("name".into(), Value::String(provider_name));
     provider.insert("npm".into(), Value::String(package.into()));
     provider.insert("options".into(), Value::Object(options));
     provider.insert("models".into(), Value::Object(models));
@@ -676,7 +692,7 @@ fn prepare_open_code(
         .get(&native_id)
         .and_then(|property| property.value())
         .and_then(|value| value.to_serde_value());
-    if agent_id == "opencode" && profile.native_ids.contains_key("__mux_generated_opencode_provider") {
+    if matches!(agent_id, "opencode" | "opencode-desktop") && profile.native_ids.contains_key("__mux_generated_opencode_provider") {
         if let Some(value) = existing.as_ref() {
             let package = open_code_package(&profile.protocol)?;
             let incompatible_package = value.get("npm").and_then(Value::as_str)
@@ -689,28 +705,35 @@ fn prepare_open_code(
             }
         }
     }
-    let legacy_id = provider_id(&profile.id);
-    if agent_id == "opencode" && legacy_id != native_id {
-        if let Some(mut legacy) = providers.get(&legacy_id)
-            .and_then(|property| property.value()).and_then(|value| value.to_serde_value()) {
-            let mut inherited = legacy.clone();
-            let models = legacy.get_mut("models").and_then(Value::as_object_mut)
-                .ok_or_else(|| "provider_migration_conflict: Legacy OpenCode models is not an object".to_string())?;
-            if let Some(model) = models.remove(&profile.model) {
-                let empty = models.is_empty();
-                inherited["models"] = serde_json::json!({ (profile.model.clone()): model });
-                if let Some(current) = existing.as_mut() {
-                    merge_missing_json(current, &inherited);
-                } else {
-                    existing = Some(inherited);
-                }
-                set_json(&providers, &legacy_id, if empty { None } else { Some(legacy) });
-                let old_selection = format!("{legacy_id}/{}", profile.model);
-                for key in ["model", "small_model"] {
-                    let value = object.get(key).and_then(|property| property.value())
-                        .and_then(|value| value.to_serde_value());
-                    if value.as_ref().and_then(Value::as_str) == Some(old_selection.as_str()) {
-                        set_json(&object, key, Some(Value::String(format!("{native_id}/{}", profile.model))));
+    let legacy_ids = [
+        provider_id(&profile.id),
+        format!("mux_desktop_{}", &provider_id(&profile.id)[4..]),
+    ];
+    if matches!(agent_id, "opencode" | "opencode-desktop") {
+        for legacy_id in legacy_ids {
+            if legacy_id != native_id {
+                if let Some(mut legacy) = providers.get(&legacy_id)
+                    .and_then(|property| property.value()).and_then(|value| value.to_serde_value()) {
+                    let mut inherited = legacy.clone();
+                    let models = legacy.get_mut("models").and_then(Value::as_object_mut)
+                        .ok_or_else(|| "provider_migration_conflict: Legacy OpenCode models is not an object".to_string())?;
+                    if let Some(model) = models.remove(&profile.model) {
+                        let empty = models.is_empty();
+                        inherited["models"] = serde_json::json!({ (profile.model.clone()): model });
+                        if let Some(current) = existing.as_mut() {
+                            merge_missing_json(current, &inherited);
+                        } else {
+                            existing = Some(inherited);
+                        }
+                        set_json(&providers, &legacy_id, if empty { None } else { Some(legacy) });
+                        let old_selection = format!("{legacy_id}/{}", profile.model);
+                        for key in ["model", "small_model"] {
+                            let value = object.get(key).and_then(|property| property.value())
+                                .and_then(|value| value.to_serde_value());
+                            if value.as_ref().and_then(Value::as_str) == Some(old_selection.as_str()) {
+                                set_json(&object, key, Some(Value::String(format!("{native_id}/{}", profile.model))));
+                            }
+                        }
                     }
                 }
             }
@@ -746,7 +769,11 @@ fn prepare_clear_open_code(
     ensure_unique(&object, path, "$root")?;
     let mut ids = vec![provider_id_for(agent_id, profile)];
     let legacy = provider_id(&profile.id);
-    if agent_id == "opencode" && !ids.contains(&legacy) { ids.push(legacy); }
+    let desktop_legacy = format!("mux_desktop_{}", &legacy[4..]);
+    if matches!(agent_id, "opencode" | "opencode-desktop") {
+        if !ids.contains(&legacy) { ids.push(legacy); }
+        if !ids.contains(&desktop_legacy) { ids.push(desktop_legacy); }
+    }
     for provider_id in ids {
         if let Some(providers) = object.object_value("provider") {
             ensure_unique(&providers, path, "provider")?;
@@ -2637,29 +2664,38 @@ other_policy: strict # keep policy
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
-    fn opencode_desktop_removal_preserves_cli_models_and_current_pointer() {
+    fn opencode_desktop_uses_readable_provider_and_migrates_legacy_desktop_entries() {
         let home = crate::testenv::TestHome::new("opencode-desktop-models");
         let path = home.home.join("opencode.json");
-        let managed = profile(ModelProtocol::OpenaiCompletions);
+        let mut managed = profile(ModelProtocol::OpenaiCompletions);
+        managed.id = "custom-qwen-test".into();
+        managed.model = "qwen-test".into();
+        managed.native_ids.insert("__mux_provider_name".into(), "AI Studio".into());
+        managed.native_ids.insert("opencode-desktop".into(), "ai-studio".into());
         let paths = std::slice::from_ref(&path);
         let desktop_id = native_provider_id("opencode-desktop", &managed);
-        let cli_id = native_provider_id("opencode", &managed);
-        assert_ne!(desktop_id, cli_id);
-        std::fs::write(&path, "{\n// user policy\n\"permission\": {\"edit\": \"ask\"}\n}").unwrap();
-        for (id, active) in [("opencode-desktop", false), ("opencode", true)] {
-            let prepared = prepare_apply(id, paths, &managed, active).unwrap();
-            std::fs::write(&path, prepared[0].content.as_ref().unwrap()).unwrap();
-        }
-        let before = read_jsonc(&path).unwrap().0.to_serde_value().unwrap();
-        let cleared = prepare_clear("opencode-desktop", paths, &managed).unwrap();
-        let content = cleared[0].content.as_ref().unwrap();
+        assert_eq!(desktop_id, "ai-studio");
+        let legacy_id = format!("mux_desktop_{}", &provider_id(&managed.id)[4..]);
+        std::fs::write(&path, format!(
+            "{{\n// user policy\n\"permission\": {{\"edit\": \"ask\"}},\n\"provider\": {{\"{legacy_id}\": {{\"npm\": \"@ai-sdk/openai-compatible\", \"options\": {{\"baseURL\": \"https://example.invalid/v1\"}}, \"models\": {{\"{}\": {{\"name\": \"Qwen\"}}}}}}}},\n\"model\": \"{legacy_id}/{}\"\n}}",
+            managed.model, managed.model
+        )).unwrap();
+        let prepared = prepare_apply("opencode-desktop", paths, &managed, true).unwrap();
+        let content = prepared[0].content.as_ref().unwrap();
         assert!(content.contains("// user policy"));
         std::fs::write(&path, content).unwrap();
         let after = read_jsonc(&path).unwrap().0.to_serde_value().unwrap();
-        assert!(after["provider"].get(&desktop_id).is_none());
-        assert_eq!(after["provider"][&cli_id], before["provider"][&cli_id]);
-        assert_eq!(after["model"], before["model"]);
-        assert_eq!(after["permission"], before["permission"]);
+        assert!(after["provider"].get(&legacy_id).is_none());
+        assert_eq!(after["provider"]["ai-studio"]["name"], "AI Studio");
+        assert_eq!(after["model"], "ai-studio/qwen-test");
+        assert_eq!(after["permission"], serde_json::json!({"edit": "ask"}));
+
+        let cleared = prepare_clear("opencode-desktop", paths, &managed).unwrap();
+        let cleared_content = cleared[0].content.as_ref().unwrap();
+        std::fs::write(&path, cleared_content).unwrap();
+        let final_json = read_jsonc(&path).unwrap().0.to_serde_value().unwrap();
+        assert!(final_json["provider"].get("ai-studio").is_none());
+        assert!(final_json["provider"].get(&legacy_id).is_none());
     }
 
     #[test]

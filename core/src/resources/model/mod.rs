@@ -2583,15 +2583,25 @@ fn materialize_profile_for_agent(
             .native_ids
             .insert("pi".into(), generated_pi_provider_id(&settings, profile));
     }
-    if agent_id == "opencode" {
-        if let Some(provider) = profile.provider_id.as_ref()
-            .and_then(|id| settings.model_providers.as_ref()?.get(id)) {
-            materialized.native_ids.insert("__mux_provider_name".into(), provider.name.clone());
+    if matches!(agent_id, "opencode" | "opencode-desktop") {
+        let provider_name = profile.provider_id.as_ref()
+            .and_then(|id| settings.model_providers.as_ref()?.get(id))
+            .map(|provider| provider.name.clone())
+            .or_else(|| {
+                if !profile.provider.is_empty() && profile.provider != "custom" {
+                    Some(profile.provider.clone())
+                } else {
+                    None
+                }
+            });
+        if let Some(name) = provider_name {
+            materialized.native_ids.insert("__mux_provider_name".into(), name);
         }
-        if materialized.native_ids.get("opencode")
-            .is_none_or(|id| id == &arca_profile_id(&profile.id)) {
+        let existing = materialized.native_ids.get(agent_id)
+            .or_else(|| materialized.native_ids.get(if agent_id == "opencode" { "opencode-desktop" } else { "opencode" }));
+        if existing.is_none_or(|id| id == &arca_profile_id(&profile.id) || id.starts_with("mux_desktop_")) {
             let id = generated_open_code_provider_id(&settings, profile);
-            materialized.native_ids.insert("opencode".into(), id.clone());
+            materialized.native_ids.insert(agent_id.into(), id.clone());
             materialized.native_ids.insert("__mux_generated_opencode_provider".into(), id);
         }
     }
@@ -8682,11 +8692,11 @@ mod tests {
 
         let model_config =
             fs::read_to_string(home().join(".config/opencode/opencode.json")).unwrap();
-        assert!(model_config.contains("mux_"));
+        let native_id = adapters::native_provider_id("opencode", &profile);
+        assert!(model_config.contains(&native_id));
         assert!(!model_config.contains("opencode-private-secret"));
         let auth_path = home().join(".local/share/opencode/auth.json");
         let auth: Value = serde_json::from_str(&fs::read_to_string(&auth_path).unwrap()).unwrap();
-        let native_id = adapters::native_provider_id("opencode", &profile);
         assert_eq!(auth[&native_id]["type"], "api");
         assert_eq!(auth[&native_id]["key"], "opencode-private-secret");
         assert_eq!(
