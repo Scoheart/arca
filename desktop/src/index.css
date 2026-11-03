@@ -1148,26 +1148,26 @@ body {
 }
 .arca-model-card { position: relative; }
 .arca-models-workspace .arca-model-card .arca-model-list-row {
-  display: flex; flex-direction: column; justify-content: space-between;
-  width: 100%; min-height: 118px; padding: 13px 14px 11px;
+  display: flex; flex-direction: column; align-items: stretch; justify-content: space-between;
+  width: 100%; min-height: 118px; padding: 13px 14px 11px; text-align: left;
 }
 .arca-model-list-row .arca-model-list-identity {
-  display: flex; align-items: center; gap: 10px; padding-right: 64px;
+  display: flex; width: 100%; min-width: 0; align-items: center; gap: 10px; padding-right: 64px; text-align: left;
 }
 .arca-model-card-facts {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 8px 0 6px;
+  display: flex; width: 100%; min-width: 0; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 6px 8px; margin: 8px 0 6px; text-align: left;
 }
 .arca-model-status-pill {
-  display: inline-flex; height: 19px; align-items: center; padding: 0 7px;
-  border-radius: 4px; font: 600 10px/1.2 var(--font-sans);
+  display: inline-flex; height: 20px; align-items: center; padding: 0 7px;
+  border-radius: 5px; font: 600 10px/1.2 var(--font-sans);
 }
 .arca-model-status-added {
   background: color-mix(in srgb, var(--color-blue) 12%, transparent);
   color: var(--color-blue);
 }
 .arca-model-card-footer {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  margin-top: auto; padding-top: 6px; border-top: 1px solid var(--border-subtle); width: 100%;
+  display: flex; width: 100%; min-width: 0; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: auto; padding-top: 6px; border-top: 1px solid var(--border-subtle); text-align: left;
 }
 .arca-model-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; padding-inline: 2px; margin-bottom: 8px; }
 .arca-model-section-heading h2 { display: flex; align-items: baseline; gap: 7px; margin: 0; color: var(--text-primary); font-size: 13px; font-weight: 660; }
@@ -3173,10 +3173,42 @@ body {
 
 .arca-agent-guided-cards { margin-top: 14px; }
 
-/* Search lives above Agent cards so narrow toolbars keep their action targets. */
-.arca-consumption-search { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
-.arca-consumption-search .arca-search { flex: 1; min-width: 0; max-width: 420px; }
-.arca-consumption-search > span { flex-shrink: 0; color: var(--text-secondary); font-size: 12px; }
+/* Search lives inline within the Agent section actions */
+.arca-consumption-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.arca-consumption-search .arca-search {
+  width: 220px;
+  min-width: 160px;
+  max-width: 260px;
+  height: 32px;
+}
+.arca-consumption-search .arca-search input {
+  height: 32px;
+  padding: 0 28px 0 28px;
+  font-size: 11.5px;
+  border-radius: var(--radius-mac);
+}
+.arca-consumption-search .arca-search-icon {
+  left: 9px;
+  width: 13px;
+  height: 13px;
+}
+.arca-consumption-search .arca-search-clear {
+  top: 3px;
+  width: 24px;
+  height: 24px;
+}
+.arca-consumption-search > span {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 
 /* Skill details are a single reading surface, with metadata above the body. */
 .arca-skill-reading { min-width: 0; }

@@ -278,6 +278,12 @@ export function AgentConsumptionPanel({
           {description && <p>{description}</p>}
         </div>
         <AgentResourceActions><div className="arca-agent-section-actions">
+          {total > 0 && (
+            <div className="arca-consumption-search">
+              <SearchBar value={query} onChange={setQuery} placeholder={`搜索当前 ${title}`} />
+              <span role="status" aria-live="polite">{query ? `${filtered.length + visible} / ${total} 项` : `${total} 项`}</span>
+            </div>
+          )}
           {domainRows.length > 0 && bulkToggleLabel && bulkEnabled !== undefined && onBulkEnabledChange && (
             <div className="arca-agent-bulk-toggle">
               <span>{bulkToggleLabel}</span>
@@ -316,11 +322,6 @@ export function AgentConsumptionPanel({
           </button>
         </div></AgentResourceActions>
       </div>
-
-      {total > 0 && <div className="arca-consumption-search">
-        <SearchBar value={query} onChange={setQuery} placeholder={`搜索当前 ${title}`} />
-        <span role="status" aria-live="polite">{query ? `${filtered.length + visible} / ${total} 项` : `${total} 项`}</span>
-      </div>}
       {domain === "model" && description && <p className="arca-consumption-model-note">{description}</p>}
       {externalMode === "summary" && domainExternal.length > 0 && (
         <div className="arca-consumption-external" role="status">

@@ -937,7 +937,7 @@ const ModelList = memo(function ModelList({
               </div>
               <div className="arca-model-card-footer">
                 <span className="arca-model-protocol-pill" title={protocolLabel(profile.protocol)}>
-                  <span className="arca-model-protocol-dot" />
+                  <span className="arca-model-protocol-dot" data-protocol={profile.protocol} />
                   <span>{protocolLabel(profile.protocol)}</span>
                 </span>
               </div>
