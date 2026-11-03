@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.66.2](https://github.com/Scoheart/arca/compare/v2.66.1...v2.66.2) (2026-11-03)
+
+### Changes
+
+* fix(model): use readable provider name and slug for opencode desktop and modularize config dialog sections ([466884c](https://github.com/Scoheart/arca/commit/466884ce1ffd166bcd5c36adcb66b80aa26773e8))
+* fix(model): write the configured Provider name for Kilo, Qoder, ZCode, Codex, Crush, Goose and Hermes ([e70f91e](https://github.com/Scoheart/arca/commit/e70f91e2b36e5b39b6bc2d2e83b3fa6200b6b56f))
+
 ## [2.66.1](https://github.com/Scoheart/arca/compare/v2.66.0...v2.66.1) (2026-11-03)
 
 ### Changes
