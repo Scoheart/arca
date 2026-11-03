@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.66.3](https://github.com/Scoheart/arca/compare/v2.66.2...v2.66.3) (2026-11-03)
+
+### Changes
+
+* feat(model): include configured arca proxy in exported curl command ([153fc42](https://github.com/Scoheart/arca/commit/153fc425249e37d29b20217547d9ee071c4941ea))
+
 ## [2.66.2](https://github.com/Scoheart/arca/compare/v2.66.1...v2.66.2) (2026-11-03)
 
 ### Changes
