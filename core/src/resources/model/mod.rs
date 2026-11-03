@@ -2583,7 +2583,7 @@ fn materialize_profile_for_agent(
             .native_ids
             .insert("pi".into(), generated_pi_provider_id(&settings, profile));
     }
-    if matches!(agent_id, "opencode" | "opencode-desktop") {
+    {
         let provider_name = profile.provider_id.as_ref()
             .and_then(|id| settings.model_providers.as_ref()?.get(id))
             .map(|provider| provider.name.clone())
@@ -2597,9 +2597,18 @@ fn materialize_profile_for_agent(
         if let Some(name) = provider_name {
             materialized.native_ids.insert("__mux_provider_name".into(), name);
         }
+    }
+    if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
+        let siblings: &[&str] = match agent_id {
+            "opencode" => &["opencode-desktop"],
+            "opencode-desktop" => &["opencode"],
+            "kilo-code" => &["kilo-desktop"],
+            _ => &["kilo-code"],
+        };
         let existing = materialized.native_ids.get(agent_id)
-            .or_else(|| materialized.native_ids.get(if agent_id == "opencode" { "opencode-desktop" } else { "opencode" }));
-        if existing.is_none_or(|id| id == &arca_profile_id(&profile.id) || id.starts_with("mux_desktop_")) {
+            .or_else(|| siblings.iter().find_map(|id| materialized.native_ids.get(*id)));
+        if existing.is_none_or(|id| id == &arca_profile_id(&profile.id)
+            || id.starts_with("mux_desktop_") || id.starts_with("mux_kilo_desktop_")) {
             let id = generated_open_code_provider_id(&settings, profile);
             materialized.native_ids.insert(agent_id.into(), id.clone());
             materialized.native_ids.insert("__mux_generated_opencode_provider".into(), id);
@@ -6365,7 +6374,7 @@ fn prepare_codex(
         .get_mut(&provider_id)
         .and_then(Item::as_table_mut)
         .ok_or_else(|| format!("Arca provider '{provider_id}' is not a TOML table"))?;
-    provider.insert("name", toml_edit::value(&profile.name));
+    provider.insert("name", toml_edit::value(&adapters::provider_display_name(profile)));
     provider.insert("base_url", toml_edit::value(&profile.base_url));
     provider.insert("wire_api", toml_edit::value("responses"));
     provider.remove("env_key");

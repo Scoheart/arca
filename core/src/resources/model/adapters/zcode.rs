@@ -87,7 +87,7 @@ pub(super) fn prepare(path: &Path, profile: &ModelProfile, literal_key: Option<&
         }
         set_json(&provider, key, Some(json!(expected)));
     }
-    set_json(&provider, "name", Some(json!(profile.name)));
+    set_json(&provider, "name", Some(json!(provider_display_name(profile))));
     set_json(&provider, "enabled", Some(json!(true)));
     let options = object(&provider, "options")?;
     set_json(&options, "baseURL", Some(json!(profile.base_url)));

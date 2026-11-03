@@ -368,10 +368,12 @@ pub fn observe_active(
                 let current_id = provider_id_for(agent_id, profile);
                 let legacy_id = provider_id(&profile.id);
                 let desktop_legacy_id = format!("mux_desktop_{}", &legacy_id[4..]);
+                let kilo_legacy_id = format!("mux_kilo_desktop_{}", &legacy_id[4..]);
                 selected == format!("{current_id}/{}", profile.model)
-                    || (matches!(agent_id, "opencode" | "opencode-desktop")
+                    || (matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop")
                         && (selected == format!("{legacy_id}/{}", profile.model)
-                            || selected == format!("{desktop_legacy_id}/{}", profile.model)))
+                            || selected == format!("{desktop_legacy_id}/{}", profile.model)
+                            || selected == format!("{kilo_legacy_id}/{}", profile.model)))
             }
             "qwen-code" => selected == format!("{}::{}", qwen_auth_type(profile), profile.model),
             "factory-droid" => selected == profile.model,
@@ -414,20 +416,26 @@ fn provider_id(profile_id: &str) -> String {
     encoded
 }
 
+/// Display name of the Arca Provider that owns this profile (falls back to the
+/// model name only when no Provider is known). Never the model name otherwise.
+pub(crate) fn provider_display_name(profile: &ModelProfile) -> String {
+    profile.native_ids.get("__mux_provider_name").cloned().unwrap_or_else(|| profile.name.clone())
+}
+
 fn provider_id_for(agent_id: &str, profile: &ModelProfile) -> String {
     profile
         .native_ids
         .get(agent_id)
         .cloned()
         .filter(|id| {
-            if matches!(agent_id, "opencode" | "opencode-desktop") {
-                id != &provider_id(&profile.id) && !id.starts_with("mux_desktop_")
+            if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
+                id != &provider_id(&profile.id) && !id.starts_with("mux_desktop_") && !id.starts_with("mux_kilo_desktop_")
             } else {
                 true
             }
         })
         .unwrap_or_else(|| {
-            if matches!(agent_id, "opencode" | "opencode-desktop") {
+            if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
                 super::generated_open_code_provider_id(&crate::settings::load_settings(), profile)
             } else if agent_id == "kilo-desktop" {
                 format!("mux_kilo_desktop_{}", &provider_id(&profile.id)[4..])
@@ -692,7 +700,7 @@ fn prepare_open_code(
         .get(&native_id)
         .and_then(|property| property.value())
         .and_then(|value| value.to_serde_value());
-    if matches!(agent_id, "opencode" | "opencode-desktop") && profile.native_ids.contains_key("__mux_generated_opencode_provider") {
+    if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") && profile.native_ids.contains_key("__mux_generated_opencode_provider") {
         if let Some(value) = existing.as_ref() {
             let package = open_code_package(&profile.protocol)?;
             let incompatible_package = value.get("npm").and_then(Value::as_str)
@@ -708,8 +716,9 @@ fn prepare_open_code(
     let legacy_ids = [
         provider_id(&profile.id),
         format!("mux_desktop_{}", &provider_id(&profile.id)[4..]),
+        format!("mux_kilo_desktop_{}", &provider_id(&profile.id)[4..]),
     ];
-    if matches!(agent_id, "opencode" | "opencode-desktop") {
+    if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
         for legacy_id in legacy_ids {
             if legacy_id != native_id {
                 if let Some(mut legacy) = providers.get(&legacy_id)
@@ -770,9 +779,11 @@ fn prepare_clear_open_code(
     let mut ids = vec![provider_id_for(agent_id, profile)];
     let legacy = provider_id(&profile.id);
     let desktop_legacy = format!("mux_desktop_{}", &legacy[4..]);
-    if matches!(agent_id, "opencode" | "opencode-desktop") {
+    let kilo_legacy = format!("mux_kilo_desktop_{}", &legacy[4..]);
+    if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
         if !ids.contains(&legacy) { ids.push(legacy); }
         if !ids.contains(&desktop_legacy) { ids.push(desktop_legacy); }
+        if !ids.contains(&kilo_legacy) { ids.push(kilo_legacy); }
     }
     for provider_id in ids {
         if let Some(providers) = object.object_value("provider") {
@@ -1027,7 +1038,7 @@ fn crush_provider(profile: &ModelProfile) -> Value {
             "id".into(),
             Value::String(provider_id_for("crush", profile)),
         ),
-        ("name".into(), Value::String(profile.name.clone())),
+        ("name".into(), Value::String(provider_display_name(profile))),
         ("base_url".into(), Value::String(profile.base_url.clone())),
         ("type".into(), Value::String(provider_type.into())),
         ("disable".into(), Value::Bool(false)),
@@ -1385,8 +1396,8 @@ fn prepare_goose(
     };
     let context = profile.context_window.unwrap_or(128_000);
     let mut provider = json!({
-        "name": provider_id_for("goose", profile), "engine": engine, "display_name": profile.name,
-        "description": format!("Arca managed {} provider", profile.name),
+        "name": provider_id_for("goose", profile), "engine": engine, "display_name": provider_display_name(profile),
+        "description": format!("Arca managed {} provider", provider_display_name(profile)),
         "api_key_env": profile.env_key.clone().unwrap_or_default(), "base_url": profile.base_url,
         "models": [{"name": profile.model, "context_limit": context, "input_token_cost": null,
             "output_token_cost": null, "currency": null, "supports_cache_control": null}],
@@ -1538,7 +1549,7 @@ fn prepare_yaml_model(
                 "providers",
                 &id,
                 &json!({
-                    "name": profile.name,
+                    "name": provider_display_name(profile),
                     "api": profile.base_url,
                     "key_env": profile.env_key,
                     "default_model": profile.model,
@@ -2708,7 +2719,7 @@ other_policy: strict # keep policy
         fs::write(&cli_path, "{\"model\":\"external/cli-model\"}").unwrap();
         let managed = profile(ModelProtocol::OpenaiCompletions);
         let desktop_id = native_provider_id("kilo-desktop", &managed);
-        assert_ne!(desktop_id, native_provider_id("kilo-code", &managed));
+        assert_eq!(desktop_id, native_provider_id("kilo-code", &managed));
         let paths = std::slice::from_ref(&path);
         let prepared = prepare_apply("kilo-desktop", paths, &managed, false).unwrap();
         fs::write(&path, prepared[0].content.as_ref().unwrap()).unwrap();

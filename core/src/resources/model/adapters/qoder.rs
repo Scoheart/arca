@@ -98,7 +98,7 @@ pub(super) fn prepare(
     }
     // Each Arca-created provider owns one model; preserve provider metadata.
     if provider.get("displayName").is_none() {
-        set_json(&provider, "displayName", Some(json!(profile.name)));
+        set_json(&provider, "displayName", Some(json!(provider_display_name(profile))));
     }
     if provider.get("model").is_none() {
         set_json(&provider, "model", Some(json!(profile.model)));
