@@ -2,7 +2,9 @@ import { readLocalSetting, writeLocalSetting } from "../lib/localSettings";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { homeDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
+import { openPath } from "@tauri-apps/plugin-opener";
 import { formatError } from "../lib/format";
 import { useToast } from "./Toast";
 import { claimLayerKeyboardEvent } from "./ui";
@@ -42,13 +44,81 @@ export function preferredFileEditor(): string | undefined {
   }
 }
 
-function editorLabel(editor: string): string {
+export function editorLabel(editor: string): string {
   return editor.split(/[\\/]/).pop()?.replace(/\.app$/i, "") || editor;
 }
 
-function editorDisplayName(editor: string): string {
+export function editorDisplayName(editor: string): string {
   const name = editorLabel(editor);
   return name === "Visual Studio Code" ? "VS Code" : name;
+}
+
+/**
+ * Opens a file or folder path with graceful fallbacks:
+ * 1. Resolves home directory (~).
+ * 2. Ensures the target path exists on disk (creating parent dirs and empty file if needed).
+ * 3. Folders open with the system file manager.
+ * 4. Files try the preferred editor first, then the base app name, then system default, then parent directory.
+ */
+export async function openLocationWithFallback(
+  path: string,
+  openKind: "file" | "folder" = "file",
+  editor = preferredFileEditor()
+): Promise<void> {
+  const trimmed = path.trim();
+  if (!trimmed) return;
+
+  const home = (await homeDir()).replace(/\/$/, "");
+  const absolute = trimmed === "~" ? home : trimmed.startsWith("~/") ? `${home}/${trimmed.slice(2)}` : trimmed;
+
+  try {
+    await invoke("ensure_file_path", { path: absolute, kind: openKind });
+  } catch {
+    // Non-fatal if backend command unavailable or permissions prevent creation
+  }
+
+  if (openKind === "folder") {
+    await openPath(absolute);
+    return;
+  }
+
+  if (editor) {
+    try {
+      await openPath(absolute, editor);
+      return;
+    } catch (editorError) {
+      console.warn(`Failed to open ${absolute} with editor "${editor}":`, editorError);
+
+      const baseName = editorLabel(editor);
+      if (baseName && baseName !== editor) {
+        try {
+          await openPath(absolute, baseName);
+          return;
+        } catch {
+          // Fall through to system default
+        }
+      }
+    }
+  }
+
+  try {
+    await openPath(absolute);
+    return;
+  } catch (defaultError) {
+    console.warn(`Failed to open ${absolute} with system default:`, defaultError);
+
+    const parentDir = absolute.replace(/[/\\][^/\\]+$/, "");
+    if (parentDir && parentDir !== absolute) {
+      try {
+        await openPath(parentDir);
+        return;
+      } catch {
+        // Fall through
+      }
+    }
+
+    throw defaultError;
+  }
 }
 
 export function FileEditorSelect({ showLabel = false }: { showLabel?: boolean }) {

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openPath } from '@tauri-apps/plugin-opener';
 import { instructionCommit, instructionList, instructionPrepareCreate, instructionPrepareSave, instructionRead, type InstructionInventory, type InstructionSnapshot } from '../lib/instructions';
 import { formatError } from '../lib/format';
 import { ToastNotice, useToast } from './Toast';
 import { DialogShell } from './DialogShell';
 import { AgentResourceActions } from './AgentResourcePanel';
 import { TraceMarkdown } from './TraceMarkdown';
-import { preferredFileEditor } from './FileEditorSelect';
+import { openLocationWithFallback } from './FileEditorSelect';
 import { DocumentIcon, ExternalLinkIcon, RefreshIcon } from './icons';
 import './TraceView.css';
 import './InstructionsEditor.css';
@@ -135,7 +134,7 @@ export function InstructionsEditor({ agentId }: { agentId: string }) {
           : snapshot || creating ? <>
             <div className="arca-instructions-file-heading"><div><strong>{creating ? path?.split('/').pop() : file?.name}</strong><code title={path}>{path}</code></div>
               <div className="arca-instructions-file-actions">{file && file.readers.length > 1 && <small title={file.readers.map(reader => reader.name).join(', ')}>{t('instructions.shared')}</small>}{dirty && <small>{t('instructions.dirty')}</small>}{file && !file.editable && <small>{t('instructions.readOnly')}</small>}
-                {file && path && <button type="button" className="arca-instructions-open" title={t('instructions.openEditor')} aria-label={t('instructions.openEditor')} onClick={() => void openPath(path, preferredFileEditor()).catch(e => toast.show({ kind: 'error', msg: formatError(e) }))}><ExternalLinkIcon className="w-3.5 h-3.5" /></button>}
+                {file && path && <button type="button" className="arca-instructions-open" title={t('instructions.openEditor')} aria-label={t('instructions.openEditor')} onClick={() => void openLocationWithFallback(path, "file").catch(e => toast.show({ kind: 'error', msg: formatError(e) }))}><ExternalLinkIcon className="w-3.5 h-3.5" /></button>}
                 <div className="arca-instructions-view-toggle" role="group" aria-label={t('instructions.preview')}><button type="button" aria-pressed={!preview} onClick={() => setPreview(false)}>{t('instructions.source')}</button><button type="button" aria-pressed={preview} onClick={() => setPreview(true)}>{t('instructions.preview')}</button></div>
               </div>
             </div>

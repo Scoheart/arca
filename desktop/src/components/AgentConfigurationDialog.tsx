@@ -23,8 +23,7 @@ import { AgentGlyph } from "./brandIcons";
 import { FormSelect } from "./FormSelect";
 import "./AgentLaunch.css";
 import { homeDir } from "@tauri-apps/api/path";
-import { openPath } from "@tauri-apps/plugin-opener";
-import { preferredFileEditor } from "./FileEditorSelect";
+import { openLocationWithFallback } from "./FileEditorSelect";
 import { open as choosePath } from "@tauri-apps/plugin-dialog";
 import { instructionGetPaths, instructionSetPaths, type InstructionPathConfiguration } from "../lib/instructions";
 import { CodexConfigurationEditor } from "./CodexConfigurationEditor";
@@ -585,11 +584,7 @@ function ConfigField({
   const hintId = useId();
   const openLocation = async () => {
     try {
-      const home = (await homeDir()).replace(/\/$/, "");
-      const path = value.trim();
-      const absolute = path === "~" ? home : path.startsWith("~/") ? `${home}/${path.slice(2)}` : path;
-      const editor = openKind === "file" ? preferredFileEditor() : undefined;
-      if (editor) await openPath(absolute, editor); else await openPath(absolute);
+      await openLocationWithFallback(value, openKind ?? "file");
     } catch (error) { toast.show({ kind: "error", msg: t("agentConfiguration.openFailed", { error: formatError(error) }) }); }
   };
   if (disabled) return (

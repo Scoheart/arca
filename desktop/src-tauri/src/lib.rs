@@ -86,6 +86,7 @@ pub fn run() {
             agent_launch::set_terminal_preference,
             file_editors::list_file_editors,
             file_editors::detect_agent_installation,
+            file_editors::ensure_file_path,
             commands::get_backend_status,
             commands::unlock_model_credentials,
             commands::get_model_credential_session_status,
