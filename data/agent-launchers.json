@@ -567,7 +567,9 @@
     "candidates": [
       "dsh"
     ],
-    "args": []
+    "args": [
+      "web"
+    ]
   },
   "goose-desktop": {
     "kind": "app",

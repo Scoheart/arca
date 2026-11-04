@@ -187,10 +187,31 @@ fn compatible_target<'a>(category: &str, target: &'a LaunchTarget) -> Option<&'a
     }
 }
 
+pub(crate) fn is_dsh_command(program: &str) -> bool {
+    Path::new(program)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|name| {
+            name.eq_ignore_ascii_case("dsh")
+                || name.eq_ignore_ascii_case("dsh.cmd")
+                || name.eq_ignore_ascii_case("dsh.exe")
+        })
+}
+
 fn resolve(target: &LaunchTarget) -> Option<LaunchTarget> {
     match target {
         LaunchTarget::App { path, args, new_instance, env } => validate_target(target).is_ok().then(|| LaunchTarget::App { path: expand(path).to_string_lossy().into_owned(), args: args.clone(), new_instance: *new_instance, env: env.clone() }),
-        LaunchTarget::Cli { command, args, env } => find_command(command).map(|path| LaunchTarget::Cli { command: path.to_string_lossy().into_owned(), args: args.clone(), env: env.clone() }),
+        LaunchTarget::Cli { command, args, env } => find_command(command).map(|path| {
+            let mut args = args.clone();
+            if args.is_empty() && is_dsh_command(&path.to_string_lossy()) {
+                args = vec!["web".to_string()];
+            }
+            LaunchTarget::Cli {
+                command: path.to_string_lossy().into_owned(),
+                args,
+                env: env.clone(),
+            }
+        }),
         LaunchTarget::Web { .. } => validate_target(target).is_ok().then(|| target.clone()),
     }
 }
@@ -515,7 +536,11 @@ pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Resul
         LaunchTarget::Web { url } => { command = Command::new("/usr/bin/open"); command.arg(url); }
         LaunchTarget::Cli { command: program, args, env } => {
             let directory = directory.ok_or("请先选择工作目录")?;
-            let line = super::launch_command::cli_command(program, args, env, directory)?;
+            let mut resolved_args = args.clone();
+            if resolved_args.is_empty() && is_dsh_command(program) {
+                resolved_args = vec!["web".to_string()];
+            }
+            let line = super::launch_command::cli_command(program, &resolved_args, env, directory)?;
             return super::terminals::dispatch(&line);
         }
     }
@@ -783,5 +808,30 @@ mod tests {
         assert_eq!(info.kind.as_deref(), Some("app"));
         assert!(matches!(info.resolved_target, Some(LaunchTarget::App { path, .. }) if path == app.to_string_lossy()));
         assert_eq!(info.install_url.as_deref(), Some("https://factory.com/product/desktop"));
+    }
+
+    #[test]
+    fn deepseek_harness_defaults_to_web_profile_when_args_are_omitted() {
+        let home = crate::testenv::TestHome::new("dsh-launch-profile");
+        let bin = home.home.join(".local/bin/dsh");
+        fs::create_dir_all(bin.parent().unwrap()).unwrap();
+        fs::write(&bin, "#!/bin/sh\nexit 0\n").unwrap();
+        #[cfg(unix)] {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&bin, fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        let info = info("deepseek-harness").unwrap();
+        assert_eq!(info.category, "cli");
+        assert!(matches!(&info.default_target, Some(LaunchTarget::Cli { args, .. }) if args == &["web"]));
+        assert!(matches!(&info.resolved_target, Some(LaunchTarget::Cli { args, .. }) if args == &["web"]));
+
+        // Explicit empty args in a custom profile still safely fall back to "web"
+        let custom_target = LaunchTarget::Cli {
+            command: "dsh".into(),
+            args: vec![],
+            env: BTreeMap::new(),
+        };
+        let resolved = resolve(&custom_target).unwrap();
+        assert!(matches!(resolved, LaunchTarget::Cli { args, .. } if args == &["web"]));
     }
 }
