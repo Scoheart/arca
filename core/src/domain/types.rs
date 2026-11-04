@@ -549,6 +549,13 @@ pub struct AgentSubagentsCapability {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AgentHooksCapability {
+    pub target_id: String,
+    pub config_file: String,
+    pub format: String, // "codex" | "claude"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AgentSkillsCapability {
     pub target_id: String,
     pub global_dir: String,
@@ -609,6 +616,8 @@ pub struct AgentDefinition {
     pub skills: Option<AgentSkillsCapability>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subagents: Option<AgentSubagentsCapability>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hooks: Option<AgentHooksCapability>,
 }
 
 fn is_false(value: &bool) -> bool {

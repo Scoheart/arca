@@ -15,6 +15,7 @@ export function viewForResourceIntent(intent: ResourceNavigationIntent): View {
   if (intent.domain === "mcp") return { kind: "registry", intent };
   if (intent.domain === "model") return { kind: "models", intent };
   if (intent.domain === "subagent") return { kind: "subagents", intent };
+  if (intent.domain === "hook") return { kind: "hooks", intent };
   return { kind: "skills", intent };
 }
 
@@ -28,5 +29,6 @@ export function clearResourceIntent(view: View, id: number): View {
   if (view.kind === "models") return { kind: "models" };
   if (view.kind === "skills") return { kind: "skills" };
   if (view.kind === "subagents") return { kind: "subagents" };
+  if (view.kind === "hooks") return { kind: "hooks" };
   return view;
 }

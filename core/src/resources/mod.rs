@@ -1,5 +1,6 @@
 //! Domain-specific resource engines.
 
+pub mod hook;
 pub mod mcp;
 pub mod model;
 pub mod skill;

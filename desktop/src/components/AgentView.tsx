@@ -26,18 +26,20 @@ import type {
   OperationPlan,
   ResourceNavigationRequest,
   SubagentDefinition,
+  HookDefinition,
 } from "../lib/types";
 import { formatError } from "../lib/format";
 import { keyOf, transportOf } from "../lib/mcp";
 import { consumptionsForAgent, externalForAgent } from "../lib/consumption";
 import { requiresAgentReview } from "../lib/agentOperation";
-import { listModelAgents, listModelProfiles, listSubagents } from "../lib/api";
+import { listModelAgents, listModelProfiles, listSubagents, listAgentHooks, listHooks, projectHookToAgent, removeHookFromAgent } from "../lib/api";
 import {
   EditIcon,
   ChevronDownIcon,
   DocumentIcon,
   ExternalLinkIcon,
   FolderIcon,
+  HookMarkIcon,
   PlusIcon,
   RefreshIcon,
   NetworkIcon,
@@ -62,7 +64,7 @@ import { McpAvatar } from "./McpIcon";
 import { NativePluginsPanel } from "./NativePluginsPanel";
 import { InstructionsEditor } from "./InstructionsEditor";
 
-type PickerDomain = "mcp" | "model" | "skill" | "subagent";
+type PickerDomain = "mcp" | "model" | "skill" | "subagent" | "hook";
 type ConfigLocationKind = "file" | "folder";
 
 function absoluteConfigLocation(path: string, home: string) {
@@ -274,6 +276,43 @@ export function AgentView({
     () => new Map(subagents.map((s) => [s.name, s])),
     [subagents],
   );
+  const [agentHooks, setAgentHooks] = useState<HookDefinition[]>([]);
+  const [centralHooks, setCentralHooks] = useState<HookDefinition[]>([]);
+  const loadHooks = useCallback(async () => {
+    try {
+      const [aList, cList] = await Promise.all([
+        listAgentHooks(agentId).catch(() => []),
+        listHooks().catch(() => []),
+      ]);
+      setAgentHooks(aList);
+      setCentralHooks(cList);
+    } catch {
+      // Non-fatal
+    }
+  }, [agentId]);
+  useEffect(() => {
+    void loadHooks();
+  }, [loadHooks]);
+  const centralHooksByName = useMemo(
+    () => new Map(centralHooks.map((h) => [h.name, h])),
+    [centralHooks],
+  );
+  const hookRows: ConsumptionView[] = useMemo(() => {
+    return agentHooks.map((h) => ({
+      agent_id: agentId,
+      asset: { domain: "hook" as const, name: h.name },
+      status: "synced" as const,
+      desired: true,
+      observed: true,
+      reason: null,
+      ownership: "managed" as const,
+      observation_id: h.name,
+      available_actions: [],
+      affected_agent_ids: [agentId],
+      target: { target_id: `${agentId}-hooks`, global_dir: "" },
+      convergence_actions: [],
+    }));
+  }, [agentHooks, agentId]);
   const { mcpRows, modelRows, skillRows, subagentRows, mcpExternal, skillExternal, modelExternal, subagentExternal } = useMemo(() => ({
     mcpRows: consumptionsForAgent(inventory, agentId, "mcp"),
     modelRows: consumptionsForAgent(inventory, agentId, "model"),
@@ -477,6 +516,26 @@ export function AgentView({
           })),
       };
     }
+    if (domain === "hook") {
+      const assigned = new Set(agentHooks.map((item) => item.name));
+      return {
+        title: "添加 Hooks",
+        mode: "multiple",
+        actionLabel: "添加 Hooks",
+        busyLabel: "添加中…",
+        emptyMessage: "没有可添加的 Hook",
+        searchPlaceholder: "搜索 Hooks",
+        options: centralHooks
+          .filter((item) => !assigned.has(item.name))
+          .map((item) => ({
+            id: item.name,
+            name: item.display_name || item.name,
+            description: `${item.event} · ${item.description || item.command}`,
+            icon: <HookMarkIcon className="w-5 h-5 text-blue-500" />,
+            meta: <Badge tone={item.enabled ? "success" : "neutral"}>{item.event}</Badge>,
+          })),
+      };
+    }
     return {
       title: "添加 Skills",
       mode: "multiple",
@@ -492,14 +551,14 @@ export function AgentView({
     };
   }
 
-  const createSelection = (domain: PickerDomain, ids: string[]): AgentConsumptionSelection => {
+  const createSelection = (domain: "mcp" | "model" | "skill" | "subagent", ids: string[]): AgentConsumptionSelection => {
     if (domain === "mcp") return { domain, asset_keys: ids };
     if (domain === "model") return { domain, profile_ids: ids };
     return { domain, names: ids };
   };
 
   const planSelection = async (
-    domain: PickerDomain,
+    domain: "mcp" | "model" | "skill" | "subagent",
     ids: string[],
     mode: "add" | "replace" | "remove",
   ) => {
@@ -519,13 +578,45 @@ export function AgentView({
     }
   };
 
-  const planAdditions = (domain: PickerDomain, ids: string[]) => {
+  const planAdditions = async (domain: PickerDomain, ids: string[]) => {
+    if (domain === "hook") {
+      setPreparingChange(true);
+      try {
+        for (const name of ids) {
+          const def = centralHooks.find((h) => h.name === name);
+          if (def) {
+            await projectHookToAgent(agentId, def);
+          }
+        }
+        showToast({ kind: "success", msg: `已添加 ${ids.length} 个 Hook 到 ${agent.name}` });
+        await loadHooks();
+        setPickerDomain(null);
+      } catch (err) {
+        showToast({ kind: "error", msg: `无法添加 Hook: ${formatError(err)}` });
+      } finally {
+        setPreparingChange(false);
+      }
+      return;
+    }
     const replacesSingleModel = domain === "model" && modelAgent?.supports_multiple === false;
     return planSelection(domain, ids, replacesSingleModel ? "replace" : "add");
   };
 
-  const planRemoval = (asset: AssetRef) => {
+  const planRemoval = async (asset: AssetRef) => {
     if (asset.domain === "model-provider") return;
+    if (asset.domain === "hook") {
+      setPreparingChange(true);
+      try {
+        await removeHookFromAgent(agentId, asset.name);
+        showToast({ kind: "success", msg: `已从 ${agent.name} 移除 Hook` });
+        await loadHooks();
+      } catch (err) {
+        showToast({ kind: "error", msg: `无法移除 Hook: ${formatError(err)}` });
+      } finally {
+        setPreparingChange(false);
+      }
+      return;
+    }
     const id = asset.domain === "mcp" ? asset.key : asset.domain === "model" ? asset.profile_id : asset.name;
     return planSelection(
       asset.domain,
@@ -682,6 +773,8 @@ export function AgentView({
       navigateResource({ domain: "skill", kind: "detail", skillName: asset.name });
     } else if (asset.domain === "subagent") {
       navigateResource({ domain: "subagent", kind: "detail", name: asset.name });
+    } else if (asset.domain === "hook") {
+      navigateResource({ domain: "hook", kind: "detail", name: asset.name });
     }
   };
 
@@ -716,6 +809,7 @@ export function AgentView({
             models: modelVisibleCount,
             skills: skillRows.length + skillExternal.length + nativeSkills.length,
             subagents: subagentRows.length + subagentExternal.length,
+            hooks: agentHooks.length,
           }}
         >
           {consumptionState.plan?.kind === "clear-models" && !preparingChange && (
@@ -922,6 +1016,41 @@ export function AgentView({
                   description: subagent?.description || "Subagent 资产",
                   icon: <Avatar seed={name} kind="subagent" size={28} />,
                   meta: subagent?.model ? <Badge tone="neutral">{subagent.model}</Badge> : null,
+                };
+              }}
+            />
+          ) : resourceTab === "hooks" ? (
+            <AgentConsumptionPanel
+              domain="hook"
+              title={RESOURCE_PRESENTATION.hook.label}
+              description={`${agentHooks.length} 项`}
+              manageLabel="添加 Hooks"
+              rows={hookRows}
+              external={[]}
+              onManage={() => setPickerDomain("hook")}
+              onOpenAsset={openAsset}
+              onRemove={(asset) => void planRemoval(asset)}
+              removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
+              removeDisabled={preparingChange}
+              emptyTitle="暂无 Hooks"
+              emptyDescription={`从 Hooks 资产库添加到 ${agent.name}。`}
+              emptyAction={
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => navigateResource({ domain: "hook", kind: "create" })}
+                >
+                  <PlusIcon className="w-4 h-4" />新建 Hooks
+                </button>
+              }
+              present={(asset) => {
+                const name = asset.domain === "hook" ? asset.name : "";
+                const hook = centralHooksByName.get(name) || agentHooks.find((h) => h.name === name);
+                return {
+                  name: hook?.display_name || name,
+                  description: hook ? `${hook.event} · ${hook.command}` : "Hook 资产",
+                  icon: <HookMarkIcon className="w-5 h-5 text-blue-500" />,
+                  meta: hook ? <Badge tone={hook.enabled ? "success" : "neutral"}>{hook.event}</Badge> : null,
                 };
               }}
             />

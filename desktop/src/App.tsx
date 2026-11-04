@@ -65,6 +65,11 @@ const SubagentsView = lazy(() =>
     default: module.SubagentsView,
   })),
 );
+const HooksView = lazy(() =>
+  import("./components/HooksView").then((module) => ({
+    default: module.HooksView,
+  })),
+);
 
 const CaptureView = lazy(() => import("./components/CaptureView").then(module => ({ default: module.CaptureView })));
 const TraceView = lazy(() => import("./components/TraceView").then(module => ({ default: module.TraceView })));
@@ -301,6 +306,7 @@ function App() {
       onSelectModels={() => setView({ kind: "models" })}
       onSelectSkills={() => setView({ kind: "skills" })}
       onSelectSubagents={() => setView({ kind: "subagents" })}
+      onSelectHooks={() => setView({ kind: "hooks" })}
       onSelectAgent={(id) => setView({ kind: "agent", id })}
       onAddAgent={() => setAddAgentOpen(true)}
       onRescan={() => refreshObservedTasks(ALL_OBSERVATION_TASK_IDS)}
@@ -327,6 +333,13 @@ function App() {
             intent={view.intent}
             onIntentConsumed={consumeResourceIntent}
             onOpenAgent={(id) => setView({ kind: "agent", id, tab: "subagents" })}
+          />
+        ) : view.kind === "hooks" ? (
+          <HooksView
+            consumptionState={consumptionState}
+            intent={view.intent}
+            onIntentConsumed={consumeResourceIntent}
+            onOpenAgent={(id) => setView({ kind: "agent", id, tab: "hooks" })}
           />
         ) : view.kind === "agent" ? (
           <AgentView

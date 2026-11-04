@@ -1169,6 +1169,65 @@ pub async fn adopt_subagent(
     asset_blocking(move || arca_core::resources::subagent::adopt_subagent(&agent_id, &name)).await
 }
 
+#[tauri::command]
+pub async fn list_hooks() -> Result<Vec<arca_core::domain::hook::HookDefinition>, AssetCommandError> {
+    asset_blocking(arca_core::resources::hook::list_central_hooks).await
+}
+
+#[tauri::command]
+pub async fn get_hook(
+    name: String,
+) -> Result<Option<arca_core::domain::hook::HookDefinition>, AssetCommandError> {
+    asset_blocking(move || arca_core::resources::hook::get_central_hook(&name)).await
+}
+
+#[tauri::command]
+pub async fn save_hook(
+    definition: arca_core::domain::hook::HookDefinition,
+) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::resources::hook::save_central_hook(definition)).await
+}
+
+#[tauri::command]
+pub async fn delete_hook(name: String) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::resources::hook::delete_central_hook(&name)).await
+}
+
+#[tauri::command]
+pub async fn list_agent_hooks(
+    agent_id: String,
+) -> Result<Vec<arca_core::domain::hook::HookDefinition>, AssetCommandError> {
+    asset_blocking(move || arca_core::resources::hook::list_agent_hooks(&agent_id)).await
+}
+
+#[tauri::command]
+pub async fn project_hook_to_agent(
+    agent_id: String,
+    definition: arca_core::domain::hook::HookDefinition,
+) -> Result<String, AssetCommandError> {
+    asset_blocking(move || {
+        arca_core::resources::hook::project_hook_to_agent(&agent_id, &definition)
+            .map(|p| p.to_string_lossy().into_owned())
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn remove_hook_from_agent(
+    agent_id: String,
+    name: String,
+) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::resources::hook::remove_hook_from_agent(&agent_id, &name)).await
+}
+
+#[tauri::command]
+pub async fn adopt_hook(
+    agent_id: String,
+    name: String,
+) -> Result<arca_core::domain::hook::HookDefinition, AssetCommandError> {
+    asset_blocking(move || arca_core::resources::hook::adopt_hook(&agent_id, &name)).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

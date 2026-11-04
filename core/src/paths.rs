@@ -61,6 +61,14 @@ pub fn central_subagent_file(name: &str) -> PathBuf {
     subagent_assets_dir().join(format!("{name}.json"))
 }
 
+pub fn hook_assets_dir() -> PathBuf {
+    assets_dir().join("hooks")
+}
+
+pub fn central_hook_file(name: &str) -> PathBuf {
+    hook_assets_dir().join(format!("{name}.json"))
+}
+
 pub fn mcp_catalog_file() -> PathBuf {
     mcp_assets_dir().join("catalog.json")
 }

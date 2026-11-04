@@ -38,6 +38,7 @@ export interface AgentInfo {
   has_model?: boolean;
   has_instructions?: boolean;
   has_subagents?: boolean;
+  has_hooks?: boolean;
   supported_transports: Array<"stdio" | "http">;
   /** Raw stored config paths (e.g. `~/Library/Application Support/…/mcp.json`). */
   global: string | null; project: string | null;
@@ -364,7 +365,9 @@ export type ResourceNavigationRequest =
   | { domain: "model"; kind: "create" }
   | { domain: "skill"; kind: "detail"; skillName: string }
   | { domain: "subagent"; kind: "detail"; name: string }
-  | { domain: "subagent"; kind: "create" };
+  | { domain: "subagent"; kind: "create" }
+  | { domain: "hook"; kind: "detail"; name: string }
+  | { domain: "hook"; kind: "create" };
 
 export type ResourceNavigationIntent = ResourceNavigationRequest & { id: number };
 export type SkillNavigationRequest = Extract<ResourceNavigationRequest, { domain: "skill" }>;
@@ -377,7 +380,8 @@ export type View =
   | { kind: "models"; intent?: Extract<ResourceNavigationIntent, { domain: "model" }> }
   | { kind: "skills"; intent?: SkillNavigationIntent }
   | { kind: "subagents"; intent?: Extract<ResourceNavigationIntent, { domain: "subagent" }> }
-  | { kind: "agent"; id: string; tab?: "skills" | "subagents" }
+  | { kind: "hooks"; intent?: Extract<ResourceNavigationIntent, { domain: "hook" }> }
+  | { kind: "agent"; id: string; tab?: "models" | "mcps" | "skills" | "subagents" | "hooks" | "instructions" | "plugins" }
   | { kind: "capture"; agentId: string }
   | { kind: "traces"; agentId?: string };
 
@@ -594,12 +598,28 @@ export interface SubagentDefinition {
   updated_at?: string;
 }
 
+export interface HookDefinition {
+  name: string;
+  display_name: string;
+  description: string;
+  event: string;
+  matcher: string;
+  command: string;
+  command_windows?: string;
+  hook_type: string;
+  timeout: number;
+  enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type AssetRef =
   | { domain: "mcp"; key: string }
   | { domain: "model"; profile_id: string }
   | { domain: "model-provider"; provider_id: string }
   | { domain: "skill"; name: string }
-  | { domain: "subagent"; name: string };
+  | { domain: "subagent"; name: string }
+  | { domain: "hook"; name: string };
 
 export type ConsumptionStatus =
   | "synced"

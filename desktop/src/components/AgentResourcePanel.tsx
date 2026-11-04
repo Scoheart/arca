@@ -19,7 +19,7 @@ export function AgentResourcePanel({
   counts,
   instructions = false,
   plugins,
-  subagents = false,
+  subagents: _subagents = false,
   children,
 }: {
   value: AgentResourceTab;
@@ -31,7 +31,7 @@ export function AgentResourcePanel({
   children: ReactNode;
 }) {
   const TABS: Array<{ id: AgentResourceTab; label: string; Icon: typeof DocumentIcon }> = [
-    ...RESOURCE_CATEGORIES.filter((category) => category.id !== "subagents" || subagents),
+    ...RESOURCE_CATEGORIES,
     ...(instructions ? [{ id: "instructions" as const, label: "Instructions", Icon: DocumentIcon }] : []),
     ...(plugins !== undefined ? [{ id: "plugins" as const, label: "Plugins", Icon: DocumentIcon }] : [])];
   const id = useId();

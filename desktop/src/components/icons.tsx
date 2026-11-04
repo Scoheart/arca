@@ -39,6 +39,19 @@ export function SubagentMarkIcon({ className, style }: IconProps) {
   );
 }
 
+/** Hook mark: lifecycle event trigger and interceptor. */
+export function HookMarkIcon({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2" />
+      <path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06l3.19 5.86c.61 1.07 1.83 1.7 3.08 1.62" />
+      <circle cx="12" cy="2" r="2" />
+      <circle cx="19" cy="14" r="2" />
+      <circle cx="5" cy="17" r="2" />
+    </svg>
+  );
+}
+
 /** Brain mark for model resources: refined dual neural lobes and central stem. */
 export function BrainIcon({ className, style }: IconProps) {
   return (
