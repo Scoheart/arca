@@ -18,7 +18,7 @@ export function formatError(e: unknown): string {
 }
 
 function cleanErrorMessage(msg: string): string {
-  if (/Launcher .* failed with ExitStatus/i.test(msg)) {
+  if (/Launcher [\s\S]* failed with ExitStatus/i.test(msg)) {
     return "指定应用无法打开该文件或目录。";
   }
   return msg;

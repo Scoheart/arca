@@ -143,6 +143,7 @@ export function ResourceWorkspace({
   children,
   filters,
   inspector,
+  inspectorWidth,
   onInspectorClose,
 }: {
   sidebar?: ReactNode;
@@ -158,6 +159,7 @@ export function ResourceWorkspace({
   children: ReactNode;
   filters?: ReactNode;
   inspector?: ReactNode;
+  inspectorWidth?: string;
   onInspectorClose?: () => void;
 }) {
   const hasSidebar = sidebar !== null && sidebar !== undefined;
@@ -312,7 +314,7 @@ export function ResourceWorkspace({
               </div>
               {inspector && (
                 <Modal
-                  width="min(720px, calc(100vw - 32px))"
+                  width={inspectorWidth ?? "min(560px, calc(100vw - 32px))"}
                   maxHeight="calc(100vh - 32px)"
                   ariaLabel="资源详情"
                   layer="detail"
@@ -572,7 +574,11 @@ export function InspectorSection({
 }
 
 export function InspectorMetrics({ children }: { children: ReactNode }) {
-  return <div className="arca-inspector-metrics">{children}</div>;
+  return (
+    <div className="arca-inspector-metrics" aria-label="资源指标">
+      {children}
+    </div>
+  );
 }
 
 export function InspectorMetric({

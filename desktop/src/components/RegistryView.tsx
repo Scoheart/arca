@@ -581,6 +581,7 @@ function RegistryDetail({
   onDelete?: () => void;
 }) {
   const { t } = useTranslation();
+  const toast = useToast();
   const endpoint = endpointOf(entry);
   return (
     <ResourceInspector
@@ -596,7 +597,7 @@ function RegistryDetail({
       footer={
         <>
           {onDelete && (
-            <button onClick={onDelete} className="btn-danger" title="删除中央 MCP 资产">
+            <button onClick={onDelete} className="arca-btn-soft-danger" title="删除中央 MCP 资产">
               <TrashIcon className="w-4 h-4" />
               删除
             </button>
@@ -622,7 +623,24 @@ function RegistryDetail({
       {entry.description && <p className="arca-inspector-description">{entry.description}</p>}
 
       <InspectorSection title="连接" icon={<LinkIcon className="w-4 h-4" />}>
-        <InspectorField icon={<NetworkIcon className="w-4 h-4" />} label="地址" mono>{endpoint.text}</InspectorField>
+        <InspectorField
+          icon={<NetworkIcon className="w-4 h-4" />}
+          label="地址"
+          mono
+          action={
+            <IconButton
+              onClick={() => {
+                void navigator.clipboard.writeText(endpoint.text);
+                toast.show({ kind: "info", msg: "地址已复制到剪贴板" });
+              }}
+              title="复制地址"
+            >
+              <CopyIcon className="w-3.5 h-3.5" />
+            </IconButton>
+          }
+        >
+          {endpoint.text}
+        </InspectorField>
         {entry.repo && (
           <InspectorField icon={<LinkIcon className="w-4 h-4" />} label="主页">
             <button onClick={() => openUrl(entry.repo!)} className="arca-inline-link" title="在浏览器中打开">
@@ -642,9 +660,27 @@ function RegistryDetail({
       )}
 
       <InspectorSection title="配置" icon={<TerminalIcon className="w-4 h-4" />}>
-        <pre className="arca-config-preview">
-          {JSON.stringify(redactSensitiveConfig(entry.config), null, 2)}
-        </pre>
+        <div className="arca-config-card">
+          <div className="arca-config-card-header">
+            <span className="arca-config-card-lang">JSON</span>
+            <button
+              type="button"
+              className="arca-config-card-copy"
+              onClick={() => {
+                const configText = JSON.stringify(redactSensitiveConfig(entry.config), null, 2);
+                void navigator.clipboard.writeText(configText);
+                toast.show({ kind: "info", msg: "配置已复制到剪贴板" });
+              }}
+              title="复制配置"
+            >
+              <CopyIcon className="w-3.5 h-3.5" />
+              <span>复制</span>
+            </button>
+          </div>
+          <pre className="arca-config-preview">
+            {JSON.stringify(redactSensitiveConfig(entry.config), null, 2)}
+          </pre>
+        </div>
       </InspectorSection>
     </ResourceInspector>
   );

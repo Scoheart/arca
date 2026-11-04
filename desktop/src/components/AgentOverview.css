@@ -190,10 +190,14 @@
 .arca-consumption-model-note { margin: 0 0 14px; color: var(--text-secondary); font-size: 11.5px; }
 .arca-agent-workbench .arca-consumption-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0; background: transparent; border-radius: 0; }
 .arca-agent-workbench .arca-consumption-list > li {
-  position: relative; grid-template-columns: 32px minmax(0, 1fr) 24px;
-  grid-template-rows: 32px minmax(32px, 1fr) auto;
-  align-items: center; column-gap: 10px; row-gap: 10px;
-  min-height: 124px; padding: 13px 15px; border: 1px solid var(--border-hairline); border-radius: 12px;
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  grid-template-rows: 32px minmax(34px, 1fr) auto;
+  align-items: center; column-gap: 10px; row-gap: 8px;
+  min-height: 118px; padding: 12px 14px; border: 1px solid var(--border-hairline); border-radius: 12px;
   background: var(--surface-asset); box-shadow: var(--shadow-card);
   transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease, transform .15s ease;
 }
@@ -204,12 +208,21 @@
 }
 .arca-agent-workbench .arca-consumption-list > li:has(.arca-consumption-card-menu[data-open="true"]),
 .arca-agent-workbench .arca-consumption-list > li:has(.arca-convergence-menu) { z-index: 5; }
-.arca-agent-workbench .arca-consumption-icon { grid-column: 1; grid-row: 1; }
-.arca-agent-workbench .arca-consumption-copy { grid-column: 2; grid-row: 1; }
-.arca-agent-workbench .arca-consumption-copy strong { font-size: 13px; font-weight: 660; }
-.arca-consumption-card-description { grid-column: 1 / -1; grid-row: 2; min-width: 0; margin: 0; align-self: start; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 11.5px; line-height: 1.55; }
-.arca-consumption-card-footer { display: grid; grid-column: 1 / -1; grid-row: 3; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; min-width: 0; }
-.arca-consumption-card-footer > .arca-consumption-controls { grid-column: 2; min-width: max-content; justify-self: end; }
+.arca-agent-workbench .arca-consumption-icon { grid-column: 1; grid-row: 1; min-width: 0; }
+.arca-agent-workbench .arca-consumption-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
+.arca-agent-workbench .arca-consumption-copy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 660; }
+.arca-agent-workbench .arca-consumption-card-menu { grid-column: 3; grid-row: 1; justify-self: end; }
+.arca-consumption-card-description {
+  grid-column: 1 / -1; grid-row: 2; min-width: 0; width: 100%; margin: 0; align-self: start;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; word-break: break-word; overflow-wrap: anywhere;
+  color: var(--text-secondary); font-size: 11.5px; line-height: 1.5; min-height: 34px;
+}
+.arca-consumption-card-footer {
+  display: flex; grid-column: 1 / -1; grid-row: 3; align-items: center; justify-content: space-between;
+  gap: 8px; min-width: 0; width: 100%;
+}
+.arca-consumption-card-footer > .arca-consumption-controls { margin-left: auto; min-width: max-content; }
 .arca-consumption-card-summary { display: flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; }
 .arca-consumption-card-summary .arca-consumption-status { flex: 0 0 7px; }
 .arca-consumption-card-summary .arca-consumption-meta { max-width: 100%; }

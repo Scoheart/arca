@@ -63,6 +63,8 @@ pub struct UiSettings {
 pub struct NetworkSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub proxy_url: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub github_token: Option<String>,
     #[serde(flatten)]
     pub extra: BTreeMap<String, Value>,
 }

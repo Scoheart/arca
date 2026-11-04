@@ -970,21 +970,58 @@ fn resolve_archive(
     })
 }
 
+pub(crate) fn github_auth_token() -> Option<String> {
+    if let Ok(token) = std::env::var("GITHUB_TOKEN").or_else(|_| std::env::var("GH_TOKEN")) {
+        let trimmed = token.trim();
+        if !trimmed.is_empty() {
+            return Some(trimmed.to_string());
+        }
+    }
+    let settings = crate::settings::load_settings();
+    if let Some(token) = settings.network.and_then(|n| n.github_token) {
+        let trimmed = token.trim();
+        if !trimmed.is_empty() {
+            return Some(trimmed.to_string());
+        }
+    }
+    static CACHED_GH_CLI: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
+    CACHED_GH_CLI
+        .get_or_init(|| {
+            std::process::Command::new("gh")
+                .args(["auth", "token"])
+                .output()
+                .ok()
+                .filter(|o| o.status.success())
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+                .filter(|t| !t.is_empty())
+        })
+        .clone()
+}
+
 fn parse_github_source(value: &str) -> Result<ParsedGithub, SkillError> {
     validate_source_text(value)?;
     if value.contains('\\') {
         return invalid_source("GitHub source paths cannot contain backslashes");
     }
+    let trimmed = value.trim();
+    let normalized;
+    let value = if let Some(ssh_rest) = trimmed.strip_prefix("git@github.com:") {
+        normalized = format!("https://github.com/{}", ssh_rest.trim_end_matches(".git"));
+        normalized.as_str()
+    } else {
+        trimmed
+    };
     if !value.contains("://") {
         if value.contains(['@', ':', '?', '#']) {
-            return invalid_source("only public owner/repository GitHub sources are supported");
+            return invalid_source("only owner/repository GitHub sources are supported");
         }
         let raw = value.split('/').collect::<Vec<_>>();
         if raw.len() != 2 {
             return invalid_source("GitHub shorthand must be owner/repository");
         }
         let owner = decode_source_component(raw[0])?;
-        let repo = decode_source_component(raw[1])?;
+        let repo_raw = raw[1].strip_suffix(".git").unwrap_or(raw[1]);
+        let repo = decode_source_component(repo_raw)?;
         validate_repository_components(&owner, &repo)?;
         return Ok(ParsedGithub {
             owner,
@@ -1003,7 +1040,7 @@ fn parse_github_source(value: &str) -> Result<ParsedGithub, SkillError> {
         || url.query().is_some()
         || url.fragment().is_some()
     {
-        return invalid_source("only credential-free public https://github.com URLs are supported");
+        return invalid_source("only https://github.com URLs are supported");
     }
     let raw_path = source_url_path(value)?;
     let mut raw = raw_path.split('/').skip(1).collect::<Vec<_>>();
@@ -1018,7 +1055,8 @@ fn parse_github_source(value: &str) -> Result<ParsedGithub, SkillError> {
         .map(decode_source_component)
         .collect::<Result<Vec<_>, _>>()?;
     let owner = components[0].clone();
-    let repo = components[1].clone();
+    let repo_raw = components[1].strip_suffix(".git").unwrap_or(&components[1]);
+    let repo = repo_raw.to_string();
     validate_repository_components(&owner, &repo)?;
     let tree = if components.len() == 2 {
         None
@@ -1287,17 +1325,20 @@ fn fetch_response_with_etag(
     let mut redirects = 0_usize;
     loop {
         validate_request_url(&url, endpoints)?;
-        let request = agent
+        let mut request = agent
             .get(url.as_str())
             .header("User-Agent", concat!("Arca/", env!("CARGO_PKG_VERSION")))
             .header("Accept", "application/vnd.github+json")
             .header("X-GitHub-Api-Version", "2022-11-28");
+        if let Some(token) = github_auth_token() {
+            request = request.header("Authorization", format!("Bearer {token}"));
+        }
         let request = match previous_etag.as_deref() {
             Some(etag) => request.header("If-None-Match", etag),
             None => request,
         };
         let response = request.call().map_err(|_| SkillError::Network {
-            message: "the public GitHub request could not be completed".into(),
+            message: "the GitHub request could not be completed".into(),
             retry_at: None,
         })?;
         if matches!(response.status().as_u16(), 301 | 302 | 303 | 307 | 308) {
@@ -1330,18 +1371,21 @@ fn ensure_public_status(
     match response.status().as_u16() {
         200..=299 => Ok(()),
         403 if rate_limited => Err(SkillError::Network {
-            message: "GitHub rate-limited the public source request".into(),
+            message: "GitHub rate-limited the source request".into(),
             retry_at,
         }),
-        401 | 403 | 404 => invalid_source(&format!(
-            "the {resource} is unavailable as an unauthenticated public GitHub source"
+        401 | 403 => invalid_source(&format!(
+            "the {resource} is unavailable or access is unauthorized; please ensure GitHub token is configured for private repositories"
+        )),
+        404 => invalid_source(&format!(
+            "the {resource} is unavailable on GitHub (not found or requires authentication for private repositories)"
         )),
         429 => Err(SkillError::Network {
-            message: "GitHub rate-limited the public source request".into(),
+            message: "GitHub rate-limited the source request".into(),
             retry_at,
         }),
         _ => Err(SkillError::Network {
-            message: "GitHub returned an unsuccessful response for the public source".into(),
+            message: "GitHub returned an unsuccessful response for the source".into(),
             retry_at: None,
         }),
     }
@@ -3287,5 +3331,33 @@ mod tests {
             }
         }
         links
+    }
+
+    #[test]
+    fn parse_github_source_supports_ssh_and_dot_git_for_private_repos() {
+        let shorthand = parse_github_source("Scoheart/agent-skills").unwrap();
+        assert_eq!(shorthand.owner, "Scoheart");
+        assert_eq!(shorthand.repo, "agent-skills");
+
+        let dot_git = parse_github_source("Scoheart/agent-skills.git").unwrap();
+        assert_eq!(dot_git.owner, "Scoheart");
+        assert_eq!(dot_git.repo, "agent-skills");
+
+        let ssh = parse_github_source("git@github.com:Scoheart/agent-skills.git").unwrap();
+        assert_eq!(ssh.owner, "Scoheart");
+        assert_eq!(ssh.repo, "agent-skills");
+
+        let ssh_no_git = parse_github_source("git@github.com:Scoheart/agent-skills").unwrap();
+        assert_eq!(ssh_no_git.owner, "Scoheart");
+        assert_eq!(ssh_no_git.repo, "agent-skills");
+
+        let https_dot_git = parse_github_source("https://github.com/Scoheart/agent-skills.git").unwrap();
+        assert_eq!(https_dot_git.owner, "Scoheart");
+        assert_eq!(https_dot_git.repo, "agent-skills");
+    }
+
+    #[test]
+    fn github_auth_token_resolves_when_configured() {
+        let _ = github_auth_token();
     }
 }
