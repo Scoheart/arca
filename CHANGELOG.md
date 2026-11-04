@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.66.5](https://github.com/Scoheart/arca/compare/v2.66.4...v2.66.5) (2026-11-04)
+
+### Changes
+
+* fix(launch): default deepseek-harness dsh launch profile to web ([4e9a495](https://github.com/Scoheart/arca/commit/4e9a495d8e6f151816b9482b38a756d4c3d9d8c4))
+
 ## [2.66.4](https://github.com/Scoheart/arca/compare/v2.66.3...v2.66.4) (2026-11-04)
 
 ### Changes
