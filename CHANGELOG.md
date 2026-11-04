@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.67.0](https://github.com/Scoheart/arca/compare/v2.66.5...v2.67.0) (2026-11-04)
+
+### Changes
+
+* feat(hooks): add central hooks asset management and permanent subagent sidebar ([bfbd295](https://github.com/Scoheart/arca/commit/bfbd2951c56a1b0be34d8c6c06dd18bb568510d1))
+
 ## [2.66.5](https://github.com/Scoheart/arca/compare/v2.66.4...v2.66.5) (2026-11-04)
 
 ### Changes
