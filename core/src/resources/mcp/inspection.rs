@@ -109,7 +109,7 @@ fn document(path: &Path, value: Result<Option<serde_json::Value>, String>) -> Mc
     match value {
         Ok(Some(value)) => match redaction::redact(&value) {
             Ok(value) => McpConfigurationDocument { source_path: collapse_home(&path.to_string_lossy()), configuration: Some(value), unavailable_reason: None },
-            Err(()) => unavailable(path, "配置超过安全查看限制，未返回配置内容。"),
+            Err(()) => unavailable(path, "配置包含无法可靠隐藏的凭据，或超过安全查看限制，未返回配置内容。"),
         },
         Ok(None) => unavailable(path, "未在此来源中找到该 MCP 的声明配置。"),
         // Parser diagnostics can contain native source lines and credentials.

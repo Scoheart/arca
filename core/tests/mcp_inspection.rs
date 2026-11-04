@@ -8,6 +8,40 @@ fn configured(agent: &str, key: &str) -> McpInspectionRequest {
 }
 
 #[test]
+fn compound_credential_names_are_hidden_and_ambiguous_command_values_are_not_returned() {
+    let home = TestHome::new("mcp-inspect-compound-credentials");
+    let path = home.home.join(".cursor/mcp.json");
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let source = json!({"mcpServers": {"fixture": {
+        "command": "fixture-server", "args": ["--aws-secret-access-key=fixture-sensitive-value", "public-file"],
+        "secret_access_key": "fixture-other-sensitive-value", "secret_key": "fixture-third-sensitive-value",
+        "echo": "fixture-sensitive-value fixture-other-sensitive-value fixture-third-sensitive-value",
+        "token_budget": 4096, "secret-less": true
+    }}}).to_string();
+    fs::write(&path, &source).unwrap();
+    let view = inspect_configuration(configured("cursor", "fixture::stdio")).unwrap();
+    let config = view.documents[0].configuration.as_ref().unwrap();
+    let rendered = serde_json::to_string(&view).unwrap();
+    for value in ["fixture-sensitive-value", "fixture-other-sensitive-value", "fixture-third-sensitive-value"] {
+        assert!(!rendered.contains(value));
+    }
+    assert_eq!(config["args"][1], "public-file");
+    assert_eq!(config["token_budget"], 4096);
+    assert_eq!(config["secret-less"], true);
+    assert_eq!(fs::read_to_string(&path).unwrap(), source);
+
+    let source = json!({"mcpServers": {"fixture": {"command": "fixture-server", "args": ["--token=\"unterminated"],
+        "echo": "do not expose other fields when redaction is ambiguous"}}}).to_string();
+    fs::write(&path, &source).unwrap();
+    let view = inspect_configuration(configured("cursor", "fixture::stdio")).unwrap();
+    assert!(view.documents[0].configuration.is_none());
+    assert!(view.documents[0].unavailable_reason.as_ref().unwrap().contains("无法可靠隐藏"));
+    assert!(!serde_json::to_string(&view).unwrap().contains("do not expose"));
+    assert_eq!(fs::read_to_string(path).unwrap(), source);
+    assert!(!home.home.join(".arca/settings.json").exists());
+}
+
+#[test]
 fn external_mcp_is_readable_without_adoption_and_hides_credentials_before_serialization() {
     let home = TestHome::new("mcp-inspect-external");
     let path = home.home.join(".cursor/mcp.json");
