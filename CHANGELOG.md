@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.66.4](https://github.com/Scoheart/arca/compare/v2.66.3...v2.66.4) (2026-11-04)
+
+### Changes
+
+* fix(desktop): add robust fallback and path verification for file editor launcher ([691fb3e](https://github.com/Scoheart/arca/commit/691fb3eeec686bb8150778ae1136973702e896ae))
+
 ## [2.66.3](https://github.com/Scoheart/arca/compare/v2.66.2...v2.66.3) (2026-11-03)
 
 ### Changes
