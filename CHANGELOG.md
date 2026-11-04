@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.67.1](https://github.com/Scoheart/arca/compare/v2.67.0...v2.67.1) (2026-11-04)
+
+### Changes
+
+* fix(ui): polish mcp detail modal, skill card grid layout, and support private github skills ([5586192](https://github.com/Scoheart/arca/commit/558619216853bdb76cd32aad953e53ffc712a1ed))
+
 ## [2.67.0](https://github.com/Scoheart/arca/compare/v2.66.5...v2.67.0) (2026-11-04)
 
 ### Changes
