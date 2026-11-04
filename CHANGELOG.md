@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.68.0](https://github.com/Scoheart/arca/compare/v2.67.1...v2.68.0) (2026-11-04)
+
+### Changes
+
+* feat(models): add Warp native model setup guidance ([ba297ec](https://github.com/Scoheart/arca/commit/ba297ecd4187b75b0f1509a21c7f21f432c3817e))
+
 ## [2.67.1](https://github.com/Scoheart/arca/compare/v2.67.0...v2.67.1) (2026-11-04)
 
 ### Changes
