@@ -188,6 +188,11 @@
 .arca-agent-workbench .arca-agent-resource-panel-body { padding: 0; }
 .arca-agent-workbench .arca-consumption-panel > .arca-agent-section-head { display: none; }
 .arca-consumption-model-note { margin: 0 0 14px; color: var(--text-secondary); font-size: 11.5px; }
+.arca-guided-models { padding: 18px; border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-asset); }
+.arca-guided-models-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.arca-guided-models-heading h4 { margin: 0; font-size: 14px; font-weight: 650; }
+.arca-guided-models > p { max-width: 72ch; margin: 12px 0 0; font-size: 12px; line-height: 1.8; color: var(--text-secondary); overflow-wrap: anywhere; }
+.arca-guided-models-protocols { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
 .arca-agent-workbench .arca-consumption-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0; background: transparent; border-radius: 0; }
 .arca-agent-workbench .arca-consumption-list > li {
   position: relative;

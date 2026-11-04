@@ -90,7 +90,7 @@ export function AgentConfigurationDialog({
   const reviewedConfiguration = useRef<string | null>(null);
   const toast = useToast();
   const hasMcp = agent.has_global;
-  const hasModel = modelAgent !== null;
+  const hasModel = modelAgent?.mode === "managed" && modelPaths.length > 0;
   const hasSkills = agent.skills_global_dir !== null;
 
   const configurationPatch = (): AgentConfigurationPatch => ({
@@ -334,12 +334,12 @@ export function AgentConfigurationDialog({
               <span className="arca-agent-config-section-icon"><ResourceIcon domain="model" /></span>
               <strong>Models</strong>
               <span className="arca-agent-config-section-badge">
-                {modelPaths.length > 0 ? `${modelPaths.length} 个文件` : t("agentConfiguration.unavailable")}
+                {hasModel ? `${modelPaths.length} 个文件` : t("agentConfiguration.unavailable")}
               </span>
             </div>
           </div>
           <div className="arca-agent-config-section-body">
-            {modelPaths.length > 0 ? modelPaths.map((path, index) => (
+            {hasModel ? modelPaths.map((path, index) => (
               <ConfigField
                 key={index}
                 icon={null}

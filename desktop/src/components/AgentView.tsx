@@ -51,6 +51,7 @@ import { AgentConfigurationDialog } from "./AgentConfigurationDialog";
 import { ToastNotice, useToast } from "./Toast";
 import { AgentResourcePanel, type AgentResourceTab } from "./AgentResourcePanel";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
+import { GuidedModelsPanel } from "./GuidedModelsPanel";
 import {
   ConsumptionPickerDialog,
   type ConsumptionPickerOption,
@@ -804,6 +805,7 @@ export function AgentView({
           instructions={agent.has_instructions}
           subagents={agent.has_subagents}
           plugins={nativePluginSupported ? nativePluginCount : undefined}
+          countLabels={modelAgent?.mode === "guided" ? { models: "原生" } : undefined}
           counts={{
             mcps: mcpRows.length + mcpExternal.length + hostMcps.length,
             models: modelVisibleCount,
@@ -901,6 +903,12 @@ export function AgentView({
               <div className="arca-agent-inline-state">正在读取 Model…</div>
             ) : modelsError ? (
               <div className="arca-agent-inline-state">Model 读取失败：{modelsError}</div>
+            ) : modelAgent?.mode === "guided" ? (
+              <GuidedModelsPanel agent={modelAgent} onOpenDocs={() => {
+                void openUrl(modelAgent.docs).catch((error) => showToast({
+                  kind: "error", msg: "无法打开模型配置说明：" + formatError(error),
+                }));
+              }} />
             ) : (
               <AgentConsumptionPanel
                 domain="model"

@@ -68,6 +68,7 @@ const QODER_CLI_DOCS: &str = "https://docs.qoder.com/cli/custom-models";
 const QODER_DESKTOP_DOCS: &str = "https://docs.qoder.com/qoder/custom-models";
 const GROK_BUILD_MODEL_DOCS: &str = "https://docs.x.ai/build/settings#model-id";
 const MINIMAX_CODE_DOCS: &str = "https://agent.minimax.io/download";
+const WARP_MODEL_DOCS: &str = "https://docs.warp.dev/agents/inference/custom-inference-endpoint/";
 const CREDENTIAL_FILE_NATIVE_ID: &str = "__mux_credential_file";
 const CREDENTIAL_COMMAND_NATIVE_ID: &str = "__mux_credential_command";
 const CREDENTIAL_ARGS_NATIVE_ID: &str = "__mux_credential_args";
@@ -4673,6 +4674,29 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             supported_protocols: Vec::new(),
             note: "请在 Qoder Settings → Models 中添加和切换自定义模型。Arca 当前提供配置引导，不自动写入模型。".into(),
         },
+        ModelAgentView {
+            id: "warp".into(),
+            name: String::new(),
+            mode: "guided".into(),
+            storage_authority: ModelStorageAuthority::Guided,
+            installed: crate::paths::system_probe_path("/Applications/Warp.app/Contents/Info.plist").is_file()
+                || home().join("Applications/Warp.app/Contents/Info.plist").is_file(),
+            config_path: String::new(),
+            config_paths: Vec::new(),
+            docs: WARP_MODEL_DOCS.into(),
+            assigned_profile: None,
+            assigned_profiles: Vec::new(),
+            active_profile: None,
+            supports_multiple: true,
+            supports_global_selection: false,
+            credential_mode: "guided".into(),
+            credential_capabilities: credential::agent_capabilities("warp"),
+            credential_policies: BTreeMap::new(),
+            default_delivery: Default::default(),
+            available_deliveries: Vec::new(),
+            supported_protocols: vec![ModelProtocol::OpenaiCompletions],
+            note: "在 Warp 设置中搜索 inference endpoint，填写公网 HTTPS Base URL、API Key 和 Model ID，可添加多个模型；保存后在会话的模型选择器中选用。API Key 由 Warp 保存在设备安全存储中，Arca 当前提供原生配置引导。".into(),
+        },
         {
             let mut view = managed_agent_view(
                 &settings, "zcode", &[], &[".zcode/v2"],
@@ -4822,7 +4846,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
 
 /// Desktop has per-conversation selection; CLI settings.model is not its current model.
 pub(crate) fn supports_global_model_selection(agent_id: &str) -> bool {
-    !matches!(agent_id, "qoder-desktop" | "zcode" | "kilo-desktop")
+    !matches!(agent_id, "qoder-desktop" | "zcode" | "kilo-desktop" | "warp")
 }
 
 pub(crate) fn normalize_model_selection(agent_id: &str, selection: &mut crate::domain::assets::ModelAgentSelection) {
@@ -5349,6 +5373,11 @@ fn ensure_supported(agent_id: &str, protocol: &ModelProtocol) -> Result<(), Stri
         "minimax-code" => {
             return Err(format!(
                 "MiniMax Code custom providers currently persist options.apiKey in plaintext YAML and do not expose a Keychain-compatible credential command; see {MINIMAX_CODE_DOCS}"
+            ))
+        }
+        "warp" => {
+            return Err(format!(
+                "请在 Warp Settings 中搜索 inference endpoint 配置自定义模型；Arca 当前提供原生配置引导，未启用原生安全存储写入；参见 {WARP_MODEL_DOCS}"
             ))
         }
         _ => return Err(format!("unsupported model Agent: {agent_id}")),
@@ -10151,6 +10180,44 @@ fork_secondary_model = "private-fork"
                 assert!(ensure_supported(id, protocol).is_err());
             }
         }
+    }
+
+    #[test]
+    fn warp_model_guide_keeps_native_settings_and_credentials_out_of_writers() {
+        let th = TestHome::new("warp-model-guide");
+        let config = th.home.join(".warp/settings.toml");
+        fs::create_dir_all(config.parent().unwrap()).unwrap();
+        let original = "# Native settings must not be adopted\n[appearance]\ntheme = 'dark'\n";
+        fs::write(&config, original).unwrap();
+        let app = crate::paths::system_probe_path("/Applications/Warp.app/Contents/Info.plist");
+        fs::create_dir_all(app.parent().unwrap()).unwrap();
+        fs::write(&app, b"isolated-install-probe").unwrap();
+
+        let agent = list_agents().into_iter().find(|agent| agent.id == "warp").unwrap();
+        assert!(agent.installed);
+        assert_eq!(agent.name, "Warp");
+        assert_eq!(agent.mode, "guided");
+        assert_eq!(agent.storage_authority, ModelStorageAuthority::Guided);
+        assert!(agent.supports_multiple);
+        assert!(!agent.supports_global_selection);
+        assert!(agent.config_paths.is_empty());
+        assert!(default_config_paths("warp").is_none());
+        assert!(agent.assigned_profiles.is_empty());
+        assert!(agent.active_profile.is_none());
+        assert_eq!(agent.supported_protocols, vec![ModelProtocol::OpenaiCompletions]);
+        assert!(agent.docs.ends_with("/agents/inference/custom-inference-endpoint/"));
+        assert!(agent.credential_capabilities.native_sources.is_empty());
+        assert!(!agent.credential_capabilities.agent_store);
+        assert!(!agent.credential_capabilities.plaintext);
+        assert!(!agent.credential_capabilities.arca_keychain_helper);
+        assert!(credential::select_delivery("warp", &ApiKeySource::ArcaStore,
+            &crate::domain::assets::ApiKeyDelivery::Auto).is_err());
+        for protocol in [ModelProtocol::OpenaiCompletions, ModelProtocol::OpenaiResponses,
+            ModelProtocol::AnthropicMessages, ModelProtocol::GeminiGenerateContent,
+            ModelProtocol::GeminiInteractions, ModelProtocol::AwsBedrockConverse] {
+            assert!(ensure_supported("warp", &protocol).unwrap_err().contains("inference endpoint"));
+        }
+        assert_eq!(fs::read_to_string(&config).unwrap(), original);
     }
 
     #[test]

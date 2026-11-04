@@ -21,6 +21,9 @@
     "mcp": "https://platform.stepfun.com/docs/zh/step-code/customization/mcp",
     "skill": "https://platform.stepfun.com/docs/zh/step-code/customization/skills"
   },
+  "warp": {
+    "model": "https://docs.warp.dev/agents/inference/custom-inference-endpoint/"
+  },
   "workbuddy": {
     "mcp": "https://www.workbuddy.ai/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
     "model": "https://www.workbuddy.ai/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Model",

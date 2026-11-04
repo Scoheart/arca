@@ -146,6 +146,30 @@ const emptyConsumptionState = {
   plan: null,
 } as unknown as ConsumptionState;
 
+it("shows Warp native model setup without offering central writes", async () => {
+  const warp: AgentInfo = { ...skillsOnlyAgent, id: "warp", name: "Warp", skills_global_dir: null };
+  apiMocks.listModelAgents.mockResolvedValueOnce([{
+    id: "warp", name: "Warp", mode: "guided", storage_authority: "guided", installed: true,
+    config_path: "", config_paths: [], docs: "https://docs.warp.dev/agents/inference/custom-inference-endpoint/",
+    assigned_profile: null, assigned_profiles: [], active_profile: null,
+    supports_multiple: true, supports_global_selection: false, credential_mode: "guided",
+    supported_protocols: ["openai-completions"],
+    note: "在 Warp 设置中搜索 inference endpoint，填写公网 HTTPS Base URL、API Key 和 Model ID。",
+  } satisfies ModelAgentView]);
+  render(<AgentView state={{ ...state, agents: [warp] } as InstallState} skillsState={skillsState}
+    consumptionState={emptyConsumptionState} agentId="warp" initialTab="models" />);
+
+  const panel = await screen.findByRole("region", { name: "Warp 模型配置引导" });
+  expect(screen.getByRole("tab", { name: /Models\s*原生/ })).toBeVisible();
+  expect(within(panel).getByText(/公网 HTTPS/)).toBeVisible();
+  expect(within(panel).getByText("OpenAI Chat Completions")).toBeVisible();
+  expect(screen.queryByRole("button", { name: "添加 Models" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "清空全部 Models" })).not.toBeInTheDocument();
+  expect(within(panel).queryByRole("switch")).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "查看配置步骤" }));
+  expect(openerMocks.openUrl).toHaveBeenCalledWith("https://docs.warp.dev/agents/inference/custom-inference-endpoint/");
+});
+
 it("keeps an Agent with only plugin Skills in the production workbench", async () => {
   const nativeAgent: AgentInfo = { ...skillsOnlyAgent, id: "cursor", name: "Cursor", skills_global_dir: null };
   apiMocks.listNativeResources.mockResolvedValueOnce({ native_plugin_agents: [], host_mcps: [], native_plugins: [],

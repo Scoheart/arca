@@ -17,6 +17,7 @@ export function AgentResourcePanel({
   value,
   onChange,
   counts,
+  countLabels,
   instructions = false,
   plugins,
   subagents: _subagents = false,
@@ -25,6 +26,7 @@ export function AgentResourcePanel({
   value: AgentResourceTab;
   onChange: (value: AgentResourceTab) => void;
   counts: Partial<Record<ResourceCategoryId, number>>;
+  countLabels?: Partial<Record<ResourceCategoryId, string>>;
   instructions?: boolean;
   plugins?: number;
   subagents?: boolean;
@@ -72,7 +74,7 @@ export function AgentResourcePanel({
             >
               <span className="arca-agent-resource-tab-icon" aria-hidden="true"><tab.Icon className="w-4 h-4" /></span>
               <span className="arca-agent-resource-tab-label">{tab.label}</span>
-              {tab.id !== "instructions" && <span className="arca-agent-resource-tab-count">{tab.id === "plugins" ? plugins : (counts[tab.id] ?? 0)}</span>}
+              {tab.id !== "instructions" && <span className="arca-agent-resource-tab-count">{tab.id === "plugins" ? plugins : (countLabels?.[tab.id] ?? counts[tab.id] ?? 0)}</span>}
             </button>
           ))}
         </div>

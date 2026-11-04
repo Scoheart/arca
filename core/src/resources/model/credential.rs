@@ -98,7 +98,7 @@ pub fn agent_capabilities(agent_id: &str) -> AgentCredentialCapabilities {
             capabilities.native_sources.push("env".into());
         }
         "mistral-vibe" | "goose" => capabilities.native_sources.push("env".into()),
-        "qoder" | "minimax-code" | "kimi-code" | "kimi-code-desktop" => {
+        "qoder" | "minimax-code" | "kimi-code" | "kimi-code-desktop" | "warp" => {
             capabilities.note = Some("credential delivery requires guided Agent setup".into());
         }
         _ => {

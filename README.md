@@ -258,7 +258,11 @@ Crush, Mistral Vibe, Hermes Agent, Factory Droid, Goose, ZCode, Qoder Desktop 0.
 Qoder Desktop uses native custom providers in `~/.qoder/settings.json`; select the
 installed model in a Qoder conversation after restarting the app. Qoder CLI shares
 that registry and supports a global current model, with environment credential
-references. MiniMax Code, Qoder, and Kimi Code CLI/Desktop remain guided targets.
+references. MiniMax Code, Qoder, Kimi Code CLI/Desktop, and Warp are guided targets.
+Warp's Models tab links to its native custom inference setup, which supports
+multiple models behind a publicly reachable HTTPS endpoint. Warp retains the
+API keys in its own device secure storage; Arca does not project central Model
+assets into that store. See [Warp model setup and audit](docs/warp-models.md).
 
 Models use a shared Provider architecture: one Provider owns its name, type,
 single Base URL, enabled protocol Endpoint Paths, environment reference, and
