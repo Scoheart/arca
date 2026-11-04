@@ -1014,11 +1014,12 @@ mod tests {
     #[test]
     fn builtin_catalog_and_transport_metadata_load() {
         let a = builtin_agents();
-        assert_eq!(audited_agents().len(), 95);
         let catalog: BTreeMap<String, AgentDefinition> =
             serde_json::from_str(CATALOG_AGENTS_JSON).unwrap();
-        assert_eq!(catalog.len(), 280);
-        assert_eq!(a.len(), 311);
+        let expected_ids = audited_agents().into_keys().chain(catalog.into_keys())
+            .collect::<BTreeSet<_>>();
+        assert!(!expected_ids.is_empty());
+        assert_eq!(a.keys().cloned().collect::<BTreeSet<_>>(), expected_ids);
         assert_eq!(a["claude-code"].key, "mcpServers");
         assert_eq!(a["codex"].format, "toml");
         assert_eq!(
@@ -1248,10 +1249,11 @@ mod tests {
     }
 
     #[test]
-    fn audited_skill_capabilities_must_match_approved_agent_set() {
+    fn audited_skill_capabilities_follow_registry_evidence_without_a_second_allowlist() {
         let mut missing = audited_agents();
         missing.get_mut("codex").unwrap().skills = None;
-        assert!(merge_builtin_definitions(BTreeMap::new(), missing).is_err());
+        let merged = merge_builtin_definitions(BTreeMap::new(), missing).unwrap();
+        assert!(merged["codex"].skills.is_none(), "a registry retraction must not restore a writer");
 
         let mut extra = audited_agents();
         extra.insert(
@@ -1265,7 +1267,8 @@ mod tests {
                 ..Default::default()
             },
         );
-        assert!(merge_builtin_definitions(BTreeMap::new(), extra).is_err());
+        let merged = merge_builtin_definitions(BTreeMap::new(), extra).unwrap();
+        assert_eq!(merged["extra-audited"].skills.as_ref().unwrap().global_dir, "~/.extra-audited/skills");
     }
 
     #[test]

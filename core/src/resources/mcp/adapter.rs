@@ -11,6 +11,15 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 pub trait Adapter {
+    /// Enumerate native identities without decoding connection or writer policy.
+    fn declaration_names(&self, _text: &str) -> Result<Vec<String>, String> {
+        Err("MCP configuration declarations are unsupported for this format".into())
+    }
+    /// Inspect one entry in bounded, already-read text. This never runs writer
+    /// policy, creates backups, resolves credentials or changes ownership.
+    fn inspect_text(&self, _text: &str, _name: &str) -> Result<Option<Value>, String> {
+        Err("MCP configuration inspection is unsupported for this format".into())
+    }
     /// Read the `key` section as `{name: config}`, parsing each entry
     /// independently — an entry that doesn't fit the stdio/http shape is skipped
     /// (it stays on disk, it just isn't surfaced). A missing file, unparseable

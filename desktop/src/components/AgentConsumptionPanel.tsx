@@ -1,7 +1,7 @@
 import { ResourceIcon } from "./resourcePresentation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { AssetRef, ConsumptionView, ConvergenceAction, HostMcpObservation, NativeSkillObservation } from "../lib/types";
-import { HostMcpCard, NativeSkillCard } from "./NativePluginsPanel";
+import type { AssetRef, ConfiguredMcpObservation, ConsumptionView, ConvergenceAction, HostMcpObservation, NativeSkillObservation } from "../lib/types";
+import { ConfiguredMcpCard, HostMcpCard, NativeSkillCard } from "./NativePluginsPanel";
 import { assetIdentity } from "../lib/consumption";
 import {
   DownloadIcon,
@@ -180,6 +180,7 @@ export function AgentConsumptionPanel({
   rows,
   external,
   hostMcps = [],
+  configuredMcps = [],
   nativeSkills = [],
   externalMode = "summary",
   externalTitle = "外部配置",
@@ -188,6 +189,7 @@ export function AgentConsumptionPanel({
   onManage,
   manageIcon = <PlusIcon className="w-3.5 h-3.5" />,
   onOpenAsset,
+  onInspect,
   onEnabledChange,
   enabledChangeDisabled,
   toggleKind = "enabled",
@@ -218,6 +220,7 @@ export function AgentConsumptionPanel({
   rows: ConsumptionView[];
   external: ConsumptionView[];
   hostMcps?: HostMcpObservation[];
+  configuredMcps?: ConfiguredMcpObservation[];
   nativeSkills?: NativeSkillObservation[];
   externalMode?: "summary" | "cards";
   externalTitle?: string;
@@ -226,6 +229,7 @@ export function AgentConsumptionPanel({
   onManage(): void;
   manageIcon?: ReactNode;
   onOpenAsset?(asset: AssetRef): void;
+  onInspect?(item: ConsumptionView): void;
   onEnabledChange?(item: ConsumptionView, enabled: boolean): void;
   enabledChangeDisabled?: boolean | ((item: ConsumptionView) => boolean);
   toggleKind?: "enabled" | "current";
@@ -260,11 +264,13 @@ export function AgentConsumptionPanel({
 
   const needle = query.trim().toLocaleLowerCase();
   const hosts = domain === "mcp" ? hostMcps : [];
+  const declarations = domain === "mcp" ? configuredMcps : [];
   const skills = domain === "skill" ? nativeSkills : [];
   const filteredHosts = hosts.filter(item => !needle || `${item.name} ${item.server_id} ${item.provider}`.toLocaleLowerCase().includes(needle));
+  const filteredDeclarations = declarations.filter(item => !needle || `${item.name} ${item.source_path}`.toLocaleLowerCase().includes(needle));
   const filteredSkills = skills.filter(item => !needle || `${item.name} ${item.plugin_name} ${item.plugin_id}`.toLocaleLowerCase().includes(needle));
-  const total = items.length + hosts.length + skills.length;
-  const visible = filteredHosts.length + filteredSkills.length;
+  const total = items.length + hosts.length + declarations.length + skills.length;
+  const visible = filteredHosts.length + filteredDeclarations.length + filteredSkills.length;
   const filtered = items.filter(({ item }) => {
     const presentation = present(item.asset);
     return !needle || `${presentation.name} ${presentation.description ?? ""} ${assetIdentity(item.asset)}`.toLocaleLowerCase().includes(needle);
@@ -275,7 +281,7 @@ export function AgentConsumptionPanel({
       <div className="arca-agent-section-head">
         <div>
           <h3>{title}</h3>
-          {description && <p>{description}</p>}
+          {description && domain !== "model" && <p>{description}</p>}
         </div>
         <AgentResourceActions><div className="arca-agent-section-actions">
           {total > 0 && (
@@ -353,6 +359,7 @@ export function AgentConsumptionPanel({
       ) : filtered.length + visible === 0 ? <p role="status" className="arca-consumption-empty">没有匹配的 {title}</p> : (
         <ul className="arca-consumption-list" data-columns={columns}>
           {filteredHosts.map(item => <HostMcpCard key={`${item.agent_id}:${item.source_fingerprint}`} item={item} />)}
+          {filteredDeclarations.map(item => <ConfiguredMcpCard key={`${item.agent_id}:configured:${item.name}`} item={item} />)}
           {filteredSkills.map(item => <NativeSkillCard key={item.id} item={item} />)}
           {filtered.map(({ item, external: isExternal }) => {
             const presentation = present(item.asset);
@@ -378,7 +385,10 @@ export function AgentConsumptionPanel({
                 <span className="arca-consumption-icon">{presentation.icon}</span>
                 <span className="arca-consumption-copy">
                   <span className="arca-consumption-title">
-                    <strong title={presentation.name}>{presentation.name}</strong>
+                    {domain === "mcp" && onInspect ? <button type="button" className="arca-consumption-inspect"
+                      aria-label={`查看 ${presentation.name} 配置`} aria-haspopup="dialog"
+                      onClick={event => { event.currentTarget.focus({ preventScroll: true }); onInspect(item); }}><strong title={presentation.name}>{presentation.name}</strong></button>
+                      : <strong title={presentation.name}>{presentation.name}</strong>}
                   </span>
                   {domain === "mcp" && <span className="arca-consumption-secondary">
                     {!isExternal && <ConsumptionStatus status={item.status} reason={item.reason} compact />}

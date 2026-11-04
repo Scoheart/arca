@@ -61,9 +61,8 @@ it("creates a manual override with custom env for a subscribed MCP", async () =>
   expect(screen.queryByRole("button", { name: "恢复默认" })).not.toBeInTheDocument();
   const addVariable = screen.getByRole("button", { name: "添加变量" });
   await user.click(addVariable);
-  const inputs = screen.getAllByRole("textbox");
-  await user.type(inputs.at(-2)!, "SOURCE_BACKED_API_KEY");
-  await user.type(inputs.at(-1)!, "user-secret");
+  await user.type(screen.getByLabelText("环境变量 · 第 1 行名称"), "SOURCE_BACKED_API_KEY");
+  await user.type(screen.getByLabelText("环境变量 · 第 1 行值"), "user-secret");
   await user.click(screen.getByRole("button", { name: "创建本地覆盖" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledTimes(1));
   expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
@@ -77,7 +76,7 @@ it("creates a manual override with custom env for a subscribed MCP", async () =>
         }),
       }),
     }),
-  }));
+  }), { reviewOnlyWhenNeeded: true });
 });
 
 it("renames an existing MCP through the shared plan while keeping its transport fixed", async () => {
@@ -119,7 +118,7 @@ it("renames an existing MCP through the shared plan while keeping its transport 
 
   const nameInput = screen.getByRole("textbox", { name: "名称" });
   expect(nameInput).toBeEnabled();
-  expect(screen.getByRole("button", { name: "http / sse" })).toBeDisabled();
+  expect(screen.getByRole("radio", { name: /远程连接/ })).toBeDisabled();
   await user.clear(nameInput);
   expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
   await user.type(nameInput, "new-name");
@@ -133,7 +132,7 @@ it("renames an existing MCP through the shared plan while keeping its transport 
       name: "new-name",
       config: { stdio: expect.objectContaining({ command: "rename-server" }) },
     }),
-  });
+  }, { reviewOnlyWhenNeeded: true });
   expect(onBack).not.toHaveBeenCalled();
 });
 
@@ -173,7 +172,9 @@ it("rejects a rename collision and cancellation leaves the plan untouched", asyn
   await user.clear(nameInput);
   await user.type(nameInput, "taken-name");
   await user.click(screen.getByRole("button", { name: "保存" }));
-  expect(await screen.findByText("已存在同名同传输方式的 MCP: taken-name (stdio)")).toBeVisible();
+  expect(nameInput).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
+  expect(await screen.findByRole("alert")).toHaveTextContent("名称重复，请保留一个。");
   expect(planUpdate).not.toHaveBeenCalled();
 
   await user.click(screen.getByRole("button", { name: "取消" }));

@@ -31,6 +31,20 @@ const externalRow: ConsumptionView = {
 };
 
 describe("AgentConsumptionPanel", () => {
+  it("opens an external MCP configuration without offering removal or enablement", async () => {
+    const inspect = vi.fn();
+    render(<AgentConsumptionPanel domain="mcp" title="MCPs" manageLabel="添加 MCP"
+      rows={[]} external={[externalRow]} externalMode="cards"
+      present={() => ({ name: "Computer Use" })} onManage={vi.fn()}
+      onInspect={inspect} onRemove={vi.fn()} onEnabledChange={vi.fn()} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "查看 Computer Use 配置" }));
+    expect(inspect).toHaveBeenCalledWith(externalRow);
+    const card = screen.getByText("Computer Use").closest("li")!;
+    expect(within(card).queryByRole("switch")).not.toBeInTheDocument();
+    expect(within(card).queryByRole("button", { name: /移除/ })).not.toBeInTheDocument();
+  });
+
   it("offers one master MCP switch without changing external entries", async () => {
     const onBulkEnabledChange = vi.fn();
     render(

@@ -236,6 +236,11 @@ pub async fn list_native_resources(agent_id: String) -> CoreResult<arca_core::do
 }
 
 #[tauri::command]
+pub async fn inspect_mcp_configuration(request: arca_core::application::mcp::McpInspectionRequest) -> CoreResult<arca_core::application::mcp::McpConfigurationView> {
+    core_blocking(move || arca_core::application::mcp::inspect_configuration(request)).await
+}
+
+#[tauri::command]
 pub async fn list_model_adoption_candidates(
 ) -> Result<Vec<ModelAdoptionCandidate>, AssetCommandError> {
     asset_blocking(arca_core::application::assets::list_model_adoption_candidates).await
@@ -656,7 +661,7 @@ pub async fn set_model_credential_delivery(
     profile_id: String,
     delivery: arca_core::application::models::ApiKeyDelivery,
     confirm_plaintext: bool,
-) -> Result<arca_core::resources::model::ModelApplyResult, String> {
+) -> Result<arca_core::application::models::ModelApplyResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
         arca_core::application::models::set_credential_delivery(
             &agent_id,
@@ -674,7 +679,7 @@ pub async fn set_agent_credential_delivery(
     agent_id: String,
     delivery: arca_core::application::models::ApiKeyDelivery,
     confirm_plaintext: bool,
-) -> Result<arca_core::resources::model::ModelApplyResult, String> {
+) -> Result<arca_core::application::models::ModelApplyResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
         arca_core::application::models::set_agent_credential_delivery(
             &agent_id,
@@ -1139,26 +1144,26 @@ pub async fn preview_install(req: InstallRequest) -> Result<Vec<PlannedWrite>, S
 
 #[tauri::command]
 pub async fn list_subagents() -> Result<Vec<arca_core::domain::subagent::SubagentDefinition>, AssetCommandError> {
-    asset_blocking(arca_core::resources::subagent::list_central_subagents).await
+    asset_blocking(arca_core::application::subagents::list_central_subagents).await
 }
 
 #[tauri::command]
 pub async fn get_subagent(
     name: String,
 ) -> Result<Option<arca_core::domain::subagent::SubagentDefinition>, AssetCommandError> {
-    asset_blocking(move || arca_core::resources::subagent::get_central_subagent(&name)).await
+    asset_blocking(move || arca_core::application::subagents::get_central_subagent(&name)).await
 }
 
 #[tauri::command]
 pub async fn save_subagent(
     definition: arca_core::domain::subagent::SubagentDefinition,
 ) -> Result<(), AssetCommandError> {
-    asset_blocking(move || arca_core::resources::subagent::save_central_subagent(definition)).await
+    asset_blocking(move || arca_core::application::subagents::save_central_subagent(definition)).await
 }
 
 #[tauri::command]
 pub async fn delete_subagent(name: String) -> Result<(), AssetCommandError> {
-    asset_blocking(move || arca_core::resources::subagent::delete_central_subagent(&name)).await
+    asset_blocking(move || arca_core::application::subagents::delete_central_subagent(&name)).await
 }
 
 #[tauri::command]
@@ -1166,38 +1171,38 @@ pub async fn adopt_subagent(
     agent_id: String,
     name: String,
 ) -> Result<arca_core::domain::subagent::SubagentDefinition, AssetCommandError> {
-    asset_blocking(move || arca_core::resources::subagent::adopt_subagent(&agent_id, &name)).await
+    asset_blocking(move || arca_core::application::subagents::adopt_subagent(&agent_id, &name)).await
 }
 
 #[tauri::command]
 pub async fn list_hooks() -> Result<Vec<arca_core::domain::hook::HookDefinition>, AssetCommandError> {
-    asset_blocking(arca_core::resources::hook::list_central_hooks).await
+    asset_blocking(arca_core::application::hooks::list_central_hooks).await
 }
 
 #[tauri::command]
 pub async fn get_hook(
     name: String,
 ) -> Result<Option<arca_core::domain::hook::HookDefinition>, AssetCommandError> {
-    asset_blocking(move || arca_core::resources::hook::get_central_hook(&name)).await
+    asset_blocking(move || arca_core::application::hooks::get_central_hook(&name)).await
 }
 
 #[tauri::command]
 pub async fn save_hook(
     definition: arca_core::domain::hook::HookDefinition,
 ) -> Result<(), AssetCommandError> {
-    asset_blocking(move || arca_core::resources::hook::save_central_hook(definition)).await
+    asset_blocking(move || arca_core::application::hooks::save_central_hook(definition)).await
 }
 
 #[tauri::command]
 pub async fn delete_hook(name: String) -> Result<(), AssetCommandError> {
-    asset_blocking(move || arca_core::resources::hook::delete_central_hook(&name)).await
+    asset_blocking(move || arca_core::application::hooks::delete_central_hook(&name)).await
 }
 
 #[tauri::command]
 pub async fn list_agent_hooks(
     agent_id: String,
 ) -> Result<Vec<arca_core::domain::hook::HookDefinition>, AssetCommandError> {
-    asset_blocking(move || arca_core::resources::hook::list_agent_hooks(&agent_id)).await
+    asset_blocking(move || arca_core::application::hooks::list_agent_hooks(&agent_id)).await
 }
 
 #[tauri::command]
@@ -1206,7 +1211,7 @@ pub async fn project_hook_to_agent(
     definition: arca_core::domain::hook::HookDefinition,
 ) -> Result<String, AssetCommandError> {
     asset_blocking(move || {
-        arca_core::resources::hook::project_hook_to_agent(&agent_id, &definition)
+        arca_core::application::hooks::project_hook_to_agent(&agent_id, &definition)
             .map(|p| p.to_string_lossy().into_owned())
     })
     .await
@@ -1217,7 +1222,7 @@ pub async fn remove_hook_from_agent(
     agent_id: String,
     name: String,
 ) -> Result<(), AssetCommandError> {
-    asset_blocking(move || arca_core::resources::hook::remove_hook_from_agent(&agent_id, &name)).await
+    asset_blocking(move || arca_core::application::hooks::remove_hook_from_agent(&agent_id, &name)).await
 }
 
 #[tauri::command]
@@ -1225,7 +1230,7 @@ pub async fn adopt_hook(
     agent_id: String,
     name: String,
 ) -> Result<arca_core::domain::hook::HookDefinition, AssetCommandError> {
-    asset_blocking(move || arca_core::resources::hook::adopt_hook(&agent_id, &name)).await
+    asset_blocking(move || arca_core::application::hooks::adopt_hook(&agent_id, &name)).await
 }
 
 #[cfg(test)]

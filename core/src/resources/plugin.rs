@@ -110,6 +110,11 @@ fn hosts() -> &'static [Host] {
         .expect("audited native plugin descriptors must be valid"))
 }
 
+/// The caller must first bind this path to a fresh host MCP observation.
+pub(crate) fn open_declared_mcp_configuration(path: &Path) -> Result<fs::File, ()> {
+    open_confined_file(path)
+}
+
 pub(crate) fn skill_observations(plugins: &[NativePluginObservation]) -> Vec<NativeSkillObservation> {
     skills::observations(plugins)
 }
@@ -179,7 +184,9 @@ fn verify_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budg
 #[cfg(unix)]
 fn open_confined(path: &Path, directory_only: bool) -> Result<fs::File, ()> {
     use rustix::fs::{open, openat, Mode, OFlags};
-    let home = expand_tilde("~/");
+    // A trailing separator makes macOS follow a final symlink even with
+    // O_NOFOLLOW. Bind the HOME directory itself before walking its children.
+    let home: PathBuf = expand_tilde("~/").components().collect();
     let (base, tail) = if let Ok(tail) = path.strip_prefix(&home) {
         (home.as_path(), tail)
     } else { (Path::new("/"), path.strip_prefix("/").map_err(|_| ())?) };
@@ -205,12 +212,15 @@ fn open_confined(path: &Path, directory_only: bool) -> Result<fs::File, ()> {
 pub(crate) fn open_confined_file(path: &Path) -> Result<fs::File, ()> { open_confined(path, false) }
 
 pub(crate) fn checked_root(path: &Path) -> Result<(), ()> {
-    let home = expand_tilde("~/");
+    let home: PathBuf = expand_tilde("~/").components().collect();
     let (mut current, tail) = if let Ok(tail) = path.strip_prefix(&home) {
         (home.clone(), tail)
     } else {
         (PathBuf::from("/"), path.strip_prefix("/").map_err(|_| ())?)
     };
+    if fs::symlink_metadata(&current).is_ok_and(|metadata| metadata.file_type().is_symlink()) {
+        return Err(());
+    }
     for part in tail.components() {
         if matches!(part, Component::ParentDir | Component::Prefix(_)) { return Err(()); }
         current.push(part);

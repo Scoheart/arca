@@ -789,12 +789,28 @@ mod tests {
         let home = crate::testenv::TestHome::new("opencode-desktop-launch");
         let app = home.home.join("Applications/OpenCode.app");
         fs::create_dir_all(app.join("Contents")).unwrap();
-        fs::write(app.join("Contents/Info.plist"), "fixture").unwrap();
+        let mut fields = plist::Dictionary::new();
+        fields.insert("CFBundleIdentifier".into(), plist::Value::String("ai.opencode.desktop".into()));
+        plist::Value::Dictionary(fields).to_file_xml(app.join("Contents/Info.plist")).unwrap();
         let info = info("opencode-desktop").unwrap();
         assert_eq!(info.category, "desktop");
         assert_eq!(info.kind.as_deref(), Some("app"));
         assert!(matches!(info.resolved_target, Some(LaunchTarget::App { path, .. }) if path == app.to_string_lossy()));
         assert_eq!(info.install_url.as_deref(), Some("https://opencode.ai/download"));
+    }
+
+    #[test]
+    fn opencode_desktop_rejects_a_same_named_app_with_another_bundle_identity() {
+        let home = crate::testenv::TestHome::new("opencode-wrong-bundle");
+        let app = home.home.join("Applications/OpenCode.app");
+        fs::create_dir_all(app.join("Contents")).unwrap();
+        let mut fields = plist::Dictionary::new();
+        fields.insert("CFBundleIdentifier".into(), plist::Value::String("example.unrelated".into()));
+        plist::Value::Dictionary(fields).to_file_xml(app.join("Contents/Info.plist")).unwrap();
+        let info = info("opencode-desktop").unwrap();
+        assert!(!info.available);
+        assert!(!info.installed.unwrap_or(false));
+        assert!(info.resolved_target.is_none());
     }
 
     #[test]

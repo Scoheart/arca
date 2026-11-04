@@ -38,7 +38,7 @@ const agents = [
   agent("codex", "Codex"),
   agent("claude-code", "Claude Code"),
   agent("qoder", "Qoder CLI"),
-  agent("catalog-only", "Catalog Only", false),
+  agent("freebuff", "Catalog Only", false),
 ];
 
 it("sections preserve pinned order and include every Agent definition", () => {
@@ -48,7 +48,7 @@ it("sections preserve pinned order and include every Agent definition", () => {
     "",
   );
   expect(sections.pinned.map(({ id }) => id)).toEqual(["qoder", "codex"]);
-  expect(sections.available.map(({ id }) => id)).toEqual(["catalog-only", "claude-code"]);
+  expect(sections.available.map(({ id }) => id)).toEqual(["freebuff", "claude-code"]);
   expect(sections.searchResults).toBeNull();
 });
 
@@ -78,6 +78,7 @@ it("includes Skills-only and catalog-only Agent definitions", () => {
   ];
   const blankSkillsPath = {
     ...agent("blank-skills", "Blank Skills", false),
+    builtin: false,
     skills_global_dir: "   ",
   };
   const sections = buildAgentPickerSections(
@@ -87,7 +88,7 @@ it("includes Skills-only and catalog-only Agent definitions", () => {
   );
 
   expect(sections.pinned.map(({ id }) => id)).toEqual(["cortex-code", "dirac", "minion-code"]);
-  expect(sections.available.map(({ id }) => id)).toContain("catalog-only");
+  expect(sections.available.map(({ id }) => id)).toContain("freebuff");
   expect(sections.available.map(({ id }) => id)).toContain("blank-skills");
 });
 

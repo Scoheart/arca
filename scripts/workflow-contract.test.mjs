@@ -10,80 +10,14 @@ async function read(relativePath) {
   return readFile(join(root, relativePath), "utf8");
 }
 
-function jobBlock(workflow, job, nextJob) {
-  const start = workflow.indexOf(`\n  ${job}:`);
-  assert.notEqual(start, -1, `missing ${job} job`);
-  const end = nextJob ? workflow.indexOf(`\n  ${nextJob}:`, start + 1) : -1;
-  return workflow.slice(start, end === -1 ? undefined : end);
-}
-
-test("quality workflow runs independent producer jobs", async () => {
+test("quality remains paused and cannot run producers or mutate releases", async () => {
   const workflow = await read(".github/workflows/quality-monitor.yml");
-  const rust = jobBlock(workflow, "rust", "tauri");
-  const tauri = jobBlock(workflow, "tauri", "desktop");
-  const desktop = jobBlock(workflow, "desktop", "website");
-  const website = jobBlock(workflow, "website", "verify");
-
-  assert.match(rust, /cargo test --locked -p arca-core -p arca-cli/);
-  assert.match(rust, /cargo fmt --all --check/);
-  assert.match(rust, /cargo clippy --locked -p arca-core -p arca-cli --all-targets -- -D warnings/);
-  assert.match(tauri, /runs-on:\s*macos-latest/);
-  assert.match(
-    tauri,
-    /cargo fmt --all --manifest-path desktop\/src-tauri\/Cargo\.toml --check/,
-  );
-  assert.match(
-    tauri,
-    /working-directory:\s*desktop[\s\S]*bash scripts\/prepare-sidecar\.sh[\s\S]*cargo clippy/,
-  );
-  assert.doesNotMatch(tauri, /\btouch\s+.*binaries\/arca/);
-  assert.match(
-    tauri,
-    /cargo clippy --locked --manifest-path desktop\/src-tauri\/Cargo\.toml --all-targets -- -D warnings/,
-  );
-  assert.match(
-    tauri,
-    /cargo test --locked --manifest-path desktop\/src-tauri\/Cargo\.toml/,
-  );
-  assert.match(desktop, /node-version:\s*24/);
-  assert.match(desktop, /cache:\s*npm/);
-  assert.match(desktop, /cache-dependency-path:\s*desktop\/package-lock\.json/);
-  assert.match(desktop, /npm ci --no-audit --no-fund/);
-  assert.match(desktop, /node scripts\/release-version\.mjs check/);
-  assert.match(
-    desktop,
-    /node --test scripts\/workflow-contract\.test\.mjs scripts\/release-version\.test\.mjs/,
-  );
-  assert.match(website, /node-version:\s*24/);
-  assert.match(website, /cache-dependency-path:\s*website\/package-lock\.json/);
-  assert.match(website, /npm ci --no-audit --no-fund/);
-  assert.doesNotMatch(workflow, /npm install/);
-});
-
-test("verify is the stable aggregate result", async () => {
-  const workflow = await read(".github/workflows/quality-monitor.yml");
-  const verify = jobBlock(workflow, "verify", "monitor");
-
-  assert.match(verify, /name:\s*verify/);
-  assert.match(verify, /if:\s*\$\{\{ always\(\) \}\}/);
-  assert.match(verify, /needs:\s*\[rust, tauri, desktop, website\]/);
-  for (const producer of ["rust", "tauri", "desktop", "website"]) {
-    assert.match(verify, new RegExp(`needs\\.${producer}\\.result`));
-  }
-});
-
-test("quality validates only stable tags, PRs, schedules, and manual runs", async () => {
-  const workflow = await read(".github/workflows/quality-monitor.yml");
-  const monitor = jobBlock(workflow, "monitor");
-
-  assert.match(workflow, /push:\s*\n\s*tags:\s*\["v\*"\]/);
-  assert.doesNotMatch(workflow, /push:\s*\n\s*branches:\s*\[main\]/);
-  assert.match(workflow, /pull_request:\s*\n\s*branches:\s*\[main\]/);
-  assert.match(workflow, /cancel-in-progress:\s*true/);
-  assert.match(monitor, /needs\.verify\.result == 'failure'/);
-  assert.match(monitor, /github\.event_name != 'pull_request'/);
-  assert.match(monitor, /needs\.verify\.result == 'success'/);
-  assert.match(monitor, /secrets\.COPILOT_PAT/);
+  assert.match(workflow, /on:\s*\n\s+workflow_dispatch:/);
+  assert.doesNotMatch(workflow, /\n\s+(?:push|pull_request|schedule):/);
+  assert.match(workflow, /permissions:\s*\n\s+contents: read/);
+  assert.match(workflow, /jobs:\s*\n\s+paused:/);
+  assert.doesNotMatch(workflow, /\n\s+(?:rust|tauri|desktop|website|verify|monitor):/);
+  assert.doesNotMatch(workflow, /cargo (?:test|clippy|fmt)|npm (?:test|run)|gh (?:api|workflow)|secrets\./);
 });
 
 test("one explicit main release request creates one Draft and dispatches one main-scoped build", async () => {
@@ -164,31 +98,19 @@ test("desktop workflow builds stable tags only from the reusable main cache scop
   assert.doesNotMatch(workflow, /cancel-in-progress:\s*true/);
 });
 
-test("quality restores release caches on tags and only writes reusable main caches", async () => {
-  const workflow = await read(".github/workflows/quality-monitor.yml");
-  const rust = jobBlock(workflow, "rust", "tauri");
-  const tauri = jobBlock(workflow, "tauri", "desktop");
-  const reusableWrite =
-    /save-if:\s*\$\{\{ github\.ref == 'refs\/heads\/main' && \(github\.event_name == 'schedule' \|\| github\.event_name == 'workflow_dispatch'\) \}\}/;
-
-  assert.match(rust, reusableWrite);
-  assert.match(tauri, reusableWrite);
-  assert.match(tauri, /shared-key:\s*stable-desktop/);
-  assert.doesNotMatch(workflow, /save-if:[^\n]*github\.event_name == 'push'/);
-});
-
 test("desktop release packaging reuses the CLI already built for the sidecar", async () => {
   const workflow = await read(".github/workflows/build-desktop.yml");
   const sidecar = await read("desktop/scripts/prepare-sidecar.sh");
   const publisher = await read(".github/scripts/publish-release-assets.sh");
 
   assert.match(sidecar, /cargo build --release --locked -p arca-cli/);
-  assert.match(sidecar, /\.\.\/target\/release\/arca/);
+  assert.match(sidecar, /TARGET_DIR=\$\(cargo metadata --locked --no-deps/);
+  assert.match(sidecar, /cp "\$TARGET_DIR\/release\/arca"/);
   assert.doesNotMatch(workflow, /cargo build --release -p arca-cli/);
   assert.match(workflow, /CLI=target\/release\/arca/);
   assert.match(workflow, /tar -C target\/release/);
-  assert.match(workflow, /desktop\/src-tauri -> target/);
-  assert.match(workflow, /^\s+\. -> target$/m);
+  assert.match(workflow, /workspaces:\s*\. -> target/);
+  assert.match(workflow, /CARGO_TARGET_DIR:[^\n]*\/target/);
   assert.match(workflow, /tauri build -- --bundles app,dmg -- --locked/);
   assert.match(publisher, /make_latest=legacy/);
   assert.match(publisher, /releases\/latest/);

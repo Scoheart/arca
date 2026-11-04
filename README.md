@@ -218,6 +218,7 @@ A one-click **Arca 精选 (curated collection)** subscribes you to a curated sou
 - **Safe, local writes** — Arca reads and edits only fields it owns. Existing files are backed up, prepared, and verified as one recoverable transaction; unrelated keys, comments, formatting, policy fields, permissions, and symlinks are preserved.
 - **Unified Agent consumption center** — each Agent page shows desired central assets under MCPs, Model, and Skills, with a central picker for relationship changes and a separate read-only external section.
 - **Native plugins and bundled MCPs** — Cursor's Plugins tab lists verified bundled providers, local plugin packages and completed marketplace caches, including versions, source paths and MCP/Skill/Rule/Agent/Command/Hook components. Host-provided MCPs also appear as read-only cards in the Agent's MCPs tab. Cached packages retain an explicit cache-only label; Arca does not infer installation, enablement or connection from files. Native observations have no delete, toggle or asset assignment actions. CLI `mcp status --agent cursor` exposes the same metadata in text and JSON.
+- **Inspect native MCP configuration** — open an MCP name or its details on the Agent page to view its parsed configuration and source path. Entries Arca cannot manage, including OAuth or unknown transports, remain available as read-only declarations. Credentials are hidden in Core before display; plugin and built-in entries have no mutation controls. Sources without an independently readable declaration explain that limit. CLI `arca mcp show 'docs::stdio' --agent cursor --json` reads the same Agent configuration without importing it.
 
 Native resource lists use compact rows. Open a row to view its IDs, versions, observed state and component sources; declarations sharing a source are grouped in the details dialog. These observations preserve each host's native plugin format and built-in declarations. They do not certify package or client conformance to the Agent Plugins specification.
 
@@ -276,6 +277,8 @@ represent a client Base URL, Arca also blocks custom paths it cannot preserve
 exactly instead of silently ignoring them.
 
 See the [complete audited matrix](website/guide/agents.md) and [catalog methodology](docs/agent-catalog.md). Every writable target's global path remains editable; paths inside the home directory are normalized to the portable `~/…` form.
+
+The [2026-11-05 asset audit](docs/agent-assets-audit-2026-11-05.md) lists all 98 audited Agents, the remaining configuration gaps, and the distinction between isolated contract tests and native runtime acceptance.
 
 Skill consumption supports the audited user-level capabilities declared in `data/agents.json`, across CLI, IDE, and desktop products. `arca agent list --json` exposes the current capability matrix. Only capabilities detected on the current machine appear, and Agents sharing one physical compatibility directory are selected and reviewed as an inseparable impact group. Managed links expose one live central copy, so consumer-side edits are detected as central drift rather than isolated copies. See the [Skills guide](website/guide/skills.md).
 

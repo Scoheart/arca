@@ -50,10 +50,7 @@ fn local_source_flow_populates_toggles_and_removes() {
         .any(|e| e.name == "wiki" && e.transport() == "http"));
 
     // The cached copy exists under ~/.arca/assets/mcps/sources/local/.
-    let cached = home
-        .join(".arca")
-        .join("sources")
-        .join("local")
+    let cached = arca_core::paths::local_sources_dir()
         .join(format!("{id}.json"));
     assert!(
         cached.exists(),

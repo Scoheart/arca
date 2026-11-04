@@ -218,7 +218,9 @@ mod tests {
         let home = crate::testenv::TestHome::new("agent-runtime-without-config");
         let contents = home.home.join("Applications/OpenCode.app/Contents");
         std::fs::create_dir_all(&contents).unwrap();
-        std::fs::write(contents.join("Info.plist"), "fixture").unwrap();
+        let mut fields = plist::Dictionary::new();
+        fields.insert("CFBundleIdentifier".into(), plist::Value::String("ai.opencode.desktop".into()));
+        plist::Value::Dictionary(fields).to_file_xml(contents.join("Info.plist")).unwrap();
         let views = list_capabilities().unwrap();
         let desktop = views.iter().find(|view| view.identity.id == "opencode-desktop").unwrap();
         assert_eq!(desktop.runtime_detected, Some(true));

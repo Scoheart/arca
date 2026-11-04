@@ -1,4 +1,4 @@
-import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -20,6 +20,7 @@ import {
 } from "../test/skillsFixtures";
 import App from "../App";
 import { SkillsView } from "./SkillsView";
+import { SkillInspector } from "./SkillInspector";
 
 const appMocks = vi.hoisted(() => ({
   useInstallState: vi.fn(),
@@ -123,7 +124,7 @@ const appAgent = (index: number) => ({
   category: "coding",
   evidence: "official",
   verified_at: null,
-  builtin: true,
+  builtin: false,
 });
 
 const installStateForApp = (loading: boolean) => ({
@@ -372,7 +373,7 @@ describe("SkillsView", () => {
 
     expect(screen.queryByText("内容类型")).not.toBeInTheDocument();
     expect(screen.getByText("来源")).toBeVisible();
-    expect(screen.getByText("全部 Skills")).toBeVisible();
+    expect(screen.getByRole("button", { name: /全部 Skills/ })).toBeVisible();
     expect(screen.getByText("acme/skills")).toBeVisible();
     expect(
       screen.queryByRole("button", { name: /说明型/ }),
@@ -412,13 +413,13 @@ describe("SkillsView", () => {
     await waitFor(() =>
       expect(api.getSkillDetail).toHaveBeenCalledWith("central:review-changes"),
     );
-    expect(await screen.findByLabelText("SKILL.md 纯文本预览")).toBeVisible();
+    expect(await screen.findByRole("region", { name: "Skill 正文" })).toBeVisible();
   });
 
   it("does not expose legacy assignment switches in the Inspector", async () => {
     const user = userEvent.setup();
     render(<SkillsView state={skillsStateFixture()} />);
-    await user.click(screen.getByRole("button", { name: /review-changes/ }));
+    await user.click(await screen.findByRole("button", { name: /打开 Skill review-changes 详情/ }));
     const inspector = await screen.findByLabelText("review-changes 详情");
     expect(within(inspector).queryByRole("switch")).not.toBeInTheDocument();
   });
@@ -451,7 +452,7 @@ describe("SkillsView", () => {
       .mockResolvedValueOnce(second);
     render(<SkillsView state={skillsStateFixture()} />);
 
-    await user.click(screen.getByRole("button", { name: /review-changes/ }));
+    await user.click(await screen.findByRole("button", { name: /打开 Skill review-changes 详情/ }));
     const firstInspector = await screen.findByLabelText("review-changes 详情");
     await waitFor(() => expect(firstInspector).toHaveFocus());
     await user.type(screen.getByPlaceholderText("搜索 Skills"), "unassigned");
@@ -540,8 +541,8 @@ describe("SkillsView", () => {
         })}
       />,
     );
-    expect(screen.getByText("读取 Skills 失败")).toBeVisible();
-    expect(screen.getByText("读取失败，请检查目录权限。")).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveTextContent("读取 Skills 失败");
+    expect(screen.getByRole("alert")).toHaveTextContent("读取失败，请检查目录权限。");
     await userEvent.click(screen.getByRole("button", { name: "重试" }));
     expect(refresh).toHaveBeenCalledOnce();
 
@@ -579,8 +580,8 @@ describe("SkillsView", () => {
     expect(screen.queryByText("journal recovery required")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "重试" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "检查更新" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "添加 Skill" })).toBeDisabled();
-    expect(screen.queryByRole("dialog", { name: "添加 Skill" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "添加 Skills" })).toBeDisabled();
+    expect(screen.queryByRole("dialog", { name: "添加 Skills" })).not.toBeInTheDocument();
     expect(onIntentConsumed).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
   });
@@ -589,7 +590,7 @@ describe("SkillsView", () => {
     const user = userEvent.setup();
     const inventory = skillsInventoryFixture();
     const cancel = vi.fn().mockResolvedValue(undefined);
-    const initialState = stateWith(inventory, { cancel });
+    const initialState = stateWith(inventory, { cancel, plan: vi.fn().mockRejectedValue({ code: "network_error", message: "fixture staged import" }) });
     const { rerender } = render(
       <SkillsView
         state={initialState}
@@ -597,10 +598,10 @@ describe("SkillsView", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "添加 Skill" }));
+    await user.click(screen.getByRole("button", { name: "添加 Skills" }));
 
     await user.type(screen.getByLabelText("仓库地址"), "acme/skills");
-    await user.click(screen.getByRole("button", { name: "查找" }));
+    await user.click(screen.getByRole("button", { name: "导入" }));
     expect(await screen.findByRole("checkbox", { name: "review-changes" })).toBeVisible();
 
     rerender(
@@ -617,7 +618,7 @@ describe("SkillsView", () => {
 
     await waitFor(() =>
       expect(
-        screen.queryByRole("dialog", { name: "添加 Skill" }),
+        screen.queryByRole("dialog", { name: "添加 Skills" }),
       ).not.toBeInTheDocument(),
     );
     await waitFor(() => expect(cancel).toHaveBeenCalledWith("resolve-fixture"));
@@ -639,7 +640,7 @@ describe("SkillsView", () => {
 
     expect(screen.getByRole("heading", { name: "review-changes" })).toBeVisible();
     expect(screen.getByText("GitHub 暂时限流。")).toBeVisible();
-    expect(screen.getByText(/2026-07-17T08:00:00Z/)).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveTextContent("GitHub 暂时限流。");
     await userEvent.click(screen.getByRole("button", { name: "检查更新" }));
     expect(checkUpdates).toHaveBeenCalledWith(true);
     expect(screen.getByRole("button", { name: "检查中…" })).toBeDisabled();
@@ -691,7 +692,7 @@ describe("SkillsView", () => {
     empty.items = [];
     const { rerender } = render(<SkillsView state={stateWith(empty)} />);
     expect(screen.getByText("暂无 Skills")).toBeVisible();
-    expect(screen.getAllByRole("button", { name: "添加 Skill" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "添加 Skills" })).toHaveLength(1);
 
     rerender(<SkillsView state={skillsStateFixture()} />);
     await userEvent.type(screen.getByPlaceholderText("搜索 Skills"), "no-such-skill");
@@ -868,14 +869,14 @@ describe("SkillsView", () => {
   it("has no Agent-scoped install navigation", () => {
     render(<SkillsView state={skillsStateFixture()} />);
     expect(screen.queryByText("为 Agent 添加 Skill")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "添加 Skill" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "添加 Skills" })).toBeVisible();
   });
 });
 
 describe("App Skills routing", () => {
   it("keeps navigation usable while fresh MCP state is still loading", async () => {
     render(<App />);
-    expect(screen.getByText("registry-view")).toBeVisible();
+    expect(await screen.findByText("models-view")).toBeVisible();
     expect(screen.getByRole("button", { name: "MCPs" })).toBeVisible();
     expect(screen.getByRole("button", { name: /Models/ })).toBeVisible();
     expect(screen.getByRole("navigation", { name: "置顶 Agent" })).toBeVisible();
@@ -893,7 +894,7 @@ describe("App Skills routing", () => {
     appMocks.useInstallState.mockReturnValue(installStateForApp(false));
     render(<App />);
 
-    expect(screen.getByText("registry-view")).toBeVisible();
+    expect(await screen.findByText("models-view")).toBeVisible();
     await user.click(screen.getByRole("button", { name: /Models/ }));
     expect(await screen.findByText("models-view")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "MCPs" }));
@@ -912,7 +913,7 @@ describe("App Skills routing", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Skills" }));
-    await user.click(screen.getByRole("button", { name: /review-changes/ }));
+    await user.click(await screen.findByRole("button", { name: /打开 Skill review-changes 详情/ }));
     expect(await screen.findByLabelText("review-changes 详情")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "选择 Agent" }));
@@ -959,5 +960,45 @@ describe("App Skills routing", () => {
         .filter((result) => result.type === "return")
         .every((result) => result.value === skillsState),
     ).toBe(true);
+  });
+});
+
+
+describe("Skill lifecycle write guards", () => {
+  it.each([{ readOnly: true, planning: false }, { readOnly: false, planning: true }])(
+    "blocks every central mutation while unavailable: %j", async (guards) => {
+      const item = { ...skillsInventoryFixture().items[0], states: ["managed" as const, "missing" as const] };
+      const onPlan = vi.fn();
+      render(<SkillInspector item={item} detail={{ ...skillDetailFixture(), item }} loading={false} error={null}
+        onClose={vi.fn()} onPlan={onPlan} {...guards} />);
+      for (const name of ["更新", "修复", "删除"]) {
+        const button = screen.getByRole("button", { name });
+        expect(button).toBeDisabled();
+        fireEvent.click(button);
+      }
+      expect(onPlan).not.toHaveBeenCalled();
+    },
+  );
+
+  it("keeps external import explicit and unavailable during recovery", () => {
+    const base = skillsInventoryFixture().items[0];
+    const item: SkillInventoryItem = { ...base, identity: "target:agents-user:review-changes", states: ["external"],
+      location: { kind: "agent_target", target_id: "agents-user", global_dir: "~/.agents/skills" }, source: null };
+    const onPlan = vi.fn();
+    render(<SkillInspector item={item} detail={{ ...skillDetailFixture(), item }} loading={false} error={null}
+      onClose={vi.fn()} onPlan={onPlan} readOnly />);
+    expect(screen.getByRole("button", { name: "导入" })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: "备份并替换同名中央副本" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "删除" })).not.toBeInTheDocument();
+    expect(onPlan).not.toHaveBeenCalled();
+  });
+
+  it("does not offer lifecycle writes without the central page's mutation owner", () => {
+    const item = skillsInventoryFixture().items[0];
+    render(<SkillInspector item={item} detail={skillDetailFixture()} loading={false} error={null} onClose={vi.fn()} />);
+    for (const name of ["更新", "修复", "导入", "删除"]) {
+      expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole("region", { name: "Skill 正文" })).toBeVisible();
   });
 });

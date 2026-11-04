@@ -14,7 +14,8 @@ describe("ReviewDialog", () => {
     );
     expect(screen.getByText(/2 个 Agent/)).toBeVisible();
     const dialog = screen.getByRole("dialog", { name: "删除 MCP" });
-    expect(dialog.style.width).toContain("408px");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog.querySelector('[data-dialog-kind="review"]')).toHaveAttribute("data-dialog-size", "sm");
     expect(dialog.querySelector(".arca-review-dialog-danger")).not.toBeNull();
     expect(dialog.querySelector(".arca-dialog-shell-leading svg")).not.toBeNull();
     expect(screen.getByRole("button", { name: "删除 MCP" })).toHaveClass("btn-danger-solid");

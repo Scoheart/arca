@@ -1026,7 +1026,7 @@ mod tests {
                 },
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
+            api_key_source: Some(crate::domain::types::ApiKeySource::Env { name: "TEAM_API_KEY".into() }),
             env_key: Some("TEAM_API_KEY".into()),
         };
         let profile = ModelProfile {

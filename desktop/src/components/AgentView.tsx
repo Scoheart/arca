@@ -23,6 +23,7 @@ import type {
   ModelAdoptionCandidate,
   ModelAgentView,
   ModelProfileView,
+  McpInspectionRequest,
   OperationPlan,
   ResourceNavigationRequest,
   SubagentDefinition,
@@ -64,6 +65,7 @@ import { useTranslation } from "react-i18next";
 import { McpAvatar } from "./McpIcon";
 import { NativePluginsPanel } from "./NativePluginsPanel";
 import { InstructionsEditor } from "./InstructionsEditor";
+import { McpConfigurationDialog } from "./McpConfigurationDialog";
 
 type PickerDomain = "mcp" | "model" | "skill" | "subagent" | "hook";
 type ConfigLocationKind = "file" | "folder";
@@ -151,6 +153,8 @@ export function AgentView({
   const [modelsLoading, setModelsLoading] = useState(true);
   const [modelsError, setModelsError] = useState<string | null>(null);
   const [resourceTab, setResourceTab] = useState<AgentResourceTab>(initialTab);
+  const [mcpInspection, setMcpInspection] = useState<{ name: string; request: McpInspectionRequest } | null>(null);
+  useEffect(() => setMcpInspection(null), [agentId]);
   const mcpIcons = useMcpIconPreferences(resourceTab === "mcps");
   const [preparingChange, setPreparingChange] = useState(false);
   const [togglingMcp, setTogglingMcp] = useState<{
@@ -324,6 +328,12 @@ export function AgentView({
     modelExternal: externalForAgent(inventory, agentId, "model"),
     subagentExternal: externalForAgent(inventory, agentId, "subagent"),
   }), [inventory, agentId]);
+  const configuredMcps = useMemo(() => {
+    const represented = new Set([...mcpRows, ...mcpExternal].flatMap(item =>
+      item.asset.domain === "mcp" ? [item.asset.key.replace(/::(?:stdio|http)$/, "")] : []));
+    return (nativeResources.inventory?.configured_mcps ?? [])
+      .filter(item => item.agent_id === agentId && !represented.has(item.name));
+  }, [agentId, mcpRows, mcpExternal, nativeResources.inventory]);
   const displayedMcpRows = useMemo(
     () => mcpRows.map((item) => (
       togglingAllMcp
@@ -469,6 +479,8 @@ export function AgentView({
               size={28}
             />,
             meta: <TransportMark transport={transportOf(entry)} />,
+            disabled: !agent?.supported_transports.includes(transportOf(entry)),
+            reason: agent?.supported_transports.includes(transportOf(entry)) ? undefined : "此 Agent 不支持该 MCP 传输类型",
           })),
       };
     }
@@ -489,8 +501,8 @@ export function AgentView({
               description: profile.model,
               icon: modelProviderIcon(profile.provider, profile.name),
               meta: <TransportMark transport={modelProtocolLabel(profile.protocol)} />,
-              disabled: false,
-              reason: undefined,
+              disabled: modelCompatibilityReason(profile, modelAgent) !== null,
+              reason: modelCompatibilityReason(profile, modelAgent) ?? undefined,
             };
           }),
       };
@@ -807,7 +819,7 @@ export function AgentView({
           plugins={nativePluginSupported ? nativePluginCount : undefined}
           countLabels={modelAgent?.mode === "guided" ? { models: "原生" } : undefined}
           counts={{
-            mcps: mcpRows.length + mcpExternal.length + hostMcps.length,
+            mcps: mcpRows.length + mcpExternal.length + configuredMcps.length + hostMcps.length,
             models: modelVisibleCount,
             skills: skillRows.length + skillExternal.length + nativeSkills.length,
             subagents: subagentRows.length + subagentExternal.length,
@@ -850,19 +862,29 @@ export function AgentView({
           <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
             message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
           <ToastNotice kind="warning" noticeKey={`native-plugins:${agent.id}`} message={nativeResources.error || nativeResources.inventory?.unavailable ? t("nativePlugins.scanUnavailable") : null} />
+          <ToastNotice kind="warning" noticeKey={`mcp-declarations:${agent.id}`} message={nativeResources.inventory?.configured_unavailable ? t("mcpInspector.declarationsUnavailable") : null} />
+          {mcpInspection?.request.agent_id === agentId && <McpConfigurationDialog name={mcpInspection.name}
+            request={mcpInspection.request} onClose={() => setMcpInspection(null)} />}
           {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? (
             <AgentConsumptionPanel
               domain="mcp"
               title={RESOURCE_PRESENTATION.mcp.label}
-              description={t("nativePlugins.mcpCounts", { configured: mcpRows.length + mcpExternal.length, host: hostMcps.length })}
+              description={t("nativePlugins.mcpCounts", { configured: mcpRows.length + mcpExternal.length + configuredMcps.length, host: hostMcps.length })}
               manageLabel="添加 MCPs"
               rows={displayedMcpRows}
               hostMcps={hostMcps}
+              configuredMcps={configuredMcps}
               columns={3}
               external={mcpExternal}
               externalMode="cards"
+              onInspect={(item) => {
+                if (item.asset.domain === "mcp") setMcpInspection({
+                  name: mcpEntriesByKey.get(item.asset.key)?.name ?? item.asset.key.replace(/::(?:stdio|http)$/, ""),
+                  request: { agent_id: agent.id, source: { kind: "configured", key: item.asset.key } },
+                });
+              }}
               onManage={() => setPickerDomain("mcp")}
-              manageDisabled={preparingChange}
+              manageDisabled={preparingChange || !agent.has_global}
               bulkRemoveLabel={t("nativePlugins.removeConfigured")}
               bulkRemoveTitle={t("nativePlugins.removeConfiguredNote", { agent: agent.name })}
               bulkRemoveDisabled={preparingChange || togglingAllMcp !== null || mcpRows.length + mcpExternal.length === 0}
@@ -881,6 +903,7 @@ export function AgentView({
               removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
               removeDisabled={preparingChange}
               emptyTitle="暂无 MCPs"
+              emptyDescription={!agent.has_global ? "Arca 尚未接入此 Agent 的 MCP 写入；已发现的内置和插件 MCP 仍可只读查看。" : undefined}
               present={(asset) => {
                 const key = asset.domain === "mcp" ? asset.key : "";
                 const entry = mcpEntriesByKey.get(key);
@@ -931,7 +954,7 @@ export function AgentView({
                   || changingModel !== null}
                 onBulkRemove={() => void clearModels()}
                 onManage={() => setPickerDomain("model")}
-                manageDisabled={preparingChange}
+                manageDisabled={preparingChange || modelAgent?.mode !== "managed"}
                 onOpenAsset={openAsset}
                 onEnabledChange={modelAgent?.supports_global_selection === false ? undefined : switchActiveModel}
                   toggleKind="current"
@@ -956,16 +979,16 @@ export function AgentView({
                   removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
                   removeDisabled={preparingChange || changingModel !== null}
                   emptyTitle="暂无 Models"
-                  emptyDescription={compatibleProfiles.length === 0
+                  emptyDescription={modelAgent?.mode !== "managed" ? "此 Agent 尚未提供可接管的 Model 配置入口。" : compatibleProfiles.length === 0
                     ? "模型库中没有兼容资产。"
                     : `从 Models 资产库添加到 ${agent.name}。`}
-                  emptyAction={compatibleProfiles.length === 0 ? (
+                  emptyAction={modelAgent?.mode === "managed" && compatibleProfiles.length === 0 ? (
                     <button
                       type="button"
                       className="btn-secondary"
                       onClick={() => navigateResource({ domain: "model", kind: "create" })}
                     >
-                      <PlusIcon className="w-4 h-4" />添加 Models
+                      <PlusIcon className="w-4 h-4" />在 Models 资产库创建
                     </button>
                   ) : undefined}
                   present={(asset) => {
@@ -1077,7 +1100,7 @@ export function AgentView({
               externalMode="cards"
               onManage={() => setPickerDomain("skill")}
               onOpenAsset={openAsset}
-              manageDisabled={preparingChange}
+              manageDisabled={preparingChange || !agent.skills_global_dir}
               onEnabledChange={(item, enabled) => void toggleSkillEnabled(item, enabled)}
               enabledChangeDisabled={(item) => togglingSkill?.name === (item.asset.domain === "skill" ? item.asset.name : "")
                 || item.status !== "synced"}

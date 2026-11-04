@@ -340,7 +340,7 @@ mod tests {
             repo: None,
         };
         let key = entry.key();
-        crate::registry::write_manual_entry(&entry).unwrap();
+        crate::resources::mcp::registry::write_manual_entry(&entry).unwrap();
         key
     }
 

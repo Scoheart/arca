@@ -216,6 +216,9 @@
 .arca-agent-workbench .arca-consumption-icon { grid-column: 1; grid-row: 1; min-width: 0; }
 .arca-agent-workbench .arca-consumption-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
 .arca-agent-workbench .arca-consumption-copy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 660; }
+.arca-consumption-inspect { display: block; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
+.arca-consumption-inspect:hover { color: var(--color-blue); }
+.arca-consumption-inspect:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 3px; border-radius: 3px; }
 .arca-agent-workbench .arca-consumption-card-menu { grid-column: 3; grid-row: 1; justify-self: end; }
 .arca-consumption-card-description {
   grid-column: 1 / -1; grid-row: 2; min-width: 0; width: 100%; margin: 0; align-self: start;

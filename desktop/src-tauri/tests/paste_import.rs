@@ -9,8 +9,7 @@ fn import_pasted_config(text: String) -> arca_core::domain::error::CoreResult<Ve
 
 #[test]
 fn paste_import_recognizes_and_adds_manual_entries() {
-    let th = arca_core::testenv::TestHome::new("paste");
-    let h = th.home.clone();
+    let _home = arca_core::testenv::TestHome::new("paste");
 
     // 1) A standard mcpServers block (the yunxiao example).
     let text = r#"{
@@ -41,7 +40,7 @@ fn paste_import_recognizes_and_adds_manual_entries() {
             .unwrap(),
         "<YOUR_TOKEN>"
     );
-    assert!(h.join(".arca/sources/local/manual.json").exists());
+    assert!(arca_core::paths::local_sources_dir().join("manual.json").exists());
 
     // 2) A bare name->config map (no mcpServers wrapper).
     let added = import_pasted_config(r#"{"git":{"command":"npx","args":["-y","git-mcp"]}}"#.into())

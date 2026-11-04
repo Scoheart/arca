@@ -80,7 +80,9 @@ fn cn_identity_scope_cannot_reactivate_stale_fixed_directory_writers(){
     let _home=TestHome::new("qwenwork-cn-stale-scope");let builtins=crate::agents::builtin_agents();
     let mut saved=builtins["qwenwork-cn"].clone();saved.global=Some("~/.qwenworkcn/mcp.json".into());saved.key="mcpServers".into();saved.skills=builtins["qwenwork"].skills.clone();
     let mut settings=crate::settings::Settings::default();settings.agents=Some(BTreeMap::from([("qwenwork-cn".into(),saved)]));let before=serde_json::to_value(&settings).unwrap();
-    let loaded=crate::agents::load_agents_from_settings(&settings);assert!(loaded["qwenwork-cn"].global.is_none());assert!(loaded["qwenwork-cn"].skills.is_none());
+    let loaded=crate::agents::load_agents_from_settings(&settings);assert!(loaded["qwenwork-cn"].global.is_none());
+    let skills=loaded["qwenwork-cn"].skills.as_ref().unwrap();
+    assert_eq!(skills.target_id,"qwenwork-cn-user");assert_eq!(skills.global_dir,"~/.qwenwork-cn/skills");assert!(skills.aliases.is_empty());
     assert_eq!(serde_json::to_value(&settings).unwrap(),before);
 }
 #[test]

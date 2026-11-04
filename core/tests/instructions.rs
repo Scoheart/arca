@@ -4,6 +4,9 @@ use std::fs;
 use instructions::InstructionPathUpdate;
 struct NativeEnv(&'static str, Option<std::ffi::OsString>);
 impl NativeEnv {
+    fn unset(name: &'static str) -> Self {
+        let old = std::env::var_os(name); std::env::remove_var(name); Self(name, old)
+    }
     fn set(name: &'static str, value: &std::path::Path) -> Self {
         let old = std::env::var_os(name); std::env::set_var(name, value); Self(name, old)
     }
@@ -16,6 +19,7 @@ impl Drop for NativeEnv {
 fn opencode_initialization_is_explicit_for_cli_and_desktop() {
     for agent in ["opencode", "opencode-desktop"] {
         let home = TestHome::new("opencode-instructions-create");
+    let _default_claude_root = NativeEnv::unset("CLAUDE_CONFIG_DIR");
         let directory = home.home.join(".config/opencode");
         let _native_root = NativeEnv::set("OPENCODE_CONFIG_DIR", &directory);
         let target = directory.join("AGENTS.md");
@@ -36,6 +40,7 @@ fn opencode_initialization_is_explicit_for_cli_and_desktop() {
 #[test]
 fn opencode_creation_uses_selected_directory_and_preserves_compatibility_files() {
     let home = TestHome::new("opencode-instructions-selected");
+    let _default_claude_root = NativeEnv::unset("CLAUDE_CONFIG_DIR");
     let native = home.home.join(".config/opencode");
     let _native_root = NativeEnv::set("OPENCODE_CONFIG_DIR", &native);
     let config = instructions::get_paths("opencode").unwrap();
@@ -93,6 +98,7 @@ fn rule_directory_preferences_never_initialize_until_explicit_content_save() {
 #[test]
 fn viewing_is_read_only_and_initialization_never_upserts() {
     let home = TestHome::new("instructions-create");
+    let _default_claude_root = NativeEnv::unset("CLAUDE_CONFIG_DIR");
     let inventory = instructions::list("claude-code").unwrap();
     assert!(inventory.create.is_some());
     assert!(!home.home.join(".claude").exists());
@@ -107,6 +113,7 @@ fn viewing_is_read_only_and_initialization_never_upserts() {
 #[test]
 fn edits_keep_original_bytes_and_refuse_external_replacement() {
     let home = TestHome::new("instructions-save");
+    let _default_claude_root = NativeEnv::unset("CLAUDE_CONFIG_DIR");
     let path = home.home.join(".claude/CLAUDE.md");
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(&path, "\u{feff}---\r\ncustom: preserved\r\n---\nHello\r\nTail").unwrap();
@@ -129,6 +136,7 @@ fn edits_keep_original_bytes_and_refuse_external_replacement() {
 #[test]
 fn existing_rules_or_empty_override_block_extra_initialization() {
     let home = TestHome::new("instructions-rules");
+    let _default_claude_root = NativeEnv::unset("CLAUDE_CONFIG_DIR");
     fs::create_dir_all(home.home.join(".claude/rules")).unwrap();
     let path = home.home.join(".claude/rules/user.md");
     fs::write(&path, "---\npaths: src/**\ncustom: keep\n---\nExisting rule").unwrap();

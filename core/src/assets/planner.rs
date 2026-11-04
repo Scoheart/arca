@@ -44,6 +44,8 @@ use uuid::Uuid;
 const OPERATION_SCHEMA_VERSION: u32 = 3;
 const LEGACY_OPERATION_SCHEMA_VERSION: u32 = 2;
 
+pub(crate) type SkillTargetChanges = BTreeMap<String, BTreeMap<String, bool>>;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct PersistedAssetOperation {
     pub schema_version: u32,
@@ -123,6 +125,9 @@ pub(crate) enum LifecycleBinding {
         affected_agent_ids: Vec<String>,
         before: bool,
         after: bool,
+    },
+    SkillConsumption {
+        target_changes: SkillTargetChanges,
     },
     McpReapply {
         key: String,
@@ -266,15 +271,15 @@ fn plan_agent_consumption(
                 None => list_consumption_inventory()?,
             };
             let before = skill_selection_from_settings(settings, &inventory, &agent_id)?;
-            let domain_plan = collapse_unchanged_consumption_plan(skill_plan_for_agent(
+            let (domain_plan, target_changes) = skill_plan_for_agent(
                 &inventory, settings, &agent_id, before, names,
-            )?);
+            )?;
             return finalize_plan_with_inventory(
                 AssetOperationKind::SetConsumption,
                 domain_plan,
                 Vec::new(),
                 Vec::new(),
-                None,
+                Some(LifecycleBinding::SkillConsumption { target_changes }),
                 &inventory,
             );
         }
@@ -1666,20 +1671,22 @@ fn plan_asset_consumers(
         }
         AssetRef::Skill { name } => {
             validate_closed_skill_consumers(name, &selected)?;
-            let mut before = BTreeMap::new();
-            let mut after = BTreeMap::new();
-            for agent_id in affected {
-                let existing = skill_selection_from_inventory(&inventory, &agent_id);
-                let mut desired: BTreeSet<String> = existing.iter().cloned().collect();
-                if selected.contains(&agent_id) {
-                    desired.insert(name.clone());
-                } else {
-                    desired.remove(name);
-                }
-                before.insert(agent_id.clone(), existing);
-                after.insert(agent_id, desired.into_iter().collect());
+            let assigned = canonical_skill_assignments(&settings)
+                .map_err(|error| format!("{error:?}"))?
+                .remove(name).unwrap_or_default();
+            let desired = normalize_agent_selection(&selected.iter().cloned().collect::<Vec<_>>())
+                .map_err(|error| format!("{error:?}"))?
+                .into_iter().collect::<BTreeSet<_>>();
+            let mut target_changes = SkillTargetChanges::new();
+            for target_id in assigned.symmetric_difference(&desired) {
+                target_changes.entry(target_id.clone()).or_default()
+                    .insert(name.clone(), desired.contains(target_id));
             }
-            DomainPlan::Skill { before, after }
+            let domain_plan = skill_plan_for_target_changes(&inventory, &settings, &target_changes, &[])?;
+            return finalize_plan_with_inventory(
+                AssetOperationKind::SetConsumption, domain_plan, Vec::new(), Vec::new(),
+                Some(LifecycleBinding::SkillConsumption { target_changes }), &inventory,
+            );
         }
     };
     let domain_plan = collapse_unchanged_consumption_plan(domain_plan);
@@ -1822,14 +1829,17 @@ fn skill_plan_for_agent(
     agent_id: &str,
     current: Vec<String>,
     desired: Vec<String>,
-) -> Result<DomainPlan, String> {
+) -> Result<(DomainPlan, SkillTargetChanges), String> {
     let current_set: BTreeSet<String> = current.iter().cloned().collect();
     let desired_set: BTreeSet<String> = desired.iter().cloned().collect();
     let changed: Vec<String> = current_set
         .symmetric_difference(&desired_set)
         .cloned()
         .collect();
-    let mut affected = BTreeSet::from([agent_id.to_string()]);
+    let assignments = canonical_skill_assignments(settings).map_err(|error| format!("{error:?}"))?;
+    let declared = declared_targets_for_agents(&[agent_id.to_string()])
+        .map_err(|error| format!("{error:?}"))?;
+    let mut target_changes = SkillTargetChanges::new();
     for name in &changed {
         if desired_set.contains(name) {
             let compatibility =
@@ -1840,74 +1850,89 @@ fn skill_plan_for_agent(
                     .expect("incompatible Skill view has reason");
                 return Err(format!("{}: {}", reason.code, reason.message));
             }
-            affected.extend(compatibility.affected_agent_ids);
+            for target_id in normalize_agent_selection(&[agent_id.to_string()])
+                .map_err(|error| format!("{error:?}"))? {
+                if !assignments.get(name).is_some_and(|targets| targets.contains(&target_id)) {
+                    target_changes.entry(target_id).or_default().insert(name.clone(), true);
+                }
+            }
         } else {
             // Removal is authorized by the persisted relationship, not by
             // current central content or an install probe. This keeps stale
             // ownership releasable after either disappears while preserving
             // the complete physical-target closure.
-            affected.extend(skill_removal_affected_agents(
-                inventory, settings, agent_id, name,
-            )?);
-        }
-    }
-    let mut before = BTreeMap::new();
-    let mut after = BTreeMap::new();
-    for affected_agent in affected {
-        let existing = skill_selection_from_settings(settings, inventory, &affected_agent)?;
-        let mut next: BTreeSet<String> = existing.iter().cloned().collect();
-        for name in &changed {
-            if desired_set.contains(name) {
-                next.insert(name.clone());
-            } else {
-                next.remove(name);
+            for target_id in assignments.get(name).into_iter().flatten().filter(|target| declared.contains(*target)) {
+                target_changes.entry(target_id.clone()).or_default().insert(name.clone(), false);
             }
         }
-        before.insert(affected_agent.clone(), existing);
-        after.insert(affected_agent, next.into_iter().collect());
+    }
+    let domain_plan = skill_plan_for_target_changes(inventory, settings, &target_changes, &[agent_id.to_string()])?;
+    Ok((domain_plan, target_changes))
+}
+
+fn skill_plan_for_target_changes(
+    inventory: &ConsumptionInventory,
+    settings: &Settings,
+    target_changes: &SkillTargetChanges,
+    requested_agents: &[String],
+) -> Result<DomainPlan, String> {
+    if target_changes.is_empty() {
+        return Ok(DomainPlan::Skill { before: BTreeMap::new(), after: BTreeMap::new() });
+    }
+    let skills = list_skills_inventory().map_err(|error| format!("{error:?}"))?;
+    let mut affected = requested_agents.iter().cloned().collect::<BTreeSet<_>>();
+    for target_id in target_changes.keys() {
+        let target = skills.targets.iter().find(|target| target.target_id == *target_id)
+            .ok_or_else(|| "skill_target_unavailable: the reviewed target is unavailable".to_string())?;
+        affected.extend(if target.affected_agent_ids.is_empty() {
+            &target.primary_agent_ids
+        } else {
+            &target.affected_agent_ids
+        }.iter().cloned());
+    }
+    let mut prospective = settings.clone();
+    merge_skill_target_changes(&mut prospective, target_changes);
+    let mut before = BTreeMap::new();
+    let mut after = BTreeMap::new();
+    for agent_id in affected {
+        before.insert(agent_id.clone(), skill_selection_from_settings(settings, inventory, &agent_id)?);
+        after.insert(agent_id.clone(), skill_selection_from_settings(&prospective, inventory, &agent_id)?);
     }
     Ok(DomainPlan::Skill { before, after })
 }
 
-fn skill_removal_affected_agents(
-    inventory: &ConsumptionInventory,
-    settings: &Settings,
-    agent_id: &str,
-    name: &str,
-) -> Result<BTreeSet<String>, String> {
-    let declared = declared_targets_for_agents(&[agent_id.to_string()])
-        .map_err(|error| format!("{error:?}"))?;
-    let assignments =
-        canonical_skill_assignments(settings).map_err(|error| format!("{error:?}"))?;
-    let assigned = assignments.get(name).cloned().unwrap_or_default();
-    let target_ids: BTreeSet<String> = declared.intersection(&assigned).cloned().collect();
-    let mut affected = BTreeSet::from([agent_id.to_string()]);
-
-    for item in inventory.consumptions.iter().filter(|item| {
-        item.desired
-            && item.asset == (AssetRef::Skill { name: name.into() })
-            && item
-                .target
-                .as_ref()
-                .is_some_and(|target| target_ids.contains(&target.target_id))
-    }) {
-        affected.insert(item.agent_id.clone());
-        affected.extend(item.affected_agent_ids.iter().cloned());
-    }
-
-    let skills = list_skills_inventory().map_err(|error| format!("{error:?}"))?;
-    for target in skills
-        .targets
-        .iter()
-        .filter(|target| target_ids.contains(&target.target_id))
-    {
-        if target.affected_agent_ids.is_empty() {
-            affected.extend(target.primary_agent_ids.iter().cloned());
-        } else {
-            affected.extend(target.affected_agent_ids.iter().cloned());
+/// Apply only the hash-bound physical delta. Reader aliases never create a
+/// second write scope, and existing records retain their enabled state.
+pub(crate) fn merge_skill_target_changes(settings: &mut Settings, target_changes: &SkillTargetChanges) {
+    let assignments = settings.skill_assignments.get_or_insert_default();
+    let consumptions = settings.skill_consumptions.get_or_insert_default();
+    for (target_id, changes) in target_changes {
+        for (name, desired) in changes {
+            if *desired {
+                assignments.entry(name.clone()).or_default().insert(target_id.clone());
+                consumptions.entry(name.clone()).or_default().entry(target_id.clone())
+                    .or_insert_with(|| super::types::SkillConsumptionRecord {
+                        name: name.clone(), target_id: target_id.clone(), enabled: true,
+                    });
+            } else {
+                if let Some(targets) = assignments.get_mut(name) {
+                    targets.remove(target_id);
+                    if targets.is_empty() { assignments.remove(name); }
+                }
+                if let Some(records) = consumptions.get_mut(name) {
+                    records.remove(target_id);
+                    if records.is_empty() { consumptions.remove(name); }
+                }
+            }
         }
     }
-    Ok(affected)
+    if assignments.is_empty() { settings.skill_assignments = None; }
+    if consumptions.is_empty() { settings.skill_consumptions = None; }
+}
+
+pub(crate) fn skill_target_removal_only(lifecycle: Option<&LifecycleBinding>) -> bool {
+    matches!(lifecycle, Some(LifecycleBinding::SkillConsumption { target_changes })
+        if !target_changes.is_empty() && target_changes.values().flatten().all(|(_, desired)| !desired))
 }
 
 fn validate_closed_skill_consumers(name: &str, selected: &BTreeSet<String>) -> Result<(), String> {
@@ -1991,7 +2016,7 @@ fn skill_selection_from_inventory(inventory: &ConsumptionInventory, agent_id: &s
 /// The consumption projection intentionally follows live install probes, but
 /// stale ownership must remain visible to an explicit unassign after an Agent
 /// is uninstalled.
-fn skill_selection_from_settings(
+pub(crate) fn skill_selection_from_settings(
     settings: &Settings,
     inventory: &ConsumptionInventory,
     agent_id: &str,
@@ -2128,7 +2153,7 @@ fn finalize_plan_with_inventory(
     target_files.sort();
     target_files.dedup();
     order_model_target_files(&domain_plan, &mut target_files)?;
-    validate_transaction_targets(&domain_plan, &target_files)?;
+    validate_transaction_targets(&domain_plan, &target_files, lifecycle.as_ref())?;
     // A Provider save explicitly updates its own enabled child projections.
     // Existing owned-field differences are replaced by that desired state;
     // malformed/ambiguous targets and unrelated profiles remain blocked.
@@ -2157,7 +2182,7 @@ fn finalize_plan_with_inventory(
         })
         .map(consumption_warning)
         .collect();
-    let relationship_removal = !relationship_changes.is_empty()
+    let relationship_removal = skill_target_removal_only(lifecycle.as_ref()) || !relationship_changes.is_empty()
         && relationship_changes
             .iter()
             .all(|change| change.action == RelationshipAction::Remove);
@@ -2520,9 +2545,9 @@ fn managed_skill_is_available(settings: &Settings, name: &str) -> bool {
         .is_ok_and(|metadata| metadata.is_dir() && !metadata.file_type().is_symlink())
 }
 
-fn validate_transaction_targets(plan: &DomainPlan, targets: &[String]) -> Result<(), String> {
+fn validate_transaction_targets(plan: &DomainPlan, targets: &[String], lifecycle: Option<&LifecycleBinding>) -> Result<(), String> {
     let skill_links_are_managed = matches!(plan, DomainPlan::Skill { .. });
-    let skill_removal_only = skill_domain_is_removal_only(plan);
+    let skill_removal_only = skill_domain_is_removal_only(plan) || skill_target_removal_only(lifecycle);
     for target in targets {
         let path = expand_tilde(target);
         capture_parent_directory(&path)?;
@@ -3177,6 +3202,18 @@ fn target_files(
             settings.model_profiles.as_ref().unwrap_or(&BTreeMap::new()),
         ));
     }
+    if let Some(LifecycleBinding::SkillConsumption { target_changes }) = lifecycle {
+        let inventory = list_skills_inventory().map_err(|error| format!("{error:?}"))?;
+        let mut files = BTreeSet::new();
+        for (target_id, changes) in target_changes {
+            let target = inventory.targets.iter().find(|target| target.target_id == *target_id)
+                .ok_or_else(|| "skill_target_unavailable: the reviewed target is unavailable".to_string())?;
+            for name in changes.keys() {
+                files.insert(format!("{}/{}", target.global_dir, name));
+            }
+        }
+        return Ok(files.into_iter().collect());
+    }
     let mut files = BTreeSet::new();
     match plan {
         DomainPlan::Mcp { .. } => {
@@ -3714,6 +3751,24 @@ mod tests {
         bytes.push(b'\n');
         fs::write(&path, bytes).unwrap();
 
+        let error = load_operation(&plan.operation_id).unwrap_err();
+        assert!(error.starts_with("asset_operation_stale:"), "{error}");
+    }
+
+    #[test]
+    fn skill_physical_delta_is_bound_to_the_reviewed_candidate() {
+        let _home = TestHome::new("skill-physical-delta-integrity");
+        let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
+            agent_id: "codex".into(),
+            selection: AgentConsumptionSelection::Skill { names: Vec::new() },
+        }).unwrap();
+        let mut persisted = load_operation(&plan.operation_id).unwrap();
+        let Some(LifecycleBinding::SkillConsumption { target_changes }) = persisted.lifecycle.as_mut() else {
+            panic!("Skill target binding");
+        };
+        target_changes.insert("claude-user".into(), BTreeMap::from([("unreviewed-skill".into(), false)]));
+        assert_ne!(candidate_hash(&persisted).unwrap(), plan.candidate_hash);
+        fs::write(operation_root(&plan.operation_id).join("plan.json"), serde_json::to_vec(&persisted).unwrap()).unwrap();
         let error = load_operation(&plan.operation_id).unwrap_err();
         assert!(error.starts_with("asset_operation_stale:"), "{error}");
     }
@@ -4383,14 +4438,14 @@ mod tests {
             &fs::read_to_string(home.home.join(".pi/agent/settings.json")).unwrap(),
         )
         .unwrap();
-        assert_eq!(native["defaultProvider"], "arca-backup");
+        assert_eq!(native["defaultProvider"], "mux-backup");
         assert_eq!(native["defaultModel"], "backup-model");
         let providers: serde_json::Value = serde_json::from_str(
             &fs::read_to_string(home.home.join(".pi/agent/models.json")).unwrap(),
         )
         .unwrap();
-        assert!(providers["providers"].get("arca-current").is_some());
-        assert!(providers["providers"].get("arca-backup").is_some());
+        assert!(providers["providers"].get("mux-current").is_some());
+        assert!(providers["providers"].get("mux-backup").is_some());
     }
 
     fn claude_desktop_provider_profile() -> ModelProfile {

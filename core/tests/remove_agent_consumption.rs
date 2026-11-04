@@ -682,6 +682,7 @@ fn managed_skill_external_directory_is_preserved_when_ownership_is_released() {
     fs::create_dir(&target).unwrap();
     let bytes = b"---\nname: managed-directory\ndescription: Local replacement\n---\n";
     fs::write(target.join("SKILL.md"), bytes).unwrap();
+    let inode = std::os::unix::fs::MetadataExt::ino(&fs::symlink_metadata(&target).unwrap());
 
     let plan = plan_remove_agent_consumption(PlanRemoveAgentConsumptionRequest {
         agent_id: "codex".into(),
@@ -694,6 +695,7 @@ fn managed_skill_external_directory_is_preserved_when_ownership_is_released() {
 
     assert!(central.is_dir());
     assert!(target.is_dir());
+    assert_eq!(std::os::unix::fs::MetadataExt::ino(&fs::symlink_metadata(&target).unwrap()), inode);
     assert_eq!(fs::read(target.join("SKILL.md")).unwrap(), bytes);
     assert_skill_settings_cleared("managed-directory");
 }
@@ -807,6 +809,88 @@ fn skill_add_merges_shared_target_delta_and_preserves_other_consumers_and_disabl
     let settings = load_settings();
     assert_eq!(settings.skill_assignments.unwrap()["delta-x"], BTreeSet::from(["claude-user".into()]));
     assert_eq!(settings.skill_consumptions.unwrap()["delta-y"], y_before);
+}
+
+#[test]
+fn shared_skill_removal_keeps_an_independent_disabled_target_and_remaining_readers() {
+    let fixture = SkillsFixture::managed_on_targets("retained-disabled", &["claude-user"]);
+    commit(plan_set_skill_enabled(PlanSetSkillEnabledRequest {
+        target_id: Some("claude-user".into()),
+        agent_id: "claude-code".into(), name: "retained-disabled".into(), enabled: false,
+    }).unwrap());
+    let retained = load_settings().skill_consumptions.unwrap()["retained-disabled"]["claude-user"].clone();
+    commit(plan_ensure_agent_consumption(PlanEnsureAgentConsumptionRequest {
+        agent_id: "codex".into(),
+        selection: AgentConsumptionSelection::Skill { names: vec!["retained-disabled".into()] },
+    }).unwrap());
+    // The retained native target remains authoritative after its Agent is no
+    // longer installed. OpenCode still declares and reads this alias.
+    fs::remove_dir_all(fixture.home.home.join(".claude")).unwrap();
+    let plan = plan_remove_agent_consumption(PlanRemoveAgentConsumptionRequest {
+        agent_id: "codex".into(),
+        selection: AgentConsumptionSelection::Skill { names: vec!["retained-disabled".into()] },
+    }).unwrap();
+    let arca_core::domain::assets::DomainPlan::Skill { after, .. } = &plan.domain_plan else { panic!("Skill plan"); };
+    assert!(after["opencode"].contains(&"retained-disabled".to_string()));
+    assert_eq!(plan.target_files, vec!["~/.agents/skills/retained-disabled"]);
+    commit(plan);
+    let settings = load_settings();
+    assert_eq!(settings.skill_assignments.unwrap()["retained-disabled"], BTreeSet::from(["claude-user".into()]));
+    assert_eq!(settings.skill_consumptions.unwrap()["retained-disabled"]["claude-user"], retained);
+    assert!(fs::symlink_metadata(fixture.target("claude-user", "retained-disabled")).is_err());
+    assert!(fs::symlink_metadata(fixture.target("agents-user", "retained-disabled")).is_err());
+}
+
+#[test]
+fn central_skill_consumer_full_set_keeps_the_selected_physical_target_and_its_alias_reader() {
+    let fixture = SkillsFixture::managed_on_targets("full-set", &["agents-user", "claude-user"]);
+    let retained = fixture.target("claude-user", "full-set");
+    let metadata = fs::symlink_metadata(&retained).unwrap();
+    let original = fs::read_link(&retained).unwrap();
+    let plan = arca_core::application::assets::plan_set_asset_consumers(
+        arca_core::domain::assets::PlanSetAssetConsumersRequest {
+            asset: AssetRef::Skill { name: "full-set".into() },
+            agent_ids: vec!["claude-code".into(), "opencode".into()],
+        },
+    ).unwrap();
+    assert_eq!(plan.target_files, vec!["~/.agents/skills/full-set"]);
+    let arca_core::domain::assets::DomainPlan::Skill { after, .. } = &plan.domain_plan else { panic!("Skill plan"); };
+    assert!(after["opencode"].contains(&"full-set".to_string()));
+    assert!(!after["codex"].contains(&"full-set".to_string()));
+    commit(plan);
+    assert_eq!(load_settings().skill_assignments.unwrap()["full-set"], BTreeSet::from(["claude-user".into()]));
+    assert_eq!(fs::read_link(&retained).unwrap(), original);
+    assert_eq!(std::os::unix::fs::MetadataExt::ino(&fs::symlink_metadata(&retained).unwrap()),
+        std::os::unix::fs::MetadataExt::ino(&metadata));
+    assert!(fs::symlink_metadata(fixture.target("agents-user", "full-set")).is_err());
+}
+
+#[test]
+fn skill_removal_refuses_a_directory_replacement_after_review_without_touching_its_content() {
+    use std::os::unix::fs::MetadataExt;
+    let fixture = SkillsFixture::managed_on_targets("reviewed-directory", &["agents-user"]);
+    let target = fixture.target("agents-user", "reviewed-directory");
+    fs::remove_file(&target).unwrap();
+    fs::create_dir(&target).unwrap();
+    fs::write(target.join("marker.txt"), b"reviewed external content").unwrap();
+    let plan = plan_remove_agent_consumption(PlanRemoveAgentConsumptionRequest {
+        agent_id: "codex".into(),
+        selection: AgentConsumptionSelection::Skill { names: vec!["reviewed-directory".into()] },
+    }).unwrap();
+    let old = target.with_extension("reviewed");
+    fs::rename(&target, &old).unwrap();
+    fs::create_dir(&target).unwrap();
+    fs::write(target.join("marker.txt"), b"new external content").unwrap();
+    let inode = fs::symlink_metadata(&target).unwrap().ino();
+    let error = commit_asset_operation(AssetCommitRequest {
+        operation_id: plan.operation_id.clone(), candidate_hash: plan.candidate_hash,
+    }).unwrap_err();
+    assert!(error.starts_with("asset_operation_stale:"), "{error}");
+    assert_eq!(fs::symlink_metadata(&target).unwrap().ino(), inode);
+    assert_eq!(fs::read(target.join("marker.txt")).unwrap(), b"new external content");
+    assert_eq!(fs::read(old.join("marker.txt")).unwrap(), b"reviewed external content");
+    assert!(load_settings().skill_assignments.unwrap()["reviewed-directory"].contains("agents-user"));
+    cancel_asset_operation(&plan.operation_id).unwrap();
 }
 
 #[test]

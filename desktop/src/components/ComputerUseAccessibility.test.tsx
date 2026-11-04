@@ -109,7 +109,7 @@ describe("Computer Use interaction contract", () => {
     expect(screen.queryByRole("dialog", { name: "选择和置顶 Agent" })).not.toBeInTheDocument();
   });
 
-  it("keeps error evidence until dismissed and expires success feedback", () => {
+  it("prioritizes error feedback, pauses it for inspection, and expires queued success feedback", () => {
     vi.useFakeTimers();
     function Feedback() {
       const toast = useToast();
@@ -117,11 +117,16 @@ describe("Computer Use interaction contract", () => {
     }
     render(<ToastProvider><Feedback /></ToastProvider>);
     fireEvent.click(screen.getByRole("button", { name: "操作" }));
-    expect(screen.getByRole("status")).toHaveTextContent("已保存");
-    act(() => vi.advanceTimersByTime(7000));
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("写入失败");
-    fireEvent.click(screen.getByRole("button", { name: "关闭错误通知 2" }));
+    fireEvent.pointerEnter(document.querySelector("[data-toast-viewport]")!);
+    act(() => vi.advanceTimersByTime(10000));
+    expect(screen.getByRole("alert")).toHaveTextContent("写入失败");
+    fireEvent.click(screen.getByRole("button", { name: "关闭错误通知" }));
+    act(() => vi.advanceTimersByTime(180));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("已保存");
+    act(() => vi.advanceTimersByTime(6000));
+    act(() => vi.advanceTimersByTime(180));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });

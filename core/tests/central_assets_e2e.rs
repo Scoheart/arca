@@ -29,9 +29,9 @@ fn commit(plan: arca_core::consumption::AssetOperationPlan) {
     .unwrap();
 }
 
-fn arca_profile_id(profile_id: &str) -> String {
+fn native_profile_id(profile_id: &str) -> String {
     format!(
-        "arca_{}",
+        "mux_{}",
         profile_id
             .bytes()
             .map(|byte| format!("{byte:02x}"))
@@ -1072,7 +1072,7 @@ fn grok_build_delete_preserves_an_unmanaged_model_without_failing_verification()
     let cleared = fs::read_to_string(target).unwrap();
     assert!(cleared.contains("model.private"));
     assert!(cleared.contains("model = \"keep\""));
-    assert!(!cleared.contains(&arca_profile_id(&profile.id)));
+    assert!(!cleared.contains(&native_profile_id(&profile.id)));
     assert!(list_profiles().is_empty());
 }
 
@@ -1173,8 +1173,8 @@ fn grok_build_keeps_multiple_profiles_and_falls_back_when_current_is_disabled() 
     assert!(reenabled_config.contains("SECOND_API_KEY"));
 
     let native = fs::read_to_string(&target).unwrap();
-    let switched_marker = format!("default = \"{}\"", arca_profile_id(&switched));
-    let initial_marker = format!("default = \"{}\"", arca_profile_id(&initial_active));
+    let switched_marker = format!("default = \"{}\"", native_profile_id(&switched));
+    let initial_marker = format!("default = \"{}\"", native_profile_id(&initial_active));
     assert!(native.contains(&switched_marker));
     fs::write(&target, native.replace(&switched_marker, &initial_marker)).unwrap();
     reconcile_active_models().unwrap();

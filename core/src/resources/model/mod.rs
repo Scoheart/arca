@@ -35,7 +35,8 @@ use crate::paths::{backup_timestamp, backups_dir, settings_file};
 use crate::resources::mcp::applier::{backup, backup_bytes};
 use crate::resources::mcp::scanner::{collapse_home, expand_tilde};
 use crate::safe_write::{
-    acquire_settings_lock, remove_if_unchanged, write_if_unchanged, SettingsLock,
+    acquire_settings_lock, remove_if_unchanged, write_if_unchanged,
+    write_private_live_if_unchanged, SettingsLock,
 };
 use crate::settings::{load_settings, mutate_settings};
 use jsonc_parser::cst::{CstInputValue, CstNode, CstObject, CstRootNode};
@@ -4453,15 +4454,21 @@ fn command_exists(names: &[&str]) -> bool {
         .map(|path| std::env::split_paths(&path).collect::<Vec<_>>())
         .unwrap_or_default();
     directories.extend([
-        PathBuf::from("/opt/homebrew/bin"),
-        PathBuf::from("/usr/local/bin"),
+        crate::paths::system_probe_path("/opt/homebrew/bin"),
+        crate::paths::system_probe_path("/usr/local/bin"),
         home().join(".local/bin"),
         home().join(".bun/bin"),
         home().join(".cargo/bin"),
     ]);
-    directories
-        .iter()
-        .any(|directory| names.iter().any(|name| directory.join(name).is_file()))
+    names.iter().any(|name| {
+        if Path::new(name).is_absolute() {
+            crate::paths::system_probe_path(name).is_file()
+        } else {
+            directories
+                .iter()
+                .any(|directory| directory.join(name).is_file())
+        }
+    })
 }
 
 fn agent_installed(names: &[&str], config_locations: &[&str], app_locations: &[&str]) -> bool {
@@ -4469,9 +4476,13 @@ fn agent_installed(names: &[&str], config_locations: &[&str], app_locations: &[&
         || config_locations
             .iter()
             .any(|location| config_path(location).exists())
-        || app_locations
-            .iter()
-            .any(|location| expand_tilde(location).exists())
+        || app_locations.iter().any(|location| {
+            if Path::new(location).is_absolute() {
+                crate::paths::system_probe_path(location).exists()
+            } else {
+                expand_tilde(location).exists()
+            }
+        })
 }
 
 pub fn list_agents() -> Vec<ModelAgentView> {
@@ -5944,7 +5955,7 @@ fn apply_native_multi_model_with_private_auth(
             "agent_store_conflicted: OpenCode auth candidate is unexpectedly empty".to_string()
         })
         .and_then(|content| {
-            write_if_unchanged(
+            write_private_live_if_unchanged(
                 &auth.path,
                 auth.original.as_deref().map(String::as_str),
                 content.as_str(),
@@ -5960,27 +5971,6 @@ fn apply_native_multi_model_with_private_auth(
                 rollback.join("; ")
             )
         });
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        if let Err(error) = fs::set_permissions(&auth.path, fs::Permissions::from_mode(0o600)) {
-            let auth_rollback = match (auth.original.as_deref(), auth.content.as_deref()) {
-                (Some(original), Some(content)) => {
-                    write_if_unchanged(&auth.path, Some(content.as_str()), original.as_str())
-                }
-                (None, Some(content)) => remove_if_unchanged(&auth.path, content.as_str()),
-                _ => Ok(()),
-            };
-            let mut rollback = rollback_native_model_files(&files);
-            if let Err(error) = auth_rollback {
-                rollback.push(error);
-            }
-            return Err(format!(
-                "plaintext_target_insecure: could not enforce 0600 on OpenCode auth.json ({error}); rollback: {}",
-                if rollback.is_empty() { "complete".into() } else { rollback.join("; ") }
-            ));
-        }
     }
     written.push(auth.path.display().to_string());
     Ok(ModelApplyResult {
@@ -6026,7 +6016,7 @@ fn commit_private_model_files(files: &[open_code_auth::PreparedAuthFile]) -> Res
     for (index, file) in files.iter().enumerate() {
         let result = match (file.original.as_deref(), file.content.as_deref()) {
             (original, Some(content)) => {
-                write_if_unchanged(&file.path, original.map(String::as_str), content.as_str())
+                write_private_live_if_unchanged(&file.path, original.map(String::as_str), content.as_str())
             }
             (Some(original), None) => remove_if_unchanged(&file.path, original.as_str()),
             (None, None) => Ok(()),
@@ -6042,23 +6032,6 @@ fn commit_private_model_files(files: &[open_code_auth::PreparedAuthFile]) -> Res
                 }
             ));
         }
-        #[cfg(unix)]
-        if file.content.is_some() {
-            use std::os::unix::fs::PermissionsExt;
-            if let Err(error) = fs::set_permissions(&file.path, fs::Permissions::from_mode(0o600)) {
-                let mut rollback_indexes = applied.clone();
-                rollback_indexes.push(index);
-                let rollback = rollback_private_model_files(files, &rollback_indexes);
-                return Err(format!(
-                    "plaintext_target_insecure: could not enforce 0600 ({error}); rollback: {}",
-                    if rollback.is_empty() {
-                        "complete".into()
-                    } else {
-                        rollback.join("; ")
-                    }
-                ));
-            }
-        }
         applied.push(index);
     }
     Ok(())
@@ -6073,10 +6046,10 @@ fn rollback_private_model_files(
         let file = &files[*index];
         let rollback = match (file.original.as_deref(), file.content.as_deref()) {
             (Some(original), Some(content)) => {
-                write_if_unchanged(&file.path, Some(content.as_str()), original.as_str())
+                write_private_live_if_unchanged(&file.path, Some(content.as_str()), original.as_str())
             }
             (None, Some(content)) => remove_if_unchanged(&file.path, content.as_str()),
-            (Some(original), None) => write_if_unchanged(&file.path, None, original.as_str()),
+            (Some(original), None) => write_private_live_if_unchanged(&file.path, None, original.as_str()),
             (None, None) => Ok(()),
         };
         if let Err(error) = rollback {
@@ -9447,7 +9420,7 @@ mod tests {
                 protocol("/v1/responses"),
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
+            api_key_source: Some(ApiKeySource::Env { name: "FIRST_KEY".into() }),
             env_key: Some("FIRST_KEY".into()),
         };
         let second_provider = ModelProviderConfig {
@@ -9462,7 +9435,7 @@ mod tests {
                 protocol("/v1/responses"),
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
+            api_key_source: Some(ApiKeySource::Env { name: "SECOND_KEY".into() }),
             env_key: Some("SECOND_KEY".into()),
         };
         save_provider_bundle(first_provider.clone(), BTreeMap::new()).unwrap();
@@ -9564,6 +9537,59 @@ mod tests {
     }
 
     #[test]
+    fn empty_test_home_has_no_installed_models() {
+        let _home = TestHome::new("model-empty-installation-probes");
+        let installed = list_agents()
+            .into_iter()
+            .filter(|agent| agent.installed)
+            .map(|agent| agent.id)
+            .collect::<Vec<_>>();
+        assert!(
+            installed.is_empty(),
+            "isolated Model probes inherited system installations: {installed:?}"
+        );
+    }
+
+    #[test]
+    fn system_model_app_probes_use_the_test_root() {
+        let home = TestHome::new("model-system-app-probes");
+        let fixture = "/Applications/Arca Model Probe Fixture.app";
+        assert!(!agent_installed(&[], &[], &[fixture]));
+        fs::create_dir_all(crate::paths::system_probe_path(fixture)).unwrap();
+        assert!(agent_installed(&[], &[], &[fixture]));
+
+        fs::create_dir_all(crate::paths::system_probe_path("/Applications/ZCode.app")).unwrap();
+        assert!(
+            list_agents()
+                .into_iter()
+                .find(|agent| agent.id == "zcode")
+                .unwrap()
+                .installed
+        );
+
+        fs::create_dir_all(home.home.join("Applications/Fixture.app")).unwrap();
+        assert!(agent_installed(&[], &[], &["~/Applications/Fixture.app"]));
+    }
+
+    #[test]
+    fn system_model_command_probes_use_the_test_root() {
+        let home = TestHome::new("model-system-command-probes");
+        let name = "arca-model-probe-fixture";
+        assert!(!command_exists(&[name]));
+        for directory in ["/opt/homebrew/bin", "/usr/local/bin"] {
+            let path = crate::paths::system_probe_path(directory).join(name);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(&path, "fixture metadata only").unwrap();
+            assert!(command_exists(&[name]), "{directory}");
+            let absolute = format!("{directory}/{name}");
+            assert!(command_exists(&[&absolute]), "{absolute}");
+            fs::remove_file(path).unwrap();
+        }
+        fs::write(home.home.join("bin/path-model-probe-fixture"), "fixture metadata only").unwrap();
+        assert!(command_exists(&["path-model-probe-fixture"]));
+    }
+
+    #[test]
     fn detects_agent_from_existing_config_without_shell_path() {
         let th = TestHome::new("model-agent-detect");
         fs::create_dir_all(th.home.join(".pi/agent")).unwrap();
@@ -9605,7 +9631,7 @@ mod tests {
         fs::create_dir_all(models_path.parent().unwrap()).unwrap();
         fs::write(
             &models_path,
-            r#"{"providers":{"arca-team-openai":{"baseUrl":"https://gateway.example.test/v1","api":"openai-responses","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
+            r#"{"providers":{"mux-team-openai":{"baseUrl":"https://gateway.example.test/v1","api":"openai-responses","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
         )
         .unwrap();
 
@@ -9725,7 +9751,7 @@ wire_api = "responses"
         assert!(content.contains("keep this comment"));
         assert!(content.contains("mcp_servers.github"));
         assert!(content.contains("model_providers.existing"));
-        assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
+        assert!(content.contains("model_providers.mux_7465616d2d6f70656e6169"));
         assert!(content.contains("find-generic-password"));
     }
 
@@ -9902,20 +9928,20 @@ wire_api = "responses"
     }
 
     #[test]
-    fn pi_write_migrates_the_matching_legacy_arca_profile_provider() {
+    fn pi_write_migrates_the_matching_legacy_managed_profile_provider() {
         let th = TestHome::new("model-pi-legacy-provider");
         let path = th.home.join(".pi/agent/models.json");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(
             &path,
-            r#"{"providers":{"arca-team-openai":{"baseUrl":"https://gateway.example.test/v1","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
+            r#"{"providers":{"mux-team-openai":{"baseUrl":"https://gateway.example.test/v1","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
         )
         .unwrap();
 
         let profile = pi_profile("team-openai", "gpt-custom", "Team OpenAI");
         let (_, content) = prepare_pi_models(&path, &profile, false).unwrap();
         let models: Value = serde_json::from_str(&content).unwrap();
-        assert!(models["providers"].get("arca-team-openai").is_none());
+        assert!(models["providers"].get("mux-team-openai").is_none());
         assert_eq!(
             models["providers"]["openrouter"]["models"][0]["id"],
             "gpt-custom"
@@ -10075,8 +10101,8 @@ fork_secondary_model = "private-fork"
         assert!(content.contains("model.private"));
         assert!(content.contains("mcp_servers.keep"));
         assert!(content.contains("permission"));
-        assert!(content.contains("default = \"arca_7465616d2d6f70656e6169\""));
-        assert!(content.contains("model.arca_7465616d2d6f70656e6169"));
+        assert!(content.contains("default = \"mux_7465616d2d6f70656e6169\""));
+        assert!(content.contains("model.mux_7465616d2d6f70656e6169"));
         assert!(content.contains("api_backend = \"responses\""));
         assert!(content.contains("env_key = \"TEAM_OPENAI_API_KEY\""));
         assert!(content.contains("fork_secondary_model = \"private-fork\""));
@@ -10256,7 +10282,7 @@ url = "https://example.test/mcp"
         assert_eq!(result.files, vec![path.display().to_string()]);
         let content = fs::read_to_string(&path).unwrap();
         assert!(content.contains("mcp_servers.keep"));
-        assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
+        assert!(content.contains("model_providers.mux_7465616d2d6f70656e6169"));
         assert!(!content.contains("find-generic-password"));
         assert_eq!(
             load_settings()

@@ -354,6 +354,9 @@ export const cancelSkillOperation = (operationId: string) =>
 export const listNativeResources = (agentId: string) =>
   invoke<import("./types").NativeResourceInventory>("list_native_resources", { agentId });
 
+export const inspectMcpConfiguration = (request: import("./types").McpInspectionRequest) =>
+  invoke<import("./types").McpConfigurationView>("inspect_mcp_configuration", { request });
+
 export const listSubagents = () => invoke<SubagentDefinition[]>("list_subagents");
 export const getSubagent = (name: string) =>
   invoke<SubagentDefinition | null>("get_subagent", { name });

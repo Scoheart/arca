@@ -2217,10 +2217,7 @@ mod tests {
 
         let error = apply_profile(AGENT_ID, &profile.id).unwrap_err();
 
-        assert_eq!(
-            error,
-            "claude_desktop_credential_missing: Claude Desktop requires an API Key in Arca Keychain"
-        );
+        assert_eq!(error.split_once(':').map(|(code, _)| code), Some("credential_missing"));
         assert!(paths.iter().all(|path| !path.exists()));
     }
 

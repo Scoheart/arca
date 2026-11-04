@@ -107,7 +107,8 @@ const TABNINE_FIELDS: &[&str] = &[
     "headers",
 ];
 const CONTINUE_FIELDS: &[&str] = &["type", "command", "args", "env", "cwd", "url"];
-const GOOSE_FIELDS: &[&str] = &["type", "cmd", "args", "envs", "cwd", "uri", "headers"];
+const GOOSE_FIELDS: &[&str] = &["type", "cmd", "args", "env", "envs", "cwd", "uri", "headers"];
+const GOOSE_HTTP_FIELDS: &[&str] = &["type", "cmd", "args", "cwd", "uri", "headers"];
 const VIBE_FIELDS: &[&str] = &[
     "transport",
     "type",
@@ -298,6 +299,40 @@ impl Codec {
                     return Err("Jan MCP entry switch 'active' is not a boolean".into());
                 }
             }
+            Codec::Goose => {
+                if object.get("enabled").and_then(Value::as_bool).is_none() {
+                    return Err("Goose MCP entry requires a boolean 'enabled' flag".into());
+                }
+                match object.get("type").and_then(Value::as_str) {
+                    Some("stdio") => {
+                        if object.get("cmd").and_then(Value::as_str).is_none()
+                            || !object.get("args").and_then(Value::as_array)
+                                .is_some_and(|args| args.iter().all(Value::is_string)) {
+                            return Err("Goose stdio MCP entry requires cmd and a string args list".into());
+                        }
+                        if object.contains_key("env") && object.contains_key("envs") {
+                            return Err("Goose stdio environment aliases 'env' and 'envs' are ambiguous".into());
+                        }
+                        if let Some(env) = object.get("env") {
+                            if string_map(Some(env)).is_none() {
+                                return Err("Goose stdio environment 'env' must be a string mapping".into());
+                            }
+                        }
+                    }
+                    Some("streamable_http") if object.get("uri").and_then(Value::as_str).is_some() => {},
+                    _ => return Err("Goose built-in, platform and unknown extensions are not writable MCP entries".into()),
+                }
+                if let Some(envs) = object.get("envs") {
+                    if string_map(Some(envs)).is_none() {
+                        return Err("Goose environment 'envs' must be a string mapping".into());
+                    }
+                }
+                if object.get("env_keys").is_some_and(|keys| {
+                    !keys.as_array().is_some_and(|keys| keys.iter().all(Value::is_string))
+                }) {
+                    return Err("Goose environment 'env_keys' must be a string list".into());
+                }
+            }
             Codec::AnythingLlm => {
                 if let Some(policy) = object.get("anythingllm") {
                     let policy = policy.as_object().ok_or("AnythingLLM policy is not an object")?;
@@ -366,6 +401,7 @@ impl Codec {
                 .map(Value::as_bool).unwrap_or(Some(true))?,
             Codec::Jan => value.as_object()?.get("active")
                 .map(Value::as_bool).unwrap_or(Some(true))?,
+            Codec::Goose => value.as_object()?.get("enabled")?.as_bool()?,
             _ => return self.decode(value).map(|config| (config, true)),
         };
         self.validate_existing_entry(value).ok()?;
@@ -375,7 +411,7 @@ impl Codec {
     pub fn decode(self, value: &Value) -> Option<McpConfig> {
         self.validate_existing_entry(value).ok()?;
         if (self == Codec::WorkBuddy && value.get("disabled") == Some(&Value::Bool(true)))
-            || (matches!(self, Codec::Pi | Codec::JunieCli) && value.get("enabled") == Some(&Value::Bool(false)))
+            || (matches!(self, Codec::Pi | Codec::JunieCli | Codec::Goose) && value.get("enabled") == Some(&Value::Bool(false)))
             || (self == Codec::Jan && value.get("active") == Some(&Value::Bool(false))) {
             return None;
         }
@@ -449,11 +485,14 @@ impl Codec {
         } else {
             "command"
         };
-        if let Some(command) = object.get(command_key).and_then(Value::as_str) {
+        if let Some(command) = object.get(command_key).and_then(Value::as_str)
+            .filter(|_| self != Codec::Goose || object.get("type").and_then(Value::as_str) == Some("stdio")) {
             return Some(McpConfig::Stdio(StdioConfig {
                 command: command.to_string(),
                 args: string_array(object.get("args")),
-                env: string_map(object.get(if self == Codec::Goose { "envs" } else { "env" })),
+                env: string_map(if self == Codec::Goose {
+                    object.get("envs").or_else(|| object.get("env"))
+                } else { object.get("env") }),
                 cwd: string_field(
                     object,
                     if matches!(self, Codec::Warp | Codec::VtCode) {
@@ -629,6 +668,7 @@ impl Codec {
                     push_optional(&mut fields, "envs", &stdio.env);
                     push_optional(&mut fields, "cwd", &stdio.cwd);
                     defaults.push(("description".into(), Value::String(String::new())));
+                    defaults.push(("enabled".into(), Value::Bool(true)));
                 }
                 Codec::Vibe => {
                     fields.push(("transport".into(), Value::String("stdio".into())));
@@ -854,6 +894,7 @@ impl Codec {
                     fields.push(("type".into(), Value::String("streamable_http".into())));
                     push_http_fields(&mut fields, http, "uri", "headers");
                     defaults.push(("description".into(), Value::String(String::new())));
+                    defaults.push(("enabled".into(), Value::Bool(true)));
                 }
                 Codec::Vibe => {
                     if http.kind == "sse" {
@@ -911,6 +952,9 @@ impl Codec {
                 // runtime substitution. Arca cannot model those as HTTP headers,
                 // so they remain Agent-owned when the URL is updated.
                 (Codec::Warp, McpConfig::Http(_)) => WARP_HTTP_FIELDS,
+                // Goose also resolves native HTTP substitutions from envs and
+                // env_keys. HttpConfig does not own that environment context.
+                (Codec::Goose, McpConfig::Http(_)) => GOOSE_HTTP_FIELDS,
                 _ => self.controlled_fields(),
             },
             fields,

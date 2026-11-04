@@ -12,6 +12,23 @@ use std::path::Path;
 use std::str::FromStr;
 use yaml_edit::{Document, Mapping, Sequence, YamlFile, YamlNode};
 
+#[cfg(test)]
+mod observation_tests {
+    use super::*;
+
+    #[test]
+    fn nested_block_mcp_observation_keeps_indentation_and_scalar_types() {
+        let document = Document::from_str(include_str!("../../../tests/fixtures/goose-desktop.yaml")).unwrap();
+        let node = document.get("extensions").unwrap().as_mapping().unwrap().get("local").unwrap();
+        let value = YamlAdapter::node_to_json(&node).unwrap();
+        assert_eq!(value["cmd"], "node");
+        assert_eq!(value["enabled"], true);
+        assert_eq!(value["timeout"], 90);
+        assert_eq!(value["args"], serde_json::json!(["original.mjs"]));
+        assert_eq!(value["envs"], serde_json::json!({"MODE": "fixture"}));
+    }
+}
+
 /// Lossless YAML adapter for both map-shaped sections (Hermes, Goose) and
 /// list-shaped sections whose entries carry their own identity (Continue).
 pub struct YamlAdapter {
@@ -314,7 +331,43 @@ impl YamlAdapter {
     }
 
     fn node_to_json(node: &YamlNode) -> Result<Value, String> {
-        serde_yaml::from_str(&node.to_string()).map_err(|error| error.to_string())
+        Self::node_to_json_at(node, 0)
+    }
+
+    fn node_to_json_at(node: &YamlNode, depth: usize) -> Result<Value, String> {
+        if depth > 64 {
+            return Err("MCP YAML nesting exceeds the observation limit".into());
+        }
+        // A detached block node loses its first line's indentation while later
+        // lines retain it. Convert its structure rather than reparsing that
+        // invalid fragment; the original CST remains untouched for writes.
+        match node {
+            YamlNode::Mapping(mapping) => {
+                let mut values = Map::new();
+                for entry in mapping.entries() {
+                    let key = entry.key_node().ok_or("MCP YAML entry has no key")?;
+                    let key = Self::node_to_json_at(&key, depth + 1)?;
+                    let key = key.as_str().ok_or("MCP YAML mapping keys must be strings")?;
+                    let value = entry.value_node().ok_or("MCP YAML entry has no value")?;
+                    if values.insert(key.into(), Self::node_to_json_at(&value, depth + 1)?).is_some() {
+                        return Err("duplicate MCP YAML mapping key is ambiguous".into());
+                    }
+                }
+                Ok(Value::Object(values))
+            }
+            YamlNode::Sequence(sequence) => sequence.into_iter()
+                .map(|value| Self::node_to_json_at(&value, depth + 1))
+                .collect::<Result<Vec<_>, _>>().map(Value::Array),
+            YamlNode::Scalar(scalar) => {
+                let text = scalar.value();
+                if scalar.is_quoted() || text.starts_with(['|', '>']) {
+                    Ok(Value::String(scalar.as_string()))
+                } else {
+                    serde_yaml::from_str(&text).map_err(|_| "invalid MCP YAML scalar".into())
+                }
+            }
+            _ => Err("MCP YAML aliases and tagged values require native configuration".into()),
+        }
     }
 
     fn ensure_unique_mapping(mapping: &Mapping, path: &Path, context: &str) -> Result<(), String> {
@@ -436,11 +489,32 @@ impl YamlAdapter {
         &self,
         target: &Mapping,
         name: &str,
-        patch: EntryPatch,
+        mut patch: EntryPatch,
         path: &Path,
     ) -> Result<(), String> {
         let context = format!("{}.{}", self.key, name);
         Self::ensure_unique_mapping(target, path, &context)?;
+        if self.codec == Codec::Goose {
+            let value = Self::node_to_json(&YamlNode::Mapping(target.clone()))?;
+            self.codec.validate_existing_entry(&value)?;
+            let original_type = value.get("type").and_then(Value::as_str);
+            let desired_type = patch.fields.iter().find(|(key, _)| key == "type")
+                .and_then(|(_, value)| value.as_str());
+            if original_type != desired_type
+                && (value.get("env").is_some() || value.get("envs").is_some()
+                    || value.get("env_keys").is_some_and(|keys| {
+                        !keys.as_array().is_some_and(Vec::is_empty)
+                    })) {
+                return Err("refusing to change Goose MCP transport with native environment context".into());
+            }
+            // env is a native stdio alias, not a second environment. Keep its
+            // original spelling and comments when updating an existing entry.
+            if desired_type == Some("stdio") && value.get("env").is_some() {
+                for (field, _) in &mut patch.fields {
+                    if field == "envs" { *field = "env".into(); }
+                }
+            }
+        }
         for field in patch.controlled {
             if let Some((_, value)) = patch.fields.iter().find(|(name, _)| name == field) {
                 Self::mapping_set(target, field, value)?;
@@ -462,6 +536,16 @@ impl YamlAdapter {
             }
         }
         Ok(())
+    }
+
+    fn is_mcp_entry(&self, value: &Value) -> bool {
+        self.codec != Codec::Goose
+            || matches!(value.get("type").and_then(Value::as_str), Some("stdio" | "streamable_http"))
+    }
+
+    fn require_mcp_entry(&self, value: &Value) -> Result<(), String> {
+        if self.is_mcp_entry(value) { Ok(()) }
+        else { Err("Goose built-in, platform and unknown extensions are outside MCP write scope".into()) }
     }
 
     fn identity(&self, node: &YamlNode) -> Option<String> {
@@ -570,7 +654,52 @@ impl YamlAdapter {
 }
 
 impl Adapter for YamlAdapter {
+    fn declaration_names(&self, text: &str) -> Result<Vec<String>, String> {
+        let file = YamlFile::from_str(text).map_err(|_| "invalid MCP YAML")?;
+        let documents = file.documents().collect::<Vec<_>>();
+        if documents.len() != 1 { return Err("MCP YAML needs exactly one document".into()); }
+        let path = Path::new("MCP configuration");
+        let root = self.ensure_root(&documents[0], path)?;
+        if self.list {
+            let Some(sequence) = self.section_sequence(&root, path, false)? else { return Ok(Vec::new()); };
+            self.ensure_unique_identities(&sequence, path)?;
+            Ok(sequence.into_iter().filter_map(|node| self.identity(&node)).collect())
+        } else {
+            let Some(section) = self.section_mapping(&root, path, false)? else { return Ok(Vec::new()); };
+            Self::ensure_unique_mapping(&section, path, &self.key)?;
+            Ok(Self::mapping_keys(&section))
+        }
+    }
+
+    fn inspect_text(&self, text: &str, name: &str) -> Result<Option<Value>, String> {
+        let file = YamlFile::from_str(text).map_err(|_| "invalid MCP YAML")?;
+        let documents = file.documents().collect::<Vec<_>>();
+        if documents.len() != 1 { return Err("MCP YAML needs exactly one document".into()); }
+        let path = Path::new("MCP configuration");
+        let root = self.ensure_root(&documents[0], path)?;
+        let node = if self.list {
+            let Some(sequence) = self.section_sequence(&root, path, false)? else { return Ok(None); };
+            self.ensure_unique_identities(&sequence, path)?;
+            let found = sequence.into_iter().find(|node| self.identity(node).as_deref() == Some(name));
+            found
+        } else {
+            let Some(section) = self.section_mapping(&root, path, false)? else { return Ok(None); };
+            Self::ensure_unique_mapping(&section, path, &self.key)?;
+            section.get(name)
+        };
+        node.map(|node| {
+            let value = Self::node_to_json(&node)?;
+            if !value.is_object() { return Err("MCP YAML entry is not a mapping".into()); }
+            Ok(value)
+        }).transpose()
+    }
+
     fn read(&self, path: &Path) -> BTreeMap<String, McpConfig> {
+        self.read_with_enabled(path).into_iter()
+            .filter_map(|(name, (config, enabled))| enabled.then_some((name, config))).collect()
+    }
+
+    fn read_with_enabled(&self, path: &Path) -> BTreeMap<String, (McpConfig, bool)> {
         let Ok((_, document, _)) = self.read_document(path) else {
             return BTreeMap::new();
         };
@@ -592,7 +721,7 @@ impl Adapter for YamlAdapter {
                 .filter_map(|node| {
                     let name = self.identity(&node)?;
                     let value = Self::node_to_json(&node).ok()?;
-                    self.codec.decode(&value).map(|config| (name, config))
+                    self.codec.decode_with_enabled(&value).map(|config| (name, config))
                 })
                 .collect()
         } else {
@@ -612,10 +741,28 @@ impl Adapter for YamlAdapter {
                         .to_string();
                     let value = entry.value_node()?;
                     let value = Self::node_to_json(&value).ok()?;
-                    self.codec.decode(&value).map(|config| (name, config))
+                    self.codec.decode_with_enabled(&value).map(|config| (name, config))
                 })
                 .collect()
         }
+    }
+
+    fn supports_native_enabled(&self) -> bool { self.codec == Codec::Goose && !self.list }
+
+    fn set_enabled(&self, path: &Path, name: &str, enabled: bool, snapshot: &Value) -> Result<(), String> {
+        if !self.supports_native_enabled() { return Err("Agent does not support a native MCP enabled flag".into()); }
+        let (file, document, original) = self.read_document(path)?;
+        let root = self.ensure_root(&document, path)?;
+        let section = self.section_mapping(&root, path, false)?.ok_or("MCP section is missing")?;
+        Self::ensure_unique_mapping(&section, path, &self.key)?;
+        let node = section.get(name).ok_or("MCP entry is missing")?;
+        let current = Self::node_to_json(&node)?;
+        if &current != snapshot { return Err("MCP entry changed while Arca was preparing its enabled state".into()); }
+        let (_, current_enabled) = self.codec.decode_with_enabled(&current).ok_or("invalid native MCP entry")?;
+        if current_enabled == enabled { return Ok(()); }
+        let target = node.as_mapping().ok_or("MCP entry is not a mapping")?;
+        Self::set_node(&target, "enabled", &Value::Bool(enabled))?;
+        self.write_document(path, &file, original.as_deref())
     }
 
     fn upsert(&self, path: &Path, name: &str, config: &McpConfig) -> Result<(), String> {
@@ -698,6 +845,10 @@ impl Adapter for YamlAdapter {
                 .enumerate()
                 .filter_map(|(index, item)| names.contains(&self.identity(&item)?).then_some(index))
                 .collect();
+            for index in &indexes {
+                let node = (&sequence).into_iter().nth(*index).ok_or("MCP entry is missing")?;
+                self.require_mcp_entry(&Self::node_to_json(&node)?)?;
+            }
             indexes.sort_unstable_by(|left, right| right.cmp(left));
             for index in indexes {
                 sequence.remove(index);
@@ -709,6 +860,7 @@ impl Adapter for YamlAdapter {
             };
             Self::ensure_unique_mapping(&section, path, &self.key)?;
             for name in names {
+                if let Some(node) = section.get(name) { self.require_mcp_entry(&Self::node_to_json(&node)?)?; }
                 changed |= section.remove(name).is_some();
             }
         }
@@ -728,16 +880,24 @@ impl Adapter for YamlAdapter {
             let Some(sequence) = self.section_sequence(&root, path, false)? else {
                 return Ok(());
             };
-            let changed = !sequence.is_empty();
+            self.ensure_unique_identities(&sequence, path)?;
+            let mut changed = false;
             for index in (0..sequence.len()).rev() {
+                let node = (&sequence).into_iter().nth(index).ok_or("MCP entry is missing")?;
+                if !self.is_mcp_entry(&Self::node_to_json(&node)?) { continue; }
                 sequence.remove(index);
+                changed = true;
             }
             changed
         } else {
             let Some(section) = self.section_mapping(&root, path, false)? else {
                 return Ok(());
             };
-            let keys = Self::mapping_keys(&section);
+            Self::ensure_unique_mapping(&section, path, &self.key)?;
+            let keys = Self::mapping_keys(&section).into_iter().filter_map(|key| {
+                section.get(key.as_str()).map(|node| Self::node_to_json(&node)
+                    .map(|value| self.is_mcp_entry(&value).then_some(key)))
+            }).collect::<Result<Vec<_>, _>>()?.into_iter().flatten().collect::<Vec<_>>();
             for key in &keys {
                 section.remove(key.as_str());
             }
@@ -756,13 +916,21 @@ impl Adapter for YamlAdapter {
         let (_, document, _) = self.read_document(path)?;
         let root = self.ensure_root(&document, path)?;
         if self.list {
-            Ok(self
-                .section_sequence(&root, path, false)?
-                .is_some_and(|section| !section.is_empty()))
+            let Some(section) = self.section_sequence(&root, path, false)? else { return Ok(false); };
+            self.ensure_unique_identities(&section, path)?;
+            for node in &section {
+                if self.is_mcp_entry(&Self::node_to_json(&node)?) { return Ok(true); }
+            }
+            Ok(false)
         } else {
-            Ok(self
-                .section_mapping(&root, path, false)?
-                .is_some_and(|section| !Self::mapping_keys(&section).is_empty()))
+            let Some(section) = self.section_mapping(&root, path, false)? else { return Ok(false); };
+            Self::ensure_unique_mapping(&section, path, &self.key)?;
+            for key in Self::mapping_keys(&section) {
+                if let Some(node) = section.get(key.as_str()) {
+                    if self.is_mcp_entry(&Self::node_to_json(&node)?) { return Ok(true); }
+                }
+            }
+            Ok(false)
         }
     }
 
@@ -774,6 +942,7 @@ impl Adapter for YamlAdapter {
                 if !value.is_object() {
                     return Err("refusing to snapshot a non-mapping YAML entry".into());
                 }
+                self.require_mcp_entry(&value)?;
                 Ok(value)
             })
             .transpose()
@@ -800,6 +969,7 @@ impl Adapter for YamlAdapter {
     }
 
     fn restore(&self, path: &Path, name: &str, snapshot: &Value) -> Result<(), String> {
+        self.require_mcp_entry(snapshot)?;
         let Some(mut fields) = snapshot.as_object().cloned() else {
             return Err("refusing to restore a non-mapping YAML snapshot".into());
         };

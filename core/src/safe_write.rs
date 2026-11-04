@@ -3848,6 +3848,7 @@ fn rewrite_regular_file_in_place(
         expected: authoritative,
         desired: &desired,
     })?;
+    let mut mutation_started = false;
     let result = (|| {
         let name = target_name(path)?;
         let mut file = fs::File::from(
@@ -3893,6 +3894,7 @@ fn rewrite_regular_file_in_place(
         }
 
         run_before_mutation_claim_hook(path);
+        verify_mutation_parent_is_current(&intent.as_ref().expect("rewrite intent is active").record)?;
         let current = read_path_state_from_parent(path, parent)?;
         if !anchored_states_match(authoritative, &current) {
             return Err(format!(
@@ -3903,6 +3905,7 @@ fn rewrite_regular_file_in_place(
 
         file.seek(SeekFrom::Start(0))
             .map_err(|error| format!("failed to seek {}: {error}", path.display()))?;
+        mutation_started = true;
         file.set_len(0)
             .map_err(|error| format!("failed to truncate {}: {error}", path.display()))?;
         file.write_all(content)
@@ -3953,6 +3956,15 @@ fn rewrite_regular_file_in_place(
     })();
     match result {
         Ok(()) => Ok(()),
+        Err(error) if !mutation_started && intent.as_ref().is_some_and(|intent|
+            verify_mutation_parent_is_current(&intent.record).is_ok()) => {
+            // No bytes or mode were changed. Retire only our exact intent;
+            // recovering an external replacement would claim unrelated data.
+            complete_mutation_intent(intent.as_ref()).map_err(|retirement| format!(
+                "recovery_required: pre-write mutation failed ({error}); claim retirement failed: {retirement}"
+            ))?;
+            Err(error)
+        }
         Err(error) => recover_failed_mutation_intent(intent.as_ref(), error),
     }
 }
@@ -4713,7 +4725,7 @@ pub(crate) fn write_if_unchanged(
     expected: Option<&str>,
     content: &str,
 ) -> Result<(), String> {
-    write_if_unchanged_impl(path, expected, content, false)
+    write_if_unchanged_impl(path, expected, content, false, true)
 }
 
 /// Settings may contain environment variables, request headers, and disabled
@@ -4724,7 +4736,16 @@ pub(crate) fn write_private_if_unchanged(
     expected: Option<&str>,
     content: &str,
 ) -> Result<(), String> {
-    write_if_unchanged_impl(path, expected, content, true)
+    write_if_unchanged_impl(path, expected, content, true, false)
+}
+
+/// Restrict an Agent-owned live configuration while retaining its watched inode.
+pub(crate) fn write_private_live_if_unchanged(
+    path: &Path,
+    expected: Option<&str>,
+    content: &str,
+) -> Result<(), String> {
+    write_if_unchanged_impl(path, expected, content, true, true)
 }
 
 /// Remove a file only when its current contents still match what the caller
@@ -5267,6 +5288,7 @@ fn write_if_unchanged_impl(
     expected: Option<&str>,
     content: &str,
     private: bool,
+    preserve_inode: bool,
 ) -> Result<(), String> {
     #[cfg(unix)]
     {
@@ -5306,7 +5328,7 @@ fn write_if_unchanged_impl(
             mode,
             &destination,
             "write",
-            !private,
+            preserve_inode,
             None,
         )?;
         if resolve_destination(path)? != destination {
@@ -5336,7 +5358,7 @@ fn write_if_unchanged_impl(
         let permissions = fs::metadata(&destination)
             .ok()
             .map(|metadata| metadata.permissions());
-        let _ = private;
+        let _ = (private, preserve_inode);
         let file_name = destination
             .file_name()
             .and_then(|name| name.to_str())
@@ -5678,6 +5700,8 @@ mod tests {
             "the replacement namespace must stay untouched"
         );
         assert!(displaced.join("config.json").exists());
+        assert_eq!(fs::read_to_string(displaced.join("config.json")).unwrap(), "reviewed",
+            "a displaced parent must be detected before changing the reviewed inode");
         assert!(global_mutation_intent_dir().is_dir());
 
         fs::remove_dir(&parent).unwrap();
@@ -5685,6 +5709,28 @@ mod tests {
         recover_global_mutation_intents().unwrap();
         assert_eq!(fs::read_to_string(&target).unwrap(), "reviewed");
         ensure_no_transaction_mutation_intents(&global_mutation_intent_dir()).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn private_live_rewrite_retains_native_inode_while_tightening_permissions() {
+        use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
+        let home = crate::testenv::TestHome::new("private-live-model");
+        let path = home.home.join("native.json");
+        let link = home.home.join("selected.json");
+        fs::write(&path, "reviewed").unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+        symlink(&path, &link).unwrap();
+        let identity = fs::metadata(&path).unwrap().ino();
+        write_private_live_if_unchanged(&link, Some("reviewed"), "first").unwrap();
+        assert_eq!(fs::metadata(&path).unwrap().ino(), identity);
+        assert_eq!(fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o600);
+        assert!(fs::symlink_metadata(&link).unwrap().file_type().is_symlink());
+        write_private_live_if_unchanged(&link, Some("first"), "second").unwrap();
+        assert_eq!(fs::metadata(&path).unwrap().ino(), identity);
+        assert_eq!(fs::read_to_string(&path).unwrap(), "second");
+        assert!(write_private_live_if_unchanged(&link, Some("first"), "stale").is_err());
+        assert_eq!(fs::read_to_string(path).unwrap(), "second");
     }
 
     #[cfg(unix)]
@@ -5827,8 +5873,9 @@ mod tests {
 
         let error = write_if_unchanged(&path, Some("reviewed"), "arca").unwrap_err();
 
-        assert!(error.contains("claim boundary"), "{error}");
+        assert!(error.starts_with("asset_operation_stale:"), "{error}");
         assert_eq!(fs::read_to_string(&path).unwrap(), "external");
+        ensure_no_transaction_mutation_intents(&global_mutation_intent_dir()).unwrap();
         let _ = fs::remove_file(path);
     }
 

@@ -1090,6 +1090,23 @@ export interface HostMcpObservation {
   source_paths: string[]; docs_url: string; source_fingerprint: string;
 }
 
+export interface McpInspectionRequest {
+  agent_id: string;
+  source: { kind: "configured"; key: string } | { kind: "configured_name"; name: string } | { kind: "host"; source_fingerprint: string };
+}
+
+export interface ConfiguredMcpObservation {
+  agent_id: string;
+  name: string;
+  source_path: string;
+}
+
+export interface McpConfigurationView {
+  agent_id: string;
+  server_id: string;
+  documents: { source_path: string; configuration: Record<string, unknown> | null; unavailable_reason: string | null }[];
+}
+
 export interface NativeSkillObservation {
   id: string;
   agent_id: string;
@@ -1111,5 +1128,7 @@ export interface NativeResourceInventory {
   host_mcps: HostMcpObservation[];
   native_plugins: NativePluginObservation[];
   native_skills: NativeSkillObservation[];
+  configured_mcps?: ConfiguredMcpObservation[];
+  configured_unavailable?: boolean;
   unavailable: boolean;
 }

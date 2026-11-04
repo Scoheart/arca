@@ -35,7 +35,7 @@ describe("SkillCard", () => {
       agentIds={["claude-code", "cursor", "codex", "gemini", "opencode", "copilot-cli"]}
       onOpenAgent={onOpenAgent} />);
     await user.click(screen.getByRole("button", { name: "查看另外 2 个 Agent" }));
-    const dialog = screen.getByRole("dialog", { name: "全部 Agent" });
+    const dialog = screen.getByRole("dialog", { name: "review-changes · 全部 Agent" });
     await user.click(within(dialog).getByRole("button", { name: /OpenCode/ }));
     expect(onOpenAgent).toHaveBeenCalledWith("opencode");
     expect(onOpen).not.toHaveBeenCalled();

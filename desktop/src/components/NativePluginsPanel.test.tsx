@@ -1,12 +1,16 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import type { HostMcpObservation, NativePluginObservation } from "../lib/types";
-import { NativePluginsPanel, NativeSkillCard } from "./NativePluginsPanel";
+import { HostMcpCard, NativePluginsPanel, NativeSkillCard } from "./NativePluginsPanel";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
 import { nativeSkillFixture } from "../test/nativeSkillFixtures";
 
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, values?: { name?: string; plugin?: string }) => values?.name ? `${key}:${values.name}` : values?.plugin ? `${key}:${values.plugin}` : key }) }));
-afterEach(cleanup);
+const inspection = vi.hoisted(() => vi.fn().mockResolvedValue({ agent_id: "cursor", server_id: "plugin-fixture-example",
+  documents: [{ source_path: "~/.cursor/plugins/cache/fixture/revision/mcp.json", configuration: { command: "fixture-mcp-command", env: { TOKEN: "[已隐藏]" } }, unavailable_reason: null }],
+}));
+vi.mock("../lib/api", () => ({ inspectMcpConfiguration: inspection }));
+afterEach(() => { cleanup(); vi.clearAllMocks(); });
 const mcp: HostMcpObservation = {
   agent_id: "cursor", server_id: "plugin-fixture-example", name: "example", provider: "fixture",
   origin: "plugin", presence: "cache_only", versions: ["1.0.0"], source_paths: ["~/.cursor/plugins/cache/fixture/revision/mcp.json"],
@@ -18,6 +22,17 @@ const plugin: NativePluginObservation = {
   components: [{ kind: "mcp", name: "example", source_path: mcp.source_paths[0], native_id: mcp.server_id }],
   docs_url: mcp.docs_url, source_fingerprint: "fixture",
 };
+
+it("reads a plugin MCP configuration in its existing read-only details dialog", async () => {
+  render(<ul><HostMcpCard item={mcp} /></ul>);
+  expect(inspection).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "nativePlugins.viewDetails:example" }));
+  const dialog = screen.getByRole("dialog", { name: "example" });
+  expect(await within(dialog).findByText(/fixture-mcp-command/)).toBeVisible();
+  expect(inspection).toHaveBeenCalledWith({ agent_id: "cursor", source: { kind: "host", source_fingerprint: "fixture" } });
+  expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
+  expect(within(dialog).queryByRole("button", { name: /delete|remove|save|删除|移除|保存/i })).not.toBeInTheDocument();
+});
 
 it("keeps cache and enablement details in a read-only dialog, including every matching group snapshot", async () => {
   render(<NativePluginsPanel plugins={[plugin, { ...plugin, revision: "revision-b" }]} />);

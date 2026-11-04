@@ -28,7 +28,7 @@ fn runtime_failure_restores_content_links_and_skill_settings() {
             .unwrap_err();
     assert!(matches!(error, SkillError::Io { .. }));
     assert_eq!(fixture.snapshot(), before);
-    assert!(!fixture.paths.journals_dir().exists());
+    assert_eq!(journal_count(&fixture), 0);
     assert!(!fixture
         .paths
         .staging_skills_dir()
@@ -60,7 +60,7 @@ fn runtime_failure_restores_a_reviewed_real_directory_link() {
     assert!(matches!(error, SkillError::Io { .. }));
     assert_eq!(fixture.snapshot(), before);
     assert!(!backup.exists());
-    assert!(!fixture.paths.journals_dir().exists());
+    assert_eq!(journal_count(&fixture), 0);
 }
 
 #[test]
@@ -97,6 +97,9 @@ fn relative_managed_link_can_be_safely_disabled() {
     symlink(&raw_target, &link).unwrap();
     let mut spec = fixture.update_spec();
     spec.directory_mutations.clear();
+    // This is a link-only disable, so it must not approve the replacement
+    // content hash carried by the fixture's normal update transaction.
+    spec.settings_after = spec.settings_before.clone();
     spec.link_mutations[0].expected = LinkState::ManagedSymlink { target: raw_target };
     spec.link_mutations[0].desired_target = None;
     spec.settings_after.skill_assignments = None;
@@ -173,7 +176,7 @@ fn runtime_failure_restores_missing_broken_and_unknown_link_states() {
 
         assert!(matches!(error, SkillError::Io { .. }), "failed for {state}");
         assert_eq!(fixture.snapshot(), before, "failed for {state}");
-        assert!(!fixture.paths.journals_dir().exists());
+        assert_eq!(journal_count(&fixture), 0);
     }
 }
 
@@ -201,13 +204,18 @@ fn recovery_removes_a_partial_same_parent_copy_left_by_a_crash() {
     let temporary = fixture
         .paths
         .skills_dir()
-        .join(format!(".arca-transaction-{TRANSACTION_OPERATION_ID}-0.tmp"));
+        .join(format!(".mux-transaction-{TRANSACTION_OPERATION_ID}-0.tmp"));
     fs::create_dir(&temporary).unwrap();
     fs::write(temporary.join("partial"), b"incomplete copy").unwrap();
+    let unowned = fixture.paths.skills_dir()
+        .join(format!(".arca-transaction-{TRANSACTION_OPERATION_ID}-0.tmp"));
+    fs::create_dir(&unowned).unwrap();
+    fs::write(unowned.join("sentinel"), b"unowned copy").unwrap();
 
     recover_pending_with_paths(&fixture.paths).unwrap();
 
     assert!(!temporary.exists());
+    assert_eq!(fs::read(unowned.join("sentinel")).unwrap(), b"unowned copy");
     assert_eq!(fixture.snapshot(), fixture.before_snapshot);
 }
 
@@ -245,7 +253,7 @@ fn recovery_finishes_a_commit_if_cleanup_already_removed_its_rollback_backup() {
     recover_pending_with_paths(&fixture.paths).unwrap();
 
     assert_eq!(fixture.snapshot(), committed);
-    assert!(!fixture.paths.journals_dir().exists());
+    assert_eq!(journal_count(&fixture), 0);
 }
 
 #[test]
@@ -307,7 +315,7 @@ fn removal_uses_links_then_content_and_cleans_consumed_state() {
 
     assert!(!fixture.paths.central_skill("remove").exists());
     assert!(!fixture.spec.link_mutations[0].path.exists());
-    assert!(!fixture.paths.journals_dir().exists());
+    assert_eq!(journal_count(&fixture), 0);
     assert!(!fixture
         .paths
         .staging_skills_dir()
@@ -373,7 +381,7 @@ fn successful_import_keeps_the_backup_referenced_by_settings() {
     execute_transaction(spec).unwrap();
 
     assert_eq!(hash_tree(&backup).unwrap(), before_hash);
-    assert!(!fixture.paths.journals_dir().exists());
+    assert_eq!(journal_count(&fixture), 0);
 }
 
 #[test]
@@ -388,7 +396,7 @@ fn successful_transaction_keeps_an_explicitly_retained_backup() {
     execute_transaction(spec).unwrap();
 
     assert_eq!(hash_tree(&backup).unwrap(), before_hash);
-    assert!(!fixture.paths.journals_dir().exists());
+    assert_eq!(journal_count(&fixture), 0);
 }
 
 #[test]

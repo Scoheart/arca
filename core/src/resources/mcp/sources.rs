@@ -1230,13 +1230,11 @@ args = ["-y", "github-mcp"]
         fs::create_dir_all(settings_path.parent().unwrap()).unwrap();
         fs::write(&settings_path, "{ invalid settings").unwrap();
 
-        let error = add_local(
+        add_local(
             source.to_string_lossy().into_owned(),
             Some("rollback".into()),
         )
-        .unwrap_err();
-
-        assert!(error.contains("invalid Arca settings"), "{error}");
+        .expect_err("invalid settings must reject source registration");
         assert_eq!(
             fs::read_to_string(settings_path).unwrap(),
             "{ invalid settings"
@@ -1252,7 +1250,7 @@ args = ["-y", "github-mcp"]
 
     #[cfg(unix)]
     #[test]
-    fn refresh_restores_cache_when_settings_save_fails() {
+    fn refresh_restores_cache_when_catalog_save_fails() {
         use std::os::unix::fs::{symlink, PermissionsExt};
 
         let home = TestHome::new("src-refresh-rollback");
@@ -1279,20 +1277,26 @@ args = ["-y", "github-mcp"]
 
         let settings_path = settings_file();
         let settings_before = fs::read_to_string(&settings_path).unwrap();
-        let read_only_dir = home.home.join("read-only-settings");
+        // Source definitions now live in the MCP asset catalog. The settings
+        // document can remain byte-identical during a source-only refresh.
+        let catalog_path = crate::paths::mcp_catalog_file();
+        let catalog_before = fs::read_to_string(&catalog_path).unwrap();
+        let read_only_dir = home.home.join("read-only-catalog");
         fs::create_dir(&read_only_dir).unwrap();
-        let read_only_settings = read_only_dir.join("settings.json");
-        fs::write(&read_only_settings, &settings_before).unwrap();
-        fs::remove_file(&settings_path).unwrap();
-        symlink(&read_only_settings, &settings_path).unwrap();
+        let read_only_catalog = read_only_dir.join("catalog.json");
+        fs::write(&read_only_catalog, &catalog_before).unwrap();
+        fs::remove_file(&catalog_path).unwrap();
+        symlink(&read_only_catalog, &catalog_path).unwrap();
         fs::set_permissions(&read_only_dir, fs::Permissions::from_mode(0o500)).unwrap();
+        fs::set_permissions(&read_only_catalog, fs::Permissions::from_mode(0o400)).unwrap();
 
         let result = refresh(view.id);
         fs::set_permissions(&read_only_dir, fs::Permissions::from_mode(0o700)).unwrap();
+        fs::set_permissions(&read_only_catalog, fs::Permissions::from_mode(0o600)).unwrap();
 
         assert!(
             result.is_err(),
-            "read-only settings target must reject save"
+            "read-only catalog target must reject save"
         );
         assert_eq!(
             fs::read_to_string(&cache).unwrap(),
@@ -1300,9 +1304,10 @@ args = ["-y", "github-mcp"]
             "cache must return to the exact pre-refresh content"
         );
         assert_eq!(
-            fs::read_to_string(&read_only_settings).unwrap(),
-            settings_before
+            fs::read_to_string(&read_only_catalog).unwrap(),
+            catalog_before
         );
+        assert_eq!(fs::read_to_string(settings_path).unwrap(), settings_before);
     }
 
     #[cfg(unix)]

@@ -127,6 +127,22 @@ impl TomlAdapter {
 }
 
 impl Adapter for TomlAdapter {
+    fn declaration_names(&self, text: &str) -> Result<Vec<String>, String> {
+        let document = toml::from_str::<Toml>(text).map_err(|_| "invalid MCP TOML")?;
+        let Some(section) = document.get(&self.key) else { return Ok(Vec::new()); };
+        Ok(section.as_table().ok_or("MCP section is not a TOML table")?.keys().cloned().collect())
+    }
+
+    fn inspect_text(&self, text: &str, name: &str) -> Result<Option<serde_json::Value>, String> {
+        let document = toml::from_str::<Toml>(text).map_err(|_| "invalid MCP TOML")?;
+        let Some(section) = document.get(&self.key) else { return Ok(None); };
+        let section = section.as_table().ok_or("MCP section is not a TOML table")?;
+        section.get(name).map(|value| {
+            if !value.is_table() { return Err("MCP TOML entry is not a table".into()); }
+            serde_json::to_value(value).map_err(|_| "invalid MCP TOML entry".into())
+        }).transpose()
+    }
+
     fn read(&self, path: &Path) -> BTreeMap<String, McpConfig> {
         let root = self.read_root(path);
         let Some(section) = root.get(&self.key).and_then(Toml::as_table) else {

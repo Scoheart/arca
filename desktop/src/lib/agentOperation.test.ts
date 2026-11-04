@@ -73,8 +73,15 @@ describe("Agent operation review policy", () => {
     }];
     expect(requiresAgentReview(currentModel)).toBe(true);
 
-    const clearMcp = plan();
-    clearMcp.kind = "clear-mcp";
-    expect(requiresAgentReview(clearMcp)).toBe(true);
+  });
+
+  it("leaves clear operations to their dedicated confirmation flow", () => {
+    for (const kind of ["clear-mcp", "clear-models"] as const) {
+      const clear = plan();
+      clear.kind = kind;
+      expect(requiresAgentReview(clear)).toBe(false);
+      clear.can_commit = false;
+      expect(requiresAgentReview(clear)).toBe(true);
+    }
   });
 });

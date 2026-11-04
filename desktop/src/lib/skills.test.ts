@@ -147,7 +147,7 @@ describe("Skills wire contracts", () => {
       if (payload) {
         expect(invokeMock).toHaveBeenCalledWith(command, payload);
       } else {
-        expect(invokeMock).toHaveBeenCalledWith(command);
+        expect(invokeMock).toHaveBeenCalledWith(command, undefined);
       }
     }
   });

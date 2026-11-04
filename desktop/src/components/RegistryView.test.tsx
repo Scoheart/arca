@@ -107,15 +107,14 @@ it("renders effective and shadowed MCP rows and opens the existing Inspector", a
 
   const list = screen.getByRole("list", { name: "MCP 资产" });
   expect(list).toHaveClass("arca-asset-list", "arca-mcp-list");
-  expect(within(list).getByText("名称与连接")).toBeVisible();
-  expect(within(list).getByText("传输")).toBeVisible();
-  expect(within(list).getByText("来源")).toBeVisible();
-  expect(within(list).getByText("状态")).toBeVisible();
+  expect(within(list).getAllByRole("listitem")).toHaveLength(2);
+  expect(within(list).getByText("HTTP")).toBeVisible();
+  expect(within(list).getByText("STDIO")).toBeVisible();
   expect(within(list).getByText("生效")).toBeVisible();
   expect(within(list).getByText("被覆盖")).toBeVisible();
   expect(screen.queryByRole("button", { name: "粘贴配置" })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "导出生效配置" })).toBeVisible();
-  expect(screen.getByRole("button", { name: "添加 MCP" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "添加 MCPs" })).toBeVisible();
   expect(screen.queryByRole("tablist", { name: "MCP 状态" })).not.toBeInTheDocument();
   expect(screen.getByRole("separator", { name: "调整侧边栏宽度" })).toBeVisible();
   expect(screen.getByRole("button", { name: "添加订阅" })).toBeVisible();
@@ -126,7 +125,7 @@ it("renders effective and shadowed MCP rows and opens the existing Inspector", a
   expect(screen.queryByRole("button", { name: /^打开 MCP brave-search 详情 ·/ })).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: /全部来源.*2/ }));
 
-  await user.type(screen.getByPlaceholderText("搜索 MCP"), "not-present");
+  await user.type(screen.getByPlaceholderText("搜索 MCPs"), "not-present");
   expect(screen.getByText("没有匹配项")).toBeVisible();
   expect(screen.getByText("调整搜索或来源筛选后重试。")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "清除筛选" }));
@@ -161,7 +160,7 @@ it("keeps MCP workspace actions visible through loading, error retry, and empty 
   );
 
   expect(screen.getByRole("status", { name: "正在读取 MCP…" })).toBeVisible();
-  expect(screen.getByRole("button", { name: "添加 MCP" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "添加 MCPs" })).toBeVisible();
   loadingView.unmount();
 
   const errorView = render(
@@ -174,6 +173,7 @@ it("keeps MCP workspace actions visible through loading, error retry, and empty 
     </ToastProvider>,
   );
   expect(screen.getByRole("alert")).toHaveTextContent("读取 MCP 失败");
+  expect(screen.getByText("暂无可显示的内容")).toBeVisible();
   expect(screen.getByRole("alert")).toHaveTextContent("registry unavailable");
   await user.click(screen.getByRole("button", { name: "重试" }));
   expect(retry).toHaveBeenCalledTimes(1);
@@ -184,7 +184,7 @@ it("keeps MCP workspace actions visible through loading, error retry, and empty 
       <RegistryView state={registryState()} onCreate={vi.fn()} />
     </ToastProvider>,
   );
-  expect(screen.getByText("暂无 MCP")).toBeVisible();
+  expect(screen.getByText("暂无 MCPs")).toBeVisible();
   expect(screen.getByText("添加订阅、导入配置或新建 MCP")).toBeVisible();
 });
 

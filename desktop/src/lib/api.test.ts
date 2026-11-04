@@ -37,7 +37,7 @@ describe("Model Profile wire contract", () => {
       catalog_key: "/vendor/model",
       credential_saved: false,
     }]);
-    expect(invokeMock).toHaveBeenCalledWith("list_model_profiles");
+    expect(invokeMock).toHaveBeenCalledWith("list_model_profiles", undefined);
   });
 
   it("uses a dedicated command to reveal one Provider credential", async () => {

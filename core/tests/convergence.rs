@@ -430,9 +430,9 @@ fn malformed_model_input_does_not_block_an_unrelated_mcp_mutation() {
 
 #[test]
 fn skill_adoption_accepts_observed_content_with_a_fresh_audit_and_preserves_links() {
-    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-code-user"]);
+    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-user"]);
     let central = fixture.central("review-changes");
-    let target = fixture.target("claude-code-user", "review-changes");
+    let target = fixture.target("claude-user", "review-changes");
     let link_before = fs::read_link(&target).unwrap();
     let content = "---\nname: review-changes\ndescription: Updated local fixture\n---\n\nReview a documented `sudo example` command; do not execute it.\n";
     fs::write(central.join("SKILL.md"), content).unwrap();
@@ -457,7 +457,7 @@ fn skill_adoption_accepts_observed_content_with_a_fresh_audit_and_preserves_link
 
 #[test]
 fn skill_adoption_rejects_a_second_edit_after_review() {
-    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-code-user"]);
+    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-user"]);
     let central = fixture.central("review-changes");
     let content = "---\nname: review-changes\ndescription: First local edit\n---\n\nSynthetic content.\n";
     fs::write(central.join("SKILL.md"), content).unwrap();
@@ -471,13 +471,13 @@ fn skill_adoption_rejects_a_second_edit_after_review() {
         operation_id: plan.operation_id, candidate_hash: plan.candidate_hash,
     }}).is_err());
     assert_eq!(arca_core::settings::load_settings().managed_skills.unwrap()["review-changes"], baseline);
-    assert_managed_link(fixture.target("claude-code-user", "review-changes"), central);
+    assert_managed_link(fixture.target("claude-user", "review-changes"), central);
 }
 
 #[test]
 fn an_independent_skill_copy_is_not_offered_central_baseline_adoption_or_destructive_restore() {
-    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-code-user"]);
-    let target = fixture.target("claude-code-user", "review-changes");
+    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-user"]);
+    let target = fixture.target("claude-user", "review-changes");
     fs::remove_file(&target).unwrap();
     support::skills::write_skill(&target, "review-changes", "Independent local copy");
     let observed = arca_core::application::assets::list_inventory().unwrap();
@@ -490,14 +490,14 @@ fn an_independent_skill_copy_is_not_offered_central_baseline_adoption_or_destruc
 
 #[test]
 fn a_disabled_skill_relation_does_not_offer_restore_over_an_independent_directory() {
-    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-code-user"]);
+    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-user"]);
     arca_core::settings::mutate_settings(|settings| {
         settings.skill_consumptions.get_or_insert_default().entry("review-changes".into())
-            .or_default().insert("claude-code-user".into(), arca_core::domain::assets::SkillConsumptionRecord {
-                name: "review-changes".into(), target_id: "claude-code-user".into(), enabled: false,
+            .or_default().insert("claude-user".into(), arca_core::domain::assets::SkillConsumptionRecord {
+                name: "review-changes".into(), target_id: "claude-user".into(), enabled: false,
             });
     }).unwrap();
-    let target = fixture.target("claude-code-user", "review-changes");
+    let target = fixture.target("claude-user", "review-changes");
     fs::remove_file(&target).unwrap();
     support::skills::write_skill(&target, "review-changes", "Foreign copy on disabled relation");
     let observed = arca_core::application::assets::list_inventory().unwrap();
@@ -510,7 +510,7 @@ fn a_disabled_skill_relation_does_not_offer_restore_over_an_independent_director
 
 #[test]
 fn toggling_one_of_multiple_skill_targets_binds_the_selected_copy() {
-    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-code-user", "opencode-user"]);
+    let fixture = SkillsFixture::managed_on_targets("review-changes", &["claude-user", "opencode-user"]);
     let observed = arca_core::application::assets::list_inventory().unwrap();
     let selected_target = observed.consumptions.iter().find(|row| row.agent_id == "opencode"
         && row.asset == (AssetRef::Skill { name: "review-changes".into() })
@@ -530,7 +530,7 @@ fn toggling_one_of_multiple_skill_targets_binds_the_selected_copy() {
         && row.target.as_ref().is_some_and(|target| target.target_id == selected_target)
         && row.enabled == Some(false)));
     assert!(!fixture.target("opencode-user", "review-changes").exists());
-    assert_managed_link(fixture.target("claude-code-user", "review-changes"), fixture.central("review-changes"));
+    assert_managed_link(fixture.target("claude-user", "review-changes"), fixture.central("review-changes"));
 }
 
 #[test]

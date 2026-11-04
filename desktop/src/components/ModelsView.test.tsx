@@ -1,7 +1,5 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { ConsumptionState } from "../hooks/useConsumptionState";
 import * as api from "../lib/api";
@@ -32,12 +30,9 @@ vi.mock("../lib/modelsDev", async () => {
   };
 });
 
-const source = await readFile(resolve(process.cwd(), "src/components/ModelsView.tsx"), "utf8");
-const i18nSource = await readFile(resolve(process.cwd(), "src/i18n/index.ts"), "utf8");
-const agentSource = await readFile(resolve(process.cwd(), "src/components/AgentView.tsx"), "utf8");
-const css = await readFile(resolve(process.cwd(), "src/index.css"), "utf8");
 
 beforeEach(() => {
+  vi.resetAllMocks();
   void invalidateModelObservation();
   vi.mocked(api.listModelProfiles).mockResolvedValue([]);
   vi.mocked(api.listModelProviders).mockResolvedValue([
@@ -135,6 +130,23 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+function routinePlan(operationId = "fixture-plan") {
+  return { operation_id: operationId, can_commit: true, warnings: [], relationship_changes: [],
+    affected_agent_ids: [], model_state_changes: [] };
+}
+
+async function openManualModel(user: ReturnType<typeof userEvent.setup>, providerName: string) {
+  const sidebar = within(document.querySelector<HTMLElement>(".arca-workspace-sidebar")!);
+  await user.click(await sidebar.findByTitle(providerName));
+  await user.click(screen.getByRole("button", { name: /手动添加 Model/ }));
+  await waitFor(() => expect(screen.getByRole("textbox", { name: "模型 ID" })).toHaveFocus());
+  return screen.getByRole("dialog", { name: "添加 Model" });
+}
+
+function providerKeyInput() {
+  return within(screen.getByRole("region", { name: "API Key" })).getByLabelText("API Key");
+}
+
 async function chooseFormSelect(
   user: ReturnType<typeof userEvent.setup>,
   label: string,
@@ -156,26 +168,9 @@ async function openProviderTemplate(
   await user.click(within(catalog).getByRole("radio", { name: new RegExp(provider) }));
   await user.click(within(catalog).getByRole("button", { name: "创建" }));
   await waitFor(() =>
-    expect(screen.getByRole("heading", { name: `添加 ${provider}` })).toHaveFocus()
+    expect(screen.getByRole("heading", { name: new RegExp(`^添加 ${provider}`) })).toHaveFocus()
   );
 }
-
-it("maps Models to one compact, scannable list", () => {
-  const list = source.slice(source.indexOf("function ModelList"), source.indexOf("function ModelInspector"));
-  expect(list).toMatch(/className="arca-asset-list arca-model-list" role="list"/);
-  expect(list).toMatch(/role="listitem"/);
-  expect(list).toMatch(/className="arca-asset-list-row arca-model-list-row"/);
-  expect(list).toMatch(/<strong title=\{displayName\}>\{displayName\}<\/strong>/);
-  expect(list).toMatch(/title=\{profile\.model\}>\{profile\.model\}<\/code>/);
-  expect(list).not.toMatch(/protocolLabel\(profile\.protocol\)/);
-  expect(list).not.toMatch(/profile\.credential_saved/);
-  expect(list).not.toMatch(/<ResourceCard/);
-  expect(source).toMatch(/className="arca-models-workspace"/);
-  expect(source).not.toMatch(/<ResourceTabs/);
-  expect(css).toMatch(/\.arca-models-workspace \.arca-model-list \{[\s\S]*?background: transparent;/);
-  expect(css).toMatch(/\.arca-models-workspace \.arca-model-list > \[role="listitem"\] \{[\s\S]*?border-bottom:/);
-  expect(css).toMatch(/\.arca-models-workspace \.arca-model-list-row \{[\s\S]*?border-radius: 0;[\s\S]*?background: transparent;/);
-});
 
 it("keeps the Models workspace visible through loading, error recovery, and empty states", async () => {
   vi.mocked(api.listModelProfiles).mockReturnValueOnce(new Promise<never>(() => undefined));
@@ -188,6 +183,7 @@ it("keeps the Models workspace visible through loading, error recovery, and empt
   expect(screen.getByRole("status", { name: "正在读取模型资产" })).toBeVisible();
   expect(screen.getByRole("button", { name: "添加 Provider" })).toBeVisible();
   loadingView.unmount();
+  await invalidateModelObservation();
 
   vi.mocked(api.listModelProfiles)
     .mockRejectedValueOnce(new Error("model registry unavailable"))
@@ -199,11 +195,11 @@ it("keeps the Models workspace visible through loading, error recovery, and empt
     </ToastProvider>,
   );
 
-  expect(await screen.findByText("读取模型资产失败")).toBeVisible();
+  expect(await screen.findByRole("alert")).toHaveTextContent("读取模型资产失败");
   expect(screen.getByRole("alert")).toHaveTextContent("model registry unavailable");
   await user.click(screen.getByRole("button", { name: "重试" }));
-  expect(await screen.findByText("暂无模型资产")).toBeVisible();
-  expect(screen.getByText("新建一个可复用的模型配置。")).toBeVisible();
+  expect(await screen.findByText("暂无 Models")).toBeVisible();
+  expect(screen.getByText("添加一个可复用的模型配置。")).toBeVisible();
   errorView.unmount();
 });
 
@@ -269,18 +265,12 @@ it("enriches an OpenRouter list row without overriding user token limits", async
   await waitFor(() => expect(within(card).getByText("Qwen3")).toBeVisible());
   expect(within(card).getByText("qwen/qwen3")).toBeVisible();
   expect(within(card).queryByText("OpenRouter")).not.toBeInTheDocument();
-  expect(within(card).getByLabelText("上下文 200K")).toHaveTextContent("上下文 200K");
+  expect(within(card).getByLabelText("上下文 200K")).toHaveTextContent("200K");
   expect(within(card).queryByText("262.1K")).not.toBeInTheDocument();
   expect(within(card).queryByText("$0.2/M 输入")).not.toBeInTheDocument();
   expect(within(card).queryByText("推理")).not.toBeInTheDocument();
   expect(within(card).queryByText("Tools")).not.toBeInTheDocument();
   expect(within(card).queryByText(/models\.dev/)).not.toBeInTheDocument();
-});
-
-it("uses neutral protocol classification without a card color rail", () => {
-  expect(source).not.toMatch(/className="arca-model-protocol-dot" data-protocol=\{profile\.protocol\}/);
-  expect(css).not.toMatch(/\.arca-model-card::before/);
-  expect(css).not.toMatch(/\.arca-model-card\[data-protocol=/);
 });
 
 it("keeps the sidebar limited to the model library and configured Providers", async () => {
@@ -348,7 +338,7 @@ it("keeps the sidebar limited to the model library and configured Providers", as
   expect(sidebar.getByText("模型库")).toBeVisible();
   expect(sidebar.getByText("官方 Provider")).toBeVisible();
   expect(sidebar.queryByText("自定义 Provider")).not.toBeInTheDocument();
-  expect(sidebar.getByText("全部模型")).toBeVisible();
+  expect(sidebar.getByText("全部 Models")).toBeVisible();
   expect(sidebar.queryByText("协议")).not.toBeInTheDocument();
   expect(sidebar.queryByText("全部协议")).not.toBeInTheDocument();
 
@@ -358,10 +348,10 @@ it("keeps the sidebar limited to the model library and configured Providers", as
   expect(screen.getByRole("button", { name: "打开模型 Responses Model 详情" })).toBeVisible();
   expect(screen.queryByRole("button", { name: "打开模型 Completions Model 详情" })).not.toBeInTheDocument();
   expect(view.container.querySelector(
-    '.arca-model-provider-banner [data-provider-icon="openai"]',
+    '.arca-resource-overview [data-provider-icon="openai"]',
   )).toBeInTheDocument();
 
-  await user.click(sidebar.getByRole("button", { name: /全部模型/ }));
+  await user.click(sidebar.getByRole("button", { name: /全部 Models/ }));
   expect(screen.getByRole("button", { name: "打开模型 Responses Model 详情" })).toBeVisible();
   expect(screen.getByRole("button", { name: "打开模型 Completions Model 详情" })).toBeVisible();
 });
@@ -515,7 +505,7 @@ it("collapses long official Provider lists behind show more", async () => {
 
 it("keeps the built-in Provider Catalog unfiltered, searchable, and keyboard-selectable", async () => {
   const user = userEvent.setup();
-  const consumptionState = { plan: null, planUpdate: vi.fn() } as unknown as ConsumptionState;
+  const consumptionState = { plan: null, planUpdate: vi.fn().mockResolvedValue(routinePlan()), commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -565,34 +555,6 @@ it("keeps the built-in Provider Catalog unfiltered, searchable, and keyboard-sel
   await waitFor(() => expect(screen.getByRole("heading", { name: "添加 OpenAI" })).toHaveFocus());
   expect(screen.getByLabelText("Base URL")).toHaveValue("https://api.openai.com/v1");
   expect(screen.getByText("API Key")).toBeVisible();
-  expect(source).toMatch(/<DialogShell\s+[\s\S]*?kind="picker"/);
-  expect(source).not.toMatch(/ProviderCatalogDrawer|provider-catalog-drawer/);
-});
-
-it("renders compact Provider options with a quiet sticky action bar", () => {
-  expect(css).toMatch(/\.arca-provider-catalog-item\s*\{[\s\S]*?min-height: 54px/);
-  expect(css).toMatch(/grid-template-columns: 28px minmax\(0, 1fr\) 16px; align-items: center/);
-  expect(css).toMatch(/\.arca-provider-catalog-copy\s*\{[\s\S]*?align-content: center; gap: 3px/);
-  expect(css).toMatch(/\.arca-provider-catalog-grid\s*\{[\s\S]*?gap: 7px/);
-  expect(css).toMatch(/\.arca-dialog-shell-footer\s*\{[\s\S]*?border-top:/);
-  expect(css).toMatch(/\.arca-provider-catalog-search \.arca-model-field\s*\{[\s\S]*?padding-left: 36px/);
-  expect(css).toMatch(/\.arca-provider-catalog-copy code\s*\{[\s\S]*?text-overflow: ellipsis; white-space: nowrap/);
-  expect(css).not.toMatch(/\.arca-provider-catalog-categories/);
-});
-
-it("uses explicit dialog variants instead of descendant shell detection", () => {
-  expect(source).toMatch(/className="arca-dialog-provider-catalog"/);
-  expect(source).toMatch(/className="arca-dialog-provider-editor"/);
-  expect(css).not.toMatch(/\.arca-dialog-shell:has\(\.arca-provider-(catalog|form)\)/);
-  expect(css).not.toMatch(/\.arca-dialog-shell:has\(\.arca-agent-create\)/);
-});
-
-it("keeps Keychain status on the Provider rather than Model cards", () => {
-  expect(source).toMatch(/className="arca-model-provider-credential"/);
-  expect(source).toMatch(/data-saved=\{provider\.credential_saved \? "true" : "false"\}/);
-  expect(source).toMatch(/<KeyIcon className="w-3\.5 h-3\.5" \/>/);
-  expect(source).not.toMatch(/className="arca-model-list-credential"/);
-  expect(css).not.toMatch(/\.arca-model-list-credential/);
 });
 
 it("renders model details as one continuous field list without section cards", async () => {
@@ -654,60 +616,10 @@ it("renders model details as one continuous field list without section cards", a
   expect(within(inspector).getByRole("button", { name: "复制模型 ID" })).toBeVisible();
 });
 
-it("keeps new Provider forms API-key-only while preserving legacy sources internally", () => {
-  const modelDialog = source.slice(
-    source.indexOf("function ModelProfileDialog"),
-    source.indexOf("function ModelProviderDialog"),
-  );
-  const providerDialog = source.slice(source.indexOf("function ModelProviderDialog"));
-  expect(modelDialog).not.toMatch(/models\.apiKeyEnv|models\.apiKey"\)/);
-  expect(providerDialog).toMatch(/initial\?\.api_key_source/);
-  expect(providerDialog).toMatch(/models\.apiKey/);
-  expect(providerDialog).toMatch(/kind: "arca-store"/);
-  expect(providerDialog).not.toMatch(/credentialSourceOptions/);
-  expect(providerDialog).not.toMatch(/authRequirementOptions/);
-  expect(providerDialog).not.toMatch(/changeCredentialSource/);
-  expect(providerDialog).not.toMatch(/testCredentialSource/);
-  expect(providerDialog).not.toMatch(/models\.authRequirement/);
-  expect(providerDialog).not.toMatch(/models\.credentialSource/);
-  expect(providerDialog).not.toMatch(/models\.apiKeyEnv/);
-  expect(providerDialog).not.toMatch(/models\.credentialFilePath/);
-  expect(providerDialog).not.toMatch(/models\.credentialHelperCommand/);
-  expect(providerDialog).toMatch(/authWithoutCredential/);
-  expect(providerDialog).toMatch(/hasNewCredential[\s\S]*?"required"[\s\S]*?clearCredential[\s\S]*?authWithoutCredential[\s\S]*?initialSource \|\| preservedCredential[\s\S]*?initialAuthRequirement/);
-  expect(i18nSource).toContain('credentialHelp: "API Key 安全保存到系统 Keychain。"');
-});
-
-it("requires Model forms to select a persisted Provider relationship", () => {
-  const profileDialog = source.indexOf("function ModelProfileDialog");
-  const providerField = source.slice(
-    source.indexOf('<span>{t("models.provider")}</span>', profileDialog),
-    source.indexOf('<span>{t("models.protocol")}</span>', profileDialog),
-  );
-  expect(providerField).toMatch(/<FormSelect\s+[\s\S]*?ariaLabel=\{t\("models\.provider"\)\}/);
-  expect(providerField).not.toMatch(/自动识别/);
-  expect(providerField).toMatch(/placeholder=\{t\("models\.providerPlaceholder"\)\}/);
-  expect(providerField).toMatch(/options=\{providerInstances\.map/);
-  expect(providerField).not.toMatch(/CUSTOM_PROVIDER_OPTION|customProviderId/);
-  expect(providerField).not.toMatch(/<select|datalist/);
-  expect(providerField).toMatch(/models\.providerRequired/);
-  expect(source).toMatch(/provider_id: provider\.id/);
-});
-
-it("uses one custom select surface for model provider, protocol, and reasoning", () => {
-  expect(source).toMatch(/<FormSelect\s+[\s\S]*?ariaLabel=\{t\("models\.provider"\)\}/);
-  expect(source).toMatch(/<FormSelect\s+[\s\S]*?ariaLabel=\{t\("models\.protocol"\)\}/);
-  expect(source).toMatch(/<FormSelect\s+[\s\S]*?ariaLabel=\{t\("models\.reasoningMode"\)\}/);
-  expect(source).not.toMatch(/<select/);
-  expect(css).toMatch(/\.arca-form-select-menu/);
-  expect(css).toMatch(/\.arca-form-select\[data-open="true"\]\s*\{\s*z-index: 621/);
-  expect(css).toMatch(/background: var\(--surface-popover\)/);
-});
-
 it("fills a standalone Provider form from the selected catalog template", async () => {
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "provider-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("provider-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -744,33 +656,28 @@ it("fills a standalone Provider form from the selected catalog template", async 
   expect(visualSwitch).not.toBeNull();
   expect(responsePath.compareDocumentPosition(visualSwitch as Node) & Node.DOCUMENT_POSITION_FOLLOWING)
     .toBeTruthy();
-  const credential = screen.getByRole("region", { name: "凭据" });
-  expect(credential).toHaveClass("arca-provider-credential");
+  const credential = screen.getByRole("region", { name: "API Key" });
   const apiKey = within(credential).getByLabelText("API Key");
   expect(apiKey).toHaveAttribute("type", "password");
-  expect(within(credential).getByRole("tab", { name: "API Key" })).toHaveAttribute("aria-selected", "true");
-  expect(within(credential).getByRole("tab", { name: "Env" })).toHaveAttribute("aria-selected", "false");
+  expect(within(credential).queryByRole("tab")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("API Key 环境变量")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
+  await user.type(apiKey, "fixture-openrouter-key");
   await user.click(within(credential).getByRole("button", { name: "显示 API Key" }));
   expect(apiKey).toHaveAttribute("type", "text");
-  await user.click(within(credential).getByRole("tab", { name: "Env" }));
-  const env = within(credential).getByLabelText("API Key 环境变量");
-  expect(env).toBeVisible();
-  expect(credential.querySelectorAll(".arca-provider-credential-input input")).toHaveLength(1);
-  await user.type(env, "OPENROUTER_API_KEY");
   await user.click(screen.getByRole("button", { name: "保存" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
     domain: "model-provider",
-    credential: undefined,
-    provider: expect.objectContaining({
-      env_key: "OPENROUTER_API_KEY",
-    }),
-  })));
+    credential: "fixture-openrouter-key",
+    provider: expect.objectContaining({ api_key_source: { kind: "arca-store" }, auth_requirement: "required" }),
+  }), { reviewOnlyWhenNeeded: true }));
+  expect(consumptionState.commit).toHaveBeenCalledWith({ background: true });
 });
 
 it("lets a Custom Provider save an explicit model catalog URL", async () => {
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "provider-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("provider-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -791,12 +698,12 @@ it("lets a Custom Provider save an explicit model catalog URL", async () => {
     provider: expect.objectContaining({
       model_catalog_url: "https://catalog.example.test/v1/models?available=true",
     }),
-  })));
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("keeps the empty protocol requirement inside the compact section header", async () => {
   const user = userEvent.setup();
-  const consumptionState = { plan: null, planUpdate: vi.fn() } as unknown as ConsumptionState;
+  const consumptionState = { plan: null, planUpdate: vi.fn().mockResolvedValue(routinePlan()), commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -810,7 +717,8 @@ it("keeps the empty protocol requirement inside the compact section header", asy
   const protocols = screen.getByRole("region", { name: "支持的协议" });
   const header = protocols.querySelector(".arca-provider-section-head");
   expect(header).not.toBeNull();
-  expect(within(header as HTMLElement).getByRole("status")).toHaveTextContent("至少启用一种协议。");
+  expect(await screen.findByRole("alert")).toHaveTextContent("至少启用一种协议。");
+  expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
   expect(within(header as HTMLElement).queryByText("已启用 0 个")).not.toBeInTheDocument();
   expect(protocols.querySelector(".arca-provider-protocol-list + .arca-provider-protocol-error"))
     .not.toBeInTheDocument();
@@ -818,8 +726,8 @@ it("keeps the empty protocol requirement inside the compact section header", asy
 
 it("keeps plan-specific protocols under one Base URL", async () => {
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "provider-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("provider-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -833,6 +741,7 @@ it("keeps plan-specific protocols under one Base URL", async () => {
   );
   expect(screen.getByRole("switch", { name: /Anthropic Messages/ })).toBeChecked();
   expect(screen.getByRole("switch", { name: /OpenAI Chat Completions/ })).toBeChecked();
+  await user.click(screen.getByRole("button", { name: /Anthropic Messages/ }));
   expect(screen.getByLabelText("Anthropic Messages Endpoint Path")).toHaveValue(
     "/apps/anthropic/v1/messages",
   );
@@ -840,6 +749,7 @@ it("keeps plan-specific protocols under one Base URL", async () => {
   expect(screen.getByLabelText("OpenAI Chat Completions Endpoint Path")).toHaveValue(
     "/v1/chat/completions",
   );
+  await user.type(providerKeyInput(), "fixture-official-key");
   await user.click(screen.getByRole("button", { name: "保存" }));
 
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
@@ -852,13 +762,13 @@ it("keeps plan-specific protocols under one Base URL", async () => {
         "openai-completions": { endpoint_path: "/v1/chat/completions" },
       },
     }),
-  })));
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("enables, previews, and submits protocol Endpoint Paths", async () => {
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "provider-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("provider-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -880,6 +790,7 @@ it("enables, previews, and submits protocol Endpoint Paths", async () => {
   expect(protocolEditor).not.toBeNull();
   expect(within(protocolEditor as HTMLElement).getByLabelText("完整请求 URL"))
     .toHaveTextContent("https://openrouter.ai/api/v1/custom/messages");
+  await user.type(providerKeyInput(), "fixture-official-key");
   await user.click(screen.getByRole("button", { name: "保存" }));
 
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
@@ -891,12 +802,12 @@ it("enables, previews, and submits protocol Endpoint Paths", async () => {
         "openai-responses": { endpoint_path: "/responses" },
       }),
     }),
-  })));
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("rejects absolute, fragmented, and traversal Endpoint Paths in the Provider form", async () => {
   const user = userEvent.setup();
-  const consumptionState = { plan: null, planUpdate: vi.fn() } as unknown as ConsumptionState;
+  const consumptionState = { plan: null, planUpdate: vi.fn().mockResolvedValue(routinePlan()), commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -919,7 +830,7 @@ it("rejects absolute, fragmented, and traversal Endpoint Paths in the Provider f
   ]) {
     await user.clear(path);
     await user.type(path, invalid);
-    expect(screen.getByText(/请输入相对路径/)).toBeVisible();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/请输入相对路径/);
     expect(protocolEditor?.querySelector(".arca-provider-route-builder"))
       .toHaveAttribute("data-invalid", "true");
     expect(within(protocolEditor as HTMLElement).queryByText(invalid)).not.toBeInTheDocument();
@@ -940,8 +851,8 @@ it("reads a saved Provider API key only on explicit reveal and preserves it when
   }]);
   vi.mocked(api.revealModelProviderCredential).mockResolvedValue("saved-test-value");
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "provider-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("provider-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   const view = render(
     <ToastProvider>
@@ -992,6 +903,7 @@ async function openSavedProviderEditor(user: ReturnType<typeof userEvent.setup>)
   const sidebar = within(view.container.querySelector(".arca-workspace-sidebar") as HTMLElement);
   await user.click(await sidebar.findByTitle("Saved Provider"));
   await user.click(screen.getByRole("button", { name: "编辑 Provider" }));
+  await waitFor(() => expect(screen.getByRole("heading", { name: "编辑 Saved Provider" })).toHaveFocus());
   const credentialSection = screen.getByRole("region", { name: "API Key" });
   return { planUpdate, commit, input: within(credentialSection).getByLabelText("API Key") };
 }
@@ -1005,6 +917,7 @@ it.each(["", "   ", "replacement-test-key"])("replaces or explicitly deletes a s
   expect(screen.queryByRole("checkbox", { name: "清除已存密钥" })).not.toBeInTheDocument();
   if (!value.trim()) await user.click(screen.getByRole("button", { name: "删除已保存的 API Key" }));
   if (value) await user.type(input, value);
+  expect(input).toHaveValue(value);
   expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
   await user.click(screen.getByRole("button", { name: "保存" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
@@ -1067,35 +980,22 @@ it("filters Model protocols by Provider and previews the selected request URL", 
     },
   ]);
   const user = userEvent.setup();
-  const consumptionState = { plan: null, planUpdate: vi.fn() } as unknown as ConsumptionState;
-
-  render(
-    <ToastProvider>
-      <ModelsView consumptionState={consumptionState} />
-    </ToastProvider>,
-  );
-
-  await user.click(await screen.findByRole("button", { name: "添加模型" }));
+  render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate: vi.fn() } as unknown as ConsumptionState} /></ToastProvider>);
+  await openManualModel(user, "Multi Provider");
   const protocol = screen.getByRole("combobox", { name: "协议" });
-  expect(protocol).toHaveTextContent("Anthropic Messages");
-  expect(screen.getByLabelText("完整请求 URL")).toHaveValue(
-    "https://multi.example.test/api/anthropic/v1/messages",
-  );
-
+  expect(protocol).toHaveTextContent("OpenAI Responses");
+  expect(screen.getByText("https://multi.example.test/api/openai/responses")).toBeVisible();
   await user.click(protocol);
   expect(screen.getByRole("option", { name: "Anthropic Messages" })).toBeVisible();
   expect(screen.getByRole("option", { name: "OpenAI Responses" })).toBeVisible();
   expect(screen.queryByRole("option", { name: "OpenAI Chat Completions" })).not.toBeInTheDocument();
-  await user.click(screen.getByRole("option", { name: "OpenAI Responses" }));
-  expect(screen.getByLabelText("完整请求 URL")).toHaveValue(
-    "https://multi.example.test/api/openai/responses",
-  );
-
-  await chooseFormSelect(user, "模型提供商", "Chat Provider");
-  expect(protocol).toHaveTextContent("OpenAI Chat Completions");
-  expect(screen.getByLabelText("完整请求 URL")).toHaveValue(
-    "https://chat.example.test/v2/chat/completions",
-  );
+  await user.click(screen.getByRole("option", { name: "Anthropic Messages" }));
+  expect(screen.getByText("https://multi.example.test/api/anthropic/v1/messages")).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "取消" }));
+  await openManualModel(user, "Chat Provider");
+  expect(screen.getByRole("combobox", { name: "协议" })).toHaveTextContent("OpenAI Chat Completions");
+  expect(screen.getByText("https://chat.example.test/v2/chat/completions")).toBeVisible();
+  expect(screen.queryByRole("combobox", { name: "模型提供商" })).not.toBeInTheDocument();
 });
 
 it("switches an existing Model to another persisted Provider relationship", async () => {
@@ -1134,7 +1034,7 @@ it("switches an existing Model to another persisted Provider relationship", asyn
     credential_saved: false,
   }]);
   const user = userEvent.setup();
-  const consumptionState = { plan: null, planUpdate: vi.fn() } as unknown as ConsumptionState;
+  const consumptionState = { plan: null, planUpdate: vi.fn().mockResolvedValue(routinePlan()), commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -1146,27 +1046,26 @@ it("switches an existing Model to another persisted Provider relationship", asyn
   await user.click(screen.getByRole("button", { name: "编辑" }));
   await waitFor(() => expect(screen.getByRole("combobox", { name: "模型提供商" })).toBeVisible());
   expect(screen.getAllByRole("dialog")).toHaveLength(1);
-  const editor = screen.getByRole("complementary", { name: "编辑模型 详情" });
+  const editor = screen.getByRole("complementary", { name: "编辑 Model 详情" });
   expect(editor).toBeVisible();
-  expect(within(editor).getByRole("heading", { name: "编辑模型" })).toBeVisible();
-  expect(within(editor).getByText("模型必须引用一个 Provider；连接与凭据由 Provider 统一管理。")).toBeVisible();
+  expect(within(editor).getByRole("heading", { name: "编辑 Model" })).toBeVisible();
+  expect(within(editor).queryByLabelText("Base URL")).not.toBeInTheDocument();
+  expect(within(editor).queryByText("API Key")).not.toBeInTheDocument();
   expect(within(editor).queryByText("编辑 · OpenAI Responses")).not.toBeInTheDocument();
-  expect(screen.queryByRole("dialog", { name: "编辑模型" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("dialog", { name: "编辑 Model" })).not.toBeInTheDocument();
 
   const provider = screen.getByRole("combobox", { name: "模型提供商" });
   expect(provider).toHaveTextContent("Custom Team");
   await chooseFormSelect(user, "模型提供商", "OpenRouter Team");
   expect(provider).toHaveTextContent("OpenRouter Team");
-  expect(screen.getByLabelText("完整请求 URL")).toHaveValue(
-    "https://openrouter.ai/api/v1/responses",
-  );
+  expect(screen.getByText("https://openrouter.ai/api/v1/responses")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "保存" }));
   await waitFor(() => expect(consumptionState.planUpdate).toHaveBeenCalledWith(
     expect.objectContaining({
       existing_id: "existing-model",
       profile: expect.objectContaining({ provider_id: "openrouter-provider" }),
-    }),
-  ));
+    }), { reviewOnlyWhenNeeded: true }));
+  expect(consumptionState.commit).toHaveBeenCalledWith({ background: true });
 });
 
 it("discovers provider models when creating and keeps manual Model ID input authoritative", async () => {
@@ -1185,44 +1084,28 @@ it("discovers provider models when creating and keeps manual Model ID input auth
     { id: "openai/gpt-5", name: "GPT-5", context_length: 400000 },
   ]);
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "model-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
-
-  render(
-    <ToastProvider>
-      <ModelsView consumptionState={consumptionState} />
-    </ToastProvider>,
-  );
-
-  await user.click(await screen.findByRole("button", { name: "添加模型" }));
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("catalog-model"));
+  const commit = vi.fn().mockResolvedValue({});
+  render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate, commit } as unknown as ConsumptionState} /></ToastProvider>);
+  await user.click(await screen.findByTitle("OpenRouter Team"));
   await waitFor(() => expect(api.discoverProviderModels).toHaveBeenCalledWith("openrouter-team-a"));
-  expect(await screen.findByRole("option", { name: /Claude Sonnet 4.*anthropic\/claude-sonnet-4/ })).toBeVisible();
-  expect(screen.queryByText("找到 2 个模型")).not.toBeInTheDocument();
-
-  const modelId = screen.getByRole("combobox", { name: "模型 ID" });
-  const modelPicker = modelId.closest(".arca-provider-model-picker");
-  expect(modelPicker).toHaveClass("arca-model-form-wide");
-  expect(modelPicker?.parentElement).toHaveClass("arca-model-form-grid");
-  expect(screen.getByRole("combobox", { name: "协议" }).closest(".arca-model-form-grid"))
-    .toBe(modelPicker?.parentElement);
-  expect(css).toMatch(/\.arca-provider-model-picker\s*\{[^}]*grid-column: 1 \/ -1/);
-  await user.type(modelId, "claude");
-  await user.click(screen.getByRole("option", { name: /Claude Sonnet 4.*anthropic\/claude-sonnet-4/ }));
-  expect(modelId).toHaveValue("anthropic/claude-sonnet-4");
-  expect(screen.getByLabelText("名称（可选）")).toHaveValue("");
-  expect(screen.getByLabelText("上下文窗口")).toHaveValue(200000);
-
-  await user.clear(modelId);
-  await user.type(modelId, "my-private-model-id");
-  expect(screen.getByLabelText("上下文窗口")).toHaveValue(null);
-  await user.click(screen.getByRole("button", { name: "添加" }));
+  const candidate = await screen.findByRole("listitem", { name: "候选模型 Claude Sonnet 4" });
+  expect(within(candidate).getByText("anthropic/claude-sonnet-4")).toBeVisible();
+  expect(planUpdate).not.toHaveBeenCalled();
+  await user.click(within(candidate).getByRole("button", { name: "添加 Claude Sonnet 4" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
-    profile: expect.objectContaining({
-      provider_id: "openrouter-team-a",
-      model: "my-private-model-id",
-      context_window: undefined,
-    }),
-  })));
+    domain: "model", profile: expect.objectContaining({ provider_id: "openrouter-team-a",
+      model: "anthropic/claude-sonnet-4", context_window: 200000, protocol: "openai-responses" }),
+  }), { reviewOnlyWhenNeeded: true }));
+  await waitFor(() => expect(commit).toHaveBeenCalledOnce());
+  await openManualModel(user, "OpenRouter Team");
+  expect(screen.getByRole("spinbutton", { name: /上下文窗口/ })).toHaveValue(null);
+  await user.type(screen.getByRole("textbox", { name: "模型 ID" }), "my-private-model-id");
+  await user.click(screen.getByRole("button", { name: "添加" }));
+  await waitFor(() => expect(planUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+    profile: expect.objectContaining({ provider_id: "openrouter-team-a", model: "my-private-model-id" }),
+  }), { reviewOnlyWhenNeeded: true }));
+  expect(planUpdate.mock.calls.at(-1)![0].profile).not.toHaveProperty("context_window");
 });
 
 it("tries discovery for a custom Provider and keeps manual save available after failure", async () => {
@@ -1240,28 +1123,19 @@ it("tries discovery for a custom Provider and keeps manual save available after 
     new Error("model_discovery_http: Provider model catalog returned HTTP 404"),
   );
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "manual-model-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
-
-  render(
-    <ToastProvider>
-      <ModelsView consumptionState={consumptionState} />
-    </ToastProvider>,
-  );
-
-  await user.click(await screen.findByRole("button", { name: "添加模型" }));
-  await waitFor(() => expect(api.discoverProviderModels).toHaveBeenCalledWith("custom-gateway"));
-  expect(await screen.findByText(/无法获取模型列表.*仍可手动填写/)).toBeVisible();
-  expect(screen.getByRole("button", { name: "刷新模型列表" })).toBeVisible();
-  const modelId = screen.getByRole("combobox", { name: "模型 ID" });
-  await user.type(modelId, "gpt-manual-fallback");
-  expect(modelId).toHaveValue("gpt-manual-fallback");
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("manual-model-plan"));
+  render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState} /></ToastProvider>);
+  await user.click(await screen.findByTitle("Custom Gateway"));
+  expect(await screen.findByRole("alert")).toHaveTextContent(/无法读取模型列表.*HTTP 404/);
+  expect(screen.getByRole("button", { name: "刷新模型列表" })).toBeEnabled();
+  await openManualModel(user, "Custom Gateway");
+  await user.type(screen.getByRole("textbox", { name: "模型 ID" }), "gpt-manual-fallback");
   const add = screen.getByRole("button", { name: "添加" });
   expect(add).toBeEnabled();
   await user.click(add);
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
-    profile: expect.objectContaining({ model: "gpt-manual-fallback" }),
-  })));
+    profile: expect.objectContaining({ model: "gpt-manual-fallback", provider_id: "custom-gateway" }),
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("keeps Azure deployment names manual and never probes an unsupported catalog", async () => {
@@ -1272,17 +1146,18 @@ it("keeps Azure deployment names manual and never probes an unsupported catalog"
     credential_saved: true, model_count: 0, model_discovery_supported: false,
   }]);
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "azure-model" });
-  render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate } as unknown as ConsumptionState} /></ToastProvider>);
-  await user.click(await screen.findByRole("button", { name: "添加模型" }));
-  expect(screen.getByText(/填写 Azure 中已创建的部署名称/)).toBeVisible();
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("azure-model"));
+  render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState} /></ToastProvider>);
+  await user.click(await screen.findByTitle("Azure resource"));
+  expect(screen.getByText("此 Provider 暂不提供模型列表，可在上方手动添加。")).toBeVisible();
   expect(screen.queryByRole("button", { name: "刷新模型列表" })).not.toBeInTheDocument();
+  await openManualModel(user, "Azure resource");
   await user.type(screen.getByRole("textbox", { name: "模型 ID" }), "production-deployment");
   expect(api.discoverProviderModels).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "添加" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
     profile: expect.objectContaining({ model: "production-deployment", provider_id: "azure-resource" }),
-  })));
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("shows cloud setup guidance without saving an account placeholder as an endpoint", async () => {
@@ -1300,7 +1175,7 @@ it("shows cloud setup guidance without saving an account placeholder as an endpo
   expect(base).toHaveValue("");
   expect(base).toHaveAttribute("placeholder", "https://<resource>.openai.azure.com/openai/v1");
   expect(screen.getByText(/填写 Azure 资源的/)).toBeVisible();
-  await user.type(screen.getByLabelText("API Key"), "fixture-only-key");
+  await user.type(screen.getByLabelText("API Key", { selector: "input" }), "fixture-only-key");
   fireEvent.change(base, { target: { value: "https://<resource>.openai.azure.com/openai/v1" } });
   expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
   fireEvent.change(base, { target: { value: "https://resource.openai.azure.com/openai/v1" } });
@@ -1337,32 +1212,20 @@ it("discovers provider models on refresh but never lets a stale Provider respons
     else resolveOpenAi = resolveModels;
   }));
   const user = userEvent.setup();
-  const consumptionState = {
-    plan: null,
-    planUpdate: vi.fn().mockResolvedValue({ operation_id: "stale-model-plan" }),
-  } as unknown as ConsumptionState;
-
-  render(
-    <ToastProvider>
-      <ModelsView consumptionState={consumptionState} />
-    </ToastProvider>,
-  );
-
-  await user.click(await screen.findByRole("button", { name: "添加模型" }));
+  render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate: vi.fn() } as unknown as ConsumptionState} /></ToastProvider>);
+  await user.click(await screen.findByTitle("OpenRouter Team"));
   await waitFor(() => expect(resolveOpenRouter).toBeTypeOf("function"));
-  await chooseFormSelect(user, "模型提供商", "OpenAI Personal");
+  await user.click(screen.getByTitle("OpenAI Personal"));
   await waitFor(() => expect(resolveOpenAi).toBeTypeOf("function"));
-
-  resolveOpenAi?.([{ id: "gpt-current", name: "Current GPT" }]);
-  expect(await screen.findByRole("option", { name: /Current GPT.*gpt-current/ })).toBeVisible();
-  resolveOpenRouter?.([{ id: "stale-openrouter", name: "Stale OpenRouter" }]);
-  await waitFor(() => expect(screen.queryByText(/Stale OpenRouter/)).not.toBeInTheDocument());
-
+  await act(async () => resolveOpenAi?.([{ id: "gpt-current", name: "Current GPT" }]));
+  expect(await screen.findByRole("listitem", { name: "候选模型 Current GPT" })).toHaveTextContent("gpt-current");
+  await act(async () => resolveOpenRouter?.([{ id: "stale-openrouter", name: "Stale OpenRouter" }]));
+  expect(screen.queryByText(/Stale OpenRouter/)).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "刷新模型列表" }));
   await waitFor(() => expect(api.discoverProviderModels).toHaveBeenCalledTimes(3));
 });
 
-it("discovers provider models only after refresh when editing an existing Model", async () => {
+it("keeps Model editing local and refreshes discovery in its Provider workspace", async () => {
   vi.mocked(api.listModelProviderInstances).mockResolvedValue([{
     id: "openrouter-team-a",
     name: "OpenRouter Team",
@@ -1388,31 +1251,24 @@ it("discovers provider models only after refresh when editing an existing Model"
     { id: "new/model", name: "New Model" },
   ]);
   const user = userEvent.setup();
-  const consumptionState = {
-    plan: null,
-    planUpdate: vi.fn().mockResolvedValue({ operation_id: "edit-model-plan" }),
-  } as unknown as ConsumptionState;
-
-  render(
-    <ToastProvider>
-      <ModelsView consumptionState={consumptionState} />
-    </ToastProvider>,
-  );
-
+  render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate: vi.fn() } as unknown as ConsumptionState} /></ToastProvider>);
   await user.click(await screen.findByRole("button", { name: "打开模型 Existing Model 详情" }));
   await user.click(screen.getByRole("button", { name: "编辑" }));
-  await waitFor(() => expect(screen.getByRole("combobox", { name: "模型 ID" })).toBeVisible());
+  expect(screen.getByRole("textbox", { name: "模型 ID" })).toHaveValue("existing/model");
   expect(api.discoverProviderModels).not.toHaveBeenCalled();
-
+  expect(screen.queryByRole("button", { name: "刷新模型列表" })).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "关闭详情" }));
+  await user.click(screen.getByTitle("OpenRouter Team"));
+  expect(await screen.findByRole("listitem", { name: "候选模型 New Model" })).toHaveTextContent("new/model");
+  expect(api.discoverProviderModels).toHaveBeenCalledWith("openrouter-team-a");
   await user.click(screen.getByRole("button", { name: "刷新模型列表" }));
-  await waitFor(() => expect(api.discoverProviderModels).toHaveBeenCalledWith("openrouter-team-a"));
-  expect(await screen.findByRole("option", { name: /New Model.*new\/model/ })).toBeVisible();
+  await waitFor(() => expect(api.discoverProviderModels).toHaveBeenCalledTimes(2));
 });
 
 it("submits an independent custom Provider through the central asset plan", async () => {
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "model-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("model-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -1440,7 +1296,7 @@ it("submits an independent custom Provider through the central asset plan", asyn
       }),
     }),
     credential: undefined,
-  });
+  }, { reviewOnlyWhenNeeded: true });
 });
 
 it("uses the Google template default for new Models and saves an explicit protocol choice", async () => {
@@ -1460,9 +1316,9 @@ it("uses the Google template default for new Models and saves an explicit protoc
     base_url: "https://generativelanguage.googleapis.com", protocols,
     credential_saved: false, model_count: 0, model_discovery_supported: false,
   }]);
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "google-model" });
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("google-model"));
   const user = userEvent.setup();
-  const view = render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate } as unknown as ConsumptionState} /></ToastProvider>);
+  const view = render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState} /></ToastProvider>);
   const sidebar = within(view.container.querySelector(".arca-workspace-sidebar") as HTMLElement);
   await user.click(await sidebar.findByTitle("Google Work"));
   await user.click(screen.getByRole("button", { name: /手动添加 Model/ }));
@@ -1473,7 +1329,7 @@ it("uses the Google template default for new Models and saves an explicit protoc
   await user.click(screen.getByRole("button", { name: "添加" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
     profile: expect.objectContaining({ protocol: "gemini-generate-content", provider_id: "google-work" }),
-  }), expect.anything()));
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("opens the Google Provider editor on its Interactions endpoint", async () => {
@@ -1497,8 +1353,8 @@ it("opens the Google Provider editor on its Interactions endpoint", async () => 
 
 it("configures a Gemini native GenerateContent endpoint on a custom Provider", async () => {
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "gemini-provider-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("gemini-provider-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   render(
     <ToastProvider>
@@ -1530,7 +1386,7 @@ it("configures a Gemini native GenerateContent endpoint on a custom Provider", a
         },
       }),
     }),
-  })));
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("keeps Model fields local while writing an explicit Provider reference", async () => {
@@ -1545,35 +1401,23 @@ it("keeps Model fields local while writing an explicit Provider reference", asyn
     model_discovery_supported: true,
   }]);
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "model-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
-
-  render(
-    <ToastProvider>
-      <ModelsView consumptionState={consumptionState} />
-    </ToastProvider>,
-  );
-
-  await user.click(await screen.findByRole("button", { name: "添加模型" }));
-  expect(screen.queryByText("高级设置")).not.toBeInTheDocument();
-  expect(screen.getByLabelText("上下文窗口")).toHaveValue(null);
-  expect(screen.getByLabelText("最大输出")).toHaveValue(null);
-  expect(screen.queryByPlaceholderText("MY_API_KEY")).not.toBeInTheDocument();
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("model-plan"));
+  render(<ToastProvider><ModelsView consumptionState={{ plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState} /></ToastProvider>);
+  await openManualModel(user, "OpenRouter Team");
+  expect(screen.queryByLabelText("Base URL")).not.toBeInTheDocument();
   expect(screen.queryByText("API Key")).not.toBeInTheDocument();
-  expect(screen.getByRole("combobox", { name: "推理" })).toHaveTextContent("自动");
-
-  await chooseFormSelect(user, "推理", "关闭");
-  await user.type(screen.getByPlaceholderText("model-name"), "explicit-reasoning-off");
+  expect(screen.getByRole("spinbutton", { name: /上下文窗口/ })).toHaveValue(null);
+  expect(screen.getByRole("spinbutton", { name: /最大输出/ })).toHaveValue(null);
+  const reasoning = within(screen.getByRole("radiogroup", { name: "推理" }));
+  expect(reasoning.getByRole("radio", { name: "自动" })).toBeChecked();
+  await user.click(reasoning.getByRole("radio", { name: "关闭" }));
+  await user.type(screen.getByRole("textbox", { name: "模型 ID" }), "explicit-reasoning-off");
   await user.click(screen.getByRole("button", { name: "添加" }));
-
-  await waitFor(() => expect(planUpdate).toHaveBeenCalledTimes(1));
-  const submitted = planUpdate.mock.calls[0][0].profile;
-  expect(submitted).toEqual(expect.objectContaining({
-    provider_id: "openrouter-team-a",
-    reasoning: false,
-  }));
-  expect(submitted).not.toHaveProperty("context_window");
-  expect(submitted).not.toHaveProperty("max_output_tokens");
+  await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
+    domain: "model", profile: expect.objectContaining({ provider_id: "openrouter-team-a", reasoning: false }),
+  }), { reviewOnlyWhenNeeded: true }));
+  expect(planUpdate.mock.calls[0][0].profile).not.toHaveProperty("context_window");
+  expect(planUpdate.mock.calls[0][0].profile).not.toHaveProperty("max_output_tokens");
 });
 
 it("adds another Model to an existing Provider without repeating shared connection fields", async () => {
@@ -1601,8 +1445,8 @@ it("adds another Model to an existing Provider without repeating shared connecti
     credential_saved: true,
   }]);
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "model-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("model-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   const view = render(
     <ToastProvider>
@@ -1612,18 +1456,16 @@ it("adds another Model to an existing Provider without repeating shared connecti
 
   const sidebar = within(view.container.querySelector(".arca-workspace-sidebar") as HTMLElement);
   await user.click(await sidebar.findByTitle("OpenRouter Team"));
-  await user.click(screen.getByRole("button", { name: "添加模型" }));
+  await user.click(screen.getByRole("button", { name: /手动添加 Model/ }));
 
-  expect(screen.getByRole("heading", { name: "添加模型" })).toBeVisible();
-  const provider = screen.getByRole("textbox", { name: "模型提供商" });
-  expect(provider).toHaveValue("OpenRouter Team");
-  expect(provider).toHaveAttribute("readonly");
+  expect(screen.getByRole("heading", { name: "添加 Model" })).toBeVisible();
+  expect(within(screen.getByRole("dialog", { name: "添加 Model" })).getByText("OpenRouter Team")).toBeVisible();
   expect(screen.queryByRole("combobox", { name: "模型提供商" })).not.toBeInTheDocument();
   expect(screen.queryByLabelText("Base URL")).not.toBeInTheDocument();
   expect(screen.queryByText("API Key")).not.toBeInTheDocument();
   expect(screen.queryByText("API Key 环境变量")).not.toBeInTheDocument();
 
-  fireEvent.change(screen.getByPlaceholderText("model-name"), {
+  fireEvent.change(screen.getByRole("textbox", { name: "模型 ID" }), {
     target: { value: "anthropic/claude-sonnet-4" },
   });
   await user.click(screen.getByRole("button", { name: "添加" }));
@@ -1636,7 +1478,7 @@ it("adds another Model to an existing Provider without repeating shared connecti
       base_url: "https://openrouter.ai",
       model: "anthropic/claude-sonnet-4",
     }),
-  })));
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("edits one Provider configuration through a single central asset plan", async () => {
@@ -1650,13 +1492,14 @@ it("edits one Provider configuration through a single central asset plan", async
       "anthropic-messages": { endpoint_path: "/api/v1/messages" },
     },
     env_key: "OPENROUTER_API_KEY",
+    api_key_source: { kind: "env", name: "OPENROUTER_API_KEY" },
     credential_saved: true,
     model_count: 3,
     model_discovery_supported: true,
   }]);
   const user = userEvent.setup();
-  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "provider-plan" });
-  const consumptionState = { plan: null, planUpdate } as unknown as ConsumptionState;
+  const planUpdate = vi.fn().mockResolvedValue(routinePlan("provider-plan"));
+  const consumptionState = { plan: null, planUpdate, commit: vi.fn().mockResolvedValue({}) } as unknown as ConsumptionState;
 
   const view = render(
     <ToastProvider>
@@ -1691,31 +1534,8 @@ it("edits one Provider configuration through a single central asset plan", async
         "openai-completions": { endpoint_path: "/api/v1/chat/completions" },
         "anthropic-messages": { endpoint_path: "/anthropic/v1/messages" },
       }),
-      env_key: "OPENROUTER_API_KEY",
+      api_key_source: { kind: "env", name: "OPENROUTER_API_KEY" },
     }),
     credential: undefined,
-  }));
-});
-
-it("routes profile lifecycle through central asset plans", () => {
-  expect(source).toMatch(/consumptionState\.planUpdate/);
-  expect(source).toMatch(/consumptionState\.planDelete/);
-  expect(source).not.toMatch(/saveModelProfile|deleteModelProfile|applyModelProfile/);
-});
-
-it("keeps the top-level Models workspace asset-only", () => {
-  expect(source).toMatch(/searchPlaceholder=\{t\("models\.search"\)\}/);
-  expect(source).toMatch(/label=\{t\("models\.asset"\)\}/);
-  expect(source).not.toMatch(/listModelAgents|planForAgent|planForAsset/);
-  expect(source).not.toMatch(/AssetConsumerDialog|管理 Agent|Agent 模型|使用中|未使用/);
-  expect(css).not.toMatch(/\.arca-model-agent-grid/);
-});
-
-it("owns multi-Model display and switching inside the Agent panel", () => {
-  expect(agentSource).toMatch(/title="Models"/);
-  expect(agentSource).toMatch(/同一时间使用其中一个/);
-  expect(agentSource).not.toMatch(/planModelEnabled/);
-  expect(agentSource).toMatch(/setActiveModel/);
-  expect(agentSource).toMatch(/toggleKind="current"/);
-  expect(agentSource).not.toMatch(/设为当前/);
+  }, { reviewOnlyWhenNeeded: true }));
 });

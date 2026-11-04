@@ -155,11 +155,14 @@ pub fn list_native_resources(agent_id: &str) -> crate::domain::plugin::NativeRes
     project_host_resources(&mut inventory, &scope);
     sort_inventory(&mut inventory);
     let native_skills = crate::resources::plugin::skill_observations(&inventory.native_plugins);
+    let (configured_mcps, configured_unavailable) = crate::resources::mcp::inspection::configured_observations(agent_id);
     crate::domain::plugin::NativeResourceInventory {
         native_plugin_agents: inventory.native_plugin_agents,
         host_mcps: inventory.host_mcps,
         native_plugins: inventory.native_plugins,
         native_skills,
+        configured_mcps,
+        configured_unavailable,
         unavailable: !inventory.capability_errors.is_empty(),
     }
 }

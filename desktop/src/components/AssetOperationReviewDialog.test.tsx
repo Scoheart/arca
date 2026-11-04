@@ -1,4 +1,4 @@
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { renderWithNotifications as render } from "../test/renderWithNotifications";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
@@ -29,6 +29,7 @@ it("commits an explicit convergence plan without a second conflict protocol", as
 it("shows central lifecycle impact independently from relationship changes", () => {
   const plan = assetOperationPlanFixture();
   plan.kind = "delete-asset";
+  plan.domain_plan = { domain: "model", before: {}, after: {} };
   plan.central_changes = [{
     asset: { domain: "model", profile_id: "work" },
     action: "delete",
@@ -88,9 +89,9 @@ it("presents Agent assignment as a direct add action", () => {
     />,
   );
 
-  expect(screen.getByRole("heading", { name: "确认添加 MCP" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "确认添加 MCPs" })).toBeVisible();
   expect(screen.getAllByText("Claude Code")).toHaveLength(2);
-  expect(screen.getByRole("button", { name: "添加 MCP" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "添加 MCPs" })).toBeEnabled();
   expect(screen.getByText("Agent 变更")).toBeVisible();
   expect(screen.queryByText(/desired relationship/)).not.toBeInTheDocument();
 });
@@ -152,11 +153,11 @@ it("shows an MCP enabled-state change separately from relationship changes", () 
 
   expect(screen.getByRole("heading", { name: "启用状态变化" })).toBeVisible();
   expect(screen.getByText("停用")).toHaveAttribute("data-action", "disable");
-  expect(screen.getByText("MCP · GitHub")).toBeVisible();
+  expect(screen.getByText("MCPs · GitHub")).toBeVisible();
   expect(screen.getByText("Claude Code：已启用 → 已停用")).toBeVisible();
   expect(screen.queryByRole("heading", { name: "Agent 变更" })).not.toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "确认停用 MCP" })).toBeVisible();
-  expect(screen.getByRole("button", { name: "停用 MCP" })).toBeEnabled();
+  expect(screen.getByRole("heading", { name: "确认停用 MCPs" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "停用 MCPs" })).toBeEnabled();
 });
 
 it("shows the physical target and all readers for a shared Skill state change", () => {
@@ -193,12 +194,12 @@ it("shows the physical target and all readers for a shared Skill state change", 
   );
 
   expect(screen.getByText("启用")).toHaveAttribute("data-action", "enable");
-  expect(screen.getByText("Skill · Review Changes")).toBeVisible();
+  expect(screen.getByText("Skills · Review Changes")).toBeVisible();
   expect(screen.getByText("Codex：已停用 → 已启用")).toBeVisible();
   expect(screen.getByText("同步影响 Codex、Cursor")).toBeVisible();
   expect(screen.getByText("共享目标 ~/.agents/skills")).toBeVisible();
-  expect(screen.getByRole("heading", { name: "确认启用 Skill" })).toBeVisible();
-  expect(screen.getByRole("button", { name: "启用 Skill" })).toBeEnabled();
+  expect(screen.getByRole("heading", { name: "确认启用 Skills" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "启用 Skills" })).toBeEnabled();
 });
 
 it("distinguishes adding a Model from switching the current Model", () => {
@@ -287,7 +288,7 @@ it("keeps a Model enabled-state delta in the richer Model state review without d
     />,
   );
 
-  expect(screen.getByRole("heading", { name: "Model 状态变化" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Models 状态变化" })).toBeVisible();
   expect(screen.queryByRole("heading", { name: "启用状态变化" })).not.toBeInTheDocument();
   expect(screen.getByText("已添加 · 已停用 → 已启用 · 非当前")).toBeVisible();
   expect(screen.getByRole("heading", { name: "确认启用 Model" })).toBeVisible();
@@ -343,6 +344,7 @@ it("labels a non-current Model addition as a backup without raw conflict codes",
   expect(screen.getByRole("heading", { name: "确认添加备选 Model" })).toBeVisible();
   expect(screen.getByRole("button", { name: "添加备选 Model" })).toBeEnabled();
   expect(screen.getByText("未添加 → 已启用 · 非当前")).toBeVisible();
+  fireEvent.click(screen.getByText("写入位置"));
   expect(screen.getByText("~/.pi/agent/models.json")).toBeVisible();
   expect(screen.queryByText("~/.pi/agent/settings.json")).not.toBeInTheDocument();
   expect(screen.queryByText(/model_active_state_drift|model_external_current/)).not.toBeInTheDocument();
@@ -366,8 +368,8 @@ it("translates Model conflict warnings into user-facing copy", () => {
     />,
   );
 
-  expect(screen.getByText("Pi：当前 Model 与 Arca 记录不一致，请先刷新或重新选择当前 Model")).toBeVisible();
-  expect(screen.getByText("Pi：当前 Model 由 Agent 外部配置管理，切换前需要先让 Arca 接管")).toBeVisible();
+  expect(screen.getByText("Pi Coding Agent：当前 Model 与 Arca 记录不一致，请先刷新或重新选择当前 Model")).toBeVisible();
+  expect(screen.getByText("Pi Coding Agent：当前 Model 由 Agent 外部配置管理，切换前需要先让 Arca 接管")).toBeVisible();
   expect(screen.queryByText(/pi: model_/)).not.toBeInTheDocument();
 });
 
@@ -424,6 +426,7 @@ it("explains Claude Desktop plaintext credential export in the shared Model revi
   expect(screen.getByRole("heading", { name: "确认添加当前 Model" })).toBeVisible();
   expect(screen.getByRole("button", { name: "添加 Model" })).toBeEnabled();
   expect(screen.getByText("Agent 变更")).toBeVisible();
+  fireEvent.click(screen.getByText("写入位置"));
   expect(screen.getByText("~/Library/Application Support/Claude/claude_desktop_config.json")).toBeVisible();
   expect(screen.getByText(
     "Claude：将把所选 Provider 的 API Key 写入 Claude 的私有配置文件（权限 0600）",
@@ -468,14 +471,14 @@ it("presents a Model removal as a readable danger summary", () => {
     />,
   );
 
-  expect(screen.getByRole("heading", { name: "确认移除 Model" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "确认移除 Models" })).toBeVisible();
   expect(screen.getByText(/将从/)).toHaveTextContent(
-    "将从Claude Code移除 Model · OpenRouter 自用。",
+    "将从Claude Code移除 Models · OpenRouter 自用。",
   );
   expect(screen.getByText("移除")).toHaveAttribute("data-action", "remove");
-  expect(screen.getByText("Model · OpenRouter 自用")).toBeVisible();
-  expect(screen.getByRole("button", { name: "移除 Model" })).toHaveClass("btn-danger");
-  expect(screen.getByRole("dialog", { name: "确认移除 Model" })).toHaveAttribute("aria-modal", "true");
+  expect(screen.getByText("Models · OpenRouter 自用")).toBeVisible();
+  expect(screen.getByRole("button", { name: "移除 Models" })).toHaveClass("btn-danger");
+  expect(screen.getByRole("dialog", { name: "确认移除 Models" })).toHaveAttribute("aria-modal", "true");
 });
 
 it("maps a stale Model removal conflict to a concise retry state", () => {
@@ -520,8 +523,8 @@ it("maps a stale Model removal conflict to a concise retry state", () => {
     "该 Model 未添加到此 Agent，无法移除。",
   );
   expect(screen.queryByText(/requested model/i)).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "重试移除 Model" })).toBeEnabled();
-  expect(screen.getByRole("dialog", { name: "确认移除 Model" })).toHaveAttribute("aria-modal", "true");
+  expect(screen.getByRole("button", { name: "重试移除 Models" })).toBeEnabled();
+  expect(screen.getByRole("dialog", { name: "确认移除 Models" })).toHaveAttribute("aria-modal", "true");
 });
 
 it("separates direct Skill assignment from compatible visibility", () => {
@@ -562,7 +565,8 @@ it("separates direct Skill assignment from compatible visibility", () => {
   expect(screen.getByRole("heading", { name: "生效范围" })).toBeVisible();
   expect(screen.getByText("直接添加")).toBeVisible();
   expect(screen.getByText("兼容可见")).toBeVisible();
-  expect(screen.getByRole("heading", { name: "实际写入位置" })).toBeVisible();
+  expect(screen.getByText("写入位置")).toBeVisible();
+  fireEvent.click(screen.getByText("写入位置"));
   expect(screen.getByText("~/.claude/skills/frontend-design")).toBeVisible();
   expect(screen.queryByText("~/.config/opencode/skills/frontend-design")).not.toBeInTheDocument();
 });
@@ -603,10 +607,11 @@ it("explains direct and shared-directory impact for a Skill removal", () => {
   );
 
   const summary = screen.getByRole("heading", { name: "影响摘要" }).closest("section");
-  expect(summary).toHaveTextContent("将从Claude Code移除 Skill · dws。");
+  expect(summary).toHaveTextContent("将从Claude Code移除 Skills · dws。");
   expect(summary).toHaveTextContent("共用目录将同步影响OpenCode的 Skill 可见性。");
   expect(screen.getByText("直接移除")).toHaveAttribute("data-action", "remove");
   expect(screen.getByText("同步不可见")).toHaveAttribute("data-action", "remove");
+  fireEvent.click(screen.getByText("写入位置"));
   expect(screen.getByText("~/.agents/skills/dws")).toBeVisible();
   expect(screen.queryByText("opencode")).not.toBeInTheDocument();
 });
@@ -641,7 +646,7 @@ it("maps an unsafe managed Skill link error and restores the known target path",
     "无法移除：这不是可安全移除的托管 Skill 链接（~/.agents/skills/dws）。",
   );
   expect(screen.queryByText(/only an exact managed/i)).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "重试移除 Skill" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "重试移除 Skills" })).toBeEnabled();
 });
 
 it("shows configuration paths and shared Skill migration compactly", () => {
@@ -758,7 +763,7 @@ it("reviews an MCP key-only location change without implying migration", () => {
     />,
   );
 
-  expect(screen.getByText("MCP 配置键")).toBeVisible();
+  expect(screen.getByText("MCPs 配置键")).toBeVisible();
   expect(screen.queryByText("MCP 文件路径")).not.toBeInTheDocument();
   expect(screen.getByText("mcpServers")).toBeVisible();
   expect(screen.getByText("amp.mcpServers")).toBeVisible();
@@ -822,7 +827,7 @@ it("opens review above the whole application and leaves page content in place", 
       />
     </main>,
   );
-  const dialog = screen.getByRole("dialog", { name: "确认添加 MCP" });
+  const dialog = screen.getByRole("dialog", { name: "确认添加 MCPs" });
   expect(dialog).toHaveAttribute("aria-modal", "true");
   expect(dialog.parentElement?.parentElement).toBe(document.body);
   expect(container).not.toContainElement(dialog);

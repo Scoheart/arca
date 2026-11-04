@@ -15,5 +15,6 @@ pub mod sources;
 pub mod toml_adapter;
 pub mod toml_list_adapter;
 pub mod yaml_adapter;
+pub(crate) mod inspection;
 
 pub(crate) mod builtin;

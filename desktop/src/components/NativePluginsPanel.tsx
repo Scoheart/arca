@@ -1,11 +1,26 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { HostMcpObservation, NativePluginObservation, NativeSkillObservation, PluginComponent, PluginPresence } from "../lib/types";
+import type { ConfiguredMcpObservation, HostMcpObservation, NativePluginObservation, NativeSkillObservation, PluginComponent, PluginPresence } from "../lib/types";
 import { SearchBar } from "./ui";
 import { ResourceIcon } from "./resourcePresentation";
 import { DialogShell } from "./DialogShell";
 import { ChevronDownIcon, PackageIcon } from "./icons";
 import "./NativePluginsPanel.css";
+import { McpConfigurationDialog, McpConfigurationSection } from "./McpConfigurationDialog";
+
+export function ConfiguredMcpCard({ item }: { item: ConfiguredMcpObservation }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  return <li data-domain="mcp" data-configuration-only="true" className="arca-host-mcp-card">
+    <ResourceRow name={item.name} icon={<ResourceIcon domain="mcp" className="w-6 h-6" />}
+      onOpen={() => setOpen(true)} open={open}>
+      <span className="arca-native-row-context" title={item.source_path}>{t("mcpInspector.declaration")}</span>
+    </ResourceRow>
+    {open && <McpConfigurationDialog name={item.name}
+      request={{ agent_id: item.agent_id, source: { kind: "configured_name", name: item.name } }}
+      onClose={() => setOpen(false)} />}
+  </li>;
+}
 
 export function HostMcpCard({ item }: { item: HostMcpObservation }) {
   const { t } = useTranslation();
@@ -28,6 +43,7 @@ export function HostMcpCard({ item }: { item: HostMcpObservation }) {
         <Fact label={t("nativePlugins.sourceState")}><Presence values={[item.presence]} /></Fact>
       </dl>
       <SourcePaths paths={item.source_paths} />
+      <McpConfigurationSection request={{ agent_id: item.agent_id, source: { kind: "host", source_fingerprint: item.source_fingerprint } }} />
     </DialogShell>}
   </li>;
 }
