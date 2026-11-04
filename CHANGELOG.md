@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.69.0](https://github.com/Scoheart/arca/compare/v2.68.0...v2.69.0) (2026-11-04)
+
+### Changes
+
+* feat(agents): inspect native MCP configurations and repair asset ownership ([c35643b](https://github.com/Scoheart/arca/commit/c35643baff6006b0e8246a5beec65ed5a01c9772))
+
 ## [2.68.0](https://github.com/Scoheart/arca/compare/v2.67.1...v2.68.0) (2026-11-04)
 
 ### Changes
