@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.69.1](https://github.com/Scoheart/arca/compare/v2.69.0...v2.69.1) (2026-11-04)
+
+### Changes
+
+* fix(mcp): redact compound credential names and argument values ([7d51182](https://github.com/Scoheart/arca/commit/7d511823d498ac06ce3190a29b1ec4dd9d6ad954))
+
 ## [2.69.0](https://github.com/Scoheart/arca/compare/v2.68.0...v2.69.0) (2026-11-04)
 
 ### Changes
