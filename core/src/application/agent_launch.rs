@@ -200,9 +200,9 @@ pub(crate) fn is_dsh_command(program: &str) -> bool {
 
 fn resolve(target: &LaunchTarget) -> Option<LaunchTarget> {
     match target {
-        LaunchTarget::App { path, args, new_instance, env } => validate_target(target).is_ok().then(|| LaunchTarget::App { path: expand(path).to_string_lossy().into_owned(), args: args.clone(), new_instance: *new_instance, env: env.clone() }),
+        LaunchTarget::App { path, args, new_instance, env } => validate_target(target).is_ok().then(|| LaunchTarget::App { path: expand(path).to_string_lossy().into_owned(), args: super::launch_command::normalize_args(args), new_instance: *new_instance, env: env.clone() }),
         LaunchTarget::Cli { command, args, env } => find_command(command).map(|path| {
-            let mut args = args.clone();
+            let mut args = super::launch_command::normalize_args(args);
             if args.is_empty() && is_dsh_command(&path.to_string_lossy()) {
                 args = vec!["web".to_string()];
             }
@@ -531,12 +531,13 @@ pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Resul
             if *new_instance { command.arg("-n"); }
             command.arg("-a").arg(path);
             for (name, value) in env { command.arg("--env").arg(format!("{name}={value}")); }
-            if !args.is_empty() { command.arg("--args").args(args); }
+            let normalized_args = super::launch_command::normalize_args(args);
+            if !normalized_args.is_empty() { command.arg("--args").args(normalized_args); }
         }
         LaunchTarget::Web { url } => { command = Command::new("/usr/bin/open"); command.arg(url); }
         LaunchTarget::Cli { command: program, args, env } => {
             let directory = directory.ok_or("请先选择工作目录")?;
-            let mut resolved_args = args.clone();
+            let mut resolved_args = super::launch_command::normalize_args(args);
             if resolved_args.is_empty() && is_dsh_command(program) {
                 resolved_args = vec!["web".to_string()];
             }
@@ -849,5 +850,12 @@ mod tests {
         };
         let resolved = resolve(&custom_target).unwrap();
         assert!(matches!(resolved, LaunchTarget::Cli { args, .. } if args == &["web"]));
+    }
+
+    #[test]
+    fn composite_args_are_normalized_into_distinct_tokens() {
+        let args = vec!["--system-prompt '/Users/scoheart/Code/english/ENGLISH.md'".to_string()];
+        let normalized = crate::application::launch_command::normalize_args(&args);
+        assert_eq!(normalized, vec!["--system-prompt", "/Users/scoheart/Code/english/ENGLISH.md"]);
     }
 }

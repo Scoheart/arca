@@ -35,3 +35,56 @@ export const configureAgentLaunch = (agentId: string, target: LaunchTarget | nul
 export const configureAgentLaunchProfiles = (agentId: string, profiles: LaunchProfile[], activeProfileId: string, expectedRevision: string) =>
   invoke<AgentLaunchInfo>("configure_agent_launch_profiles", { agentId, profiles, activeProfileId, expectedRevision });
 export const launchAgent = (agentId: string, directory: string | null) => invoke<{ directory_saved: boolean }>("launch_agent", { agentId, directory });
+
+export function splitLaunchArguments(text: string): string[] {
+  const result: string[] = [];
+  const lines = text.split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let current = "";
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+    let hasToken = false;
+
+    for (let i = 0; i < trimmed.length; i++) {
+      const ch = trimmed[i];
+      if (ch === "'" && !inDoubleQuote) {
+        inSingleQuote = !inSingleQuote;
+        hasToken = true;
+      } else if (ch === '"' && !inSingleQuote) {
+        inDoubleQuote = !inDoubleQuote;
+        hasToken = true;
+      } else if (ch === "\\" && inDoubleQuote) {
+        const next = trimmed[i + 1];
+        if (next === '"' || next === "\\" || next === "$" || next === "`") {
+          current += next;
+          i++;
+        } else {
+          current += "\\";
+        }
+        hasToken = true;
+      } else if (ch === "\\" && !inSingleQuote) {
+        const next = trimmed[i + 1];
+        if (next !== undefined) {
+          current += next;
+          i++;
+          hasToken = true;
+        }
+      } else if ((ch === " " || ch === "\t") && !inSingleQuote && !inDoubleQuote) {
+        if (hasToken || current.length > 0) {
+          result.push(current);
+          current = "";
+          hasToken = false;
+        }
+      } else {
+        current += ch;
+        hasToken = true;
+      }
+    }
+    if (hasToken || current.length > 0) {
+      result.push(current);
+    }
+  }
+  return result;
+}
