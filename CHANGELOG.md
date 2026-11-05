@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.69.3](https://github.com/Scoheart/arca/compare/v2.69.2...v2.69.3) (2026-11-05)
+
+### Changes
+
+* feat(desktop): unify card click-to-inspect and direct delete button across all views ([1237600](https://github.com/Scoheart/arca/commit/12376008e3a00f16ea0f68873d9327e0d4b66942))
+
 ## [2.69.2](https://github.com/Scoheart/arca/compare/v2.69.1...v2.69.2) (2026-11-05)
 
 ### Changes
