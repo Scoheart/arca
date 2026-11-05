@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.69.2](https://github.com/Scoheart/arca/compare/v2.69.1...v2.69.2) (2026-11-05)
+
+### Changes
+
+* fix(launch): tokenize composite cli arguments and strip outer quotes ([764da0c](https://github.com/Scoheart/arca/commit/764da0c1c633869176a7a44f6cb48ff01ab7adf6))
+
 ## [2.69.1](https://github.com/Scoheart/arca/compare/v2.69.0...v2.69.1) (2026-11-04)
 
 ### Changes
