@@ -451,10 +451,13 @@ export function SkillsView({
   const cards = useMemo(() => filtered.map((item) => (
     <div role="listitem" key={item.identity}>
       <SkillCard item={item} selected={item.name === selected?.name}
-        onOpen={() => openSkill(item.identity)} agentIds={consumers.get(item.name) ?? []}
+        onOpen={() => openSkill(item.identity)}
+        onDelete={item.location.kind === "central" ? () => void planLifecycle({ kind: "remove", skillName: item.name }) : undefined}
+        deleteDisabled={checkDisabled}
+        agentIds={consumers.get(item.name) ?? []}
         agentNames={agentNames} onOpenAgent={onOpenAgent} />
     </div>
-  )), [filtered, selected?.name, openSkill, consumers, agentNames, onOpenAgent]);
+  )), [filtered, selected?.name, openSkill, checkDisabled, consumers, agentNames, onOpenAgent]);
 
   useEffect(() => {
     if (!recoveryError) return;

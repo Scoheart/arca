@@ -118,9 +118,45 @@ describe("AgentConsumptionPanel", () => {
     expect(screen.queryByText("已同步")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("switch", { name: "停用 GitHub" }));
     expect(onEnabledChange).toHaveBeenCalledWith(syncedRow, false);
-    await userEvent.click(screen.getByRole("button", { name: "GitHub 操作" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "从 Codex 移除 GitHub" }));
+    await userEvent.click(screen.getByRole("button", { name: "从 Codex 移除 GitHub" }));
     expect(onRemove).toHaveBeenCalledWith(syncedRow.asset);
+  });
+
+  it("opens details when clicking the card surface and does not trigger details on remove or switch click", async () => {
+    const onOpenAsset = vi.fn();
+    const onRemove = vi.fn();
+    const onEnabledChange = vi.fn();
+    const skillRow: ConsumptionView = {
+      ...syncedRow,
+      asset: { domain: "skill", name: "brainstorming" },
+    };
+    render(
+      <AgentConsumptionPanel
+        domain="skill"
+        title="Skills"
+        manageLabel="添加 Skills"
+        rows={[skillRow]}
+        external={[]}
+        present={() => ({ name: "brainstorming", description: "Must use before creative work" })}
+        onManage={vi.fn()}
+        onOpenAsset={onOpenAsset}
+        onRemove={onRemove}
+        onEnabledChange={onEnabledChange}
+        removeLabel={(name) => `从 Agent 移除 ${name}`}
+      />,
+    );
+
+    await userEvent.click(screen.getByText("Must use before creative work"));
+    expect(onOpenAsset).toHaveBeenCalledTimes(1);
+    expect(onOpenAsset).toHaveBeenCalledWith(skillRow.asset);
+
+    await userEvent.click(screen.getByRole("switch", { name: "停用 brainstorming" }));
+    expect(onEnabledChange).toHaveBeenCalledWith(skillRow, false);
+    expect(onOpenAsset).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(screen.getByRole("button", { name: "从 Agent 移除 brainstorming" }));
+    expect(onRemove).toHaveBeenCalledWith(skillRow.asset);
+    expect(onOpenAsset).toHaveBeenCalledTimes(1);
   });
 
   it("does not expose an asset identity when the card has no description", () => {

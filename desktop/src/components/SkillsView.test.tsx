@@ -403,7 +403,7 @@ describe("SkillsView", () => {
     render(<SkillsView state={skillsStateFixture()} />);
     expect(api.getSkillDetail).not.toHaveBeenCalled();
 
-    const card = screen.getByRole("button", { name: /review-changes/ });
+    const card = screen.getByRole("button", { name: /打开 Skill review-changes 详情/ });
     expect(card).toHaveAttribute("aria-pressed", "false");
     card.focus();
     await user.keyboard(" ");
@@ -428,7 +428,7 @@ describe("SkillsView", () => {
     const user = userEvent.setup();
     render(<SkillsView state={skillsStateFixture()} />);
 
-    const card = screen.getByRole("button", { name: /review-changes/ });
+    const card = screen.getByRole("button", { name: /打开 Skill review-changes 详情/ });
     card.focus();
     await user.keyboard(" ");
     const inspector = await screen.findByLabelText("review-changes 详情");
@@ -461,7 +461,7 @@ describe("SkillsView", () => {
         screen.queryByLabelText("review-changes 详情"),
       ).not.toBeInTheDocument(),
     );
-    await user.click(screen.getByRole("button", { name: /unassigned-skill/ }));
+    await user.click(screen.getByRole("button", { name: /打开 Skill unassigned-skill 详情/ }));
     expect(await screen.findByText("second-selection")).toBeVisible();
 
     first.resolve({ ...skillDetailFixture("review-changes"), skill_md: "stale-first" });
@@ -478,7 +478,7 @@ describe("SkillsView", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { unmount } = render(<SkillsView state={skillsStateFixture()} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /review-changes/ }));
+    await userEvent.click(screen.getByRole("button", { name: /打开 Skill review-changes 详情/ }));
     unmount();
     pending.resolve(skillDetailFixture("review-changes"));
     await act(async () => {
@@ -501,7 +501,7 @@ describe("SkillsView", () => {
       .mockResolvedValueOnce(second);
     render(<SkillsView state={skillsStateFixture()} />);
 
-    const card = screen.getByRole("button", { name: /review-changes/ });
+    const card = screen.getByRole("button", { name: /打开 Skill review-changes 详情/ });
     await user.click(card);
     const firstInspector = await screen.findByLabelText("review-changes 详情");
     await user.click(
@@ -859,7 +859,7 @@ describe("SkillsView", () => {
       await screen.findByText("未找到 Skill 资产“missing-skill”。"),
     ).toBeVisible();
 
-    await userEvent.click(screen.getByRole("button", { name: /review-changes/ }));
+    await userEvent.click(screen.getByRole("button", { name: /打开 Skill review-changes 详情/ }));
     expect(await screen.findByLabelText("review-changes 详情")).toBeVisible();
     expect(
       screen.queryByText("未找到 Skill 资产“missing-skill”。"),

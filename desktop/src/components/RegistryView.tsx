@@ -209,17 +209,39 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
     ).map((item) => ({ item, text: `${item.entry.name}\n${item.entry.description}`.toLowerCase() }));
   }, [sourceScoped]);
 
+  // Every catalog copy can be edited. Source-owned edits are materialized as a
+  // manual override by the central lifecycle planner; deletion remains limited
+  // to user-owned copies.
+  const deletable = useCallback((entry: RegistryEntry) => isUserOwned(entry), []);
+
+  const deleteEntry = useCallback(
+    async (entry: RegistryEntry) => {
+      if (!deletable(entry) || !consumptionState) return;
+      try {
+        const sourceId = entry.origin?.source ?? entry.origin?.kind;
+        await consumptionState.planDelete(
+          { domain: "mcp", key: keyOf(entry) },
+          sourceId,
+        );
+      } catch (e) {
+        toast.show({ kind: "error", msg: `无法删除：${String(e)}` });
+      }
+    },
+    [consumptionState, deletable, toast]
+  );
+
   const filtered = useMemo(() => {
     const needle = deferredQuery.trim().toLowerCase();
     return searchIndex.filter((row) => !needle || row.text.includes(needle)).map((row) => row.item);
   }, [deferredQuery, searchIndex]);
   const cards = useMemo(() => filtered.map((item) => (
-    <div role="listitem" key={`${keyOf(item.entry)}@${item.entry.origin?.source ?? item.entry.origin?.kind ?? ""}`}>
+    <div role="listitem" key={`${keyOf(item.entry)}@${item.entry.origin?.source ?? item.entry.origin?.kind ?? ""}`} className="arca-model-card arca-mcp-card">
       <RegistryCard item={item} iconPreference={mcpIcons.preferences[keyOf(item.entry)]}
         selected={detail === item} installedAgents={agentsForServer(keyOf(item.entry))}
-        sourceName={sourceName} onOpen={() => { setEditingDetail(false); setDetail(item); }} />
+        sourceName={sourceName} onOpen={() => { setEditingDetail(false); setDetail(item); }}
+        onDelete={consumptionState && deletable(item.entry) && item.in_effect ? () => void deleteEntry(item.entry) : undefined} />
     </div>
-  )), [filtered, mcpIcons.preferences, detail, agentsForServer, sourceName]);
+  )), [filtered, mcpIcons.preferences, detail, agentsForServer, sourceName, consumptionState, deletable, deleteEntry]);
 
   useEffect(() => {
     if (!intent || state.loading || lastConsumedIntentId.current === intent.id) return;
@@ -292,27 +314,6 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
       toast.show({ kind: "error", msg: "导出失败：" + formatError(e) });
     }
   }, [entries.length, toast]);
-
-  // Every catalog copy can be edited. Source-owned edits are materialized as a
-  // manual override by the central lifecycle planner; deletion remains limited
-  // to user-owned copies.
-  const deletable = useCallback((entry: RegistryEntry) => isUserOwned(entry), []);
-
-  const deleteEntry = useCallback(
-    async (entry: RegistryEntry) => {
-      if (!deletable(entry) || !consumptionState) return;
-      try {
-        const sourceId = entry.origin?.source ?? entry.origin?.kind;
-        await consumptionState.planDelete(
-          { domain: "mcp", key: keyOf(entry) },
-          sourceId,
-        );
-      } catch (e) {
-        toast.show({ kind: "error", msg: `无法删除：${String(e)}` });
-      }
-    },
-    [consumptionState, deletable, toast]
-  );
 
   const reviewingMcpDeletion = !editingDetail && !suppressOperationReview
     && consumptionState?.plan?.kind === "delete-asset"
@@ -510,6 +511,7 @@ function RegistryCard({
   installedAgents,
   sourceName,
   onOpen,
+  onDelete,
 }: {
   item: CatalogItem;
   iconPreference?: McpIconPreference;
@@ -517,6 +519,7 @@ function RegistryCard({
   installedAgents: string[];
   sourceName: (id: string) => string;
   onOpen: () => void;
+  onDelete?: () => void;
 }) {
   const { t } = useTranslation();
   const { entry } = item;
@@ -528,32 +531,50 @@ function RegistryCard({
     : originLabel(entry.origin, sourceName);
 
   return (
-    <button
-      type="button"
-      className="arca-asset-list-row arca-mcp-list-row"
-      data-selected={selected ? "true" : undefined}
-      data-attention={item.in_effect ? undefined : "shadowed"}
-      aria-label={`${t("centralAssets.openMcpDetails", { name: entry.name })} · ${transport} · ${source}`}
-      aria-pressed={selected}
-      onClick={onOpen}
-    >
-      <span className="arca-asset-list-identity">
-        <McpAvatar assetKey={keyOf(entry)} entry={entry} preference={iconPreference} />
-        <span className="arca-asset-list-copy">
-          <strong title={entry.name}>{entry.name}</strong>
-          <code title={ep.text}>{ep.text}</code>
+    <>
+      <button
+        type="button"
+        className="arca-asset-list-row arca-mcp-list-row"
+        data-selected={selected ? "true" : undefined}
+        data-attention={item.in_effect ? undefined : "shadowed"}
+        aria-label={`${t("centralAssets.openMcpDetails", { name: entry.name })} · ${transport} · ${source}`}
+        aria-pressed={selected}
+        onClick={onOpen}
+      >
+        <span className="arca-asset-list-identity">
+          <McpAvatar assetKey={keyOf(entry)} entry={entry} preference={iconPreference} />
+          <span className="arca-asset-list-copy">
+            <strong title={entry.name}>{entry.name}</strong>
+            <code title={ep.text}>{ep.text}</code>
+          </span>
         </span>
-      </span>
-      <span className="arca-asset-list-transport">{transport}</span>
-      <span className="arca-asset-list-source" title={source}>{source}</span>
-      <span className="arca-asset-list-status">
-        <Badge tone={item.in_effect ? "success" : "info"}>
-          {item.in_effect
-            ? t("centralAssets.effective")
-            : t("centralAssets.shadowed")}
-        </Badge>
-      </span>
-    </button>
+        <span className="arca-asset-list-transport">{transport}</span>
+        <span className="arca-asset-list-source" title={source}>{source}</span>
+        <span className="arca-asset-list-status">
+          <Badge tone={item.in_effect ? "success" : "info"}>
+            {item.in_effect
+              ? t("centralAssets.effective")
+              : t("centralAssets.shadowed")}
+          </Badge>
+        </span>
+      </button>
+      {onDelete && (
+        <div className="arca-model-card-actions">
+          <button
+            type="button"
+            className="arca-model-card-action arca-model-card-delete"
+            aria-label={`删除 ${entry.name}`}
+            title={`删除 ${entry.name}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete();
+            }}
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 

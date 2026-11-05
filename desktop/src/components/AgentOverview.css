@@ -206,12 +206,12 @@
   background: var(--surface-asset); box-shadow: var(--shadow-card);
   transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease, transform .15s ease;
 }
+.arca-agent-workbench .arca-consumption-list > li[data-clickable="true"] { cursor: pointer; }
 .arca-agent-workbench .arca-consumption-list > li:hover {
   border-color: color-mix(in srgb, var(--color-blue) 34%, var(--border-hairline));
   box-shadow: var(--shadow-hover);
   transform: translateY(-1px);
 }
-.arca-agent-workbench .arca-consumption-list > li:has(.arca-consumption-card-menu[data-open="true"]),
 .arca-agent-workbench .arca-consumption-list > li:has(.arca-convergence-menu) { z-index: 5; }
 .arca-agent-workbench .arca-consumption-icon { grid-column: 1; grid-row: 1; min-width: 0; }
 .arca-agent-workbench .arca-consumption-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
@@ -219,7 +219,7 @@
 .arca-consumption-inspect { display: block; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
 .arca-consumption-inspect:hover { color: var(--color-blue); }
 .arca-consumption-inspect:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 3px; border-radius: 3px; }
-.arca-agent-workbench .arca-consumption-card-menu { grid-column: 3; grid-row: 1; justify-self: end; }
+.arca-agent-workbench .arca-consumption-remove { grid-column: 3; grid-row: 1; justify-self: end; }
 .arca-consumption-card-description {
   grid-column: 1 / -1; grid-row: 2; min-width: 0; width: 100%; margin: 0; align-self: start;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
@@ -285,16 +285,9 @@
 }
 .arca-agent-workbench li[data-domain="mcp"] .arca-consumption-card-footer { display: flex; grid-column: 3; grid-row: 1; gap: 0; }
 .arca-agent-workbench li[data-domain="mcp"] .arca-consumption-controls { flex: 0 0 auto; }
-.arca-agent-workbench li[data-domain="mcp"] .arca-consumption-card-menu { grid-column: 4; }
-.arca-agent-workbench li[data-domain="mcp"]:not(:has(.arca-consumption-card-menu)) .arca-consumption-card-footer { grid-column: 3 / -1; justify-self: end; }
+.arca-agent-workbench li[data-domain="mcp"] .arca-consumption-remove { grid-column: 4; grid-row: 1; justify-self: end; }
+.arca-agent-workbench li[data-domain="mcp"]:not(:has(.arca-consumption-remove)) .arca-consumption-card-footer { grid-column: 3 / -1; justify-self: end; }
 .arca-agent-workbench .arca-consumption-meta .arca-transport-mark { font-weight: 620; font-size: 9.5px; padding: 2px 5px; border-radius: 4px; background: var(--surface-item); }
-.arca-consumption-card-menu { position: relative; grid-column: 3; grid-row: 1; justify-self: end; }
-.arca-consumption-card-menu-items { position: absolute; right: 0; top: calc(100% + 5px); z-index: 8; min-width: 148px; padding: 4px; background: var(--surface-popover); border: 1px solid var(--border-hairline); border-radius: 9px; box-shadow: var(--shadow-sheet); }
-.arca-consumption-card-menu-items > button { display: flex; align-items: center; width: 100%; min-height: 32px; padding: 6px 9px; gap: 7px; border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); text-align: left; font-size: 11.5px; cursor: pointer; }
-.arca-consumption-card-menu-items > button:hover { background: var(--surface-section); }
-.arca-consumption-card-menu-items > button:disabled { opacity: .45; cursor: default; }
-.arca-consumption-card-menu-items .arca-consumption-remove { opacity: 1; color: var(--color-red); }
-.arca-consumption-card-menu-items > button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -1px; }
 .arca-agent-workbench .arca-consumption-empty { min-height: 240px; border: 1px dashed var(--border-hairline); background: color-mix(in srgb, var(--surface-item) 55%, transparent); }
 @media (max-width: 1060px) {
   .arca-agent-workbench .arca-consumption-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }

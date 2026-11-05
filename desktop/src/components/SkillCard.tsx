@@ -4,6 +4,7 @@ import type {
   SkillSource,
 } from "../lib/types";
 import { useTranslation } from "react-i18next";
+import { TrashIcon } from "./icons";
 import { SkillAgentHand } from "./SkillAgentHand";
 import { Badge } from "./ui";
 
@@ -68,10 +69,21 @@ function skillAssetState(item: SkillInventoryItem) {
   return { labelKey: "normal" as const, tone: "success" as const };
 }
 
-export function SkillCard({ item, selected, onOpen, agentIds = [], agentNames = new Map(), onOpenAgent }: {
+export function SkillCard({
+  item,
+  selected,
+  onOpen,
+  onDelete,
+  deleteDisabled = false,
+  agentIds = [],
+  agentNames = new Map(),
+  onOpenAgent,
+}: {
   item: SkillInventoryItem;
   selected: boolean;
   onOpen: () => void;
+  onDelete?: () => void;
+  deleteDisabled?: boolean;
   agentIds?: string[];
   agentNames?: ReadonlyMap<string, string>;
   onOpenAgent?: (id: string) => void;
@@ -84,17 +96,47 @@ export function SkillCard({ item, selected, onOpen, agentIds = [], agentNames = 
       ? { labelKey: "updateAvailable" as const, tone: "info" as const }
       : assetState.labelKey !== "normal" ? assetState : null;
   return (
-    <article className="arca-skill-card" data-selected={selected ? "true" : undefined}>
-      <button type="button" className="arca-skill-card-main"
+    <article
+      className="arca-skill-card"
+      data-selected={selected ? "true" : undefined}
+      onClick={onOpen}
+    >
+      <button
+        type="button"
+        className="arca-skill-card-main"
         aria-label={t("centralAssets.openSkillDetails", { name: item.name })}
-        aria-pressed={selected} onClick={onOpen}>
+        aria-pressed={selected}
+        onClick={(event) => {
+          event.stopPropagation();
+          onOpen();
+        }}
+      >
         <h2 title={item.name}>{item.name}</h2>
         <span className="arca-skill-card-description" title={item.description}>
           {item.description || t("centralAssets.noDescription")}
         </span>
       </button>
+      {onDelete && (
+        <div className="arca-model-card-actions" onClick={(event) => event.stopPropagation()}>
+          <button
+            type="button"
+            className="arca-model-card-action arca-model-card-delete arca-skill-card-delete"
+            aria-label={`删除 ${item.name}`}
+            title={`删除 ${item.name}`}
+            disabled={deleteDisabled}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete();
+            }}
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       <div className="arca-skill-card-footer">
-        <SkillAgentHand ids={agentIds} names={agentNames} skillName={item.name} onOpenAgent={onOpenAgent} />
+        <div className="arca-skill-card-hand-wrap" onClick={(event) => event.stopPropagation()}>
+          <SkillAgentHand ids={agentIds} names={agentNames} skillName={item.name} onOpenAgent={onOpenAgent} />
+        </div>
         {status && <Badge tone={status.tone}>{t(`centralAssets.${status.labelKey}`)}</Badge>}
       </div>
     </article>

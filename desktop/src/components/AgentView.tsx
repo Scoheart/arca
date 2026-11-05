@@ -1028,6 +1028,11 @@ export function AgentView({
               externalMode="cards"
               onManage={() => setPickerDomain("subagent")}
               onOpenAsset={openAsset}
+              onRemove={(asset) => void planRemoval(asset)}
+              onConverge={(item, action) => void converge(item, action)}
+              convergenceDisabled={preparingChange}
+              removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
+              removeDisabled={preparingChange}
               emptyTitle="暂无 Subagents"
               emptyDescription={`从 Subagents 资产库添加到 ${agent.name}。`}
               emptyAction={

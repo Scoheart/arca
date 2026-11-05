@@ -1126,6 +1126,9 @@ body {
 .arca-registry-workspace .arca-mcp-list-row:hover {
   transform: translateY(-1px);
 }
+.arca-mcp-card:has(.arca-model-card-actions) .arca-mcp-list-row .arca-asset-list-identity {
+  padding-right: 36px;
+}
 .arca-mcp-card-top {
   display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 10px;
 }
@@ -1775,8 +1778,14 @@ body {
 .arca-skill-card {
   position: relative; display: flex; flex-direction: column; min-width: 0; height: 100%; min-height: 114px;
   border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-asset);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card); cursor: pointer;
   transition: border-color .16s ease, box-shadow .16s ease, opacity .14s ease, transform .16s ease;
+}
+.arca-skill-card:has(.arca-skill-card-delete) .arca-skill-card-main > h2 {
+  padding-right: 34px;
+}
+.arca-skill-card-hand-wrap {
+  display: contents;
 }
 .arca-skill-card:hover,
 .arca-skill-card:has(:focus-visible) {
@@ -2710,10 +2719,10 @@ body {
 .arca-consumption-open:hover { background: var(--surface-section); color: var(--color-blue); }
 .arca-consumption-open:disabled { opacity: .42; cursor: not-allowed; }
 .arca-consumption-open:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: 1px; }
-.arca-consumption-remove { opacity: .52; transition: color .14s ease, opacity .14s ease; }
+.arca-consumption-remove { opacity: .72; transition: color .14s ease, background-color .14s ease, opacity .14s ease; }
 .arca-consumption-list > li:hover .arca-consumption-remove,
 .arca-consumption-remove:focus-visible { opacity: 1; }
-.arca-consumption-remove:hover:not(:disabled) { color: var(--color-red); }
+.arca-consumption-remove:hover:not(:disabled) { background: color-mix(in srgb, var(--color-red) 10%, transparent); color: var(--color-red); }
 .arca-consumption-empty { display: grid; min-height: 128px; place-content: center; justify-items: center; gap: 6px; padding: 15px; border: 0; border-radius: var(--radius-row); background: var(--surface-item); color: var(--text-secondary); text-align: center; }
 .arca-consumption-empty strong { color: var(--text-primary); font-size: 11px; }
 .arca-consumption-empty span { max-width: 420px; font-size: 10px; line-height: 1.45; }

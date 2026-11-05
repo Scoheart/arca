@@ -5,7 +5,6 @@ import { ConfiguredMcpCard, HostMcpCard, NativeSkillCard } from "./NativePlugins
 import { assetIdentity } from "../lib/consumption";
 import {
   DownloadIcon,
-  LinkIcon,
   LinkOffIcon,
   MoreHorizontalIcon,
   PlusIcon,
@@ -131,45 +130,6 @@ function ConvergenceActions({
       )}
     </span>
   );
-}
-
-function ConsumptionCardMenu({ name, onOpen, onRemove, removeDisabled, removeLabel }: {
-  name: string;
-  onOpen?: () => void;
-  onRemove?: () => void;
-  removeDisabled: boolean;
-  removeLabel: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    root.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus();
-    const close = (event: PointerEvent) => { if (!root.current?.contains(event.target as Node)) setOpen(false); };
-    document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
-  }, [open]);
-  return <div ref={root} className="arca-consumption-card-menu" data-open={open || undefined} onKeyDown={(event) => {
-    if (!open) return;
-    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus(); }
-    if (event.key === "Tab") setOpen(false);
-    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
-      event.preventDefault();
-      const items = Array.from(root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? []);
-      const index = items.indexOf(document.activeElement as HTMLButtonElement);
-      const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
-      items[next]?.focus();
-    }
-  }}>
-    <button ref={trigger} type="button" className="arca-consumption-open" aria-label={`${name} 操作`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-      <MoreHorizontalIcon className="w-4 h-4" />
-    </button>
-    {open && <div role="menu" className="arca-consumption-card-menu-items" aria-label={`${name} 操作`}>
-      {onOpen && <button type="button" role="menuitem" aria-label={`查看 ${name} 详情`} onClick={() => { setOpen(false); onOpen(); }}><LinkIcon className="w-3.5 h-3.5" />查看详情</button>}
-      {onRemove && <button type="button" role="menuitem" disabled={removeDisabled} aria-label={removeLabel} className="arca-consumption-remove" onClick={() => { setOpen(false); onRemove(); }}><TrashIcon className="w-3.5 h-3.5" />移除</button>}
-    </div>}
-  </div>;
 }
 
 export function AgentConsumptionPanel({
@@ -375,20 +335,46 @@ export function AgentConsumptionPanel({
               : enabled
                 ? `停用 ${presentation.name}`
                 : `启用 ${presentation.name}`;
+            const canInspect = domain === "mcp" && Boolean(onInspect);
+            const canOpen = !isExternal && Boolean(onOpenAsset);
+            const canViewDetail = canInspect || canOpen;
+            const openDetail = () => {
+              if (canInspect) onInspect?.(item);
+              else if (canOpen) onOpenAsset?.(item.asset);
+            };
+            const openDetailLabel = canInspect
+              ? `查看 ${presentation.name} 配置`
+              : `查看 ${presentation.name} 详情`;
+            const removeActionLabel = removeLabel?.(presentation.name) ?? `从 Agent 移除 ${presentation.name}`;
             return (
               <li
                 key={rowKey(item, isExternal)}
                 data-domain={domain}
                 data-status={item.status}
                 data-enabled={isExternal || enabled === false ? "false" : undefined}
+                data-clickable={canViewDetail ? "true" : undefined}
+                onClick={canViewDetail ? openDetail : undefined}
               >
                 <span className="arca-consumption-icon">{presentation.icon}</span>
                 <span className="arca-consumption-copy">
                   <span className="arca-consumption-title">
-                    {domain === "mcp" && onInspect ? <button type="button" className="arca-consumption-inspect"
-                      aria-label={`查看 ${presentation.name} 配置`} aria-haspopup="dialog"
-                      onClick={event => { event.currentTarget.focus({ preventScroll: true }); onInspect(item); }}><strong title={presentation.name}>{presentation.name}</strong></button>
-                      : <strong title={presentation.name}>{presentation.name}</strong>}
+                    {canViewDetail ? (
+                      <button
+                        type="button"
+                        className="arca-consumption-inspect"
+                        aria-label={openDetailLabel}
+                        aria-haspopup={canInspect ? "dialog" : undefined}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          event.currentTarget.focus({ preventScroll: true });
+                          openDetail();
+                        }}
+                      >
+                        <strong title={presentation.name}>{presentation.name}</strong>
+                      </button>
+                    ) : (
+                      <strong title={presentation.name}>{presentation.name}</strong>
+                    )}
                   </span>
                   {domain === "mcp" && <span className="arca-consumption-secondary">
                     {!isExternal && <ConsumptionStatus status={item.status} reason={item.reason} compact />}
@@ -396,13 +382,21 @@ export function AgentConsumptionPanel({
                     {presentationDescription && <small title={presentationDescription}>{presentationDescription}</small>}
                   </span>}
                 </span>
-                {!isExternal && (onOpenAsset || onRemove) && <ConsumptionCardMenu
-                  name={presentation.name}
-                  onOpen={onOpenAsset ? () => onOpenAsset(item.asset) : undefined}
-                  onRemove={onRemove ? () => onRemove(item.asset) : undefined}
-                  removeDisabled={removeDisabled}
-                  removeLabel={removeLabel?.(presentation.name) ?? `从 Agent 移除 ${presentation.name}`}
-                />}
+                {!isExternal && onRemove && (
+                  <button
+                    type="button"
+                    className="arca-consumption-open arca-consumption-remove"
+                    disabled={removeDisabled}
+                    aria-label={removeActionLabel}
+                    title={removeActionLabel}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onRemove(item.asset);
+                    }}
+                  >
+                    <TrashIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 {domain !== "mcp" && presentationDescription && <p className="arca-consumption-card-description" title={presentationDescription}>{presentationDescription}</p>}
                 <div className="arca-consumption-card-footer">
                   {domain !== "mcp" && <div className="arca-consumption-card-summary">
@@ -412,7 +406,10 @@ export function AgentConsumptionPanel({
                 {(item.status !== "synced" && !(isExternal && item.status === "external-added")
                   || item.available_actions.length > 0
                   || !isExternal && (renderAction || onEnabledChange && enabled !== null || onOpenAsset || onRemove)) && (
-                  <span className="arca-consumption-controls">
+                  <span
+                    className="arca-consumption-controls"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <span className="arca-consumption-actions">
                       {onConverge && item.available_actions.length > 0 && (
                         <ConvergenceActions

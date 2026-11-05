@@ -314,7 +314,7 @@ describe("Skills central lifecycle orchestration", () => {
   };
 
   async function openInspector(item: SkillInventoryItem) {
-    await userEvent.click(screen.getByRole("button", { name: new RegExp(item.name) }));
+    await userEvent.click(screen.getByRole("button", { name: `打开 Skill ${item.name} 详情` }));
     return screen.findByLabelText(`${item.name} 详情`);
   }
 

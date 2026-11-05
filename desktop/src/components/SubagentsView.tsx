@@ -62,9 +62,6 @@ export function SubagentsView({
     try {
       const list = await api.listSubagents();
       setSubagents(list);
-      if (list.length > 0 && !selectedName) {
-        setSelectedName(list[0].name);
-      }
     } catch (err) {
       toast.show({ kind: "error", msg: `读取 Subagents 失败: ${formatError(err)}` });
     } finally {
@@ -382,9 +379,18 @@ export function SubagentsView({
             {filteredSubagents.map((item) => (
               <div
                 key={item.name}
+                role="button"
+                tabIndex={0}
+                aria-label={`查看 ${item.display_name || item.name} 详情`}
                 className="arca-card cursor-pointer group hover:border-primary transition-colors p-4 flex flex-col justify-between"
                 data-active={selectedSubagent?.name === item.name ? "true" : undefined}
                 onClick={() => setSelectedName(item.name)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setSelectedName(item.name);
+                  }
+                }}
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
@@ -399,11 +405,25 @@ export function SubagentsView({
                         </span>
                       </div>
                     </div>
-                    {item.model && (
-                      <Badge tone="neutral">
-                        {item.model}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.model && (
+                        <Badge tone="neutral">
+                          {item.model}
+                        </Badge>
+                      )}
+                      <button
+                        type="button"
+                        className="arca-model-card-action arca-model-card-delete"
+                        aria-label={`删除 ${item.display_name || item.name}`}
+                        title={`删除 ${item.display_name || item.name}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDeletingSubagent(item);
+                        }}
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   {item.description && (
                     <p className="text-xs text-muted line-clamp-2 mt-2 leading-relaxed">
