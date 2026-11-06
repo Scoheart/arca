@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.70.0](https://github.com/Scoheart/arca/compare/v2.69.3...v2.70.0) (2026-11-06)
+
+### Changes
+
+* feat(deepseek-harness): add native model and MCP configuration ([8b60718](https://github.com/Scoheart/arca/commit/8b60718f1c30b90bf3cfbdb4ed6db91b131985d4))
+
 ## [2.69.3](https://github.com/Scoheart/arca/compare/v2.69.2...v2.69.3) (2026-11-05)
 
 ### Changes
