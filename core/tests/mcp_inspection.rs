@@ -86,6 +86,12 @@ fn every_registered_mcp_target_can_inspect_its_own_wire_format_without_changing_
     for (id, definition) in definitions {
         let Some(target) = definition.global.as_deref() else { continue; };
         let path = arca_core::scanner::expand_tilde(target);
+        if matches!(id.as_str(), "deepseek-harness" | "deepseek-harness-desktop") {
+            let directory = path.parent().unwrap();
+            fs::create_dir_all(directory).unwrap();
+            fs::write(directory.join("package.json"), r#"{"dsh":{"profile":{"bundles":["@deepseek-ai/dsh-base","@deepseek-ai/dsh-web-app"]}}}"#).unwrap();
+            fs::write(&path, "- id: mcp-manager\n  config: {servers: {}}\n").unwrap();
+        }
         let config = arca_core::types::McpConfig::Stdio(arca_core::types::StdioConfig {
             command: "fixture-inspected-command".into(), args: None, env: None, cwd: None,
         });

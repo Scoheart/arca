@@ -160,7 +160,9 @@ fn new_native_switch_and_shared_format_guards_fail_closed() {
         assert_eq!(agents[id].global, agents[sibling].global);
         assert_eq!(agents[id].skills.as_ref().unwrap().target_id, agents[sibling].skills.as_ref().unwrap().target_id);
     }
-    assert!(agents["deepseek-harness"].global.is_none());
+    assert_eq!(agents["deepseek-harness"].global.as_deref(), Some("~/.dsh/profiles/web/cordis.patch.yml"));
+    assert_eq!(agents["deepseek-harness"].layout.as_deref(), Some("cordis-patch"));
+    assert_ne!(agents["deepseek-harness"].global, agents["deepseek-harness-desktop"].global);
     assert_eq!(agents["deepseek-harness"].skills.as_ref().unwrap().global_dir, "~/.dsh/skills");
 }
 
@@ -870,14 +872,20 @@ fn every_writable_builtin_roundtrips_through_its_wire_format() {
         if definition.global.is_none() {
             continue;
         }
-        let path = temp_file(
-            &format!("matrix-{agent_id}"),
-            match definition.format.as_str() {
-                "toml" => "toml",
-                "yaml" => "yaml",
-                _ => "json",
-            },
-        );
+        let path = if matches!(agent_id.as_str(), "deepseek-harness" | "deepseek-harness-desktop") {
+            let path = arca_core::scanner::expand_tilde(definition.global.as_deref().unwrap());
+            let directory = path.parent().unwrap();
+            std::fs::create_dir_all(directory).unwrap();
+            std::fs::write(directory.join("package.json"), r#"{"dsh":{"profile":{"bundles":["@deepseek-ai/dsh-base","@deepseek-ai/dsh-web-app"]}}}"#).unwrap();
+            // This wire-format matrix exercises an existing explicit native
+            // manager, independently of a real installed Harness carrier.
+            std::fs::write(&path, "- id: mcp-manager\n  config: {servers: {}}\n").unwrap();
+            path
+        } else {
+            temp_file(&format!("matrix-{agent_id}"), match definition.format.as_str() {
+                "toml" => "toml", "yaml" => "yaml", _ => "json",
+            })
+        };
         let adapter = get_agent_adapter_for(&definition, &agent_id);
         let codec = from_name(definition.codec.as_deref(), &agent_id);
         let supports_http = definition
@@ -1256,13 +1264,14 @@ fn verified_and_catalog_definitions_have_auditable_boundaries() {
                         | "url_transport"
                         | "stdio_only"
                         | "stepcode"
+                        | "deepseek-harness"
                 )
             ),
             "{id}: unknown codec {:?}",
             definition.codec
         );
         assert!(
-            matches!(definition.layout.as_deref(), Some("map" | "list")),
+            matches!(definition.layout.as_deref(), Some("map" | "list" | "cordis-patch")),
             "{id}: invalid layout {:?}",
             definition.layout
         );

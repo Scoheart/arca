@@ -97,7 +97,7 @@ pub fn agent_capabilities(agent_id: &str) -> AgentCredentialCapabilities {
         "qoder-cli" | "qwen-code" | "grok-build" | "crush" | "hermes" | "factory-droid" => {
             capabilities.native_sources.push("env".into());
         }
-        "mistral-vibe" | "goose" => capabilities.native_sources.push("env".into()),
+        "mistral-vibe" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => capabilities.native_sources.push("env".into()),
         "qoder" | "minimax-code" | "kimi-code" | "kimi-code-desktop" | "warp" => {
             capabilities.note = Some("credential delivery requires guided Agent setup".into());
         }

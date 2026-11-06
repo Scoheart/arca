@@ -3188,6 +3188,10 @@ pub fn default_config_paths(agent_id: &str) -> Option<Vec<String>> {
     if agent_id == claude_desktop::AGENT_ID {
         return Some(claude_desktop::default_paths());
     }
+    if matches!(agent_id, "deepseek-harness" | "deepseek-harness-desktop") {
+        let profile = if agent_id == "deepseek-harness-desktop" { "desktop" } else { "web" };
+        return Some(vec![crate::resources::deepseek_harness::profile_path(profile)]);
+    }
     let paths: &[&str] = match agent_id {
         "claude-code" => &["~/.claude/settings.json"],
         "codex" => &["~/.codex/config.toml"],
@@ -4405,6 +4409,8 @@ fn env_key_required_issue(agent_id: &str) -> Option<(&'static str, &'static str)
             | "hermes"
             | "factory-droid"
             | "goose"
+            | "deepseek-harness"
+            | "deepseek-harness-desktop"
     ) {
         return None;
     }
@@ -4798,6 +4804,19 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             "原生 providers/active_provider 与 declarative custom provider；密钥由外部环境变量提供。",
         ),
     ];
+    for (id, profile) in [("deepseek-harness", "web"), ("deepseek-harness-desktop", "desktop")] {
+        let mut view = managed_agent_view(
+            &settings, id, if profile == "web" { &["dsh"] } else { &[] }, &[],
+            "https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/docs/user/guide/providers.md",
+            "管理当前用户的 Harness Profile：CLI/Web 使用 web，Desktop 使用 desktop。支持三种自定义 API、多模型和新会话默认模型；API Key 使用环境变量/原生 credential 引用，不导出 Arca Keychain 密钥。Profile 需由 Harness 初始化；高层 home patch 冲突或自定义继承不明时拒绝写入。",
+        );
+        if profile == "desktop" {
+            view.installed = agent_installed(&[], &[], &["/Applications/DeepSeek Harness.app", "~/Applications/DeepSeek Harness.app"]);
+        } else {
+            view.installed |= expand_tilde(&crate::resources::deepseek_harness::profile_path(profile)).parent().is_some_and(|dir| dir.join("package.json").is_file());
+        }
+        agents.push(view);
+    }
     // Both clients share native providers, but their api_key/env fields contain
     // literal credentials. Do not advertise an environment-reference writer.
     for (id, commands, apps, docs, note) in [
@@ -4980,7 +4999,7 @@ pub(crate) fn observe_active_model_for_settings(
         }
         "claude-code" | "codex" => settings.model_selection(agent_id).active_profile_id,
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => {
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             return match adapters::observe_active(agent_id, &paths, &profiles) {
                 adapters::ObservedActiveModel::Managed(id) => ObservedActiveModel::Managed(id),
                 adapters::ObservedActiveModel::External => ObservedActiveModel::External,
@@ -5106,7 +5125,7 @@ pub fn observe_profile(
             combine_observed(models, settings)
         }
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => Ok(adapters::observe_prepared_files(
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => Ok(adapters::observe_prepared_files(
             prepare_observed_native_files(agent_id, &paths, &profile, true, has_credential),
         )),
         _ => Ok(ModelObservedState::Conflicted),
@@ -5136,7 +5155,7 @@ pub fn observe_profile_consumption(
         "grok-build" => cleared_toml_profile_absent(prepare_clear_grok_build(&paths[0], &profile)),
         "pi" => cleared_toml_profile_absent(prepare_clear_pi_models(&paths[0], &profile)),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => {
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             adapters::cleared_profile_absent(adapters::prepare_clear(agent_id, &paths, &profile))
         }
         _ => Ok(false),
@@ -5154,7 +5173,7 @@ pub fn observe_profile_consumption(
             pi_api_key_value_with_credential(&profile, has_credential, credential_snapshot_for_observation)?,
         )),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => Ok(adapters::observe_prepared_files(
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => Ok(adapters::observe_prepared_files(
             prepare_observed_native_files(agent_id, &paths, &profile, false, has_credential),
         )),
         _ => observe_profile(agent_id, &profile),
@@ -5184,7 +5203,7 @@ pub fn observe_external_model(agent_id: &str) -> Result<ExternalModelObservedSta
         "grok-build" => observe_external_grok_build(&paths[0]),
         "pi" => observe_external_pi(&paths[0], &paths[1]),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => Ok(adapters::observe_external(agent_id, &paths[0])),
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => Ok(adapters::observe_external(agent_id, &paths[0])),
         _ => Ok(ExternalModelObservedState::Absent),
     }
 }
@@ -5367,7 +5386,7 @@ fn ensure_supported(agent_id: &str, protocol: &ModelProtocol) -> Result<(), Stri
             ModelProtocol::AnthropicMessages | ModelProtocol::OpenaiResponses
             | ModelProtocol::OpenaiCompletions | ModelProtocol::GeminiGenerateContent
             | ModelProtocol::AwsBedrockConverse),
-        "grok-build" | "pi" | "factory-droid" => matches!(protocol,
+        "grok-build" | "pi" | "factory-droid" | "deepseek-harness" | "deepseek-harness-desktop" => matches!(protocol,
             ModelProtocol::AnthropicMessages | ModelProtocol::OpenaiResponses | ModelProtocol::OpenaiCompletions),
         "qwen-code" | "crush" | "hermes" | "goose" => matches!(
             protocol,
@@ -5611,7 +5630,7 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
                     .map_err(Into::into),
             }
         }
-        "qwen-code" | "crush" | "mistral-vibe" | "hermes" | "factory-droid" | "goose" => {
+        "qwen-code" | "crush" | "mistral-vibe" | "hermes" | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             apply_native_multi_model(
                 agent_id,
                 &profile,
@@ -5729,7 +5748,7 @@ pub(crate) fn clear_all_configured_models_for_targets(
         "pi" => clear_all_pi(&paths[0], &paths[1]),
         "grok-build" => clear_one_model_file(&paths[0], "grok-build", prepare_clear_all_grok_build),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => {
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             let reviewed = reviewed_targets
                 .iter()
                 .map(|path| expand_tilde(path))
@@ -5774,7 +5793,7 @@ pub(crate) fn agent_has_configured_models(agent_id: &str) -> Result<bool, String
                 .is_some_and(|value| value != content.as_str()))
         }
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => adapters::has_configured_models(agent_id, &paths),
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => adapters::has_configured_models(agent_id, &paths),
         _ => Ok(false),
     }
 }
@@ -5789,6 +5808,8 @@ fn guard_shared_model_clear(settings: &crate::settings::Settings, agent_id: &str
         "opencode-desktop" => "opencode",
         "kilo-code" => "kilo-desktop",
         "kilo-desktop" => "kilo-code",
+        "deepseek-harness" => "deepseek-harness-desktop",
+        "deepseek-harness-desktop" => "deepseek-harness",
         _ => return Ok(()),
     };
     if settings.model_selection(sibling).profiles.is_empty() { return Ok(()); }
@@ -5797,6 +5818,7 @@ fn guard_shared_model_clear(settings: &crate::settings::Settings, agent_id: &str
     if targets.iter().any(|path| sibling_targets.iter().any(|other| expand_tilde(path) == expand_tilde(other))) {
         let code = if agent_id.starts_with("qoder-") { "qoder_shared_registry" }
             else if agent_id.starts_with("kilo-") { "kilo_shared_registry" }
+            else if agent_id.starts_with("deepseek-harness") { "deepseek_harness_shared_registry" }
             else { "opencode_shared_registry" };
         return Err(format!("{code}: {sibling} also uses this model config; remove individual models instead of clearing the shared registry"));
     }
@@ -5886,7 +5908,7 @@ pub(crate) fn clear_profile_consumption_target(
         .map_err(ModelTargetError::from)?,
         "pi" => clear_pi(&paths[0], &paths[1], &profile, active).map_err(ModelTargetError::from)?,
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => {
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             commit_native_model_files(
                 agent_id,
                 adapters::prepare_clear(agent_id, &paths, &profile)?,

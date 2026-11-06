@@ -61,6 +61,16 @@ fn absolute(value: &str, home: &Path) -> CoreResult<PathBuf> {
     Ok(path)
 }
 fn root(source: &Source, home: &Path) -> CoreResult<PathBuf> {
+    // Harness uses the same native home resolver for Instructions, Skills,
+    // Models and MCP. Keep explicit Arca source overrides in location().
+    let harness_root = match (source.root.as_str(), source.env.first().map(String::as_str), source.env.len()) {
+        ("~/.dsh", Some("DSH_HOME"), 1) => Some(crate::resources::deepseek_harness::home_dir()),
+        ("~/.agents", Some("DSH_AGENTS_HOME"), 1) => Some(crate::resources::deepseek_harness::agents_home_dir()),
+        _ => None,
+    };
+    if let Some(path) = harness_root {
+        return absolute(path.to_str().ok_or_else(|| err("instruction_context_unresolved", "The native root is not valid text."))?, home);
+    }
     if (source.root == "~/.claude" && std::env::var_os("CLAUDE_CONFIG_DIR").is_some())
         || (source.root == "~/.stepcode/agent" && std::env::var_os("STEPCODE_CONFIG_DIR").is_some()) {
         return Err(err("instruction_context_unresolved", "This custom native root needs a verified local resolver."));

@@ -16,6 +16,25 @@ impl Drop for NativeEnv {
 }
 
 #[test]
+fn deepseek_instruction_homes_match_native_tilde_blank_and_normalized_roots() {
+    let home = TestHome::new("dsh-instruction-roots");
+    for (dsh, shared, primary, fallback) in [
+        ("~", "~\\shared", "~", "~/shared"),
+        ("~/.dsh/../selected", "~/shared/../.agents", "~/selected", "~/.agents"),
+        (" \t", " ", "~/.dsh", "~/.agents"),
+    ] {
+        let _dsh = NativeEnv::set("DSH_HOME", std::path::Path::new(dsh));
+        let _shared = NativeEnv::set("DSH_AGENTS_HOME", std::path::Path::new(shared));
+        for id in ["deepseek-harness", "deepseek-harness-desktop"] {
+            let paths = instructions::get_paths(id).unwrap();
+            assert_eq!(paths.sources[0].path, primary);
+            assert_eq!(paths.sources[1].path, fallback);
+        }
+    }
+    assert!(!home.home.join(".dsh").exists(), "path discovery initialized Harness");
+}
+
+#[test]
 fn opencode_initialization_is_explicit_for_cli_and_desktop() {
     for agent in ["opencode", "opencode-desktop"] {
         let home = TestHome::new("opencode-instructions-create");

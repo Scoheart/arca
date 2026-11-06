@@ -7,15 +7,18 @@
 
 mod qoder;
 mod zcode;
+mod deepseek_harness;
 pub(crate) use zcode::read_registry as read_zcode_registry;
 
 pub(crate) use qoder::read_registry as read_qoder_registry;
+pub(crate) use deepseek_harness::read_registry as read_deepseek_harness_registry;
 
 use crate::domain::types::{ModelProfile, ModelProtocol};
 use crate::resources::mcp::scanner::expand_tilde;
 use jsonc_parser::cst::{CstInputValue, CstObject, CstRootNode};
 use jsonc_parser::ParseOptions;
 use serde_json::{json, Map, Value};
+use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::fs;
 use std::io::ErrorKind;
@@ -53,6 +56,7 @@ pub fn prepare_apply(
         "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => prepare_open_code(agent_id, &paths[0], profile, active, None)?,
         "zcode" => zcode::prepare(&paths[0], profile, None)?,
         "qoder-desktop" | "qoder-cli" => qoder::prepare(agent_id, &paths[0], profile, active, None)?,
+        "deepseek-harness" | "deepseek-harness-desktop" => deepseek_harness::prepare(agent_id, &paths[0], profile, active)?,
         "qwen-code" => prepare_qwen(&paths[0], profile, active)?,
         "crush" => prepare_crush(&paths[0], profile, active)?,
         "mistral-vibe" => prepare_vibe(&paths[0], profile, active)?,
@@ -95,6 +99,7 @@ pub fn prepare_clear(
         "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => prepare_clear_open_code(agent_id, &paths[0], profile)?,
         "zcode" => zcode::clear(&paths[0], profile)?,
         "qoder-desktop" | "qoder-cli" => qoder::clear(agent_id, &paths[0], profile)?,
+        "deepseek-harness" | "deepseek-harness-desktop" => deepseek_harness::clear(agent_id, &paths[0], profile)?,
         "qwen-code" => prepare_clear_qwen(&paths[0], profile)?,
         "crush" => prepare_clear_crush(&paths[0], profile)?,
         "mistral-vibe" => prepare_clear_vibe(&paths[0], profile)?,
@@ -122,6 +127,7 @@ pub fn prepare_clear_all_for_targets(
         "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => Ok(vec![prepare_clear_all_open_code(&paths[0])?]),
         "zcode" => Ok(vec![zcode::clear_all(&paths[0])?]),
         "qoder-desktop" | "qoder-cli" => Ok(vec![qoder::clear_all(&paths[0])?]),
+        "deepseek-harness" | "deepseek-harness-desktop" => Ok(vec![deepseek_harness::clear_all(&paths[0])?]),
         "qwen-code" => Ok(vec![prepare_clear_all_qwen(&paths[0])?]),
         "crush" => Ok(vec![prepare_clear_all_crush(&paths[0])?]),
         "mistral-vibe" => Ok(vec![prepare_clear_all_vibe(&paths[0])?]),
@@ -221,6 +227,9 @@ pub fn observe_external(
     path: &Path,
 ) -> crate::resources::model::ExternalModelObservedState {
     use crate::resources::model::ExternalModelObservedState::{Absent, Conflicted, Present};
+    if matches!(agent_id, "deepseek-harness" | "deepseek-harness-desktop") {
+        return deepseek_harness::observe_external(path);
+    }
     if matches!(agent_id, "qoder-cli" | "qoder-desktop") {
         return match qoder::read_registry(path) {
             Err(_) => Conflicted,
@@ -332,6 +341,9 @@ pub fn observe_active(
     paths: &[PathBuf],
     profiles: &std::collections::BTreeMap<String, ModelProfile>,
 ) -> ObservedActiveModel {
+    if matches!(agent_id, "deepseek-harness" | "deepseek-harness-desktop") {
+        return deepseek_harness::observe_active(agent_id, &paths[0], profiles);
+    }
     let selected = match agent_id {
         "qoder-cli" => match qoder::read_registry(&paths[0]) {
             Err(_) => return ObservedActiveModel::Conflicted,
@@ -441,6 +453,9 @@ fn provider_id_for(agent_id: &str, profile: &ModelProfile) -> String {
                 format!("mux_kilo_desktop_{}", &provider_id(&profile.id)[4..])
             } else if agent_id == "qoder-cli" {
                 format!("mux_cli_{}", &provider_id(&profile.id)[4..])
+            } else if matches!(agent_id, "deepseek-harness" | "deepseek-harness-desktop") {
+                // Keep native identities bounded even for long central IDs.
+                format!("arca_{}", &hex::encode(Sha256::digest(profile.id.as_bytes()))[..24])
             } else {
                 provider_id(&profile.id)
             }

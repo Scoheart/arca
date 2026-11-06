@@ -72,6 +72,12 @@ pub fn get_agent_adapter(format: &str, key: &str, agent_id: &str) -> Box<dyn Ada
 }
 
 pub fn get_agent_adapter_for(definition: &AgentDefinition, agent_id: &str) -> Box<dyn Adapter> {
+    if definition.layout.as_deref() == Some("cordis-patch") {
+        return if definition.format == "yaml" && definition.key == "servers"
+            && definition.codec.as_deref() == Some("deepseek-harness") {
+            Box::new(super::deepseek_harness_adapter::DeepseekHarnessAdapter)
+        } else { Box::new(UnsupportedAdapter::new("invalid Cordis MCP format/layout/codec contract")) };
+    }
     let codec = from_name(definition.codec.as_deref(), agent_id);
     let root_defaults = definition.root_defaults.clone().unwrap_or_default();
     let list = definition.layout.as_deref() == Some("list");
@@ -120,6 +126,11 @@ fn get_map_adapter(
     codec: Codec,
     root_defaults: BTreeMap<String, Value>,
 ) -> Box<dyn Adapter> {
+    if codec == Codec::DeepseekHarness {
+        return if format == "yaml" && key == "servers" {
+            Box::new(super::deepseek_harness_adapter::DeepseekHarnessAdapter)
+        } else { Box::new(UnsupportedAdapter::new("DeepSeek Harness requires its native Cordis patch format")) };
+    }
     match format {
         "json" => Box::new(JsonAdapter::with_spec(key, codec, root_defaults)),
         "toml" => Box::new(TomlAdapter::with_spec(key, codec, root_defaults)),

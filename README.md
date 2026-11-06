@@ -557,6 +557,8 @@ Kimi Code is a separate Agent (`kimi-code-desktop`) with its official app icon a
 
 Kilo Desktop is available as `Kilo` (`kilo-desktop`) with its official app icon, launcher, installed version, MCPs, Skills, and custom Models. Its desktop runtime config is separate from the CLI's global config; Skills share `~/.kilo/skills`. Models use environment/file credential references and are selected inside each Kilo conversation. See [Kilo Desktop integration](docs/kilo-desktop.md).
 
+DeepSeek Harness has separate CLI/Web (`deepseek-harness`, profile `web`) and Desktop (`deepseek-harness-desktop`, profile `desktop`) entries. Arca manages their verified Cordis MCP manager, three custom-model API protocols, and shared user Skills/Instructions. The MCP manager needs a verified `0.2.2-rc.1` installation; `0.2.1-rc.3` has no manager. Model credentials remain native environment/credential references; Arca does not export Keychain secrets to Harness. Profile initialization and inheritance checks prevent overwriting unobserved bundle configuration. See [DeepSeek Harness configuration and boundaries](docs/deepseek-harness-integration.md).
+
 ChatGPT (`codex-desktop`) opens ChatGPT.app and shares `~/.codex/config.toml` plus `~/.agents/skills` with Codex CLI. The model writer stays on Codex CLI. Agent types are CLI, Desktop, IDE, and Plugin; the launch form follows that type and does not switch among them.
 
 Agent labels use the actual application name, or the official CLI/plugin product name. Region, version, and surface are not added to the name. Existing IDs and bindings stay stable; see the [name audit](docs/agent-name-audit.md).

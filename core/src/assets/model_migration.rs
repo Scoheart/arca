@@ -535,6 +535,7 @@ fn extract_models_scoped(settings: &Settings, agent_ids: &BTreeSet<String>) -> R
             "pi" => extract_pi(&paths[0], &paths[1]),
             "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => extract_open_code(&agent_id, &paths[0]),
             "qoder-desktop" | "qoder-cli" => extract_qoder(&agent_id, &paths[0]),
+            "deepseek-harness" | "deepseek-harness-desktop" => extract_deepseek_harness(&agent_id, &paths[0]),
             "zcode" => extract_zcode(&paths[0]),
             "qwen-code" => extract_qwen(&paths[0]),
             "crush" => extract_crush(&paths[0]),
@@ -572,6 +573,8 @@ fn agent_uses_native_id(agent_id: &str) -> bool {
             | "mistral-vibe"
             | "hermes"
             | "goose"
+            | "deepseek-harness"
+            | "deepseek-harness-desktop"
     )
 }
 
@@ -982,6 +985,66 @@ fn extract_qoder(agent_id: &str, path: &Path) -> Result<Vec<ExtractedModel>, Str
                 credential: if models.len() > 1 {
                     ExtractedCredential::Invalid("此 Qoder provider 共用多个模型；保留只读，避免接管时改动其他模型的连接与凭据".into())
                 } else { credential.clone() },
+                target_paths: vec![path.into()],
+            });
+        }
+    }
+    Ok(rows)
+}
+
+fn extract_deepseek_harness(agent_id: &str, path: &Path) -> Result<Vec<ExtractedModel>, String> {
+    let Some(root) = crate::resources::model::adapters::read_deepseek_harness_registry(path)? else {
+        return Ok(Vec::new());
+    };
+    let providers = root["providers"].as_object().ok_or("Harness providers must be a mapping")?;
+    let blocked = crate::resources::deepseek_harness::guard_profile(path, &["llm-pi-ai", "agent-default-model"]).err();
+    let mut rows = Vec::new();
+    for (native_id, provider) in providers {
+        let Some(models) = provider.get("models").and_then(Value::as_array) else { continue; };
+        let protocol = match provider.get("api").and_then(Value::as_str) {
+            Some("openai-completions") => ModelProtocol::OpenaiCompletions,
+            Some("openai-responses") => ModelProtocol::OpenaiResponses,
+            Some("anthropic-messages") => ModelProtocol::AnthropicMessages,
+            // Catalog-only routes need the installed Harness catalog. Never
+            // guess their effective protocol or connection from a route name.
+            _ => {
+                let mut row = invalid_candidate(agent_id,
+                    format!("Harness provider {native_id} inherits an unobserved catalog protocol or uses an unsupported custom API; configure it in Harness"),
+                    vec![path.into()]);
+                row.native_id = native_id.clone();
+                row.name = native_id.clone();
+                rows.push(row);
+                continue;
+            }
+        };
+        let Some(base_url) = provider.get("baseURL").and_then(Value::as_str) else {
+            rows.push(invalid_candidate(agent_id, "Harness custom provider is missing its explicit baseURL".into(), vec![path.into()]));
+            continue;
+        };
+        let (env_key, credential) = match provider.get("apiKeyEnv") {
+            Some(Value::String(key)) if !key.is_empty() => (Some(key.clone()), ExtractedCredential::Env(key.clone())),
+            _ => (None, ExtractedCredential::Invalid("Arca requires a named Harness credential/environment reference; account and implicit authentication stay native".into())),
+        };
+        let mut ids = BTreeSet::new();
+        for model in models {
+            let model_id = model.get("id").and_then(Value::as_str).filter(|id| !id.is_empty())
+                .ok_or("Harness model id is missing")?;
+            if !ids.insert(model_id) { return Err("Harness contains duplicate model ids".into()); }
+            let issue = blocked.clone().or_else(|| (models.len() > 1).then(||
+                "Harness provider serves multiple models; keep it read-only until split, so adoption cannot overwrite a sibling".into()));
+            rows.push(ExtractedModel {
+                agent_id: agent_id.into(), native_id: native_id.clone(),
+                name: model.get("name").and_then(Value::as_str).unwrap_or(model_id).into(),
+                protocol: protocol.clone(), base_url: base_url.into(), model: model_id.into(),
+                env_key: env_key.clone(),
+                context_window: model.get("contextWindow").and_then(Value::as_u64),
+                max_output_tokens: model.get("maxTokens").and_then(Value::as_u64),
+                reasoning: model.get("reasoningEfforts").map(|value| value.is_object()),
+                enabled: None,
+                active: blocked.is_none()
+                    && root["default"].get("provider").and_then(Value::as_str) == Some(native_id.as_str())
+                    && root["default"].get("model").and_then(Value::as_str) == Some(model_id),
+                credential: issue.map(ExtractedCredential::Invalid).unwrap_or_else(|| credential.clone()),
                 target_paths: vec![path.into()],
             });
         }
@@ -1500,7 +1563,7 @@ fn profile_owns_candidate(
     explicit_native_id.is_none()
         || !matches!(
             candidate.agent_id.as_str(),
-            "pi" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qoder-desktop" | "qoder-cli" | "zcode" | "crush" | "goose"
+            "pi" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qoder-desktop" | "qoder-cli" | "zcode" | "crush" | "goose" | "deepseek-harness" | "deepseek-harness-desktop"
         )
         || profile.model == candidate.model
 }
@@ -1508,7 +1571,7 @@ fn profile_owns_candidate(
 fn generated_native_id(settings: &Settings, agent_id: &str, profile: &ModelProfile) -> String {
     match agent_id {
         "claude-code" => "claude-settings".into(),
-        "qoder-cli" | "opencode-desktop" | "kilo-desktop" => crate::resources::model::adapters::native_provider_id(agent_id, profile),
+        "qoder-cli" | "opencode-desktop" | "kilo-desktop" | "deepseek-harness" | "deepseek-harness-desktop" => crate::resources::model::adapters::native_provider_id(agent_id, profile),
         "pi" => crate::resources::model::generated_pi_provider_id(settings, profile),
         "qwen-code" => format!(
             "{}:{}:{}",
