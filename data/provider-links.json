@@ -1153,5 +1153,12 @@
       "url": "https://asicloud.cudos.org/",
       "kind": "console"
     }
+  },
+  "llm7": {
+    "docs_url": "https://docs.llm7.io/api-reference/introduction",
+    "portal": {
+      "url": "https://dash.llm7.io/#/api-keys",
+      "kind": "api-key"
+    }
   }
 }

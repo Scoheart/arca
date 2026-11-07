@@ -3626,6 +3626,20 @@
       }
     },
     {
+      "id": "llm7",
+      "name": "LLM7.io",
+      "category": "gateway",
+      "baseUrl": "https://api.llm7.io/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.llm7.io/api-reference/introduction",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://dash.llm7.io/#/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
