@@ -88,6 +88,13 @@ pub fn discover_provider_models(provider_id: &str) -> Result<Vec<ProviderModelSu
 
 pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<Vec<ProviderModelSummary>, String> {
     let provider = &input.provider;
+    // A reviewed static list is the catalog when the provider has no Models
+    // API. An explicit Models list URL still uses the generic decoder below.
+    if provider.model_catalog_url.is_none() {
+        if let Some(models) = static_seed_models(&provider.provider) {
+            return Ok(models);
+        }
+    }
     let spec = discovery_spec_for_provider(provider)?;
     let stored_credential = if provider.auth_requirement != AuthRequirement::None
         && matches!(provider.api_key_source, None | Some(ApiKeySource::ArcaStore)) {
@@ -151,6 +158,36 @@ pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<V
         url = next_page_url(url, spec.adapter, &next_token)?;
     }
     Ok(models)
+}
+
+/// Built-in model IDs copied from a provider's official catalog when that
+/// provider does not publish a Models API. Names and context lengths stay
+/// empty unless the same page states them.
+fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
+    let ids: &[&str] = match provider_type {
+        // https://pages.edgeone.ai/document/models-vendors-overview
+        "edgeone-makers" => &[
+            "@makers/hy3",
+            "@makers/hy3-preview",
+            "@makers/deepseek-v4-pro",
+            "@makers/deepseek-v4-flash",
+            "@makers/deepseek-v4.1-flash",
+            "@makers/minimax-m3",
+            "@makers/minimax-m2.7",
+            "@makers/kimi-k2.6",
+            "@makers/zhuque-text",
+        ],
+        _ => return None,
+    };
+    Some(
+        ids.iter()
+            .map(|id| ProviderModelSummary {
+                id: (*id).to_string(),
+                name: None,
+                context_length: None,
+            })
+            .collect(),
+    )
 }
 
 fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
@@ -350,6 +387,9 @@ fn discovery_spec_for_provider(provider: &ModelProviderConfig) -> Result<Discove
     }
     if let Some(spec) = reviewed_discovery_spec(&provider.provider) {
         return Ok(spec);
+    }
+    if provider.model_catalog_url.is_none() && static_seed_models(&provider.provider).is_some() {
+        return Err("model_discovery_static_seed: This provider publishes a reviewed model list and no Models API".into());
     }
     let adapter = if provider
         .protocols
@@ -921,6 +961,47 @@ mod tests {
         assert_eq!(
             discovery_url(&config, spec.adapter).unwrap().as_str(),
             "https://inference.asicloud.cudos.org/v1/models"
+        );
+    }
+
+    #[test]
+    fn edgeone_makers_serves_the_documented_builtin_seed_and_does_not_call_models() {
+        assert!(reviewed_discovery_spec("edgeone-makers").is_none());
+        assert!(model_discovery_supported("edgeone-makers"));
+        let mut config = provider(
+            "edgeone-makers",
+            "https://ai-gateway.edgeone.link",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        config.auth_requirement = AuthRequirement::Required;
+        assert!(discovery_spec_for_provider(&config)
+            .unwrap_err()
+            .contains("model_discovery_static_seed"));
+        let models = execute_provider_discovery(ModelDiscoveryInput { provider: config.clone() }).unwrap();
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            [
+                "@makers/hy3",
+                "@makers/hy3-preview",
+                "@makers/deepseek-v4-pro",
+                "@makers/deepseek-v4-flash",
+                "@makers/deepseek-v4.1-flash",
+                "@makers/minimax-m3",
+                "@makers/minimax-m2.7",
+                "@makers/kimi-k2.6",
+                "@makers/zhuque-text",
+            ]
+        );
+        assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()));
+
+        config.model_catalog_url = Some("https://catalog.example.test/models".into());
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://catalog.example.test/models"
         );
     }
 
