@@ -3626,6 +3626,22 @@
       }
     },
     {
+      "id": "zro",
+      "name": "Zro",
+      "category": "gateway",
+      "baseUrl": "https://zro.moonmath.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://zro.moonmath.ai/docs/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://zro.moonmath.ai/sign-in"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

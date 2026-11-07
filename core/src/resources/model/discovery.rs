@@ -105,9 +105,18 @@ pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<V
             stored_credential.as_ref().map(|bytes| bytes.to_vec()))?;
         Some(Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
             .map_err(|_| "model_provider_credential_invalid: API Key is not UTF-8".to_string())?))
-    } else if provider.auth_requirement == AuthRequirement::Required {
+    } else if provider.auth_requirement == AuthRequirement::Required
+        && (provider.model_catalog_url.is_some() || reviewed_static_catalog(&provider.provider).is_none()) {
         return Err("model_provider_credential_missing: Configure a credential source before loading the model catalog".into());
     } else { None };
+
+    // Anonymous GET /v1/models is not a public catalog for these providers.
+    // A saved credential still uses the reviewed live decoder below.
+    if credential.is_none() && provider.model_catalog_url.is_none() {
+        if let Some(models) = reviewed_static_catalog(&provider.provider) {
+            return Ok(models);
+        }
+    }
 
     let deadline = Instant::now() + Duration::from_secs(30);
     let mut url = discovery_url(provider, spec.adapter)?;
@@ -151,6 +160,30 @@ pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<V
         url = next_page_url(url, spec.adapter, &next_token)?;
     }
     Ok(models)
+}
+
+/// Documented model ids used when the provider's catalog is not public.
+/// Ids are the current models page, not aliases or retired routes.
+const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("deepseek-v4.1-flash", Some("DeepSeek V4.1 Flash"), Some(1_048_576)),
+    ("glm-5.3", Some("GLM-5.3"), Some(1_048_576)),
+    ("glm-5.3-flash", Some("GLM-5.3 Flash"), Some(1_048_576)),
+    ("dolly1-security", Some("Dolly 1 Security"), Some(1_048_576)),
+    ("dolly2-security", Some("Dolly 2 Security"), Some(1_048_576)),
+    ("abyss1", Some("Abyss 1"), Some(1_048_576)),
+    ("auto", None, None),
+];
+
+fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
+    let entries = match provider_type {
+        "zro" => ZRO_STATIC_MODELS,
+        _ => return None,
+    };
+    Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
+        id: (*id).to_string(),
+        name: name.map(str::to_string),
+        context_length: *context_length,
+    }).collect())
 }
 
 fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
@@ -224,6 +257,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "helmholtz-blablador"
 
         | "token360"
+        | "zro"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -960,6 +994,85 @@ mod tests {
     }
 
     #[test]
+    fn zro_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("zro").expect("zro seed");
+        let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            [
+                "deepseek-v4.1-flash",
+                "glm-5.3",
+                "glm-5.3-flash",
+                "dolly1-security",
+                "dolly2-security",
+                "abyss1",
+                "auto",
+            ]
+        );
+        assert_eq!(
+            models[0].name.as_deref(),
+            Some("DeepSeek V4.1 Flash")
+        );
+        assert_eq!(models[0].context_length, Some(1_048_576));
+        assert_eq!(models[5].name.as_deref(), Some("Abyss 1"));
+        assert!(models[6].name.is_none());
+        assert!(models[6].context_length.is_none());
+        for retired in [
+            "glm-5.2",
+            "minimax-m3",
+            "kimi-k3",
+            "kimi-k2.7-code",
+            "deepseek-v4-flash-0731",
+            "laguna-2.1",
+            "deepseek-v4-flash-vision",
+            "minimax-m3.1-flash",
+            "zro/deepseek-v4.1-flash",
+        ] {
+            assert!(!ids.contains(&retired), "{retired}");
+        }
+        assert!(reviewed_static_catalog("decuff").is_none());
+        assert!(reviewed_static_catalog("token360").is_none());
+
+        let config = provider(
+            "zro",
+            "https://zro.moonmath.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://zro.moonmath.ai/v1/models"
+        );
+
+        let _home = TestHome::new("zro-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "zro-instance".into(),
+                name: "Zro".into(),
+                provider: "zro".into(),
+                base_url: "https://zro.moonmath.ai".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), ids.len());
+        assert_eq!(seeded[0].id, "deepseek-v4.1-flash");
+    }
+
+    #[test]
     fn blazerail_discovers_the_public_openai_catalog() {
         let config = provider(
             "blazerail",
@@ -1126,6 +1239,7 @@ mod tests {
         "helmholtz-blablador",
 
         "token360",
+        "zro",
         "mistral",
         "deepseek",
         "groq",
@@ -1316,7 +1430,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
