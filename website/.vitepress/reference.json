@@ -3642,6 +3642,35 @@
       }
     },
     {
+      "id": "llm7",
+      "name": "LLM7.io",
+      "category": "gateway",
+      "baseUrl": "https://api.llm7.io/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.llm7.io/api-reference/introduction",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://dash.llm7.io/#/api-keys"
+      }
+    },
+    {
+      "id": "edgeone-makers",
+      "name": "EdgeOne Makers Models",
+      "category": "gateway",
+      "baseUrl": "https://ai-gateway.edgeone.link/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://pages.edgeone.ai/document/makers-models-integration",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.tencentcloud.com/edgeone/makers"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
