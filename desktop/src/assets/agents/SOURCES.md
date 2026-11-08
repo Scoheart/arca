@@ -124,3 +124,5 @@ CodeBuddy CN reuses the sourced CodeBuddy mark through an explicit alias. Its in
 - `qoderwake.png`: PNG converted with macOS `sips` from the signed QoderWake native `AppIcon.icns` (`com.qoder.QoderWake.MenuBar`, shell 0.1.19/backend 1.2.4), acquired from the official `download.qoder.com/qoderwake/installers/1.2.4/` installer (2026-10-28). The surface catalog records its Desktop form.
 
 - `qoderwake-cn.png`: PNG converted with macOS `sips` from the independently signed QoderWake CN `AppIcon.icns` (`com.qoder.QoderWakeCN.MenuBar`, shell 0.1.19/backend 1.2.4-cn), acquired from `ide.qoder.com.cn/qoderwake-cn/installers/1.2.4-cn/` (2026-10-28). Its native artwork and Desktop form distinguish this independent product.
+
+- `dl.png`: unmodified 180×180 PNG from the official site apple-touch icon at <https://directionallylocal.com/apple-touch-icon.png?v=3>, retrieved 2026-11-08. The same mascot is the media-kit mark at <https://directionallylocal.com/press/assets/directionally-local-mark.png>. Bytes are the published apple-touch icon, not a resample of the larger mark. `surfaces.json` records the CLI form.

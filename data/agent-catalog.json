@@ -4802,5 +4802,22 @@
     "codec": "standard",
     "layout": "map",
     "transports": []
+  },
+  "dl": {
+    "global": null,
+    "project": null,
+    "format": "unknown",
+    "key": "",
+    "enabled": true,
+    "builtin": true,
+    "name": "Directionally Local",
+    "docs": "https://directionallylocal.com/docs/install/",
+    "note": "Directionally Local 的终端编程代理，命令为 dl，同一安装也提供 directionallylocal。官方安装文档确认 macOS 与 Linux 使用 curl -fsSL https://dl.new | sh，默认装到 ~/.directionallylocal（无需 sudo），并把 ~/.directionallylocal/bin 加入 shell 的 PATH；Windows 目前使用 WSL。已有 Node.js 时可用 npm install -g directionallylocal：22 线需 22.23.4 或更高，24 线需 24.22.1 或更高，26 及以后需 26.12.1 或更高。首次运行由 Autopilot 显示设备码和链接，在浏览器用 GitHub 登录并批准；autopilot auth directionally-local 是同一 GitHub 设备码登录。免费档只在本机 dl 会话中提供（GPT-6 Luna 与 DeepSeek 每周共享 5000 万 token；较新或不够活跃的 GitHub 账号为 Starter，仅 DeepSeek、每周 500 万 token）；安装文档写明后台任务和服务器会话目前不提供免费档。本机 dl 使用 Autopilot 配置 ~/.config/autopilot/config.json（若设置 XDG_CONFIG_HOME 则改到其 autopilot/config.json）。其中 mcpServers 的 command 是字符串数组，环境变量字段是 env；文档表格的 type 为 local 或 remote，Autopilot 官方 README 另有 http。现有适配器写入 command/args 或 OpenCode 的 environment，不能安全写入该文件。官方文档只有 /skills 命令，没有用户级 Skills 目录。Arca 仅展示，不写入。",
+    "category": "cli",
+    "evidence": "official",
+    "verified_at": "2026-11-08",
+    "codec": "standard",
+    "layout": "map",
+    "transports": []
   }
 }
