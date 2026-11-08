@@ -89,6 +89,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "deepseek",
   "digitalocean",
   "dolphin",
+  "edenai",
   "experiential-labs",
   "featherless-ai",
   "fikra",

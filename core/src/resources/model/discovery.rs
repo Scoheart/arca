@@ -338,6 +338,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "helmholtz-blablador"
 
         | "token360"
+        | "edenai"
         | "nararouter"
         | "zro"
         | "llm7"
@@ -434,6 +435,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "blazerail"
             | "subq"
             | "token360"
+            | "edenai"
             | "llm7"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
@@ -1333,6 +1335,23 @@ mod tests {
     }
 
     #[test]
+    fn edenai_discovers_the_public_openai_catalog() {
+        let config = provider(
+            "edenai",
+            "https://api.edenai.run/v3",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.edenai.run/v3/models"
+        );
+    }
+
+    #[test]
     fn blazerail_discovers_the_public_openai_catalog() {
         let config = provider(
             "blazerail",
@@ -1499,6 +1518,7 @@ mod tests {
         "helmholtz-blablador",
 
         "token360",
+        "edenai",
         "nararouter",
         "zro",
         "llm7",
@@ -1685,6 +1705,7 @@ mod tests {
             "blazerail",
             "subq",
             "token360",
+            "edenai",
             "llm7",
         ] {
             assert_eq!(

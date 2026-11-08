@@ -861,6 +861,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.token360.ai/v1beta",
             },
         ],
+        "edenai" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.edenai.run/v3",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.edenai.run/v3",
+            },
+        ],
         "nararouter" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -1540,6 +1550,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "asi-cloud",
         name: "ASI:Cloud",
         default_base_url: Some("https://inference.asicloud.cudos.org/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "edenai",
+        name: "Eden AI",
+        default_base_url: Some("https://api.edenai.run/v3"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2328,6 +2345,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.token360.ai" => "token360",
         "zro.moonmath.ai" => "zro",
         "inference.asicloud.cudos.org" => "asi-cloud",
+        "api.edenai.run" => "edenai",
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
         "ai-gateway.edgeone.link" => "edgeone-makers",
@@ -8119,6 +8137,23 @@ mod tests {
             ("https://a.singularitycompute.com/v1", "custom"),
             ("https://llm.singularitycompute.com/v1", "custom"),
             ("https://inference.asicloud.cudos.org.evil.test/v1", "custom"),
+            ("https://api.edenai.run/v3", "edenai"),
+            ("https://api.edenai.run/v3/chat/completions", "edenai"),
+            ("https://api.edenai.run/v3/responses", "edenai"),
+            ("https://api.edenai.run/v3/models", "edenai"),
+            ("https://api.edenai.run", "edenai"),
+            ("https://api.edenai.run/v3/v1/messages", "edenai"),
+            ("https://www.edenai.co/docs/", "custom"),
+            ("https://edenai.co/", "custom"),
+            ("https://docs.edenai.co/", "custom"),
+            ("https://app.edenai.run/settings/api-keys", "custom"),
+            ("https://api.eu.edenai.run/v3", "custom"),
+            ("https://api.eu.edenai.run/v3/models", "custom"),
+            ("https://mcp.edenai.run/mcp", "custom"),
+            ("https://edenai.run/v3", "custom"),
+            ("https://www.edenai.run/v3", "custom"),
+            ("https://api.edenai.co/v3", "custom"),
+            ("https://api.edenai.run.evil.test/v3", "custom"),
             ("https://router.bynara.id/v1", "nararouter"),
             ("https://router.bynara.id/v1/chat/completions", "nararouter"),
             ("https://router.bynara.id/v1/responses", "nararouter"),
@@ -8257,7 +8292,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 170);
+        assert_eq!(list_providers().len(), 171);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8838,6 +8873,51 @@ mod tests {
             "https://console.tencentcloud.com/edgeone/makers"
         );
         assert_eq!(serialized["portal"]["kind"], "console");
+
+        let edenai = list_providers()
+            .iter()
+            .find(|provider| provider.id == "edenai")
+            .unwrap();
+        let serialized = serde_json::to_value(edenai).unwrap();
+        assert_eq!(edenai.name, "Eden AI");
+        assert_eq!(edenai.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(edenai.category, "gateway");
+        assert_eq!(edenai.default_base_url, Some("https://api.edenai.run/v3"));
+        assert_eq!(serialized["base_url"], "https://api.edenai.run/v3");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.edenai.run/v3"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://api.edenai.run/v3"
+        );
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://www.edenai.co/docs/v3/llms/chat-completions"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://app.edenai.run/settings/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(

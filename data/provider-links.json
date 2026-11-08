@@ -1154,6 +1154,13 @@
       "kind": "console"
     }
   },
+  "edenai": {
+    "docs_url": "https://www.edenai.co/docs/v3/llms/chat-completions",
+    "portal": {
+      "url": "https://app.edenai.run/settings/api-keys",
+      "kind": "api-key"
+    }
+  },
   "nararouter": {
     "docs_url": "https://router.bynara.id/docs",
     "portal": {
