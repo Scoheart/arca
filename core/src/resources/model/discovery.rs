@@ -170,6 +170,49 @@ pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<V
 }
 
 /// Documented model ids used when the provider's catalog is not public.
+/// Ids are the current published directory, plus docs aliases that directory omits.
+const NARAROUTER_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("agnes-3-flash", Some("Agnes 3 Flash"), Some(1_000_000)),
+    ("claude-fable-5.1", Some("Claude Fable 5.1"), Some(1_000_000)),
+    ("claude-haiku-5.5", Some("Claude Haiku 5.5"), Some(1_000_000)),
+    ("claude-opus-4.8", Some("Claude Opus 4.8"), Some(1_000_000)),
+    ("claude-opus-5", Some("Claude Opus 5"), Some(1_000_000)),
+    ("claude-opus-5.5", Some("Claude Opus 5.5"), Some(1_000_000)),
+    ("claude-sonnet-5", Some("Claude Sonnet 5"), Some(1_000_000)),
+    ("claude-sonnet-5.5", Some("Claude Sonnet 5.5"), Some(1_000_000)),
+    ("deepseek-v4.1-flash-fast", Some("DeepSeek v4.1 Flash Fast"), Some(1_000_000)),
+    ("deepseek-v4.1-flash", Some("Deepseek v4.1 Flash"), Some(1_000_000)),
+    ("glm-5.3", Some("GLM 5.3"), Some(1_000_000)),
+    ("glm-5.3-flash", Some("GLM 5.3 Flash"), Some(1_000_000)),
+    ("gpt-5.6-luna", Some("GPT 5.6 Luna"), Some(1_000_000)),
+    ("gpt-5.6-sol", Some("GPT 5.6 Sol"), Some(1_000_000)),
+    ("gpt-5.6-terra", Some("GPT 5.6 Terra"), Some(1_000_000)),
+    ("gpt-6-astra", Some("GPT 6 Astra"), Some(1_000_000)),
+    ("gpt-6.1-terra", Some("GPT 6.1 Terra"), Some(1_000_000)),
+    ("grok-4.6", Some("Grok 4.6"), Some(500_000)),
+    // Catalog JSON says 262000; pricing says 1000000. Do not pick one.
+    ("kimi-k2.7-code", Some("Kimi K2.7-code"), None),
+    ("kimi-k3", Some("Kimi K3"), Some(1_000_000)),
+    ("kimi-k3.1-pro", Some("Kimi K3.1 Pro"), Some(1_000_000)),
+    ("laguna-s-2.1", Some("Laguna S 2.1"), Some(262_000)),
+    ("longcat-2.0-free", Some("LongCat 2.0"), Some(1_000_000)),
+    ("minimax-m3", Some("MiniMax M3"), Some(1_000_000)),
+    ("muse-spark-1.2", Some("Muse Spark 1.2"), Some(1_000_000)),
+    ("muse-spark-1.2-contributor", Some("Muse Spark 1.2 Contributor"), Some(1_000_000)),
+    ("muse-spark-1.3", Some("Muse Spark 1.3"), Some(1_000_000)),
+    ("muse-spark-1.3-contributor", Some("Muse Spark 1.3 Contributor"), Some(1_000_000)),
+    ("qwen3.7-plus", Some("Qwen 3.7 Plus"), Some(1_000_000)),
+    ("qwen3.8-27b", Some("Qwen 3.8 27B"), Some(1_000_000)),
+    ("qwen3.8-flash", Some("Qwen 3.8 Flash"), Some(1_000_000)),
+    ("qwen3.8-max", Some("Qwen3.8-Max"), Some(1_000_000)),
+    ("stepfun-3.7-flash", Some("Stepfun 3.7 Flash"), Some(262_000)),
+    ("deepseek-v4-flash", Some("DeepSeek v4 Flash"), Some(1_000_000)),
+    ("deepseek-v4-pro", Some("DeepSeek v4 Pro"), Some(1_000_000)),
+    ("step-5-preview", Some("Step 5 Preview"), Some(1_000_000)),
+    ("auto/bynara", None, None),
+];
+
+/// Documented model ids used when the provider's catalog is not public.
 /// Ids are the current models page, not aliases or retired routes.
 const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("deepseek-v4.1-flash", Some("DeepSeek V4.1 Flash"), Some(1_048_576)),
@@ -184,6 +227,7 @@ const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
 fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
     let entries = match provider_type {
         "zro" => ZRO_STATIC_MODELS,
+        "nararouter" => NARAROUTER_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -294,6 +338,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "helmholtz-blablador"
 
         | "token360"
+        | "nararouter"
         | "zro"
         | "llm7"
         | "mistral"
@@ -1173,6 +1218,121 @@ mod tests {
     }
 
     #[test]
+    fn nararouter_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("nararouter").expect("nararouter seed");
+        let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            [
+                "agnes-3-flash",
+                "claude-fable-5.1",
+                "claude-haiku-5.5",
+                "claude-opus-4.8",
+                "claude-opus-5",
+                "claude-opus-5.5",
+                "claude-sonnet-5",
+                "claude-sonnet-5.5",
+                "deepseek-v4.1-flash-fast",
+                "deepseek-v4.1-flash",
+                "glm-5.3",
+                "glm-5.3-flash",
+                "gpt-5.6-luna",
+                "gpt-5.6-sol",
+                "gpt-5.6-terra",
+                "gpt-6-astra",
+                "gpt-6.1-terra",
+                "grok-4.6",
+                "kimi-k2.7-code",
+                "kimi-k3",
+                "kimi-k3.1-pro",
+                "laguna-s-2.1",
+                "longcat-2.0-free",
+                "minimax-m3",
+                "muse-spark-1.2",
+                "muse-spark-1.2-contributor",
+                "muse-spark-1.3",
+                "muse-spark-1.3-contributor",
+                "qwen3.7-plus",
+                "qwen3.8-27b",
+                "qwen3.8-flash",
+                "qwen3.8-max",
+                "stepfun-3.7-flash",
+                "deepseek-v4-flash",
+                "deepseek-v4-pro",
+                "step-5-preview",
+                "auto/bynara",
+            ]
+        );
+        assert_eq!(models[9].name.as_deref(), Some("Deepseek v4.1 Flash"));
+        assert_eq!(models[9].context_length, Some(1_000_000));
+        assert_eq!(models[17].context_length, Some(500_000));
+        assert_eq!(models[18].name.as_deref(), Some("Kimi K2.7-code"));
+        assert!(models[18].context_length.is_none());
+        assert_eq!(models[21].name.as_deref(), Some("Laguna S 2.1"));
+        assert_eq!(models[21].context_length, Some(262_000));
+        assert_eq!(models[35].name.as_deref(), Some("Step 5 Preview"));
+        assert_eq!(models[35].context_length, Some(1_000_000));
+        assert!(models[36].name.is_none());
+        assert!(models[36].context_length.is_none());
+        for omitted in [
+            "kimi-k2.5",
+            "gemini-3.1-pro",
+            "text-embedding-3-small",
+            "rerank-v3",
+            "jev",
+            "jev-1.14.0",
+            "combo/free-pack",
+            "deepseek-v4-flash:online",
+            "gpt-image-2",
+            "crouton-alpha",
+            "deepseek-v4.1-flash-abliterated",
+        ] {
+            assert!(!ids.contains(&omitted), "{omitted}");
+        }
+        assert!(reviewed_static_catalog("decuff").is_none());
+        assert!(reviewed_static_catalog("token360").is_none());
+
+        let config = provider(
+            "nararouter",
+            "https://router.bynara.id",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://router.bynara.id/v1/models"
+        );
+
+        let _home = TestHome::new("nararouter-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "nararouter-instance".into(),
+                name: "NaraRouter".into(),
+                provider: "nararouter".into(),
+                base_url: "https://router.bynara.id".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: crate::domain::types::AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), ids.len());
+        assert_eq!(seeded[0].id, "agnes-3-flash");
+        assert_eq!(seeded[36].id, "auto/bynara");
+    }
+
+    #[test]
     fn blazerail_discovers_the_public_openai_catalog() {
         let config = provider(
             "blazerail",
@@ -1339,6 +1499,7 @@ mod tests {
         "helmholtz-blablador",
 
         "token360",
+        "nararouter",
         "zro",
         "llm7",
         "mistral",
@@ -1532,7 +1693,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),

@@ -1154,6 +1154,13 @@
       "kind": "console"
     }
   },
+  "nararouter": {
+    "docs_url": "https://router.bynara.id/docs",
+    "portal": {
+      "url": "https://router.bynara.id/register",
+      "kind": "console"
+    }
+  },
   "zro": {
     "docs_url": "https://zro.moonmath.ai/docs/quickstart",
     "portal": {
