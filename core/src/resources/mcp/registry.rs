@@ -573,6 +573,12 @@ mod tests {
                 "https://github.com/jina-ai/MCP",
                 &["web", "search", "extraction", "research", "official"][..],
             ),
+            (
+                "you",
+                "https://api.you.com/mcp?profile=free",
+                "https://you.com/docs/agents/mcp-server",
+                &["search", "research", "official", "free"][..],
+            ),
         ];
 
         for (name, url, repo, tags) in http_cases {
@@ -587,6 +593,23 @@ mod tests {
                 "{name}: required tags drifted"
             );
         }
+
+        let you = builtin_entry(&entries, "you", "http");
+        let you_http = you.config.http.as_ref().unwrap();
+        assert!(
+            you_http.headers.is_none(),
+            "you: free profile must stay keyless"
+        );
+        assert!(
+            !you_http.url.contains("/mcp/research") && !you_http.url.contains("/mcp/finance"),
+            "you: do not attach the free profile to research or finance endpoints"
+        );
+        assert!(
+            you.description.contains("you-search")
+                && you.description.contains("you-discover")
+                && you.description.contains("100"),
+            "you: description must keep the free-profile tool and quota limits"
+        );
 
         let serpapi = builtin_entry(&entries, "serpapi", "http");
         assert_eq!(
