@@ -3640,6 +3640,21 @@
       }
     },
     {
+      "id": "edgeone-makers",
+      "name": "EdgeOne Makers Models",
+      "category": "gateway",
+      "baseUrl": "https://ai-gateway.edgeone.link/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://pages.edgeone.ai/document/makers-models-integration",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.tencentcloud.com/edgeone/makers"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

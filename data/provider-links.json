@@ -1160,5 +1160,12 @@
       "url": "https://dash.llm7.io/#/api-keys",
       "kind": "api-key"
     }
+  },
+  "edgeone-makers": {
+    "docs_url": "https://pages.edgeone.ai/document/makers-models-integration",
+    "portal": {
+      "url": "https://console.tencentcloud.com/edgeone/makers",
+      "kind": "console"
+    }
   }
 }
