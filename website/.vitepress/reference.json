@@ -3703,6 +3703,21 @@
       }
     },
     {
+      "id": "ifm",
+      "name": "IFM",
+      "category": "official",
+      "baseUrl": "https://api.ifm.ai/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.ifm.ai/docs/quickstart.md",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.ifm.ai/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

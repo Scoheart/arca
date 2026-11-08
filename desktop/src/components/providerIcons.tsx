@@ -104,6 +104,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "helicone",
   "huggingface",
   "iflytek-spark-x2",
+  "ifm",
   "inception",
   "indicstack",
   "inference-net",

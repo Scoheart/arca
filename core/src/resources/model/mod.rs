@@ -861,6 +861,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.token360.ai/v1beta",
             },
         ],
+        "ifm" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.ifm.ai/v1",
+        }],
         "edenai" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -1587,6 +1591,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         default_base_url: Some("https://ai-gateway.edgeone.link/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
+    },
+    ModelProviderView {
+        id: "ifm",
+        name: "IFM",
+        default_base_url: Some("https://api.ifm.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
     },
     ModelProviderView {
         id: "azure-openai",
@@ -2348,6 +2359,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.edenai.run" => "edenai",
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
+        "api.ifm.ai" => "ifm",
         "ai-gateway.edgeone.link" => "edgeone-makers",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
@@ -8195,6 +8207,24 @@ mod tests {
             ("https://dash.llm7.io/#/api-keys", "custom"),
             ("https://docs.llm7.io/", "custom"),
             ("https://api.llm7.io.evil.test/v1", "custom"),
+            ("https://api.ifm.ai/v1", "ifm"),
+            ("https://api.ifm.ai/v1/chat/completions", "ifm"),
+            ("https://api.ifm.ai/v1/responses", "ifm"),
+            ("https://api.ifm.ai/v1/models", "ifm"),
+            ("https://api.ifm.ai", "ifm"),
+            ("https://api.ifm.ai/v1/messages", "ifm"),
+            ("https://api.ifm.ai/v1/audio/transcriptions", "ifm"),
+            ("https://docs.ifm.ai/docs/quickstart.md", "custom"),
+            ("https://platform.ifm.ai/api-keys", "custom"),
+            ("https://ifm.ai/", "custom"),
+            ("https://www.ifm.ai/v1", "custom"),
+            ("https://console.ifm.ai/", "custom"),
+            ("https://chat.ifm.ai/v1/models", "custom"),
+            ("https://ifm.mbzuai.ac.ae/", "custom"),
+            ("https://mbzuai.ac.ae/", "custom"),
+            ("https://app.ifm.ai/v1", "custom"),
+            ("https://api.ifm.com/v1", "custom"),
+            ("https://api.ifm.ai.evil.test/v1", "custom"),
             ("https://ai-gateway.edgeone.link/v1", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link/v1/chat/completions", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link", "edgeone-makers"),
@@ -8292,7 +8322,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 171);
+        assert_eq!(list_providers().len(), 172);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8873,6 +8903,44 @@ mod tests {
             "https://console.tencentcloud.com/edgeone/makers"
         );
         assert_eq!(serialized["portal"]["kind"], "console");
+
+        let ifm = list_providers()
+            .iter()
+            .find(|provider| provider.id == "ifm")
+            .unwrap();
+        let serialized = serde_json::to_value(ifm).unwrap();
+        assert_eq!(ifm.name, "IFM");
+        assert_eq!(ifm.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(ifm.category, "official");
+        assert_eq!(ifm.default_base_url, Some("https://api.ifm.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.ifm.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/responses"
+        );
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.ifm.ai/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-responses"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"].as_array().map(|endpoints| endpoints.len()),
+            Some(1)
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://docs.ifm.ai/docs/quickstart.md");
+        assert_eq!(serialized["portal"]["url"], "https://platform.ifm.ai/api-keys");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
 
         let edenai = list_providers()
             .iter()

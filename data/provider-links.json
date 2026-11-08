@@ -1188,5 +1188,12 @@
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
     }
+  },
+  "ifm": {
+    "docs_url": "https://docs.ifm.ai/docs/quickstart.md",
+    "portal": {
+      "url": "https://platform.ifm.ai/api-keys",
+      "kind": "api-key"
+    }
   }
 }

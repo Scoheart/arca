@@ -342,6 +342,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "nararouter"
         | "zro"
         | "llm7"
+        | "ifm"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -437,6 +438,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "token360"
             | "edenai"
             | "llm7"
+            | "ifm"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -667,6 +669,7 @@ fn decode_page(adapter: DiscoveryAdapter, value: Value) -> Result<DecodedPage, S
                             .any(|method| method.as_str() == Some("generateContent"))
                     })
         })
+        .filter(|entry| !is_non_chat_ifm_catalog_entry(entry))
         .filter_map(|entry| model_summary(adapter, entry))
         .collect();
     // A malformed Cloudflare ID must not make a full page appear to be the
@@ -675,6 +678,25 @@ fn decode_page(adapter: DiscoveryAdapter, value: Value) -> Result<DecodedPage, S
         return Err("model_discovery_invalid_response: Workers AI returned an invalid marketplace model ID".into());
     }
     Ok(DecodedPage { models, next_token })
+}
+
+/// IFM publishes speech-only rows in the same OpenAI list as chat models.
+/// Drop a row only when it is an IFM model and `supported_endpoints` lists
+/// neither Chat Completions nor Responses. Other catalogs are unchanged.
+fn is_non_chat_ifm_catalog_entry(entry: &Value) -> bool {
+    let id = entry.get("id").and_then(Value::as_str).unwrap_or("");
+    if entry.get("owned_by").and_then(Value::as_str) != Some("MBZUAI") || !id.starts_with("IFM/") {
+        return false;
+    }
+    let Some(endpoints) = entry.get("supported_endpoints").and_then(Value::as_array) else {
+        return false;
+    };
+    !endpoints.iter().any(|endpoint| {
+        matches!(
+            endpoint.as_str(),
+            Some("/v1/chat/completions") | Some("/v1/responses")
+        )
+    })
 }
 
 fn model_summary(adapter: DiscoveryAdapter, value: &Value) -> Option<ProviderModelSummary> {
@@ -1335,6 +1357,24 @@ mod tests {
     }
 
     #[test]
+    fn ifm_discovers_the_public_openai_catalog() {
+        assert!(reviewed_static_catalog("ifm").is_none());
+        let config = provider(
+            "ifm",
+            "https://api.ifm.ai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.ifm.ai/v1/models"
+        );
+    }
+
+    #[test]
     fn edenai_discovers_the_public_openai_catalog() {
         let config = provider(
             "edenai",
@@ -1522,6 +1562,7 @@ mod tests {
         "nararouter",
         "zro",
         "llm7",
+        "ifm",
         "mistral",
         "deepseek",
         "groq",
@@ -1707,6 +1748,7 @@ mod tests {
             "token360",
             "edenai",
             "llm7",
+            "ifm",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -1860,6 +1902,56 @@ mod tests {
                 .as_str(),
             "https://api.fireworks.ai/v1/accounts/fireworks/models?filter=supports_serverless%3Dtrue&pageSize=200",
         );
+    }
+
+    #[test]
+    fn ifm_public_catalog_drops_speech_only_models() {
+        let page = decode_page(
+            DiscoveryAdapter::OpenAi,
+            serde_json::json!({
+                "object": "list",
+                "data": [
+                    {
+                        "id": "IFM/K2-Horizon-375B-A23B",
+                        "object": "model",
+                        "owned_by": "MBZUAI",
+                        "display_name": "K2 Horizon 375B A23B",
+                        "max_model_len": 524288,
+                        "context_length": 524288,
+                        "supported_endpoints": ["/v1/chat/completions", "/v1/responses"]
+                    },
+                    {
+                        "id": "IFM/Jais-3-MoVA-36B-A4B",
+                        "object": "model",
+                        "owned_by": "MBZUAI",
+                        "display_name": "Jais 3 MoVA 36B A4B",
+                        "supported_endpoints": ["/v1/chat/completions"]
+                    },
+                    {
+                        "id": "IFM/Jais-ASR",
+                        "object": "model",
+                        "owned_by": "MBZUAI",
+                        "display_name": "Jais ASR",
+                        "supported_endpoints": ["/v1/audio/transcriptions"]
+                    },
+                    {
+                        "id": "vendor/embed",
+                        "owned_by": "other",
+                        "supported_endpoints": ["/v1/embeddings"]
+                    }
+                ]
+            }),
+        )
+        .unwrap();
+        assert_eq!(page.models.len(), 3);
+        assert_eq!(page.models[0].id, "IFM/K2-Horizon-375B-A23B");
+        assert_eq!(page.models[0].name.as_deref(), Some("K2 Horizon 375B A23B"));
+        assert_eq!(page.models[0].context_length, Some(524288));
+        assert_eq!(page.models[1].id, "IFM/Jais-3-MoVA-36B-A4B");
+        assert_eq!(page.models[1].name.as_deref(), Some("Jais 3 MoVA 36B A4B"));
+        assert!(page.models[1].context_length.is_none());
+        assert_eq!(page.models[2].id, "vendor/embed");
+        assert!(page.models.iter().all(|model| model.id != "IFM/Jais-ASR"));
     }
 
     #[test]
