@@ -1524,6 +1524,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "llm7",
+        name: "LLM7.io",
+        default_base_url: Some("https://api.llm7.io/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "edgeone-makers",
         name: "EdgeOne Makers Models",
         default_base_url: Some("https://ai-gateway.edgeone.link/v1"),
@@ -2286,6 +2293,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.blablador.fz-juelich.de" => "helmholtz-blablador",
         "api.token360.ai" => "token360",
         "inference.asicloud.cudos.org" => "asi-cloud",
+        "api.llm7.io" => "llm7",
         "ai-gateway.edgeone.link" => "edgeone-makers",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
@@ -8076,6 +8084,19 @@ mod tests {
             ("https://llm.singularitycompute.com/v1", "custom"),
             ("https://inference.asicloud.cudos.org.evil.test/v1", "custom"),
             ("https://llm.a.singularitycompute.com.evil.test/v1", "custom"),
+            ("https://api.llm7.io/v1", "llm7"),
+            ("https://api.llm7.io/v1/chat/completions", "llm7"),
+            ("https://api.llm7.io/v1/models", "llm7"),
+            ("https://api.llm7.io", "llm7"),
+            ("https://api.llm7.io/v1/messages", "llm7"),
+            ("https://api.llm7.io/v1/responses", "llm7"),
+            ("https://api.llm7.io/v1beta/models/gemini-2.5-flash:generateContent", "llm7"),
+            ("https://llm7.io/v1", "custom"),
+            ("https://www.llm7.io/v1", "custom"),
+            ("https://dash.llm7.io/", "custom"),
+            ("https://dash.llm7.io/#/api-keys", "custom"),
+            ("https://docs.llm7.io/", "custom"),
+            ("https://api.llm7.io.evil.test/v1", "custom"),
             ("https://ai-gateway.edgeone.link/v1", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link/v1/chat/completions", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link", "edgeone-makers"),
@@ -8173,7 +8194,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 167);
+        assert_eq!(list_providers().len(), 168);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8605,6 +8626,37 @@ mod tests {
         assert_eq!(serialized["portal"]["url"], "https://asicloud.cudos.org/");
         assert_eq!(serialized["portal"]["kind"], "console");
 
+        let llm7 = list_providers()
+            .iter()
+            .find(|provider| provider.id == "llm7")
+            .unwrap();
+        let serialized = serde_json::to_value(llm7).unwrap();
+        assert_eq!(llm7.name, "LLM7.io");
+        assert_eq!(llm7.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(llm7.category, "gateway");
+        assert_eq!(llm7.default_base_url, Some("https://api.llm7.io/v1"));
+        assert_eq!(serialized["base_url"], "https://api.llm7.io/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.llm7.io/api-reference/introduction"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://dash.llm7.io/#/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
         let edgeone_makers = list_providers()
             .iter()
             .find(|provider| provider.id == "edgeone-makers")
