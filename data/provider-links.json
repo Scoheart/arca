@@ -1154,6 +1154,13 @@
       "kind": "console"
     }
   },
+  "zro": {
+    "docs_url": "https://zro.moonmath.ai/docs/quickstart",
+    "portal": {
+      "url": "https://zro.moonmath.ai/sign-in",
+      "kind": "console"
+    }
+  },
   "llm7": {
     "docs_url": "https://docs.llm7.io/api-reference/introduction",
     "portal": {

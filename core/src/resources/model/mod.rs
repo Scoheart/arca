@@ -861,6 +861,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.token360.ai/v1beta",
             },
         ],
+        "zro" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://zro.moonmath.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://zro.moonmath.ai",
+            },
+        ],
         "edgeone-makers" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://ai-gateway.edgeone.link",
@@ -1520,6 +1530,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "asi-cloud",
         name: "ASI:Cloud",
         default_base_url: Some("https://inference.asicloud.cudos.org/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "zro",
+        name: "Zro",
+        default_base_url: Some("https://zro.moonmath.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2292,6 +2309,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.decuff.ai" => "decuff",
         "api.blablador.fz-juelich.de" => "helmholtz-blablador",
         "api.token360.ai" => "token360",
+        "zro.moonmath.ai" => "zro",
         "inference.asicloud.cudos.org" => "asi-cloud",
         "api.llm7.io" => "llm7",
         "ai-gateway.edgeone.link" => "edgeone-makers",
@@ -8083,6 +8101,18 @@ mod tests {
             ("https://a.singularitycompute.com/v1", "custom"),
             ("https://llm.singularitycompute.com/v1", "custom"),
             ("https://inference.asicloud.cudos.org.evil.test/v1", "custom"),
+            ("https://zro.moonmath.ai/v1", "zro"),
+            ("https://zro.moonmath.ai/v1/chat/completions", "zro"),
+            ("https://zro.moonmath.ai/v1/responses", "zro"),
+            ("https://zro.moonmath.ai/v1/models", "zro"),
+            ("https://zro.moonmath.ai", "zro"),
+            ("https://zro.moonmath.ai/v1/messages", "zro"),
+            ("https://zro.moonmath.ai/sign-in", "zro"),
+            ("https://www.zro.moonmath.ai/v1", "custom"),
+            ("https://moonmath.ai/v1", "custom"),
+            ("https://moonmath.ai/v1/models", "custom"),
+            ("https://api.moonmath.ai/v1", "custom"),
+            ("https://zro.moonmath.ai.evil.test/v1", "custom"),
             ("https://llm.a.singularitycompute.com.evil.test/v1", "custom"),
             ("https://api.llm7.io/v1", "llm7"),
             ("https://api.llm7.io/v1/chat/completions", "llm7"),
@@ -8194,7 +8224,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 168);
+        assert_eq!(list_providers().len(), 169);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8624,6 +8654,42 @@ mod tests {
             "https://docs.cudos.org/docs/asi-cloud/inference/quickstart"
         );
         assert_eq!(serialized["portal"]["url"], "https://asicloud.cudos.org/");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let zro = list_providers()
+            .iter()
+            .find(|provider| provider.id == "zro")
+            .unwrap();
+        let serialized = serde_json::to_value(zro).unwrap();
+        assert_eq!(zro.name, "Zro");
+        assert_eq!(zro.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(zro.category, "gateway");
+        assert_eq!(zro.default_base_url, Some("https://zro.moonmath.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://zro.moonmath.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://zro.moonmath.ai/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(serialized["additional_endpoints"][1]["base_url"], "https://zro.moonmath.ai");
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://zro.moonmath.ai/docs/quickstart");
+        assert_eq!(serialized["portal"]["url"], "https://zro.moonmath.ai/sign-in");
         assert_eq!(serialized["portal"]["kind"], "console");
 
         let llm7 = list_providers()
