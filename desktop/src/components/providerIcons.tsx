@@ -135,6 +135,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "ollama",
   "openai",
   "openrouter",
+  "optracloud",
   "orcarouter",
   "ovhcloud",
   "oxion-ai",

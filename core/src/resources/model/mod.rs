@@ -861,6 +861,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.token360.ai/v1beta",
             },
         ],
+        "optracloud" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.optracloud.com",
+        }],
         "edenai" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -1550,6 +1554,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "asi-cloud",
         name: "ASI:Cloud",
         default_base_url: Some("https://inference.asicloud.cudos.org/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "optracloud",
+        name: "OptraCloud",
+        default_base_url: Some("https://api.optracloud.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2345,6 +2356,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.token360.ai" => "token360",
         "zro.moonmath.ai" => "zro",
         "inference.asicloud.cudos.org" => "asi-cloud",
+        "api.optracloud.com" => "optracloud",
         "api.edenai.run" => "edenai",
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
@@ -8195,6 +8207,30 @@ mod tests {
             ("https://dash.llm7.io/#/api-keys", "custom"),
             ("https://docs.llm7.io/", "custom"),
             ("https://api.llm7.io.evil.test/v1", "custom"),
+            ("https://api.optracloud.com/v1", "optracloud"),
+            ("https://api.optracloud.com/v1/chat/completions", "optracloud"),
+            ("https://api.optracloud.com/v1/models", "optracloud"),
+            ("https://api.optracloud.com", "optracloud"),
+            ("https://api.optracloud.com/v1/messages", "optracloud"),
+            ("https://api.optracloud.com/v1/responses", "optracloud"),
+            ("https://api.optracloud.com/v1beta/models/optra-coder:generateContent", "optracloud"),
+            ("https://api.optracloud.com/portal/login", "optracloud"),
+            ("https://api.optracloud.com/portal/apikeys", "optracloud"),
+            ("https://optracloud.com/v1", "custom"),
+            ("https://optracloud.com/docs.html", "custom"),
+            ("https://optracloud.com/free.html", "custom"),
+            ("https://optracloud.com/portal/apikeys", "custom"),
+            ("https://optracloud.com/portal/join", "custom"),
+            ("https://www.optracloud.com/v1", "custom"),
+            ("https://www.optracloud.com/v1/models", "custom"),
+            ("https://portal.optracloud.com/v1", "custom"),
+            ("https://you.optracloud.com/v1", "custom"),
+            ("https://docs.optracloud.com/v1", "custom"),
+            ("https://api.optracloud.ai/v1", "custom"),
+            ("https://optracloud.ai/v1", "custom"),
+            ("https://globussoft.com/v1", "custom"),
+            ("https://www.globussoft.com/v1", "custom"),
+            ("https://api.optracloud.com.evil.test/v1", "custom"),
             ("https://ai-gateway.edgeone.link/v1", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link/v1/chat/completions", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link", "edgeone-makers"),
@@ -8292,7 +8328,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 171);
+        assert_eq!(list_providers().len(), 172);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8916,6 +8952,50 @@ mod tests {
         assert_eq!(
             serialized["portal"]["url"],
             "https://app.edenai.run/settings/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let optracloud = list_providers()
+            .iter()
+            .find(|provider| provider.id == "optracloud")
+            .unwrap();
+        let serialized = serde_json::to_value(optracloud).unwrap();
+        assert_eq!(optracloud.name, "OptraCloud");
+        assert_eq!(optracloud.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(optracloud.category, "gateway");
+        assert_eq!(
+            optracloud.default_base_url,
+            Some("https://api.optracloud.com/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.optracloud.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.optracloud.com"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"].as_array().map(|endpoints| endpoints.len()),
+            Some(1)
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://optracloud.com/docs.html");
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://optracloud.com/portal/apikeys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
 

@@ -1188,5 +1188,12 @@
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
     }
+  },
+  "optracloud": {
+    "docs_url": "https://optracloud.com/docs.html",
+    "portal": {
+      "url": "https://optracloud.com/portal/apikeys",
+      "kind": "api-key"
+    }
   }
 }
