@@ -1527,6 +1527,10 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "llm7",
         name: "LLM7.io",
         default_base_url: Some("https://api.llm7.io/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "edgeone-makers",
         name: "EdgeOne Makers Models",
         default_base_url: Some("https://ai-gateway.edgeone.link/v1"),
@@ -8190,7 +8194,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 167);
+        assert_eq!(list_providers().len(), 168);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
