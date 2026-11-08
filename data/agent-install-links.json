@@ -514,5 +514,9 @@
   "deepseek-harness-desktop": {
     "url": "https://www.deepseek.com/en/harness/",
     "label": "安装文档"
+  },
+  "deepai-code": {
+    "url": "https://deepai.org/chat/ai-code",
+    "label": "官方下载"
   }
 }

@@ -175,6 +175,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "yeta",
   "zai",
   "zenmux",
+  "zro",
 ] as const;
 
 const FALLBACK_COLORS = ["#3568D4", "#16856B", "#B84A62", "#9A6618", "#5E55B8", "#277B91"];
