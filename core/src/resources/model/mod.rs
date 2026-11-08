@@ -891,6 +891,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://zro.moonmath.ai",
             },
         ],
+        "nodecode" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.nodecode.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.nodecode.ai",
+            },
+        ],
         "edgeone-makers" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://ai-gateway.edgeone.link",
@@ -1585,6 +1595,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "edgeone-makers",
         name: "EdgeOne Makers Models",
         default_base_url: Some("https://ai-gateway.edgeone.link/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "nodecode",
+        name: "Nodecode",
+        default_base_url: Some("https://api.nodecode.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2348,6 +2365,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.edenai.run" => "edenai",
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
+        "api.nodecode.ai" => "nodecode",
         "ai-gateway.edgeone.link" => "edgeone-makers",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
@@ -8195,6 +8213,28 @@ mod tests {
             ("https://dash.llm7.io/#/api-keys", "custom"),
             ("https://docs.llm7.io/", "custom"),
             ("https://api.llm7.io.evil.test/v1", "custom"),
+            ("https://api.nodecode.ai/v1", "nodecode"),
+            ("https://api.nodecode.ai/v1/chat/completions", "nodecode"),
+            ("https://api.nodecode.ai/v1/responses", "nodecode"),
+            ("https://api.nodecode.ai/v1/models", "nodecode"),
+            ("https://api.nodecode.ai", "nodecode"),
+            ("https://api.nodecode.ai/v1/messages", "nodecode"),
+            ("https://api.nodecode.ai/v1/images/generations", "nodecode"),
+            ("https://nodecode.ai/", "custom"),
+            ("https://nodecode.ai/docs/models", "custom"),
+            ("https://nodecode.ai/pricing", "custom"),
+            ("https://nodecode.ai/account/keys", "custom"),
+            ("https://www.nodecode.ai/", "custom"),
+            ("https://docs.nodecode.ai/", "custom"),
+            ("https://app.nodecode.ai/", "custom"),
+            ("https://dash.nodecode.ai/", "custom"),
+            ("https://console.nodecode.ai/", "custom"),
+            ("https://account.nodecode.ai/", "custom"),
+            ("https://www.api.nodecode.ai/v1", "custom"),
+            ("https://api.nodecode.com/v1", "custom"),
+            ("https://nodecode.com/", "custom"),
+            ("https://www.nodecode.com/", "custom"),
+            ("https://api.nodecode.ai.evil.test/v1", "custom"),
             ("https://ai-gateway.edgeone.link/v1", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link/v1/chat/completions", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link", "edgeone-makers"),
@@ -8292,7 +8332,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 171);
+        assert_eq!(list_providers().len(), 172);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8917,6 +8957,42 @@ mod tests {
             serialized["portal"]["url"],
             "https://app.edenai.run/settings/api-keys"
         );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let nodecode = list_providers()
+            .iter()
+            .find(|provider| provider.id == "nodecode")
+            .unwrap();
+        let serialized = serde_json::to_value(nodecode).unwrap();
+        assert_eq!(nodecode.name, "Nodecode");
+        assert_eq!(nodecode.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(nodecode.category, "gateway");
+        assert_eq!(nodecode.default_base_url, Some("https://api.nodecode.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.nodecode.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.nodecode.ai/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(serialized["additional_endpoints"][1]["base_url"], "https://api.nodecode.ai");
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://nodecode.ai/docs/models");
+        assert_eq!(serialized["portal"]["url"], "https://nodecode.ai/account/keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {

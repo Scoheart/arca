@@ -212,6 +212,12 @@ const NARAROUTER_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("auto/bynara", None, None),
 ];
 
+/// Documented chat model used when Nodecode's catalog is not public.
+/// The image and classifier ids are real and are not session chat models.
+const NODECODE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("nodecode-cyber-v1", Some("Cyber v1"), Some(1_048_576)),
+];
+
 /// Documented model ids used when the provider's catalog is not public.
 /// Ids are the current models page, not aliases or retired routes.
 const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
@@ -226,6 +232,7 @@ const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
 
 fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
     let entries = match provider_type {
+        "nodecode" => NODECODE_STATIC_MODELS,
         "zro" => ZRO_STATIC_MODELS,
         "nararouter" => NARAROUTER_STATIC_MODELS,
         _ => return None,
@@ -342,6 +349,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "nararouter"
         | "zro"
         | "llm7"
+        | "nodecode"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -1335,6 +1343,62 @@ mod tests {
     }
 
     #[test]
+    fn nodecode_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("nodecode").expect("nodecode seed");
+        let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
+        assert_eq!(ids, ["nodecode-cyber-v1"]);
+        assert_eq!(models[0].name.as_deref(), Some("Cyber v1"));
+        assert_eq!(models[0].context_length, Some(1_048_576));
+        for omitted in [
+            "nodecode-image-v1",
+            "nodecode-decide-v1",
+            "nodecode-free/nodecode-cyber-v1",
+            "nodecode-free",
+        ] {
+            assert!(!ids.contains(&omitted), "{omitted}");
+        }
+
+        let config = provider(
+            "nodecode",
+            "https://api.nodecode.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.nodecode.ai/v1/models"
+        );
+
+        let _home = TestHome::new("nodecode-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "nodecode-instance".into(),
+                name: "Nodecode".into(),
+                provider: "nodecode".into(),
+                base_url: "https://api.nodecode.ai".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "nodecode-cyber-v1");
+        assert_eq!(seeded[0].context_length, Some(1_048_576));
+    }
+
+    #[test]
     fn edenai_discovers_the_public_openai_catalog() {
         let config = provider(
             "edenai",
@@ -1522,6 +1586,7 @@ mod tests {
         "nararouter",
         "zro",
         "llm7",
+        "nodecode",
         "mistral",
         "deepseek",
         "groq",
@@ -1714,7 +1779,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),

@@ -4802,5 +4802,22 @@
     "codec": "standard",
     "layout": "map",
     "transports": []
+  },
+  "nodecode": {
+    "global": null,
+    "project": null,
+    "format": "unknown",
+    "key": "",
+    "enabled": true,
+    "builtin": true,
+    "name": "Nodecode",
+    "docs": "https://nodecode.ai/docs/install",
+    "note": "Nodecode 的终端编程代理，命令为 nodecode。官方安装文档确认 Linux x86_64 与 Apple Silicon macOS 15 及以上使用 curl -fsSL https://nodecode.ai/install.sh | sh，Windows x86_64 的 PowerShell 使用 irm https://nodecode.ai/install.ps1 | iex；登录为 nodecode login。主目录是 ~/.nodecode/，模型写在 config.jsonc 的 providers，技能由 import 链接进 knowledge cell，MCP 由 import 与 /mcp 写入配置。已发布的核心配置键没有可由 Arca 现有适配器安全写入的 MCP、Models 或 Skills 契约。Arca 仅展示，不写入。",
+    "category": "cli",
+    "evidence": "official",
+    "verified_at": "2026-11-08",
+    "codec": "standard",
+    "layout": "map",
+    "transports": []
   }
 }

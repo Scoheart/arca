@@ -336,5 +336,13 @@
     "note": "DeepAI 的 Mac 与 Windows 桌面编程客户端。官方产品页确认 macOS 13 或更高版本的 Apple silicon 与 Intel 下载，以及 Windows x64 与 Arm 下载；文档说明 Mac 打开磁盘映像后拖入应用程序文件夹，Windows 运行安装程序。尚未核验可由 Arca 启动的应用包名或 CLI，也未核验可安全写入的用户级 MCP、Models 或 Skills 契约。Arca 仅展示，不写入。",
     "verified_at": "2026-11-07",
     "evidence": "official"
+  },
+  "nodecode": {
+    "name": "Nodecode",
+    "category": "cli",
+    "docs": "https://nodecode.ai/docs/install",
+    "note": "Nodecode 的终端编程代理，命令为 nodecode。官方安装文档确认 Linux x86_64 与 Apple Silicon macOS 15 及以上使用 curl -fsSL https://nodecode.ai/install.sh | sh，Windows x86_64 的 PowerShell 使用 irm https://nodecode.ai/install.ps1 | iex；登录为 nodecode login。主目录是 ~/.nodecode/，模型写在 config.jsonc 的 providers，技能由 import 链接进 knowledge cell，MCP 由 import 与 /mcp 写入配置。已发布的核心配置键没有可由 Arca 现有适配器安全写入的 MCP、Models 或 Skills 契约。Arca 仅展示，不写入。",
+    "verified_at": "2026-11-08",
+    "evidence": "official"
   }
 }

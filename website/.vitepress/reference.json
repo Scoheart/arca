@@ -3703,6 +3703,22 @@
       }
     },
     {
+      "id": "nodecode",
+      "name": "Nodecode",
+      "category": "gateway",
+      "baseUrl": "https://api.nodecode.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://nodecode.ai/docs/models",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://nodecode.ai/account/keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

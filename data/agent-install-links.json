@@ -518,5 +518,9 @@
   "deepai-code": {
     "url": "https://deepai.org/chat/ai-code",
     "label": "官方下载"
+  },
+  "nodecode": {
+    "url": "https://nodecode.ai/docs/install",
+    "label": "安装文档"
   }
 }

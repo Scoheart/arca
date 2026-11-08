@@ -126,6 +126,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "munito",
   "nanogpt",
   "nararouter",
+  "nodecode",
   "nebius",
   "nomask",
   "nous-portal",

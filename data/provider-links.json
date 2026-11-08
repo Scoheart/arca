@@ -1188,5 +1188,12 @@
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
     }
+  },
+  "nodecode": {
+    "docs_url": "https://nodecode.ai/docs/models",
+    "portal": {
+      "url": "https://nodecode.ai/account/keys",
+      "kind": "api-key"
+    }
   }
 }
