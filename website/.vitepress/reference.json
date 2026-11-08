@@ -3626,6 +3626,21 @@
       }
     },
     {
+      "id": "xkiro",
+      "name": "xKiro",
+      "category": "gateway",
+      "baseUrl": "https://api.xkiro.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://docs.xkiro.com/api/chat-completions/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://xkiro.com/dashboard/api/keys"
+      }
+    },
+    {
       "id": "edenai",
       "name": "Eden AI",
       "category": "gateway",

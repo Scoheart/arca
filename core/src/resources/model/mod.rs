@@ -861,6 +861,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.token360.ai/v1beta",
             },
         ],
+        "xkiro" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.xkiro.com",
+        }],
         "edenai" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -1550,6 +1554,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "asi-cloud",
         name: "ASI:Cloud",
         default_base_url: Some("https://inference.asicloud.cudos.org/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "xkiro",
+        name: "xKiro",
+        default_base_url: Some("https://api.xkiro.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2345,6 +2356,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.token360.ai" => "token360",
         "zro.moonmath.ai" => "zro",
         "inference.asicloud.cudos.org" => "asi-cloud",
+        "api.xkiro.com" => "xkiro",
         "api.edenai.run" => "edenai",
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
@@ -8137,6 +8149,27 @@ mod tests {
             ("https://a.singularitycompute.com/v1", "custom"),
             ("https://llm.singularitycompute.com/v1", "custom"),
             ("https://inference.asicloud.cudos.org.evil.test/v1", "custom"),
+            ("https://api.xkiro.com/v1", "xkiro"),
+            ("https://api.xkiro.com/v1/chat/completions", "xkiro"),
+            ("https://api.xkiro.com/v1/models", "xkiro"),
+            ("https://api.xkiro.com", "xkiro"),
+            ("https://api.xkiro.com/v1/messages", "xkiro"),
+            ("https://api.xkiro.com/v1/responses", "xkiro"),
+            ("https://api.xkiro.com/v1beta/models/gemini-2.5-flash:generateContent", "xkiro"),
+            ("https://xkiro.com/v1", "custom"),
+            ("https://xkiro.com/v1/models", "custom"),
+            ("https://xkiro.com/v1/chat/completions", "custom"),
+            ("https://xkiro.com/register", "custom"),
+            ("https://xkiro.com/dashboard/api/keys", "custom"),
+            ("https://www.xkiro.com/v1", "custom"),
+            ("https://docs.xkiro.com/", "custom"),
+            ("https://docs.xkiro.com/api/chat-completions/", "custom"),
+            ("https://app.xkiro.com/v1", "custom"),
+            ("https://xtrouter.com/", "custom"),
+            ("https://api.xtrouter.com/v1", "custom"),
+            ("https://cdn.xtrouter.com/tag-images/kimi-icon.svg", "custom"),
+            ("https://api.xkiro.ai/v1", "custom"),
+            ("https://api.xkiro.com.evil.test/v1", "custom"),
             ("https://api.edenai.run/v3", "edenai"),
             ("https://api.edenai.run/v3/chat/completions", "edenai"),
             ("https://api.edenai.run/v3/responses", "edenai"),
@@ -8292,7 +8325,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 171);
+        assert_eq!(list_providers().len(), 172);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8873,6 +8906,53 @@ mod tests {
             "https://console.tencentcloud.com/edgeone/makers"
         );
         assert_eq!(serialized["portal"]["kind"], "console");
+
+        let xkiro = list_providers()
+            .iter()
+            .find(|provider| provider.id == "xkiro")
+            .unwrap();
+        let serialized = serde_json::to_value(xkiro).unwrap();
+        assert_eq!(xkiro.name, "xKiro");
+        assert_eq!(xkiro.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(xkiro.category, "gateway");
+        assert_eq!(xkiro.default_base_url, Some("https://api.xkiro.com/v1"));
+        assert_eq!(serialized["base_url"], "https://api.xkiro.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_some());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.xkiro.com"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"]
+                .as_array()
+                .map(|endpoints| endpoints.len()),
+            Some(1)
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.xkiro.com/api/chat-completions/"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://xkiro.com/dashboard/api/keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
 
         let edenai = list_providers()
             .iter()

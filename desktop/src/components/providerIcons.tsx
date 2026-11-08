@@ -173,6 +173,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "wandb",
   "xai",
   "xiaomi",
+  "xkiro",
   "yeta",
   "zai",
   "zenmux",

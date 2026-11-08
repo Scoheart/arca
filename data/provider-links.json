@@ -1154,6 +1154,13 @@
       "kind": "console"
     }
   },
+  "xkiro": {
+    "docs_url": "https://docs.xkiro.com/api/chat-completions/",
+    "portal": {
+      "url": "https://xkiro.com/dashboard/api/keys",
+      "kind": "api-key"
+    }
+  },
   "edenai": {
     "docs_url": "https://www.edenai.co/docs/v3/llms/chat-completions",
     "portal": {
