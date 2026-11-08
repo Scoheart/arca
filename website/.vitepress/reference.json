@@ -3703,6 +3703,22 @@
       }
     },
     {
+      "id": "freeinference",
+      "name": "FreeInference",
+      "category": "gateway",
+      "baseUrl": "https://freeinference.org/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://doc.freeinference.org/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://freeinference.org/signup"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

@@ -1188,5 +1188,12 @@
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
     }
+  },
+  "freeinference": {
+    "docs_url": "https://doc.freeinference.org/quickstart",
+    "portal": {
+      "url": "https://freeinference.org/signup",
+      "kind": "console"
+    }
   }
 }

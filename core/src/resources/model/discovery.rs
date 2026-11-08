@@ -342,6 +342,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "nararouter"
         | "zro"
         | "llm7"
+        | "freeinference"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -437,6 +438,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "token360"
             | "edenai"
             | "llm7"
+            | "freeinference"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
             | "nvidia"
@@ -1335,6 +1337,24 @@ mod tests {
     }
 
     #[test]
+    fn freeinference_discovers_the_public_openai_catalog() {
+        assert!(reviewed_static_catalog("freeinference").is_none());
+        let config = provider(
+            "freeinference",
+            "https://freeinference.org",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://freeinference.org/v1/models"
+        );
+    }
+
+    #[test]
     fn edenai_discovers_the_public_openai_catalog() {
         let config = provider(
             "edenai",
@@ -1522,6 +1542,7 @@ mod tests {
         "nararouter",
         "zro",
         "llm7",
+        "freeinference",
         "mistral",
         "deepseek",
         "groq",
@@ -1707,6 +1728,7 @@ mod tests {
             "token360",
             "edenai",
             "llm7",
+            "freeinference",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
