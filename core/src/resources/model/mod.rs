@@ -861,6 +861,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.token360.ai/v1beta",
             },
         ],
+        "edgeone-makers" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://ai-gateway.edgeone.link",
+        }],
         _ => &[],
     }
 }
@@ -1516,6 +1520,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "asi-cloud",
         name: "ASI:Cloud",
         default_base_url: Some("https://inference.asicloud.cudos.org/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "edgeone-makers",
+        name: "EdgeOne Makers Models",
+        default_base_url: Some("https://ai-gateway.edgeone.link/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2275,6 +2286,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.blablador.fz-juelich.de" => "helmholtz-blablador",
         "api.token360.ai" => "token360",
         "inference.asicloud.cudos.org" => "asi-cloud",
+        "ai-gateway.edgeone.link" => "edgeone-makers",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -8064,6 +8076,21 @@ mod tests {
             ("https://llm.singularitycompute.com/v1", "custom"),
             ("https://inference.asicloud.cudos.org.evil.test/v1", "custom"),
             ("https://llm.a.singularitycompute.com.evil.test/v1", "custom"),
+            ("https://ai-gateway.edgeone.link/v1", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link/v1/chat/completions", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link/v1/messages", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link/v1/models", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link/v1/responses", "edgeone-makers"),
+            ("https://makers.edgeone.link/document/makers-models-integration", "custom"),
+            ("https://pages.edgeone.ai/document/makers-models-integration", "custom"),
+            ("https://pages.edgeone.ai/zh/use-cases/free-llm-api", "custom"),
+            ("https://edgeone.ai/makers/new", "custom"),
+            ("https://console.tencentcloud.com/edgeone/makers", "custom"),
+            ("https://www.ai-gateway.edgeone.link/v1", "custom"),
+            ("https://ai-gateway.edgeone.ai/v1", "custom"),
+            ("https://gateway.edgeone.link/v1", "custom"),
+            ("https://ai-gateway.edgeone.link.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -8146,7 +8173,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 166);
+        assert_eq!(list_providers().len(), 167);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8576,6 +8603,53 @@ mod tests {
             "https://docs.cudos.org/docs/asi-cloud/inference/quickstart"
         );
         assert_eq!(serialized["portal"]["url"], "https://asicloud.cudos.org/");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let edgeone_makers = list_providers()
+            .iter()
+            .find(|provider| provider.id == "edgeone-makers")
+            .unwrap();
+        let serialized = serde_json::to_value(edgeone_makers).unwrap();
+        assert_eq!(edgeone_makers.name, "EdgeOne Makers Models");
+        assert_eq!(edgeone_makers.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(edgeone_makers.category, "gateway");
+        assert_eq!(
+            edgeone_makers.default_base_url,
+            Some("https://ai-gateway.edgeone.link/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://ai-gateway.edgeone.link");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://ai-gateway.edgeone.link"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"].as_array().map(|endpoints| endpoints.len()),
+            Some(1)
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://pages.edgeone.ai/document/makers-models-integration"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://console.tencentcloud.com/edgeone/makers"
+        );
         assert_eq!(serialized["portal"]["kind"], "console");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
