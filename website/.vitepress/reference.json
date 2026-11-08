@@ -3626,6 +3626,22 @@
       }
     },
     {
+      "id": "nararouter",
+      "name": "NaraRouter",
+      "category": "gateway",
+      "baseUrl": "https://router.bynara.id/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://router.bynara.id/docs",
+      "portal": {
+        "kind": "console",
+        "url": "https://router.bynara.id/register"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

@@ -1153,5 +1153,12 @@
       "url": "https://asicloud.cudos.org/",
       "kind": "console"
     }
+  },
+  "nararouter": {
+    "docs_url": "https://router.bynara.id/docs",
+    "portal": {
+      "url": "https://router.bynara.id/register",
+      "kind": "console"
+    }
   }
 }
