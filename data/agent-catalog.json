@@ -4785,5 +4785,22 @@
     "codec": "standard",
     "layout": "map",
     "transports": []
+  },
+  "deepai-code": {
+    "global": null,
+    "project": null,
+    "format": "unknown",
+    "key": "",
+    "enabled": true,
+    "builtin": true,
+    "name": "DeepAI Code",
+    "docs": "https://deepai.org/chat/ai-code",
+    "note": "DeepAI 的 Mac 与 Windows 桌面编程客户端。官方产品页确认 macOS 13 或更高版本的 Apple silicon 与 Intel 下载，以及 Windows x64 与 Arm 下载；文档说明 Mac 打开磁盘映像后拖入应用程序文件夹，Windows 运行安装程序。尚未核验可由 Arca 启动的应用包名或 CLI，也未核验可安全写入的用户级 MCP、Models 或 Skills 契约。Arca 仅展示，不写入。",
+    "category": "desktop",
+    "evidence": "official",
+    "verified_at": "2026-11-07",
+    "codec": "standard",
+    "layout": "map",
+    "transports": []
   }
 }
