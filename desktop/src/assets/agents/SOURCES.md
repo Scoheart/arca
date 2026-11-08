@@ -124,3 +124,5 @@ CodeBuddy CN reuses the sourced CodeBuddy mark through an explicit alias. Its in
 - `qoderwake.png`: PNG converted with macOS `sips` from the signed QoderWake native `AppIcon.icns` (`com.qoder.QoderWake.MenuBar`, shell 0.1.19/backend 1.2.4), acquired from the official `download.qoder.com/qoderwake/installers/1.2.4/` installer (2026-10-28). The surface catalog records its Desktop form.
 
 - `qoderwake-cn.png`: PNG converted with macOS `sips` from the independently signed QoderWake CN `AppIcon.icns` (`com.qoder.QoderWakeCN.MenuBar`, shell 0.1.19/backend 1.2.4-cn), acquired from `ide.qoder.com.cn/qoderwake-cn/installers/1.2.4-cn/` (2026-10-28). Its native artwork and Desktop form distinguish this independent product.
+
+- `velork.png`: unmodified 192×192 PNG from the official apple-touch icon at <https://velork.com/apple-touch-icon.png>, retrieved 2026-11-08. The homepage links the same bytes as <https://velork.com/icons/icon-192x192.png>. SHA-256 `e8e1b7679ecc7dea7a1deb15e8c8a2de4dbee48c1825d1a595d4625a82ea46cf`. The tile is fully opaque, so it is full-bleed. `surfaces.json` records the Desktop form.
