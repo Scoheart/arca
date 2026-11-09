@@ -1589,6 +1589,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "exaone",
+        name: "EXAONE API Platform",
+        default_base_url: Some("https://api.exaone.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2348,6 +2355,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.edenai.run" => "edenai",
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
+        "api.exaone.ai" => "exaone",
         "ai-gateway.edgeone.link" => "edgeone-makers",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
@@ -8195,6 +8203,26 @@ mod tests {
             ("https://dash.llm7.io/#/api-keys", "custom"),
             ("https://docs.llm7.io/", "custom"),
             ("https://api.llm7.io.evil.test/v1", "custom"),
+            ("https://api.exaone.ai/v1", "exaone"),
+            ("https://api.exaone.ai/v1/chat/completions", "exaone"),
+            ("https://api.exaone.ai/v1/models", "exaone"),
+            ("https://api.exaone.ai", "exaone"),
+            ("https://api.exaone.ai/v1/tabular/classification", "exaone"),
+            ("https://api.exaone.ai/v1/responses", "exaone"),
+            ("https://api.exaone.ai/v1/messages", "exaone"),
+            ("https://docs.exaone.ai/en/docs/k-exaone-2.5", "custom"),
+            ("https://docs.exaone.ai/en/docs/changelog", "custom"),
+            ("https://id.exaone.ai/mypage", "custom"),
+            ("https://id.exaone.ai/login", "custom"),
+            ("https://showroom.exaone.ai/", "custom"),
+            ("https://asset-showroom.exaone.ai/image/showroom-logo.png", "custom"),
+            ("https://www.exaone.ai/v1", "custom"),
+            ("https://exaone.ai/", "custom"),
+            ("https://console.exaone.ai/", "custom"),
+            ("https://platform.exaone.ai/", "custom"),
+            ("https://app.exaone.ai/", "custom"),
+            ("https://api.exaone.com/v1", "custom"),
+            ("https://api.exaone.ai.evil.test/v1", "custom"),
             ("https://ai-gateway.edgeone.link/v1", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link/v1/chat/completions", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link", "edgeone-makers"),
@@ -8292,7 +8320,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 171);
+        assert_eq!(list_providers().len(), 172);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8872,6 +8900,35 @@ mod tests {
             serialized["portal"]["url"],
             "https://console.tencentcloud.com/edgeone/makers"
         );
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let exaone = list_providers()
+            .iter()
+            .find(|provider| provider.id == "exaone")
+            .unwrap();
+        let serialized = serde_json::to_value(exaone).unwrap();
+        assert_eq!(exaone.name, "EXAONE API Platform");
+        assert_eq!(exaone.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(exaone.category, "official");
+        assert_eq!(exaone.default_base_url, Some("https://api.exaone.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.exaone.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.exaone.ai/en/docs/k-exaone-2.5"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://id.exaone.ai/mypage");
         assert_eq!(serialized["portal"]["kind"], "console");
 
         let edenai = list_providers()

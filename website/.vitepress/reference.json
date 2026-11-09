@@ -3703,6 +3703,20 @@
       }
     },
     {
+      "id": "exaone",
+      "name": "EXAONE API Platform",
+      "category": "official",
+      "baseUrl": "https://api.exaone.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.exaone.ai/en/docs/k-exaone-2.5",
+      "portal": {
+        "kind": "console",
+        "url": "https://id.exaone.ai/mypage"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

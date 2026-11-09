@@ -1188,5 +1188,12 @@
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
     }
+  },
+  "exaone": {
+    "docs_url": "https://docs.exaone.ai/en/docs/k-exaone-2.5",
+    "portal": {
+      "url": "https://id.exaone.ai/mypage",
+      "kind": "console"
+    }
   }
 }
