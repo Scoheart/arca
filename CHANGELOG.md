@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.71.0](https://github.com/Scoheart/arca/compare/v2.70.2...v2.71.0) (2026-11-10)
+
+### Changes
+
+* feat(mcp): add You.com's keyless free remote MCP (#281) ([0957be2](https://github.com/Scoheart/arca/commit/0957be22f9b4d7b0da626772680de035344f6a93))
+* feat(agents): catalog Directionally Local as a display-only CLI (#279) ([47acd79](https://github.com/Scoheart/arca/commit/47acd795d520171e4660c99520cb760f6fa69bf3))
+* chore(deps): bump the desktop-minor-patch group across 1 directory with 7 updates (#289) ([8b8248e](https://github.com/Scoheart/arca/commit/8b8248e10ee71794af8730e8859e562c927eab05))
+* chore(deps): bump the tauri-minor-patch group across 1 directory with 4 updates (#286) ([fa95fb3](https://github.com/Scoheart/arca/commit/fa95fb321ab677733687fc07b236dea7412894bf))
+* chore(deps): bump the workspace-minor-patch group across 1 directory with 8 updates (#285) ([b04d5fc](https://github.com/Scoheart/arca/commit/b04d5fc41205090f2dbf5fe18bf1502cc466d402))
+* chore(deps): bump jsonc-parser from 0.32.4 to 0.34.0 (#267) ([2034be3](https://github.com/Scoheart/arca/commit/2034be3280945f9ae7e45fd382398d543d0f9b72))
+* chore(deps-dev): bump jsdom from 29.1.1 to 31.0.0 in /desktop (#265) ([0ba5739](https://github.com/Scoheart/arca/commit/0ba5739a87da5aa1d60e863da09c68cd4edb0247))
+* feat(models): consolidate eight provider PRs and the Velork catalog entry (#292) ([b343686](https://github.com/Scoheart/arca/commit/b3436868415262b14e332ddb5fdaa344a03e0489))
+* feat(models): add seven provider templates (#293) ([9efb386](https://github.com/Scoheart/arca/commit/9efb386420e518b11f930b1e310530407ab16900))
+
 ## [2.70.2](https://github.com/Scoheart/arca/compare/v2.70.1...v2.70.2) (2026-11-10)
 
 ### Changes
