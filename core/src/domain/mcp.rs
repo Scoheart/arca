@@ -5,6 +5,45 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
+/// Select a discovered MCP, never an arbitrary file supplied by a frontend.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct McpInspectionRequest {
+    pub agent_id: String,
+    pub source: McpInspectionSource,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum McpInspectionSource {
+    Configured { key: String },
+    ConfiguredName { name: String },
+    Host { source_fingerprint: String },
+}
+
+/// A native declaration remains visible even when its transport or credential
+/// policy cannot be managed. No configuration values or writer authority.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ConfiguredMcpObservation {
+    pub agent_id: String,
+    pub name: String,
+    pub source_path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct McpConfigurationDocument {
+    pub source_path: String,
+    pub configuration: Option<Value>,
+    pub unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct McpConfigurationView {
+    pub agent_id: String,
+    pub server_id: String,
+    pub documents: Vec<McpConfigurationDocument>,
+}
+
 /// Fields that differ from the canonical MCP asset.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct OverridePatch {

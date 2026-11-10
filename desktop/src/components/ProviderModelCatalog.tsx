@@ -13,10 +13,21 @@ const PAGE_SIZE = 8;
 export function ManualModelCard({ disabled, onAdd }: { disabled: boolean; onAdd(): void }) {
   const { t } = useTranslation();
   return (
-    <div role="listitem">
+    <div role="listitem" className="arca-model-card arca-model-manual-item">
       <button type="button" className="arca-model-manual-card" onClick={onAdd} disabled={disabled}>
-        <span className="arca-model-manual-icon"><PlusIcon className="w-5 h-5" /></span>
-        <span><strong>{t("models.manualAdd")}</strong><small>{t("models.manualAddHint")}</small></span>
+        <div className="arca-model-manual-header">
+          <span className="arca-model-manual-icon"><PlusIcon className="w-5 h-5" /></span>
+          <div className="arca-model-manual-copy">
+            <strong>{t("models.manualAdd")}</strong>
+            <code>{t("models.manualAddHint")}</code>
+          </div>
+        </div>
+        <div className="arca-model-manual-facts">
+          <span className="arca-model-manual-tag">{t("models.manualConfigTag", "+ 自定义参数")}</span>
+        </div>
+        <div className="arca-model-manual-footer">
+          <span className="arca-model-manual-action">{t("models.manualAddAction", "立即添加模型 →")}</span>
+        </div>
       </button>
     </div>
   );

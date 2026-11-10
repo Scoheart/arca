@@ -218,6 +218,7 @@ A one-click **Arca 精选 (curated collection)** subscribes you to a curated sou
 - **Safe, local writes** — Arca reads and edits only fields it owns. Existing files are backed up, prepared, and verified as one recoverable transaction; unrelated keys, comments, formatting, policy fields, permissions, and symlinks are preserved.
 - **Unified Agent consumption center** — each Agent page shows desired central assets under MCPs, Model, and Skills, with a central picker for relationship changes and a separate read-only external section.
 - **Native plugins and bundled MCPs** — Cursor's Plugins tab lists verified bundled providers, local plugin packages and completed marketplace caches, including versions, source paths and MCP/Skill/Rule/Agent/Command/Hook components. Host-provided MCPs also appear as read-only cards in the Agent's MCPs tab. Cached packages retain an explicit cache-only label; Arca does not infer installation, enablement or connection from files. Native observations have no delete, toggle or asset assignment actions. CLI `mcp status --agent cursor` exposes the same metadata in text and JSON.
+- **Inspect native MCP configuration** — open an MCP name or its details on the Agent page to view its parsed configuration and source path. Entries Arca cannot manage, including OAuth or unknown transports, remain available as read-only declarations. Recognized credentials are hidden in Core before display; plugin and built-in entries have no mutation controls. Sources without an independently readable declaration explain that limit. CLI `arca mcp show 'docs::stdio' --agent cursor --json` reads the same Agent configuration without importing it.
 
 Native resource lists use compact rows. Open a row to view its IDs, versions, observed state and component sources; declarations sharing a source are grouped in the details dialog. These observations preserve each host's native plugin format and built-in declarations. They do not certify package or client conformance to the Agent Plugins specification.
 
@@ -258,7 +259,11 @@ Crush, Mistral Vibe, Hermes Agent, Factory Droid, Goose, ZCode, Qoder Desktop 0.
 Qoder Desktop uses native custom providers in `~/.qoder/settings.json`; select the
 installed model in a Qoder conversation after restarting the app. Qoder CLI shares
 that registry and supports a global current model, with environment credential
-references. MiniMax Code, Qoder, and Kimi Code CLI/Desktop remain guided targets.
+references. MiniMax Code, Qoder, Kimi Code CLI/Desktop, and Warp are guided targets.
+Warp's Models tab links to its native custom inference setup, which supports
+multiple models behind a publicly reachable HTTPS endpoint. Warp retains the
+API keys in its own device secure storage; Arca does not project central Model
+assets into that store. See [Warp model setup and audit](docs/warp-models.md).
 
 Models use a shared Provider architecture: one Provider owns its name, type,
 single Base URL, enabled protocol Endpoint Paths, environment reference, and
@@ -272,6 +277,8 @@ represent a client Base URL, Arca also blocks custom paths it cannot preserve
 exactly instead of silently ignoring them.
 
 See the [complete audited matrix](website/guide/agents.md) and [catalog methodology](docs/agent-catalog.md). Every writable target's global path remains editable; paths inside the home directory are normalized to the portable `~/…` form.
+
+The [2026-11-05 asset audit](docs/agent-assets-audit-2026-11-05.md) lists all 98 audited Agents, the remaining configuration gaps, and the distinction between isolated contract tests and native runtime acceptance.
 
 Skill consumption supports the audited user-level capabilities declared in `data/agents.json`, across CLI, IDE, and desktop products. `arca agent list --json` exposes the current capability matrix. Only capabilities detected on the current machine appear, and Agents sharing one physical compatibility directory are selected and reviewed as an inseparable impact group. Managed links expose one live central copy, so consumer-side edits are detected as central drift rather than isolated copies. See the [Skills guide](website/guide/skills.md).
 
@@ -549,6 +556,8 @@ ZCode 自定义模型接入与凭据交付说明见 [ZCode Models](docs/zcode-mo
 Kimi Code is a separate Agent (`kimi-code-desktop`) with its official app icon and launcher. It shares user-level MCP and Skills with Kimi Code CLI; Models currently open the native setup guide because provider credentials are literal config values. See [integration evidence and boundaries](docs/kimi-code-desktop.md).
 
 Kilo Desktop is available as `Kilo` (`kilo-desktop`) with its official app icon, launcher, installed version, MCPs, Skills, and custom Models. Its desktop runtime config is separate from the CLI's global config; Skills share `~/.kilo/skills`. Models use environment/file credential references and are selected inside each Kilo conversation. See [Kilo Desktop integration](docs/kilo-desktop.md).
+
+DeepSeek Harness has separate CLI/Web (`deepseek-harness`, profile `web`) and Desktop (`deepseek-harness-desktop`, profile `desktop`) entries. Arca manages their verified Cordis MCP manager, three custom-model API protocols, and shared user Skills/Instructions. The MCP manager needs a verified `0.2.2-rc.1` installation; `0.2.1-rc.3` has no manager. Model credentials remain native environment/credential references; Arca does not export Keychain secrets to Harness. Profile initialization and inheritance checks prevent overwriting unobserved bundle configuration. See [DeepSeek Harness configuration and boundaries](docs/deepseek-harness-integration.md).
 
 ChatGPT (`codex-desktop`) opens ChatGPT.app and shares `~/.codex/config.toml` plus `~/.agents/skills` with Codex CLI. The model writer stays on Codex CLI. Agent types are CLI, Desktop, IDE, and Plugin; the launch form follows that type and does not switch among them.
 

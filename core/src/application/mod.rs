@@ -4,6 +4,8 @@
 //! composing storage, recovery, adapters, or domain engines themselves.
 
 pub mod agents;
+pub mod hooks;
+pub mod subagents;
 pub mod instructions;
 pub mod codex_configuration;
 pub mod agent_launch;

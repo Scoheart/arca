@@ -102,6 +102,6 @@ describe("unified operation wire contract", () => {
 
   it("loads the revisioned workspace through the unified query", async () => {
     await getWorkspaceSnapshot();
-    expect(invokeMock).toHaveBeenCalledWith("get_workspace_snapshot");
+    expect(invokeMock).toHaveBeenCalledWith("get_workspace_snapshot", undefined);
   });
 });

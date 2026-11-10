@@ -324,7 +324,7 @@
     "label": "安装文档"
   },
   "deepseek-harness": {
-    "url": "https://www.deepseek.com/harness/en/",
+    "url": "https://www.deepseek.com/en/harness/",
     "label": "安装文档"
   },
   "goose-desktop": {
@@ -509,6 +509,18 @@
   },
   "codebuddy-cn-ide": {
     "url": "https://www.codebuddy.cn/docs/ide/Getting-Started/Installation",
+    "label": "安装文档"
+  },
+  "deepseek-harness-desktop": {
+    "url": "https://www.deepseek.com/en/harness/",
+    "label": "安装文档"
+  },
+  "deepai-code": {
+    "url": "https://deepai.org/chat/ai-code",
+    "label": "官方下载"
+  },
+  "dl": {
+    "url": "https://directionallylocal.com/docs/install/",
     "label": "安装文档"
   }
 }

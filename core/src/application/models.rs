@@ -4,7 +4,7 @@ pub use crate::domain::assets::ApiKeyDelivery;
 pub use crate::domain::types::{ModelProfile, ModelProtocol};
 pub use crate::resources::model::credential::CredentialValidationView;
 pub use crate::resources::model::{
-    ModelAgentView, ModelProfileView, ModelProviderInstanceView, ModelProviderView, ModelProviderPortalView,
+    ModelApplyResult, ModelAgentView, ModelProfileView, ModelProviderInstanceView, ModelProviderView, ModelProviderPortalView,
     ProviderModelSummary,
 };
 

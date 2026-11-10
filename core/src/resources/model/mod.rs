@@ -35,7 +35,8 @@ use crate::paths::{backup_timestamp, backups_dir, settings_file};
 use crate::resources::mcp::applier::{backup, backup_bytes};
 use crate::resources::mcp::scanner::{collapse_home, expand_tilde};
 use crate::safe_write::{
-    acquire_settings_lock, remove_if_unchanged, write_if_unchanged, SettingsLock,
+    acquire_settings_lock, remove_if_unchanged, write_if_unchanged,
+    write_private_live_if_unchanged, SettingsLock,
 };
 use crate::settings::{load_settings, mutate_settings};
 use jsonc_parser::cst::{CstInputValue, CstNode, CstObject, CstRootNode};
@@ -68,6 +69,7 @@ const QODER_CLI_DOCS: &str = "https://docs.qoder.com/cli/custom-models";
 const QODER_DESKTOP_DOCS: &str = "https://docs.qoder.com/qoder/custom-models";
 const GROK_BUILD_MODEL_DOCS: &str = "https://docs.x.ai/build/settings#model-id";
 const MINIMAX_CODE_DOCS: &str = "https://agent.minimax.io/download";
+const WARP_MODEL_DOCS: &str = "https://docs.warp.dev/agents/inference/custom-inference-endpoint/";
 const CREDENTIAL_FILE_NATIVE_ID: &str = "__mux_credential_file";
 const CREDENTIAL_COMMAND_NATIVE_ID: &str = "__mux_credential_command";
 const CREDENTIAL_ARGS_NATIVE_ID: &str = "__mux_credential_args";
@@ -859,6 +861,40 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.token360.ai/v1beta",
             },
         ],
+        "edenai" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.edenai.run/v3",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.edenai.run/v3",
+            },
+        ],
+        "nararouter" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://router.bynara.id/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://router.bynara.id",
+            },
+        ],
+        "zro" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://zro.moonmath.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://zro.moonmath.ai",
+            },
+        ],
+        "edgeone-makers" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://ai-gateway.edgeone.link",
+        }],
         _ => &[],
     }
 }
@@ -1514,6 +1550,41 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "asi-cloud",
         name: "ASI:Cloud",
         default_base_url: Some("https://inference.asicloud.cudos.org/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "edenai",
+        name: "Eden AI",
+        default_base_url: Some("https://api.edenai.run/v3"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "nararouter",
+        name: "NaraRouter",
+        default_base_url: Some("https://router.bynara.id/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "zro",
+        name: "Zro",
+        default_base_url: Some("https://zro.moonmath.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "llm7",
+        name: "LLM7.io",
+        default_base_url: Some("https://api.llm7.io/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "edgeone-makers",
+        name: "EdgeOne Makers Models",
+        default_base_url: Some("https://ai-gateway.edgeone.link/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2272,7 +2343,12 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.decuff.ai" => "decuff",
         "api.blablador.fz-juelich.de" => "helmholtz-blablador",
         "api.token360.ai" => "token360",
+        "zro.moonmath.ai" => "zro",
         "inference.asicloud.cudos.org" => "asi-cloud",
+        "api.edenai.run" => "edenai",
+        "router.bynara.id" => "nararouter",
+        "api.llm7.io" => "llm7",
+        "ai-gateway.edgeone.link" => "edgeone-makers",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -2583,15 +2659,34 @@ fn materialize_profile_for_agent(
             .native_ids
             .insert("pi".into(), generated_pi_provider_id(&settings, profile));
     }
-    if agent_id == "opencode" {
-        if let Some(provider) = profile.provider_id.as_ref()
-            .and_then(|id| settings.model_providers.as_ref()?.get(id)) {
-            materialized.native_ids.insert("__mux_provider_name".into(), provider.name.clone());
+    {
+        let provider_name = profile.provider_id.as_ref()
+            .and_then(|id| settings.model_providers.as_ref()?.get(id))
+            .map(|provider| provider.name.clone())
+            .or_else(|| {
+                if !profile.provider.is_empty() && profile.provider != "custom" {
+                    Some(profile.provider.clone())
+                } else {
+                    None
+                }
+            });
+        if let Some(name) = provider_name {
+            materialized.native_ids.insert("__mux_provider_name".into(), name);
         }
-        if materialized.native_ids.get("opencode")
-            .is_none_or(|id| id == &arca_profile_id(&profile.id)) {
+    }
+    if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
+        let siblings: &[&str] = match agent_id {
+            "opencode" => &["opencode-desktop"],
+            "opencode-desktop" => &["opencode"],
+            "kilo-code" => &["kilo-desktop"],
+            _ => &["kilo-code"],
+        };
+        let existing = materialized.native_ids.get(agent_id)
+            .or_else(|| siblings.iter().find_map(|id| materialized.native_ids.get(*id)));
+        if existing.is_none_or(|id| id == &arca_profile_id(&profile.id)
+            || id.starts_with("mux_desktop_") || id.starts_with("mux_kilo_desktop_")) {
             let id = generated_open_code_provider_id(&settings, profile);
-            materialized.native_ids.insert("opencode".into(), id.clone());
+            materialized.native_ids.insert(agent_id.into(), id.clone());
             materialized.native_ids.insert("__mux_generated_opencode_provider".into(), id);
         }
     }
@@ -3166,6 +3261,10 @@ fn config_path(relative: &str) -> PathBuf {
 pub fn default_config_paths(agent_id: &str) -> Option<Vec<String>> {
     if agent_id == claude_desktop::AGENT_ID {
         return Some(claude_desktop::default_paths());
+    }
+    if matches!(agent_id, "deepseek-harness" | "deepseek-harness-desktop") {
+        let profile = if agent_id == "deepseek-harness-desktop" { "desktop" } else { "web" };
+        return Some(vec![crate::resources::deepseek_harness::profile_path(profile)]);
     }
     let paths: &[&str] = match agent_id {
         "claude-code" => &["~/.claude/settings.json"],
@@ -4384,6 +4483,8 @@ fn env_key_required_issue(agent_id: &str) -> Option<(&'static str, &'static str)
             | "hermes"
             | "factory-droid"
             | "goose"
+            | "deepseek-harness"
+            | "deepseek-harness-desktop"
     ) {
         return None;
     }
@@ -4433,15 +4534,21 @@ fn command_exists(names: &[&str]) -> bool {
         .map(|path| std::env::split_paths(&path).collect::<Vec<_>>())
         .unwrap_or_default();
     directories.extend([
-        PathBuf::from("/opt/homebrew/bin"),
-        PathBuf::from("/usr/local/bin"),
+        crate::paths::system_probe_path("/opt/homebrew/bin"),
+        crate::paths::system_probe_path("/usr/local/bin"),
         home().join(".local/bin"),
         home().join(".bun/bin"),
         home().join(".cargo/bin"),
     ]);
-    directories
-        .iter()
-        .any(|directory| names.iter().any(|name| directory.join(name).is_file()))
+    names.iter().any(|name| {
+        if Path::new(name).is_absolute() {
+            crate::paths::system_probe_path(name).is_file()
+        } else {
+            directories
+                .iter()
+                .any(|directory| directory.join(name).is_file())
+        }
+    })
 }
 
 fn agent_installed(names: &[&str], config_locations: &[&str], app_locations: &[&str]) -> bool {
@@ -4449,9 +4556,13 @@ fn agent_installed(names: &[&str], config_locations: &[&str], app_locations: &[&
         || config_locations
             .iter()
             .any(|location| config_path(location).exists())
-        || app_locations
-            .iter()
-            .any(|location| expand_tilde(location).exists())
+        || app_locations.iter().any(|location| {
+            if Path::new(location).is_absolute() {
+                crate::paths::system_probe_path(location).exists()
+            } else {
+                expand_tilde(location).exists()
+            }
+        })
 }
 
 pub fn list_agents() -> Vec<ModelAgentView> {
@@ -4654,6 +4765,29 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             supported_protocols: Vec::new(),
             note: "请在 Qoder Settings → Models 中添加和切换自定义模型。Arca 当前提供配置引导，不自动写入模型。".into(),
         },
+        ModelAgentView {
+            id: "warp".into(),
+            name: String::new(),
+            mode: "guided".into(),
+            storage_authority: ModelStorageAuthority::Guided,
+            installed: crate::paths::system_probe_path("/Applications/Warp.app/Contents/Info.plist").is_file()
+                || home().join("Applications/Warp.app/Contents/Info.plist").is_file(),
+            config_path: String::new(),
+            config_paths: Vec::new(),
+            docs: WARP_MODEL_DOCS.into(),
+            assigned_profile: None,
+            assigned_profiles: Vec::new(),
+            active_profile: None,
+            supports_multiple: true,
+            supports_global_selection: false,
+            credential_mode: "guided".into(),
+            credential_capabilities: credential::agent_capabilities("warp"),
+            credential_policies: BTreeMap::new(),
+            default_delivery: Default::default(),
+            available_deliveries: Vec::new(),
+            supported_protocols: vec![ModelProtocol::OpenaiCompletions],
+            note: "在 Warp 设置中搜索 inference endpoint，填写公网 HTTPS Base URL、API Key 和 Model ID，可添加多个模型；保存后在会话的模型选择器中选用。API Key 由 Warp 保存在设备安全存储中，Arca 当前提供原生配置引导。".into(),
+        },
         {
             let mut view = managed_agent_view(
                 &settings, "zcode", &[], &[".zcode/v2"],
@@ -4744,6 +4878,19 @@ pub fn list_agents() -> Vec<ModelAgentView> {
             "原生 providers/active_provider 与 declarative custom provider；密钥由外部环境变量提供。",
         ),
     ];
+    for (id, profile) in [("deepseek-harness", "web"), ("deepseek-harness-desktop", "desktop")] {
+        let mut view = managed_agent_view(
+            &settings, id, if profile == "web" { &["dsh"] } else { &[] }, &[],
+            "https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/docs/user/guide/providers.md",
+            "管理当前用户的 Harness Profile：CLI/Web 使用 web，Desktop 使用 desktop。支持三种自定义 API、多模型和新会话默认模型；API Key 使用环境变量/原生 credential 引用，不导出 Arca Keychain 密钥。Profile 需由 Harness 初始化；高层 home patch 冲突或自定义继承不明时拒绝写入。",
+        );
+        if profile == "desktop" {
+            view.installed = agent_installed(&[], &[], &["/Applications/DeepSeek Harness.app", "~/Applications/DeepSeek Harness.app"]);
+        } else {
+            view.installed |= expand_tilde(&crate::resources::deepseek_harness::profile_path(profile)).parent().is_some_and(|dir| dir.join("package.json").is_file());
+        }
+        agents.push(view);
+    }
     // Both clients share native providers, but their api_key/env fields contain
     // literal credentials. Do not advertise an environment-reference writer.
     for (id, commands, apps, docs, note) in [
@@ -4803,7 +4950,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
 
 /// Desktop has per-conversation selection; CLI settings.model is not its current model.
 pub(crate) fn supports_global_model_selection(agent_id: &str) -> bool {
-    !matches!(agent_id, "qoder-desktop" | "zcode" | "kilo-desktop")
+    !matches!(agent_id, "qoder-desktop" | "zcode" | "kilo-desktop" | "warp")
 }
 
 pub(crate) fn normalize_model_selection(agent_id: &str, selection: &mut crate::domain::assets::ModelAgentSelection) {
@@ -4926,7 +5073,7 @@ pub(crate) fn observe_active_model_for_settings(
         }
         "claude-code" | "codex" => settings.model_selection(agent_id).active_profile_id,
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => {
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             return match adapters::observe_active(agent_id, &paths, &profiles) {
                 adapters::ObservedActiveModel::Managed(id) => ObservedActiveModel::Managed(id),
                 adapters::ObservedActiveModel::External => ObservedActiveModel::External,
@@ -5052,7 +5199,7 @@ pub fn observe_profile(
             combine_observed(models, settings)
         }
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => Ok(adapters::observe_prepared_files(
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => Ok(adapters::observe_prepared_files(
             prepare_observed_native_files(agent_id, &paths, &profile, true, has_credential),
         )),
         _ => Ok(ModelObservedState::Conflicted),
@@ -5082,7 +5229,7 @@ pub fn observe_profile_consumption(
         "grok-build" => cleared_toml_profile_absent(prepare_clear_grok_build(&paths[0], &profile)),
         "pi" => cleared_toml_profile_absent(prepare_clear_pi_models(&paths[0], &profile)),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => {
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             adapters::cleared_profile_absent(adapters::prepare_clear(agent_id, &paths, &profile))
         }
         _ => Ok(false),
@@ -5100,7 +5247,7 @@ pub fn observe_profile_consumption(
             pi_api_key_value_with_credential(&profile, has_credential, credential_snapshot_for_observation)?,
         )),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => Ok(adapters::observe_prepared_files(
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => Ok(adapters::observe_prepared_files(
             prepare_observed_native_files(agent_id, &paths, &profile, false, has_credential),
         )),
         _ => observe_profile(agent_id, &profile),
@@ -5130,7 +5277,7 @@ pub fn observe_external_model(agent_id: &str) -> Result<ExternalModelObservedSta
         "grok-build" => observe_external_grok_build(&paths[0]),
         "pi" => observe_external_pi(&paths[0], &paths[1]),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => Ok(adapters::observe_external(agent_id, &paths[0])),
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => Ok(adapters::observe_external(agent_id, &paths[0])),
         _ => Ok(ExternalModelObservedState::Absent),
     }
 }
@@ -5313,7 +5460,7 @@ fn ensure_supported(agent_id: &str, protocol: &ModelProtocol) -> Result<(), Stri
             ModelProtocol::AnthropicMessages | ModelProtocol::OpenaiResponses
             | ModelProtocol::OpenaiCompletions | ModelProtocol::GeminiGenerateContent
             | ModelProtocol::AwsBedrockConverse),
-        "grok-build" | "pi" | "factory-droid" => matches!(protocol,
+        "grok-build" | "pi" | "factory-droid" | "deepseek-harness" | "deepseek-harness-desktop" => matches!(protocol,
             ModelProtocol::AnthropicMessages | ModelProtocol::OpenaiResponses | ModelProtocol::OpenaiCompletions),
         "qwen-code" | "crush" | "hermes" | "goose" => matches!(
             protocol,
@@ -5330,6 +5477,11 @@ fn ensure_supported(agent_id: &str, protocol: &ModelProtocol) -> Result<(), Stri
         "minimax-code" => {
             return Err(format!(
                 "MiniMax Code custom providers currently persist options.apiKey in plaintext YAML and do not expose a Keychain-compatible credential command; see {MINIMAX_CODE_DOCS}"
+            ))
+        }
+        "warp" => {
+            return Err(format!(
+                "请在 Warp Settings 中搜索 inference endpoint 配置自定义模型；Arca 当前提供原生配置引导，未启用原生安全存储写入；参见 {WARP_MODEL_DOCS}"
             ))
         }
         _ => return Err(format!("unsupported model Agent: {agent_id}")),
@@ -5552,7 +5704,7 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
                     .map_err(Into::into),
             }
         }
-        "qwen-code" | "crush" | "mistral-vibe" | "hermes" | "factory-droid" | "goose" => {
+        "qwen-code" | "crush" | "mistral-vibe" | "hermes" | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             apply_native_multi_model(
                 agent_id,
                 &profile,
@@ -5670,7 +5822,7 @@ pub(crate) fn clear_all_configured_models_for_targets(
         "pi" => clear_all_pi(&paths[0], &paths[1]),
         "grok-build" => clear_one_model_file(&paths[0], "grok-build", prepare_clear_all_grok_build),
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => {
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             let reviewed = reviewed_targets
                 .iter()
                 .map(|path| expand_tilde(path))
@@ -5715,7 +5867,7 @@ pub(crate) fn agent_has_configured_models(agent_id: &str) -> Result<bool, String
                 .is_some_and(|value| value != content.as_str()))
         }
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => adapters::has_configured_models(agent_id, &paths),
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => adapters::has_configured_models(agent_id, &paths),
         _ => Ok(false),
     }
 }
@@ -5730,6 +5882,8 @@ fn guard_shared_model_clear(settings: &crate::settings::Settings, agent_id: &str
         "opencode-desktop" => "opencode",
         "kilo-code" => "kilo-desktop",
         "kilo-desktop" => "kilo-code",
+        "deepseek-harness" => "deepseek-harness-desktop",
+        "deepseek-harness-desktop" => "deepseek-harness",
         _ => return Ok(()),
     };
     if settings.model_selection(sibling).profiles.is_empty() { return Ok(()); }
@@ -5738,6 +5892,7 @@ fn guard_shared_model_clear(settings: &crate::settings::Settings, agent_id: &str
     if targets.iter().any(|path| sibling_targets.iter().any(|other| expand_tilde(path) == expand_tilde(other))) {
         let code = if agent_id.starts_with("qoder-") { "qoder_shared_registry" }
             else if agent_id.starts_with("kilo-") { "kilo_shared_registry" }
+            else if agent_id.starts_with("deepseek-harness") { "deepseek_harness_shared_registry" }
             else { "opencode_shared_registry" };
         return Err(format!("{code}: {sibling} also uses this model config; remove individual models instead of clearing the shared registry"));
     }
@@ -5827,7 +5982,7 @@ pub(crate) fn clear_profile_consumption_target(
         .map_err(ModelTargetError::from)?,
         "pi" => clear_pi(&paths[0], &paths[1], &profile, active).map_err(ModelTargetError::from)?,
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" | "qwen-code" | "crush" | "mistral-vibe" | "hermes"
-        | "factory-droid" | "goose" => {
+        | "factory-droid" | "goose" | "deepseek-harness" | "deepseek-harness-desktop" => {
             commit_native_model_files(
                 agent_id,
                 adapters::prepare_clear(agent_id, &paths, &profile)?,
@@ -5896,7 +6051,7 @@ fn apply_native_multi_model_with_private_auth(
             "agent_store_conflicted: OpenCode auth candidate is unexpectedly empty".to_string()
         })
         .and_then(|content| {
-            write_if_unchanged(
+            write_private_live_if_unchanged(
                 &auth.path,
                 auth.original.as_deref().map(String::as_str),
                 content.as_str(),
@@ -5912,27 +6067,6 @@ fn apply_native_multi_model_with_private_auth(
                 rollback.join("; ")
             )
         });
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        if let Err(error) = fs::set_permissions(&auth.path, fs::Permissions::from_mode(0o600)) {
-            let auth_rollback = match (auth.original.as_deref(), auth.content.as_deref()) {
-                (Some(original), Some(content)) => {
-                    write_if_unchanged(&auth.path, Some(content.as_str()), original.as_str())
-                }
-                (None, Some(content)) => remove_if_unchanged(&auth.path, content.as_str()),
-                _ => Ok(()),
-            };
-            let mut rollback = rollback_native_model_files(&files);
-            if let Err(error) = auth_rollback {
-                rollback.push(error);
-            }
-            return Err(format!(
-                "plaintext_target_insecure: could not enforce 0600 on OpenCode auth.json ({error}); rollback: {}",
-                if rollback.is_empty() { "complete".into() } else { rollback.join("; ") }
-            ));
-        }
     }
     written.push(auth.path.display().to_string());
     Ok(ModelApplyResult {
@@ -5978,7 +6112,7 @@ fn commit_private_model_files(files: &[open_code_auth::PreparedAuthFile]) -> Res
     for (index, file) in files.iter().enumerate() {
         let result = match (file.original.as_deref(), file.content.as_deref()) {
             (original, Some(content)) => {
-                write_if_unchanged(&file.path, original.map(String::as_str), content.as_str())
+                write_private_live_if_unchanged(&file.path, original.map(String::as_str), content.as_str())
             }
             (Some(original), None) => remove_if_unchanged(&file.path, original.as_str()),
             (None, None) => Ok(()),
@@ -5994,23 +6128,6 @@ fn commit_private_model_files(files: &[open_code_auth::PreparedAuthFile]) -> Res
                 }
             ));
         }
-        #[cfg(unix)]
-        if file.content.is_some() {
-            use std::os::unix::fs::PermissionsExt;
-            if let Err(error) = fs::set_permissions(&file.path, fs::Permissions::from_mode(0o600)) {
-                let mut rollback_indexes = applied.clone();
-                rollback_indexes.push(index);
-                let rollback = rollback_private_model_files(files, &rollback_indexes);
-                return Err(format!(
-                    "plaintext_target_insecure: could not enforce 0600 ({error}); rollback: {}",
-                    if rollback.is_empty() {
-                        "complete".into()
-                    } else {
-                        rollback.join("; ")
-                    }
-                ));
-            }
-        }
         applied.push(index);
     }
     Ok(())
@@ -6025,10 +6142,10 @@ fn rollback_private_model_files(
         let file = &files[*index];
         let rollback = match (file.original.as_deref(), file.content.as_deref()) {
             (Some(original), Some(content)) => {
-                write_if_unchanged(&file.path, Some(content.as_str()), original.as_str())
+                write_private_live_if_unchanged(&file.path, Some(content.as_str()), original.as_str())
             }
             (None, Some(content)) => remove_if_unchanged(&file.path, content.as_str()),
-            (Some(original), None) => write_if_unchanged(&file.path, None, original.as_str()),
+            (Some(original), None) => write_private_live_if_unchanged(&file.path, None, original.as_str()),
             (None, None) => Ok(()),
         };
         if let Err(error) = rollback {
@@ -6355,7 +6472,7 @@ fn prepare_codex(
         .get_mut(&provider_id)
         .and_then(Item::as_table_mut)
         .ok_or_else(|| format!("Arca provider '{provider_id}' is not a TOML table"))?;
-    provider.insert("name", toml_edit::value(&profile.name));
+    provider.insert("name", toml_edit::value(&adapters::provider_display_name(profile)));
     provider.insert("base_url", toml_edit::value(&profile.base_url));
     provider.insert("wire_api", toml_edit::value("responses"));
     provider.remove("env_key");
@@ -8020,7 +8137,79 @@ mod tests {
             ("https://a.singularitycompute.com/v1", "custom"),
             ("https://llm.singularitycompute.com/v1", "custom"),
             ("https://inference.asicloud.cudos.org.evil.test/v1", "custom"),
+            ("https://api.edenai.run/v3", "edenai"),
+            ("https://api.edenai.run/v3/chat/completions", "edenai"),
+            ("https://api.edenai.run/v3/responses", "edenai"),
+            ("https://api.edenai.run/v3/models", "edenai"),
+            ("https://api.edenai.run", "edenai"),
+            ("https://api.edenai.run/v3/v1/messages", "edenai"),
+            ("https://www.edenai.co/docs/", "custom"),
+            ("https://edenai.co/", "custom"),
+            ("https://docs.edenai.co/", "custom"),
+            ("https://app.edenai.run/settings/api-keys", "custom"),
+            ("https://api.eu.edenai.run/v3", "custom"),
+            ("https://api.eu.edenai.run/v3/models", "custom"),
+            ("https://mcp.edenai.run/mcp", "custom"),
+            ("https://edenai.run/v3", "custom"),
+            ("https://www.edenai.run/v3", "custom"),
+            ("https://api.edenai.co/v3", "custom"),
+            ("https://api.edenai.run.evil.test/v3", "custom"),
+            ("https://router.bynara.id/v1", "nararouter"),
+            ("https://router.bynara.id/v1/chat/completions", "nararouter"),
+            ("https://router.bynara.id/v1/responses", "nararouter"),
+            ("https://router.bynara.id/v1/models", "nararouter"),
+            ("https://router.bynara.id", "nararouter"),
+            ("https://router.bynara.id/v1/messages", "nararouter"),
+            ("https://router.bynara.id/register", "nararouter"),
+            ("https://router.bynara.id/docs", "nararouter"),
+            ("https://www.router.bynara.id/v1", "custom"),
+            ("https://bynara.id/pricing", "custom"),
+            ("https://bynara.id/v1", "custom"),
+            ("https://api.bynara.id/v1", "custom"),
+            ("https://api-images.bynara.id/v1/images/generations", "custom"),
+            ("https://router.bynara.web.id/v1", "custom"),
+            ("https://router.bynara.id.evil.test/v1", "custom"),
+            ("https://zro.moonmath.ai/v1", "zro"),
+            ("https://zro.moonmath.ai/v1/chat/completions", "zro"),
+            ("https://zro.moonmath.ai/v1/responses", "zro"),
+            ("https://zro.moonmath.ai/v1/models", "zro"),
+            ("https://zro.moonmath.ai", "zro"),
+            ("https://zro.moonmath.ai/v1/messages", "zro"),
+            ("https://zro.moonmath.ai/sign-in", "zro"),
+            ("https://www.zro.moonmath.ai/v1", "custom"),
+            ("https://moonmath.ai/v1", "custom"),
+            ("https://moonmath.ai/v1/models", "custom"),
+            ("https://api.moonmath.ai/v1", "custom"),
+            ("https://zro.moonmath.ai.evil.test/v1", "custom"),
             ("https://llm.a.singularitycompute.com.evil.test/v1", "custom"),
+            ("https://api.llm7.io/v1", "llm7"),
+            ("https://api.llm7.io/v1/chat/completions", "llm7"),
+            ("https://api.llm7.io/v1/models", "llm7"),
+            ("https://api.llm7.io", "llm7"),
+            ("https://api.llm7.io/v1/messages", "llm7"),
+            ("https://api.llm7.io/v1/responses", "llm7"),
+            ("https://api.llm7.io/v1beta/models/gemini-2.5-flash:generateContent", "llm7"),
+            ("https://llm7.io/v1", "custom"),
+            ("https://www.llm7.io/v1", "custom"),
+            ("https://dash.llm7.io/", "custom"),
+            ("https://dash.llm7.io/#/api-keys", "custom"),
+            ("https://docs.llm7.io/", "custom"),
+            ("https://api.llm7.io.evil.test/v1", "custom"),
+            ("https://ai-gateway.edgeone.link/v1", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link/v1/chat/completions", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link/v1/messages", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link/v1/models", "edgeone-makers"),
+            ("https://ai-gateway.edgeone.link/v1/responses", "edgeone-makers"),
+            ("https://makers.edgeone.link/document/makers-models-integration", "custom"),
+            ("https://pages.edgeone.ai/document/makers-models-integration", "custom"),
+            ("https://pages.edgeone.ai/zh/use-cases/free-llm-api", "custom"),
+            ("https://edgeone.ai/makers/new", "custom"),
+            ("https://console.tencentcloud.com/edgeone/makers", "custom"),
+            ("https://www.ai-gateway.edgeone.link/v1", "custom"),
+            ("https://ai-gateway.edgeone.ai/v1", "custom"),
+            ("https://gateway.edgeone.link/v1", "custom"),
+            ("https://ai-gateway.edgeone.link.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -8103,7 +8292,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 166);
+        assert_eq!(list_providers().len(), 171);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8535,6 +8724,201 @@ mod tests {
         assert_eq!(serialized["portal"]["url"], "https://asicloud.cudos.org/");
         assert_eq!(serialized["portal"]["kind"], "console");
 
+        let nararouter = list_providers()
+            .iter()
+            .find(|provider| provider.id == "nararouter")
+            .unwrap();
+        let serialized = serde_json::to_value(nararouter).unwrap();
+        assert_eq!(nararouter.name, "NaraRouter");
+        assert_eq!(nararouter.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(nararouter.category, "gateway");
+        assert_eq!(nararouter.default_base_url, Some("https://router.bynara.id/v1"));
+        assert_eq!(serialized["base_url"], "https://router.bynara.id");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://router.bynara.id/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(serialized["additional_endpoints"][1]["base_url"], "https://router.bynara.id");
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://router.bynara.id/docs");
+        assert_eq!(serialized["portal"]["url"], "https://router.bynara.id/register");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let zro = list_providers()
+            .iter()
+            .find(|provider| provider.id == "zro")
+            .unwrap();
+        let serialized = serde_json::to_value(zro).unwrap();
+        assert_eq!(zro.name, "Zro");
+        assert_eq!(zro.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(zro.category, "gateway");
+        assert_eq!(zro.default_base_url, Some("https://zro.moonmath.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://zro.moonmath.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://zro.moonmath.ai/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(serialized["additional_endpoints"][1]["base_url"], "https://zro.moonmath.ai");
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://zro.moonmath.ai/docs/quickstart");
+        assert_eq!(serialized["portal"]["url"], "https://zro.moonmath.ai/sign-in");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let llm7 = list_providers()
+            .iter()
+            .find(|provider| provider.id == "llm7")
+            .unwrap();
+        let serialized = serde_json::to_value(llm7).unwrap();
+        assert_eq!(llm7.name, "LLM7.io");
+        assert_eq!(llm7.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(llm7.category, "gateway");
+        assert_eq!(llm7.default_base_url, Some("https://api.llm7.io/v1"));
+        assert_eq!(serialized["base_url"], "https://api.llm7.io/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.llm7.io/api-reference/introduction"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://dash.llm7.io/#/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        let edgeone_makers = list_providers()
+            .iter()
+            .find(|provider| provider.id == "edgeone-makers")
+            .unwrap();
+        let serialized = serde_json::to_value(edgeone_makers).unwrap();
+        assert_eq!(edgeone_makers.name, "EdgeOne Makers Models");
+        assert_eq!(edgeone_makers.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(edgeone_makers.category, "gateway");
+        assert_eq!(
+            edgeone_makers.default_base_url,
+            Some("https://ai-gateway.edgeone.link/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://ai-gateway.edgeone.link");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://ai-gateway.edgeone.link"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"].as_array().map(|endpoints| endpoints.len()),
+            Some(1)
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://pages.edgeone.ai/document/makers-models-integration"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://console.tencentcloud.com/edgeone/makers"
+        );
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let edenai = list_providers()
+            .iter()
+            .find(|provider| provider.id == "edenai")
+            .unwrap();
+        let serialized = serde_json::to_value(edenai).unwrap();
+        assert_eq!(edenai.name, "Eden AI");
+        assert_eq!(edenai.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(edenai.category, "gateway");
+        assert_eq!(edenai.default_base_url, Some("https://api.edenai.run/v3"));
+        assert_eq!(serialized["base_url"], "https://api.edenai.run/v3");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.edenai.run/v3"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://api.edenai.run/v3"
+        );
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://www.edenai.co/docs/v3/llms/chat-completions"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://app.edenai.run/settings/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(
                 list_providers()
@@ -8682,11 +9066,11 @@ mod tests {
 
         let model_config =
             fs::read_to_string(home().join(".config/opencode/opencode.json")).unwrap();
-        assert!(model_config.contains("mux_"));
+        let native_id = adapters::native_provider_id("opencode", &profile);
+        assert!(model_config.contains(&native_id));
         assert!(!model_config.contains("opencode-private-secret"));
         let auth_path = home().join(".local/share/opencode/auth.json");
         let auth: Value = serde_json::from_str(&fs::read_to_string(&auth_path).unwrap()).unwrap();
-        let native_id = adapters::native_provider_id("opencode", &profile);
         assert_eq!(auth[&native_id]["type"], "api");
         assert_eq!(auth[&native_id]["key"], "opencode-private-secret");
         assert_eq!(
@@ -9399,7 +9783,7 @@ mod tests {
                 protocol("/v1/responses"),
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
+            api_key_source: Some(ApiKeySource::Env { name: "FIRST_KEY".into() }),
             env_key: Some("FIRST_KEY".into()),
         };
         let second_provider = ModelProviderConfig {
@@ -9414,7 +9798,7 @@ mod tests {
                 protocol("/v1/responses"),
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
+            api_key_source: Some(ApiKeySource::Env { name: "SECOND_KEY".into() }),
             env_key: Some("SECOND_KEY".into()),
         };
         save_provider_bundle(first_provider.clone(), BTreeMap::new()).unwrap();
@@ -9516,6 +9900,59 @@ mod tests {
     }
 
     #[test]
+    fn empty_test_home_has_no_installed_models() {
+        let _home = TestHome::new("model-empty-installation-probes");
+        let installed = list_agents()
+            .into_iter()
+            .filter(|agent| agent.installed)
+            .map(|agent| agent.id)
+            .collect::<Vec<_>>();
+        assert!(
+            installed.is_empty(),
+            "isolated Model probes inherited system installations: {installed:?}"
+        );
+    }
+
+    #[test]
+    fn system_model_app_probes_use_the_test_root() {
+        let home = TestHome::new("model-system-app-probes");
+        let fixture = "/Applications/Arca Model Probe Fixture.app";
+        assert!(!agent_installed(&[], &[], &[fixture]));
+        fs::create_dir_all(crate::paths::system_probe_path(fixture)).unwrap();
+        assert!(agent_installed(&[], &[], &[fixture]));
+
+        fs::create_dir_all(crate::paths::system_probe_path("/Applications/ZCode.app")).unwrap();
+        assert!(
+            list_agents()
+                .into_iter()
+                .find(|agent| agent.id == "zcode")
+                .unwrap()
+                .installed
+        );
+
+        fs::create_dir_all(home.home.join("Applications/Fixture.app")).unwrap();
+        assert!(agent_installed(&[], &[], &["~/Applications/Fixture.app"]));
+    }
+
+    #[test]
+    fn system_model_command_probes_use_the_test_root() {
+        let home = TestHome::new("model-system-command-probes");
+        let name = "arca-model-probe-fixture";
+        assert!(!command_exists(&[name]));
+        for directory in ["/opt/homebrew/bin", "/usr/local/bin"] {
+            let path = crate::paths::system_probe_path(directory).join(name);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(&path, "fixture metadata only").unwrap();
+            assert!(command_exists(&[name]), "{directory}");
+            let absolute = format!("{directory}/{name}");
+            assert!(command_exists(&[&absolute]), "{absolute}");
+            fs::remove_file(path).unwrap();
+        }
+        fs::write(home.home.join("bin/path-model-probe-fixture"), "fixture metadata only").unwrap();
+        assert!(command_exists(&["path-model-probe-fixture"]));
+    }
+
+    #[test]
     fn detects_agent_from_existing_config_without_shell_path() {
         let th = TestHome::new("model-agent-detect");
         fs::create_dir_all(th.home.join(".pi/agent")).unwrap();
@@ -9557,7 +9994,7 @@ mod tests {
         fs::create_dir_all(models_path.parent().unwrap()).unwrap();
         fs::write(
             &models_path,
-            r#"{"providers":{"arca-team-openai":{"baseUrl":"https://gateway.example.test/v1","api":"openai-responses","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
+            r#"{"providers":{"mux-team-openai":{"baseUrl":"https://gateway.example.test/v1","api":"openai-responses","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
         )
         .unwrap();
 
@@ -9677,7 +10114,7 @@ wire_api = "responses"
         assert!(content.contains("keep this comment"));
         assert!(content.contains("mcp_servers.github"));
         assert!(content.contains("model_providers.existing"));
-        assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
+        assert!(content.contains("model_providers.mux_7465616d2d6f70656e6169"));
         assert!(content.contains("find-generic-password"));
     }
 
@@ -9854,20 +10291,20 @@ wire_api = "responses"
     }
 
     #[test]
-    fn pi_write_migrates_the_matching_legacy_arca_profile_provider() {
+    fn pi_write_migrates_the_matching_legacy_managed_profile_provider() {
         let th = TestHome::new("model-pi-legacy-provider");
         let path = th.home.join(".pi/agent/models.json");
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(
             &path,
-            r#"{"providers":{"arca-team-openai":{"baseUrl":"https://gateway.example.test/v1","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
+            r#"{"providers":{"mux-team-openai":{"baseUrl":"https://gateway.example.test/v1","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
         )
         .unwrap();
 
         let profile = pi_profile("team-openai", "gpt-custom", "Team OpenAI");
         let (_, content) = prepare_pi_models(&path, &profile, false).unwrap();
         let models: Value = serde_json::from_str(&content).unwrap();
-        assert!(models["providers"].get("arca-team-openai").is_none());
+        assert!(models["providers"].get("mux-team-openai").is_none());
         assert_eq!(
             models["providers"]["openrouter"]["models"][0]["id"],
             "gpt-custom"
@@ -10027,8 +10464,8 @@ fork_secondary_model = "private-fork"
         assert!(content.contains("model.private"));
         assert!(content.contains("mcp_servers.keep"));
         assert!(content.contains("permission"));
-        assert!(content.contains("default = \"arca_7465616d2d6f70656e6169\""));
-        assert!(content.contains("model.arca_7465616d2d6f70656e6169"));
+        assert!(content.contains("default = \"mux_7465616d2d6f70656e6169\""));
+        assert!(content.contains("model.mux_7465616d2d6f70656e6169"));
         assert!(content.contains("api_backend = \"responses\""));
         assert!(content.contains("env_key = \"TEAM_OPENAI_API_KEY\""));
         assert!(content.contains("fork_secondary_model = \"private-fork\""));
@@ -10135,6 +10572,44 @@ fork_secondary_model = "private-fork"
     }
 
     #[test]
+    fn warp_model_guide_keeps_native_settings_and_credentials_out_of_writers() {
+        let th = TestHome::new("warp-model-guide");
+        let config = th.home.join(".warp/settings.toml");
+        fs::create_dir_all(config.parent().unwrap()).unwrap();
+        let original = "# Native settings must not be adopted\n[appearance]\ntheme = 'dark'\n";
+        fs::write(&config, original).unwrap();
+        let app = crate::paths::system_probe_path("/Applications/Warp.app/Contents/Info.plist");
+        fs::create_dir_all(app.parent().unwrap()).unwrap();
+        fs::write(&app, b"isolated-install-probe").unwrap();
+
+        let agent = list_agents().into_iter().find(|agent| agent.id == "warp").unwrap();
+        assert!(agent.installed);
+        assert_eq!(agent.name, "Warp");
+        assert_eq!(agent.mode, "guided");
+        assert_eq!(agent.storage_authority, ModelStorageAuthority::Guided);
+        assert!(agent.supports_multiple);
+        assert!(!agent.supports_global_selection);
+        assert!(agent.config_paths.is_empty());
+        assert!(default_config_paths("warp").is_none());
+        assert!(agent.assigned_profiles.is_empty());
+        assert!(agent.active_profile.is_none());
+        assert_eq!(agent.supported_protocols, vec![ModelProtocol::OpenaiCompletions]);
+        assert!(agent.docs.ends_with("/agents/inference/custom-inference-endpoint/"));
+        assert!(agent.credential_capabilities.native_sources.is_empty());
+        assert!(!agent.credential_capabilities.agent_store);
+        assert!(!agent.credential_capabilities.plaintext);
+        assert!(!agent.credential_capabilities.arca_keychain_helper);
+        assert!(credential::select_delivery("warp", &ApiKeySource::ArcaStore,
+            &crate::domain::assets::ApiKeyDelivery::Auto).is_err());
+        for protocol in [ModelProtocol::OpenaiCompletions, ModelProtocol::OpenaiResponses,
+            ModelProtocol::AnthropicMessages, ModelProtocol::GeminiGenerateContent,
+            ModelProtocol::GeminiInteractions, ModelProtocol::AwsBedrockConverse] {
+            assert!(ensure_supported("warp", &protocol).unwrap_err().contains("inference endpoint"));
+        }
+        assert_eq!(fs::read_to_string(&config).unwrap(), original);
+    }
+
+    #[test]
     fn minimax_code_is_a_guided_three_protocol_target() {
         let _th = TestHome::new("model-minimax-code");
         let agents = list_agents();
@@ -10170,7 +10645,7 @@ url = "https://example.test/mcp"
         assert_eq!(result.files, vec![path.display().to_string()]);
         let content = fs::read_to_string(&path).unwrap();
         assert!(content.contains("mcp_servers.keep"));
-        assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
+        assert!(content.contains("model_providers.mux_7465616d2d6f70656e6169"));
         assert!(!content.contains("find-generic-password"));
         assert_eq!(
             load_settings()

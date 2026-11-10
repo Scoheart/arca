@@ -5,7 +5,8 @@ use super::lifecycle::{clear_pending_payload, pending_payload, PendingAssetPaylo
 use super::planner::{
     hash_file, hash_mcp_catalog, hash_settings_target, hash_skill_target_graph, hash_target,
     hash_targets, load_operation, operation_root, CredentialAction, LifecycleBinding,
-    PersistedAssetOperation, SkillMigrationEntry,
+    PersistedAssetOperation, SkillMigrationEntry, SkillTargetChanges, skill_selection_from_settings,
+    skill_target_removal_only,
 };
 use super::store::AssetStateStore;
 use super::types::{
@@ -90,6 +91,30 @@ fn mark_central_committed(plan: &AssetOperationPlan) -> Result<(), String> {
     mark_operation_state(&plan.operation_id, CENTRAL_COMMITTED_MARKER, b"central-committed\n")
 }
 
+fn checkpoint_state_digest(
+    path: &Path,
+    state: Option<&TransactionPathState>,
+    manifest: &DurableSnapshotManifest,
+) -> Result<Vec<u8>, String> {
+    let immutable = manifest.snapshots.iter().find(|snapshot|
+        snapshot.path == path && matches!(&snapshot.kind, DurableSnapshotKind::Directory));
+    let Some(directory) = immutable else { return target_state_digest(state); };
+    if state.is_some() {
+        return Err("target_recovery_required: immutable Skill directory has write evidence".into());
+    }
+    let snapshot = PathSnapshot {
+        path: directory.path.clone(), parent: directory.parent.clone(), identity: directory.identity,
+        privacy: directory.privacy, kind: SnapshotKind::Directory,
+    };
+    let current = read_path_state_anchored(path, &snapshot.parent)?;
+    if !snapshot.matches_current(&current) {
+        return Err("target_recovery_required: immutable Skill directory changed".into());
+    }
+    let bytes = serde_json::to_vec(&("immutable-directory", snapshot.target_fingerprint()?))
+        .map_err(|error| error.to_string())?;
+    Ok(hex::encode(Sha256::digest(bytes)).into_bytes())
+}
+
 fn mark_target_completed(plan: &AssetOperationPlan, agent_id: &str) -> Result<(), String> {
     if !operation_state_marker_exists(&plan.operation_id, CENTRAL_COMMITTED_MARKER)? { return Ok(()); }
     let manifest = load_rollback_manifest(&plan.operation_id)?
@@ -100,7 +125,7 @@ fn mark_target_completed(plan: &AssetOperationPlan, agent_id: &str) -> Result<()
         &transaction_write_evidence_dir(&plan.operation_id), &private)?;
     let completed = target_paths_for_agent(plan, agent_id).iter().map(|target| expand_tilde_path(target))
         .filter(|path| !central_snapshot_path(path))
-        .map(|path| target_state_digest(states.get(&path)).map(|digest| (path, digest)))
+        .map(|path| checkpoint_state_digest(&path, states.get(&path), &manifest).map(|digest| (path, digest)))
         .collect::<Result<BTreeMap<_, _>, _>>()?;
     // One durable marker covers all files in an Agent write set. A crash while
     // publishing it cannot preserve only half of a multi-file target.
@@ -119,8 +144,10 @@ fn mark_physical_target_completed(
 ) -> Result<(), String> {
     let states = load_transaction_write_states_with_private_paths(
         &transaction_write_evidence_dir(&plan.operation_id), &BTreeSet::new())?;
+    let manifest = load_rollback_manifest(&plan.operation_id)?
+        .ok_or_else(|| "target_recovery_required: rollback manifest is missing".to_string())?;
     let completed = paths.iter().map(|path| expand_tilde_path(path))
-        .map(|path| target_state_digest(states.get(&path)).map(|digest| (path, digest)))
+        .map(|path| checkpoint_state_digest(&path, states.get(&path), &manifest).map(|digest| (path, digest)))
         .collect::<Result<BTreeMap<_, _>, _>>()?;
     let bytes = serde_json::to_vec(&completed).map_err(|error| error.to_string())?;
     mark_operation_state(&plan.operation_id, &physical_completion_marker(directory), &bytes)
@@ -139,8 +166,10 @@ fn completed_checkpoint_paths(
     if completed.keys().cloned().collect::<BTreeSet<_>>() != expected {
         return Err("target_recovery_required: completion target set changed".into());
     }
+    let manifest = load_rollback_manifest(&plan.operation_id)?
+        .ok_or_else(|| "target_recovery_required: rollback manifest is missing".to_string())?;
     for (path, digest) in &completed {
-        if *digest != target_state_digest(states.get(path))? { return Ok(BTreeSet::new()); }
+        if *digest != checkpoint_state_digest(path, states.get(path), &manifest)? { return Ok(BTreeSet::new()); }
     }
     Ok(expected)
 }
@@ -615,7 +644,7 @@ where
         persisted.plan.domain_plan,
         DomainPlan::Skill { .. } | DomainPlan::AgentCapabilities { .. }
     );
-    let preserving_external_skill_targets =
+    let preserving_external_skill_targets = skill_target_removal_only(persisted.lifecycle.as_ref()) ||
         matches!(persisted.plan.domain_plan, DomainPlan::Skill { .. })
             && !persisted.plan.relationship_changes.is_empty()
             && persisted
@@ -641,14 +670,17 @@ where
     validate_private_snapshot_aliases(&snapshots, &private_paths)?;
     let tracked_paths = snapshots
         .iter()
+        .filter(|snapshot| snapshot.is_mutable())
         .map(|snapshot| snapshot.path.clone())
         .collect::<Vec<_>>();
     let tracked_parent_snapshots = snapshots
         .iter()
+        .filter(|snapshot| snapshot.is_mutable())
         .map(|snapshot| (snapshot.path.clone(), snapshot.parent.clone()))
         .collect::<BTreeMap<_, _>>();
     let reviewed_states = snapshots
         .iter()
+        .filter(|snapshot| snapshot.is_mutable())
         .map(|snapshot| {
             snapshot
                 .transaction_state()
@@ -982,6 +1014,7 @@ fn recover_pending_asset_operation(
     let parent_snapshots = manifest
         .snapshots
         .iter()
+        .filter(|snapshot| !matches!(&snapshot.kind, DurableSnapshotKind::Directory))
         .map(|snapshot| (snapshot.path.clone(), snapshot.parent.clone()))
         .collect::<BTreeMap<_, _>>();
     recover_transaction_mutation_intents_with_private_paths(
@@ -1025,10 +1058,12 @@ fn recover_pending_asset_operation(
     // so every unmarked operation is rolled back when ownership still matches.
     let tracked_paths = snapshots
         .iter()
+        .filter(|snapshot| snapshot.is_mutable())
         .map(|snapshot| snapshot.path.clone())
         .collect::<Vec<_>>();
     let reviewed_states = snapshots
         .iter()
+        .filter(|snapshot| snapshot.is_mutable())
         .map(|snapshot| {
             snapshot
                 .transaction_state()
@@ -1559,6 +1594,13 @@ fn apply_operation(
             }
             Ok(())
         }
+        LifecycleBinding::SkillConsumption { target_changes } => {
+            let DomainPlan::Skill { before, after } = &persisted.plan.domain_plan else {
+                return Err("Skill consumption requires a Skill domain plan".into());
+            };
+            apply_skill(&persisted.plan, before, after, Some(target_changes), skills_lock, blocked_agents)
+                .map_err(ModelTargetError::from)
+        }
         LifecycleBinding::SkillEnabled {
             name,
             target_id,
@@ -1957,6 +1999,21 @@ fn verify_operation(persisted: &PersistedAssetOperation) -> Result<(), String> {
                 .any(|key| records.get(key).map(|record| record.enabled) != Some(*after))
             {
                 return Err("MCP enabled states did not match the reviewed bulk change".into());
+            }
+            Ok(())
+        }
+        LifecycleBinding::SkillConsumption { target_changes } => {
+            let settings = load_settings_strict().map_err(|error| error.to_string())?;
+            let assignments = canonical_skill_assignments(&settings).map_err(|error| format!("{error:?}"))?;
+            for (target_id, changes) in target_changes {
+                for (name, desired) in changes {
+                    let assigned = assignments.get(name).is_some_and(|targets| targets.contains(target_id));
+                    let record = settings.skill_consumptions.as_ref().and_then(|skills| skills.get(name))
+                        .and_then(|targets| targets.get(target_id));
+                    if assigned != *desired || if *desired { !record.is_some_and(|record| record.enabled) } else { record.is_some() } {
+                        return Err("Skill physical desired state did not match the reviewed delta".into());
+                    }
+                }
             }
             Ok(())
         }
@@ -2676,7 +2733,7 @@ fn apply_domain_plan(
             blocked_agents,
         ),
         DomainPlan::Skill { before, after } => apply_skill(
-            operation, before, after, skills_lock, blocked_agents,
+            operation, before, after, None, skills_lock, blocked_agents,
         )
         .map_err(ModelTargetError::from),
         DomainPlan::AgentCapabilities { .. } => Err(ModelTargetError::ConvergenceFailed(
@@ -3105,6 +3162,7 @@ fn apply_skill(
     operation: &AssetOperationPlan,
     before: &BTreeMap<String, Vec<String>>,
     after: &BTreeMap<String, Vec<String>>,
+    target_changes: Option<&SkillTargetChanges>,
     skills_lock: &SkillsOperationLock,
     blocked_agents: &BTreeSet<String>,
 ) -> Result<(), String> {
@@ -3117,32 +3175,43 @@ fn apply_skill(
         let right = after.get(agent).into_iter().flatten().cloned().collect::<BTreeSet<_>>();
         left.symmetric_difference(&right).cloned().collect::<Vec<_>>()
     }).collect::<BTreeSet<_>>();
-    let mut groups = BTreeMap::<String, BTreeMap<String, bool>>::new();
-    // A domain plan contains only the affected Agent closure, not every
-    // consumer. Merge its physical delta into complete central authority.
-    for name in changed_names {
-        let assigned = assignments.get(&name).cloned().unwrap_or_default();
-        let removed_agents = before.iter().filter(|(agent, names)| names.contains(&name)
-            && !after.get(*agent).is_some_and(|names| names.contains(&name)))
-            .map(|(agent, _)| agent.clone()).collect::<Vec<_>>();
-        let desired_agents = after.iter().filter(|(_, names)| names.contains(&name))
-            .map(|(agent, _)| agent.clone()).collect::<Vec<_>>();
-        let declared = declared_targets_for_agents(&removed_agents).map_err(|error| format!("{error:?}"))?;
-        // Normalize the whole reviewed closure once. Normalizing each Agent
-        // separately invents redundant primary targets for shared aliases.
-        let desired = normalize_agent_selection(&desired_agents).map_err(|error| format!("{error:?}"))?
-            .into_iter().collect::<BTreeSet<_>>();
-        let removals = assigned.intersection(&declared).filter(|target| !desired.contains(*target))
-            .cloned().map(|target| (target, false));
-        let additions = desired.difference(&assigned).cloned().map(|target| (target, true));
-        for (target_id, enabled) in removals.chain(additions) {
-            let target = inventory.targets.iter().find(|target| target.target_id == target_id)
-                .ok_or_else(|| "skill_target_unavailable: the reviewed target is unavailable".to_string())?;
-            let path = expand_tilde_path(&target.global_dir).join(&name);
-            if !reviewed_paths.contains(&path) {
+    let mut groups = target_changes.cloned().unwrap_or_default();
+    // Previously reviewed plans have no physical binding. Keep their bounded
+    // interpreter for recovery/compatibility; all new plans supply exact deltas.
+    if target_changes.is_none() {
+        for name in changed_names {
+            let assigned = assignments.get(&name).cloned().unwrap_or_default();
+            let removed_agents = before.iter().filter(|(agent, names)| names.contains(&name)
+                && !after.get(*agent).is_some_and(|names| names.contains(&name)))
+                .map(|(agent, _)| agent.clone()).collect::<Vec<_>>();
+            let desired_agents = after.iter().filter(|(_, names)| names.contains(&name))
+                .map(|(agent, _)| agent.clone()).collect::<Vec<_>>();
+            let declared = declared_targets_for_agents(&removed_agents).map_err(|error| format!("{error:?}"))?;
+            // Normalize the whole reviewed closure once. Normalizing each Agent
+            // separately invents redundant primary targets for shared aliases.
+            let desired = normalize_agent_selection(&desired_agents).map_err(|error| format!("{error:?}"))?
+                .into_iter().collect::<BTreeSet<_>>();
+            let removals = assigned.intersection(&declared).filter(|target| !desired.contains(*target))
+                .cloned().map(|target| (target, false));
+            let additions = desired.difference(&assigned).cloned().map(|target| (target, true));
+            for (target_id, enabled) in removals.chain(additions) {
+                let target = inventory.targets.iter().find(|target| target.target_id == target_id)
+                    .ok_or_else(|| "skill_target_unavailable: the reviewed target is unavailable".to_string())?;
+                let path = expand_tilde_path(&target.global_dir).join(&name);
+                if !reviewed_paths.contains(&path) {
+                    return Err("asset_operation_stale: Skill delta exceeds the reviewed physical write set".into());
+                }
+                groups.entry(target_id).or_default().insert(name.clone(), enabled);
+            }
+        }
+    }
+    for (target_id, changes) in &groups {
+        let target = inventory.targets.iter().find(|target| target.target_id == *target_id)
+            .ok_or_else(|| "skill_target_unavailable: the reviewed target is unavailable".to_string())?;
+        for name in changes.keys() {
+            if !reviewed_paths.contains(&expand_tilde_path(&target.global_dir).join(name)) {
                 return Err("asset_operation_stale: Skill delta exceeds the reviewed physical write set".into());
             }
-            groups.entry(target_id).or_default().insert(name.clone(), enabled);
         }
     }
     // The reviewed write set also contains existing targets of changed Skills.
@@ -3217,35 +3286,9 @@ fn record_skill_physical_result(
     }
 }
 
-fn persist_skill_desired(
-    target_changes: &BTreeMap<String, BTreeMap<String, bool>>,
-) -> Result<(), String> {
-    mutate_settings(|settings| {
-        let assignments = settings.skill_assignments.get_or_insert_default();
-        let consumptions = settings.skill_consumptions.get_or_insert_default();
-        for (target_id, changes) in target_changes {
-            for (name, desired) in changes {
-                if *desired {
-                    assignments.entry(name.clone()).or_default().insert(target_id.clone());
-                    consumptions.entry(name.clone()).or_default().entry(target_id.clone())
-                        .or_insert_with(|| SkillConsumptionRecord {
-                            name: name.clone(), target_id: target_id.clone(), enabled: true,
-                        });
-                } else {
-                    if let Some(targets) = assignments.get_mut(name) {
-                        targets.remove(target_id);
-                        if targets.is_empty() { assignments.remove(name); }
-                    }
-                    if let Some(records) = consumptions.get_mut(name) {
-                        records.remove(target_id);
-                        if records.is_empty() { consumptions.remove(name); }
-                    }
-                }
-            }
-        }
-        if assignments.is_empty() { settings.skill_assignments = None; }
-        if consumptions.is_empty() { settings.skill_consumptions = None; }
-    }).map_err(|error| error.to_string())
+fn persist_skill_desired(target_changes: &SkillTargetChanges) -> Result<(), String> {
+    mutate_settings(|settings| super::planner::merge_skill_target_changes(settings, target_changes))
+        .map_err(|error| error.to_string())
 }
 
 fn verify_postcondition(
@@ -3258,6 +3301,9 @@ fn verify_postcondition(
         if before.is_empty() && after.is_empty());
     let inventory = if central_mcp_only { ConsumptionInventory::default() }
         else { list_consumption_inventory()? };
+    let skill_settings = if matches!(lifecycle, Some(LifecycleBinding::SkillConsumption { .. })) {
+        Some(load_settings_strict().map_err(|error| error.to_string())?)
+    } else { None };
     match &plan.domain_plan {
         DomainPlan::Mcp { after, .. } => {
             for (agent_id, expected) in after {
@@ -3306,6 +3352,13 @@ fn verify_postcondition(
         }
         DomainPlan::Skill { after, .. } => {
             for (agent_id, expected) in after {
+                if let Some(settings) = &skill_settings {
+                    let actual = skill_selection_from_settings(settings, &inventory, agent_id)?;
+                    if actual != *expected {
+                        return Err(format!("Skill desired projection did not match the reviewed state for {agent_id}"));
+                    }
+                    continue;
+                }
                 verify_desired_many(&inventory, agent_id, expected, |asset| match asset {
                     AssetRef::Skill { name } => Some(name.as_str()),
                     _ => None,
@@ -3333,17 +3386,19 @@ fn verify_postcondition(
     }
 
     for ((agent_id, asset), desired) in expected_effects(plan, lifecycle) {
-        let consumption = inventory
-            .consumptions
-            .iter()
-            .find(|item| item.agent_id == agent_id && item.asset == asset && item.desired);
+        let consumption = if let (Some(settings), AssetRef::Skill { name }) = (&skill_settings, &asset) {
+            skill_selection_from_settings(settings, &inventory, &agent_id)?.contains(name)
+        } else {
+            inventory.consumptions.iter()
+                .any(|item| item.agent_id == agent_id && item.asset == asset && item.desired)
+        };
         if desired {
-            if consumption.is_none() {
+            if !consumption {
                 return Err(format!(
                     "asset post-commit verification failed: missing desired {asset:?} for {agent_id}"
                 ));
             }
-        } else if consumption.is_some() {
+        } else if consumption {
             return Err("asset removal post-commit verification failed".into());
         }
     }
@@ -3601,6 +3656,10 @@ enum DurableSnapshotKind {
 }
 
 impl PathSnapshot {
+    fn is_mutable(&self) -> bool {
+        !matches!(&self.kind, SnapshotKind::Directory)
+    }
+
     /// Ordinary settings/configuration targets must never be symlinks: their
     /// writers follow links, while a link-only snapshot cannot restore the
     /// destination content.
@@ -4586,6 +4645,83 @@ mod tests {
         assert_eq!(load_settings_strict().unwrap().imported.as_deref(), Some("durable-intent"));
     }
 
+    #[cfg(unix)]
+    fn recover_immutable_skill_directory(central_committed: bool, replace_after_checkpoint: bool) {
+        use std::os::unix::fs::MetadataExt;
+        let home = TestHome::new("skill-immutable-directory-recovery");
+        mutate_settings(|settings| settings.imported = Some("before".into())).unwrap();
+        let target = home.home.join(".agents/skills/external-directory");
+        fs::create_dir_all(&target).unwrap();
+        fs::write(target.join("marker.txt"), b"original external content").unwrap();
+        let inode = fs::symlink_metadata(&target).unwrap().ino();
+        let mut snapshots = central_snapshots();
+        snapshots.push(PathSnapshot::capture_any(&target).unwrap());
+        let directory = snapshots.last().unwrap();
+        assert!(!directory.is_mutable());
+        assert!(directory.transaction_state().unwrap_err().contains("refusing directory"));
+        let mut plan = private_transaction_plan(vec![target.to_string_lossy().into_owned()]);
+        plan.domain_plan = DomainPlan::Skill { before: BTreeMap::new(), after: BTreeMap::new() };
+        plan.affected_agent_ids.clear();
+        let persisted = PersistedAssetOperation {
+            schema_version: 3, plan, settings_hash: None, state_preconditions: vec![],
+            settings_target_hash: String::new(), target_hashes: BTreeMap::new(),
+            mcp_catalog_hash: None, skill_target_graph_hash: None, lifecycle: None,
+        };
+        let plan = &persisted.plan;
+        persist_rollback_snapshots(&plan.operation_id, &snapshots).unwrap();
+        let mutable = snapshots.iter().filter(|snapshot| snapshot.is_mutable()).collect::<Vec<_>>();
+        let paths = mutable.iter().map(|snapshot| snapshot.path.clone()).collect::<Vec<_>>();
+        assert!(!paths.contains(&target));
+        let parents = mutable.iter().map(|snapshot| (snapshot.path.clone(), snapshot.parent.clone())).collect();
+        let states = mutable.iter().map(|snapshot| (snapshot.path.clone(), snapshot.transaction_state().unwrap())).collect();
+        let tracker = begin_transaction_write_tracking_with_private_states(
+            &transaction_write_evidence_dir(&plan.operation_id), &paths, &BTreeSet::new(), &parents, &states,
+        ).unwrap();
+        let forbidden = target.join("unreviewed.txt");
+        assert!(crate::safe_write::write_if_unchanged(&forbidden, None, "forbidden").unwrap_err().contains("unreviewed write"));
+        assert!(!forbidden.exists());
+        mutate_settings(|settings| settings.imported = Some("after".into())).unwrap();
+        if central_committed {
+            mark_central_committed(plan).unwrap();
+            mark_physical_target_completed(plan, target.parent().unwrap(), &plan.target_files).unwrap();
+        }
+        drop(tracker);
+        if replace_after_checkpoint {
+            assert!(central_committed);
+            let retained = target.with_extension("reviewed");
+            fs::rename(&target, &retained).unwrap();
+            fs::create_dir(&target).unwrap();
+            fs::write(target.join("marker.txt"), b"replacement external content").unwrap();
+            let replacement_inode = fs::symlink_metadata(&target).unwrap().ino();
+            let error = recover_pending_asset_operation(&persisted, &operation_root(&plan.operation_id)).unwrap_err();
+            assert!(error.contains("immutable Skill directory changed"), "{error}");
+            assert_eq!(fs::symlink_metadata(&target).unwrap().ino(), replacement_inode);
+            assert_eq!(fs::read(target.join("marker.txt")).unwrap(), b"replacement external content");
+            assert_eq!(fs::symlink_metadata(&retained).unwrap().ino(), inode);
+            assert_eq!(fs::read(retained.join("marker.txt")).unwrap(), b"original external content");
+            assert!(operation_root(&plan.operation_id).exists());
+            return;
+        }
+        recover_pending_asset_operation(&persisted, &operation_root(&plan.operation_id)).unwrap();
+        assert_eq!(fs::symlink_metadata(&target).unwrap().ino(), inode);
+        assert_eq!(fs::read(target.join("marker.txt")).unwrap(), b"original external content");
+        assert_eq!(load_settings_strict().unwrap().imported.as_deref(), Some(if central_committed { "after" } else { "before" }));
+        assert!(!operation_root(&plan.operation_id).exists());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn immutable_skill_directories_survive_pre_and_post_checkpoint_recovery_without_write_authority() {
+        recover_immutable_skill_directory(false, false);
+        recover_immutable_skill_directory(true, false);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn immutable_skill_directory_checkpoint_rejects_an_inode_replacement_during_recovery() {
+        recover_immutable_skill_directory(true, true);
+    }
+
     #[test]
     fn qoder_cli_model_path_override_uses_private_snapshots() {
         let home = TestHome::new("qoder-cli-private-override");
@@ -4684,6 +4820,15 @@ mod tests {
         commit_asset_operation(AssetCommitRequest { operation_id: install.operation_id, candidate_hash: install.candidate_hash }).unwrap();
         let active = plan_set_active_model(PlanSetActiveModelRequest { agent_id: "opencode".into(), profile_id: "a".into() }).unwrap();
         commit_asset_operation(AssetCommitRequest { operation_id: active.operation_id, candidate_hash: active.candidate_hash }).unwrap();
+        let native_path = home.home.join(".config/opencode/opencode.json");
+        #[cfg(unix)]
+        let native_inode = {
+            use std::os::unix::fs::{MetadataExt, PermissionsExt};
+            // A native file can predate private credential delivery. Tightening
+            // it must be part of the same tracked write, independent of umask.
+            fs::set_permissions(&native_path, fs::Permissions::from_mode(0o644)).unwrap();
+            fs::metadata(&native_path).unwrap().ino()
+        };
         let before = load_settings_strict().unwrap().model_selection("opencode");
         let plan = crate::assets::planner::plan_model_credential_delivery("opencode", None, ApiKeyDelivery::Plaintext, true).unwrap();
         let files = plan.target_files.iter().map(|path| {
@@ -4697,6 +4842,12 @@ mod tests {
         assert!(!error.is_empty());
         assert_eq!(load_settings_strict().unwrap().model_selection("opencode"), before);
         for (path, bytes) in &files { assert_eq!(fs::read(path).ok(), *bytes); }
+        #[cfg(unix)] {
+            use std::os::unix::fs::{MetadataExt, PermissionsExt};
+            let metadata = fs::metadata(&native_path).unwrap();
+            assert_eq!(metadata.permissions().mode() & 0o777, 0o644);
+            assert_eq!(metadata.ino(), native_inode);
+        }
         fs::write(&key_paths[1], b"fixture-key-b").unwrap();
         #[cfg(unix)] {
             use std::os::unix::fs::PermissionsExt;
@@ -4706,6 +4857,12 @@ mod tests {
         let after = load_settings_strict().unwrap().model_selection("opencode");
         assert_eq!(after.active_profile_id, before.active_profile_id);
         assert!(after.profiles.values().all(|record| record.enabled));
+        #[cfg(unix)] {
+            use std::os::unix::fs::{MetadataExt, PermissionsExt};
+            let metadata = fs::metadata(&native_path).unwrap();
+            assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
+            assert_eq!(metadata.ino(), native_inode);
+        }
     }
 
     #[test]
@@ -4889,6 +5046,11 @@ mod tests {
             .iter()
             .map(|snapshot| (snapshot.path.clone(), snapshot.parent.clone()))
             .collect()
+    }
+
+    fn central_snapshots() -> Vec<PathSnapshot> {
+        [settings_file(), mcp_catalog_file(), model_catalog_file(), skill_catalog_file()]
+            .iter().map(|path| PathSnapshot::capture(path).unwrap()).collect()
     }
 
     fn evidence_contains(root: &Path, needle: &[u8]) -> bool {
@@ -5575,6 +5737,10 @@ mod tests {
             b"PRIVATE-OVERRIDE-PRESTATE-SENTINEL",
         )
         .unwrap();
+
+        // Simulate the process exiting; a live confirmation still owns its
+        // plan and must not be cancelled by another process's startup.
+        crate::assets::lease::release(&plan.operation_id);
 
         recover_pending_asset_operations().unwrap();
 
@@ -6568,7 +6734,7 @@ mod tests {
         })
         .unwrap();
         let persisted = load_operation(&plan.operation_id).unwrap();
-        let snapshots = vec![PathSnapshot::capture(&settings_file()).unwrap()];
+        let snapshots = central_snapshots();
         let old_credential = credential_snapshot("work").unwrap();
         persist_credential_rollback(&plan.operation_id, "work", old_credential.as_deref()).unwrap();
         persist_rollback_snapshots(&plan.operation_id, &snapshots).unwrap();
@@ -6584,12 +6750,15 @@ mod tests {
         .unwrap();
         let skills_guard = acquire_asset_skills_lock().unwrap();
         apply_operation(&persisted, &skills_guard, &BTreeSet::new()).unwrap();
+        assert!(operation_state_marker_exists(&plan.operation_id, CENTRAL_COMMITTED_MARKER).unwrap());
+        assert!(!operation_commit_marker_exists(&plan.operation_id).unwrap());
         drop(tracker);
         drop(skills_guard);
         assert_eq!(credential_snapshot("work").unwrap().unwrap(), b"old-secret");
 
         recover_pending_asset_operations().unwrap();
         assert_eq!(fs::read(settings_file()).unwrap(), settings_before);
+        assert_eq!(load_settings_strict().unwrap().model_profiles.unwrap()["work"].model, "new-model");
         assert_eq!(credential_snapshot("work").unwrap().unwrap(), b"old-secret");
         assert!(!operation_root(&plan.operation_id).exists());
     }
@@ -6813,9 +6982,19 @@ mod tests {
 
     #[test]
     fn provider_recovery_rolls_back_every_child_model_and_credential() {
+        assert_provider_recovery(false);
+    }
+
+    #[test]
+    fn provider_checkpoint_recovery_preserves_every_child_model_and_credential() {
+        assert_provider_recovery(true);
+    }
+
+    fn assert_provider_recovery(central_checkpoint: bool) {
         let _home = TestHome::new("consume-provider-keychain-rollback");
         let (mut provider, first, second) = install_shared_provider_models();
         let settings_before = fs::read(settings_file()).unwrap();
+        let catalog_before = fs::read(model_catalog_file()).unwrap();
         provider.base_url = "https://new.example.test".into();
         let plan = plan_update_central_asset(PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::ModelProvider {
@@ -6826,13 +7005,13 @@ mod tests {
         })
         .unwrap();
         let persisted = load_operation(&plan.operation_id).unwrap();
-        let snapshots = vec![PathSnapshot::capture(&settings_file()).unwrap()];
+        let snapshots = central_snapshots();
         let subject = provider_credential_subject(&provider.id);
         let old_credential = credential_snapshot(&subject).unwrap();
         persist_credential_rollback(&plan.operation_id, &subject, old_credential.as_deref())
             .unwrap();
         persist_rollback_snapshots(&plan.operation_id, &snapshots).unwrap();
-        let tracked_paths = vec![settings_file()];
+        let tracked_paths = snapshots.iter().map(|snapshot| snapshot.path.clone()).collect::<Vec<_>>();
         let tracker = begin_transaction_write_tracking(
             &transaction_write_evidence_dir(&plan.operation_id),
             &tracked_paths,
@@ -6840,16 +7019,37 @@ mod tests {
         )
         .unwrap();
         let skills_guard = acquire_asset_skills_lock().unwrap();
-        apply_operation(&persisted, &skills_guard, &BTreeSet::new()).unwrap();
+        if central_checkpoint {
+            apply_operation(&persisted, &skills_guard, &BTreeSet::new()).unwrap();
+        } else {
+            // Crash between central writes and the checkpoint. Use exactly the
+            // reviewed in-memory bundle, without publishing the checkpoint.
+            let PendingAssetPayload::ModelProvider { provider, profiles, credential } =
+                require_pending_payload(&plan.operation_id).unwrap() else { panic!("Provider payload"); };
+            save_provider_bundle(*provider, profiles).unwrap();
+            apply_credential_update(&subject, credential.as_deref().map(String::as_str)).unwrap();
+        }
+        assert_eq!(operation_state_marker_exists(&plan.operation_id, CENTRAL_COMMITTED_MARKER).unwrap(), central_checkpoint);
+        assert!(!operation_commit_marker_exists(&plan.operation_id).unwrap());
         drop(tracker);
         drop(skills_guard);
         assert_eq!(credential_snapshot(&first.id).unwrap().unwrap(), b"new-secret");
         assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"new-secret");
+        assert_ne!(fs::read(model_catalog_file()).unwrap(), catalog_before);
 
         recover_pending_asset_operations().unwrap();
         assert_eq!(fs::read(settings_file()).unwrap(), settings_before);
-        assert_eq!(credential_snapshot(&first.id).unwrap().unwrap(), b"old-secret");
-        assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"old-secret");
+        if central_checkpoint {
+            let profiles = load_settings_strict().unwrap().model_profiles.unwrap();
+            assert_eq!(profiles[&first.id].base_url, "https://new.example.test");
+            assert_eq!(profiles[&second.id].base_url, "https://new.example.test");
+            assert_eq!(credential_snapshot(&first.id).unwrap().unwrap(), b"new-secret");
+            assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"new-secret");
+        } else {
+            assert_eq!(fs::read(model_catalog_file()).unwrap(), catalog_before);
+            assert_eq!(credential_snapshot(&first.id).unwrap().unwrap(), b"old-secret");
+            assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"old-secret");
+        }
         assert!(!operation_root(&plan.operation_id).exists());
     }
 

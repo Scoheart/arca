@@ -40,6 +40,8 @@ interface LayoutProps {
   onSelectRegistry: () => void;
   onSelectModels: () => void;
   onSelectSkills: () => void;
+  onSelectSubagents: () => void;
+  onSelectHooks: () => void;
   onSelectAgent: (id: string) => void;
   onAddAgent?: () => void;
   onRescan?: () => Promise<unknown> | void;
@@ -57,6 +59,8 @@ export function Layout({
   onSelectRegistry,
   onSelectModels,
   onSelectSkills,
+  onSelectSubagents,
+  onSelectHooks,
   onSelectAgent,
   onAddAgent,
   onRescan,
@@ -154,7 +158,7 @@ export function Layout({
             className="arca-seg-item"
             data-active={view.kind === resource.view ? "true" : undefined}
             aria-pressed={view.kind === resource.view}
-            onClick={{ models: onSelectModels, mcps: onSelectRegistry, skills: onSelectSkills }[resource.id]}
+            onClick={{ models: onSelectModels, mcps: onSelectRegistry, skills: onSelectSkills, subagents: onSelectSubagents, hooks: onSelectHooks }[resource.id]}
           >
             <span className="flex items-center gap-1.5">
               <resource.Icon className="w-3.5 h-3.5" />

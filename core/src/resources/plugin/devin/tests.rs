@@ -366,7 +366,11 @@ fn unsafe_agent_registry_root_does_not_hide_safe_ordinary_extensions_or_enter_wa
 
 #[test]
 fn selected_app_priority_and_environment_are_rechecked_before_publication() {
-    let mut f=fixture(); f.host.roots.insert(0,Root {path:"/Applications/Devin.app".into(),layout:"devin_app".into(),presence:PluginPresence::Bundled,complete_marker:None});
+    let mut f=fixture();
+    // The default TestHome probe root aliases /Applications to ~/Applications;
+    // this priority regression needs two distinct physical namespaces.
+    std::env::set_var("ARCA_TEST_PROBE_ROOT", f.home.home.join("system"));
+    f.host.roots.insert(0,Root {path:"/Applications/Devin.app".into(),layout:"devin_app".into(),presence:PluginPresence::Bundled,complete_marker:None});
     let audit=capture(&f.host,&f.c,&Mutex::default()).unwrap().unwrap();
     fs::create_dir_all(crate::paths::system_probe_path("/Applications/Devin.app")).unwrap();
     assert!(audit.revalidate(&f.host).is_err());

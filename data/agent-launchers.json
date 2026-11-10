@@ -567,7 +567,9 @@
     "candidates": [
       "dsh"
     ],
-    "args": []
+    "args": [
+      "web"
+    ]
   },
   "goose-desktop": {
     "kind": "app",
@@ -687,6 +689,12 @@
     ],
     "bundle_ids": [
       "com.tencent.codebuddycn"
+    ]
+  },
+  "deepseek-harness-desktop": {
+    "kind": "app",
+    "candidates": [
+      "DeepSeek Harness"
     ]
   }
 }

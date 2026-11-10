@@ -1,0 +1,32 @@
+# Preserve this profile comment and unrelated expression verbatim.
+- insert:
+    - id: unrelated-plugin
+      name: '@fixture/unrelated'
+      config:
+        location: !!js dshHomePath('unrelated')
+    - id: mcp-paused
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: true # native pause
+      config:
+        serverName: paused
+        transport: stdio
+        command: fixture-command # keep command comment
+        args: [original]
+        startupTimeoutMs: 42000
+        reconnect: {initialDelayMs: 1234}
+        futureServerPolicy: {keep: true}
+    - id: mcp-sibling
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: sibling
+        transport: streamable-http
+        url: https://example.test/sibling
+        headers: {Authorization: 'Bearer token'}
+- id: llm-pi-ai
+  config:
+    providers:
+      external:
+        models:
+          - id: external-model # keep model comment
+            contextWindow: 12000
+            policy: {keep: true}

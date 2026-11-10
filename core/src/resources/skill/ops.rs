@@ -318,14 +318,50 @@ pub(crate) fn release_assignment_links_safely(
         return Ok(Vec::new());
     }
     let raw_target = fs::read_link(&path).map_err(|error| io_error(&path, error))?;
-    let resolved = match fs::canonicalize(&path) {
-        Ok(resolved) => resolved,
-        Err(error) if error.kind() == ErrorKind::NotFound || is_symlink_loop(&error) => {
-            return Ok(Vec::new());
+    let exact_central = match fs::canonicalize(&path) {
+        Ok(resolved) => fs::canonicalize(&central).ok().as_ref() == Some(&resolved),
+        Err(error) if error.kind() == ErrorKind::NotFound => {
+            use super::anchored::{AnchoredFileKind, AnchoredRoot};
+
+            if !broken_link_targets_central(&raw_target, &path, &central)? {
+                return Ok(Vec::new());
+            }
+            // A missing leaf cannot be canonicalized. Bind its actual parent
+            // through the current private central root instead; lexical '..'
+            // normalization alone would mistake a symlink escape for ownership.
+            let central_parent = paths.skills_dir();
+            let relative = central_parent.strip_prefix(paths.arca_dir())
+                .map_err(|_| invalid_source_error("the central Skill root is outside Arca"))?;
+            let mut opened = AnchoredRoot::open(paths.arca_dir())?;
+            let mut opened_path = paths.arca_dir().to_path_buf();
+            for component in relative.components() {
+                let Component::Normal(name) = component else {
+                    return invalid_source("the central Skill parent chain is invalid");
+                };
+                opened_path.push(name);
+                let Some(identity) = opened.stat_root_entry(name, &opened_path)? else {
+                    return Ok(Vec::new());
+                };
+                if identity.kind != AnchoredFileKind::Directory {
+                    return Ok(Vec::new());
+                }
+                opened = AnchoredRoot::open_expected(&opened_path, &identity)?;
+            }
+            let absolute_target = if raw_target.is_absolute() { raw_target.clone() }
+                else { path.parent().ok_or_else(|| invalid_source_error("a Skill link has no parent"))?.join(&raw_target) };
+            let target_parent = absolute_target.parent()
+                .ok_or_else(|| invalid_source_error("a Skill link destination has no parent"))?;
+            if !opened.path_refers_to_root(&central_parent)?
+                || !opened.path_refers_to_root(target_parent)?
+                || opened.stat_root_entry(std::ffi::OsStr::new(skill_name), &central)?.is_some() {
+                return Ok(Vec::new());
+            }
+            true
         }
+        Err(error) if is_symlink_loop(&error) => false,
         Err(error) => return Err(io_error(&path, error)),
     };
-    if fs::canonicalize(&central).ok().as_ref() != Some(&resolved) {
+    if !exact_central {
         return Ok(Vec::new());
     }
     let expected = match fs::metadata(&path) {
@@ -2880,6 +2916,163 @@ mod tests {
         .unwrap();
         commit_install(plan.confirmation()).unwrap();
         SkillsPaths::from_env().unwrap()
+    }
+
+    fn orphan_release_fixture(name: &str) -> (TestHome, SkillsPaths, SkillTargetView, PathBuf) {
+        let home = TestHome::new("orphan-link-release");
+        let paths = SkillsPaths::from_env().unwrap();
+        let link = home.home.join(".claude/skills").join(name);
+        fs::create_dir_all(link.parent().unwrap()).unwrap();
+        let target = SkillTargetView {
+            target_id: "claude-user".into(), global_dir: "~/.claude/skills".into(),
+            primary_agent_ids: vec!["claude-code".into()],
+            affected_agent_ids: vec!["claude-code".into()], assignable: true,
+        };
+        (home, paths, target, link)
+    }
+
+    fn orphan_release_tracker(home: &TestHome, path: &Path) -> crate::safe_write::TransactionWriteTracker {
+        let parent = crate::safe_write::capture_parent_directory(path).unwrap();
+        crate::safe_write::begin_transaction_write_tracking(
+            &home.home.join(format!("review-{}", Uuid::new_v4())),
+            &[path.to_path_buf()], &BTreeMap::from([(path.to_path_buf(), parent)]),
+        ).unwrap()
+    }
+
+    #[test]
+    fn orphan_release_removes_exact_absolute_and_relative_links_after_central_disappears() {
+        use std::os::unix::fs::symlink;
+        for relative in [false, true] {
+            let (home, paths, target, link) = orphan_release_fixture("orphan-exact");
+            let raw = if relative {
+                PathBuf::from("../../.arca/assets/skills/items/orphan-exact")
+            } else { paths.central_skill("orphan-exact") };
+            symlink(&raw, &link).unwrap();
+            let _tracker = orphan_release_tracker(&home, &link);
+            let lock = acquire_skills_lock(&paths).unwrap();
+            assert_eq!(release_assignment_links_safely("orphan-exact", &target, &lock).unwrap(), vec![link.clone()]);
+            assert!(matches!(fs::symlink_metadata(&link), Err(error) if error.kind() == ErrorKind::NotFound));
+            assert!(!paths.central_skill("orphan-exact").exists());
+        }
+    }
+
+    #[test]
+    fn orphan_release_preserves_foreign_broken_looping_and_non_link_entries() {
+        use std::os::unix::fs::symlink;
+        for kind in ["foreign", "relative-foreign", "foreign-central-sibling", "legacy-central", "self-loop", "two-link-loop", "directory", "file", "central-is-symlink"] {
+            let (home, paths, target, link) = orphan_release_fixture("orphan-foreign");
+            let outside = home.home.join("foreign");
+            match kind {
+                "foreign" => symlink(&outside, &link).unwrap(),
+                "relative-foreign" => symlink("../../foreign", &link).unwrap(),
+                "foreign-central-sibling" => symlink(paths.central_skill("different-skill"), &link).unwrap(),
+                "legacy-central" => {
+                    let legacy = home.home.join(".arca/skills");
+                    fs::create_dir(&legacy).unwrap();
+                    symlink(legacy.join("orphan-foreign"), &link).unwrap();
+                }
+                "self-loop" => symlink("orphan-foreign", &link).unwrap(),
+                "two-link-loop" => {
+                    symlink("sibling", &link).unwrap();
+                    symlink("orphan-foreign", link.with_file_name("sibling")).unwrap();
+                }
+                "directory" => { fs::create_dir(&link).unwrap(); fs::write(link.join("sentinel"), b"user directory").unwrap(); }
+                "file" => fs::write(&link, b"user file").unwrap(),
+                "central-is-symlink" => {
+                    symlink(&outside, paths.central_skill("orphan-foreign")).unwrap();
+                    symlink(paths.central_skill("orphan-foreign"), &link).unwrap();
+                }
+                _ => unreachable!(),
+            }
+            let before = fs::symlink_metadata(&link).unwrap();
+            let raw = before.file_type().is_symlink().then(|| fs::read_link(&link).unwrap());
+            let _tracker = if kind == "directory" || kind == "file" { None }
+                else { Some(orphan_release_tracker(&home, &link)) };
+            let lock = acquire_skills_lock(&paths).unwrap();
+            assert!(release_assignment_links_safely("orphan-foreign", &target, &lock).unwrap().is_empty(), "{kind}");
+            assert_eq!(fs::symlink_metadata(&link).unwrap().ino(), before.ino(), "{kind}");
+            if let Some(raw) = raw { assert_eq!(fs::read_link(&link).unwrap(), raw, "{kind}"); }
+            if kind == "directory" { assert_eq!(fs::read(link.join("sentinel")).unwrap(), b"user directory"); }
+            if kind == "file" { assert_eq!(fs::read(&link).unwrap(), b"user file"); }
+        }
+    }
+
+    #[test]
+    fn orphan_release_preserves_a_lexically_exact_target_that_escapes_through_a_symlink() {
+        use std::os::unix::fs::symlink;
+        let (home, paths, target, link) = orphan_release_fixture("orphan-escape");
+        let outside = home.home.join("outside");
+        fs::create_dir_all(outside.join("child")).unwrap();
+        fs::create_dir_all(outside.join(".arca/assets/skills/items")).unwrap();
+        fs::write(outside.join("sentinel"), b"foreign namespace").unwrap();
+        symlink(outside.join("child"), home.home.join("hop")).unwrap();
+        let raw = PathBuf::from("../../hop/../.arca/assets/skills/items/orphan-escape");
+        symlink(&raw, &link).unwrap();
+        let inode = fs::symlink_metadata(&link).unwrap().ino();
+        let _tracker = orphan_release_tracker(&home, &link);
+        let lock = acquire_skills_lock(&paths).unwrap();
+        assert!(release_assignment_links_safely("orphan-escape", &target, &lock).unwrap().is_empty());
+        assert_eq!(fs::read_link(&link).unwrap(), raw);
+        assert_eq!(fs::symlink_metadata(&link).unwrap().ino(), inode);
+        assert_eq!(fs::read(outside.join("sentinel")).unwrap(), b"foreign namespace");
+    }
+
+    #[test]
+    fn orphan_release_preserves_a_symlink_replacement_in_the_central_parent_chain() {
+        use std::os::unix::fs::symlink;
+        let (home, paths, target, link) = orphan_release_fixture("orphan-central-parent");
+        symlink(paths.central_skill("orphan-central-parent"), &link).unwrap();
+        let _tracker = orphan_release_tracker(&home, &link);
+        let central_parent = paths.skills_dir().parent().unwrap().to_path_buf();
+        fs::rename(&central_parent, central_parent.with_extension("retained")).unwrap();
+        let outside = home.home.join("outside-central");
+        fs::create_dir_all(outside.join("items")).unwrap();
+        fs::write(outside.join("sentinel"), b"foreign parent").unwrap();
+        symlink(&outside, &central_parent).unwrap();
+        let lock = acquire_skills_lock(&paths).unwrap();
+        let result = release_assignment_links_safely("orphan-central-parent", &target, &lock);
+        assert!(result.as_ref().map_or(true, Vec::is_empty));
+        assert_eq!(fs::read_link(&link).unwrap(), paths.central_skill("orphan-central-parent"));
+        assert_eq!(fs::read(outside.join("sentinel")).unwrap(), b"foreign parent");
+    }
+
+    #[test]
+    fn orphan_release_rejects_a_same_target_new_symlink_inode_after_review() {
+        use std::os::unix::fs::symlink;
+        let (home, paths, target, link) = orphan_release_fixture("orphan-concurrent");
+        let raw = paths.central_skill("orphan-concurrent");
+        symlink(&raw, &link).unwrap();
+        let _tracker = orphan_release_tracker(&home, &link);
+        let retained = link.with_extension("retained");
+        fs::rename(&link, &retained).unwrap();
+        symlink(&raw, &link).unwrap();
+        let replacement_inode = fs::symlink_metadata(&link).unwrap().ino();
+        assert_ne!(replacement_inode, fs::symlink_metadata(&retained).unwrap().ino());
+        let lock = acquire_skills_lock(&paths).unwrap();
+        assert!(release_assignment_links_safely("orphan-concurrent", &target, &lock).is_err());
+        assert_eq!(fs::read_link(&link).unwrap(), raw);
+        assert_eq!(fs::symlink_metadata(&link).unwrap().ino(), replacement_inode);
+        assert!(fs::symlink_metadata(retained).unwrap().file_type().is_symlink());
+    }
+
+    #[test]
+    fn orphan_release_rejects_a_same_path_new_parent_inode_after_review() {
+        use std::os::unix::fs::symlink;
+        let (home, paths, target, link) = orphan_release_fixture("orphan-parent-race");
+        let raw = paths.central_skill("orphan-parent-race");
+        symlink(&raw, &link).unwrap();
+        let _tracker = orphan_release_tracker(&home, &link);
+        let parent = link.parent().unwrap();
+        let retained = parent.with_extension("retained");
+        fs::rename(parent, &retained).unwrap();
+        fs::create_dir(parent).unwrap();
+        symlink(&raw, &link).unwrap();
+        let replacement_inode = fs::symlink_metadata(&link).unwrap().ino();
+        let lock = acquire_skills_lock(&paths).unwrap();
+        assert!(release_assignment_links_safely("orphan-parent-race", &target, &lock).is_err());
+        assert_eq!(fs::read_link(&link).unwrap(), raw);
+        assert_eq!(fs::symlink_metadata(&link).unwrap().ino(), replacement_inode);
+        assert!(fs::symlink_metadata(retained.join("orphan-parent-race")).unwrap().file_type().is_symlink());
     }
 
     #[test]

@@ -504,7 +504,7 @@ mod tests {
         })
         .unwrap();
 
-        let source = home.home.join(".arca/sources/local/manual.json");
+        let source = crate::paths::local_sources_dir().join("manual.json");
         assert!(fs::read_to_string(&source)
             .unwrap()
             .contains("super-secret"));

@@ -1,5 +1,114 @@
 # Changelog
 
+## [2.70.2](https://github.com/Scoheart/arca/compare/v2.70.1...v2.70.2) (2026-11-10)
+
+### Changes
+
+* feat(ui): unified card click-to-view, direct delete button, and compact skill card layout ([1859a4f](https://github.com/Scoheart/arca/commit/1859a4fe45417efa1c00034a3080df77d391d956))
+
+## [2.70.1](https://github.com/Scoheart/arca/compare/v2.70.0...v2.70.1) (2026-11-10)
+
+### Changes
+
+* feat(model): add EdgeOne Makers Models provider (#270) ([23ca2bd](https://github.com/Scoheart/arca/commit/23ca2bd0f69d51274778ee72679bfe9e6fb862d1))
+* feat(models): add the LLM7.io gateway provider (#271) ([f8b052b](https://github.com/Scoheart/arca/commit/f8b052b1bdfae5d096c55339b57ce714d751d1fe))
+* feat(agents): catalog DeepAI Code as a display-only desktop agent (#272) ([12f2dd5](https://github.com/Scoheart/arca/commit/12f2dd5dc1ad7f0473c990bdea39ce72d7a1650e))
+* feat(models): add the Zro gateway provider (#273) ([6be0337](https://github.com/Scoheart/arca/commit/6be0337d6ade553d65e2758162d72719d65287bd))
+* feat(models): add the NaraRouter gateway provider (#274) ([cf84e59](https://github.com/Scoheart/arca/commit/cf84e5926efbcbaac5011569dd8bdd9bce300035))
+* feat(models): add the Eden AI gateway provider (#275) ([c6380ce](https://github.com/Scoheart/arca/commit/c6380ce45452d606403286ded8d9ccbddf73c21b))
+* fix(dsh): use native dsh-mcp-client cordis insert entries for mcp ([489bacf](https://github.com/Scoheart/arca/commit/489bacfcf0ce05f110347444da51b52674ea3a8b))
+
+## [2.70.0](https://github.com/Scoheart/arca/compare/v2.69.3...v2.70.0) (2026-11-06)
+
+### Changes
+
+* feat(deepseek-harness): add native model and MCP configuration ([8b60718](https://github.com/Scoheart/arca/commit/8b60718f1c30b90bf3cfbdb4ed6db91b131985d4))
+
+## [2.69.3](https://github.com/Scoheart/arca/compare/v2.69.2...v2.69.3) (2026-11-05)
+
+### Changes
+
+* feat(desktop): unify card click-to-inspect and direct delete button across all views ([1237600](https://github.com/Scoheart/arca/commit/12376008e3a00f16ea0f68873d9327e0d4b66942))
+
+## [2.69.2](https://github.com/Scoheart/arca/compare/v2.69.1...v2.69.2) (2026-11-05)
+
+### Changes
+
+* fix(launch): tokenize composite cli arguments and strip outer quotes ([764da0c](https://github.com/Scoheart/arca/commit/764da0c1c633869176a7a44f6cb48ff01ab7adf6))
+
+## [2.69.1](https://github.com/Scoheart/arca/compare/v2.69.0...v2.69.1) (2026-11-04)
+
+### Changes
+
+* fix(mcp): redact compound credential names and argument values ([7d51182](https://github.com/Scoheart/arca/commit/7d511823d498ac06ce3190a29b1ec4dd9d6ad954))
+
+## [2.69.0](https://github.com/Scoheart/arca/compare/v2.68.0...v2.69.0) (2026-11-04)
+
+### Changes
+
+* feat(agents): inspect native MCP configurations and repair asset ownership ([c35643b](https://github.com/Scoheart/arca/commit/c35643baff6006b0e8246a5beec65ed5a01c9772))
+
+## [2.68.0](https://github.com/Scoheart/arca/compare/v2.67.1...v2.68.0) (2026-11-04)
+
+### Changes
+
+* feat(models): add Warp native model setup guidance ([ba297ec](https://github.com/Scoheart/arca/commit/ba297ecd4187b75b0f1509a21c7f21f432c3817e))
+
+## [2.67.1](https://github.com/Scoheart/arca/compare/v2.67.0...v2.67.1) (2026-11-04)
+
+### Changes
+
+* fix(ui): polish mcp detail modal, skill card grid layout, and support private github skills ([5586192](https://github.com/Scoheart/arca/commit/558619216853bdb76cd32aad953e53ffc712a1ed))
+
+## [2.67.0](https://github.com/Scoheart/arca/compare/v2.66.5...v2.67.0) (2026-11-04)
+
+### Changes
+
+* feat(hooks): add central hooks asset management and permanent subagent sidebar ([bfbd295](https://github.com/Scoheart/arca/commit/bfbd2951c56a1b0be34d8c6c06dd18bb568510d1))
+
+## [2.66.5](https://github.com/Scoheart/arca/compare/v2.66.4...v2.66.5) (2026-11-04)
+
+### Changes
+
+* fix(launch): default deepseek-harness dsh launch profile to web ([4e9a495](https://github.com/Scoheart/arca/commit/4e9a495d8e6f151816b9482b38a756d4c3d9d8c4))
+
+## [2.66.4](https://github.com/Scoheart/arca/compare/v2.66.3...v2.66.4) (2026-11-04)
+
+### Changes
+
+* fix(desktop): add robust fallback and path verification for file editor launcher ([691fb3e](https://github.com/Scoheart/arca/commit/691fb3eeec686bb8150778ae1136973702e896ae))
+
+## [2.66.3](https://github.com/Scoheart/arca/compare/v2.66.2...v2.66.3) (2026-11-03)
+
+### Changes
+
+* feat(model): include configured arca proxy in exported curl command ([153fc42](https://github.com/Scoheart/arca/commit/153fc425249e37d29b20217547d9ee071c4941ea))
+
+## [2.66.2](https://github.com/Scoheart/arca/compare/v2.66.1...v2.66.2) (2026-11-03)
+
+### Changes
+
+* fix(model): use readable provider name and slug for opencode desktop and modularize config dialog sections ([466884c](https://github.com/Scoheart/arca/commit/466884ce1ffd166bcd5c36adcb66b80aa26773e8))
+* fix(model): write the configured Provider name for Kilo, Qoder, ZCode, Codex, Crush, Goose and Hermes ([e70f91e](https://github.com/Scoheart/arca/commit/e70f91e2b36e5b39b6bc2d2e83b3fa6200b6b56f))
+
+## [2.66.1](https://github.com/Scoheart/arca/compare/v2.66.0...v2.66.1) (2026-11-03)
+
+### Changes
+
+* fix(desktop): left-align model cards and move agent search input to header actions ([18848aa](https://github.com/Scoheart/arca/commit/18848aac010ecb77606d8c3035a00fcede9ff5c4))
+
+## [2.66.0](https://github.com/Scoheart/arca/compare/v2.65.1...v2.66.0) (2026-11-02)
+
+### Changes
+
+* feat(desktop): add central subagents asset and refine navigation & card layouts ([523d88f](https://github.com/Scoheart/arca/commit/523d88f115744fe82bf008b3c14eadd99bb12030))
+
+## [2.65.1](https://github.com/Scoheart/arca/compare/v2.65.0...v2.65.1) (2026-11-02)
+
+### Changes
+
+* fix(desktop): clean skill card status dot, double labels, and lift agent capability restrictions ([b20aedc](https://github.com/Scoheart/arca/commit/b20aedcaa3a989a1a22c4215b1001610d0785b7d))
+
 ## [2.65.0](https://github.com/Scoheart/arca/compare/v2.64.0...v2.65.0) (2026-11-01)
 
 ### Changes

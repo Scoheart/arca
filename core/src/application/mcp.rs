@@ -1,5 +1,12 @@
 //! MCP-specific asset capabilities behind the shared application boundary.
 
+pub use crate::domain::mcp::{McpConfigurationView, McpInspectionRequest, McpInspectionSource};
+
+/// Read a single MCP independently of ownership, model credentials and recovery.
+pub fn inspect_configuration(request: McpInspectionRequest) -> crate::domain::error::CoreResult<McpConfigurationView> {
+    crate::resources::mcp::inspection::inspect(request)
+}
+
 pub mod catalog {
     pub use crate::resources::mcp::registry::{CatalogItem, RegistrySnapshot};
 

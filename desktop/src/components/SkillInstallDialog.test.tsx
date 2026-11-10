@@ -213,7 +213,7 @@ describe("SkillInstallDialog central asset intake", () => {
     const commit = vi.fn().mockResolvedValue(skillsInventoryFixture());
     renderInstall({ plan, commit });
     await resolveGithub(userEvent.setup());
-    expect(await screen.findByText("发现冲突")).toBeVisible();
+    expect(await screen.findByRole("alert")).toHaveTextContent("central Skill content already exists");
     expect(commit).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "备份并下载" }));
     await waitFor(() => expect(commit).toHaveBeenCalledOnce());
@@ -314,7 +314,7 @@ describe("Skills central lifecycle orchestration", () => {
   };
 
   async function openInspector(item: SkillInventoryItem) {
-    await userEvent.click(screen.getByRole("button", { name: new RegExp(item.name) }));
+    await userEvent.click(screen.getByRole("button", { name: `打开 Skill ${item.name} 详情` }));
     return screen.findByLabelText(`${item.name} 详情`);
   }
 

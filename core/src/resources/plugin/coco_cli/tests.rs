@@ -65,7 +65,7 @@ fn shared_metadata_opener_rejects_a_symlink_at_the_home_base(){
  struct Restore{home:PathBuf,original:PathBuf,external:PathBuf}
  impl Drop for Restore{fn drop(&mut self){let _=fs::remove_file(&self.home);let _=fs::rename(&self.original,&self.home);let _=fs::remove_dir_all(&self.external);}}
  fs::rename(&f.home.home,&original).unwrap();let restore=Restore{home:f.home.home.clone(),original,external:external.clone()};symlink(&external,&f.home.home).unwrap();
- let opened=open_confined_file(&f.home.home.join("metadata.json"));drop(restore);assert!(opened.is_err());
+ let rejected=checked_root(&f.home.home.join("metadata.json")).is_err();let opened=open_confined_file(&f.home.home.join("metadata.json"));drop(restore);assert!(opened.is_err());assert!(rejected);
 }
 #[test]
 fn custom_hook_json_is_opaque_while_independent_mcp_metadata_survives(){

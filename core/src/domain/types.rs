@@ -542,6 +542,20 @@ pub enum AgentInstallProbe {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AgentSubagentsCapability {
+    pub target_id: String,
+    pub global_dir: String,
+    pub format: String, // "markdown" | "json"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AgentHooksCapability {
+    pub target_id: String,
+    pub config_file: String,
+    pub format: String, // "codex" | "claude"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AgentSkillsCapability {
     pub target_id: String,
     pub global_dir: String,
@@ -600,6 +614,10 @@ pub struct AgentDefinition {
     pub root_defaults: Option<BTreeMap<String, serde_json::Value>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skills: Option<AgentSkillsCapability>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagents: Option<AgentSubagentsCapability>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hooks: Option<AgentHooksCapability>,
 }
 
 fn is_false(value: &bool) -> bool {

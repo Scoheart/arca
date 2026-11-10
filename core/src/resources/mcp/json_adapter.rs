@@ -344,6 +344,37 @@ impl JsonAdapter {
 }
 
 impl Adapter for JsonAdapter {
+    fn declaration_names(&self, text: &str) -> Result<Vec<String>, String> {
+        let path = Path::new("MCP configuration");
+        let root = CstRootNode::parse(text.trim_start_matches('\u{feff}'), &ParseOptions::default())
+            .map_err(|_| "invalid MCP JSON/JSONC")?;
+        let object = root.object_value().ok_or("MCP JSON root is not an object")?;
+        let section = if self.key.is_empty() { Some(object) }
+            else { self.section_object(object, path, false)? };
+        let Some(section) = section else { return Ok(Vec::new()); };
+        Self::ensure_unique_keys(&section, path, &self.key)?;
+        section.properties().iter().map(|property| {
+            property.name().and_then(|name| name.decoded_value().ok()).ok_or_else(|| "invalid MCP JSON identity".into())
+        }).collect()
+    }
+
+    fn inspect_text(&self, text: &str, name: &str) -> Result<Option<Value>, String> {
+        let path = Path::new("MCP configuration");
+        let root = CstRootNode::parse(text.trim_start_matches('\u{feff}'), &ParseOptions::default())
+            .map_err(|_| "invalid MCP JSON/JSONC".to_string())?;
+        let object = root.object_value().ok_or("MCP JSON root is not an object")?;
+        let section = if self.key.is_empty() { Some(object) }
+            else { self.section_object(object, path, false)? };
+        let Some(section) = section else { return Ok(None); };
+        Self::ensure_unique_keys(&section, path, &self.key)?;
+        let Some(property) = section.get(name) else { return Ok(None); };
+        let node = property.value().ok_or("MCP JSON entry has no value")?;
+        Self::ensure_unique_nested_keys(&node, path, name)?;
+        let value = property.to_serde_value().ok_or("invalid MCP JSON entry")?;
+        if !value.is_object() { return Err("MCP JSON entry is not an object".into()); }
+        Ok(Some(value))
+    }
+
     fn read(&self, path: &Path) -> BTreeMap<String, McpConfig> {
         self.read_with_enabled(path).into_iter()
             .filter_map(|(name, (config, enabled))| enabled.then_some((name, config)))

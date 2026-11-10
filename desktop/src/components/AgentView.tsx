@@ -23,21 +23,24 @@ import type {
   ModelAdoptionCandidate,
   ModelAgentView,
   ModelProfileView,
+  McpInspectionRequest,
   OperationPlan,
   ResourceNavigationRequest,
+  SubagentDefinition,
+  HookDefinition,
 } from "../lib/types";
 import { formatError } from "../lib/format";
 import { keyOf, transportOf } from "../lib/mcp";
 import { consumptionsForAgent, externalForAgent } from "../lib/consumption";
 import { requiresAgentReview } from "../lib/agentOperation";
-import { listModelAgents, listModelProfiles } from "../lib/api";
+import { listModelAgents, listModelProfiles, listSubagents, listAgentHooks, listHooks, projectHookToAgent, removeHookFromAgent } from "../lib/api";
 import {
   EditIcon,
   ChevronDownIcon,
   DocumentIcon,
   ExternalLinkIcon,
   FolderIcon,
-  LinkIcon,
+  HookMarkIcon,
   PlusIcon,
   RefreshIcon,
   NetworkIcon,
@@ -49,6 +52,7 @@ import { AgentConfigurationDialog } from "./AgentConfigurationDialog";
 import { ToastNotice, useToast } from "./Toast";
 import { AgentResourcePanel, type AgentResourceTab } from "./AgentResourcePanel";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
+import { GuidedModelsPanel } from "./GuidedModelsPanel";
 import {
   ConsumptionPickerDialog,
   type ConsumptionPickerOption,
@@ -61,8 +65,9 @@ import { useTranslation } from "react-i18next";
 import { McpAvatar } from "./McpIcon";
 import { NativePluginsPanel } from "./NativePluginsPanel";
 import { InstructionsEditor } from "./InstructionsEditor";
+import { McpConfigurationDialog } from "./McpConfigurationDialog";
 
-type PickerDomain = "mcp" | "model" | "skill";
+type PickerDomain = "mcp" | "model" | "skill" | "subagent" | "hook";
 type ConfigLocationKind = "file" | "folder";
 
 function absoluteConfigLocation(path: string, home: string) {
@@ -148,6 +153,8 @@ export function AgentView({
   const [modelsLoading, setModelsLoading] = useState(true);
   const [modelsError, setModelsError] = useState<string | null>(null);
   const [resourceTab, setResourceTab] = useState<AgentResourceTab>(initialTab);
+  const [mcpInspection, setMcpInspection] = useState<{ name: string; request: McpInspectionRequest } | null>(null);
+  useEffect(() => setMcpInspection(null), [agentId]);
   const mcpIcons = useMcpIconPreferences(resourceTab === "mcps");
   const [preparingChange, setPreparingChange] = useState(false);
   const [togglingMcp, setTogglingMcp] = useState<{
@@ -245,9 +252,7 @@ export function AgentView({
     () => modelAgents.find((item) => item.id === agentId) ?? null,
     [modelAgents, agentId],
   );
-  const canEditConfiguration = Boolean(
-    agent?.has_global || modelAgent !== null || agent?.skills_global_dir,
-  );
+  const canEditConfiguration = true;
   const compatibleProfiles = useMemo(
     () => modelAgent
       ? modelProfiles.filter((profile) => modelCompatibilityReason(profile, modelAgent) === null)
@@ -264,14 +269,71 @@ export function AgentView({
   useEffect(() => {
     if (nativeResources.inventory && resourceTab === "plugins" && !nativePluginSupported) setResourceTab("mcps");
   }, [agentId, nativeResources.inventory, resourceTab, nativePluginSupported]);
-  const { mcpRows, modelRows, skillRows, mcpExternal, skillExternal, modelExternal } = useMemo(() => ({
+  const [subagents, setSubagents] = useState<SubagentDefinition[]>([]);
+  useEffect(() => {
+    let active = true;
+    listSubagents().then((list) => {
+      if (active) setSubagents(list);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+  const subagentsByName = useMemo(
+    () => new Map(subagents.map((s) => [s.name, s])),
+    [subagents],
+  );
+  const [agentHooks, setAgentHooks] = useState<HookDefinition[]>([]);
+  const [centralHooks, setCentralHooks] = useState<HookDefinition[]>([]);
+  const loadHooks = useCallback(async () => {
+    try {
+      const [aList, cList] = await Promise.all([
+        listAgentHooks(agentId).catch(() => []),
+        listHooks().catch(() => []),
+      ]);
+      setAgentHooks(aList);
+      setCentralHooks(cList);
+    } catch {
+      // Non-fatal
+    }
+  }, [agentId]);
+  useEffect(() => {
+    void loadHooks();
+  }, [loadHooks]);
+  const centralHooksByName = useMemo(
+    () => new Map(centralHooks.map((h) => [h.name, h])),
+    [centralHooks],
+  );
+  const hookRows: ConsumptionView[] = useMemo(() => {
+    return agentHooks.map((h) => ({
+      agent_id: agentId,
+      asset: { domain: "hook" as const, name: h.name },
+      status: "synced" as const,
+      desired: true,
+      observed: true,
+      reason: null,
+      ownership: "managed" as const,
+      observation_id: h.name,
+      available_actions: [],
+      affected_agent_ids: [agentId],
+      target: { target_id: `${agentId}-hooks`, global_dir: "" },
+      convergence_actions: [],
+    }));
+  }, [agentHooks, agentId]);
+  const { mcpRows, modelRows, skillRows, subagentRows, mcpExternal, skillExternal, modelExternal, subagentExternal } = useMemo(() => ({
     mcpRows: consumptionsForAgent(inventory, agentId, "mcp"),
     modelRows: consumptionsForAgent(inventory, agentId, "model"),
     skillRows: consumptionsForAgent(inventory, agentId, "skill"),
+    subagentRows: consumptionsForAgent(inventory, agentId, "subagent"),
     mcpExternal: externalForAgent(inventory, agentId, "mcp"),
     skillExternal: externalForAgent(inventory, agentId, "skill"),
     modelExternal: externalForAgent(inventory, agentId, "model"),
+    subagentExternal: externalForAgent(inventory, agentId, "subagent"),
   }), [inventory, agentId]);
+  const configuredMcps = useMemo(() => {
+    const represented = new Set([...mcpRows, ...mcpExternal].flatMap(item =>
+      item.asset.domain === "mcp" ? [item.asset.key.replace(/::(?:stdio|http)$/, "")] : []));
+    return (nativeResources.inventory?.configured_mcps ?? [])
+      .filter(item => item.agent_id === agentId && !represented.has(item.name));
+  }, [agentId, mcpRows, mcpExternal, nativeResources.inventory]);
   const displayedMcpRows = useMemo(
     () => mcpRows.map((item) => (
       togglingAllMcp
@@ -346,7 +408,7 @@ export function AgentView({
 
   if (!agent) return <div className="arca-agent-state">未找到该 Agent</div>;
 
-  if (!agent.has_global && !agent.skills_global_dir && !modelsLoading && !modelAgent && !agent.has_instructions && hostMcps.length === 0 && nativeSkills.length === 0 && !nativePluginSupported) {
+  if (false as boolean) {
     return (
       <div className="arca-agent-page">
         <div className="arca-agent-shell">
@@ -374,7 +436,6 @@ export function AgentView({
     );
   }
 
-  const runtimeSkillAgent = skillsState.inventory?.agents.find((item) => item.id === agentId) ?? null;
 
   const currentIds = (domain: PickerDomain): string[] => {
     if (domain === "mcp") {
@@ -406,7 +467,7 @@ export function AgentView({
         emptyMessage: "没有可添加的 MCP",
         searchPlaceholder: "搜索 MCPs",
         options: entries
-          .filter((entry) => agent?.supported_transports.includes(transportOf(entry)) && !assigned.has(keyOf(entry)))
+          .filter((entry) => !assigned.has(keyOf(entry)))
           .map((entry) => ({
             id: keyOf(entry),
             name: entry.name,
@@ -418,6 +479,8 @@ export function AgentView({
               size={28}
             />,
             meta: <TransportMark transport={transportOf(entry)} />,
+            disabled: !agent?.supported_transports.includes(transportOf(entry)),
+            reason: agent?.supported_transports.includes(transportOf(entry)) ? undefined : "此 Agent 不支持该 MCP 传输类型",
           })),
       };
     }
@@ -427,22 +490,63 @@ export function AgentView({
         mode: modelAgent?.supports_multiple ? "multiple" : "single",
         actionLabel: "添加 Models",
         busyLabel: "添加中…",
-        emptyMessage: "没有可添加的兼容 Model",
+        emptyMessage: "没有可添加的 Model",
         searchPlaceholder: "搜索 Models",
         options: modelProfiles
           .filter((profile) => !assigned.has(profile.id))
           .map((profile) => {
-            const reason = modelCompatibilityReason(profile, modelAgent);
             return {
               id: profile.id,
               name: profile.name,
               description: profile.model,
               icon: modelProviderIcon(profile.provider, profile.name),
               meta: <TransportMark transport={modelProtocolLabel(profile.protocol)} />,
-              disabled: reason !== null,
-              reason: reason ?? undefined,
+              disabled: modelCompatibilityReason(profile, modelAgent) !== null,
+              reason: modelCompatibilityReason(profile, modelAgent) ?? undefined,
             };
           }),
+      };
+    }
+    if (domain === "subagent") {
+      const assigned = new Set(
+        subagentRows.map((item) => (item.asset.domain === "subagent" ? item.asset.name : "")),
+      );
+      return {
+        title: "添加 Subagents",
+        mode: "multiple",
+        actionLabel: "添加 Subagents",
+        busyLabel: "添加中…",
+        emptyMessage: "没有可添加的 Subagent",
+        searchPlaceholder: "搜索 Subagents",
+        options: subagents
+          .filter((item) => !assigned.has(item.name))
+          .map((item) => ({
+            id: item.name,
+            name: item.display_name || item.name,
+            description: item.description,
+            icon: <Avatar seed={item.name} kind="subagent" size={24} />,
+            meta: item.model ? <Badge tone="neutral">{item.model}</Badge> : null,
+          })),
+      };
+    }
+    if (domain === "hook") {
+      const assigned = new Set(agentHooks.map((item) => item.name));
+      return {
+        title: "添加 Hooks",
+        mode: "multiple",
+        actionLabel: "添加 Hooks",
+        busyLabel: "添加中…",
+        emptyMessage: "没有可添加的 Hook",
+        searchPlaceholder: "搜索 Hooks",
+        options: centralHooks
+          .filter((item) => !assigned.has(item.name))
+          .map((item) => ({
+            id: item.name,
+            name: item.display_name || item.name,
+            description: `${item.event} · ${item.description || item.command}`,
+            icon: <HookMarkIcon className="w-5 h-5 text-blue-500" />,
+            meta: <Badge tone={item.enabled ? "success" : "neutral"}>{item.event}</Badge>,
+          })),
       };
     }
     return {
@@ -460,14 +564,14 @@ export function AgentView({
     };
   }
 
-  const createSelection = (domain: PickerDomain, ids: string[]): AgentConsumptionSelection => {
+  const createSelection = (domain: "mcp" | "model" | "skill" | "subagent", ids: string[]): AgentConsumptionSelection => {
     if (domain === "mcp") return { domain, asset_keys: ids };
     if (domain === "model") return { domain, profile_ids: ids };
     return { domain, names: ids };
   };
 
   const planSelection = async (
-    domain: PickerDomain,
+    domain: "mcp" | "model" | "skill" | "subagent",
     ids: string[],
     mode: "add" | "replace" | "remove",
   ) => {
@@ -487,13 +591,45 @@ export function AgentView({
     }
   };
 
-  const planAdditions = (domain: PickerDomain, ids: string[]) => {
+  const planAdditions = async (domain: PickerDomain, ids: string[]) => {
+    if (domain === "hook") {
+      setPreparingChange(true);
+      try {
+        for (const name of ids) {
+          const def = centralHooks.find((h) => h.name === name);
+          if (def) {
+            await projectHookToAgent(agentId, def);
+          }
+        }
+        showToast({ kind: "success", msg: `已添加 ${ids.length} 个 Hook 到 ${agent.name}` });
+        await loadHooks();
+        setPickerDomain(null);
+      } catch (err) {
+        showToast({ kind: "error", msg: `无法添加 Hook: ${formatError(err)}` });
+      } finally {
+        setPreparingChange(false);
+      }
+      return;
+    }
     const replacesSingleModel = domain === "model" && modelAgent?.supports_multiple === false;
     return planSelection(domain, ids, replacesSingleModel ? "replace" : "add");
   };
 
-  const planRemoval = (asset: AssetRef) => {
+  const planRemoval = async (asset: AssetRef) => {
     if (asset.domain === "model-provider") return;
+    if (asset.domain === "hook") {
+      setPreparingChange(true);
+      try {
+        await removeHookFromAgent(agentId, asset.name);
+        showToast({ kind: "success", msg: `已从 ${agent.name} 移除 Hook` });
+        await loadHooks();
+      } catch (err) {
+        showToast({ kind: "error", msg: `无法移除 Hook: ${formatError(err)}` });
+      } finally {
+        setPreparingChange(false);
+      }
+      return;
+    }
     const id = asset.domain === "mcp" ? asset.key : asset.domain === "model" ? asset.profile_id : asset.name;
     return planSelection(
       asset.domain,
@@ -648,6 +784,10 @@ export function AgentView({
       navigateResource({ domain: "model", kind: "detail", profileId: asset.profile_id });
     } else if (asset.domain === "skill") {
       navigateResource({ domain: "skill", kind: "detail", skillName: asset.name });
+    } else if (asset.domain === "subagent") {
+      navigateResource({ domain: "subagent", kind: "detail", name: asset.name });
+    } else if (asset.domain === "hook") {
+      navigateResource({ domain: "hook", kind: "detail", name: asset.name });
     }
   };
 
@@ -675,11 +815,15 @@ export function AgentView({
           value={resourceTab}
           onChange={setResourceTab}
           instructions={agent.has_instructions}
+          subagents={agent.has_subagents}
           plugins={nativePluginSupported ? nativePluginCount : undefined}
+          countLabels={modelAgent?.mode === "guided" ? { models: "原生" } : undefined}
           counts={{
-            mcps: mcpRows.length + mcpExternal.length + hostMcps.length,
+            mcps: mcpRows.length + mcpExternal.length + configuredMcps.length + hostMcps.length,
             models: modelVisibleCount,
             skills: skillRows.length + skillExternal.length + nativeSkills.length,
+            subagents: subagentRows.length + subagentExternal.length,
+            hooks: agentHooks.length,
           }}
         >
           {consumptionState.plan?.kind === "clear-models" && !preparingChange && (
@@ -718,21 +862,29 @@ export function AgentView({
           <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
             message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
           <ToastNotice kind="warning" noticeKey={`native-plugins:${agent.id}`} message={nativeResources.error || nativeResources.inventory?.unavailable ? t("nativePlugins.scanUnavailable") : null} />
-          {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? !agent.has_global && hostMcps.length === 0 ? (
-            <div className="arca-agent-inline-state">{nativePluginSupported ? t("nativePlugins.hostEmpty") : "此 Agent 未接入 MCP。"}</div>
-          ) : (
+          <ToastNotice kind="warning" noticeKey={`mcp-declarations:${agent.id}`} message={nativeResources.inventory?.configured_unavailable ? t("mcpInspector.declarationsUnavailable") : null} />
+          {mcpInspection?.request.agent_id === agentId && <McpConfigurationDialog name={mcpInspection.name}
+            request={mcpInspection.request} onClose={() => setMcpInspection(null)} />}
+          {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? (
             <AgentConsumptionPanel
               domain="mcp"
               title={RESOURCE_PRESENTATION.mcp.label}
-              description={t("nativePlugins.mcpCounts", { configured: mcpRows.length + mcpExternal.length, host: hostMcps.length })}
+              description={t("nativePlugins.mcpCounts", { configured: mcpRows.length + mcpExternal.length + configuredMcps.length, host: hostMcps.length })}
               manageLabel="添加 MCPs"
               rows={displayedMcpRows}
               hostMcps={hostMcps}
+              configuredMcps={configuredMcps}
               columns={3}
               external={mcpExternal}
               externalMode="cards"
+              onInspect={(item) => {
+                if (item.asset.domain === "mcp") setMcpInspection({
+                  name: mcpEntriesByKey.get(item.asset.key)?.name ?? item.asset.key.replace(/::(?:stdio|http)$/, ""),
+                  request: { agent_id: agent.id, source: { kind: "configured", key: item.asset.key } },
+                });
+              }}
               onManage={() => setPickerDomain("mcp")}
-              manageDisabled={!agent.has_global || preparingChange}
+              manageDisabled={preparingChange || !agent.has_global}
               bulkRemoveLabel={t("nativePlugins.removeConfigured")}
               bulkRemoveTitle={t("nativePlugins.removeConfiguredNote", { agent: agent.name })}
               bulkRemoveDisabled={preparingChange || togglingAllMcp !== null || mcpRows.length + mcpExternal.length === 0}
@@ -751,6 +903,7 @@ export function AgentView({
               removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
               removeDisabled={preparingChange}
               emptyTitle="暂无 MCPs"
+              emptyDescription={!agent.has_global ? "Arca 尚未接入此 Agent 的 MCP 写入；已发现的内置和插件 MCP 仍可只读查看。" : undefined}
               present={(asset) => {
                 const key = asset.domain === "mcp" ? asset.key : "";
                 const entry = mcpEntriesByKey.get(key);
@@ -769,47 +922,41 @@ export function AgentView({
               }}
             />
           ) : resourceTab === "models" ? (
-            modelAgent?.mode === "guided" ? (
-              <section className="arca-agent-section arca-agent-resource-content">
-                <div className="arca-agent-guided-model">
-                  <div><strong>由 Agent 管理</strong><span>{modelAgent.note || `请在 ${agent.name} 内切换。`}</span></div>
-                  <button type="button" className="btn-secondary" onClick={() => openUrl(modelAgent.docs)}>
-                    <LinkIcon className="w-4 h-4" />打开设置文档
-                  </button>
-                </div>
-              </section>
+            modelsLoading ? (
+              <div className="arca-agent-inline-state">正在读取 Model…</div>
+            ) : modelsError ? (
+              <div className="arca-agent-inline-state">Model 读取失败：{modelsError}</div>
+            ) : modelAgent?.mode === "guided" ? (
+              <GuidedModelsPanel agent={modelAgent} onOpenDocs={() => {
+                void openUrl(modelAgent.docs).catch((error) => showToast({
+                  kind: "error", msg: "无法打开模型配置说明：" + formatError(error),
+                }));
+              }} />
             ) : (
-              modelsLoading ? (
-                <div className="arca-agent-inline-state">正在读取 Model…</div>
-              ) : modelsError ? (
-                <div className="arca-agent-inline-state">Model 读取失败：{modelsError}</div>
-              ) : !modelAgent ? (
-                <div className="arca-agent-inline-state">此 Agent 尚未接入 Models。</div>
-              ) : (
-                <AgentConsumptionPanel
-                  domain="model"
-                  title={RESOURCE_PRESENTATION.model.label}
-                  description={modelAgent.storage_authority === "native-registry"
-                    ? `配置中 ${modelVisibleCount} 个${modelAgent.supports_global_selection === false ? ` · 重启 ${agent.name} 后在会话中选用` : modelAgent.supports_multiple ? " · 同一时间使用其中一个" : ""}`
-                    : `Arca 管理 ${modelVisibleCount} 个`}
-                  manageLabel="添加 Models"
-                  rows={displayedModelRows}
-                  columns={3}
-                  external={modelAgent.storage_authority === "native-registry" ? modelExternal : []}
-                  externalMode="cards"
-                  bulkRemoveLabel="清空全部 Models"
-                  bulkRemoveTitle={modelAgent.storage_authority === "native-registry"
-                    ? `清空 ${agent.name} 真实配置中的全部 Model，包括外部和手工配置；中央资产与凭据保留`
-                    : `清空 ${agent.name} 的全部 Arca Model 映射；中央资产与凭据保留`}
-                  bulkRemoveDisabled={modelVisibleCount === 0
-                    || preparingChange
-                    || consumptionState.committing
-                    || changingModel !== null}
-                  onBulkRemove={() => void clearModels()}
-                  onManage={() => setPickerDomain("model")}
-                  manageDisabled={preparingChange || compatibleProfiles.length === 0}
-                  onOpenAsset={openAsset}
-                  onEnabledChange={modelAgent.supports_global_selection === false ? undefined : switchActiveModel}
+              <AgentConsumptionPanel
+                domain="model"
+                title={RESOURCE_PRESENTATION.model.label}
+                description={modelAgent?.storage_authority === "native-registry"
+                  ? `配置中 ${modelVisibleCount} 个${modelAgent.supports_global_selection === false ? ` · 重启 ${agent.name} 后在会话中选用` : modelAgent.supports_multiple ? " · 同一时间使用其中一个" : ""}`
+                  : `Arca 管理 ${modelVisibleCount} 个`}
+                manageLabel="添加 Models"
+                rows={displayedModelRows}
+                columns={3}
+                external={modelAgent?.storage_authority === "native-registry" ? modelExternal : []}
+                externalMode="cards"
+                bulkRemoveLabel="清空全部 Models"
+                bulkRemoveTitle={modelAgent?.storage_authority === "native-registry"
+                  ? `清空 ${agent.name} 真实配置中的全部 Model，包括外部和手工配置；中央资产与凭据保留`
+                  : `清空 ${agent.name} 的全部 Arca Model 映射；中央资产与凭据保留`}
+                bulkRemoveDisabled={modelVisibleCount === 0
+                  || preparingChange
+                  || consumptionState.committing
+                  || changingModel !== null}
+                onBulkRemove={() => void clearModels()}
+                onManage={() => setPickerDomain("model")}
+                manageDisabled={preparingChange || modelAgent?.mode !== "managed"}
+                onOpenAsset={openAsset}
+                onEnabledChange={modelAgent?.supports_global_selection === false ? undefined : switchActiveModel}
                   toggleKind="current"
                   enabledChangeDisabled={(item) => changingModel !== null
                     || item.status === "ambiguous"}
@@ -832,16 +979,16 @@ export function AgentView({
                   removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
                   removeDisabled={preparingChange || changingModel !== null}
                   emptyTitle="暂无 Models"
-                  emptyDescription={compatibleProfiles.length === 0
+                  emptyDescription={modelAgent?.mode !== "managed" ? "此 Agent 尚未提供可接管的 Model 配置入口。" : compatibleProfiles.length === 0
                     ? "模型库中没有兼容资产。"
                     : `从 Models 资产库添加到 ${agent.name}。`}
-                  emptyAction={compatibleProfiles.length === 0 ? (
+                  emptyAction={modelAgent?.mode === "managed" && compatibleProfiles.length === 0 ? (
                     <button
                       type="button"
                       className="btn-secondary"
                       onClick={() => navigateResource({ domain: "model", kind: "create" })}
                     >
-                      <PlusIcon className="w-4 h-4" />添加 Models
+                      <PlusIcon className="w-4 h-4" />在 Models 资产库创建
                     </button>
                   ) : undefined}
                   present={(asset) => {
@@ -870,7 +1017,79 @@ export function AgentView({
                   }}
                 />
               )
-            )
+          ) : resourceTab === "subagents" ? (
+            <AgentConsumptionPanel
+              domain="subagent"
+              title={RESOURCE_PRESENTATION.subagent.label}
+              description={`${subagentRows.length} 项`}
+              manageLabel="添加 Subagents"
+              rows={subagentRows}
+              external={subagentExternal}
+              externalMode="cards"
+              onManage={() => setPickerDomain("subagent")}
+              onOpenAsset={openAsset}
+              onRemove={(asset) => void planRemoval(asset)}
+              onConverge={(item, action) => void converge(item, action)}
+              convergenceDisabled={preparingChange}
+              removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
+              removeDisabled={preparingChange}
+              emptyTitle="暂无 Subagents"
+              emptyDescription={`从 Subagents 资产库添加到 ${agent.name}。`}
+              emptyAction={
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => navigateResource({ domain: "subagent", kind: "create" })}
+                >
+                  <PlusIcon className="w-4 h-4" />新建 Subagents
+                </button>
+              }
+              present={(asset) => {
+                const name = asset.domain === "subagent" ? asset.name : "";
+                const subagent = subagentsByName.get(name);
+                return {
+                  name: subagent?.display_name || name,
+                  description: subagent?.description || "Subagent 资产",
+                  icon: <Avatar seed={name} kind="subagent" size={28} />,
+                  meta: subagent?.model ? <Badge tone="neutral">{subagent.model}</Badge> : null,
+                };
+              }}
+            />
+          ) : resourceTab === "hooks" ? (
+            <AgentConsumptionPanel
+              domain="hook"
+              title={RESOURCE_PRESENTATION.hook.label}
+              description={`${agentHooks.length} 项`}
+              manageLabel="添加 Hooks"
+              rows={hookRows}
+              external={[]}
+              onManage={() => setPickerDomain("hook")}
+              onOpenAsset={openAsset}
+              onRemove={(asset) => void planRemoval(asset)}
+              removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
+              removeDisabled={preparingChange}
+              emptyTitle="暂无 Hooks"
+              emptyDescription={`从 Hooks 资产库添加到 ${agent.name}。`}
+              emptyAction={
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => navigateResource({ domain: "hook", kind: "create" })}
+                >
+                  <PlusIcon className="w-4 h-4" />新建 Hooks
+                </button>
+              }
+              present={(asset) => {
+                const name = asset.domain === "hook" ? asset.name : "";
+                const hook = centralHooksByName.get(name) || agentHooks.find((h) => h.name === name);
+                return {
+                  name: hook?.display_name || name,
+                  description: hook ? `${hook.event} · ${hook.command}` : "Hook 资产",
+                  icon: <HookMarkIcon className="w-5 h-5 text-blue-500" />,
+                  meta: hook ? <Badge tone={hook.enabled ? "success" : "neutral"}>{hook.event}</Badge> : null,
+                };
+              }}
+            />
           ) : (
             <AgentConsumptionPanel
               domain="skill"
@@ -886,7 +1105,7 @@ export function AgentView({
               externalMode="cards"
               onManage={() => setPickerDomain("skill")}
               onOpenAsset={openAsset}
-              manageDisabled={!runtimeSkillAgent || preparingChange}
+              manageDisabled={preparingChange || !agent.skills_global_dir}
               onEnabledChange={(item, enabled) => void toggleSkillEnabled(item, enabled)}
               enabledChangeDisabled={(item) => togglingSkill?.name === (item.asset.domain === "skill" ? item.asset.name : "")
                 || item.status !== "synced"}

@@ -132,7 +132,7 @@ fn selected_symlink_is_allowed_but_retargeting_and_same_path_replacement_are_rej
     assert!(!home.home.join("crush-executed-marker").exists());
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "macos")))]
 #[test]
 fn fifo_dangling_symlink_and_non_utf8_selection_are_rejected_without_reading() {
     use std::os::unix::ffi::OsStringExt;

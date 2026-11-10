@@ -69,6 +69,7 @@ mod coco_desktop;
 mod qwenwork;
 mod qwenwork_cn;
 mod skills;
+mod deepseek_harness;
 
 const MAX_ENTRIES: usize = 4096;
 const MAX_COMPONENTS: usize = 4096;
@@ -108,6 +109,11 @@ fn hosts() -> &'static [Host] {
     static HOSTS: OnceLock<Vec<Host>> = OnceLock::new();
     HOSTS.get_or_init(|| serde_json::from_str(include_str!("../../../data/native-plugin-hosts.json"))
         .expect("audited native plugin descriptors must be valid"))
+}
+
+/// The caller must first bind this path to a fresh host MCP observation.
+pub(crate) fn open_declared_mcp_configuration(path: &Path) -> Result<fs::File, ()> {
+    open_confined_file(path)
 }
 
 pub(crate) fn skill_observations(plugins: &[NativePluginObservation]) -> Vec<NativeSkillObservation> {
@@ -179,7 +185,9 @@ fn verify_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budg
 #[cfg(unix)]
 fn open_confined(path: &Path, directory_only: bool) -> Result<fs::File, ()> {
     use rustix::fs::{open, openat, Mode, OFlags};
-    let home = expand_tilde("~/");
+    // A trailing separator makes macOS follow a final symlink even with
+    // O_NOFOLLOW. Bind the HOME directory itself before walking its children.
+    let home: PathBuf = expand_tilde("~/").components().collect();
     let (base, tail) = if let Ok(tail) = path.strip_prefix(&home) {
         (home.as_path(), tail)
     } else { (Path::new("/"), path.strip_prefix("/").map_err(|_| ())?) };
@@ -205,12 +213,15 @@ fn open_confined(path: &Path, directory_only: bool) -> Result<fs::File, ()> {
 pub(crate) fn open_confined_file(path: &Path) -> Result<fs::File, ()> { open_confined(path, false) }
 
 pub(crate) fn checked_root(path: &Path) -> Result<(), ()> {
-    let home = expand_tilde("~/");
+    let home: PathBuf = expand_tilde("~/").components().collect();
     let (mut current, tail) = if let Ok(tail) = path.strip_prefix(&home) {
         (home.clone(), tail)
     } else {
         (PathBuf::from("/"), path.strip_prefix("/").map_err(|_| ())?)
     };
+    if fs::symlink_metadata(&current).is_ok_and(|metadata| metadata.file_type().is_symlink()) {
+        return Err(());
+    }
     for part in tail.components() {
         if matches!(part, Component::ParentDir | Component::Prefix(_)) { return Err(()); }
         current.push(part);
@@ -552,6 +563,7 @@ pub(crate) fn observe(agents: &BTreeMap<String, AgentDefinition>) -> PluginScan 
     let mut result = PluginScan::default();
     for host in hosts() {
         if !agents.get(&host.agent_id).is_some_and(|agent| agent.enabled) { continue; }
+        if host.adapter == "deepseek_harness" { deepseek_harness::observe(host, &mut result); continue; }
         if host.adapter == "codex" { codex::observe(host, &mut result); continue; }
         if host.adapter == "goose_desktop" { goose_desktop::observe(host, &mut result); continue; }
         if host.adapter == "goose_cli" { goose_cli::observe(host, &mut result); continue; }
@@ -667,7 +679,7 @@ fn normalize(result: &mut PluginScan) {
 
 pub(crate) fn watch_paths(agents: &BTreeMap<String, AgentDefinition>) -> Vec<PathBuf> {
     hosts().iter().filter(|host| agents.get(&host.agent_id).is_some_and(|agent| agent.enabled))
-        .flat_map(|host| if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "augment" { augment::watch_paths(host) } else if host.adapter == "factory_droid" { factory_droid::watch_paths(host) } else if host.adapter == "factory_desktop" { factory_desktop::watch_paths(host) } else if host.adapter == "cline" { cline::watch_paths(host) } else if host.adapter == "pi" { pi::watch_paths(host) } else if host.adapter == "hermes" { hermes::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else if host.adapter == "vscode" { vscode::watch_paths(host) } else if host.adapter == "warp" { warp::watch_paths(host) } else if host.adapter == "zed" { zed::watch_paths(host) } else if host.adapter == "openclaw" { openclaw::watch_paths(host) } else if host.adapter == "devin" { devin::watch_paths(host) } else if host.adapter == "junie_cli" { junie_cli::watch_paths(host) } else if host.adapter == "codebuddy_cli" { codebuddy_cli::watch_paths(host) } else if host.adapter == "codebuddy_desktop" { codebuddy_desktop::watch_paths(host) } else if host.adapter == "kilo_cli" { kilo_cli::watch_paths(host) } else if host.adapter == "kilo_desktop" { kilo_desktop::watch_paths(host) } else if host.adapter == "coco_cli" { coco_cli::watch_paths(host) } else if host.adapter == "coco_desktop" { coco_desktop::watch_paths(host) } else if host.adapter == "qwenwork" { qwenwork::watch_paths(host) } else if host.adapter == "qwenwork_cn" { qwenwork_cn::watch_paths(host) } else {
+        .flat_map(|host| if host.adapter == "deepseek_harness" { deepseek_harness::watch_paths(host) } else if host.adapter == "goose_desktop" { goose_desktop::watch_paths(host) } else if host.adapter == "goose_cli" { goose_cli::watch_paths(host) } else if host.adapter == "vibe" { vibe::watch_paths(host) } else if host.adapter == "kimi" { kimi::watch_paths(host) } else if host.adapter == "kimi_desktop" { kimi_desktop::watch_paths(host) } else if host.adapter == "amp" { amp::watch_paths(host) } else if host.adapter == "augment" { augment::watch_paths(host) } else if host.adapter == "factory_droid" { factory_droid::watch_paths(host) } else if host.adapter == "factory_desktop" { factory_desktop::watch_paths(host) } else if host.adapter == "cline" { cline::watch_paths(host) } else if host.adapter == "pi" { pi::watch_paths(host) } else if host.adapter == "hermes" { hermes::watch_paths(host) } else if host.adapter == "cursor_cli" { cursor_cli::watch_paths(host) } else if host.adapter == "codex" { codex::watch_paths(host) } else if host.adapter == "claude" { claude::watch_paths() } else if host.adapter == "claude_desktop" { claude_desktop::watch_paths(host) } else if host.adapter == "gemini" { gemini::watch_paths(host) } else if host.adapter == "opencode" { opencode::watch_paths(host) } else if host.adapter == "opencode_desktop" { opencode_desktop::watch_paths(host) } else if host.adapter == "copilot" { copilot::watch_paths(host) } else if host.adapter == "qwen" { qwen::watch_paths(host) } else if host.adapter == "kiro" { kiro::watch_paths(host) } else if host.adapter == "workbuddy" { workbuddy::watch_paths(host) } else if host.adapter == "qoder" { qoder::watch_paths(host) } else if host.adapter == "qoder_cli" { qoder_cli::watch_paths(host) } else if host.adapter == "qoder_cn_cli" { qoder_cn_cli::watch_paths(host) } else if host.adapter == "qoder_wake" { qoder_wake::watch_paths(host) } else if host.adapter == "qoderwork" { qoderwork::watch_paths(host) } else if host.adapter == "qoder_desktop" { qoder_desktop::watch_paths(host) } else if host.adapter == "zcode" { zcode::watch_paths(host) } else if host.adapter == "vscode_extensions" { vscode_extensions::watch_paths(host) } else if host.adapter == "vscode" { vscode::watch_paths(host) } else if host.adapter == "warp" { warp::watch_paths(host) } else if host.adapter == "zed" { zed::watch_paths(host) } else if host.adapter == "openclaw" { openclaw::watch_paths(host) } else if host.adapter == "devin" { devin::watch_paths(host) } else if host.adapter == "junie_cli" { junie_cli::watch_paths(host) } else if host.adapter == "codebuddy_cli" { codebuddy_cli::watch_paths(host) } else if host.adapter == "codebuddy_desktop" { codebuddy_desktop::watch_paths(host) } else if host.adapter == "kilo_cli" { kilo_cli::watch_paths(host) } else if host.adapter == "kilo_desktop" { kilo_desktop::watch_paths(host) } else if host.adapter == "coco_cli" { coco_cli::watch_paths(host) } else if host.adapter == "coco_desktop" { coco_desktop::watch_paths(host) } else if host.adapter == "qwenwork" { qwenwork::watch_paths(host) } else if host.adapter == "qwenwork_cn" { qwenwork_cn::watch_paths(host) } else {
             host.roots.iter().map(|root| expand_tilde(&root.path)).collect()
         })
         .collect::<BTreeSet<_>>().into_iter().collect()

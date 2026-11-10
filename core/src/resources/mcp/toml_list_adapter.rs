@@ -305,6 +305,38 @@ impl TomlListAdapter {
 }
 
 impl Adapter for TomlListAdapter {
+    fn declaration_names(&self, text: &str) -> Result<Vec<String>, String> {
+        let document = text.parse::<Document>().map_err(|_| "invalid MCP TOML")?;
+        let semantic = toml::from_str::<Toml>(text).map_err(|_| "invalid MCP TOML")?;
+        let mut section = &semantic;
+        for part in self.key.split('.') {
+            let Some(value) = section.get(part) else { return Ok(Vec::new()); };
+            section = value;
+        }
+        if !section.is_array() { return Err("MCP TOML list section is not an array".into()); }
+        let mut seen = BTreeSet::new();
+        for entry in self.semantic_entries(&document)? {
+            let name = entry.get(&self.identity_field).and_then(Value::as_str)
+                .ok_or("MCP TOML list entry has no identity")?;
+            if !seen.insert(name.to_string()) { return Err("ambiguous MCP TOML identity".into()); }
+        }
+        Ok(seen.into_iter().collect())
+    }
+
+    fn inspect_text(&self, text: &str, name: &str) -> Result<Option<Value>, String> {
+        let document = text.parse::<Document>().map_err(|_| "invalid MCP TOML")?;
+        let entries = self.semantic_entries(&document)?;
+        let mut identities = BTreeSet::new();
+        let mut result = None;
+        for entry in entries {
+            let identity = entry.get(&self.identity_field).and_then(Value::as_str)
+                .ok_or("MCP TOML list entry has no identity")?;
+            if !identities.insert(identity.to_string()) { return Err("ambiguous MCP TOML identity".into()); }
+            if identity == name { result = Some(entry); }
+        }
+        Ok(result)
+    }
+
     fn read(&self, path: &Path) -> BTreeMap<String, McpConfig> {
         let Ok((document, _)) = self.read_document(path) else {
             return BTreeMap::new();

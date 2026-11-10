@@ -1,4 +1,5 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithNotifications as render } from "../test/renderWithNotifications";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { DialogShell } from "./DialogShell";
@@ -72,13 +73,15 @@ it("does not submit a selected resource that becomes unavailable", () => {
 
 it("shows a single risk-review step and requires acknowledgment before retrying the bound plan", async () => {
   const plan = highRiskPlan("bound-fixture");
+  plan.requires_risk_override = false;
   plan.kind = "install";
   const onCommit = vi.fn().mockRejectedValueOnce({ code: "confirmation_required", message: "review required", findings_hash: plan.findings_hash })
     .mockResolvedValueOnce(skillsInventoryFixture());
   render(<SkillReviewDialog plan={plan} onCommit={onCommit} onClose={() => undefined}
     onCommitted={() => undefined} onRecoveryRequired={() => undefined} />);
   fireEvent.click(screen.getByRole("button", { name: "确认安装" }));
-  await screen.findByRole("dialog", { name: "确认高风险覆盖" });
+  await screen.findByRole("checkbox", { name: "我已了解高风险内容及其影响" });
+  expect(screen.getByRole("dialog", { name: "确认 Skill 更改" })).toBeVisible();
   expect(screen.getAllByRole("dialog")).toHaveLength(1);
   expect(screen.getByRole("button", { name: "仍然安装" })).toBeDisabled();
   fireEvent.click(screen.getByRole("checkbox", { name: "我已了解高风险内容及其影响" }));

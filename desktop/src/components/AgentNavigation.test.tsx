@@ -48,52 +48,40 @@ const agents = [
   agent("amp", "Amp"),
 ];
 
-it("groups unpinned Agents by origin and keeps pinned Agents out of both groups", () => {
+it("filters built-in, pinned and custom cards without duplicating Agents", () => {
   const custom = { ...agent("team-workbench", "Team Workbench"), builtin: false };
-  const { container } = render(
-    <AgentNavigation agents={[...agents, custom]} selectedAgentId="codex" onSelectAgent={vi.fn()} />,
-  );
+  const { container } = render(<AgentNavigation agents={[...agents, custom]} selectedAgentId="codex" onSelectAgent={vi.fn()} />);
   fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
-
   const picker = within(screen.getByRole("dialog", { name: "选择和置顶 Agent" }));
-  const customGroup = within(picker.getByRole("group", { name: "自定义 Agent" }));
-  const builtinGroup = within(picker.getByRole("group", { name: "内置 Agent" }));
-  expect(customGroup.getByText("Team Workbench")).toBeVisible();
-  expect(customGroup.queryByText("Amp")).not.toBeInTheDocument();
-  expect(builtinGroup.getByText("Amp")).toBeVisible();
-  expect(builtinGroup.queryByText("Team Workbench")).not.toBeInTheDocument();
-  expect(builtinGroup.queryByText("Codex")).not.toBeInTheDocument();
-  expect(picker.getAllByText("Codex")).toHaveLength(1);
-  expect(picker.queryByText("全部 Agent")).not.toBeInTheDocument();
+  expect(picker.getByRole("button", { name: "内置", pressed: true })).toBeVisible();
+  expect(picker.getByRole("button", { name: "进入 Amp（amp）" })).toBeVisible();
+  expect(picker.getAllByRole("button", { name: "进入 Codex（codex）" })).toHaveLength(1);
+  expect(picker.queryByRole("button", { name: "进入 Team Workbench（team-workbench）" })).not.toBeInTheDocument();
+  fireEvent.click(picker.getByRole("button", { name: "自定义" }));
+  expect(picker.getByRole("button", { name: "进入 Team Workbench（team-workbench）" })).toBeVisible();
+  expect(picker.queryByRole("button", { name: "进入 Amp（amp）" })).not.toBeInTheDocument();
+  fireEvent.click(picker.getByRole("button", { name: "常用" }));
+  expect(picker.getByRole("button", { name: "进入 Codex（codex）" })).toBeVisible();
+  expect(picker.queryByRole("button", { name: "进入 Team Workbench（team-workbench）" })).not.toBeInTheDocument();
 });
 
-it("groups search matches, retains pin state, and hides empty categories", () => {
+it("searches across categories, retains pin state, and opens an exact custom match", () => {
   const onSelectAgent = vi.fn();
   const custom = { ...agent("code-workbench", "Code Workbench"), builtin: false };
-  const { container } = render(
-    <AgentNavigation agents={[...agents, custom]} selectedAgentId="codex" onSelectAgent={onSelectAgent} />,
-  );
+  const { container } = render(<AgentNavigation agents={[...agents, custom]} selectedAgentId="codex" onSelectAgent={onSelectAgent} />);
   fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
   const picker = within(screen.getByRole("dialog", { name: "选择和置顶 Agent" }));
   const search = picker.getByRole("searchbox", { name: "搜索 Agent" });
-
   fireEvent.change(search, { target: { value: "code" } });
-  expect(within(picker.getByRole("group", { name: "自定义 Agent" })).getByText("Code Workbench")).toBeVisible();
-  expect(within(picker.getByRole("group", { name: "内置 Agent" })).getByRole("button", { name: "取消置顶 Codex" })).toBeEnabled();
-  expect(picker.getAllByText("Codex")).toHaveLength(1);
-
-  fireEvent.change(search, { target: { value: "workbench" } });
-  expect(picker.queryByRole("group", { name: "内置 Agent" })).not.toBeInTheDocument();
-  expect(picker.getByRole("group", { name: "自定义 Agent" })).toBeVisible();
-
+  expect(picker.getByRole("button", { name: "进入 Code Workbench（code-workbench）" })).toBeVisible();
+  expect(picker.getByRole("button", { name: "取消置顶 Codex" })).toHaveAttribute("aria-pressed", "true");
   fireEvent.change(search, { target: { value: "no-such-agent" } });
-  expect(picker.queryByRole("group", { name: "自定义 Agent" })).not.toBeInTheDocument();
-  expect(picker.getByText("未找到匹配项")).toBeVisible();
-
-  fireEvent.change(search, { target: { value: "workbench" } });
-  fireEvent.click(picker.getByText("Code Workbench").closest("button")!);
+  expect(picker.getByText("未找到匹配的 Agent")).toBeVisible();
+  expect(picker.queryByRole("button", { name: /^进入 / })).not.toBeInTheDocument();
+  fireEvent.change(search, { target: { value: "code-workbench" } });
+  fireEvent.keyDown(search, { key: "Enter" });
   expect(onSelectAgent).toHaveBeenCalledWith("code-workbench");
-  expect(screen.queryByRole("dialog", { name: "选择和置顶 Agent" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
 it("distinguishes shared Claude logos in the Agent picker", () => {
@@ -110,10 +98,10 @@ it("distinguishes shared Claude logos in the Agent picker", () => {
   );
 
   const picker = within(screen.getByRole("dialog", { name: "选择和置顶 Agent" }));
-  const codeRow = picker.getByText("Claude Code").closest(".arca-agent-picker-select");
+  const codeRow = picker.getByText("Claude Code").closest(".arca-agent-hand-select");
   const desktopRow = picker
     .getByText("Claude Desktop")
-    .closest(".arca-agent-picker-select");
+    .closest(".arca-agent-hand-select");
   expect(codeRow?.querySelector("[data-agent-surface='cli']")).not.toBeNull();
   expect(
     desktopRow?.querySelector("[data-agent-surface='desktop']"),
@@ -127,64 +115,23 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-it("keeps the HTML drag source hit-testable and commits the dropped order", async () => {
-  const { container } = render(
-    <AgentNavigation
-      agents={agents}
-      selectedAgentId="codex"
-      onSelectAgent={vi.fn()}
-    />,
-  );
-
-  const trigger = container.querySelector<HTMLButtonElement>(
-    ".arca-agent-picker-trigger",
-  );
-  expect(trigger).not.toBeNull();
-  fireEvent.click(trigger!);
-
-  const sourceHandle = screen.getByRole("button", {
-    name: "调整 Qoder 的置顶顺序",
+it("keeps Dock drag sources reachable and commits the dropped order", async () => {
+  render(<AgentNavigation agents={agents} selectedAgentId="codex" onSelectAgent={vi.fn()} />);
+  const dock = screen.getByRole("navigation", { name: "置顶 Agent" });
+  const source = within(dock).getByRole("button", { name: "Qoder" });
+  const target = within(dock).getByRole("button", { name: "Claude Code" });
+  vi.spyOn(target, "getBoundingClientRect").mockReturnValue({
+    top: 0, bottom: 36, left: 0, right: 36, width: 36, height: 36, x: 0, y: 0, toJSON: () => ({}),
   });
-  const sourceSlot = sourceHandle.closest(".arca-agent-picker-slot");
-  const targetHandle = screen.getByRole("button", {
-    name: "调整 Claude Code 的置顶顺序",
-  });
-  const targetSlot = targetHandle.closest(".arca-agent-picker-slot");
-  expect(sourceSlot).not.toBeNull();
-  expect(targetSlot).not.toBeNull();
-
-  vi.spyOn(targetSlot!, "getBoundingClientRect").mockReturnValue({
-    top: 0,
-    bottom: 48,
-    left: 0,
-    right: 360,
-    width: 360,
-    height: 48,
-    x: 0,
-    y: 0,
-    toJSON: () => ({}),
-  });
-  const dataTransfer = {
-    effectAllowed: "none",
-    dropEffect: "none",
-    setData: vi.fn(),
-    setDragImage: vi.fn(),
-  } as unknown as DataTransfer;
-
-  fireEvent.dragStart(sourceHandle, { dataTransfer });
-  expect(sourceSlot).toHaveAttribute("data-drag-source", "true");
-  expect(targetSlot).toHaveAttribute("data-sorting", "true");
-
-  fireEvent.dragOver(targetSlot!, { clientY: 1, dataTransfer });
-  fireEvent.drop(targetSlot!, { clientY: 1, dataTransfer });
-
-  await waitFor(() => {
-    expect(pinnedAgentMocks.commit).toHaveBeenCalledWith([
-      "qoder",
-      "claude-code",
-      "codex",
-    ]);
-  });
+  const dataTransfer = { effectAllowed: "none", dropEffect: "none", setData: vi.fn() } as unknown as DataTransfer;
+  expect(source).toHaveAttribute("draggable", "true");
+  fireEvent.dragStart(source, { dataTransfer });
+  expect(dataTransfer.setData).toHaveBeenCalledWith("text/plain", "qoder");
+  fireEvent.dragOver(target, { clientX: 0, dataTransfer });
+  expect(source).toBeInTheDocument();
+  expect(source).toHaveAttribute("draggable", "true");
+  fireEvent.drop(target, { dataTransfer });
+  await waitFor(() => expect(pinnedAgentMocks.commit).toHaveBeenCalledWith(["qoder", "claude-code", "codex"]));
 });
 
 it("uses a dedicated crossed pin for unpinning and keeps the action wired", async () => {
@@ -211,10 +158,10 @@ it("uses a dedicated crossed pin for unpinning and keeps the action wired", asyn
   await waitFor(() => {
     expect(pinnedAgentMocks.commit).toHaveBeenCalledWith(["codex", "qoder"]);
   });
-  expect(screen.getByText("Claude Code 已取消置顶")).toHaveAttribute("aria-live", "polite");
+  expect(await screen.findByRole("status")).toHaveTextContent(/Claude Code.*取消置顶/);
 });
 
-it("uses the entire custom Agent footer as one native action", () => {
+it("opens the custom Agent creation card as one native action", async () => {
   const onAddAgent = vi.fn();
   const { container } = render(
     <AgentNavigation
@@ -227,11 +174,12 @@ it("uses the entire custom Agent footer as one native action", () => {
 
   fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
 
+  fireEvent.click(screen.getByRole("button", { name: "自定义" }));
   const addAgent = screen.getByRole("button", { name: "添加自定义 Agent" });
-  expect(addAgent).toHaveClass("arca-agent-picker-footer");
+  expect(addAgent).toHaveClass("arca-agent-hand-select");
   expect(addAgent.querySelector("button")).toBeNull();
   fireEvent.click(addAgent);
-  expect(onAddAgent).toHaveBeenCalledOnce();
+  await waitFor(() => expect(onAddAgent).toHaveBeenCalledOnce());
   expect(
     screen.queryByRole("dialog", { name: "选择和置顶 Agent" }),
   ).not.toBeInTheDocument();
@@ -243,7 +191,7 @@ it("lists and opens a projection-only Model Agent", () => {
       id: "model-only",
       name: "Projection Model",
       enabled: true,
-      builtin: true,
+      builtin: false,
       category: "coding-agent",
       evidence: "official",
     },
@@ -272,6 +220,7 @@ it("lists and opens a projection-only Model Agent", () => {
   );
 
   fireEvent.click(container.querySelector<HTMLButtonElement>(".arca-agent-picker-trigger")!);
-  fireEvent.click(screen.getByText("Projection Model").closest("button")!);
+  fireEvent.change(screen.getByRole("searchbox", { name: "搜索 Agent" }), { target: { value: "model-only" } });
+  fireEvent.keyDown(screen.getByRole("searchbox"), { key: "Enter" });
   expect(onSelectAgent).toHaveBeenCalledWith("model-only");
 });

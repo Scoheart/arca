@@ -133,7 +133,7 @@ fn desktop_fixture(home:&TestHome) -> DesktopContract {
     plist::Value::Dictionary(info).to_file_xml(app.join("Contents/Info.plist")).unwrap();
     for member in &APP_MEMBERS[1..]{write(&app.join(member),CODE);}
     serde_json::from_value(json!({"agent_id":"cline-desktop","version":"0.0.49","bundle_id":"bot.cline.app","product_name":"Cline",
-        "app_paths":[app],"guards":APP_MEMBERS.iter().map(|member|guard(member,&fs::read(app.join(member)).unwrap())).collect::<Vec<_>>()
+        "app_paths":["~/Applications/Cline.app"],"guards":APP_MEMBERS.iter().map(|member|guard(member,&fs::read(app.join(member)).unwrap())).collect::<Vec<_>>()
     })).unwrap()
 }
 

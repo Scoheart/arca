@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { splitLaunchArguments } from "./agentLaunch";
 
 export type CodexConfigurationSource = "native" | "arca";
 export interface CodexConfigurationSnapshot {
@@ -13,7 +14,7 @@ export const saveCodexConfiguration = (source: CodexConfigurationSource, snapsho
   invoke<CodexConfigurationSnapshot>("codex_configuration_save", { source, codexHome, expectedRevision: snapshot.revision, text, patch });
 
 export function codexProfileArguments(text: string) {
-  const args = text.split("\n").filter(Boolean);
+  const args = splitLaunchArguments(text);
   const remaining: string[] = [];
   let profile: string | null = null;
   for (let index = 0; index < args.length; index += 1) {

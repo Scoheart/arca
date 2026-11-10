@@ -37,6 +37,8 @@ export interface AgentInfo {
   /** Derived from WorkspaceSnapshot; absent on the legacy MCP-shaped wire. */
   has_model?: boolean;
   has_instructions?: boolean;
+  has_subagents?: boolean;
+  has_hooks?: boolean;
   supported_transports: Array<"stdio" | "http">;
   /** Raw stored config paths (e.g. `~/Library/Application Support/…/mcp.json`). */
   global: string | null; project: string | null;
@@ -94,6 +96,11 @@ export interface AgentCapabilityView {
       global_dir: string;
       alias_dirs: string[];
       affected_agent_ids: string[];
+    } | null;
+    subagent?: {
+      target_id: string;
+      global_dir: string;
+      format: string;
     } | null;
   };
 }
@@ -356,7 +363,11 @@ export type ResourceNavigationRequest =
   | { domain: "mcp"; kind: "create" }
   | { domain: "model"; kind: "detail"; profileId: string }
   | { domain: "model"; kind: "create" }
-  | { domain: "skill"; kind: "detail"; skillName: string };
+  | { domain: "skill"; kind: "detail"; skillName: string }
+  | { domain: "subagent"; kind: "detail"; name: string }
+  | { domain: "subagent"; kind: "create" }
+  | { domain: "hook"; kind: "detail"; name: string }
+  | { domain: "hook"; kind: "create" };
 
 export type ResourceNavigationIntent = ResourceNavigationRequest & { id: number };
 export type SkillNavigationRequest = Extract<ResourceNavigationRequest, { domain: "skill" }>;
@@ -368,7 +379,9 @@ export type View =
   | { kind: "registry"; intent?: Extract<ResourceNavigationIntent, { domain: "mcp" }> }
   | { kind: "models"; intent?: Extract<ResourceNavigationIntent, { domain: "model" }> }
   | { kind: "skills"; intent?: SkillNavigationIntent }
-  | { kind: "agent"; id: string; tab?: "skills" }
+  | { kind: "subagents"; intent?: Extract<ResourceNavigationIntent, { domain: "subagent" }> }
+  | { kind: "hooks"; intent?: Extract<ResourceNavigationIntent, { domain: "hook" }> }
+  | { kind: "agent"; id: string; tab?: "models" | "mcps" | "skills" | "subagents" | "hooks" | "instructions" | "plugins" }
   | { kind: "capture"; agentId: string }
   | { kind: "traces"; agentId?: string };
 
@@ -571,11 +584,42 @@ export interface SkillsInventory {
   recovery_error: string | null;
 }
 
+export interface SubagentDefinition {
+  name: string;
+  display_name: string;
+  description: string;
+  system_prompt: string;
+  model?: string;
+  tools?: string[];
+  mcp_dependencies?: string[];
+  readonly?: boolean;
+  allow_subagents?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface HookDefinition {
+  name: string;
+  display_name: string;
+  description: string;
+  event: string;
+  matcher: string;
+  command: string;
+  command_windows?: string;
+  hook_type: string;
+  timeout: number;
+  enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type AssetRef =
   | { domain: "mcp"; key: string }
   | { domain: "model"; profile_id: string }
   | { domain: "model-provider"; provider_id: string }
-  | { domain: "skill"; name: string };
+  | { domain: "skill"; name: string }
+  | { domain: "subagent"; name: string }
+  | { domain: "hook"; name: string };
 
 export type ConsumptionStatus =
   | "synced"
@@ -641,7 +685,8 @@ export interface TargetIncident {
 export type AgentConsumptionSelection =
   | { domain: "mcp"; asset_keys: string[] }
   | { domain: "model"; profile_ids: string[] }
-  | { domain: "skill"; names: string[] };
+  | { domain: "skill"; names: string[] }
+  | { domain: "subagent"; names: string[] };
 
 export type RelationshipAction = "add" | "remove";
 
@@ -1045,6 +1090,23 @@ export interface HostMcpObservation {
   source_paths: string[]; docs_url: string; source_fingerprint: string;
 }
 
+export interface McpInspectionRequest {
+  agent_id: string;
+  source: { kind: "configured"; key: string } | { kind: "configured_name"; name: string } | { kind: "host"; source_fingerprint: string };
+}
+
+export interface ConfiguredMcpObservation {
+  agent_id: string;
+  name: string;
+  source_path: string;
+}
+
+export interface McpConfigurationView {
+  agent_id: string;
+  server_id: string;
+  documents: { source_path: string; configuration: Record<string, unknown> | null; unavailable_reason: string | null }[];
+}
+
 export interface NativeSkillObservation {
   id: string;
   agent_id: string;
@@ -1066,5 +1128,7 @@ export interface NativeResourceInventory {
   host_mcps: HostMcpObservation[];
   native_plugins: NativePluginObservation[];
   native_skills: NativeSkillObservation[];
+  configured_mcps?: ConfiguredMcpObservation[];
+  configured_unavailable?: boolean;
   unavailable: boolean;
 }

@@ -270,6 +270,9 @@ mod tests {
     #[test]
     fn native_lists_accumulate_legacy_entries_and_keep_operations_out_of_packages() {
         let home=TestHome::new("opencode-desktop-config");let root=home.home.join(".config/opencode");fs::create_dir_all(&root).unwrap();
+        // This case covers the ordinary global layers, not an explicit native
+        // override (which TestHome supplies only to isolate other tests).
+        std::env::remove_var("OPENCODE_CONFIG");
         fs::write(root.join("opencode.json"),r#"{"plugin":[["old-plugin",{"token":"secret-option"}]],"plugins":["-*","opencode.provider.chatgpt","opencode.provider.*",{"package":"new-plugin","options":{"token":"secret-option"}}]}"#).unwrap();
         fs::write(root.join("opencode.jsonc"),"{/* preserve this */\"plugins\":[\"last-plugin\",],}").unwrap();
         let mut scan=PluginScan::default();global(host(),&mut scan).unwrap();

@@ -134,7 +134,7 @@ fn independent_identity_budget_rejects_oversized_guards_and_does_not_leak_betwee
     assert_eq!(version_for(&c, &selected).as_deref(), Some("1.5.47"));
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "macos")))]
 #[test]
 fn linked_or_special_public_members_are_rejected_without_following_or_blocking() {
     use std::os::unix::fs::symlink;

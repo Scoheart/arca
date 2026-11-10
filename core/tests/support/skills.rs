@@ -216,6 +216,9 @@ impl SkillsFixture {
 
     pub fn managed_on_targets(name: &str, target_ids: &[&str]) -> Self {
         let fixture = Self::installed_agents(DEFAULT_SKILL_FIXTURE_AGENT_IDS);
+        // Check against the current registry before publishing fixture settings,
+        // so a retired test ID cannot poison inventory for every later lookup.
+        for target_id in target_ids { fixture.target(target_id, name); }
         let paths = SkillsPaths::from_env().unwrap();
         let central = paths.central_skill(name);
         write_skill(&central, name, "Managed fixture");

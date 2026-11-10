@@ -1,11 +1,10 @@
 import { ResourceIcon } from "./resourcePresentation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { AssetRef, ConsumptionView, ConvergenceAction, HostMcpObservation, NativeSkillObservation } from "../lib/types";
-import { HostMcpCard, NativeSkillCard } from "./NativePluginsPanel";
+import type { AssetRef, ConfiguredMcpObservation, ConsumptionView, ConvergenceAction, HostMcpObservation, NativeSkillObservation } from "../lib/types";
+import { ConfiguredMcpCard, HostMcpCard, NativeSkillCard } from "./NativePluginsPanel";
 import { assetIdentity } from "../lib/consumption";
 import {
   DownloadIcon,
-  LinkIcon,
   LinkOffIcon,
   MoreHorizontalIcon,
   PlusIcon,
@@ -133,45 +132,6 @@ function ConvergenceActions({
   );
 }
 
-function ConsumptionCardMenu({ name, onOpen, onRemove, removeDisabled, removeLabel }: {
-  name: string;
-  onOpen?: () => void;
-  onRemove?: () => void;
-  removeDisabled: boolean;
-  removeLabel: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    root.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus();
-    const close = (event: PointerEvent) => { if (!root.current?.contains(event.target as Node)) setOpen(false); };
-    document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
-  }, [open]);
-  return <div ref={root} className="arca-consumption-card-menu" data-open={open || undefined} onKeyDown={(event) => {
-    if (!open) return;
-    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus(); }
-    if (event.key === "Tab") setOpen(false);
-    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
-      event.preventDefault();
-      const items = Array.from(root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? []);
-      const index = items.indexOf(document.activeElement as HTMLButtonElement);
-      const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
-      items[next]?.focus();
-    }
-  }}>
-    <button ref={trigger} type="button" className="arca-consumption-open" aria-label={`${name} 操作`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-      <MoreHorizontalIcon className="w-4 h-4" />
-    </button>
-    {open && <div role="menu" className="arca-consumption-card-menu-items" aria-label={`${name} 操作`}>
-      {onOpen && <button type="button" role="menuitem" aria-label={`查看 ${name} 详情`} onClick={() => { setOpen(false); onOpen(); }}><LinkIcon className="w-3.5 h-3.5" />查看详情</button>}
-      {onRemove && <button type="button" role="menuitem" disabled={removeDisabled} aria-label={removeLabel} className="arca-consumption-remove" onClick={() => { setOpen(false); onRemove(); }}><TrashIcon className="w-3.5 h-3.5" />移除</button>}
-    </div>}
-  </div>;
-}
-
 export function AgentConsumptionPanel({
   domain,
   title,
@@ -180,6 +140,7 @@ export function AgentConsumptionPanel({
   rows,
   external,
   hostMcps = [],
+  configuredMcps = [],
   nativeSkills = [],
   externalMode = "summary",
   externalTitle = "外部配置",
@@ -188,6 +149,7 @@ export function AgentConsumptionPanel({
   onManage,
   manageIcon = <PlusIcon className="w-3.5 h-3.5" />,
   onOpenAsset,
+  onInspect,
   onEnabledChange,
   enabledChangeDisabled,
   toggleKind = "enabled",
@@ -218,6 +180,7 @@ export function AgentConsumptionPanel({
   rows: ConsumptionView[];
   external: ConsumptionView[];
   hostMcps?: HostMcpObservation[];
+  configuredMcps?: ConfiguredMcpObservation[];
   nativeSkills?: NativeSkillObservation[];
   externalMode?: "summary" | "cards";
   externalTitle?: string;
@@ -226,6 +189,7 @@ export function AgentConsumptionPanel({
   onManage(): void;
   manageIcon?: ReactNode;
   onOpenAsset?(asset: AssetRef): void;
+  onInspect?(item: ConsumptionView): void;
   onEnabledChange?(item: ConsumptionView, enabled: boolean): void;
   enabledChangeDisabled?: boolean | ((item: ConsumptionView) => boolean);
   toggleKind?: "enabled" | "current";
@@ -260,11 +224,13 @@ export function AgentConsumptionPanel({
 
   const needle = query.trim().toLocaleLowerCase();
   const hosts = domain === "mcp" ? hostMcps : [];
+  const declarations = domain === "mcp" ? configuredMcps : [];
   const skills = domain === "skill" ? nativeSkills : [];
   const filteredHosts = hosts.filter(item => !needle || `${item.name} ${item.server_id} ${item.provider}`.toLocaleLowerCase().includes(needle));
+  const filteredDeclarations = declarations.filter(item => !needle || `${item.name} ${item.source_path}`.toLocaleLowerCase().includes(needle));
   const filteredSkills = skills.filter(item => !needle || `${item.name} ${item.plugin_name} ${item.plugin_id}`.toLocaleLowerCase().includes(needle));
-  const total = items.length + hosts.length + skills.length;
-  const visible = filteredHosts.length + filteredSkills.length;
+  const total = items.length + hosts.length + declarations.length + skills.length;
+  const visible = filteredHosts.length + filteredDeclarations.length + filteredSkills.length;
   const filtered = items.filter(({ item }) => {
     const presentation = present(item.asset);
     return !needle || `${presentation.name} ${presentation.description ?? ""} ${assetIdentity(item.asset)}`.toLocaleLowerCase().includes(needle);
@@ -275,9 +241,15 @@ export function AgentConsumptionPanel({
       <div className="arca-agent-section-head">
         <div>
           <h3>{title}</h3>
-          {description && <p>{description}</p>}
+          {description && domain !== "model" && <p>{description}</p>}
         </div>
         <AgentResourceActions><div className="arca-agent-section-actions">
+          {total > 0 && (
+            <div className="arca-consumption-search">
+              <SearchBar value={query} onChange={setQuery} placeholder={`搜索当前 ${title}`} />
+              <span role="status" aria-live="polite">{query ? `${filtered.length + visible} / ${total} 项` : `${total} 项`}</span>
+            </div>
+          )}
           {domainRows.length > 0 && bulkToggleLabel && bulkEnabled !== undefined && onBulkEnabledChange && (
             <div className="arca-agent-bulk-toggle">
               <span>{bulkToggleLabel}</span>
@@ -312,15 +284,10 @@ export function AgentConsumptionPanel({
             onClick={onManage}
           >
             {manageIcon}
-            <span className="arca-consumption-manage-label">{manageLabel}</span><span className="arca-consumption-manage-short" aria-hidden="true">添加</span>
+            <span className="arca-consumption-manage-label">{manageLabel}</span>
           </button>
         </div></AgentResourceActions>
       </div>
-
-      {total > 0 && <div className="arca-consumption-search">
-        <SearchBar value={query} onChange={setQuery} placeholder={`搜索当前 ${title}`} />
-        <span role="status" aria-live="polite">{query ? `${filtered.length + visible} / ${total} 项` : `${total} 项`}</span>
-      </div>}
       {domain === "model" && description && <p className="arca-consumption-model-note">{description}</p>}
       {externalMode === "summary" && domainExternal.length > 0 && (
         <div className="arca-consumption-external" role="status">
@@ -352,6 +319,7 @@ export function AgentConsumptionPanel({
       ) : filtered.length + visible === 0 ? <p role="status" className="arca-consumption-empty">没有匹配的 {title}</p> : (
         <ul className="arca-consumption-list" data-columns={columns}>
           {filteredHosts.map(item => <HostMcpCard key={`${item.agent_id}:${item.source_fingerprint}`} item={item} />)}
+          {filteredDeclarations.map(item => <ConfiguredMcpCard key={`${item.agent_id}:configured:${item.name}`} item={item} />)}
           {filteredSkills.map(item => <NativeSkillCard key={item.id} item={item} />)}
           {filtered.map(({ item, external: isExternal }) => {
             const presentation = present(item.asset);
@@ -367,48 +335,112 @@ export function AgentConsumptionPanel({
               : enabled
                 ? `停用 ${presentation.name}`
                 : `启用 ${presentation.name}`;
+            const canInspect = domain === "mcp" && Boolean(onInspect);
+            const canOpen = !isExternal && Boolean(onOpenAsset);
+            const canViewDetail = canInspect || canOpen || Boolean(onOpenAsset);
+            const openDetail = () => {
+              if (canInspect) onInspect?.(item);
+              else if (onOpenAsset) onOpenAsset?.(item.asset);
+            };
+            const openDetailLabel = canInspect
+              ? `查看 ${presentation.name} 配置`
+              : `查看 ${presentation.name} 详情`;
+            const hasTitleButton = canInspect || canOpen;
+            const canRemoveDirect = !isExternal && Boolean(onRemove);
+            const canDetachDirect = Boolean(onConverge) && item.available_actions.includes("detach");
+            const canDelete = canRemoveDirect || canDetachDirect;
+            const removeActionLabel = canDetachDirect && !canRemoveDirect
+              ? `取消关联 ${presentation.name}`
+              : (removeLabel?.(presentation.name) ?? `从 Agent 移除 ${presentation.name}`);
+            const handleDelete = () => {
+              if (canRemoveDirect) {
+                onRemove?.(item.asset);
+              } else if (canDetachDirect) {
+                onConverge?.(item, "detach");
+              }
+            };
+            const remainingConvergenceActions = canDetachDirect
+              ? item.available_actions.filter((action) => action !== "detach")
+              : item.available_actions;
+            const hasConvergence = Boolean(onConverge) && remainingConvergenceActions.length > 0;
+            const hasControls = hasConvergence
+              || Boolean(renderAction)
+              || (!isExternal && Boolean(onEnabledChange) && enabled !== null);
             return (
               <li
                 key={rowKey(item, isExternal)}
                 data-domain={domain}
                 data-status={item.status}
                 data-enabled={isExternal || enabled === false ? "false" : undefined}
+                data-clickable={canViewDetail ? "true" : undefined}
+                onClick={canViewDetail ? openDetail : undefined}
               >
                 <span className="arca-consumption-icon">{presentation.icon}</span>
                 <span className="arca-consumption-copy">
                   <span className="arca-consumption-title">
-                    <strong title={presentation.name}>{presentation.name}</strong>
+                    {hasTitleButton ? (
+                      <button
+                        type="button"
+                        className="arca-consumption-inspect"
+                        aria-label={openDetailLabel}
+                        aria-haspopup={canInspect ? "dialog" : undefined}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          event.currentTarget.focus({ preventScroll: true });
+                          openDetail();
+                        }}
+                      >
+                        <strong title={presentation.name}>{presentation.name}</strong>
+                      </button>
+                    ) : (
+                      <strong title={presentation.name}>{presentation.name}</strong>
+                    )}
                   </span>
                   {domain === "mcp" && <span className="arca-consumption-secondary">
-                    <ConsumptionStatus status={item.status} reason={item.reason} compact />
+                    {!isExternal && <ConsumptionStatus status={item.status} reason={item.reason} compact />}
                     {presentation.meta && <span className="arca-consumption-meta">{presentation.meta}</span>}
                     {presentationDescription && <small title={presentationDescription}>{presentationDescription}</small>}
                   </span>}
                 </span>
-                {!isExternal && (onOpenAsset || onRemove) && <ConsumptionCardMenu
-                  name={presentation.name}
-                  onOpen={onOpenAsset ? () => onOpenAsset(item.asset) : undefined}
-                  onRemove={onRemove ? () => onRemove(item.asset) : undefined}
-                  removeDisabled={removeDisabled}
-                  removeLabel={removeLabel?.(presentation.name) ?? `从 Agent 移除 ${presentation.name}`}
-                />}
-                {domain !== "mcp" && presentationDescription && <p className="arca-consumption-card-description" title={presentationDescription}>{presentationDescription}</p>}
+                {canDelete && (
+                  <button
+                    type="button"
+                    className="arca-consumption-open arca-consumption-remove"
+                    disabled={removeDisabled || (canDetachDirect && !canRemoveDirect && convergenceDisabled)}
+                    aria-label={removeActionLabel}
+                    title={removeActionLabel}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleDelete();
+                    }}
+                  >
+                    <TrashIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {domain !== "mcp" && (presentationDescription || presentation.meta || (!isExternal && item.status !== "synced")) && (
+                  <p className="arca-consumption-card-description" title={presentationDescription}>
+                    {!isExternal && <ConsumptionStatus status={item.status} reason={item.reason} compact />}
+                    {presentation.meta && <span className="arca-consumption-meta">{presentation.meta}</span>}
+                    {presentationDescription && <span>{presentationDescription}</span>}
+                  </p>
+                )}
                 <div className="arca-consumption-card-footer">
                   {domain !== "mcp" && <div className="arca-consumption-card-summary">
                     <ConsumptionStatus status={item.status} reason={item.reason} compact />
                     {presentation.meta && <span className="arca-consumption-meta">{presentation.meta}</span>}
                   </div>}
-                {(item.status !== "synced" && !(isExternal && item.status === "external-added")
-                  || item.available_actions.length > 0
-                  || !isExternal && (renderAction || onEnabledChange && enabled !== null || onOpenAsset || onRemove)) && (
-                  <span className="arca-consumption-controls">
+                {hasControls && (
+                  <span
+                    className="arca-consumption-controls"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <span className="arca-consumption-actions">
-                      {onConverge && item.available_actions.length > 0 && (
+                      {hasConvergence && (
                         <ConvergenceActions
                           name={`${presentation.name}${item.asset.domain === "mcp" ? ` · ${item.asset.key.split("::").at(-1)}` : item.target?.target_id ? ` · ${item.target.target_id}` : ""}`}
                           actions={item.available_actions}
                           disabled={convergenceDisabled}
-                          onAction={(action) => onConverge(item, action)}
+                          onAction={(action) => onConverge?.(item, action)}
                         />
                       )}
                       {renderAction?.(item)}

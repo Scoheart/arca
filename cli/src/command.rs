@@ -178,10 +178,13 @@ pub enum McpCommand {
     },
     /// List every MCP asset in the central catalog.
     List,
-    /// Show one central MCP asset by its exact name::transport key.
+    /// Show one central MCP, or inspect its native configuration with --agent.
     Show {
         #[arg(value_parser = parse_mcp_key)]
         key: String,
+        /// Inspect this Agent's configuration without importing or changing it.
+        #[arg(long)]
+        agent: Option<String>,
     },
     /// Show desired, observed, enabled, and drift state for MCP relationships.
     Status {
@@ -506,9 +509,14 @@ fn dispatch_mcp(cli: &Cli, command: &McpCommand) -> Result<CommandOutput, CliErr
             cli.reject_mutation_options()?;
             mcp_list(palette)
         }
-        McpCommand::Show { key } => {
+        McpCommand::Show { key, agent } => {
             cli.reject_mutation_options()?;
-            mcp_show(key, palette)
+            if let Some(agent) = agent {
+                let view = arca_core::application::mcp::inspect_configuration(arca_core::application::mcp::McpInspectionRequest {
+                    agent_id: agent.clone(), source: arca_core::application::mcp::McpInspectionSource::Configured { key: key.clone() },
+                }).map_err(CliError::from_core)?;
+                crate::output::query_output("mcp.show", json!(view))
+            } else { mcp_show(key, palette) }
         }
         McpCommand::Status { agent } => {
             cli.reject_mutation_options()?;
@@ -1896,6 +1904,23 @@ mod tests {
     use super::*;
 
     #[test]
+    fn mcp_show_can_read_an_unmanaged_agent_entry_without_importing_it() {
+        let home = arca_core::testenv::TestHome::new("cli-mcp-inspection");
+        let path = home.home.join(".cursor/mcp.json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let original = r#"{"mcpServers":{"docs":{"command":"npx","env":{"TOKEN":"cli-fixture-secret"}}}}"#;
+        std::fs::write(&path, original).unwrap();
+        let cli = Cli::try_parse_from(["arca", "--json", "mcp", "show", "docs::stdio", "--agent", "cursor"]).unwrap();
+        let output = dispatch(&cli).unwrap();
+        assert!(!output.changed);
+        assert_eq!(output.data["documents"][0]["configuration"]["command"], "npx");
+        assert!(!output.human.contains("cli-fixture-secret"));
+        assert!(!output.data.to_string().contains("cli-fixture-secret"));
+        assert_eq!(std::fs::read_to_string(path).unwrap(), original);
+        assert!(!home.home.join(".arca/settings.json").exists());
+    }
+
+    #[test]
     fn model_clear_requires_explicit_all_or_exact_profiles() {
         assert!(Cli::try_parse_from(["arca", "model", "unassign", "--agent", "qoder-cli"]).is_err());
         assert!(Cli::try_parse_from(["arca", "model", "unassign", "work", "--all", "--agent", "qoder-cli"]).is_err());
@@ -2069,7 +2094,7 @@ mod tests {
     #[test]
     fn legacy_top_level_commands_are_rejected() {
         for command in [
-            "list", "status", "add", "remove", "export", "apply", "clean", "models", "skills",
+            "list", "add", "remove", "export", "apply", "clean", "models", "skills",
             "agents", "detected", "manage", "import",
         ] {
             assert!(
@@ -2105,7 +2130,7 @@ mod tests {
         ])
         .is_err());
         assert!(
-            Cli::try_parse_from(["arca", "model", "unassign", "--all", "--agent", "codex"]).is_err()
+            Cli::try_parse_from(["arca", "model", "unassign", "--all"]).is_err()
         );
     }
 

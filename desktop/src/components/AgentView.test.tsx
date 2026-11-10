@@ -1,8 +1,7 @@
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, screen, waitFor, within, type RenderOptions } from "@testing-library/react";
+import type { ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { InstallState } from "../hooks/useInstallState";
 import type { SkillsState } from "../hooks/useSkillsState";
 import type { ConsumptionState } from "../hooks/useConsumptionState";
@@ -17,12 +16,40 @@ import { assetOperationPlanFixture } from "../test/consumptionFixtures";
 import { nativeSkillFixture } from "../test/nativeSkillFixtures";
 import { AgentView } from "./AgentView";
 import { ToastProvider } from "./Toast";
+import { AgentLauncherContext } from "../lib/agentLauncherContext";
+import { renderWithNotifications } from "../test/renderWithNotifications";
+
+function render(ui: ReactNode, options?: RenderOptions) {
+  return renderWithNotifications(ui, { ...options, wrapper: ({ children }) =>
+    <AgentLauncherContext.Provider value={{ busyId: null, revision: 0,
+      launch: vi.fn(), configure: vi.fn(), refresh: vi.fn() }}>
+      {children}
+    </AgentLauncherContext.Provider>,
+  });
+}
+
+vi.mock("../lib/agentLaunch", () => ({
+  getAgentLaunchInfo: vi.fn(async (agentId: string) => ({
+    agent_id: agentId, name: agentId, category: "cli", kind: "cli",
+    available: false, installed: false, supported: true, host_name: null,
+    install_url: null, directory: null, directory_exists: false,
+    configured_target: null, resolved_target: null,
+  })),
+  getAgentRuntimeVersion: vi.fn().mockResolvedValue(null),
+}));
 
 const apiMocks = vi.hoisted(() => ({
   listNativeResources: vi.fn().mockResolvedValue({ native_plugin_agents: [], host_mcps: [], native_plugins: [], native_skills: [], unavailable: false }),
   listModelAgents: vi.fn().mockResolvedValue([]),
   listModelProfiles: vi.fn().mockResolvedValue([]),
   setAgentCredentialDelivery: vi.fn().mockResolvedValue({ agent: "pi", profile: "" }),
+  inspectMcpConfiguration: vi.fn().mockResolvedValue({
+    agent_id: "codex", server_id: "computer-use", documents: [{
+      source_path: "~/.codex/config.toml",
+      configuration: { command: "external-computer-use", env: { TOKEN: "[已隐藏]" }, timeout: 9000 },
+      unavailable_reason: null,
+    }],
+  }),
   listMcpIconPreferences: vi.fn().mockResolvedValue({
     "github::stdio": { kind: "builtin", value: "database" },
   }),
@@ -47,18 +74,10 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-it("shows an Agent-level credential strategy next to config locations", async () => {
-  const source = await readFile(resolve(process.cwd(), "src/components/AgentView.tsx"), "utf8");
-  expect(source).toContain("setAgentCredentialDelivery");
-  expect(source).toContain("凭据策略");
-  expect(source).toContain("明文配置");
-  expect(source).toContain("plaintextConfirmation");
-  expect(source).toContain("available_deliveries");
-  expect(source).toContain("ProviderGlyph");
-  expect(source).toContain("modelProviderIcon");
-  expect(source).not.toContain("setModelCredentialDelivery");
-  expect(source).not.toContain("自动适配（推荐）");
-  expect(source).not.toContain("需要 ENV");
+beforeEach(() => {
+  apiMocks.listModelAgents.mockReset().mockResolvedValue([]);
+  apiMocks.listModelProfiles.mockReset().mockResolvedValue([]);
+  apiMocks.listNativeResources.mockReset().mockResolvedValue({ native_plugin_agents: [], host_mcps: [], native_plugins: [], native_skills: [], unavailable: false });
 });
 
 const skillsOnlyAgent: AgentInfo = {
@@ -146,6 +165,30 @@ const emptyConsumptionState = {
   plan: null,
 } as unknown as ConsumptionState;
 
+it("shows Warp native model setup without offering central writes", async () => {
+  const warp: AgentInfo = { ...skillsOnlyAgent, id: "warp", name: "Warp", skills_global_dir: null };
+  apiMocks.listModelAgents.mockResolvedValue([{
+    id: "warp", name: "Warp", mode: "guided", storage_authority: "guided", installed: true,
+    config_path: "", config_paths: [], docs: "https://docs.warp.dev/agents/inference/custom-inference-endpoint/",
+    assigned_profile: null, assigned_profiles: [], active_profile: null,
+    supports_multiple: true, supports_global_selection: false, credential_mode: "guided",
+    supported_protocols: ["openai-completions"],
+    note: "在 Warp 设置中搜索 inference endpoint，填写公网 HTTPS Base URL、API Key 和 Model ID。",
+  } satisfies ModelAgentView]);
+  render(<AgentView state={{ ...state, agents: [warp] } as InstallState} skillsState={skillsState}
+    consumptionState={emptyConsumptionState} agentId="warp" initialTab="models" />);
+
+  const panel = await screen.findByRole("region", { name: "Warp 模型配置引导" });
+  expect(screen.getByRole("tab", { name: /Models\s*原生/ })).toBeVisible();
+  expect(within(panel).getByText(/公网 HTTPS/)).toBeVisible();
+  expect(within(panel).getByText("OpenAI Chat Completions")).toBeVisible();
+  expect(screen.queryByRole("button", { name: "添加 Models" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "清空全部 Models" })).not.toBeInTheDocument();
+  expect(within(panel).queryByRole("switch")).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "查看配置步骤" }));
+  expect(openerMocks.openUrl).toHaveBeenCalledWith("https://docs.warp.dev/agents/inference/custom-inference-endpoint/");
+});
+
 it("keeps an Agent with only plugin Skills in the production workbench", async () => {
   const nativeAgent: AgentInfo = { ...skillsOnlyAgent, id: "cursor", name: "Cursor", skills_global_dir: null };
   apiMocks.listNativeResources.mockResolvedValueOnce({ native_plugin_agents: [], host_mcps: [], native_plugins: [],
@@ -161,6 +204,16 @@ it("keeps an Agent with only plugin Skills in the production workbench", async (
   expect(within(panel).getByText("配置 0 项 · 内置 2 项")).toBeVisible();
   expect(screen.getByRole("button", { name: "添加 Skills" })).toBeDisabled();
   expect(within(panel).queryByRole("switch")).not.toBeInTheDocument();
+});
+
+it("keeps unsupported MCP and Model assignment unavailable while their tabs remain viewable", async () => {
+  const nativeAgent: AgentInfo = { ...skillsOnlyAgent, id: "native-only", name: "Native Only", skills_global_dir: null };
+  render(<AgentView state={{ ...state, agents: [nativeAgent] } as InstallState} skillsState={skillsState}
+    consumptionState={emptyConsumptionState} agentId="native-only" />);
+  expect(screen.getByRole("button", { name: "添加 MCPs" })).toBeDisabled();
+  await userEvent.click(screen.getByRole("tab", { name: /Models/ }));
+  expect(await screen.findByRole("button", { name: "添加 Models" })).toBeDisabled();
+  expect(screen.getAllByRole("button", { name: "添加 Models" })).toHaveLength(1);
 });
 
 it("includes native Skills in Agent tab counts alongside same-name managed and external Skills", async () => {
@@ -202,18 +255,11 @@ it("opens a projection-only Skills Agent without a legacy MCP-shaped row", async
     />,
   );
 
-  const locations = screen.getByRole("region", { name: "配置位置" });
-  expect(within(locations).getByText("配置位置")).toBeVisible();
-  expect(within(locations).getByText(/读取或写入的实际位置/)).toBeVisible();
-  expect(within(locations).getByText("MCPs")).toBeVisible();
-  expect(within(locations).getByText("Models")).toBeVisible();
-  expect(within(locations).getByText("Skills")).toBeVisible();
-  expect(await within(locations).findByText("/Users/test/.snowflake/cortex/skills")).toBeVisible();
-  await userEvent.click(within(locations).getByRole("button", {
-    name: "打开文件夹：/Users/test/.snowflake/cortex/skills",
-  }));
-  expect(openerMocks.openPath).toHaveBeenCalledWith("/Users/test/.snowflake/cortex/skills");
-  expect(within(locations).getByRole("button", { name: "编辑配置" })).toBeVisible();
+  await userEvent.click(screen.getByRole("button", { name: "编辑配置" }));
+  const configuration = screen.getByRole("dialog", { name: skillsOnlyAgent.name });
+  expect(within(configuration).getByRole("textbox", { name: "Skills" })).toHaveValue("~/.snowflake/cortex/skills");
+  expect(within(configuration).getByRole("textbox", { name: "MCP" })).toBeDisabled();
+  await userEvent.keyboard("{Escape}");
   expect(screen.queryByText(/UNKNOWN/)).not.toBeInTheDocument();
   expect(screen.queryByText(/coding-agent/)).not.toBeInTheDocument();
   expect(screen.queryByText(/公开来源/)).not.toBeInTheDocument();
@@ -225,8 +271,7 @@ it("opens a projection-only Skills Agent without a legacy MCP-shaped row", async
   });
 
   await userEvent.click(screen.getByRole("tab", { name: /MCPs/ }));
-  expect(screen.getByText("此 Agent 未接入 MCP。")).toBeVisible();
-  expect(screen.queryByRole("button", { name: "添加 MCP" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "添加 MCPs" })).toBeDisabled();
 });
 
 it("keeps Agent resources visible without a target recovery banner", async () => {
@@ -264,7 +309,7 @@ it("keeps Agent resources visible without a target recovery banner", async () =>
   expect(screen.queryByRole("status")).not.toBeInTheDocument();
 
   await userEvent.click(screen.getByRole("tab", { name: /MCPs/ }));
-  expect(screen.getByText("此 Agent 未接入 MCP。")).toBeVisible();
+  expect(screen.getByRole("button", { name: "添加 MCPs" })).toBeDisabled();
   expect(screen.queryByText("此配置位置待收敛")).not.toBeInTheDocument();
 });
 
@@ -313,6 +358,7 @@ it("toggles a managed Skill without routing through removal", async () => {
       skillsOnlyAgent.id,
       "review-changes",
       false,
+      "cortex-user",
     );
   });
   expect(screen.queryByRole("heading", { name: "确认停用 Skill" })).not.toBeInTheDocument();
@@ -377,7 +423,7 @@ it("toggles one or every managed MCP without opening the review panel", async ()
   ));
   expect(screen.queryByRole("heading", { name: "确认停用 MCP" })).not.toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole("switch", { name: "停用全部 MCP" }));
+  await userEvent.click(screen.getByRole("switch", { name: "停用全部 MCPs" }));
   await waitFor(() => expect(setAllMcpEnabled).toHaveBeenCalledWith(mcpAgent.id, false));
   expect(screen.queryByRole("heading", { name: "确认停用 MCP" })).not.toBeInTheDocument();
 });
@@ -471,7 +517,7 @@ it("keeps a Model-only Agent in the full resource workspace", async () => {
     agents: [],
     refreshAgents: vi.fn().mockResolvedValue([]),
   } as unknown as InstallState;
-  apiMocks.listModelAgents.mockResolvedValueOnce([{
+  apiMocks.listModelAgents.mockResolvedValue([{
     id: modelOnlyAgent.identity.id,
     name: modelOnlyAgent.identity.name,
     mode: "managed",
@@ -504,11 +550,16 @@ it("keeps a Model-only Agent in the full resource workspace", async () => {
   await waitFor(() => {
     expect(screen.getByRole("button", { name: "编辑配置" })).toBeVisible();
   });
-  expect(await screen.findByText("/Users/test/.model-only/config.json")).toBeVisible();
+  await userEvent.click(screen.getByRole("tab", { name: /Models/ }));
+  await screen.findByRole("button", { name: "添加 Models" });
+  await userEvent.click(screen.getByRole("button", { name: "编辑配置" }));
+  expect(screen.getByLabelText("Model")).toHaveValue("~/.model-only/config.json");
   expect(screen.queryByText(/未提供可写的用户级全局配置/)).not.toBeInTheDocument();
 });
 
-it("keeps an external MCP card read-only", async () => {
+it("shows an external MCP configuration without importing, toggling or removing it", async () => {
+  apiMocks.listNativeResources.mockResolvedValue({ native_plugin_agents: [], host_mcps: [], native_plugins: [], native_skills: [], unavailable: false,
+    configured_mcps: [{ agent_id: "codex", name: "computer-use", source_path: "~/.codex/config.toml" }], configured_unavailable: false });
   const mcpAgent: AgentInfo = {
     ...skillsOnlyAgent,
     id: "codex",
@@ -561,32 +612,48 @@ it("keeps an external MCP card read-only", async () => {
     />,
   );
 
-  const locations = screen.getByRole("region", { name: "配置位置" });
-  expect(await within(locations).findByText("/Users/test/.codex/config.toml")).toBeVisible();
-  expect(within(locations).getByText("/Users/test/.agents/skills")).toBeVisible();
-  expect(within(locations).getByText("/Users/test/.claude/skills")).toBeVisible();
-  await userEvent.click(within(locations).getByRole("button", {
-    name: "使用默认应用打开文件：/Users/test/.codex/config.toml",
-  }));
-  expect(openerMocks.openPath).toHaveBeenCalledWith("/Users/test/.codex/config.toml");
-  expect(screen.queryByText(`${mcpAgent.id} · ${mcpAgent.category}`)).not.toBeInTheDocument();
-  expect(within(locations).getByRole("button", { name: "编辑配置" })).toBeVisible();
-  await userEvent.click(within(locations).getByRole("button", { name: "编辑配置" }));
-  expect(screen.getByRole("heading", { name: "编辑配置" })).toBeVisible();
-
   const card = screen.getByText("computer-use").closest<HTMLElement>("li");
+  await waitFor(() => expect(apiMocks.listNativeResources).toHaveBeenCalledWith("codex"));
+  expect(screen.queryByText("配置声明 · 仅查看")).not.toBeInTheDocument();
   expect(card).not.toBeNull();
   expect(within(card!).queryByText("computer-use::stdio")).not.toBeInTheDocument();
   expect(card!.querySelector(".arca-consumption-copy small")).toBeNull();
   expect(card).toHaveAttribute("data-enabled", "false");
   expect(within(card!).queryByRole("switch")).not.toBeInTheDocument();
-  expect(within(card!).queryByRole("button", { name: /查看|移除/ })).not.toBeInTheDocument();
+  expect(within(card!).queryByRole("button", { name: /移除/ })).not.toBeInTheDocument();
   expect(within(card!).queryByText("外部新增")).not.toBeInTheDocument();
   expect(within(card!).getByRole("button", { name: /^收录 Arca：/ })).toBeVisible();
-  const clearAll = screen.getByRole("button", { name: "移除全部 MCP" });
-  expect(clearAll).toHaveAttribute("title", expect.stringContaining("包括外部配置"));
-  await userEvent.click(clearAll);
-  await waitFor(() => expect(clearAgentMcp).toHaveBeenCalledWith("codex"));
+  await userEvent.click(within(card!).getByRole("button", { name: "查看 computer-use 配置" }));
+  const dialog = screen.getByRole("dialog", { name: "computer-use" });
+  expect(await within(dialog).findByText(/external-computer-use/)).toBeVisible();
+  expect(within(dialog).getByText("~/.codex/config.toml")).toBeVisible();
+  expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
+  expect(within(dialog).queryByRole("button", { name: /保存|删除|移除|收录/ })).not.toBeInTheDocument();
+  expect(apiMocks.inspectMcpConfiguration).toHaveBeenCalledWith({ agent_id: "codex", source: { kind: "configured", key: "computer-use::stdio" } });
+  expect(clearAgentMcp).not.toHaveBeenCalled();
+});
+
+it("keeps an unsupported MCP declaration visible with a configuration viewer and no mutation controls", async () => {
+  apiMocks.listNativeResources.mockResolvedValue({ native_plugin_agents: [], host_mcps: [], native_plugins: [], native_skills: [], unavailable: false,
+    configured_mcps: [{ agent_id: "codex", name: "future-oauth", source_path: "~/.codex/config.toml" }], configured_unavailable: false });
+  apiMocks.inspectMcpConfiguration.mockResolvedValueOnce({ agent_id: "codex", server_id: "future-oauth", documents: [{
+    source_path: "~/.codex/config.toml", configuration: { type: "future", oauth: { token: "[已隐藏]" } }, unavailable_reason: null,
+  }] });
+  const agent: AgentInfo = { ...skillsOnlyAgent, id: "codex", name: "Codex", has_global: true,
+    global: "~/.codex/config.toml", format: "toml", key: "mcp_servers" };
+  const localState = { ...state, agents: [agent], refreshAgents: vi.fn().mockResolvedValue([agent]) } as unknown as InstallState;
+  const consumptionState = { agents: [], inventory: { consumptions: [], external: [] } } as unknown as ConsumptionState;
+  render(<AgentView state={localState} skillsState={skillsState} consumptionState={consumptionState} agentId="codex" />);
+  const name = await screen.findByText("future-oauth");
+  const card = name.closest("li")!;
+  expect(within(card).getByText("配置声明 · 仅查看")).toBeVisible();
+  expect(within(card).queryByRole("switch")).not.toBeInTheDocument();
+  expect(within(card).queryByRole("button", { name: /删除|移除|收录/ })).not.toBeInTheDocument();
+  await userEvent.click(within(card).getByRole("button", { name: "查看 future-oauth 详情" }));
+  const dialog = screen.getByRole("dialog", { name: "future-oauth" });
+  expect(await within(dialog).findByText(/\[已隐藏\]/)).toBeVisible();
+  expect(within(dialog).queryByRole("button", { name: /保存|删除|移除|收录/ })).not.toBeInTheDocument();
+  expect(apiMocks.inspectMcpConfiguration).toHaveBeenCalledWith({ agent_id: "codex", source: { kind: "configured_name", name: "future-oauth" } });
 });
 
 it("adds an Agent asset as a delta with inline progress and no routine review dialog", async () => {
@@ -652,10 +719,10 @@ it("adds an Agent asset as a delta with inline progress and no routine review di
     </ToastProvider>,
   );
 
-  await userEvent.click(screen.getByRole("button", { name: "添加 MCP" }));
-  const picker = screen.getByRole("dialog", { name: "添加 MCP" });
+  await userEvent.click(screen.getByRole("button", { name: "添加 MCPs" }));
+  const picker = screen.getByRole("dialog", { name: "添加 MCPs" });
   await userEvent.click(within(picker).getByRole("button", { name: /github/ }));
-  await userEvent.click(within(picker).getByRole("button", { name: "添加 MCP" }));
+  await userEvent.click(within(picker).getByRole("button", { name: "添加 MCPs" }));
 
   await waitFor(() => {
     expect(planAdditionsForAgent).toHaveBeenCalledWith("codex", {
@@ -721,7 +788,7 @@ it("renders every external Model as its own read-only card", async () => {
     target_hash: "target",
     candidate_hash: "candidate",
   };
-  apiMocks.listModelAgents.mockResolvedValueOnce([modelAgent]);
+  apiMocks.listModelAgents.mockResolvedValue([modelAgent]);
   render(
     <AgentView
       state={{ ...state, agents: [modelAgentInfo] } as unknown as InstallState}
@@ -910,8 +977,8 @@ it("shows each Model's Provider icon in the picker and assigned cards", async ()
   const assigned = await screen.findByText("Qwen3 7 Plus").then((node) => node.closest<HTMLElement>("li"));
   expect(assigned?.querySelector('[data-provider-icon="alibaba"]')).toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole("button", { name: "添加 Model" }));
-  const picker = screen.getByRole("dialog", { name: "添加 Model" });
+  await userEvent.click(screen.getByRole("button", { name: "添加 Models" }));
+  const picker = screen.getByRole("dialog", { name: "添加 Models" });
   expect(within(picker).getByRole("button", { name: /GPT OSS/ })
     .querySelector('[data-provider-icon="openai"]')).toBeInTheDocument();
   expect(within(picker).queryByRole("button", { name: /Qwen3 7 Plus/ })).not.toBeInTheDocument();
@@ -1044,6 +1111,8 @@ it("uses one current-Model switch and activates a disabled backup atomically", a
   await userEvent.click(current);
   expect(await screen.findByText("请先选择其他当前 Model。")).toBeVisible();
   expect(setActiveModel).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole("button", { name: "关闭错误通知" }));
+  await waitFor(() => expect(screen.queryByText("请先选择其他当前 Model。")).not.toBeInTheDocument());
 
   await userEvent.click(backup);
   await waitFor(() => {

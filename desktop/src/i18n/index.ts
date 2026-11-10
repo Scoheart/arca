@@ -1,3 +1,4 @@
+import { desktopZhCN, desktopEnUS } from "./desktopCopy";
 import { instructionsEnUS, instructionsZhCN } from '../lib/instructionCopy';
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -13,8 +14,10 @@ export function systemLocale(): SupportedLocale {
 }
 
 const zhCN = {
+  desktop: desktopZhCN,
   agentSurfaces: { cli: "命令行", desktop: "桌面应用", ide: "IDE 编辑器", plugin: "IDE 插件", web: "Web 应用" },
   mcpEditor: mcpEditorZhCN,
+  mcpInspector: { declaration: "配置声明 · 仅查看", declarationsUnavailable: "Agent 的 MCP 配置暂时无法解析，部分声明可能未显示。", configuration: "MCP 配置", readOnly: "Agent 配置 · 只读查看", privacy: "以 JSON 展示已解析的配置；环境变量、请求头、URL 参数和常见凭据已隐藏。", parsedConfiguration: "已解析的 MCP 配置", unavailable: "暂时无法读取 MCP 配置，请刷新后重试。", noDeclaration: "此来源没有可独立读取的 MCP 声明配置。" },
   agentConfiguration: agentConfigurationZhCN,
   notifications: { close: "关闭通知", closeError: "关闭错误通知", closeSuccess: "关闭成功通知" },
   credentialSession: { locked: "Arca 凭据尚未解锁，使用已保存的 API Key 前需要授权。", retry: "解锁凭据", unlocking: "正在解锁…", deferred: "密钥已保存，但统一保管库尚未更新；下次启动可能需要重新授权。" },
@@ -507,8 +510,10 @@ type TranslationShape<T> = {
 };
 
 const enUS: TranslationShape<typeof zhCN> = {
+  desktop: desktopEnUS,
   agentSurfaces: { cli: "Command line", desktop: "Desktop app", ide: "IDE editor", plugin: "IDE extension", web: "Web app" },
   mcpEditor: mcpEditorEnUS,
+  mcpInspector: { declaration: "Configuration declaration · Read-only", declarationsUnavailable: "The Agent MCP configuration could not be parsed. Some declarations may be missing.", configuration: "MCP configuration", readOnly: "Agent configuration · Read-only", privacy: "Parsed configuration shown as JSON. Environment values, headers, URL parameters and common credentials are hidden.", parsedConfiguration: "Parsed MCP configuration", unavailable: "MCP configuration is unavailable. Refresh and try again.", noDeclaration: "This source has no independently readable MCP declaration." },
   agentConfiguration: agentConfigurationEnUS,
   notifications: { close: "Dismiss notification", closeError: "Dismiss error notification", closeSuccess: "Dismiss success notification" },
   credentialSession: { locked: "Arca credentials are locked. Authorize access before using saved API keys.", retry: "Unlock credentials", unlocking: "Unlocking…", deferred: "The key was saved, but the shared vault could not be updated. The next launch may require authorization again." },

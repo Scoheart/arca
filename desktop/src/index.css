@@ -520,44 +520,104 @@ body {
   display: inline-flex; align-items: center; justify-content: center;
 }
 .arca-agent-navigation { display: flex; width: 100%; min-width: 0; flex: 1 1 auto; align-items: center; justify-content: flex-end; gap: 8px; }
-.arca-agent-picker-cluster { position: relative; display: flex; max-width: 100%; min-width: 0; flex: 0 1 auto; align-items: center; gap: 8px; }
+.arca-agent-picker-cluster {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
+  align-items: center;
+  height: 36px;
+  padding: 2px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: 11px;
+  box-shadow: var(--shadow-card);
+  transition: border-color .14s ease, box-shadow .14s ease;
+}
 .arca-pinned-agent-bar {
-  position: relative; display: flex; min-width: 0; height: 36px; flex: 0 0 auto; align-items: center; gap: 2px; padding: 2px 4px;
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  height: 32px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px;
   overflow: hidden;
-  border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-raised);
-  box-shadow: var(--shadow-card); scrollbar-width: none;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  box-shadow: none;
+  scrollbar-width: none;
 }
 .arca-pinned-agent-bar::-webkit-scrollbar { display: none; }
-.arca-pinned-agent { position: relative; display: inline-flex; width: 30px; height: 30px; flex: 0 0 30px; align-items: center; justify-content: center; padding: 0; border: 1px solid transparent; border-radius: 7px; background: transparent; cursor: pointer; transition: background .12s ease, border-color .12s ease; }
+.arca-pinned-agent {
+  position: relative;
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, transform .12s ease;
+}
 .arca-pinned-agent-glyph { display: inline-flex; width: 24px; height: 24px; flex: 0 0 auto; }
 .arca-pinned-agent-glyph > * { width: 100% !important; height: 100% !important; }
-.arca-pinned-agent:hover { background: var(--surface-section); }
-.arca-pinned-agent[data-active="true"] { border-color: color-mix(in srgb, var(--color-blue) 32%, transparent); background: var(--surface-selected); }
+.arca-pinned-agent:hover { background: var(--surface-control); transform: scale(1.04); }
+.arca-pinned-agent[data-active="true"] {
+  border-color: color-mix(in srgb, var(--color-blue) 48%, transparent);
+  background: var(--surface-selected);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-blue) 18%, transparent);
+}
 .arca-pinned-agent[data-active="true"]::after { content: none; }
 .arca-pinned-agent:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 56%, transparent); outline-offset: 1px; }
+
+.arca-agent-dock-divider {
+  width: 1px;
+  height: 16px;
+  flex: 0 0 1px;
+  margin: 0 3px;
+  background: var(--border-subtle);
+  border-radius: 1px;
+}
+
 .arca-agent-picker-anchor {
-  width: 216px; min-width: 36px; flex: 0 1 216px;
-  container-name: arca-agent-picker-anchor; container-type: inline-size;
+  width: auto;
+  min-width: 32px;
+  flex: 0 1 auto;
+  container-name: arca-agent-picker-anchor;
+  container-type: inline-size;
 }
 .arca-agent-picker-trigger {
-  display: inline-flex; width: 100%; height: 36px; align-items: center; gap: 8px; padding: 0 10px;
-  border: 1px solid var(--border-hairline); border-radius: 10px;
-  background: var(--surface-raised); color: var(--text-primary);
-  box-shadow: var(--shadow-card); cursor: pointer;
+  display: inline-flex;
+  width: 100%;
+  height: 32px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-primary);
+  box-shadow: none;
+  cursor: pointer;
   transition: background .14s ease, border-color .14s ease, box-shadow .14s ease;
 }
 .arca-agent-picker-trigger:hover {
   background: var(--surface-control);
-  border-color: color-mix(in srgb, var(--color-blue) 32%, var(--border-hairline));
 }
 .arca-agent-picker-trigger[data-active="true"] {
-  border-color: color-mix(in srgb, var(--color-blue) 42%, var(--border-hairline));
-  background: color-mix(in srgb, var(--surface-selected) 58%, var(--surface-raised));
+  background: var(--surface-selected);
+  color: var(--color-blue);
 }
 .arca-agent-picker-trigger[data-open="true"] {
-  background: var(--surface-raised);
-  border-color: var(--color-blue);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+  background: var(--surface-control);
 }
 .arca-agent-picker-trigger-name {
   min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;
@@ -1066,6 +1126,9 @@ body {
 .arca-registry-workspace .arca-mcp-list-row:hover {
   transform: translateY(-1px);
 }
+.arca-mcp-card:has(.arca-model-card-actions) .arca-mcp-list-row .arca-asset-list-identity {
+  padding-right: 36px;
+}
 .arca-mcp-card-top {
   display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 10px;
 }
@@ -1077,9 +1140,7 @@ body {
 .arca-mcp-card-tags { display: flex; min-width: 0; flex: 1; align-items: center; gap: 7px; }
 .arca-mcp-card-agents { display: inline-flex; flex: 0 0 auto; align-items: center; }
 .arca-models-workspace :is(.arca-model-list-header, .arca-model-list-row) {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "identity";
-  min-height: 114px; column-gap: 10px;
+  min-height: 118px;
   transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 .arca-models-workspace .arca-model-list-row:hover {
@@ -1088,27 +1149,67 @@ body {
 .arca-models-workspace .arca-model-list {
   margin: 0 auto;
 }
-.arca-model-list-row .arca-model-list-identity {
-  display: flex; align-items: center; gap: 11px; padding-right: 68px;
-}
 .arca-model-card { position: relative; }
+.arca-models-workspace .arca-model-card .arca-model-list-row {
+  display: flex; flex-direction: column; align-items: stretch; justify-content: space-between;
+  width: 100%; min-height: 118px; padding: 13px 14px 11px; text-align: left;
+}
+.arca-model-list-row .arca-model-list-identity {
+  display: flex; width: 100%; min-width: 0; align-items: center; gap: 10px; padding-right: 64px; text-align: left;
+}
+.arca-model-card-facts {
+  display: flex; width: 100%; min-width: 0; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 6px 8px; margin: 8px 0 6px; text-align: left;
+}
+.arca-model-status-pill {
+  display: inline-flex; height: 20px; align-items: center; padding: 0 7px;
+  border-radius: 5px; font: 600 10px/1.2 var(--font-sans);
+}
+.arca-model-status-added {
+  background: color-mix(in srgb, var(--color-blue) 12%, transparent);
+  color: var(--color-blue);
+}
+.arca-model-card-footer {
+  display: flex; width: 100%; min-width: 0; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: auto; padding-top: 6px; border-top: 1px solid var(--border-subtle); text-align: left;
+}
 .arca-model-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; padding-inline: 2px; margin-bottom: 8px; }
 .arca-model-section-heading h2 { display: flex; align-items: baseline; gap: 7px; margin: 0; color: var(--text-primary); font-size: 13px; font-weight: 660; }
 .arca-model-section-heading h2 > span { color: var(--text-secondary); font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .arca-model-section-heading .btn-ghost { min-height: 28px; padding: 4px 8px; font-size: 11px; }
 .arca-model-catalog-section { margin-top: 22px; }
+
 .arca-model-manual-card {
-  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 100px; padding: 14px 16px;
-  border: 1px dashed color-mix(in srgb, var(--color-blue) 42%, var(--border-hairline)); border-radius: 12px;
-  background: color-mix(in srgb, var(--surface-selected) 24%, transparent); color: var(--color-blue); text-align: left; cursor: pointer;
-  transition: border-color .14s ease, background .14s ease;
+  display: flex; flex-direction: column; justify-content: space-between;
+  width: 100%; min-height: 118px; padding: 13px 14px 11px;
+  border: 1px dashed color-mix(in srgb, var(--color-blue) 45%, var(--border-hairline)); border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-selected) 20%, transparent); text-align: left; cursor: pointer;
+  transition: border-color .14s ease, background .14s ease, transform .16s ease;
 }
-.arca-model-manual-card:hover:not(:disabled) { border-color: var(--color-blue); background: var(--surface-selected); }
+.arca-model-manual-card:hover:not(:disabled) {
+  border-color: var(--color-blue); background: var(--surface-selected); transform: translateY(-1px);
+}
 .arca-model-manual-card:disabled { opacity: .45; cursor: default; }
 .arca-model-manual-card:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
-.arca-model-manual-icon { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex: 0 0 36px; border-radius: 10px; background: var(--surface-selected); }
-.arca-model-manual-card strong { display: block; font-size: 13px; font-weight: 660; }
-.arca-model-manual-card small { display: block; margin-top: 4px; color: var(--text-secondary); font-size: 11px; }
+.arca-model-manual-header { display: flex; align-items: center; gap: 10px; }
+.arca-model-manual-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; flex: 0 0 32px; border-radius: 8px;
+  background: var(--surface-selected); color: var(--color-blue);
+}
+.arca-model-manual-copy strong { display: block; font-size: 13px; font-weight: 660; color: var(--color-blue); }
+.arca-model-manual-copy code { display: block; margin-top: 2px; color: var(--text-secondary); font: 10.5px/1.3 var(--font-mono); }
+.arca-model-manual-facts { display: flex; align-items: center; margin: 8px 0 6px; }
+.arca-model-manual-tag {
+  display: inline-flex; height: 19px; align-items: center; padding: 0 7px;
+  border-radius: 4px; font: 560 10px/1.2 var(--font-sans); color: var(--color-blue);
+  background: color-mix(in srgb, var(--color-blue) 10%, transparent);
+}
+.arca-model-manual-footer {
+  display: flex; align-items: center; justify-content: flex-end;
+  margin-top: auto; padding-top: 6px; border-top: 1px dashed color-mix(in srgb, var(--color-blue) 25%, var(--border-subtle)); width: 100%;
+}
+.arca-model-manual-action { font-size: 10.5px; font-weight: 600; color: var(--color-blue); }
+
 .arca-model-candidate-card { min-width: 0; padding: 14px; border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-asset); }
 .arca-model-candidate-facts { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 9px; color: var(--text-secondary); font-size: 10.5px; }
 .arca-model-candidate-facts > span:first-child { color: var(--color-blue); }
@@ -1121,19 +1222,24 @@ body {
 .arca-model-catalog-notice { margin: 8px 4px; color: var(--text-secondary); font-size: 11.5px; line-height: 1.6; overflow-wrap: anywhere; }
 .arca-model-candidate-error { margin: 9px 0 0; color: var(--color-red); font-size: 10.5px; line-height: 1.5; overflow-wrap: anywhere; }
 .arca-model-catalog-more { display: flex; margin: 12px auto 0; font-size: 11.5px; }
-.arca-models-workspace .arca-model-card .arca-model-list-row {
-  display: flex; flex-direction: column; justify-content: space-between;
-  min-height: 114px; padding: 13px 15px 10px;
+
+.arca-model-card-actions {
+  position: absolute; top: 11px; right: 11px; display: flex; gap: 4px; z-index: 2;
 }
-.arca-model-card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 3px; }
 .arca-model-card-action {
-  display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center;
-  border: 0; border-radius: 7px; background: transparent; color: var(--text-tertiary); cursor: pointer;
-  transition: color .12s ease, background-color .12s ease;
+  display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
+  border: 1px solid var(--border-subtle); border-radius: 6px;
+  background: var(--surface-asset); color: var(--text-tertiary); cursor: pointer;
+  transition: color .12s ease, background-color .12s ease, border-color .12s ease;
 }
-.arca-model-card-action:hover:not(:disabled) { color: var(--color-blue); background: var(--surface-item); }
-.arca-model-card-delete:hover:not(:disabled) { color: var(--color-red); background: color-mix(in srgb, var(--color-red) 10%, transparent); }
-.arca-model-card-action:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+.arca-model-card-action:hover:not(:disabled) {
+  color: var(--color-blue); background: var(--surface-item); border-color: var(--color-blue);
+}
+.arca-model-card-delete:hover:not(:disabled) {
+  color: var(--color-red); background: color-mix(in srgb, var(--color-red) 10%, transparent);
+  border-color: var(--color-red);
+}
+.arca-model-card-action:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
 .arca-model-card-action:disabled { opacity: .4; cursor: default; }
 .arca-model-card-action[aria-busy="true"] { opacity: .55; }
 .arca-model-list-subline {
@@ -1249,11 +1355,12 @@ body {
   display: flex; min-height: var(--arca-dialog-header-height); flex: 0 0 auto; align-items: center; gap: 11px;
   padding: 10px var(--arca-dialog-inline); border-bottom: 1px solid var(--border-hairline);
 }
-.arca-resource-inspector-head h2 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); font-size: 14px; font-weight: 680; }
-.arca-resource-inspector-subtitle { margin-top: 2px; color: var(--text-secondary); font-size: 9px; }
+.arca-resource-inspector-head h2 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+.arca-resource-inspector-subtitle { margin-top: 3px; color: var(--text-secondary); font-size: 11px; }
 .arca-inspector-close {
-  display: inline-flex; width: 28px; height: 28px; flex: 0 0 auto; align-items: center; justify-content: center;
-  padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer;
+  display: inline-flex; width: 30px; height: 30px; flex: 0 0 auto; align-items: center; justify-content: center;
+  padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary); cursor: pointer;
+  transition: background-color .12s ease, color .12s ease;
 }
 .arca-inspector-close:hover { background: var(--surface-section); color: var(--text-primary); }
 .arca-resource-inspector-body {
@@ -1509,10 +1616,10 @@ body {
 .arca-picker-option-meta { flex: 0 0 auto; }
 .arca-picker-empty { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 11px; }
 .arca-picker-count { color: var(--text-secondary); font-size: 10px; font-variant-numeric: tabular-nums; }
-.arca-inspector-section { padding: 0 0 14px; border-bottom: 1px solid var(--border-hairline); background: transparent; }
-.arca-inspector-section + .arca-inspector-section { margin-top: 14px; }
+.arca-inspector-section { padding: 0 0 16px; border-bottom: 1px solid var(--border-hairline); background: transparent; }
+.arca-inspector-section + .arca-inspector-section { margin-top: 16px; }
 .arca-inspector-section:last-child { padding-bottom: 0; border-bottom: 0; }
-.arca-inspector-section h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 8px; color: var(--text-primary); font-size: 10px; font-weight: 700; }
+.arca-inspector-section h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; color: var(--text-secondary); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
 .arca-inspector-section h3 > span { display: inline-flex; color: var(--color-blue); }
 .arca-inspector-section h3 svg { width: 14px !important; height: 14px !important; flex-shrink: 0; }
 .arca-inspector-metrics { display: flex; min-width: 0; flex-wrap: wrap; gap: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-hairline); }
@@ -1520,9 +1627,9 @@ body {
 .arca-inspector-metric-icon { display: inline-flex; width: 26px; height: 26px; flex: 0 0 26px; align-items: center; justify-content: center; border-radius: 7px; background: color-mix(in srgb, var(--color-blue) 10%, transparent); color: var(--color-blue); }
 .arca-inspector-metric-icon svg { width: 14px !important; height: 14px !important; flex-shrink: 0; }
 .arca-inspector-metric > span:last-child { display: grid; min-width: 0; gap: 2px; }
-.arca-inspector-metric strong { overflow: hidden; color: var(--text-primary); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.arca-inspector-metric small { color: var(--text-secondary); font-size: 8px; }
-.arca-model-inspector-description { margin: 13px 0 4px; color: var(--text-secondary); font-size: 10px; line-height: 1.55; }
+.arca-inspector-metric strong { overflow: hidden; color: var(--text-primary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.arca-inspector-metric small { color: var(--text-secondary); font-size: 10px; }
+.arca-model-inspector-description { margin: 13px 0 4px; color: var(--text-secondary); font-size: 11px; line-height: 1.55; }
 .arca-model-inspector-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; padding: 4px 0 0; border: 0; border-radius: 0; background: transparent; }
 .arca-model-inspector-fields .arca-inspector-field[data-wide="true"] { grid-column: 1 / -1; }
 @media (max-width: 620px) {
@@ -1535,7 +1642,7 @@ body {
   .arca-dialog-shell-footer,
   .arca-resource-inspector-footer { padding-right: 14px; padding-left: 14px; }
   .arca-inspector-metrics { gap: 12px; }
-  .arca-inspector-field { grid-template-columns: 22px 68px minmax(0, 1fr) auto; }
+  .arca-inspector-field { grid-template-columns: 22px 64px minmax(0, 1fr) auto; }
 }
 @media (max-height: 640px) {
   .arca-resource-overview { padding-bottom: 4px; }
@@ -1549,25 +1656,100 @@ body {
   .arca-picker-list { max-height: calc(100vh - 190px); }
 }
 .arca-inspector-field {
-  display: grid; min-width: 0; grid-template-columns: 24px 76px minmax(0, 1fr) auto; align-items: start;
-  gap: 7px; padding: 9px 0; border-bottom: 1px solid var(--border-hairline);
+  display: grid; min-width: 0; grid-template-columns: 24px 64px minmax(0, 1fr) auto; align-items: center;
+  gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border-hairline);
 }
 .arca-inspector-field:last-child { border-bottom: 0; }
 .arca-inspector-field-icon { display: inline-flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
 .arca-inspector-field-icon[data-empty="true"] { visibility: hidden; }
 .arca-inspector-field-icon svg { width: 14px !important; height: 14px !important; flex-shrink: 0; }
-.arca-inspector-field-label { color: var(--text-secondary); font-size: 10px; }
-.arca-inspector-field-value { min-width: 0; overflow-wrap: anywhere; color: var(--text-primary); font-size: 10px; }
+.arca-inspector-field-label { color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+.arca-inspector-field-value { min-width: 0; overflow-wrap: anywhere; color: var(--text-primary); font-size: 12.5px; }
 .arca-inspector-field-action { display: inline-flex; align-items: center; justify-content: flex-end; }
-.arca-inspector-field-action > button { display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-tertiary); cursor: pointer; }
+.arca-inspector-field-action > button { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-tertiary); cursor: pointer; transition: background-color .12s ease, color .12s ease; }
 .arca-inspector-field-action > button:hover { background: var(--surface-section); color: var(--color-blue); }
-.arca-inspector-field-action svg { width: 13px; height: 13px; }
-.arca-inspector-field-mono { font-family: var(--font-mono); font-size: 10px !important; line-height: 1.5; }
+.arca-inspector-field-action svg { width: 14px; height: 14px; }
+.arca-inspector-field-mono { font-family: var(--font-mono); font-size: 12px !important; line-height: 1.5; }
 .arca-copy-inline { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px; color: var(--text-tertiary); border-radius: 5px; }
 .arca-copy-inline:hover { color: var(--color-blue); background: var(--surface-selected); }
 .arca-inspector-description { margin: 0 0 18px; color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
 .arca-inline-link { display: inline-flex; align-items: flex-start; gap: 5px; max-width: 100%; padding: 0; border: 0; background: transparent; color: var(--color-blue); font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
-.arca-config-preview { margin: 0; padding: 12px; overflow-x: auto; border: 0; border-radius: var(--radius-control); background: var(--surface-item); color: var(--text-primary); font: 10px/1.55 var(--font-mono); }
+
+.arca-config-card {
+  border: 1px solid var(--border-hairline);
+  border-radius: 9px;
+  background: var(--surface-item);
+  overflow: hidden;
+}
+.arca-config-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--surface-control) 65%, var(--surface-item));
+  border-bottom: 1px solid var(--border-hairline);
+}
+.arca-config-card-lang {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+}
+.arca-config-card-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color .12s ease, color .12s ease;
+}
+.arca-config-card-copy:hover {
+  background: var(--surface-control);
+  color: var(--text-primary);
+}
+.arca-config-card-copy svg {
+  width: 13px;
+  height: 13px;
+}
+.arca-config-preview {
+  margin: 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: 12px/1.6 var(--font-mono);
+}
+
+.arca-btn-soft-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-red) 10%, transparent);
+  color: var(--color-red);
+  font-size: 12.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background-color .14s ease, color .14s ease;
+}
+.arca-btn-soft-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-red) 18%, transparent);
+}
+.arca-btn-soft-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 
 /* Skills: package inventory, provenance, risk evidence, and Agent impact. */
 .arca-skill-workspace { width: 100%; height: 100%; min-width: 0; min-height: 0; }
@@ -1596,8 +1778,14 @@ body {
 .arca-skill-card {
   position: relative; display: flex; flex-direction: column; min-width: 0; height: 100%; min-height: 114px;
   border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-asset);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card); cursor: pointer;
   transition: border-color .16s ease, box-shadow .16s ease, opacity .14s ease, transform .16s ease;
+}
+.arca-skill-card:has(.arca-skill-card-delete) .arca-skill-card-main > h2 {
+  padding-right: 34px;
+}
+.arca-skill-card-hand-wrap {
+  display: contents;
 }
 .arca-skill-card:hover,
 .arca-skill-card:has(:focus-visible) {
@@ -2531,10 +2719,10 @@ body {
 .arca-consumption-open:hover { background: var(--surface-section); color: var(--color-blue); }
 .arca-consumption-open:disabled { opacity: .42; cursor: not-allowed; }
 .arca-consumption-open:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: 1px; }
-.arca-consumption-remove { opacity: .52; transition: color .14s ease, opacity .14s ease; }
+.arca-consumption-remove { opacity: .72; transition: color .14s ease, background-color .14s ease, opacity .14s ease; }
 .arca-consumption-list > li:hover .arca-consumption-remove,
 .arca-consumption-remove:focus-visible { opacity: 1; }
-.arca-consumption-remove:hover:not(:disabled) { color: var(--color-red); }
+.arca-consumption-remove:hover:not(:disabled) { background: color-mix(in srgb, var(--color-red) 10%, transparent); color: var(--color-red); }
 .arca-consumption-empty { display: grid; min-height: 128px; place-content: center; justify-items: center; gap: 6px; padding: 15px; border: 0; border-radius: var(--radius-row); background: var(--surface-item); color: var(--text-secondary); text-align: center; }
 .arca-consumption-empty strong { color: var(--text-primary); font-size: 11px; }
 .arca-consumption-empty span { max-width: 420px; font-size: 10px; line-height: 1.45; }
@@ -3070,10 +3258,42 @@ body {
 
 .arca-agent-guided-cards { margin-top: 14px; }
 
-/* Search lives above Agent cards so narrow toolbars keep their action targets. */
-.arca-consumption-search { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
-.arca-consumption-search .arca-search { flex: 1; min-width: 0; max-width: 420px; }
-.arca-consumption-search > span { flex-shrink: 0; color: var(--text-secondary); font-size: 12px; }
+/* Search lives inline within the Agent section actions */
+.arca-consumption-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.arca-consumption-search .arca-search {
+  width: 220px;
+  min-width: 160px;
+  max-width: 260px;
+  height: 32px;
+}
+.arca-consumption-search .arca-search input {
+  height: 32px;
+  padding: 0 28px 0 28px;
+  font-size: 11.5px;
+  border-radius: var(--radius-mac);
+}
+.arca-consumption-search .arca-search-icon {
+  left: 9px;
+  width: 13px;
+  height: 13px;
+}
+.arca-consumption-search .arca-search-clear {
+  top: 3px;
+  width: 24px;
+  height: 24px;
+}
+.arca-consumption-search > span {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 
 /* Skill details are a single reading surface, with metadata above the body. */
 .arca-skill-reading { min-width: 0; }

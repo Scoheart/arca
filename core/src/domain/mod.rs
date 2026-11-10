@@ -8,7 +8,9 @@ pub mod instructions;
 pub mod assets;
 pub mod error;
 pub mod mcp;
+pub mod hook;
 pub mod skill;
+pub mod subagent;
 pub mod types;
 
 pub mod plugin;

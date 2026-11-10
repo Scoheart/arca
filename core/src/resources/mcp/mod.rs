@@ -5,6 +5,7 @@ pub mod applier;
 pub mod codec;
 pub mod differ;
 pub mod disabled;
+pub mod deepseek_harness_adapter;
 pub mod effective;
 pub mod json_adapter;
 pub mod ops;
@@ -15,5 +16,6 @@ pub mod sources;
 pub mod toml_adapter;
 pub mod toml_list_adapter;
 pub mod yaml_adapter;
+pub(crate) mod inspection;
 
 pub(crate) mod builtin;

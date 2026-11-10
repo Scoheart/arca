@@ -145,6 +145,26 @@ it("adds and removes multiple Skills compatibility directories", async () => {
   });
 });
 
+it("keeps MCP configuration editable when Models use native setup guidance", async () => {
+  const warp: AgentInfo = { ...amp, id: "warp", name: "Warp", global: "~/.warp/.mcp.json", key: "mcpServers" };
+  render(<AgentConfigurationDialog agent={warp} modelAgent={{
+    id: "warp", name: "Warp", mode: "guided", storage_authority: "guided", installed: true,
+    config_path: "", config_paths: [], docs: "https://docs.warp.dev/agents/inference/custom-inference-endpoint/",
+    assigned_profile: null, assigned_profiles: [], active_profile: null, supports_multiple: true,
+    supports_global_selection: false, credential_mode: "guided", supported_protocols: ["openai-completions"], note: "原生配置",
+  }} onClose={vi.fn()} onSaved={vi.fn()} />);
+
+  expect(screen.getByLabelText("Model")).toBeDisabled();
+  const mcp = screen.getByLabelText("MCP 文件路径");
+  fireEvent.change(mcp, { target: { value: "~/.warp/custom-mcp.json" } });
+  await userEvent.click(screen.getByRole("button", { name: "继续" }));
+  await waitFor(() => expect(apiMocks.planOperation).toHaveBeenCalledWith({
+    operation: "update_agent_capabilities", request: { agent_id: "warp", patch: {
+      mcp: { path: "~/.warp/custom-mcp.json", key: "mcpServers" },
+    } },
+  }));
+});
+
 it("submits a Model-only Agent without inventing MCP configuration", async () => {
   const grok: AgentInfo = {
     ...amp,
@@ -209,8 +229,9 @@ it("commits the reviewed Agent configuration through the unified asset envelope"
     />,
   );
 
+  fireEvent.change(screen.getByLabelText("MCP 配置键"), { target: { value: "amp.mcpServers.updated" } });
   await userEvent.click(screen.getByRole("button", { name: "继续" }));
-  await userEvent.click(await screen.findByRole("button", { name: "添加 MCP" }));
+  await userEvent.click(await screen.findByRole("button", { name: "添加 MCPs" }));
 
   await waitFor(() => {
     expect(apiMocks.commitOperation).toHaveBeenCalledWith({
@@ -236,6 +257,7 @@ it("cancels the reviewed Agent configuration through the unified asset envelope"
     />,
   );
 
+  fireEvent.change(screen.getByLabelText("MCP 配置键"), { target: { value: "amp.mcpServers.updated" } });
   await userEvent.click(screen.getByRole("button", { name: "继续" }));
   await userEvent.click(await screen.findByRole("button", { name: "返回编辑" }));
 

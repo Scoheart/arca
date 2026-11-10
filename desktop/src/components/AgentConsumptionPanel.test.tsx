@@ -31,6 +31,20 @@ const externalRow: ConsumptionView = {
 };
 
 describe("AgentConsumptionPanel", () => {
+  it("opens an external MCP configuration without offering removal or enablement", async () => {
+    const inspect = vi.fn();
+    render(<AgentConsumptionPanel domain="mcp" title="MCPs" manageLabel="添加 MCP"
+      rows={[]} external={[externalRow]} externalMode="cards"
+      present={() => ({ name: "Computer Use" })} onManage={vi.fn()}
+      onInspect={inspect} onRemove={vi.fn()} onEnabledChange={vi.fn()} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "查看 Computer Use 配置" }));
+    expect(inspect).toHaveBeenCalledWith(externalRow);
+    const card = screen.getByText("Computer Use").closest("li")!;
+    expect(within(card).queryByRole("switch")).not.toBeInTheDocument();
+    expect(within(card).queryByRole("button", { name: /移除/ })).not.toBeInTheDocument();
+  });
+
   it("offers one master MCP switch without changing external entries", async () => {
     const onBulkEnabledChange = vi.fn();
     render(
@@ -108,6 +122,43 @@ describe("AgentConsumptionPanel", () => {
     expect(onRemove).toHaveBeenCalledWith(syncedRow.asset);
   });
 
+  it("opens details when clicking the card surface and does not trigger details on remove or switch click", async () => {
+    const onOpenAsset = vi.fn();
+    const onRemove = vi.fn();
+    const onEnabledChange = vi.fn();
+    const skillRow: ConsumptionView = {
+      ...syncedRow,
+      asset: { domain: "skill", name: "brainstorming" },
+    };
+    render(
+      <AgentConsumptionPanel
+        domain="skill"
+        title="Skills"
+        manageLabel="添加 Skills"
+        rows={[skillRow]}
+        external={[]}
+        present={() => ({ name: "brainstorming", description: "Must use before creative work" })}
+        onManage={vi.fn()}
+        onOpenAsset={onOpenAsset}
+        onRemove={onRemove}
+        onEnabledChange={onEnabledChange}
+        removeLabel={(name) => `从 Agent 移除 ${name}`}
+      />,
+    );
+
+    await userEvent.click(screen.getByText("Must use before creative work"));
+    expect(onOpenAsset).toHaveBeenCalledTimes(1);
+    expect(onOpenAsset).toHaveBeenCalledWith(skillRow.asset);
+
+    await userEvent.click(screen.getByRole("switch", { name: "停用 brainstorming" }));
+    expect(onEnabledChange).toHaveBeenCalledWith(skillRow, false);
+    expect(onOpenAsset).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(screen.getByRole("button", { name: "从 Agent 移除 brainstorming" }));
+    expect(onRemove).toHaveBeenCalledWith(skillRow.asset);
+    expect(onOpenAsset).toHaveBeenCalledTimes(1);
+  });
+
   it("does not expose an asset identity when the card has no description", () => {
     render(
       <AgentConsumptionPanel
@@ -166,6 +217,33 @@ describe("AgentConsumptionPanel", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "设为当前" }));
     expect(onActivate).toHaveBeenCalledOnce();
+  });
+
+  it("renders a direct delete button for external items with detach action", async () => {
+    const onConverge = vi.fn();
+    const externalDetachable: ConsumptionView = {
+      ...externalRow,
+      asset: { domain: "skill", name: "external-tool" },
+      available_actions: ["detach"],
+    };
+    render(
+      <AgentConsumptionPanel
+        domain="skill"
+        title="Skills"
+        manageLabel="添加 Skill"
+        rows={[]}
+        external={[externalDetachable]}
+        externalMode="cards"
+        present={() => ({ name: "external-tool" })}
+        onManage={vi.fn()}
+        onConverge={onConverge}
+      />,
+    );
+
+    const deleteBtn = screen.getByRole("button", { name: "取消关联 external-tool" });
+    expect(deleteBtn).toBeVisible();
+    await userEvent.click(deleteBtn);
+    expect(onConverge).toHaveBeenCalledWith(externalDetachable, "detach");
   });
 
   it("renders every external asset as a read-only disabled card", () => {
@@ -262,7 +340,7 @@ describe("AgentConsumptionPanel", () => {
             ? asset.profile_id
             : asset.domain === "model-provider"
               ? asset.provider_id
-              : asset.domain === "skill"
+              : asset.domain === "skill" || asset.domain === "subagent" || asset.domain === "hook"
                 ? asset.name
                 : asset.key,
         })}

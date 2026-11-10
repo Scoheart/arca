@@ -902,7 +902,8 @@
     },
     {
       "agent_ids": [
-        "deepseek-harness"
+        "deepseek-harness",
+        "deepseek-harness-desktop"
       ],
       "sources": [
         {
@@ -931,13 +932,14 @@
         }
       ],
       "reload": "new-session",
-      "verified_at": "2026-10-16",
+      "verified_at": "2026-11-06",
       "docs": [
-        "https://github.com/deepseek-ai/deepseek-harness/blob/86a402200d95fecef4529d969836f1fe13c6cb0d/packages/context/agent-instructions/README.md",
-        "https://github.com/deepseek-ai/deepseek-harness/blob/86a402200d95fecef4529d969836f1fe13c6cb0d/packages/context/agent-instructions/src/config.ts"
+        "https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/context/agent-instructions/README.md",
+        "https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/context/agent-instructions/src/config.ts"
       ],
       "native_notes": {
-        "deepseek-harness": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority."
+        "deepseek-harness": "These are verified local user-level candidates. Native settings, profile, backend and project context may affect loading. Arca edits the original files without changing their native activation or priority.",
+        "deepseek-harness-desktop": "Shares Harness user-global instruction roots; profile and session configuration still decide activation. Arca edits user files without changing native loading policy."
       },
       "create": {
         "source": 0,

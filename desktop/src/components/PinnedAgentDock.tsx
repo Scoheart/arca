@@ -117,7 +117,7 @@ export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, dis
           onReorder(previewRef.current ?? ids, dragged.current);
           clearDrag();
         }} onDragEnd={clearDrag}>
-        {agent ? <span className="arca-pinned-agent-glyph"><AgentGlyph id={agent.id} name={agent.name} size={30} /></span>
+        {agent ? <span className="arca-pinned-agent-glyph"><AgentGlyph id={agent.id} name={agent.name} size={24} hideSurfaceBadge={true} /></span>
           : <PlusIcon className="w-3.5 h-3.5" />}
       </button>;
     })}

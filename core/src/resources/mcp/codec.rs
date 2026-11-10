@@ -1,6 +1,7 @@
 //! Lossless MCP wire-format codecs.
 
 use crate::domain::types::{HttpConfig, McpConfig, StdioConfig};
+use crate::resources::deepseek_harness::valid_mcp_server_name;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
@@ -96,6 +97,16 @@ const TRANSPORT_FIELDS: &[&str] = &[
     "url",
     "headers",
 ];
+const DSH_FIELDS: &[&str] = &[
+    "serverName",
+    "transport",
+    "command",
+    "args",
+    "env",
+    "cwd",
+    "url",
+    "headers",
+];
 const TABNINE_FIELDS: &[&str] = &[
     "transport",
     "type",
@@ -107,7 +118,8 @@ const TABNINE_FIELDS: &[&str] = &[
     "headers",
 ];
 const CONTINUE_FIELDS: &[&str] = &["type", "command", "args", "env", "cwd", "url"];
-const GOOSE_FIELDS: &[&str] = &["type", "cmd", "args", "envs", "cwd", "uri", "headers"];
+const GOOSE_FIELDS: &[&str] = &["type", "cmd", "args", "env", "envs", "cwd", "uri", "headers"];
+const GOOSE_HTTP_FIELDS: &[&str] = &["type", "cmd", "args", "cwd", "uri", "headers"];
 const VIBE_FIELDS: &[&str] = &[
     "transport",
     "type",
@@ -151,6 +163,7 @@ pub enum Codec {
     Warp,
     Kimi,
     Transport,
+    DeepseekHarness,
     Tabnine,
     Continue,
     Goose,
@@ -207,6 +220,7 @@ pub fn for_agent(agent_id: &str) -> Codec {
         "cline" | "cline-cli" => Codec::Cline,
         "roo-code" => Codec::Roo,
         "warp" => Codec::Warp,
+        "deepseek-harness" | "deepseek-harness-desktop" => Codec::DeepseekHarness,
         _ => Codec::Standard,
     }
 }
@@ -239,6 +253,7 @@ pub fn from_name(name: Option<&str>, agent_id: &str) -> Codec {
         Some("warp") => Codec::Warp,
         Some("kimi") => Codec::Kimi,
         Some("transport") => Codec::Transport,
+        Some("deepseek-harness") => Codec::DeepseekHarness,
         Some("tabnine") => Codec::Tabnine,
         Some("continue") => Codec::Continue,
         Some("goose") => Codec::Goose,
@@ -288,6 +303,7 @@ impl Codec {
             .as_object()
             .ok_or_else(|| "MCP entry is not an object".to_string())?;
         match self {
+            Codec::DeepseekHarness => validate_deepseek_harness(object)?,
             Codec::MiMo => validate_active_field(object.get("enabled"), true, "enabled")?,
             Codec::Jcode => {
                 validate_active_field(object.get("enabled"), true, "enabled")?;
@@ -296,6 +312,40 @@ impl Codec {
             Codec::Jan => {
                 if object.get("active").is_some_and(|value| !value.is_boolean()) {
                     return Err("Jan MCP entry switch 'active' is not a boolean".into());
+                }
+            }
+            Codec::Goose => {
+                if object.get("enabled").and_then(Value::as_bool).is_none() {
+                    return Err("Goose MCP entry requires a boolean 'enabled' flag".into());
+                }
+                match object.get("type").and_then(Value::as_str) {
+                    Some("stdio") => {
+                        if object.get("cmd").and_then(Value::as_str).is_none()
+                            || !object.get("args").and_then(Value::as_array)
+                                .is_some_and(|args| args.iter().all(Value::is_string)) {
+                            return Err("Goose stdio MCP entry requires cmd and a string args list".into());
+                        }
+                        if object.contains_key("env") && object.contains_key("envs") {
+                            return Err("Goose stdio environment aliases 'env' and 'envs' are ambiguous".into());
+                        }
+                        if let Some(env) = object.get("env") {
+                            if string_map(Some(env)).is_none() {
+                                return Err("Goose stdio environment 'env' must be a string mapping".into());
+                            }
+                        }
+                    }
+                    Some("streamable_http") if object.get("uri").and_then(Value::as_str).is_some() => {},
+                    _ => return Err("Goose built-in, platform and unknown extensions are not writable MCP entries".into()),
+                }
+                if let Some(envs) = object.get("envs") {
+                    if string_map(Some(envs)).is_none() {
+                        return Err("Goose environment 'envs' must be a string mapping".into());
+                    }
+                }
+                if object.get("env_keys").is_some_and(|keys| {
+                    !keys.as_array().is_some_and(|keys| keys.iter().all(Value::is_string))
+                }) {
+                    return Err("Goose environment 'env_keys' must be a string list".into());
                 }
             }
             Codec::AnythingLlm => {
@@ -347,8 +397,8 @@ impl Codec {
     }
 
     pub fn validate_update(self, value: &Value, config: &McpConfig) -> Result<(), String> {
-        if self == Codec::WorkBuddy {
-            self.decode_with_enabled(value).ok_or("invalid WorkBuddy MCP entry")?;
+        if self == Codec::WorkBuddy || self == Codec::DeepseekHarness {
+            self.decode_with_enabled(value).ok_or("invalid WorkBuddy or DeepSeek Harness MCP entry")?;
         } else if self == Codec::JunieCli {
             self.decode_with_enabled(value).ok_or("invalid Junie CLI MCP entry")?;
         } else {
@@ -360,12 +410,13 @@ impl Codec {
 
     pub fn decode_with_enabled(self, value: &Value) -> Option<(McpConfig, bool)> {
         let enabled = match self {
-            Codec::WorkBuddy => !value.as_object()?.get("disabled")
+            Codec::WorkBuddy | Codec::DeepseekHarness => !value.as_object()?.get("disabled")
                 .and_then(Value::as_bool).unwrap_or(false),
             Codec::Pi | Codec::JunieCli => value.as_object()?.get("enabled")
                 .map(Value::as_bool).unwrap_or(Some(true))?,
             Codec::Jan => value.as_object()?.get("active")
                 .map(Value::as_bool).unwrap_or(Some(true))?,
+            Codec::Goose => value.as_object()?.get("enabled")?.as_bool()?,
             _ => return self.decode(value).map(|config| (config, true)),
         };
         self.validate_existing_entry(value).ok()?;
@@ -374,8 +425,8 @@ impl Codec {
 
     pub fn decode(self, value: &Value) -> Option<McpConfig> {
         self.validate_existing_entry(value).ok()?;
-        if (self == Codec::WorkBuddy && value.get("disabled") == Some(&Value::Bool(true)))
-            || (matches!(self, Codec::Pi | Codec::JunieCli) && value.get("enabled") == Some(&Value::Bool(false)))
+        if (matches!(self, Codec::WorkBuddy | Codec::DeepseekHarness) && value.get("disabled") == Some(&Value::Bool(true)))
+            || (matches!(self, Codec::Pi | Codec::JunieCli | Codec::Goose) && value.get("enabled") == Some(&Value::Bool(false)))
             || (self == Codec::Jan && value.get("active") == Some(&Value::Bool(false))) {
             return None;
         }
@@ -449,11 +500,15 @@ impl Codec {
         } else {
             "command"
         };
-        if let Some(command) = object.get(command_key).and_then(Value::as_str) {
+        if let Some(command) = object.get(command_key).and_then(Value::as_str)
+            .filter(|_| (self != Codec::Goose || object.get("type").and_then(Value::as_str) == Some("stdio"))
+                && (self != Codec::DeepseekHarness || object.get("transport").and_then(Value::as_str) == Some("stdio"))) {
             return Some(McpConfig::Stdio(StdioConfig {
                 command: command.to_string(),
                 args: string_array(object.get("args")),
-                env: string_map(object.get(if self == Codec::Goose { "envs" } else { "env" })),
+                env: string_map(if self == Codec::Goose {
+                    object.get("envs").or_else(|| object.get("env"))
+                } else { object.get("env") }),
                 cwd: string_field(
                     object,
                     if matches!(self, Codec::Warp | Codec::VtCode) {
@@ -479,7 +534,7 @@ impl Codec {
         };
         let url = object.get(url_key).and_then(Value::as_str)?.to_string();
         let raw_kind = match self {
-            Codec::Kimi | Codec::Transport | Codec::Tabnine | Codec::Vibe | Codec::AgentKube => {
+            Codec::Kimi | Codec::Transport | Codec::DeepseekHarness | Codec::Tabnine | Codec::Vibe | Codec::AgentKube => {
                 object.get("transport").and_then(Value::as_str)
             }
             _ => object.get("type").and_then(Value::as_str),
@@ -590,9 +645,12 @@ impl Codec {
                 Codec::Warp => push_stdio_fields(&mut fields, stdio, "working_directory"),
                 Codec::VtCode => push_stdio_fields(&mut fields, stdio, "working_directory"),
                 Codec::Kimi => push_stdio_fields(&mut fields, stdio, "cwd"),
-                Codec::Transport => {
+                Codec::Transport | Codec::DeepseekHarness => {
                     fields.push(("transport".into(), Value::String("stdio".into())));
                     push_stdio_fields(&mut fields, stdio, "cwd");
+                    if self == Codec::DeepseekHarness && stdio.command.is_empty() {
+                        return Err("DeepSeek Harness requires a stdio command".into());
+                    }
                 }
                 Codec::Tabnine => {
                     push_stdio_fields(&mut fields, stdio, "cwd");
@@ -629,6 +687,7 @@ impl Codec {
                     push_optional(&mut fields, "envs", &stdio.env);
                     push_optional(&mut fields, "cwd", &stdio.cwd);
                     defaults.push(("description".into(), Value::String(String::new())));
+                    defaults.push(("enabled".into(), Value::Bool(true)));
                 }
                 Codec::Vibe => {
                     fields.push(("transport".into(), Value::String("stdio".into())));
@@ -804,6 +863,12 @@ impl Codec {
                     }
                     push_http_fields(&mut fields, http, "url", "headers");
                 }
+                Codec::DeepseekHarness => {
+                    require_http_kind(http, "DeepSeek Harness", &["http", "streamable-http"])?;
+                    if http.url.is_empty() { return Err("DeepSeek Harness requires a Streamable HTTP URL".into()); }
+                    fields.push(("transport".into(), Value::String("streamable-http".into())));
+                    push_http_fields(&mut fields, http, "url", "headers");
+                }
                 Codec::Transport => {
                     fields.push((
                         "transport".into(),
@@ -854,6 +919,7 @@ impl Codec {
                     fields.push(("type".into(), Value::String("streamable_http".into())));
                     push_http_fields(&mut fields, http, "uri", "headers");
                     defaults.push(("description".into(), Value::String(String::new())));
+                    defaults.push(("enabled".into(), Value::Bool(true)));
                 }
                 Codec::Vibe => {
                     if http.kind == "sse" {
@@ -911,6 +977,9 @@ impl Codec {
                 // runtime substitution. Arca cannot model those as HTTP headers,
                 // so they remain Agent-owned when the URL is updated.
                 (Codec::Warp, McpConfig::Http(_)) => WARP_HTTP_FIELDS,
+                // Goose also resolves native HTTP substitutions from envs and
+                // env_keys. HttpConfig does not own that environment context.
+                (Codec::Goose, McpConfig::Http(_)) => GOOSE_HTTP_FIELDS,
                 _ => self.controlled_fields(),
             },
             fields,
@@ -929,6 +998,7 @@ impl Codec {
             Codec::Warp => WARP_FIELDS,
             Codec::Kimi => KIMI_FIELDS,
             Codec::Transport => TRANSPORT_FIELDS,
+            Codec::DeepseekHarness => DSH_FIELDS,
             Codec::Tabnine => TABNINE_FIELDS,
             Codec::Continue => CONTINUE_FIELDS,
             Codec::Goose => GOOSE_FIELDS,
@@ -940,6 +1010,29 @@ impl Codec {
             _ => STANDARD_FIELDS,
         }
     }
+}
+
+fn validate_deepseek_harness(object: &Map<String, Value>) -> Result<(), String> {
+    if object.get("disabled").is_some_and(|v| !v.is_boolean()) { return Err("DeepSeek Harness disabled must be boolean".into()); }
+    if let Some(server_name) = object.get("serverName") {
+        if !server_name.as_str().is_some_and(valid_mcp_server_name) {
+            return Err("DeepSeek Harness serverName must match [A-Za-z0-9_-]{1,32}".into());
+        }
+    }
+    for key in ["command", "url", "cwd"] {
+        if object.get(key).is_some_and(|v| !v.is_string()) { return Err(format!("DeepSeek Harness {key} must be a string")); }
+    }
+    if object.get("args").is_some_and(|v| !v.as_array().is_some_and(|a| a.iter().all(Value::is_string))) { return Err("DeepSeek Harness args must be strings".into()); }
+    for key in ["env", "headers"] {
+        if object.get(key).is_some_and(|v| string_map(Some(v)).is_none()) { return Err(format!("DeepSeek Harness {key} must be a string mapping")); }
+    }
+    let nonempty = |key: &str| object.get(key).is_some_and(|v| match v { Value::String(s) => !s.is_empty(), Value::Array(a) => !a.is_empty(), Value::Object(o) => !o.is_empty(), _ => true });
+    match object.get("transport").and_then(Value::as_str) {
+        Some("stdio") if nonempty("command") && !nonempty("url") && !nonempty("headers") => {},
+        Some("streamable-http") if nonempty("url") && !["command", "args", "env", "cwd"].iter().any(|k| nonempty(k)) => {},
+        _ => return Err("DeepSeek Harness supports stdio or Streamable HTTP without cross-transport fields".into()),
+    }
+    Ok(())
 }
 
 // Junie CLI 3893.6 McpServerBean has seven fields; OAuth and enabled are

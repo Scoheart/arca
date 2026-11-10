@@ -74,7 +74,39 @@ pub fn builtin_agents() -> BTreeMap<String, AgentDefinition> {
         merge_builtin_definitions(catalog, audited_agents())
             .expect("builtin Agent Skills capabilities must be valid")
     });
-    BUILTINS.clone()
+    let mut definitions = BUILTINS.clone();
+    apply_deepseek_runtime_roots(&mut definitions);
+    definitions
+}
+
+/// Harness resolves its homes at invocation time. Cache audited schemas, not
+/// process-dependent paths; explicit Arca path overrides are applied later.
+fn apply_deepseek_runtime_roots(definitions: &mut BTreeMap<String, AgentDefinition>) {
+    let agents_root = crate::resources::deepseek_harness::agents_home_dir();
+    let agents_path = collapse_home(&agents_root.join("skills").to_string_lossy());
+    let dsh_path = collapse_home(&crate::resources::deepseek_harness::home_dir().join("skills").to_string_lossy());
+    // Reuse the registry identity when a native home names an existing shared
+    // directory. One physical directory must not acquire a second ownership.
+    let known_targets = definitions.iter()
+        .filter(|(id, _)| !matches!(id.as_str(), "deepseek-harness" | "deepseek-harness-desktop"))
+        .filter_map(|(_, definition)| definition.skills.as_ref())
+        .flat_map(|skill| std::iter::once((skill.global_dir.clone(), skill.target_id.clone()))
+            .chain(skill.aliases.iter().map(|alias| (alias.global_dir.clone(), alias.target_id.clone()))))
+        .collect::<BTreeMap<_, _>>();
+    let dsh_target = known_targets.get(&dsh_path).cloned().unwrap_or_else(|| "dsh-user".into());
+    let agents_target = known_targets.get(&agents_path).cloned().unwrap_or_else(|| "dsh-shared-user".into());
+    for (id, profile) in [("deepseek-harness", "web"), ("deepseek-harness-desktop", "desktop")] {
+        let Some(definition) = definitions.get_mut(id) else { continue; };
+        definition.global = Some(crate::resources::deepseek_harness::profile_path(profile));
+        if let Some(skill) = definition.skills.as_mut() {
+            skill.target_id = dsh_target.clone();
+            skill.global_dir = dsh_path.clone();
+            skill.aliases = if agents_path == dsh_path { vec![] } else { vec![AgentSkillsDirectory {
+                target_id: agents_target.clone(),
+                global_dir: agents_path.clone(),
+            }] };
+        }
+    }
 }
 
 fn merge_builtin_definitions(
@@ -308,6 +340,11 @@ fn migrated_builtin_global(
     // No audited writer means no path override. This keeps catalog-only targets
     // read-only even when old settings claimed a path for them.
     current.global.as_ref()?;
+    if matches!(id, "deepseek-harness" | "deepseek-harness-desktop")
+        && saved.global.as_deref().is_none_or(|path| matches!(path,
+            "~/.dsh/profiles/web/cordis.patch.yml" | "~/.dsh/profiles/desktop/cordis.patch.yml")) {
+        return current.global.clone();
+    }
     // These clients were read-only before their user-level contracts were verified. Do
     // not turn a stale guessed path into a writable override during promotion.
     if matches!(id, "qoderwork" | "workbuddy")
@@ -749,6 +786,9 @@ pub(crate) fn normalize_configuration_patch(
             if key.is_empty() {
                 return Err("MCP 配置键不能为空".into());
             }
+            if current.layout.as_deref() == Some("cordis-patch") && key != "servers" {
+                return Err("DeepSeek Harness MCP 使用固定的 Cordis insert 配置；不能把配置键改成另一种原生结构".into());
+            }
             let structured_key = current.key_path
                 || (current.format == "toml" && current.layout.as_deref() == Some("list"));
             if structured_key && key.split('.').any(str::is_empty) {
@@ -1012,13 +1052,35 @@ mod tests {
     }
 
     #[test]
+    fn deepseek_native_homes_share_existing_skill_targets_and_deduplicate_roots() {
+        let _home = crate::testenv::TestHome::new("dsh-root-targets");
+        for (dsh, shared, primary, aliases, target) in [
+            ("~", "~", "~/skills", Vec::<&str>::new(), "dsh-user"),
+            ("~/.agents", "~/.agents", "~/.agents/skills", vec![], "agents-user"),
+            ("~/.dsh", "~\\shared", "~/.dsh/skills", vec!["~/shared/skills"], "dsh-user"),
+            (" ", "\t", "~/.dsh/skills", vec!["~/.agents/skills"], "dsh-user"),
+        ] {
+            std::env::set_var("DSH_HOME", dsh);
+            std::env::set_var("DSH_AGENTS_HOME", shared);
+            let definitions = builtin_agents();
+            for id in ["deepseek-harness", "deepseek-harness-desktop"] {
+                let skill = definitions[id].skills.as_ref().unwrap();
+                assert_eq!(skill.global_dir, primary);
+                assert_eq!(skill.target_id, target);
+                assert_eq!(skill.aliases.iter().map(|alias| alias.global_dir.as_str()).collect::<Vec<_>>(), aliases);
+            }
+        }
+    }
+
+    #[test]
     fn builtin_catalog_and_transport_metadata_load() {
         let a = builtin_agents();
-        assert_eq!(audited_agents().len(), 95);
         let catalog: BTreeMap<String, AgentDefinition> =
             serde_json::from_str(CATALOG_AGENTS_JSON).unwrap();
-        assert_eq!(catalog.len(), 280);
-        assert_eq!(a.len(), 311);
+        let expected_ids = audited_agents().into_keys().chain(catalog.into_keys())
+            .collect::<BTreeSet<_>>();
+        assert!(!expected_ids.is_empty());
+        assert_eq!(a.keys().cloned().collect::<BTreeSet<_>>(), expected_ids);
         assert_eq!(a["claude-code"].key, "mcpServers");
         assert_eq!(a["codex"].format, "toml");
         assert_eq!(
@@ -1248,10 +1310,11 @@ mod tests {
     }
 
     #[test]
-    fn audited_skill_capabilities_must_match_approved_agent_set() {
+    fn audited_skill_capabilities_follow_registry_evidence_without_a_second_allowlist() {
         let mut missing = audited_agents();
         missing.get_mut("codex").unwrap().skills = None;
-        assert!(merge_builtin_definitions(BTreeMap::new(), missing).is_err());
+        let merged = merge_builtin_definitions(BTreeMap::new(), missing).unwrap();
+        assert!(merged["codex"].skills.is_none(), "a registry retraction must not restore a writer");
 
         let mut extra = audited_agents();
         extra.insert(
@@ -1265,7 +1328,8 @@ mod tests {
                 ..Default::default()
             },
         );
-        assert!(merge_builtin_definitions(BTreeMap::new(), extra).is_err());
+        let merged = merge_builtin_definitions(BTreeMap::new(), extra).unwrap();
+        assert_eq!(merged["extra-audited"].skills.as_ref().unwrap().global_dir, "~/.extra-audited/skills");
     }
 
     #[test]

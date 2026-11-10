@@ -1304,5 +1304,7 @@
         "presence": "bundled"
       }
     ]
-  }
+  },
+  {"agent_id": "deepseek-harness", "adapter": "deepseek_harness", "docs_url": "https://github.com/deepseek-ai/deepseek-harness/tree/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/boot/app-boot", "manifest_paths": ["package.json"], "default_mcp_files": [], "mcp_id_prefix": "", "roots": [{"path": "~/.dsh/profiles/web", "layout": "dsh_profile", "presence": "declared"}]},
+  {"agent_id": "deepseek-harness-desktop", "adapter": "deepseek_harness", "docs_url": "https://github.com/deepseek-ai/deepseek-harness/tree/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/boot/app-boot", "manifest_paths": ["package.json"], "default_mcp_files": [], "mcp_id_prefix": "", "roots": [{"path": "~/.dsh/profiles/desktop", "layout": "dsh_profile", "presence": "declared"}]}
 ]

@@ -32,7 +32,7 @@ const appAgent = (index: number) => ({
   category: "coding",
   evidence: "official",
   verified_at: null,
-  builtin: true,
+  builtin: false,
 });
 
 function ModalStackHarness() {
@@ -142,7 +142,7 @@ describe("SkillReviewDialog", () => {
     expect(within(impact).getByText("将停止为 Cursor 分配")).toBeVisible();
     expect(within(impact).getByText("~/.agents/skills")).toBeVisible();
     expect(
-      within(impact).getByText("Codex、Cursor、Gemini CLI 将失去访问"),
+      within(impact).getByText("Codex CLI、Cursor、Gemini CLI 将失去访问"),
     ).toBeVisible();
     expect(within(impact).queryByText("~/.claude/skills")).not.toBeInTheDocument();
     expect(within(impact).queryByText(/Claude Code.*将失去访问/)).not.toBeInTheDocument();
@@ -290,7 +290,7 @@ describe("SkillReviewDialog", () => {
     const dialog = screen.getByRole("dialog", { name: "确认 Skill 更改" });
     await userEvent.click(within(dialog).getByRole("checkbox", { name: /我已了解/ }));
     await userEvent.click(within(dialog).getByRole("button", { name: "仍然安装" }));
-    expect(await within(dialog).findByRole("alert")).toHaveTextContent("目标在确认期间发生变化。");
+    expect(await screen.findByRole("alert")).toHaveTextContent("目标在确认期间发生变化。");
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
     expect(onCommit).toHaveBeenCalledOnce();
   });
@@ -300,7 +300,7 @@ describe("SkillReviewDialog", () => {
     [{ code: "confirmation_required", findings_hash: "different-hash" }, "风险内容已变化，请重新操作。"],
     [{ code: "plan_stale" }, "确认已过期，请重新操作。"],
   ])("invalidates the same review when its confirmation no longer matches", async (error, expectedMessage) => {
-    const onCommit = vi.fn().mockRejectedValue(error);
+    const onCommit = vi.fn().mockRejectedValue({ message: "fixture error", ...error });
     render(<SkillReviewDialog plan={highRiskPlan("findings-expected")} onCommit={onCommit}
       onClose={vi.fn()} onCommitted={vi.fn()} onRecoveryRequired={vi.fn()} />);
     await userEvent.click(screen.getByRole("checkbox", { name: /我已了解/ }));
@@ -391,6 +391,7 @@ describe("SkillReviewDialog", () => {
       />,
     );
 
+    fireEvent.click(screen.getByText("文件与来源详情"));
     expect(screen.getByText("来源")).toBeVisible();
     expect(screen.queryByText("现有来源")).not.toBeInTheDocument();
     expect(
@@ -432,6 +433,8 @@ describe("SkillReviewDialog", () => {
     ).toBeVisible();
     expect(screen.getByRole("heading", { name: "确认 Skill 更改" })).toBeVisible();
     expect(screen.getByText("review-changes")).toBeVisible();
+    fireEvent.click(screen.getByText("文件与来源详情"));
+    fireEvent.click(screen.getByText("目标与 Agent 影响", { selector: "summary span" }));
     expect(screen.getByText("现有来源")).toBeVisible();
     expect(screen.getByText("本地 · ~/existing-skills / review-changes")).toBeVisible();
     expect(screen.getByText("候选来源")).toBeVisible();
@@ -451,7 +454,7 @@ describe("SkillReviewDialog", () => {
     expect(screen.getByText(/downloads content/)).toBeVisible();
     expect(screen.getByText("已显示 1 / 3 条证据")).toBeVisible();
     expect(screen.getByText("~/.agents/skills")).toBeVisible();
-    expect(screen.getByText("Codex、Cursor、Gemini CLI")).toBeVisible();
+    expect(screen.getByText("Codex CLI、Cursor、Gemini CLI")).toBeVisible();
     expect(
       screen.getByText("Gemini CLI also observes this shared directory"),
     ).toBeVisible();
@@ -549,7 +552,7 @@ describe("Modal stack infrastructure", () => {
     await user.click(screen.getByRole("button", { name: "选择 Agent" }));
     expect(
       screen.getByRole("dialog", { name: "选择和置顶 Agent" }),
-    ).not.toHaveAttribute("aria-modal");
+    ).toHaveAttribute("aria-modal", "true");
     expect(screen.getByLabelText("背景 Skill 详情")).toBeVisible();
 
     // Click without a pointerdown so the already-open picker stays behind the modal.

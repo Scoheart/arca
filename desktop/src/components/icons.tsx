@@ -24,6 +24,34 @@ export function SkillMarkIcon({ className, style }: IconProps) {
   );
 }
 
+/** Subagent mark: specialized autonomous delegated agent persona. */
+export function SubagentMarkIcon({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 2v3M8 3h8" />
+      <rect x="4" y="6" width="16" height="12" rx="3" />
+      <circle cx="9" cy="11" r="1.2" fill="currentColor" />
+      <circle cx="15" cy="11" r="1.2" fill="currentColor" />
+      <path d="M9 14.5h6" />
+      <path d="M2 12h2M20 12h2" />
+      <path d="M9 18v3M15 18v3" />
+    </svg>
+  );
+}
+
+/** Hook mark: lifecycle event trigger and interceptor. */
+export function HookMarkIcon({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2" />
+      <path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06l3.19 5.86c.61 1.07 1.83 1.7 3.08 1.62" />
+      <circle cx="12" cy="2" r="2" />
+      <circle cx="19" cy="14" r="2" />
+      <circle cx="5" cy="17" r="2" />
+    </svg>
+  );
+}
+
 /** Brain mark for model resources: refined dual neural lobes and central stem. */
 export function BrainIcon({ className, style }: IconProps) {
   return (
@@ -179,6 +207,17 @@ export function PackageIcon({ className, style }: IconProps) {
       <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
       <path d="m3.3 7 8.7 5 8.7-5" />
       <path d="M12 22V12" />
+    </svg>
+  );
+}
+
+export function AgentIcon({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} stroke="currentColor" fill="none"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 8V4m0 0a2 2 0 1 0-2-2 2 2 0 0 0 2 2Z" />
+      <rect x="4" y="8" width="16" height="12" rx="4" />
+      <path d="M9 13v2m6-2v2" />
     </svg>
   );
 }

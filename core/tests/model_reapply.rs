@@ -41,9 +41,9 @@ fn commit(plan: arca_core::consumption::AssetOperationPlan) {
     .unwrap();
 }
 
-fn arca_profile_id(profile_id: &str) -> String {
+fn native_profile_id(profile_id: &str) -> String {
     format!(
-        "arca_{}",
+        "mux_{}",
         profile_id
             .bytes()
             .map(|byte| format!("{byte:02x}"))
@@ -191,8 +191,8 @@ fn targeted_reapply_repairs_only_the_requested_profile_and_clean_retry_is_a_noop
 fn reapply_rejects_an_observed_but_not_desired_current_profile_without_writing() {
     let (home, desired, observed) = setup_two_profiles("model-reapply-active-direction");
     let target = home.home.join(".grok/config.toml");
-    let desired_marker = format!("default = \"{}\"", arca_profile_id(&desired));
-    let observed_marker = format!("default = \"{}\"", arca_profile_id(&observed));
+    let desired_marker = format!("default = \"{}\"", native_profile_id(&desired));
+    let observed_marker = format!("default = \"{}\"", native_profile_id(&observed));
     let before = fs::read_to_string(&target).unwrap();
     assert!(before.contains(&desired_marker));
     let drifted = before.replace(&desired_marker, &observed_marker);

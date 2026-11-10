@@ -2152,6 +2152,7 @@ mod tests {
     fn observation_roots_include_alias_only_directories_without_creating_them() {
         let home = TestHome::new("skill-alias-watch-roots");
         let mut definition = crate::agents::load_agents()["cursor"].clone();
+        definition.builtin = Some(false);
         let capability = definition.skills.as_mut().unwrap();
         capability.target_id = "audit-primary".into();
         capability.global_dir = "~/audit-primary/skills".into();

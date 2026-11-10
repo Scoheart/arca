@@ -56,13 +56,20 @@ fn url_component(value: &str) -> String {
 pub enum CurlAuth<'a> { None, Placeholder, Key(&'a str) }
 
 pub fn render(provider_type: &str, protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'_>) -> Result<String, String> {
+    render_with_proxy(provider_type, protocol, url, model, auth, None)
+}
+
+pub fn render_with_proxy(provider_type: &str, protocol: &ModelProtocol, url: &str, model: &str, auth: CurlAuth<'_>, proxy_url: Option<&str>) -> Result<String, String> {
     if model.contains('\0') || url.contains('\0') {
         return Err("curl_invalid_input: NUL bytes are unsupported".into());
     }
     let body = serde_json::to_string_pretty(&request_template(provider_type, protocol, model)?)
         .map_err(|_| "curl_serialization_failed")?;
-    let mut lines = vec![format!("curl --request POST {}", quote(&url.replace("{model}", &url_component(model)))),
-        "  --header 'Content-Type: application/json'".into()];
+    let mut lines = vec![format!("curl --request POST {}", quote(&url.replace("{model}", &url_component(model))))];
+    if let Some(proxy) = proxy_url.filter(|p| !p.trim().is_empty()) {
+        lines.push(format!("  --proxy {}", quote(proxy)));
+    }
+    lines.push("  --header 'Content-Type: application/json'".into());
     let prefix = match protocol {
         ModelProtocol::AnthropicMessages => "x-api-key: ",
         ModelProtocol::GeminiGenerateContent | ModelProtocol::GeminiInteractions => "x-goog-api-key: ",
@@ -88,6 +95,12 @@ pub fn render(provider_type: &str, protocol: &ModelProtocol, url: &str, model: &
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn render_with_proxy_includes_proxy_flag() {
+        let command = render_with_proxy("custom", &ModelProtocol::OpenaiResponses,
+            "https://example.invalid/responses", "fixture-model", CurlAuth::None, Some("http://127.0.0.1:7890")).unwrap();
+        assert!(command.contains("  --proxy 'http://127.0.0.1:7890'"));
+    }
 
     #[test]
     fn responses_exports_follow_reviewed_provider_storage_contracts() {
@@ -192,8 +205,9 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     };
     let url = format!("{}{}", normalize_provider_base_url(base)?, normalize_endpoint_path(endpoint)?);
     let auth_requirement = provider.map(|provider| &provider.auth_requirement).unwrap_or(&AuthRequirement::Required);
+    let proxy_url = crate::network::configured_proxy_url()?;
     if *auth_requirement == AuthRequirement::None {
-        return render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None);
+        return render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None, proxy_url.as_deref());
     }
     let configured_source = if let Some(provider) = provider { provider.api_key_source.clone() }
         else { profile.env_key.as_ref().map(|name| ApiKeySource::Env { name: name.clone() }) };
@@ -201,7 +215,7 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
         let auth = if *auth_requirement == AuthRequirement::Optional && configured_source.is_none() {
             CurlAuth::None
         } else { CurlAuth::Placeholder };
-        return render(provider_type, &profile.protocol, &url, &profile.model, auth);
+        return render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, auth, proxy_url.as_deref());
     }
     let stored = if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore)) {
         if let Some(provider) = provider {
@@ -210,10 +224,10 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     } else { None };
     if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore))
         && stored.is_none() && *auth_requirement == AuthRequirement::Optional {
-        return render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None);
+        return render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None, proxy_url.as_deref());
     }
     let resolved = credential::resolve_source(&configured_source.unwrap_or(ApiKeySource::ArcaStore), stored)?;
     let key = Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
         .map_err(|_| "credential_invalid: API Key must be UTF-8")?);
-    render(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::Key(&key))
+    render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::Key(&key), proxy_url.as_deref())
 }

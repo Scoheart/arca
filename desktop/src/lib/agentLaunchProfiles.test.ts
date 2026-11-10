@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import type { AgentLaunchInfo } from "./agentLaunch";
+import { splitLaunchArguments, type AgentLaunchInfo } from "./agentLaunch";
 import { createLaunchProfilesDraft, launchProfilesChanged, launchProfilesPayload, launchProfilesValid } from "../components/AgentLaunchProfiles";
 
 const info: AgentLaunchInfo = {
@@ -39,4 +39,17 @@ it("accepts an empty default even when no runtime is installed", () => {
   expect(draft.activeProfileId).toBe("default");
   expect(launchProfilesValid(draft)).toBe(true);
   expect(launchProfilesPayload(empty, draft).profiles[0].target).toBeNull();
+});
+
+it("splits arguments respecting quotes, flags, and paths", () => {
+  expect(splitLaunchArguments("--system-prompt '/Users/scoheart/Code/english/ENGLISH.md'"))
+    .toEqual(["--system-prompt", "/Users/scoheart/Code/english/ENGLISH.md"]);
+  expect(splitLaunchArguments("--system-prompt \"/Users/scoheart/Code/english/ENGLISH.md\""))
+    .toEqual(["--system-prompt", "/Users/scoheart/Code/english/ENGLISH.md"]);
+  expect(splitLaunchArguments("--system-prompt /Users/scoheart/Code/english/ENGLISH.md"))
+    .toEqual(["--system-prompt", "/Users/scoheart/Code/english/ENGLISH.md"]);
+  expect(splitLaunchArguments("--system-prompt\n/Users/scoheart/Code/english/ENGLISH.md"))
+    .toEqual(["--system-prompt", "/Users/scoheart/Code/english/ENGLISH.md"]);
+  expect(splitLaunchArguments("-m 'hello world' --flag"))
+    .toEqual(["-m", "hello world", "--flag"]);
 });

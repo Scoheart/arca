@@ -30,5 +30,6 @@
   "openclaw-desktop": "openclaw",
   "windsurf": "devin",
   "codebuddy-cn-ide": "codebuddy-code",
-  "cortex-code-desktop": "cortex-code"
+  "cortex-code-desktop": "cortex-code",
+  "deepseek-harness-desktop": "deepseek-harness"
 }

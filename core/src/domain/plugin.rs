@@ -77,5 +77,9 @@ pub struct NativeResourceInventory {
     pub host_mcps: Vec<HostMcpObservation>,
     pub native_plugins: Vec<NativePluginObservation>,
     pub native_skills: Vec<NativeSkillObservation>,
+    #[serde(default)]
+    pub configured_mcps: Vec<super::mcp::ConfiguredMcpObservation>,
+    #[serde(default)]
+    pub configured_unavailable: bool,
     pub unavailable: bool,
 }

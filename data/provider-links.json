@@ -1153,5 +1153,40 @@
       "url": "https://asicloud.cudos.org/",
       "kind": "console"
     }
+  },
+  "edenai": {
+    "docs_url": "https://www.edenai.co/docs/v3/llms/chat-completions",
+    "portal": {
+      "url": "https://app.edenai.run/settings/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "nararouter": {
+    "docs_url": "https://router.bynara.id/docs",
+    "portal": {
+      "url": "https://router.bynara.id/register",
+      "kind": "console"
+    }
+  },
+  "zro": {
+    "docs_url": "https://zro.moonmath.ai/docs/quickstart",
+    "portal": {
+      "url": "https://zro.moonmath.ai/sign-in",
+      "kind": "console"
+    }
+  },
+  "llm7": {
+    "docs_url": "https://docs.llm7.io/api-reference/introduction",
+    "portal": {
+      "url": "https://dash.llm7.io/#/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "edgeone-makers": {
+    "docs_url": "https://pages.edgeone.ai/document/makers-models-integration",
+    "portal": {
+      "url": "https://console.tencentcloud.com/edgeone/makers",
+      "kind": "console"
+    }
   }
 }

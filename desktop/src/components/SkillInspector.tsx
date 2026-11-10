@@ -1,9 +1,11 @@
 import { ToastNotice } from "./Toast";
+import { useEffect, useState } from "react";
 import type { PlanRepairRequest, SkillCommandError, SkillDetail, SkillInventoryItem } from "../lib/types";
 import { ResourceInspector } from "./ResourceWorkspace";
 import { skillSourceText } from "./SkillCard";
 import { Avatar, Badge } from "./ui";
 import { LinkIcon } from "./icons";
+import { FormSelect } from "./FormSelect";
 
 export type SkillLifecycleIntent =
   | {
@@ -39,7 +41,8 @@ function skillBody(text: string) {
 }
 
 export function SkillInspector({
-  item, detail, loading, error, onClose,
+  item, copies = [item], onSelectCopy, detail, loading, error, onClose,
+  onPlan, planning = false, readOnly = false,
 }: {
   item: SkillInventoryItem;
   copies?: SkillInventoryItem[];
@@ -52,14 +55,57 @@ export function SkillInspector({
   planning?: boolean;
   readOnly?: boolean;
 }) {
+  const [replaceConflicts, setReplaceConflicts] = useState(false);
+  const [replaceLocalChanges, setReplaceLocalChanges] = useState(false);
+  useEffect(() => {
+    setReplaceConflicts(false);
+    setReplaceLocalChanges(false);
+  }, [item.identity]);
+  const central = item.location.kind === "central";
+  const external = !central && item.states.includes("external");
+  const needsRepair = item.states.some((state) =>
+    state === "missing" || state === "broken_link" || state === "conflicting_link");
+  const canUpdate = central && item.source && item.source.kind !== "imported";
+  const blocked = readOnly || planning || loading;
+  const submit = (intent: SkillLifecycleIntent) => {
+    if (!blocked) onPlan?.(intent);
+  };
+  const visibleCopies = copies.filter((copy) => copy.name === item.name);
+
   return (
     <ResourceInspector
       title={item.name}
       avatar={<Avatar seed={item.name} kind="skill" size={40} />}
       subtitle={<Badge tone={item.source?.kind === "github" ? "info" : "neutral"}>{sourceKindLabel(item)}</Badge>}
       onClose={onClose}
+      footer={onPlan ? <div className="flex gap-2">
+        {external ? <button type="button" className="btn-primary" disabled={blocked}
+          onClick={() => submit({ kind: "import", identity: item.identity, replaceConflicts })}>导入</button> : null}
+        {canUpdate ? <button type="button" className="btn-secondary" disabled={blocked}
+          onClick={() => submit({ kind: "update", skillName: item.name, replaceLocalChanges })}>更新</button> : null}
+        {needsRepair && !external ? <button type="button" className="btn-secondary" disabled={blocked}
+          onClick={() => submit({ kind: "repair", skillName: item.name,
+            repair: item.location.kind === "central" ? { kind: "central" }
+              : { kind: "target", target_id: item.location.target_id } })}>修复</button> : null}
+        {central ? <button type="button" className="btn-danger" disabled={blocked}
+          onClick={() => submit({ kind: "remove", skillName: item.name })}>删除</button> : null}
+      </div> : undefined}
     >
       <article className="arca-skill-reading" key={item.identity}>
+        {onSelectCopy && visibleCopies.length > 1 && <FormSelect ariaLabel="Skill 位置" value={item.identity}
+          disabled={planning} options={visibleCopies.map((copy) => ({ value: copy.identity,
+            label: copy.location.kind === "central" ? "中央副本" : copy.location.global_dir }))}
+          onChange={(identity) => {
+            if (!planning && visibleCopies.some((copy) => copy.identity === identity)) onSelectCopy(identity);
+          }} />}
+        {onPlan && external && <label>
+          <input type="checkbox" checked={replaceConflicts} disabled={blocked}
+            onChange={(event) => setReplaceConflicts(event.currentTarget.checked)} />备份并替换同名中央副本
+        </label>}
+        {onPlan && canUpdate && item.states.includes("locally_modified") && <label>
+          <input type="checkbox" checked={replaceLocalChanges} disabled={blocked}
+            onChange={(event) => setReplaceLocalChanges(event.currentTarget.checked)} />备份并替换本地修改
+        </label>}
         {item.description && <p className="arca-skill-reading-description">{item.description}</p>}
         <div className="arca-skill-detail-source">
           <LinkIcon className="w-3.5 h-3.5" />

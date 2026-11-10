@@ -1,5 +1,5 @@
 {
-  "version": "2.65.0",
+  "version": "2.70.2",
   "agents": [
     {
       "id": "agentkube",
@@ -3623,6 +3623,83 @@
       "portal": {
         "kind": "console",
         "url": "https://asicloud.cudos.org/"
+      }
+    },
+    {
+      "id": "edenai",
+      "name": "Eden AI",
+      "category": "gateway",
+      "baseUrl": "https://api.edenai.run/v3",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://www.edenai.co/docs/v3/llms/chat-completions",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://app.edenai.run/settings/api-keys"
+      }
+    },
+    {
+      "id": "nararouter",
+      "name": "NaraRouter",
+      "category": "gateway",
+      "baseUrl": "https://router.bynara.id/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://router.bynara.id/docs",
+      "portal": {
+        "kind": "console",
+        "url": "https://router.bynara.id/register"
+      }
+    },
+    {
+      "id": "zro",
+      "name": "Zro",
+      "category": "gateway",
+      "baseUrl": "https://zro.moonmath.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://zro.moonmath.ai/docs/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://zro.moonmath.ai/sign-in"
+      }
+    },
+    {
+      "id": "llm7",
+      "name": "LLM7.io",
+      "category": "gateway",
+      "baseUrl": "https://api.llm7.io/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.llm7.io/api-reference/introduction",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://dash.llm7.io/#/api-keys"
+      }
+    },
+    {
+      "id": "edgeone-makers",
+      "name": "EdgeOne Makers Models",
+      "category": "gateway",
+      "baseUrl": "https://ai-gateway.edgeone.link/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://pages.edgeone.ai/document/makers-models-integration",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.tencentcloud.com/edgeone/makers"
       }
     },
     {

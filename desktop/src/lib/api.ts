@@ -48,6 +48,8 @@ import type {
   CatalogItem,
   ConsumptionInventory,
   CommitOperationRequest,
+  SubagentDefinition,
+  HookDefinition,
   CredentialValidationView,
   CancelOperationRequest,
   InstalledMcp,
@@ -351,3 +353,32 @@ export const cancelSkillOperation = (operationId: string) =>
 
 export const listNativeResources = (agentId: string) =>
   invoke<import("./types").NativeResourceInventory>("list_native_resources", { agentId });
+
+export const inspectMcpConfiguration = (request: import("./types").McpInspectionRequest) =>
+  invoke<import("./types").McpConfigurationView>("inspect_mcp_configuration", { request });
+
+export const listSubagents = () => invoke<SubagentDefinition[]>("list_subagents");
+export const getSubagent = (name: string) =>
+  invoke<SubagentDefinition | null>("get_subagent", { name });
+export const saveSubagent = (definition: SubagentDefinition) =>
+  invoke<void>("save_subagent", { definition });
+export const deleteSubagent = (name: string) =>
+  invoke<void>("delete_subagent", { name });
+export const adoptSubagent = (agentId: string, name: string) =>
+  invoke<SubagentDefinition>("adopt_subagent", { agentId, name });
+
+export const listHooks = () => invoke<HookDefinition[]>("list_hooks");
+export const getHook = (name: string) =>
+  invoke<HookDefinition | null>("get_hook", { name });
+export const saveHook = (definition: HookDefinition) =>
+  invoke<void>("save_hook", { definition });
+export const deleteHook = (name: string) =>
+  invoke<void>("delete_hook", { name });
+export const listAgentHooks = (agentId: string) =>
+  invoke<HookDefinition[]>("list_agent_hooks", { agentId });
+export const projectHookToAgent = (agentId: string, definition: HookDefinition) =>
+  invoke<string>("project_hook_to_agent", { agentId, definition });
+export const removeHookFromAgent = (agentId: string, name: string) =>
+  invoke<void>("remove_hook_from_agent", { agentId, name });
+export const adoptHook = (agentId: string, name: string) =>
+  invoke<HookDefinition>("adopt_hook", { agentId, name });

@@ -2,7 +2,8 @@ import { useId, useState, type ReactNode } from "react";
 import { ToastNotice } from "./Toast";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { AgentLaunchInfo, LaunchTarget } from "../lib/agentLaunch";
+import { splitLaunchArguments, type AgentLaunchInfo, type LaunchTarget } from "../lib/agentLaunch";
+export { splitLaunchArguments };
 import { formatError } from "../lib/format";
 import { formatLaunchEnvironment, parseLaunchEnvironment } from "../lib/launchEnvironment";
 import { Switch } from "./ui";
@@ -38,8 +39,8 @@ export function agentLaunchDraftTarget(draft: AgentLaunchDraft, info?: AgentLaun
   if (info && JSON.stringify(agentLaunchDraftTarget(draft)) === JSON.stringify(agentLaunchDraftTarget(createAgentLaunchDraft(info)))) return info.configured_target;
 
   const env = parseLaunchEnvironment(draft.environment).env;
-  if (draft.kind === "app") return { kind: "app", path: draft.app.trim(), args: draft.appArgs.split(/\r?\n/).filter(Boolean), new_instance: draft.newInstance, env };
-  return { kind: "cli", command: draft.command.trim(), args: draft.args.split("\n").filter(Boolean), env };
+  if (draft.kind === "app") return { kind: "app", path: draft.app.trim(), args: splitLaunchArguments(draft.appArgs), new_instance: draft.newInstance, env };
+  return { kind: "cli", command: draft.command.trim(), args: splitLaunchArguments(draft.args), env };
 }
 
 function environmentError(draft: AgentLaunchDraft): string | null {
@@ -89,7 +90,7 @@ export function AgentLaunchFields({ info, draft, disabled, readOnlyDefault = fal
   const { t } = useTranslation();
   const validation = parseLaunchEnvironment(draft.environment);
   const argumentsText = draft.kind === "app" ? draft.appArgs : draft.args;
-  const argumentsList = argumentsText.split(draft.kind === "app" ? /\r?\n/ : "\n").filter(Boolean);
+  const argumentsList = splitLaunchArguments(argumentsText);
   const environmentEntries = Object.entries(validation.env);
   const change = (patch: Partial<AgentLaunchDraft>) => { if (!readOnlyDefault) onChange({ ...draft, ...patch }); };
   const browse = async () => {

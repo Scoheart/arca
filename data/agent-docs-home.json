@@ -80,7 +80,7 @@
   "anythingllm": "https://docs.anythingllm.com/mcp-compatibility/desktop",
   "cline-cli": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/sdk/packages/shared/src/storage/paths.ts",
   "codex-ide": "https://learn.chatgpt.com/docs/config-file/config-basic",
-  "deepseek-harness": "https://github.com/deepseek-ai/deepseek-harness/blob/5badb15009ae1756c3afe0ae0cef1faafc290ccc/packages/skill/skill-filesystem/README.md",
+  "deepseek-harness": "https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/docs/user/guide/index.md",
   "goose-desktop": "https://github.com/aaif-goose/goose/blob/591edd47cf2cfea4957d720c607cf2a4def8673d/crates/goose/src/config/paths.rs",
   "ibm-bob": "https://bob.ibm.com/docs/ide/configuration/mcp/mcp-in-bob",
   "jan-cli": "https://github.com/janhq/jan/blob/14a720628f9592c8e60f7e081ef733076db8a6a9/src-tauri/src/core/mcp/commands.rs",
@@ -106,5 +106,6 @@
   "qoderwake": "https://docs.qoder.com/",
   "qoderwake-cn": "https://docs.qoder.cn/",
   "openclaw-desktop": "https://docs.openclaw.ai/",
-  "codebuddy-cn-ide": "https://www.codebuddy.cn/docs/ide/Getting-Started/Installation"
+  "codebuddy-cn-ide": "https://www.codebuddy.cn/docs/ide/Getting-Started/Installation",
+  "deepseek-harness-desktop": "https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/README.md"
 }

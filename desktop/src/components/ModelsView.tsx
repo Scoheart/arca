@@ -12,7 +12,6 @@ import {
 } from "../lib/api";
 import type { ConsumptionState } from "../hooks/useConsumptionState";
 import type {
-  ApiKeySource,
   CentralAssetDraft,
   ModelProfile,
   ModelProfileView,
@@ -79,6 +78,7 @@ const DEFAULT_ENDPOINT_PATHS = Object.fromEntries(
 const KEYLESS_PROVIDER_TYPES = new Set(["ollama", "lm-studio", "vllm", "bilibili-index-translate"]);
 
 const emptyProfile = (): ModelProfile => ({
+  provider_id: "",
   id: "",
   name: "",
   provider: "",
@@ -567,7 +567,7 @@ export function ModelsView({
                 setProviderCatalogOpen(true);
               }}>
                 <PlusIcon className="w-4 h-4" />
-                {t("models.addProvider")}
+                <span>{t("models.addProvider")}</span>
               </button>
             }
           >
@@ -786,11 +786,11 @@ function ProviderPortalButton({ portal }: { portal?: ModelProviderView["portal"]
   const { t } = useTranslation();
   const toast = useToast();
   if (!portal || !portal.url.startsWith("https://")) return null;
-  const label = t({
+  const label = t(({
     "api-key": "models.getApiKey",
     console: "models.openProviderConsole",
     setup: "models.providerSetupGuide",
-  }[portal.kind]);
+  } as const)[portal.kind]);
   return (
     <button type="button" className="btn-ghost shrink-0 whitespace-nowrap" title={portal.url}
       aria-label={label}
@@ -915,38 +915,45 @@ const ModelList = memo(function ModelList({
               aria-label={t("models.openDetails", { name: profile.name })}
               onClick={() => onOpen(profile.id)}
             >
-              <span className="arca-asset-list-identity arca-model-list-identity">
-                <ProviderGlyph id={profile.provider || "custom"} name={providerName} size={34} />
+              <div className="arca-asset-list-identity arca-model-list-identity">
+                <ProviderGlyph id={profile.provider || "custom"} name={providerName} size={30} />
                 <span className="arca-asset-list-copy">
                   <strong title={displayName}>{displayName}</strong>
-                  <span className="arca-model-list-subline">
-                    <code title={profile.model}>{profile.model}</code>
-                    {contextWindow && (
-                      <span
-                        className="arca-model-list-context"
-                        aria-label={`${t("models.context")} ${formatTokens(contextWindow)}`}
-                        title={`${t("models.contextWindow")}: ${contextWindow.toLocaleString()} tokens`}
-                      >
-                        <span>{t("models.context")}</span>
-                        <strong>{formatTokens(contextWindow)}</strong>
-                      </span>
-                    )}
-                  </span>
+                  <code title={profile.model}>{profile.model}</code>
                 </span>
-              </span>
+              </div>
+              <div className="arca-model-card-facts">
+                <span className="arca-model-status-pill arca-model-status-added">{t("models.addedStatus", "已添加")}</span>
+                {contextWindow && (
+                  <span
+                    className="arca-model-list-context"
+                    aria-label={`${t("models.context")} ${formatTokens(contextWindow)}`}
+                    title={`${t("models.contextWindow")}: ${contextWindow.toLocaleString()} tokens`}
+                  >
+                    <span>{t("models.context")}</span>
+                    <strong>{formatTokens(contextWindow)}</strong>
+                  </span>
+                )}
+              </div>
+              <div className="arca-model-card-footer">
+                <span className="arca-model-protocol-pill" title={protocolLabel(profile.protocol)}>
+                  <span className="arca-model-protocol-dot" data-protocol={profile.protocol} />
+                  <span>{protocolLabel(profile.protocol)}</span>
+                </span>
+              </div>
             </button>
             <div className="arca-model-card-actions">
               <button type="button" className="arca-model-card-action"
                 aria-label={copyLabel} title={copyLabel}
                 aria-busy={copyingId === profile.id}
                 disabled={copyingId !== null}
-                onClick={() => void copyCurl(profile)}>
+                onClick={(e) => { e.stopPropagation(); void copyCurl(profile); }}>
                 <TerminalIcon className="w-4 h-4" />
               </button>
               <button type="button" className="arca-model-card-action arca-model-card-delete"
                 aria-label={deleteLabel} title={deleteLabel}
                 disabled={!onDelete || copyingId === profile.id}
-                onClick={() => void onDelete?.(profile)}>
+                onClick={(e) => { e.stopPropagation(); void onDelete?.(profile); }}>
                 <TrashIcon className="w-4 h-4" />
               </button>
             </div>
@@ -980,7 +987,7 @@ function ModelInspector({
     metadata?.toolCall && t("models.tools"),
     metadata?.structuredOutput && t("models.structuredOutput"),
     metadata?.modalities?.some((modality) => modality !== "text") && t("models.multimodal"),
-  ].filter((item): item is string => Boolean(item));
+  ].filter((item): item is Exclude<typeof item, false | undefined> => Boolean(item));
   const showReasoning = profile.reasoning !== undefined || metadata?.reasoning === true;
   const requestUrl = provider
     ? fullRequestUrl(
@@ -1248,12 +1255,12 @@ function ModelProfileDialog({
   ) ?? null;
   const [draft, setDraft] = useState<ModelProfile>(() => initial ?? {
     ...emptyProfile(),
-    provider_id: preferredProvider?.id,
+    provider_id: preferredProvider?.id ?? "",
     provider: preferredProvider?.provider ?? "",
     protocol: defaultProtocol(preferredProvider?.protocols,
       providerTemplates.find((template) => template.id === preferredProvider?.provider)?.default_protocol),
     base_url: preferredProvider?.base_url ?? "",
-    env_key: preferredProvider?.env_key,
+    env_key: preferredProvider?.api_key_source?.kind === "env" ? preferredProvider.api_key_source.name : undefined,
   });
   const [busy, setBusy] = useState(false);
   const [protocolChosen, setProtocolChosen] = useState(Boolean(initial));
@@ -1280,7 +1287,7 @@ function ModelProfileDialog({
         : defaultProtocol(provider.protocols,
             providerTemplates.find((template) => template.id === provider.provider)?.default_protocol),
       base_url: provider.base_url,
-      env_key: provider.env_key,
+      env_key: provider.api_key_source?.kind === "env" ? provider.api_key_source.name : undefined,
     }));
   };
   const save = async () => {
@@ -1434,9 +1441,7 @@ function ModelProviderDialog({
           .map(([protocol, config]) => [protocol, { ...config! }]),
       ) as ModelProviderConfig["protocols"]
     : templateConnection.protocols;
-  const initialSource = initial?.api_key_source
-    ?? (initial?.env_key ? { kind: "env", name: initial.env_key } satisfies ApiKeySource : undefined)
-    ?? (initial?.credential_saved ? { kind: "arca-store" } satisfies ApiKeySource : undefined);
+  const initialSource = initial?.api_key_source;
   const authWithoutCredential: ModelProviderConfig["auth_requirement"] =
     KEYLESS_PROVIDER_TYPES.has(initialProviderType)
       ? "none"
@@ -1589,7 +1594,6 @@ function ModelProviderDialog({
         protocols,
         auth_requirement: authRequirement,
         api_key_source: authRequirement === "none" ? undefined : apiKeySource,
-        env_key: undefined,
       }, authRequirement === "none"
         ? initial?.credential_saved ? "" : undefined
         : hasNewCredential ? credential : clearCredential ? "" : undefined);
@@ -1674,7 +1678,7 @@ function ModelProviderDialog({
                   placeholder={showSavedCredentialMask
                     ? "••••••••"
                     : preservesLegacySource && !clearCredential
-                        ? t("models.legacyCredentialPreserved")
+                        ? t("models.externalCredentialPreserved")
                         : initial ? t("models.emptyCredentialDeletes") : t("models.optionalCredential")}
                 />
                   <button

@@ -52,6 +52,9 @@
 .arca-native-facts code { display: block; }
 .arca-native-detail-section { min-width: 0; margin-top: 18px; }
 .arca-native-detail-section > h3 { margin: 0 0 8px; color: var(--text-primary); font-size: 12px; font-weight: 650; }
+.arca-mcp-configuration-source { min-width: 0; margin-top: 12px; }
+.arca-mcp-configuration-path { display: block; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 11px; }
+.arca-mcp-configuration pre { max-width: 100%; margin: 8px 0 0; padding: 12px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--surface-asset); color: var(--text-primary); font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: auto; }
 .arca-native-source-list { margin: 0; padding: 0; list-style: none; }
 .arca-native-source-list > li { padding: 6px 0; }
 .arca-native-source-list code { display: block; color: var(--text-secondary); }

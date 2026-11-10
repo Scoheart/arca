@@ -259,22 +259,11 @@ fn canonical_target_graph_merges_two_ids_resolving_to_one_path() {
     let inventory = list_inventory().unwrap();
     assert_eq!(inventory.targets.len(), 1);
     assert_eq!(inventory.targets[0].target_id, "agents-user");
-    assert_eq!(
-        inventory.targets[0].primary_agent_ids,
-        vec![
-            "codex",
-            "cursor",
-            "dirac",
-            "docker-agent",
-            "goose",
-            "poolside",
-            "theiaai-theiaide",
-            "vt-code",
-            "warp",
-            "zed",
-            "zencoder"
-        ]
-    );
+    let expected_primary = arca_core::agents::builtin_agents().into_iter()
+        .filter_map(|(id, agent)| agent.skills.as_ref().filter(|skills| {
+            matches!(skills.global_dir.as_str(), "~/.agents/skills" | "~/.cursor/skills")
+        }).map(|_| id)).collect::<Vec<_>>();
+    assert_eq!(inventory.targets[0].primary_agent_ids, expected_primary);
 }
 
 #[test]
@@ -433,7 +422,8 @@ fn invalid_managed_tree_is_visible_but_is_not_marked_managed() {
         .unwrap();
     assert!(item.states.contains(&InventoryState::LocallyModified));
     assert!(!item.states.contains(&InventoryState::Managed));
-    assert_eq!(item.content_hash.as_deref(), Some(hash.as_str()));
+    assert!(item.content_hash.is_none(), "an invalid manifest cannot certify the installed hash");
+    assert!(item.risk.is_none());
 }
 
 #[test]
