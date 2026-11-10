@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.70.2](https://github.com/Scoheart/arca/compare/v2.70.1...v2.70.2) (2026-11-10)
+
+### Changes
+
+* feat(ui): unified card click-to-view, direct delete button, and compact skill card layout ([1859a4f](https://github.com/Scoheart/arca/commit/1859a4fe45417efa1c00034a3080df77d391d956))
+
 ## [2.70.1](https://github.com/Scoheart/arca/compare/v2.70.0...v2.70.1) (2026-11-10)
 
 ### Changes
