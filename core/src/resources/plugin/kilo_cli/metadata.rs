@@ -84,7 +84,8 @@ impl Snapshot {
             DocumentFormat::Jsonc=>{
                 check_jsonc_depth(text)?;
                 let options=jsonc_parser::ParseOptions{allow_comments:true,allow_trailing_commas:true,allow_loose_object_property_names:false,
-                    allow_missing_commas:false,allow_single_quoted_strings:false,allow_hexadecimal_numbers:false,allow_unary_plus_numbers:false};
+                    allow_missing_commas:false,allow_single_quoted_strings:false,allow_hexadecimal_numbers:false,allow_unary_plus_numbers:false,
+                    allow_bare_decimal_point_numbers:false,allow_non_finite_numbers:false,allow_extended_string_escapes:false};
                 jsonc_parser::parse_to_ast(text,&Default::default(),&options).map_err(|_|())?.value.ok_or(())?.into()
             },
             DocumentFormat::Toml=>serde_json::to_value(toml::from_str::<toml::Value>(text).map_err(|_|())?).map_err(|_|())?,
