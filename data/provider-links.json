@@ -1188,5 +1188,12 @@
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
     }
+  },
+  "fortytwo-engine": {
+    "docs_url": "https://docs.fortytwo.network/docs/quickstart",
+    "portal": {
+      "url": "https://platform.fortytwo.network/api-keys",
+      "kind": "api-key"
+    }
   }
 }

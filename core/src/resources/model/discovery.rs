@@ -224,10 +224,17 @@ const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("auto", None, None),
 ];
 
+/// The models page lists one id. Context is that page's context window.
+/// `GET /v1/models` does not return a name or a context length.
+const FORTYTWO_ENGINE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen/qwen3.8-27b", Some("Qwen3.8-27B"), Some(262_144)),
+];
+
 fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
     let entries = match provider_type {
         "zro" => ZRO_STATIC_MODELS,
         "nararouter" => NARAROUTER_STATIC_MODELS,
+        "fortytwo-engine" => FORTYTWO_ENGINE_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -342,6 +349,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "nararouter"
         | "zro"
         | "llm7"
+        | "fortytwo-engine"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -1220,6 +1228,52 @@ mod tests {
     }
 
     #[test]
+    fn fortytwo_engine_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("fortytwo-engine").expect("fortytwo seed");
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].id, "qwen/qwen3.8-27b");
+        assert_eq!(models[0].name.as_deref(), Some("Qwen3.8-27B"));
+        assert_eq!(models[0].context_length, Some(262_144));
+        let config = provider(
+            "fortytwo-engine",
+            "https://api.fortytwo.network/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.fortytwo.network/v1/models"
+        );
+        let _home = TestHome::new("fortytwo-engine-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "fortytwo-engine-instance".into(),
+                name: "Fortytwo Engine".into(),
+                provider: "fortytwo-engine".into(),
+                base_url: "https://api.fortytwo.network/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "qwen/qwen3.8-27b");
+        assert_eq!(seeded[0].context_length, Some(262_144));
+    }
+
+    #[test]
     fn nararouter_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
         let models = reviewed_static_catalog("nararouter").expect("nararouter seed");
         let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
@@ -1522,6 +1576,7 @@ mod tests {
         "nararouter",
         "zro",
         "llm7",
+        "fortytwo-engine",
         "mistral",
         "deepseek",
         "groq",
@@ -1714,7 +1769,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "fortytwo-engine"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),

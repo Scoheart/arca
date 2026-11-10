@@ -3703,6 +3703,20 @@
       }
     },
     {
+      "id": "fortytwo-engine",
+      "name": "Fortytwo Engine",
+      "category": "gateway",
+      "baseUrl": "https://api.fortytwo.network/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.fortytwo.network/docs/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.fortytwo.network/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
