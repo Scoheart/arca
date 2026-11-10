@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.70.1](https://github.com/Scoheart/arca/compare/v2.70.0...v2.70.1) (2026-11-10)
+
+### Changes
+
+* feat(model): add EdgeOne Makers Models provider (#270) ([23ca2bd](https://github.com/Scoheart/arca/commit/23ca2bd0f69d51274778ee72679bfe9e6fb862d1))
+* feat(models): add the LLM7.io gateway provider (#271) ([f8b052b](https://github.com/Scoheart/arca/commit/f8b052b1bdfae5d096c55339b57ce714d751d1fe))
+* feat(agents): catalog DeepAI Code as a display-only desktop agent (#272) ([12f2dd5](https://github.com/Scoheart/arca/commit/12f2dd5dc1ad7f0473c990bdea39ce72d7a1650e))
+* feat(models): add the Zro gateway provider (#273) ([6be0337](https://github.com/Scoheart/arca/commit/6be0337d6ade553d65e2758162d72719d65287bd))
+* feat(models): add the NaraRouter gateway provider (#274) ([cf84e59](https://github.com/Scoheart/arca/commit/cf84e5926efbcbaac5011569dd8bdd9bce300035))
+* feat(models): add the Eden AI gateway provider (#275) ([c6380ce](https://github.com/Scoheart/arca/commit/c6380ce45452d606403286ded8d9ccbddf73c21b))
+* fix(dsh): use native dsh-mcp-client cordis insert entries for mcp ([489bacf](https://github.com/Scoheart/arca/commit/489bacfcf0ce05f110347444da51b52674ea3a8b))
+
 ## [2.70.0](https://github.com/Scoheart/arca/compare/v2.69.3...v2.70.0) (2026-11-06)
 
 ### Changes
