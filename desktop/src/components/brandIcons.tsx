@@ -71,6 +71,7 @@ function visibleSurface(id: string): AgentSurface | null {
 const FULL_BLEED = new Set<string>([
   "boltai",
   "capy",
+  "dl",
   "cline",
   "cline-desktop",
   "codebuddy-code",

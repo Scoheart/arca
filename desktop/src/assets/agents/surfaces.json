@@ -61,5 +61,6 @@
   "openclaw-desktop": "desktop",
   "windsurf": "ide",
   "codebuddy-cn-ide": "ide",
-  "deepseek-harness-desktop": "desktop"
+  "deepseek-harness-desktop": "desktop",
+  "dl": "cli"
 }
