@@ -333,7 +333,8 @@ fn optional_document(root: &Path, input: &str, format: DocumentFormat, budget: &
                 check_jsonc_depth(content)?;
                 let options = jsonc_parser::ParseOptions { allow_comments: true, allow_trailing_commas: true,
                     allow_loose_object_property_names: false, allow_missing_commas: false,
-                    allow_single_quoted_strings: false, allow_hexadecimal_numbers: false, allow_unary_plus_numbers: false };
+                    allow_single_quoted_strings: false, allow_hexadecimal_numbers: false, allow_unary_plus_numbers: false,
+                    allow_bare_decimal_point_numbers: false, allow_non_finite_numbers: false, allow_extended_string_escapes: false };
                 jsonc_parser::parse_to_ast(content, &Default::default(), &options).map_err(|_| ())?.value.ok_or(())?.into()
             }, DocumentFormat::Json5 => {
                 check_json5_depth(content)?;

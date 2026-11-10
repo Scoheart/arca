@@ -501,7 +501,8 @@ impl Snapshot {
         let limit=MAX_DOCUMENT_BYTES.min(MAX_METADATA_BYTES.saturating_sub(b.read_bytes));let bytes=self.bound[i].bytes(limit,b)?;
         let text=std::str::from_utf8(&bytes).map_err(|_|())?;
         let value=if jsonc {check_jsonc_depth(text)?;let options=jsonc_parser::ParseOptions{allow_comments:true,allow_trailing_commas:true,
-            allow_loose_object_property_names:false,allow_missing_commas:false,allow_single_quoted_strings:false,allow_hexadecimal_numbers:false,allow_unary_plus_numbers:false};
+            allow_loose_object_property_names:false,allow_missing_commas:false,allow_single_quoted_strings:false,allow_hexadecimal_numbers:false,allow_unary_plus_numbers:false,
+            allow_bare_decimal_point_numbers:false,allow_non_finite_numbers:false,allow_extended_string_escapes:false};
             jsonc_parser::parse_to_ast(text,&Default::default(),&options).map_err(|_|())?.value.ok_or(())?.into()
         }else{serde_json::from_str(text).map_err(|_|())?};Ok(Some(value))
     }
