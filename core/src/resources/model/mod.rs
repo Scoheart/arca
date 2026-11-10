@@ -304,7 +304,7 @@ fn provider_template_connection(
     let Some(default_base_url) = provider.default_base_url else {
         return Ok((
             None,
-            if provider.id == "azure-openai" {
+            if matches!(provider.id, "azure-openai" | "cloudflare-workers-ai") {
                 [ModelProtocol::OpenaiResponses, ModelProtocol::OpenaiCompletions]
                     .into_iter()
                     .map(|protocol| {
@@ -364,27 +364,35 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             },
             ModelProviderEndpointView {
                 protocol: GeminiGenerateContent,
-                base_url: "https://aihubmix.com/v1beta",
+                base_url: "https://aihubmix.com/gemini/v1beta",
             },
         ],
         "opencode-zen" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiCompletions,
-                base_url: "https://opencode.ai/zen/v1",
+                base_url: "https://opencode.ai/inference/openai/v1",
             },
             ModelProviderEndpointView {
                 protocol: AnthropicMessages,
-                base_url: "https://opencode.ai/zen",
+                base_url: "https://opencode.ai/inference/anthropic",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://opencode.ai/inference/google/v1beta",
             },
         ],
         "opencode-go" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
-                base_url: "https://opencode.ai/zen/go/v1",
+                base_url: "https://opencode.ai/inference/go/openai/v1",
             },
             ModelProviderEndpointView {
                 protocol: AnthropicMessages,
-                base_url: "https://opencode.ai/zen/go",
+                base_url: "https://opencode.ai/inference/go/anthropic",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://opencode.ai/inference/go/google/v1beta",
             },
         ],
         "nanogpt" => &[
@@ -438,6 +446,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             },
         ],
         "longcat" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.longcat.chat/openai/v1",
+            },
             ModelProviderEndpointView {
                 protocol: AnthropicMessages,
                 base_url: "https://api.longcat.chat/anthropic",
@@ -717,14 +729,26 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://generativelanguage.googleapis.com/v1beta/openai",
             },
         ],
-        "zai-coding-plan" => &[ModelProviderEndpointView {
-            protocol: AnthropicMessages,
-            base_url: "https://api.z.ai/api/anthropic",
-        }],
-        "zhipuai-coding-plan" => &[ModelProviderEndpointView {
-            protocol: AnthropicMessages,
-            base_url: "https://open.bigmodel.cn/api/anthropic",
-        }],
+        "zai-coding-plan" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.z.ai/api/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.z.ai/api/anthropic",
+            },
+        ],
+        "zhipuai-coding-plan" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://open.bigmodel.cn/api/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://open.bigmodel.cn/api/anthropic",
+            },
+        ],
         "alibaba-coding-plan-cn" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://coding.dashscope.aliyuncs.com/apps/anthropic",
@@ -741,22 +765,46 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic",
         }],
-        "xiaomi-token-plan-cn" => &[ModelProviderEndpointView {
-            protocol: AnthropicMessages,
-            base_url: "https://token-plan-cn.xiaomimimo.com/anthropic",
-        }],
-        "xiaomi-token-plan-sgp" => &[ModelProviderEndpointView {
-            protocol: AnthropicMessages,
-            base_url: "https://token-plan-sgp.xiaomimimo.com/anthropic",
-        }],
-        "xiaomi-token-plan-ams" => &[ModelProviderEndpointView {
-            protocol: AnthropicMessages,
-            base_url: "https://token-plan-ams.xiaomimimo.com/anthropic",
-        }],
-        "kimi-for-coding" => &[ModelProviderEndpointView {
-            protocol: AnthropicMessages,
-            base_url: "https://api.kimi.com/coding",
-        }],
+        "xiaomi-token-plan-cn" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://token-plan-cn.xiaomimimo.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://token-plan-cn.xiaomimimo.com/anthropic",
+            },
+        ],
+        "xiaomi-token-plan-sgp" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://token-plan-sgp.xiaomimimo.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://token-plan-sgp.xiaomimimo.com/anthropic",
+            },
+        ],
+        "xiaomi-token-plan-ams" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://token-plan-ams.xiaomimimo.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://token-plan-ams.xiaomimimo.com/anthropic",
+            },
+        ],
+        "kimi-for-coding" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.kimi.com/coding/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.kimi.com/coding",
+            },
+        ],
         "minimax-coding-plan" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.minimax.io/anthropic",
@@ -777,14 +825,26 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://api.lkeap.cloud.tencent.com/coding/anthropic",
         }],
-        "tencent-token-plan" => &[ModelProviderEndpointView {
-            protocol: AnthropicMessages,
-            base_url: "https://api.lkeap.cloud.tencent.com/plan/anthropic",
-        }],
-        "tencent-token-plan-global" => &[ModelProviderEndpointView {
-            protocol: AnthropicMessages,
-            base_url: "https://tokenhub-intl.tencentcloudmaas.com/plan/anthropic",
-        }],
+        "tencent-token-plan" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://tokenhub.tencentmaas.com/plan/v3",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://tokenhub.tencentmaas.com/plan/anthropic",
+            },
+        ],
+        "tencent-token-plan-global" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://tokenhub-intl.tencentcloudmaas.com/plan/v3",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://tokenhub-intl.tencentcloudmaas.com/plan/anthropic",
+            },
+        ],
         "scnet" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://api.scnet.cn/api/llm/anthropic",
@@ -795,7 +855,7 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
         }],
         "larprouter" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
-            base_url: "https://larprouter.com",
+            base_url: "https://lutheos.com",
         }],
         "stark-relay" => &[
             ModelProviderEndpointView {
@@ -811,10 +871,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://api.mangoboost.io",
         }],
-        "darkbloom" => &[ModelProviderEndpointView {
-            protocol: OpenaiResponses,
-            base_url: "https://api.darkbloom.dev/v1",
-        }],
+        "darkbloom" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.darkbloom.dev/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.darkbloom.dev",
+            },
+        ],
         "inworld" => &[ModelProviderEndpointView {
             protocol: OpenaiResponses,
             base_url: "https://api.inworld.ai/v1",
@@ -965,6 +1031,84 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://proxy.gonkabroker.com",
         }],
+        "stepfun" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.stepfun.com/v1",
+        }],
+        "moonshotai" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.moonshot.ai/v1",
+        }],
+        "deepseek" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.deepseek.com",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.deepseek.com/anthropic",
+            },
+        ],
+        "xiaomi" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.xiaomimimo.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.xiaomimimo.com/anthropic",
+            },
+        ],
+        "sambanova" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.sambanova.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.sambanova.ai",
+            },
+        ],
+        "fireworks" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.fireworks.ai/inference",
+        }],
+        "baseten" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://inference.baseten.co/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://inference.baseten.co",
+            },
+        ],
+        // These templates default to Responses. Chat Completions stays available
+        // on the same documented base and does not replace that default.
+        "openrouter" => &[ModelProviderEndpointView {
+            protocol: OpenaiCompletions,
+            base_url: "https://openrouter.ai/api/v1",
+        }],
+        "openai" => &[ModelProviderEndpointView {
+            protocol: OpenaiCompletions,
+            base_url: "https://api.openai.com/v1",
+        }],
+        "poe" => &[ModelProviderEndpointView {
+            protocol: OpenaiCompletions,
+            base_url: "https://api.poe.com/v1",
+        }],
+        "nebius" => &[ModelProviderEndpointView {
+            protocol: OpenaiCompletions,
+            base_url: "https://api.tokenfactory.nebius.com/v1",
+        }],
+        "requesty" => &[ModelProviderEndpointView {
+            protocol: OpenaiCompletions,
+            base_url: "https://router.requesty.ai/v1",
+        }],
+        "huggingface" => &[ModelProviderEndpointView {
+            protocol: OpenaiCompletions,
+            base_url: "https://router.huggingface.co/v1",
+        }],
         _ => &[],
     }
 }
@@ -1017,21 +1161,21 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     ModelProviderView {
         id: "opencode-zen",
         name: "OpenCode Zen",
-        default_base_url: Some("https://opencode.ai/zen/v1"),
+        default_base_url: Some("https://opencode.ai/inference/openai/v1"),
         default_protocol: ModelProtocol::OpenaiResponses,
         category: "gateway",
     },
     ModelProviderView {
         id: "opencode-go",
         name: "OpenCode Go",
-        default_base_url: Some("https://opencode.ai/zen/go/v1"),
+        default_base_url: Some("https://opencode.ai/inference/go/openai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
     ModelProviderView {
         id: "kilo-gateway",
         name: "Kilo Gateway",
-        default_base_url: Some("https://api.kilo.ai/api/gateway"),
+        default_base_url: Some("https://ai-gateway.kilo.ai/api/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -1506,8 +1650,8 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     },
     ModelProviderView {
         id: "larprouter",
-        name: "LarpRouter",
-        default_base_url: Some("https://larprouter.com/v1"),
+        name: "Lutheos",
+        default_base_url: Some("https://lutheos.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -1815,8 +1959,8 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     ModelProviderView {
         id: "perplexity",
         name: "Perplexity Sonar",
-        default_base_url: Some("https://api.perplexity.ai"),
-        default_protocol: ModelProtocol::OpenaiCompletions,
+        default_base_url: Some("https://api.perplexity.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
         category: "official",
     },
     ModelProviderView {
@@ -1955,7 +2099,7 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     ModelProviderView {
         id: "liquid-ai",
         name: "Liquid AI",
-        default_base_url: Some("https://inference.liquid.ai/v1"),
+        default_base_url: Some("https://api.liquid.ai/openai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
@@ -2091,14 +2235,14 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     },
     ModelProviderView {
         id: "minimax-coding-plan",
-        name: "MiniMax Token Plan (Global)",
+        name: "MiniMax M Plan (Global)",
         default_base_url: Some("https://api.minimax.io/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
     ModelProviderView {
         id: "minimax-cn-coding-plan",
-        name: "MiniMax Token Plan (China)",
+        name: "MiniMax M Plan (China)",
         default_base_url: Some("https://api.minimax.cn/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
@@ -2127,7 +2271,7 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     ModelProviderView {
         id: "tencent-token-plan",
         name: "Tencent Cloud Token Plan (China)",
-        default_base_url: Some("https://api.lkeap.cloud.tencent.com/plan/v3"),
+        default_base_url: Some("https://tokenhub.tencentmaas.com/plan/v3"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
@@ -2162,7 +2306,7 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     ModelProviderView {
         id: "together",
         name: "Together AI",
-        default_base_url: Some("https://api.together.xyz/v1"),
+        default_base_url: Some("https://api.together.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2203,7 +2347,7 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     },
     ModelProviderView {
         id: "digitalocean",
-        name: "DigitalOcean Gradient AI",
+        name: "DigitalOcean Inference",
         default_base_url: Some("https://inference.do-ai.run/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
@@ -2245,7 +2389,7 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
     },
     ModelProviderView {
         id: "wandb",
-        name: "Weights & Biases",
+        name: "Weights & Biases (CoreWeave)",
         default_base_url: Some("https://api.inference.wandb.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
@@ -2383,7 +2527,7 @@ pub fn infer_provider(base_url: &str) -> String {
     let normalized = base_url.trim().trim_end_matches('/');
     // Match the complete reviewed endpoint or request URL, not an arbitrary
     // host/path prefix. Shared PAYG/plan URLs deliberately prefer the neutral
-    // PAYG template; explicit user-selected plan IDs are never inferred here.
+    // PAYG template. Dedicated plan hosts map to that plan.
     let matches_endpoint = |endpoint: &str, protocol: &ModelProtocol| {
         endpoint.eq_ignore_ascii_case(normalized)
             || format!("{endpoint}{}", protocol.default_endpoint_path())
@@ -2428,6 +2572,25 @@ pub fn infer_provider(base_url: &str) -> String {
             return "cloudflare-workers-ai".into();
         }
     }
+    // OpenCode Zen and Go share opencode.ai. Match the current inference paths
+    // and the previous /zen aliases before any single-host fallback.
+    if host == "opencode.ai" {
+        if in_path("/inference/go") || in_path("/zen/go") {
+            return "opencode-go".into();
+        }
+        if in_path("/inference") || in_path("/zen") {
+            return "opencode-zen".into();
+        }
+    }
+    // Token Plan moved to tokenhub.tencentmaas.com. The old lkeap host is shared
+    // with Coding Plan, and the new host is shared with TokenHub pay-as-you-go,
+    // so only the /plan prefix selects this template.
+    if host == "api.lkeap.cloud.tencent.com" && in_path("/plan") {
+        return "tencent-token-plan".into();
+    }
+    if host == "tokenhub.tencentmaas.com" && in_path("/plan") {
+        return "tencent-token-plan".into();
+    }
     match host.as_str() {
         "openrouter.ai" | "api.openrouter.ai" => "openrouter",
         "api.anthropic.com" => "anthropic",
@@ -2436,7 +2599,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.x.ai" => "xai",
         "api.mistral.ai" => "mistral",
         "api.sarashina.ai" => "sarashina",
-        "inference.liquid.ai" => "liquid-ai",
+        "inference.liquid.ai" | "api.liquid.ai" => "liquid-ai",
         "api.atria-asi.ai" => "atria",
         "api.cohere.ai" => "cohere",
         "api.deepseek.com" => "deepseek",
@@ -2457,6 +2620,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "open.bigmodel.cn" => "zhipuai",
         "api.deepinfra.com" => "deepinfra",
         "ai-gateway.vercel.sh" => "vercel-ai-gateway",
+        "api.kilo.ai" | "ai-gateway.kilo.ai" => "kilo-gateway",
         "api.routeway.ai" => "routeway",
         "llm.onerouter.pro" => "infron",
         "api.apinex.bond" => "apinex",
@@ -2502,7 +2666,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "oxionai.com" => "oxion-ai",
         "model.inferx.net" => "inferx",
         "api.blazerail.com" => "blazerail",
-        "larprouter.com" => "larprouter",
+        "larprouter.com" | "lutheos.com" => "larprouter",
         "starkrelay.bond" => "stark-relay",
         "cloud.infini-ai.com" => "infini-ai",
         "api.pojia.ai" => "pojiaai",
@@ -2540,6 +2704,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "itzi.app" => "itzi",
         "proxy.gonkabroker.com" => "gonka-broker",
         "api.sambanova.ai" => "sambanova",
+        "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
         "qianfan.baidubce.com" => "baidu-qianfan",
@@ -2552,15 +2717,16 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.inference.wandb.ai" => "wandb",
         "api.siliconflow.cn" => "siliconflow-cn",
         "api.siliconflow.com" => "siliconflow",
-        "api.together.xyz" => "together",
+        "api.together.xyz" | "api.together.ai" => "together",
         "api.fireworks.ai" => "fireworks",
         "api.cerebras.ai" => "cerebras",
         "dashscope.aliyuncs.com" => "alibaba",
         "dashscope-intl.aliyuncs.com" => "alibaba-international",
-        "api.xiaomimimo.com"
-        | "token-plan-cn.xiaomimimo.com"
-        | "token-plan-sgp.xiaomimimo.com"
-        | "token-plan-ams.xiaomimimo.com" => "xiaomi",
+        "api.xiaomimimo.com" => "xiaomi",
+        "token-plan-cn.xiaomimimo.com" => "xiaomi-token-plan-cn",
+        "token-plan-sgp.xiaomimimo.com" => "xiaomi-token-plan-sgp",
+        "token-plan-ams.xiaomimimo.com" => "xiaomi-token-plan-ams",
+        "api.kimi.ai" => "kimi-for-coding",
         "localhost" | "127.0.0.1" | "::1" => match url::Url::parse(base_url)
             .ok()
             .and_then(|url| url.port_or_known_default())
@@ -7909,6 +8075,10 @@ mod tests {
         let value = serde_json::to_value(azure).unwrap();
         assert_eq!(value["protocols"]["openai-responses"]["endpoint_path"], "/responses");
         assert_eq!(value["protocols"]["openai-completions"]["endpoint_path"], "/chat/completions");
+        let cloudflare = list_providers().iter().find(|p| p.id == "cloudflare-workers-ai").unwrap();
+        let value = serde_json::to_value(cloudflare).unwrap();
+        assert_eq!(value["protocols"]["openai-completions"]["endpoint_path"], "/chat/completions");
+        assert_eq!(value["protocols"]["openai-responses"]["endpoint_path"], "/responses");
     }
 
     #[test]
@@ -8756,7 +8926,7 @@ mod tests {
             "/v1beta/openai/chat/completions"
         );
 
-        let plan_ids = [
+        for id in [
             "zai-coding-plan",
             "zhipuai-coding-plan",
             "alibaba-coding-plan-cn",
@@ -8774,13 +8944,42 @@ mod tests {
             "tencent-coding-plan",
             "tencent-token-plan",
             "tencent-token-plan-global",
-        ];
-        for id in plan_ids {
-            assert_eq!(
-                provider_additional_endpoints(id).len(),
-                1,
+        ] {
+            assert!(
+                provider_additional_endpoints(id)
+                    .iter()
+                    .any(|endpoint| endpoint.protocol == ModelProtocol::AnthropicMessages),
                 "{id} should include its Anthropic-compatible endpoint"
             );
+        }
+        for (id, count) in [
+            ("zai-coding-plan", 2),
+            ("zhipuai-coding-plan", 2),
+            ("alibaba-coding-plan-cn", 1),
+            ("alibaba-coding-plan", 1),
+            ("alibaba-token-plan-cn", 1),
+            ("alibaba-token-plan", 1),
+            ("xiaomi-token-plan-cn", 2),
+            ("xiaomi-token-plan-sgp", 2),
+            ("xiaomi-token-plan-ams", 2),
+            ("kimi-for-coding", 2),
+            ("minimax-coding-plan", 1),
+            ("minimax-cn-coding-plan", 1),
+            ("stepfun-step-plan", 1),
+            ("stepfun-ai-step-plan", 1),
+            ("tencent-coding-plan", 1),
+            ("tencent-token-plan", 2),
+            ("tencent-token-plan-global", 2),
+        ] {
+            assert_eq!(provider_additional_endpoints(id).len(), count, "{id}");
+            if count == 2 {
+                assert!(
+                    provider_additional_endpoints(id)
+                        .iter()
+                        .any(|endpoint| endpoint.protocol == ModelProtocol::OpenaiResponses),
+                    "{id} should include Responses"
+                );
+            }
         }
         let alibaba_plan = list_providers()
             .iter()
@@ -8891,10 +9090,11 @@ mod tests {
             .find(|provider| provider.id == "larprouter")
             .unwrap();
         let serialized = serde_json::to_value(larprouter).unwrap();
+        assert_eq!(larprouter.name, "Lutheos");
         assert_eq!(larprouter.default_protocol, ModelProtocol::OpenaiCompletions);
         assert_eq!(larprouter.category, "gateway");
-        assert_eq!(larprouter.default_base_url, Some("https://larprouter.com/v1"));
-        assert_eq!(serialized["base_url"], "https://larprouter.com");
+        assert_eq!(larprouter.default_base_url, Some("https://lutheos.com/v1"));
+        assert_eq!(serialized["base_url"], "https://lutheos.com");
         assert_eq!(
             serialized["protocols"]["openai-completions"]["endpoint_path"],
             "/v1/chat/completions"
@@ -8905,7 +9105,7 @@ mod tests {
         );
         assert_eq!(
             serialized["additional_endpoints"][0]["base_url"],
-            "https://larprouter.com"
+            "https://lutheos.com"
         );
         assert!(serialized["protocols"].get("openai-responses").is_none());
         let stark_relay = list_providers()
@@ -11859,6 +12059,73 @@ url = "https://example.test/mcp"
             model_paths: default_config_paths("kilo-code"), ..Default::default()
         })]));
         assert!(guard_shared_model_clear(&settings, "kilo-desktop").unwrap_err().starts_with("kilo_shared_registry:"));
+    }
+
+    #[test]
+    fn moved_provider_hosts_keep_old_inference_and_reject_lookalikes() {
+        for (url, expected) in [
+            ("https://opencode.ai/inference/openai/v1", "opencode-zen"),
+            ("https://opencode.ai/inference/openai/v1/responses", "opencode-zen"),
+            ("https://opencode.ai/inference/anthropic/v1/messages", "opencode-zen"),
+            ("https://opencode.ai/inference/google/v1beta/models/gemini-4-argon:generateContent", "opencode-zen"),
+            ("https://opencode.ai/zen/v1", "opencode-zen"),
+            ("https://opencode.ai/inference/go/openai/v1", "opencode-go"),
+            ("https://opencode.ai/inference/go/openai/v1/chat/completions", "opencode-go"),
+            ("https://opencode.ai/zen/go/v1", "opencode-go"),
+            ("https://ai-gateway.kilo.ai/api/v1", "kilo-gateway"),
+            ("https://ai-gateway.kilo.ai/api/v1/chat/completions", "kilo-gateway"),
+            ("https://api.kilo.ai/api/gateway", "kilo-gateway"),
+            ("https://lutheos.com/v1", "larprouter"),
+            ("https://lutheos.com/v1/messages", "larprouter"),
+            ("https://larprouter.com/v1", "larprouter"),
+            ("https://api.perplexity.ai/v1", "perplexity"),
+            ("https://api.perplexity.ai/v1/responses", "perplexity"),
+            ("https://api.perplexity.ai", "perplexity"),
+            ("https://api.liquid.ai/openai/v1", "liquid-ai"),
+            ("https://api.liquid.ai/openai/v1/chat/completions", "liquid-ai"),
+            ("https://inference.liquid.ai/v1", "liquid-ai"),
+            ("https://tokenhub.tencentmaas.com/plan/v3", "tencent-token-plan"),
+            ("https://tokenhub.tencentmaas.com/plan/v3/responses", "tencent-token-plan"),
+            ("https://tokenhub.tencentmaas.com/plan/anthropic/v1/messages", "tencent-token-plan"),
+            ("https://api.lkeap.cloud.tencent.com/plan/v3", "tencent-token-plan"),
+            ("https://api.lkeap.cloud.tencent.com/coding/v3", "tencent-coding-plan"),
+            ("https://tokenhub.tencentmaas.com/v1", "tencent-tokenhub-cn"),
+            ("https://api.together.ai/v1", "together"),
+            ("https://api.together.ai/v1/chat/completions", "together"),
+            ("https://api.together.xyz/v1", "together"),
+            ("https://api.gmi-serving.com/v1/models", "gmi-cloud"),
+            ("https://token-plan-cn.xiaomimimo.com/v1", "xiaomi-token-plan-cn"),
+            ("https://token-plan-cn.xiaomimimo.com/v1/models", "xiaomi-token-plan-cn"),
+            ("https://token-plan-sgp.xiaomimimo.com/other", "xiaomi-token-plan-sgp"),
+            ("https://token-plan-ams.xiaomimimo.com/v1", "xiaomi-token-plan-ams"),
+            ("https://api.xiaomimimo.com/v1/models", "xiaomi"),
+            ("https://api.kimi.ai/coding/v1", "kimi-for-coding"),
+            ("https://api.kimi.ai/coding/v1/responses", "kimi-for-coding"),
+            ("https://api.kimi.com/coding/v1", "kimi-for-coding"),
+            ("https://opencode.ai/docs/console/models/", "custom"),
+            ("https://opencode.ai.evil.test/inference/openai/v1", "custom"),
+            ("https://ai-gateway.kilo.ai.evil.test/api/v1", "custom"),
+            ("https://api.kilo.ai.evil.test/api/gateway", "custom"),
+            ("https://kilo.ai/docs/gateway", "custom"),
+            ("https://www.lutheos.com/v1", "custom"),
+            ("https://lutheos.com.evil.test/v1", "custom"),
+            ("https://api.perplexity.ai.evil.test/v1", "custom"),
+            ("https://docs.perplexity.ai/docs/agent-api/openai-compatibility", "custom"),
+            ("https://api.liquid.ai.evil.test/openai/v1", "custom"),
+            ("https://docs.liquid.ai/api/quickstart", "custom"),
+            ("https://tokenhub.tencentmaas.com.evil.test/plan/v3", "custom"),
+            ("https://api.lkeap.cloud.tencent.com.evil.test/plan/v3", "custom"),
+            ("https://api.together.ai.evil.test/v1", "custom"),
+            ("https://docs.together.ai/docs/quickstart", "custom"),
+            ("https://api.gmi-serving.com.evil.test/v1", "custom"),
+            ("https://docs.gmicloud.ai/inference-engine/api-reference/llm-api-reference", "custom"),
+            ("https://token-plan-cn.xiaomimimo.com.evil.test/v1", "custom"),
+            ("https://api.kimi.ai.evil.test/coding/v1", "custom"),
+            ("https://www.kimi.ai/coding/v1", "custom"),
+            ("https://api.moonshot.ai/v1", "moonshotai"),
+        ] {
+            assert_eq!(infer_provider(url), expected, "{url}");
+        }
     }
 
 }

@@ -14,10 +14,10 @@
     }
   },
   "ppio": {
-    "docs_url": "https://ppio.com/model/ppio-4b",
+    "docs_url": "https://ppio.com/docs/home",
     "portal": {
-      "url": "https://ppio.com/model/ppio-4b",
-      "kind": "setup"
+      "url": "https://ppio.com/settings/key-management",
+      "kind": "api-key"
     }
   },
   "infini-ai": {
@@ -42,14 +42,14 @@
     }
   },
   "opencode-zen": {
-    "docs_url": "https://opencode.ai/docs/zen/",
+    "docs_url": "https://opencode.ai/docs/console/models/",
     "portal": {
       "url": "https://opencode.ai/auth",
       "kind": "console"
     }
   },
   "opencode-go": {
-    "docs_url": "https://opencode.ai/docs/go/",
+    "docs_url": "https://opencode.ai/docs/console/go/",
     "portal": {
       "url": "https://opencode.ai/auth",
       "kind": "console"
@@ -86,8 +86,8 @@
   "featherless-ai": {
     "docs_url": "https://featherless.ai/docs/quickstart-guide",
     "portal": {
-      "url": "https://featherless.ai/dashboard",
-      "kind": "console"
+      "url": "https://featherless.ai/account/api-keys",
+      "kind": "api-key"
     }
   },
   "venice": {
@@ -182,7 +182,7 @@
     }
   },
   "io-net": {
-    "docs_url": "https://io.net/p/how-to-deploy-llama-3-on-io-net-step-by-step-guide",
+    "docs_url": "https://io.net/docs/guides/getting-started",
     "portal": {
       "url": "https://ai.io.net/",
       "kind": "console"
@@ -329,7 +329,7 @@
     }
   },
   "dolphin": {
-    "docs_url": "https://dphn.ai/docs/coupon-credits",
+    "docs_url": "https://dphn.ai/docs/dphn-api/",
     "portal": {
       "url": "https://app.dphn.ai/",
       "kind": "console"
@@ -455,7 +455,7 @@
     }
   },
   "indicstack": {
-    "docs_url": "https://indicstack.ai/blog/migrate-openai-to-india-hosted-api",
+    "docs_url": "https://indicstack.ai/docs",
     "portal": {
       "url": "https://console.indicstack.ai/signup",
       "kind": "console"
@@ -532,9 +532,9 @@
     }
   },
   "larprouter": {
-    "docs_url": "https://larprouter.com/docs",
+    "docs_url": "https://lutheos.com/docs",
     "portal": {
-      "url": "https://larprouter.com/api-keys",
+      "url": "https://lutheos.com/api-keys",
       "kind": "api-key"
     }
   },
@@ -630,14 +630,14 @@
     }
   },
   "azure-openai": {
-    "docs_url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
+    "docs_url": "https://learn.microsoft.com/en-us/azure/foundry/openai/api-version-lifecycle?view=foundry-classic",
     "portal": {
       "url": "https://ai.azure.com/",
       "kind": "console"
     }
   },
   "amazon-bedrock-mantle": {
-    "docs_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html",
+    "docs_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/inference-responses-api.html",
     "portal": {
       "url": "https://console.aws.amazon.com/bedrock/home",
       "kind": "console"
@@ -672,7 +672,7 @@
     }
   },
   "perplexity": {
-    "docs_url": "https://docs.perplexity.ai/",
+    "docs_url": "https://docs.perplexity.ai/docs/agent-api/openai-compatibility",
     "portal": {
       "url": "https://www.perplexity.ai/account/api/keys",
       "kind": "api-key"
@@ -709,7 +709,7 @@
   "minimax": {
     "docs_url": "https://platform.minimax.io/docs/guides/quickstart",
     "portal": {
-      "url": "https://platform.minimax.io/console/access",
+      "url": "https://platform.minimax.io/console/keys",
       "kind": "api-key"
     }
   },
@@ -721,7 +721,7 @@
     }
   },
   "stepfun": {
-    "docs_url": "https://platform.stepfun.com/docs/zh/overview/concept",
+    "docs_url": "https://platform.stepfun.com/docs/zh/guides/basic-concepts",
     "portal": {
       "url": "https://platform.stepfun.com/interface-key",
       "kind": "api-key"
@@ -742,7 +742,7 @@
     }
   },
   "moonshotai-cn": {
-    "docs_url": "https://platform.moonshot.cn/docs/api/chat",
+    "docs_url": "https://platform.kimi.com/docs/api/chat",
     "portal": {
       "url": "https://platform.kimi.com/console/api-keys",
       "kind": "api-key"
@@ -812,7 +812,7 @@
     }
   },
   "liquid-ai": {
-    "docs_url": "https://docs.liquid.ai/",
+    "docs_url": "https://docs.liquid.ai/api/quickstart",
     "portal": {
       "url": "https://console.liquid.ai/",
       "kind": "console"
@@ -875,7 +875,7 @@
     }
   },
   "alibaba-token-plan": {
-    "docs_url": "https://www.alibabacloud.com/help/en/model-studio/token-plan-quickstart",
+    "docs_url": "https://www.alibabacloud.com/help/en/model-studio/token-plan-team-quickstart",
     "portal": {
       "url": "https://modelstudio.console.alibabacloud.com/ap-southeast-1/subscription/overview",
       "kind": "console"
@@ -884,33 +884,33 @@
   "xiaomi": {
     "docs_url": "https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call",
     "portal": {
-      "url": "https://platform.xiaomimimo.com/",
-      "kind": "console"
+      "url": "https://platform.xiaomimimo.com/#/console/api-keys",
+      "kind": "api-key"
     }
   },
   "xiaomi-token-plan-cn": {
-    "docs_url": "https://mimo.mi.com/docs/zh-CN/tokenplan/Token%20Plan/quick-access",
+    "docs_url": "https://mimo.mi.com/static/docs/tokenplan/Token%20Plan/quick-access.md",
     "portal": {
-      "url": "https://platform.xiaomimimo.com/",
-      "kind": "console"
+      "url": "https://platform.xiaomimimo.com/#/console/plan-manage",
+      "kind": "api-key"
     }
   },
   "xiaomi-token-plan-sgp": {
-    "docs_url": "https://mimo.mi.com/docs/en-US/tokenplan/Token%20Plan/quick-access",
+    "docs_url": "https://mimo.mi.com/static/docs/tokenplan/Token%20Plan/quick-access.md",
     "portal": {
-      "url": "https://platform.xiaomimimo.com/",
-      "kind": "console"
+      "url": "https://platform.xiaomimimo.com/#/console/plan-manage",
+      "kind": "api-key"
     }
   },
   "xiaomi-token-plan-ams": {
-    "docs_url": "https://mimo.mi.com/docs/en-US/tokenplan/Token%20Plan/quick-access",
+    "docs_url": "https://mimo.mi.com/static/docs/tokenplan/Token%20Plan/quick-access.md",
     "portal": {
-      "url": "https://platform.xiaomimimo.com/",
-      "kind": "console"
+      "url": "https://platform.xiaomimimo.com/#/console/plan-manage",
+      "kind": "api-key"
     }
   },
   "moonshotai": {
-    "docs_url": "https://platform.moonshot.ai/docs/api/chat",
+    "docs_url": "https://platform.kimi.ai/docs/api/chat",
     "portal": {
       "url": "https://platform.kimi.ai/console/api-keys",
       "kind": "api-key"
@@ -945,14 +945,14 @@
     }
   },
   "minimax-coding-plan": {
-    "docs_url": "https://platform.minimax.io/docs/token-plan/intro",
+    "docs_url": "https://platform.minimax.io/docs/m-plan/intro",
     "portal": {
       "url": "https://platform.minimax.io/console/plan",
       "kind": "console"
     }
   },
   "minimax-cn-coding-plan": {
-    "docs_url": "https://platform.minimax.cn/docs/token-plan/intro",
+    "docs_url": "https://platform.minimax.cn/docs/m-plan/intro",
     "portal": {
       "url": "https://platform.minimax.cn/console/plan",
       "kind": "console"
@@ -973,7 +973,7 @@
     }
   },
   "tencent-coding-plan": {
-    "docs_url": "https://cloud.tencent.com/document/product/1772/128947",
+    "docs_url": "https://cloud.tencent.com/document/product/1823/130092",
     "portal": {
       "url": "https://console.cloud.tencent.com/tokenhub/",
       "kind": "console"
@@ -1057,7 +1057,7 @@
     }
   },
   "digitalocean": {
-    "docs_url": "https://docs.digitalocean.com/products/gradient-ai-platform/details/models/",
+    "docs_url": "https://docs.digitalocean.com/products/inference/details/models/",
     "portal": {
       "url": "https://cloud.digitalocean.com/model-studio/manage-keys",
       "kind": "api-key"
@@ -1099,7 +1099,7 @@
     }
   },
   "wandb": {
-    "docs_url": "https://docs.wandb.ai/inference",
+    "docs_url": "https://docs.coreweave.com/products/inference/serverless",
     "portal": {
       "url": "https://forge.coreweave.com/wandb/settings",
       "kind": "console"
@@ -1108,7 +1108,7 @@
   "ollama": {
     "docs_url": "https://docs.ollama.com/",
     "portal": {
-      "url": "https://docs.ollama.com/openai",
+      "url": "https://docs.ollama.com/api/openai-compatibility",
       "kind": "setup"
     }
   },
@@ -1127,9 +1127,9 @@
     }
   },
   "vllm": {
-    "docs_url": "https://docs.vllm.ai/en/latest/serving/openai_compatible_server/",
+    "docs_url": "https://docs.vllm.ai/en/latest/serving/online_serving/",
     "portal": {
-      "url": "https://docs.vllm.ai/en/latest/serving/openai_compatible_server/",
+      "url": "https://docs.vllm.ai/en/latest/serving/online_serving/",
       "kind": "setup"
     }
   },

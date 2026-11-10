@@ -180,6 +180,7 @@ const NARAROUTER_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("claude-opus-5.5", Some("Claude Opus 5.5"), Some(1_000_000)),
     ("claude-sonnet-5", Some("Claude Sonnet 5"), Some(1_000_000)),
     ("claude-sonnet-5.5", Some("Claude Sonnet 5.5"), Some(1_000_000)),
+    ("deepseek-v4.1-flash-abliterated", Some("DeepSeek v4.1 Flash Abliterated"), Some(1_000_000)),
     ("deepseek-v4.1-flash-fast", Some("DeepSeek v4.1 Flash Fast"), Some(1_000_000)),
     ("deepseek-v4.1-flash", Some("Deepseek v4.1 Flash"), Some(1_000_000)),
     ("glm-5.3", Some("GLM 5.3"), Some(1_000_000)),
@@ -1782,6 +1783,7 @@ mod tests {
                 "claude-opus-5.5",
                 "claude-sonnet-5",
                 "claude-sonnet-5.5",
+                "deepseek-v4.1-flash-abliterated",
                 "deepseek-v4.1-flash-fast",
                 "deepseek-v4.1-flash",
                 "glm-5.3",
@@ -1813,17 +1815,19 @@ mod tests {
                 "auto/bynara",
             ]
         );
-        assert_eq!(models[9].name.as_deref(), Some("Deepseek v4.1 Flash"));
-        assert_eq!(models[9].context_length, Some(1_000_000));
-        assert_eq!(models[17].context_length, Some(500_000));
-        assert_eq!(models[18].name.as_deref(), Some("Kimi K2.7-code"));
-        assert!(models[18].context_length.is_none());
-        assert_eq!(models[21].name.as_deref(), Some("Laguna S 2.1"));
-        assert_eq!(models[21].context_length, Some(262_000));
-        assert_eq!(models[35].name.as_deref(), Some("Step 5 Preview"));
-        assert_eq!(models[35].context_length, Some(1_000_000));
-        assert!(models[36].name.is_none());
-        assert!(models[36].context_length.is_none());
+        assert_eq!(models[8].name.as_deref(), Some("DeepSeek v4.1 Flash Abliterated"));
+        assert_eq!(models[8].context_length, Some(1_000_000));
+        assert_eq!(models[10].name.as_deref(), Some("Deepseek v4.1 Flash"));
+        assert_eq!(models[10].context_length, Some(1_000_000));
+        assert_eq!(models[18].context_length, Some(500_000));
+        assert_eq!(models[19].name.as_deref(), Some("Kimi K2.7-code"));
+        assert!(models[19].context_length.is_none());
+        assert_eq!(models[22].name.as_deref(), Some("Laguna S 2.1"));
+        assert_eq!(models[22].context_length, Some(262_000));
+        assert_eq!(models[36].name.as_deref(), Some("Step 5 Preview"));
+        assert_eq!(models[36].context_length, Some(1_000_000));
+        assert!(models[37].name.is_none());
+        assert!(models[37].context_length.is_none());
         for omitted in [
             "kimi-k2.5",
             "gemini-3.1-pro",
@@ -1835,7 +1839,6 @@ mod tests {
             "deepseek-v4-flash:online",
             "gpt-image-2",
             "crouton-alpha",
-            "deepseek-v4.1-flash-abliterated",
         ] {
             assert!(!ids.contains(&omitted), "{omitted}");
         }
@@ -1879,7 +1882,8 @@ mod tests {
         .unwrap();
         assert_eq!(seeded.len(), ids.len());
         assert_eq!(seeded[0].id, "agnes-3-flash");
-        assert_eq!(seeded[36].id, "auto/bynara");
+        assert_eq!(seeded[8].id, "deepseek-v4.1-flash-abliterated");
+        assert_eq!(seeded[37].id, "auto/bynara");
     }
 
     #[test]
@@ -2048,7 +2052,7 @@ mod tests {
     fn larprouter_discovers_openai_models_on_the_documented_catalog_path() {
         let config = provider(
             "larprouter",
-            "https://larprouter.com",
+            "https://lutheos.com",
             ModelProtocol::OpenaiCompletions,
             "/v1/chat/completions",
         );
@@ -2057,7 +2061,7 @@ mod tests {
         assert_eq!(spec.credential, CredentialPolicy::Required);
         assert_eq!(
             discovery_url(&config, spec.adapter).unwrap().as_str(),
-            "https://larprouter.com/v1/models"
+            "https://lutheos.com/v1/models"
         );
     }
 
