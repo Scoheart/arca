@@ -272,9 +272,9 @@
 .arca-consumption-current-label { font-size: 10.5px; font-weight: 640; white-space: nowrap; }
 .arca-consumption-current-label[data-tone="success"] { color: var(--badge-success-fg); }
 .arca-consumption-current-label[data-tone="warning"] { color: var(--badge-warning-fg); }
-.arca-consumption-secondary { display: flex; min-width: 0; align-items: center; gap: 5px; margin-top: 3px; }
-.arca-consumption-secondary .arca-consumption-status { flex: 0 0 7px; height: 12px; }
-.arca-consumption-secondary small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-tertiary); font-size: 10px; }
+.arca-agent-workbench .arca-consumption-secondary { display: flex; min-width: 0; align-items: center; gap: 5px; margin-top: 3px; }
+.arca-agent-workbench .arca-consumption-secondary .arca-consumption-status { flex: 0 0 7px; height: 12px; }
+.arca-agent-workbench .arca-consumption-secondary small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-tertiary); font-size: 10px; }
 .arca-agent-workbench .arca-consumption-list > li[data-domain="mcp"] {
   min-height: 68px; grid-template-columns: 32px minmax(0, 1fr) auto 24px; grid-template-rows: auto; row-gap: 0; padding: 11px 14px;
   border-radius: 12px;
@@ -287,6 +287,53 @@
 .arca-agent-workbench li[data-domain="mcp"] .arca-consumption-controls { flex: 0 0 auto; }
 .arca-agent-workbench li[data-domain="mcp"] .arca-consumption-remove { grid-column: 4; grid-row: 1; justify-self: end; }
 .arca-agent-workbench li[data-domain="mcp"]:not(:has(.arca-consumption-remove)) .arca-consumption-card-footer { grid-column: 3 / -1; justify-self: end; }
+
+.arca-agent-workbench .arca-consumption-list > li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]) {
+  min-height: 76px;
+  grid-template-columns: 32px minmax(0, 1fr) auto 24px;
+  grid-template-rows: 32px auto;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 5px;
+  padding: 10px 14px 9px;
+  border-radius: 12px;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease, transform .15s ease;
+}
+.arca-agent-workbench .arca-consumption-list > li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]):hover {
+  transform: translateY(-1px);
+}
+.arca-agent-workbench li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]) .arca-consumption-copy {
+  grid-column: 2; grid-row: 1; min-width: 0;
+}
+.arca-agent-workbench li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]) .arca-consumption-card-footer {
+  display: flex; grid-column: 3; grid-row: 1; min-width: 0; width: auto; margin-left: auto; justify-content: flex-end; gap: 4px;
+}
+.arca-agent-workbench li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]) .arca-consumption-controls {
+  flex: 0 0 auto;
+}
+.arca-agent-workbench li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]) .arca-consumption-remove {
+  grid-column: 4; grid-row: 1; justify-self: end;
+}
+.arca-agent-workbench li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]):not(:has(.arca-consumption-remove)) .arca-consumption-card-footer {
+  grid-column: 3 / -1; justify-self: end;
+}
+.arca-agent-workbench li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]) .arca-consumption-card-description {
+  grid-column: 1 / -1; grid-row: 2;
+  min-height: 0;
+  -webkit-line-clamp: 1;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.arca-agent-workbench li:is([data-domain="skill"], [data-domain="subagent"], [data-domain="hook"]) .arca-consumption-card-footer > .arca-consumption-card-summary {
+  display: none;
+}
 .arca-agent-workbench .arca-consumption-meta .arca-transport-mark { font-weight: 620; font-size: 9.5px; padding: 2px 5px; border-radius: 4px; background: var(--surface-item); }
 .arca-agent-workbench .arca-consumption-empty { min-height: 240px; border: 1px dashed var(--border-hairline); background: color-mix(in srgb, var(--surface-item) 55%, transparent); }
 @media (max-width: 1060px) {

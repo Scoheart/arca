@@ -337,15 +337,35 @@ export function AgentConsumptionPanel({
                 : `启用 ${presentation.name}`;
             const canInspect = domain === "mcp" && Boolean(onInspect);
             const canOpen = !isExternal && Boolean(onOpenAsset);
-            const canViewDetail = canInspect || canOpen;
+            const canViewDetail = canInspect || canOpen || Boolean(onOpenAsset);
             const openDetail = () => {
               if (canInspect) onInspect?.(item);
-              else if (canOpen) onOpenAsset?.(item.asset);
+              else if (onOpenAsset) onOpenAsset?.(item.asset);
             };
             const openDetailLabel = canInspect
               ? `查看 ${presentation.name} 配置`
               : `查看 ${presentation.name} 详情`;
-            const removeActionLabel = removeLabel?.(presentation.name) ?? `从 Agent 移除 ${presentation.name}`;
+            const hasTitleButton = canInspect || canOpen;
+            const canRemoveDirect = !isExternal && Boolean(onRemove);
+            const canDetachDirect = Boolean(onConverge) && item.available_actions.includes("detach");
+            const canDelete = canRemoveDirect || canDetachDirect;
+            const removeActionLabel = canDetachDirect && !canRemoveDirect
+              ? `取消关联 ${presentation.name}`
+              : (removeLabel?.(presentation.name) ?? `从 Agent 移除 ${presentation.name}`);
+            const handleDelete = () => {
+              if (canRemoveDirect) {
+                onRemove?.(item.asset);
+              } else if (canDetachDirect) {
+                onConverge?.(item, "detach");
+              }
+            };
+            const remainingConvergenceActions = canDetachDirect
+              ? item.available_actions.filter((action) => action !== "detach")
+              : item.available_actions;
+            const hasConvergence = Boolean(onConverge) && remainingConvergenceActions.length > 0;
+            const hasControls = hasConvergence
+              || Boolean(renderAction)
+              || (!isExternal && Boolean(onEnabledChange) && enabled !== null);
             return (
               <li
                 key={rowKey(item, isExternal)}
@@ -358,7 +378,7 @@ export function AgentConsumptionPanel({
                 <span className="arca-consumption-icon">{presentation.icon}</span>
                 <span className="arca-consumption-copy">
                   <span className="arca-consumption-title">
-                    {canViewDetail ? (
+                    {hasTitleButton ? (
                       <button
                         type="button"
                         className="arca-consumption-inspect"
@@ -382,41 +402,45 @@ export function AgentConsumptionPanel({
                     {presentationDescription && <small title={presentationDescription}>{presentationDescription}</small>}
                   </span>}
                 </span>
-                {!isExternal && onRemove && (
+                {canDelete && (
                   <button
                     type="button"
                     className="arca-consumption-open arca-consumption-remove"
-                    disabled={removeDisabled}
+                    disabled={removeDisabled || (canDetachDirect && !canRemoveDirect && convergenceDisabled)}
                     aria-label={removeActionLabel}
                     title={removeActionLabel}
                     onClick={(event) => {
                       event.stopPropagation();
-                      onRemove(item.asset);
+                      handleDelete();
                     }}
                   >
                     <TrashIcon className="w-3.5 h-3.5" />
                   </button>
                 )}
-                {domain !== "mcp" && presentationDescription && <p className="arca-consumption-card-description" title={presentationDescription}>{presentationDescription}</p>}
+                {domain !== "mcp" && (presentationDescription || presentation.meta || (!isExternal && item.status !== "synced")) && (
+                  <p className="arca-consumption-card-description" title={presentationDescription}>
+                    {!isExternal && <ConsumptionStatus status={item.status} reason={item.reason} compact />}
+                    {presentation.meta && <span className="arca-consumption-meta">{presentation.meta}</span>}
+                    {presentationDescription && <span>{presentationDescription}</span>}
+                  </p>
+                )}
                 <div className="arca-consumption-card-footer">
                   {domain !== "mcp" && <div className="arca-consumption-card-summary">
                     <ConsumptionStatus status={item.status} reason={item.reason} compact />
                     {presentation.meta && <span className="arca-consumption-meta">{presentation.meta}</span>}
                   </div>}
-                {(item.status !== "synced" && !(isExternal && item.status === "external-added")
-                  || item.available_actions.length > 0
-                  || !isExternal && (renderAction || onEnabledChange && enabled !== null || onOpenAsset || onRemove)) && (
+                {hasControls && (
                   <span
                     className="arca-consumption-controls"
                     onClick={(event) => event.stopPropagation()}
                   >
                     <span className="arca-consumption-actions">
-                      {onConverge && item.available_actions.length > 0 && (
+                      {hasConvergence && (
                         <ConvergenceActions
                           name={`${presentation.name}${item.asset.domain === "mcp" ? ` · ${item.asset.key.split("::").at(-1)}` : item.target?.target_id ? ` · ${item.target.target_id}` : ""}`}
                           actions={item.available_actions}
                           disabled={convergenceDisabled}
-                          onAction={(action) => onConverge(item, action)}
+                          onAction={(action) => onConverge?.(item, action)}
                         />
                       )}
                       {renderAction?.(item)}

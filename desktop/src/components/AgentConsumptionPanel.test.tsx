@@ -219,6 +219,33 @@ describe("AgentConsumptionPanel", () => {
     expect(onActivate).toHaveBeenCalledOnce();
   });
 
+  it("renders a direct delete button for external items with detach action", async () => {
+    const onConverge = vi.fn();
+    const externalDetachable: ConsumptionView = {
+      ...externalRow,
+      asset: { domain: "skill", name: "external-tool" },
+      available_actions: ["detach"],
+    };
+    render(
+      <AgentConsumptionPanel
+        domain="skill"
+        title="Skills"
+        manageLabel="添加 Skill"
+        rows={[]}
+        external={[externalDetachable]}
+        externalMode="cards"
+        present={() => ({ name: "external-tool" })}
+        onManage={vi.fn()}
+        onConverge={onConverge}
+      />,
+    );
+
+    const deleteBtn = screen.getByRole("button", { name: "取消关联 external-tool" });
+    expect(deleteBtn).toBeVisible();
+    await userEvent.click(deleteBtn);
+    expect(onConverge).toHaveBeenCalledWith(externalDetachable, "detach");
+  });
+
   it("renders every external asset as a read-only disabled card", () => {
     const onEnabledChange = vi.fn();
     const onOpenAsset = vi.fn();
