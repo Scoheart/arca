@@ -347,6 +347,96 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "zai-org/GLM-5.3-Flash",
             "deepseek-ai/DeepSeek-V4-Flash-0731",
         ],
+        // https://bazaarlink.ai/free
+        // Public /v1/models mixes paid chat with image rows.
+        "bazaarlink" => &[
+            "auto:free",
+            "qwen/qwen3.7-flash",
+            "nvidia/nemotron-3.5-lightning-free",
+            "stealth/glyph-cluster",
+            "deepseek/deepseek-v4-flash-0731free",
+        ],
+        // https://aiapi-pro.com/docs
+        // Public /v1/models includes image, video, audio, and embedding rows.
+        "novai" => &[
+            "glm-4.7-flash",
+            "glm-4.6v-flash",
+            "glm-4.1v-thinking-flash",
+        ],
+        // https://inference.dahl.global/docs/tokens/
+        // The public list is these three chat ids. Embedding rows are not seeded.
+        "dahl-inference" => &[
+            "MiniMaxAI/MiniMax-M2.7",
+            "zai-org/GLM-5.3-Flash",
+            "deepseek-ai/DeepSeek-V4-Flash-0731",
+        ],
+        // https://docs.meganova.ai/tiers/tier-1
+        // Public /v1/models includes whisper, embeddings, rerankers, and image rows.
+        "meganova" => &[
+            "meganova-ai/manta-mini-1.0",
+            "meganova-ai/manta-flash-1.0",
+            "Sao10K/L3-8B-Stheno-v3.2",
+            "Sao10K/L3-70B-Euryale-v2.1",
+            "Steelskull/L3.3-MS-Nevoria-70b",
+            "BruhzWater/Sapphira-L3.3-70b-0.1",
+            "FallenMerick/MN-Violet-Lotus-12B",
+            "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        ],
+        // https://www.runcrate.ai/inference/free
+        // Public /v1/models includes audio, image, and video rows.
+        "runcrate" => &[
+            "deepseek-ai/DeepSeek-V4.1-Flash",
+            "zai-org/GLM-5.3-Flash",
+            "zai-org/GLM-5.3",
+            "openai/gpt-oss-120b",
+            "Qwen/Qwen3.8-Flash",
+        ],
+        // https://api.moark.com/v1/models
+        // The public list mixes chat with OCR, image, and embedding rows.
+        "moark" => &[
+            "MiniMax-M3.1-Flash",
+            "kimi-k3.1-pro",
+            "DeepSeek-V4.1-Flash-1017",
+            "deepseek-v4.1-flash",
+        ],
+        // https://docs.llm.kiwi/quickstart
+        "llmkiwi" => &[
+            "auto",
+            "minimax-m3",
+            "nemotron-3-ultra",
+            "nemotron-3-super",
+            "minimax-m2.5",
+        ],
+        // https://docs.sea-lion.ai/guides/inferencing/api
+        // Anonymous GET /v1/models is not a catalog. Embeddings and SEA-Guard are not chat.
+        "sea-lion" => &[
+            "aisingapore/Qwen-SEA-LION-v4.5-27B-IT",
+            "aisingapore/Llama-SEA-LION-v3.5-70B-R",
+        ],
+        // https://www.aionlabs.ai/docs/quickstart/
+        "aion-labs" => &[
+            "aion-labs/aion-3.5",
+            "aion-labs/aion-3.5-mini",
+            "aion-labs/aion-3.0",
+            "aion-labs/aion-3.0-mini",
+            "aion-labs/aion-2.0",
+            "aion-labs/aion-rp-llama-3.1-8b",
+        ],
+        // https://platform.publicai.co/docs
+        // Anonymous GET /v1/models is not a catalog.
+        "publicai" => &["swiss-ai/apertus-v1.5-8b"],
+        // https://kiosapi.id/docs
+        // Public /v1/models includes image, video, embedding, and rerank rows.
+        "kiosapi" => &[
+            "meta/llama-3.1-8b",
+            "qwen/qwen3-30b",
+            "zai/glm-4.7-flash",
+            "google/gemma-4-26b",
+            "aisingapore/sea-lion-27b",
+        ],
+        // https://simplellm.eu/docs/models.html
+        // GET /v1/models is not a public catalog. The priced gemma-4-E4B id is not free.
+        "simplellm" => &["free-gemma-4-E4B", "free-Llama-3.1-8B-Instruct"],
         _ => return None,
     };
     Some(
@@ -2833,5 +2923,202 @@ mod tests {
         assert!(unauthorized.contains("401"), "{unauthorized}");
         assert!(!unauthorized.contains("provider echoed"), "{unauthorized}");
         assert!(!unauthorized.contains("openai-secret"), "{unauthorized}");
+    }
+
+    #[test]
+    fn thirteen_provider_templates_seed_only_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "bazaarlink",
+            "https://api.bazaarlink.ai/v1",
+            "/chat/completions",
+            &[
+                "auto:free",
+                "qwen/qwen3.7-flash",
+                "nvidia/nemotron-3.5-lightning-free",
+                "stealth/glyph-cluster",
+                "deepseek/deepseek-v4-flash-0731free",
+            ],
+            &[
+                "qwen3.7-flash",
+                "qwen/qwen3.7-flash:free",
+                "deepseek-v4-flash-0731free",
+                "gemini-3.1-flash-image",
+            ],
+        );
+        assert_static_chat_seed(
+            "novai",
+            "https://aiapi-pro.com/v1",
+            "/chat/completions",
+            &[
+                "glm-4.7-flash",
+                "glm-4.6v-flash",
+                "glm-4.1v-thinking-flash",
+            ],
+            &[
+                "cogview-3-flash",
+                "cogvideox-flash",
+                "qwen3-tts-flash",
+                "qwen3.7-text-embedding",
+            ],
+        );
+        assert_static_chat_seed(
+            "dahl-inference",
+            "https://inference.dahl.global/v1",
+            "/chat/completions",
+            &[
+                "MiniMaxAI/MiniMax-M2.7",
+                "zai-org/GLM-5.3-Flash",
+                "deepseek-ai/DeepSeek-V4-Flash-0731",
+            ],
+            &["BAAI/bge-m3"],
+        );
+        assert_static_chat_seed(
+            "meganova",
+            "https://api.meganova.ai/v1",
+            "/chat/completions",
+            &[
+                "meganova-ai/manta-mini-1.0",
+                "meganova-ai/manta-flash-1.0",
+                "Sao10K/L3-8B-Stheno-v3.2",
+                "Sao10K/L3-70B-Euryale-v2.1",
+                "Steelskull/L3.3-MS-Nevoria-70b",
+                "BruhzWater/Sapphira-L3.3-70b-0.1",
+                "FallenMerick/MN-Violet-Lotus-12B",
+                "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+            ],
+            &[
+                "meganova-ai/manta-pro-1.0",
+                "zai-org/GLM-4.7-Flash",
+                "Systran/faster-whisper-large-v3",
+                "Qwen/Qwen3-Embedding-8B",
+                "BAAI/bge-reranker-v2-m3",
+                "Bytedance/seedream-4-5-251128",
+            ],
+        );
+        assert_static_chat_seed(
+            "runcrate",
+            "https://api.runcrate.ai/v1",
+            "/chat/completions",
+            &[
+                "deepseek-ai/DeepSeek-V4.1-Flash",
+                "zai-org/GLM-5.3-Flash",
+                "zai-org/GLM-5.3",
+                "openai/gpt-oss-120b",
+                "Qwen/Qwen3.8-Flash",
+            ],
+            &[
+                "openai/whisper-large-v3-turbo",
+                "Qwen/Qwen3-Embedding-8B",
+                "stabilityai/stable-diffusion-3-5-large",
+                "kuaishou/kling-v3-video",
+                "Qwen/Qwen3-TTS",
+            ],
+        );
+        assert_static_chat_seed(
+            "moark",
+            "https://api.moark.com/v1",
+            "/chat/completions",
+            &[
+                "MiniMax-M3.1-Flash",
+                "kimi-k3.1-pro",
+                "DeepSeek-V4.1-Flash-1017",
+                "deepseek-v4.1-flash",
+            ],
+            &[
+                "Unlimited-OCR-2",
+                "qwen-image-2.1-viggle-turbo",
+                "WeMM-Embedding-9B",
+            ],
+        );
+        assert_static_chat_seed(
+            "llmkiwi",
+            "https://api.llm.kiwi/v1",
+            "/chat/completions",
+            &[
+                "auto",
+                "minimax-m3",
+                "nemotron-3-ultra",
+                "nemotron-3-super",
+                "minimax-m2.5",
+            ],
+            &["hrllm"],
+        );
+        assert_static_chat_seed(
+            "sea-lion",
+            "https://api.sea-lion.ai/v1",
+            "/chat/completions",
+            &[
+                "aisingapore/Qwen-SEA-LION-v4.5-27B-IT",
+                "aisingapore/Llama-SEA-LION-v3.5-70B-R",
+            ],
+            &["aisingapore/SEA-Guard"],
+        );
+        assert_static_chat_seed(
+            "aion-labs",
+            "https://api.aionlabs.ai/v1",
+            "/chat/completions",
+            &[
+                "aion-labs/aion-3.5",
+                "aion-labs/aion-3.5-mini",
+                "aion-labs/aion-3.0",
+                "aion-labs/aion-3.0-mini",
+                "aion-labs/aion-2.0",
+                "aion-labs/aion-rp-llama-3.1-8b",
+            ],
+            &[],
+        );
+        assert_static_chat_seed(
+            "publicai",
+            "https://api.publicai.co/v1",
+            "/chat/completions",
+            &["swiss-ai/apertus-v1.5-8b"],
+            &[],
+        );
+        assert_static_chat_seed(
+            "kiosapi",
+            "https://api.kiosapi.id/v1",
+            "/chat/completions",
+            &[
+                "meta/llama-3.1-8b",
+                "qwen/qwen3-30b",
+                "zai/glm-4.7-flash",
+                "google/gemma-4-26b",
+                "aisingapore/sea-lion-27b",
+            ],
+            &[
+                "openai/text-embedding-3-small",
+                "baai/bge-reranker-base",
+                "deepseek/search",
+            ],
+        );
+        assert_static_chat_seed(
+            "simplellm",
+            "https://api.simplellm.eu/v1",
+            "/chat/completions",
+            &["free-gemma-4-E4B", "free-Llama-3.1-8B-Instruct"],
+            &["gemma-4-E4B"],
+        );
+    }
+
+    #[test]
+    fn bytez_has_no_seed_and_is_not_an_openai_compatible_catalog_provider() {
+        assert!(static_seed_models("bytez").is_none());
+        assert!(reviewed_static_catalog("bytez").is_none());
+        assert!(reviewed_discovery_spec("bytez").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"bytez"));
+        assert!(model_discovery_supported("bytez"));
+        let config = provider(
+            "bytez",
+            "https://api.bytez.com/models/v2/openai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.bytez.com/models/v2/openai/v1/models"
+        );
     }
 }

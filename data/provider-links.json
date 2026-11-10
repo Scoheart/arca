@@ -1293,5 +1293,96 @@
       "url": "https://app.gonkabroker.com",
       "kind": "console"
     }
+  },
+  "bazaarlink": {
+    "docs_url": "https://bazaarlink.ai/en/docs",
+    "portal": {
+      "url": "https://bazaarlink.ai/keys",
+      "kind": "api-key"
+    }
+  },
+  "novai": {
+    "docs_url": "https://aiapi-pro.com/docs",
+    "portal": {
+      "url": "https://aiapi-pro.com/dashboard",
+      "kind": "console"
+    }
+  },
+  "dahl-inference": {
+    "docs_url": "https://inference.dahl.global/docs/api/",
+    "portal": {
+      "url": "https://inference.dahl.global/account",
+      "kind": "console"
+    }
+  },
+  "meganova": {
+    "docs_url": "https://docs.meganova.ai/api-reference/inference-models",
+    "portal": {
+      "url": "https://console.meganova.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "runcrate": {
+    "docs_url": "https://www.runcrate.ai/docs/getting-started/quickstart",
+    "portal": {
+      "url": "https://www.runcrate.ai/dashboard/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "moark": {
+    "docs_url": "https://moark.com/docs/FAQ",
+    "portal": {
+      "url": "https://moark.com/settings/access-token",
+      "kind": "api-key"
+    }
+  },
+  "bytez": {
+    "docs_url": "https://docs.bytez.com/http-reference/examples/openai-compliant/chatCompletionsExample",
+    "portal": {
+      "url": "https://bytez.com/api",
+      "kind": "api-key"
+    }
+  },
+  "llmkiwi": {
+    "docs_url": "https://docs.llm.kiwi/quickstart",
+    "portal": {
+      "url": "https://llm.kiwi/dashboard",
+      "kind": "console"
+    }
+  },
+  "sea-lion": {
+    "docs_url": "https://docs.sea-lion.ai/guides/inferencing/api",
+    "portal": {
+      "url": "https://playground.sea-lion.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "aion-labs": {
+    "docs_url": "https://www.aionlabs.ai/docs/quickstart/",
+    "portal": {
+      "url": "https://www.aionlabs.ai/app/api-keys/",
+      "kind": "api-key"
+    }
+  },
+  "publicai": {
+    "docs_url": "https://platform.publicai.co/docs",
+    "portal": {
+      "url": "https://platform.publicai.co/settings/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "kiosapi": {
+    "docs_url": "https://kiosapi.id/docs",
+    "portal": {
+      "url": "https://kiosapi.id/dashboard/keys",
+      "kind": "api-key"
+    }
+  },
+  "simplellm": {
+    "docs_url": "https://simplellm.eu/docs/quickstart.html",
+    "portal": {
+      "url": "https://app.simplellm.eu/keys",
+      "kind": "api-key"
+    }
   }
 }

@@ -3928,6 +3928,195 @@
       }
     },
     {
+      "id": "bazaarlink",
+      "name": "BazaarLink",
+      "category": "gateway",
+      "baseUrl": "https://api.bazaarlink.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://bazaarlink.ai/en/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://bazaarlink.ai/keys"
+      }
+    },
+    {
+      "id": "novai",
+      "name": "NovAI",
+      "category": "gateway",
+      "baseUrl": "https://aiapi-pro.com/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://aiapi-pro.com/docs",
+      "portal": {
+        "kind": "console",
+        "url": "https://aiapi-pro.com/dashboard"
+      }
+    },
+    {
+      "id": "dahl-inference",
+      "name": "Dahl Inference",
+      "category": "gateway",
+      "baseUrl": "https://inference.dahl.global/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://inference.dahl.global/docs/api/",
+      "portal": {
+        "kind": "console",
+        "url": "https://inference.dahl.global/account"
+      }
+    },
+    {
+      "id": "meganova",
+      "name": "MegaNova AI",
+      "category": "gateway",
+      "baseUrl": "https://api.meganova.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.meganova.ai/api-reference/inference-models",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.meganova.ai/api-keys"
+      }
+    },
+    {
+      "id": "runcrate",
+      "name": "Runcrate",
+      "category": "gateway",
+      "baseUrl": "https://api.runcrate.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://www.runcrate.ai/docs/getting-started/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://www.runcrate.ai/dashboard/api-keys"
+      }
+    },
+    {
+      "id": "moark",
+      "name": "模力方舟（Moark）",
+      "category": "gateway",
+      "baseUrl": "https://api.moark.com/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://moark.com/docs/FAQ",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://moark.com/settings/access-token"
+      }
+    },
+    {
+      "id": "bytez",
+      "name": "Bytez",
+      "category": "gateway",
+      "baseUrl": "https://api.bytez.com/models/v2/openai/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.bytez.com/http-reference/examples/openai-compliant/chatCompletionsExample",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://bytez.com/api"
+      }
+    },
+    {
+      "id": "llmkiwi",
+      "name": "LLM.kiwi",
+      "category": "gateway",
+      "baseUrl": "https://api.llm.kiwi/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.llm.kiwi/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://llm.kiwi/dashboard"
+      }
+    },
+    {
+      "id": "sea-lion",
+      "name": "SEA-LION（AI Singapore）",
+      "category": "official",
+      "baseUrl": "https://api.sea-lion.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.sea-lion.ai/guides/inferencing/api",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://playground.sea-lion.ai/api-keys"
+      }
+    },
+    {
+      "id": "aion-labs",
+      "name": "Aion Labs",
+      "category": "official",
+      "baseUrl": "https://api.aionlabs.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://www.aionlabs.ai/docs/quickstart/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://www.aionlabs.ai/app/api-keys/"
+      }
+    },
+    {
+      "id": "publicai",
+      "name": "Public AI",
+      "category": "gateway",
+      "baseUrl": "https://api.publicai.co/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://platform.publicai.co/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.publicai.co/settings/api-keys"
+      }
+    },
+    {
+      "id": "kiosapi",
+      "name": "Kiosapi.id",
+      "category": "gateway",
+      "baseUrl": "https://api.kiosapi.id/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://kiosapi.id/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://kiosapi.id/dashboard/keys"
+      }
+    },
+    {
+      "id": "simplellm",
+      "name": "SimpleLLM",
+      "category": "gateway",
+      "baseUrl": "https://api.simplellm.eu/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://simplellm.eu/docs/quickstart.html",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://app.simplellm.eu/keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
