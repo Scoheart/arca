@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" role="img" aria-label="OptraCloud">
+  <style>
+    .l1 { fill: #5B6BE8; }
+    .l2 { fill: #7680F6; }
+    .l3 { fill: #B48CF5; }
+    @media (prefers-color-scheme: dark) {
+      .l1 { fill: #7680F6; }
+      .l2 { fill: #9AA2FA; }
+      .l3 { fill: #C59AF9; }
+    }
+  </style>
+  <path class="l1" d="M22 4 L40 13 L22 22 L4 13 Z"/>
+  <path class="l2" d="M22 17 L40 26 L22 35 L4 26 Z" opacity=".92"/>
+  <path class="l3" d="M22 26 L40 35 L22 44 L4 35 Z" opacity=".85"/>
+</svg>

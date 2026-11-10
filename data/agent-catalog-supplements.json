@@ -344,5 +344,21 @@
     "note": "Directionally Local 的终端编程代理，命令为 dl，同一安装也提供 directionallylocal。官方安装文档确认 macOS 与 Linux 使用 curl -fsSL https://dl.new | sh，默认装到 ~/.directionallylocal（无需 sudo），并把 ~/.directionallylocal/bin 加入 shell 的 PATH；Windows 目前使用 WSL。已有 Node.js 时可用 npm install -g directionallylocal：22 线需 22.23.4 或更高，24 线需 24.22.1 或更高，26 及以后需 26.12.1 或更高。首次运行由 Autopilot 显示设备码和链接，在浏览器用 GitHub 登录并批准；autopilot auth directionally-local 是同一 GitHub 设备码登录。免费档只在本机 dl 会话中提供（GPT-6 Luna 与 DeepSeek 每周共享 5000 万 token；较新或不够活跃的 GitHub 账号为 Starter，仅 DeepSeek、每周 500 万 token）；安装文档写明后台任务和服务器会话目前不提供免费档。本机 dl 使用 Autopilot 配置 ~/.config/autopilot/config.json（若设置 XDG_CONFIG_HOME 则改到其 autopilot/config.json）。其中 mcpServers 的 command 是字符串数组，环境变量字段是 env；文档表格的 type 为 local 或 remote，Autopilot 官方 README 另有 http。现有适配器写入 command/args 或 OpenCode 的 environment，不能安全写入该文件。官方文档只有 /skills 命令，没有用户级 Skills 目录。Arca 仅展示，不写入。",
     "verified_at": "2026-11-08",
     "evidence": "official"
+  },
+  "nodecode": {
+    "name": "Nodecode",
+    "category": "cli",
+    "docs": "https://nodecode.ai/docs/install",
+    "note": "Nodecode 的终端编程代理，命令为 nodecode。官方安装文档确认 Linux x86_64 与 Apple Silicon macOS 15 及以上使用 curl -fsSL https://nodecode.ai/install.sh | sh，Windows x86_64 的 PowerShell 使用 irm https://nodecode.ai/install.ps1 | iex；登录为 nodecode login。主目录是 ~/.nodecode/，模型写在 config.jsonc 的 providers，技能由 import 链接进 knowledge cell，MCP 由 import 与 /mcp 写入配置。已发布的核心配置键没有可由 Arca 现有适配器安全写入的 MCP、Models 或 Skills 契约。Arca 仅展示，不写入。",
+    "verified_at": "2026-11-08",
+    "evidence": "official"
+  },
+  "velork": {
+    "name": "Velork",
+    "category": "desktop",
+    "docs": "https://velork.com",
+    "note": "Velork，面向前端团队的桌面 IDE。产品页标题是 “Design and code, together.”，说明在代码旁的画布上用 AI 设计，并用已有技术栈交付。套餐页内的文档摘录写明它是建在 VS Code 上的 AI-native desktop IDE。下载页确认 macOS Intel 与 Apple Silicon、Windows x64 与 ARM64 的 .exe，以及 Linux x64 与 ARM64 的 .deb 与 .rpm；安装命令为 curl -fsSL https://api.velork.com/releases/install.sh | bash，应用会自行更新。可登录 Claude Pro 或 ChatGPT 方案，或自带 API key；新账号有免费 Velork credits。产品页列出 Claude Code、Codex、Cursor、GitHub Copilot 与 OpenRouter，并写明 Claude Code、Codex、Cursor 或 Copilot 在 Velork 内按你的方案或自有 key 运行。套餐页说明设计、代码与 Agent 在每个方案上都不限量，方案差别在 Velork AI credits 与算力；用自有提供商发出的请求不消耗 credits，Velork 也不限制这类请求。该页把完整 IDE、Agent 模式、skills 与 MCP servers 列为不限量功能，但没有用户级 MCP、Models 或 Skills 文件路径。这些页面没有第三方模型 API，因此不登记模型供应商。Arca 仅展示，不写入。",
+    "verified_at": "2026-11-08",
+    "evidence": "official"
   }
 }

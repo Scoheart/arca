@@ -212,6 +212,12 @@ const NARAROUTER_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("auto/bynara", None, None),
 ];
 
+/// Documented chat model used when Nodecode's catalog is not public.
+/// The image and classifier ids are real and are not session chat models.
+const NODECODE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("nodecode-cyber-v1", Some("Cyber v1"), Some(1_048_576)),
+];
+
 /// Documented model ids used when the provider's catalog is not public.
 /// Ids are the current models page, not aliases or retired routes.
 const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
@@ -224,10 +230,52 @@ const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("auto", None, None),
 ];
 
+/// Documented chat model used when anonymous GET /v1/models is not a catalog.
+/// The id, display name, and context length are the K-EXAONE 2.5 API page.
+const EXAONE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("k-exaone_v2.5", Some("K-EXAONE 2.5"), Some(524_288)),
+];
+
+/// Documented model ids used when anonymous GET /v1/models is not a catalog.
+/// Ids and names are the current models page. Context values are the decimal
+/// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
+const SAILRESEARCH_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("moonshotai/Kimi-K3.1-Pro", Some("Kimi K3.1 Pro"), Some(1_000_000)),
+    ("moonshotai/Kimi-K3", Some("Kimi K3"), Some(1_000_000)),
+    ("zai-org/GLM-5.3", Some("GLM-5.3"), Some(1_000_000)),
+    ("zai-org/GLM-5.3-Flash", Some("GLM-5.3-Flash"), Some(1_000_000)),
+    (
+        "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        Some("DeepSeek V4.1 Flash 1017"),
+        Some(1_000_000),
+    ),
+    (
+        "deepseek-ai/DeepSeek-V4-Pro-0813",
+        Some("DeepSeek V4 Pro 0813"),
+        Some(1_000_000),
+    ),
+    (
+        "deepseek-ai/DeepSeek-V4-Flash-0731",
+        Some("DeepSeek V4 Flash 0731"),
+        Some(1_000_000),
+    ),
+    ("google/gemma-4-31B-it", Some("Gemma 4 31B IT"), Some(256_000)),
+    (
+        "nvidia/Gemma-4-31B-IT-NVFP4",
+        Some("Gemma 4 31B IT (NVFP4)"),
+        Some(262_000),
+    ),
+    ("google/gemma-4-12B-it", Some("Gemma 4 12B IT"), Some(16_000)),
+    ("Qwen/Qwen3.6-35B-A3B", Some("Qwen3.6 35B A3B"), Some(262_000)),
+];
+
 fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
     let entries = match provider_type {
+        "nodecode" => NODECODE_STATIC_MODELS,
         "zro" => ZRO_STATIC_MODELS,
         "nararouter" => NARAROUTER_STATIC_MODELS,
+        "exaone" => EXAONE_STATIC_MODELS,
+        "sailresearch" => SAILRESEARCH_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -254,6 +302,9 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "@makers/kimi-k2.6",
             "@makers/zhuque-text",
         ],
+        // https://app.vllm-sr.ai/docs
+        // GET /v1/models also lists System One decision models. Only this id is chat.
+        "vllm-semantic-router" => &["vllm-sr/auto"],
         _ => return None,
     };
     Some(
@@ -341,6 +392,13 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "edenai"
         | "nararouter"
         | "zro"
+        | "xkiro"
+        | "nodecode"
+        | "freeinference"
+        | "optracloud"
+        | "ifm"
+        | "exaone"
+        | "sailresearch"
         | "llm7"
         | "mistral"
         | "deepseek"
@@ -436,6 +494,10 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "subq"
             | "token360"
             | "edenai"
+            | "xkiro"
+            | "freeinference"
+            | "optracloud"
+            | "ifm"
             | "llm7"
             | "alibaba-coding-plan-cn"
             | "alibaba-coding-plan"
@@ -667,6 +729,7 @@ fn decode_page(adapter: DiscoveryAdapter, value: Value) -> Result<DecodedPage, S
                             .any(|method| method.as_str() == Some("generateContent"))
                     })
         })
+        .filter(|entry| !is_non_chat_ifm_catalog_entry(entry))
         .filter_map(|entry| model_summary(adapter, entry))
         .collect();
     // A malformed Cloudflare ID must not make a full page appear to be the
@@ -675,6 +738,25 @@ fn decode_page(adapter: DiscoveryAdapter, value: Value) -> Result<DecodedPage, S
         return Err("model_discovery_invalid_response: Workers AI returned an invalid marketplace model ID".into());
     }
     Ok(DecodedPage { models, next_token })
+}
+
+/// IFM publishes speech-only rows in the same OpenAI list as chat models.
+/// Drop a row only when it is an IFM model and `supported_endpoints` lists
+/// neither Chat Completions nor Responses. Other catalogs are unchanged.
+fn is_non_chat_ifm_catalog_entry(entry: &Value) -> bool {
+    let id = entry.get("id").and_then(Value::as_str).unwrap_or("");
+    if entry.get("owned_by").and_then(Value::as_str) != Some("MBZUAI") || !id.starts_with("IFM/") {
+        return false;
+    }
+    let Some(endpoints) = entry.get("supported_endpoints").and_then(Value::as_array) else {
+        return false;
+    };
+    !endpoints.iter().any(|endpoint| {
+        matches!(
+            endpoint.as_str(),
+            Some("/v1/chat/completions") | Some("/v1/responses")
+        )
+    })
 }
 
 fn model_summary(adapter: DiscoveryAdapter, value: &Value) -> Option<ProviderModelSummary> {
@@ -1089,6 +1171,60 @@ mod tests {
     }
 
     #[test]
+    fn vllm_semantic_router_seeds_vllm_sr_auto_and_does_not_call_models() {
+        assert!(reviewed_discovery_spec("vllm-semantic-router").is_none());
+        assert!(model_discovery_supported("vllm-semantic-router"));
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"vllm-semantic-router"));
+        let mut config = provider(
+            "vllm-semantic-router",
+            "https://app.vllm-sr.ai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        config.auth_requirement = AuthRequirement::Required;
+        assert!(discovery_spec_for_provider(&config)
+            .unwrap_err()
+            .contains("model_discovery_static_seed"));
+        let models = execute_provider_discovery(ModelDiscoveryInput {
+            provider: config.clone(),
+        })
+        .unwrap();
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["vllm-sr/auto"]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "vllm-sr/d3-ultra",
+            "vllm-sr/d3-turbo",
+            "vllm-sr/d3",
+            "vllm-sr/d3-flash",
+            "vllm-sr/d3-mini",
+            "vllm-sr/d3-nano",
+            "vllm-sr/d3-lite",
+            "vllm-sr/d3-edge",
+            "vllm-sr/vela3-turbo",
+            "vllm-sr/vela3-flash",
+            "zai/glm-5.3-flash",
+            "qwen/qwen3.8-flash-next",
+            "qwen/qwen3.8-27b",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+
+        config.model_catalog_url = Some("https://catalog.example.test/models".into());
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://catalog.example.test/models"
+        );
+    }
+
+    #[test]
     fn inferx_has_no_reviewed_catalog_spec_and_falls_back_to_the_openai_models_path() {
         assert!(reviewed_discovery_spec("inferx").is_none());
         let config = provider(
@@ -1220,6 +1356,128 @@ mod tests {
     }
 
     #[test]
+    fn exaone_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("exaone").expect("exaone seed");
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].id, "k-exaone_v2.5");
+        assert_eq!(models[0].name.as_deref(), Some("K-EXAONE 2.5"));
+        assert_eq!(models[0].context_length, Some(524_288));
+        assert!(static_seed_models("exaone").is_none());
+
+        let config = provider(
+            "exaone",
+            "https://api.exaone.ai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.exaone.ai/v1/models"
+        );
+
+        let _home = TestHome::new("exaone-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "exaone-instance".into(),
+                name: "EXAONE API Platform".into(),
+                provider: "exaone".into(),
+                base_url: "https://api.exaone.ai/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "k-exaone_v2.5");
+        assert_eq!(seeded[0].context_length, Some(524_288));
+    }
+
+    #[test]
+    fn sailresearch_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("sailresearch").expect("sailresearch seed");
+        let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            [
+                "moonshotai/Kimi-K3.1-Pro",
+                "moonshotai/Kimi-K3",
+                "zai-org/GLM-5.3",
+                "zai-org/GLM-5.3-Flash",
+                "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+                "deepseek-ai/DeepSeek-V4-Pro-0813",
+                "deepseek-ai/DeepSeek-V4-Flash-0731",
+                "google/gemma-4-31B-it",
+                "nvidia/Gemma-4-31B-IT-NVFP4",
+                "google/gemma-4-12B-it",
+                "Qwen/Qwen3.6-35B-A3B",
+            ]
+        );
+        assert_eq!(models[0].name.as_deref(), Some("Kimi K3.1 Pro"));
+        assert_eq!(models[0].context_length, Some(1_000_000));
+        assert_eq!(models[4].name.as_deref(), Some("DeepSeek V4.1 Flash 1017"));
+        assert_eq!(models[4].context_length, Some(1_000_000));
+        assert_eq!(models[7].context_length, Some(256_000));
+        assert_eq!(models[8].context_length, Some(262_000));
+        assert_eq!(models[9].context_length, Some(16_000));
+        assert_eq!(models[10].name.as_deref(), Some("Qwen3.6 35B A3B"));
+        assert_eq!(models[10].context_length, Some(262_000));
+        assert!(static_seed_models("sailresearch").is_none());
+        assert!(reviewed_static_catalog("decuff").is_none());
+
+        let config = provider(
+            "sailresearch",
+            "https://api.sailresearch.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.sailresearch.com/v1/models"
+        );
+
+        let _home = TestHome::new("sailresearch-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "sailresearch-instance".into(),
+                name: "Sail Research".into(),
+                provider: "sailresearch".into(),
+                base_url: "https://api.sailresearch.com".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), ids.len());
+        assert_eq!(seeded[0].id, "moonshotai/Kimi-K3.1-Pro");
+        assert_eq!(seeded[3].id, "zai-org/GLM-5.3-Flash");
+        assert_eq!(seeded[10].context_length, Some(262_000));
+    }
+
+    #[test]
     fn nararouter_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
         let models = reviewed_static_catalog("nararouter").expect("nararouter seed");
         let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
@@ -1332,6 +1590,134 @@ mod tests {
         assert_eq!(seeded.len(), ids.len());
         assert_eq!(seeded[0].id, "agnes-3-flash");
         assert_eq!(seeded[36].id, "auto/bynara");
+    }
+
+    #[test]
+    fn xkiro_discovers_the_public_openai_catalog() {
+        assert!(reviewed_static_catalog("xkiro").is_none());
+        let config = provider(
+            "xkiro",
+            "https://api.xkiro.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.xkiro.com/v1/models"
+        );
+    }
+
+    #[test]
+    fn nodecode_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("nodecode").expect("nodecode seed");
+        let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
+        assert_eq!(ids, ["nodecode-cyber-v1"]);
+        assert_eq!(models[0].name.as_deref(), Some("Cyber v1"));
+        assert_eq!(models[0].context_length, Some(1_048_576));
+        for omitted in [
+            "nodecode-image-v1",
+            "nodecode-decide-v1",
+            "nodecode-free/nodecode-cyber-v1",
+            "nodecode-free",
+        ] {
+            assert!(!ids.contains(&omitted), "{omitted}");
+        }
+
+        let config = provider(
+            "nodecode",
+            "https://api.nodecode.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.nodecode.ai/v1/models"
+        );
+
+        let _home = TestHome::new("nodecode-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "nodecode-instance".into(),
+                name: "Nodecode".into(),
+                provider: "nodecode".into(),
+                base_url: "https://api.nodecode.ai".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "nodecode-cyber-v1");
+        assert_eq!(seeded[0].context_length, Some(1_048_576));
+    }
+
+    #[test]
+    fn freeinference_discovers_the_public_openai_catalog() {
+        assert!(reviewed_static_catalog("freeinference").is_none());
+        let config = provider(
+            "freeinference",
+            "https://freeinference.org",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://freeinference.org/v1/models"
+        );
+    }
+
+    #[test]
+    fn optracloud_discovers_the_public_openai_catalog() {
+        assert!(reviewed_static_catalog("optracloud").is_none());
+        let config = provider(
+            "optracloud",
+            "https://api.optracloud.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.optracloud.com/v1/models"
+        );
+    }
+
+    #[test]
+    fn ifm_discovers_the_public_openai_catalog() {
+        assert!(reviewed_static_catalog("ifm").is_none());
+        let config = provider(
+            "ifm",
+            "https://api.ifm.ai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.ifm.ai/v1/models"
+        );
     }
 
     #[test]
@@ -1521,6 +1907,13 @@ mod tests {
         "edenai",
         "nararouter",
         "zro",
+        "xkiro",
+        "nodecode",
+        "freeinference",
+        "optracloud",
+        "ifm",
+        "exaone",
+        "sailresearch",
         "llm7",
         "mistral",
         "deepseek",
@@ -1706,6 +2099,10 @@ mod tests {
             "subq",
             "token360",
             "edenai",
+            "xkiro",
+            "freeinference",
+            "optracloud",
+            "ifm",
             "llm7",
         ] {
             assert_eq!(
@@ -1714,7 +2111,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
@@ -1860,6 +2257,56 @@ mod tests {
                 .as_str(),
             "https://api.fireworks.ai/v1/accounts/fireworks/models?filter=supports_serverless%3Dtrue&pageSize=200",
         );
+    }
+
+    #[test]
+    fn ifm_public_catalog_drops_speech_only_models() {
+        let page = decode_page(
+            DiscoveryAdapter::OpenAi,
+            serde_json::json!({
+                "object": "list",
+                "data": [
+                    {
+                        "id": "IFM/K2-Horizon-375B-A23B",
+                        "object": "model",
+                        "owned_by": "MBZUAI",
+                        "display_name": "K2 Horizon 375B A23B",
+                        "max_model_len": 524288,
+                        "context_length": 524288,
+                        "supported_endpoints": ["/v1/chat/completions", "/v1/responses"]
+                    },
+                    {
+                        "id": "IFM/Jais-3-MoVA-36B-A4B",
+                        "object": "model",
+                        "owned_by": "MBZUAI",
+                        "display_name": "Jais 3 MoVA 36B A4B",
+                        "supported_endpoints": ["/v1/chat/completions"]
+                    },
+                    {
+                        "id": "IFM/Jais-ASR",
+                        "object": "model",
+                        "owned_by": "MBZUAI",
+                        "display_name": "Jais ASR",
+                        "supported_endpoints": ["/v1/audio/transcriptions"]
+                    },
+                    {
+                        "id": "vendor/embed",
+                        "owned_by": "other",
+                        "supported_endpoints": ["/v1/embeddings"]
+                    }
+                ]
+            }),
+        )
+        .unwrap();
+        assert_eq!(page.models.len(), 3);
+        assert_eq!(page.models[0].id, "IFM/K2-Horizon-375B-A23B");
+        assert_eq!(page.models[0].name.as_deref(), Some("K2 Horizon 375B A23B"));
+        assert_eq!(page.models[0].context_length, Some(524288));
+        assert_eq!(page.models[1].id, "IFM/Jais-3-MoVA-36B-A4B");
+        assert_eq!(page.models[1].name.as_deref(), Some("Jais 3 MoVA 36B A4B"));
+        assert!(page.models[1].context_length.is_none());
+        assert_eq!(page.models[2].id, "vendor/embed");
+        assert!(page.models.iter().all(|model| model.id != "IFM/Jais-ASR"));
     }
 
     #[test]

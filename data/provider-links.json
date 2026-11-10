@@ -1154,6 +1154,13 @@
       "kind": "console"
     }
   },
+  "xkiro": {
+    "docs_url": "https://docs.xkiro.com/api/chat-completions/",
+    "portal": {
+      "url": "https://xkiro.com/dashboard/api/keys",
+      "kind": "api-key"
+    }
+  },
   "edenai": {
     "docs_url": "https://www.edenai.co/docs/v3/llms/chat-completions",
     "portal": {
@@ -1187,6 +1194,55 @@
     "portal": {
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
+    }
+  },
+  "nodecode": {
+    "docs_url": "https://nodecode.ai/docs/models",
+    "portal": {
+      "url": "https://nodecode.ai/account/keys",
+      "kind": "api-key"
+    }
+  },
+  "freeinference": {
+    "docs_url": "https://doc.freeinference.org/quickstart",
+    "portal": {
+      "url": "https://freeinference.org/signup",
+      "kind": "console"
+    }
+  },
+  "optracloud": {
+    "docs_url": "https://optracloud.com/docs.html",
+    "portal": {
+      "url": "https://optracloud.com/portal/apikeys",
+      "kind": "api-key"
+    }
+  },
+  "ifm": {
+    "docs_url": "https://docs.ifm.ai/docs/quickstart.md",
+    "portal": {
+      "url": "https://platform.ifm.ai/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "exaone": {
+    "docs_url": "https://docs.exaone.ai/en/docs/k-exaone-2.5",
+    "portal": {
+      "url": "https://id.exaone.ai/mypage",
+      "kind": "console"
+    }
+  },
+  "sailresearch": {
+    "docs_url": "https://docs.sailresearch.com/quickstart",
+    "portal": {
+      "url": "https://app.sailresearch.com/sign-up",
+      "kind": "console"
+    }
+  },
+  "vllm-semantic-router": {
+    "docs_url": "https://app.vllm-sr.ai/docs",
+    "portal": {
+      "url": "https://app.vllm-sr.ai",
+      "kind": "api-key"
     }
   }
 }

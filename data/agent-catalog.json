@@ -4819,5 +4819,39 @@
     "codec": "standard",
     "layout": "map",
     "transports": []
+  },
+  "nodecode": {
+    "global": null,
+    "project": null,
+    "format": "unknown",
+    "key": "",
+    "enabled": true,
+    "builtin": true,
+    "name": "Nodecode",
+    "docs": "https://nodecode.ai/docs/install",
+    "note": "Nodecode 的终端编程代理，命令为 nodecode。官方安装文档确认 Linux x86_64 与 Apple Silicon macOS 15 及以上使用 curl -fsSL https://nodecode.ai/install.sh | sh，Windows x86_64 的 PowerShell 使用 irm https://nodecode.ai/install.ps1 | iex；登录为 nodecode login。主目录是 ~/.nodecode/，模型写在 config.jsonc 的 providers，技能由 import 链接进 knowledge cell，MCP 由 import 与 /mcp 写入配置。已发布的核心配置键没有可由 Arca 现有适配器安全写入的 MCP、Models 或 Skills 契约。Arca 仅展示，不写入。",
+    "category": "cli",
+    "evidence": "official",
+    "verified_at": "2026-11-08",
+    "codec": "standard",
+    "layout": "map",
+    "transports": []
+  },
+  "velork": {
+    "global": null,
+    "project": null,
+    "format": "unknown",
+    "key": "",
+    "enabled": true,
+    "builtin": true,
+    "name": "Velork",
+    "docs": "https://velork.com",
+    "note": "Velork，面向前端团队的桌面 IDE。产品页标题是 “Design and code, together.”，说明在代码旁的画布上用 AI 设计，并用已有技术栈交付。套餐页内的文档摘录写明它是建在 VS Code 上的 AI-native desktop IDE。下载页确认 macOS Intel 与 Apple Silicon、Windows x64 与 ARM64 的 .exe，以及 Linux x64 与 ARM64 的 .deb 与 .rpm；安装命令为 curl -fsSL https://api.velork.com/releases/install.sh | bash，应用会自行更新。可登录 Claude Pro 或 ChatGPT 方案，或自带 API key；新账号有免费 Velork credits。产品页列出 Claude Code、Codex、Cursor、GitHub Copilot 与 OpenRouter，并写明 Claude Code、Codex、Cursor 或 Copilot 在 Velork 内按你的方案或自有 key 运行。套餐页说明设计、代码与 Agent 在每个方案上都不限量，方案差别在 Velork AI credits 与算力；用自有提供商发出的请求不消耗 credits，Velork 也不限制这类请求。该页把完整 IDE、Agent 模式、skills 与 MCP servers 列为不限量功能，但没有用户级 MCP、Models 或 Skills 文件路径。这些页面没有第三方模型 API，因此不登记模型供应商。Arca 仅展示，不写入。",
+    "category": "desktop",
+    "evidence": "official",
+    "verified_at": "2026-11-08",
+    "codec": "standard",
+    "layout": "map",
+    "transports": []
   }
 }
