@@ -4117,6 +4117,50 @@
       }
     },
     {
+      "id": "helyx-ai",
+      "name": "Helyx AI",
+      "category": "gateway",
+      "baseUrl": "https://helyxai.space/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://helyxai.space/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://helyxai.space/dashboard"
+      }
+    },
+    {
+      "id": "hyperbolic",
+      "name": "Hyperbolic",
+      "category": "gateway",
+      "baseUrl": "https://api.hyperbolic.ai/inference/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://hyperbolic.ai/docs/inference/overview",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://app.hyperbolic.ai/settings/api-keys"
+      }
+    },
+    {
+      "id": "vectoree",
+      "name": "Vectoree",
+      "category": "gateway",
+      "baseUrl": "https://vectoree.ai/api/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.vectoree.ai/models",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://vectoree.ai/dashboard/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

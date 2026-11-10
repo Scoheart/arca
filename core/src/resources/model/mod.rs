@@ -997,6 +997,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: OpenaiResponses,
             base_url: "https://api.bytez.com/models/v2/openai/v1",
         }],
+        "vectoree" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://vectoree.ai/api/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://vectoree.ai/api",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1887,6 +1897,27 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "helyx-ai",
+        name: "Helyx AI",
+        default_base_url: Some("https://helyxai.space/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "hyperbolic",
+        name: "Hyperbolic",
+        default_base_url: Some("https://api.hyperbolic.ai/inference/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "vectoree",
+        name: "Vectoree",
+        default_base_url: Some("https://vectoree.ai/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2551,6 +2582,14 @@ pub fn infer_provider(base_url: &str) -> String {
             return "cloudflare-workers-ai".into();
         }
     }
+    // Chat inference is only under /inference. /v1 on this host is the GPU API.
+    if host == "api.hyperbolic.ai" && in_path("/inference") {
+        return "hyperbolic".into();
+    }
+    // The gateway is /api/v1. The same host is the marketing site, and bare /v1 is not the API.
+    if host == "vectoree.ai" && in_path("/api") {
+        return "vectoree".into();
+    }
     match host.as_str() {
         "openrouter.ai" | "api.openrouter.ai" => "openrouter",
         "api.anthropic.com" => "anthropic",
@@ -2675,6 +2714,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.publicai.co" => "publicai",
         "api.kiosapi.id" => "kiosapi",
         "api.simplellm.eu" => "simplellm",
+        "helyxai.space" => "helyx-ai",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -8938,6 +8978,50 @@ mod tests {
             ("https://www.api.simplellm.eu/v1", "custom"),
             ("https://api.simplellm.com/v1", "custom"),
             ("https://api.simplellm.eu.evil.test/v1", "custom"),
+            ("https://helyxai.space/v1", "helyx-ai"),
+            ("https://helyxai.space/v1/chat/completions", "helyx-ai"),
+            ("https://helyxai.space/v1/models", "helyx-ai"),
+            ("https://helyxai.space", "helyx-ai"),
+            ("https://helyxai.space/docs", "helyx-ai"),
+            ("https://helyxai.space/dashboard", "helyx-ai"),
+            ("https://www.helyxai.space/v1", "custom"),
+            ("https://api.helyxai.space/v1", "custom"),
+            ("https://helyxai.com/v1", "custom"),
+            ("https://helyxai.space.evil.test/v1", "custom"),
+            ("https://api.hyperbolic.ai/inference/v1", "hyperbolic"),
+            ("https://api.hyperbolic.ai/inference/v1/chat/completions", "hyperbolic"),
+            ("https://api.hyperbolic.ai/inference/v1/models", "hyperbolic"),
+            ("https://api.hyperbolic.ai/inference", "hyperbolic"),
+            ("https://api.hyperbolic.ai/v1", "custom"),
+            ("https://api.hyperbolic.ai/v1/models", "custom"),
+            ("https://api.hyperbolic.ai/v1/chat/completions", "custom"),
+            ("https://api.hyperbolic.ai/v2/openapi.json", "custom"),
+            ("https://api.hyperbolic.ai", "custom"),
+            ("https://api.hyperbolic.ai/inference-v1", "custom"),
+            ("https://api.hyperbolic.xyz/v1", "custom"),
+            ("https://api.hyperbolic.xyz/inference/v1", "custom"),
+            ("https://api.hyperbolic.xyz/inference/v1/models", "custom"),
+            ("https://app.hyperbolic.ai/settings/api-keys", "custom"),
+            ("https://hyperbolic.ai/docs/inference/overview", "custom"),
+            ("https://www.hyperbolic.ai/docs/inference/overview", "custom"),
+            ("https://www.api.hyperbolic.ai/inference/v1", "custom"),
+            ("https://api.hyperbolic.com/inference/v1", "custom"),
+            ("https://api.hyperbolic.ai.evil.test/inference/v1", "custom"),
+            ("https://vectoree.ai/api/v1", "vectoree"),
+            ("https://vectoree.ai/api/v1/chat/completions", "vectoree"),
+            ("https://vectoree.ai/api/v1/responses", "vectoree"),
+            ("https://vectoree.ai/api/v1/messages", "vectoree"),
+            ("https://vectoree.ai/api/v1/models", "vectoree"),
+            ("https://vectoree.ai/api", "vectoree"),
+            ("https://vectoree.ai/v1", "custom"),
+            ("https://vectoree.ai/v1/models", "custom"),
+            ("https://vectoree.ai", "custom"),
+            ("https://vectoree.ai/dashboard/api-keys", "custom"),
+            ("https://docs.vectoree.ai/models", "custom"),
+            ("https://www.vectoree.ai/api/v1", "custom"),
+            ("https://api.vectoree.ai/v1", "custom"),
+            ("https://vectoree.com/api/v1", "custom"),
+            ("https://vectoree.ai.evil.test/api/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9015,7 +9099,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 199);
+        assert_eq!(list_providers().len(), 202);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -12374,7 +12458,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 199);
+        assert_eq!(list_providers().len(), 202);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -12382,6 +12466,128 @@ url = "https://example.test/mcp"
         assert_eq!(linked, list_providers().len() - 1);
         assert!(provider_docs_url("custom").is_none());
 
+        for expect in cases {
+            let provider = list_providers()
+                .iter()
+                .find(|provider| provider.id == expect.id)
+                .unwrap_or_else(|| panic!("missing {}", expect.id));
+            let serialized = serde_json::to_value(provider).unwrap();
+            assert_eq!(provider.name, expect.name, "{}", expect.id);
+            assert_eq!(provider.default_protocol, OpenaiCompletions, "{}", expect.id);
+            assert_eq!(provider.category, expect.category, "{}", expect.id);
+            assert_eq!(provider.default_base_url, Some(expect.default_base_url), "{}", expect.id);
+            assert_eq!(serialized["base_url"], expect.base_url, "{}", expect.id);
+            assert_eq!(
+                serialized["protocols"]["openai-completions"]["endpoint_path"],
+                expect.completions,
+                "{}",
+                expect.id
+            );
+            match expect.responses {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["openai-responses"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("openai-responses").is_none(), "{}", expect.id),
+            }
+            match expect.messages {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("anthropic-messages").is_none(), "{}", expect.id),
+            }
+            assert!(serialized["protocols"].get("gemini-generate-content").is_none(), "{}", expect.id);
+            assert!(serialized["protocols"].get("gemini-interactions").is_none(), "{}", expect.id);
+            let extras = provider_additional_endpoints(expect.id);
+            assert_eq!(extras.len(), expect.extras.len(), "{}", expect.id);
+            for (actual, expected) in extras.iter().zip(expect.extras.iter()) {
+                assert_eq!(actual.protocol, expected.protocol, "{}", expect.id);
+                assert_eq!(actual.base_url, expected.base_url, "{}", expect.id);
+            }
+            assert_eq!(serialized["model_discovery_supported"], true, "{}", expect.id);
+            assert_eq!(serialized["docs_url"], expect.docs_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["url"], expect.portal_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["kind"], expect.portal_kind, "{}", expect.id);
+        }
+    }
+
+    #[test]
+    fn three_provider_templates_match_reviewed_connections() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        struct Extra {
+            protocol: ModelProtocol,
+            base_url: &'static str,
+        }
+        struct Expect {
+            id: &'static str,
+            name: &'static str,
+            category: &'static str,
+            default_base_url: &'static str,
+            base_url: &'static str,
+            completions: &'static str,
+            responses: Option<&'static str>,
+            messages: Option<&'static str>,
+            docs_url: &'static str,
+            portal_url: &'static str,
+            portal_kind: &'static str,
+            extras: Vec<Extra>,
+        }
+
+        let cases = [
+            Expect {
+                id: "helyx-ai",
+                name: "Helyx AI",
+                category: "gateway",
+                default_base_url: "https://helyxai.space/v1",
+                base_url: "https://helyxai.space/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://helyxai.space/docs",
+                portal_url: "https://helyxai.space/dashboard",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "hyperbolic",
+                name: "Hyperbolic",
+                category: "gateway",
+                default_base_url: "https://api.hyperbolic.ai/inference/v1",
+                base_url: "https://api.hyperbolic.ai/inference/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://hyperbolic.ai/docs/inference/overview",
+                portal_url: "https://app.hyperbolic.ai/settings/api-keys",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "vectoree",
+                name: "Vectoree",
+                category: "gateway",
+                default_base_url: "https://vectoree.ai/api/v1",
+                base_url: "https://vectoree.ai",
+                completions: "/api/v1/chat/completions",
+                responses: Some("/api/v1/responses"),
+                messages: Some("/api/v1/messages"),
+                docs_url: "https://docs.vectoree.ai/models",
+                portal_url: "https://vectoree.ai/dashboard/api-keys",
+                portal_kind: "api-key",
+                extras: vec![
+                    Extra { protocol: OpenaiResponses, base_url: "https://vectoree.ai/api/v1" },
+                    Extra { protocol: AnthropicMessages, base_url: "https://vectoree.ai/api" },
+                ],
+            },
+        ];
+
+        assert_eq!(list_providers().len(), 202);
         for expect in cases {
             let provider = list_providers()
                 .iter()
