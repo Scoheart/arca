@@ -531,6 +531,17 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // https://hiapi.ai/docs/text-api/chat-completions/
         // GET /v1/models needs a key. The curl example deepseek-v4-flash is not this seed.
         "hiapi" => &["deepseek-v4.1-flash"],
+        // https://docs.maritaca.ai/en/s5-quick-start
+        // GET /api/models needs a key. Previous-generation ids such as sabia-4 are not this seed.
+        "maritaca" => &["S5-free", "S5", "S5-br-sp", "S5-nano"],
+        // https://crowllm.com/docs
+        // Public /v1/models mixes chat with embeddings, images, and other non-chat rows.
+        "crowllm" => &[
+            "qwen-3.8-27b:free",
+            "deepseek-v4.1-flash:free",
+            "longcat-2.5:free",
+            "gemma-4-31b-it:free",
+        ],
         _ => return None,
     };
     Some(
@@ -3356,6 +3367,29 @@ mod tests {
             "/chat/completions",
             &["deepseek-v4.1-flash"],
             &["deepseek-v4-flash"],
+        );
+    }
+
+    #[test]
+    fn maritaca_and_crowllm_seed_only_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "maritaca",
+            "https://chat.maritaca.ai/api",
+            "/chat/completions",
+            &["S5-free", "S5", "S5-br-sp", "S5-nano"],
+            &["sabia-4", "s5-free"],
+        );
+        assert_static_chat_seed(
+            "crowllm",
+            "https://crowllm.com/v1",
+            "/chat/completions",
+            &[
+                "qwen-3.8-27b:free",
+                "deepseek-v4.1-flash:free",
+                "longcat-2.5:free",
+                "gemma-4-31b-it:free",
+            ],
+            &["agnes-2.5-flash:free", "qwen3.8-max"],
         );
     }
 

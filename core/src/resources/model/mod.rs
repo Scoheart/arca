@@ -1035,6 +1035,14 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: OpenaiResponses,
             base_url: "https://api.hiapi.ai/v1",
         }],
+        "maritaca" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://chat.maritaca.ai/api/v1",
+        }],
+        "crowllm" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://crowllm.com",
+        }],
         _ => &[],
     }
 }
@@ -1974,6 +1982,20 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "maritaca",
+        name: "Maritaca AI",
+        default_base_url: Some("https://chat.maritaca.ai/api"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "crowllm",
+        name: "CrowLLM",
+        default_base_url: Some("https://crowllm.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2649,6 +2671,16 @@ pub fn infer_provider(base_url: &str) -> String {
     // The gateway is /api/v1. The same host is the marketing site, and bare /v1 is not the API.
     if host == "coarena.ai" && in_path("/api") {
         return "coarena".into();
+    }
+    // Chat Completions are under /api with no /v1. Responses are under /api/v1.
+    // The same host is the web chat, so the site root is not the API.
+    if host == "chat.maritaca.ai" && in_path("/api") {
+        return "maritaca".into();
+    }
+    // OpenAI-shaped calls are under /v1. The Anthropic base is the origin and is
+    // matched as that exact endpoint. The same host is the marketing site.
+    if host == "crowllm.com" && in_path("/v1") {
+        return "crowllm".into();
     }
     match host.as_str() {
         "openrouter.ai" | "api.openrouter.ai" => "openrouter",
@@ -9140,6 +9172,37 @@ mod tests {
             ("https://www.api.hiapi.ai/v1", "custom"),
             ("https://api.hiapi.com/v1", "custom"),
             ("https://api.hiapi.ai.evil.test/v1", "custom"),
+            ("https://chat.maritaca.ai/api", "maritaca"),
+            ("https://chat.maritaca.ai/api/chat/completions", "maritaca"),
+            ("https://chat.maritaca.ai/api/v1", "maritaca"),
+            ("https://chat.maritaca.ai/api/v1/responses", "maritaca"),
+            ("https://chat.maritaca.ai/api/models", "maritaca"),
+            ("https://chat.maritaca.ai", "custom"),
+            ("https://chat.maritaca.ai/docs", "custom"),
+            ("https://docs.maritaca.ai/en/s5-quick-start", "custom"),
+            ("https://plataforma.maritaca.ai/chaves-de-api", "custom"),
+            ("https://maritaca.ai/", "custom"),
+            ("https://www.maritaca.ai/", "custom"),
+            ("https://www.chat.maritaca.ai/api", "custom"),
+            ("https://api.maritaca.ai/api", "custom"),
+            ("https://chat.maritaca.com/api", "custom"),
+            ("https://chat.maritaca.ai.evil.test/api", "custom"),
+            ("https://crowllm.com/v1", "crowllm"),
+            ("https://crowllm.com/v1/chat/completions", "crowllm"),
+            ("https://crowllm.com/v1/models", "crowllm"),
+            ("https://crowllm.com/v1/messages", "crowllm"),
+            ("https://crowllm.com/v1/responses", "crowllm"),
+            ("https://crowllm.com", "crowllm"),
+            ("https://crowllm.com/docs", "custom"),
+            ("https://crowllm.com/console", "custom"),
+            ("https://crowllm.com/llms.txt", "custom"),
+            ("https://crowllm.com/models", "custom"),
+            ("https://crowllm.com/v1beta", "custom"),
+            ("https://crowllm.com/v1beta/models/gemma-4-31b-it:free:generateContent", "custom"),
+            ("https://www.crowllm.com/v1", "custom"),
+            ("https://api.crowllm.com/v1", "custom"),
+            ("https://crowllm.ai/v1", "custom"),
+            ("https://crowllm.com.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9217,7 +9280,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 206);
+        assert_eq!(list_providers().len(), 208);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -12576,7 +12639,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 206);
+        assert_eq!(list_providers().len(), 208);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -12705,7 +12768,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 206);
+        assert_eq!(list_providers().len(), 208);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -12850,7 +12913,118 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 206);
+        assert_eq!(list_providers().len(), 208);
+        for expect in cases {
+            let provider = list_providers()
+                .iter()
+                .find(|provider| provider.id == expect.id)
+                .unwrap_or_else(|| panic!("missing {}", expect.id));
+            let serialized = serde_json::to_value(provider).unwrap();
+            assert_eq!(provider.name, expect.name, "{}", expect.id);
+            assert_eq!(provider.default_protocol, OpenaiCompletions, "{}", expect.id);
+            assert_eq!(provider.category, expect.category, "{}", expect.id);
+            assert_eq!(provider.default_base_url, Some(expect.default_base_url), "{}", expect.id);
+            assert_eq!(serialized["base_url"], expect.base_url, "{}", expect.id);
+            assert_eq!(
+                serialized["protocols"]["openai-completions"]["endpoint_path"],
+                expect.completions,
+                "{}",
+                expect.id
+            );
+            match expect.responses {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["openai-responses"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("openai-responses").is_none(), "{}", expect.id),
+            }
+            match expect.messages {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("anthropic-messages").is_none(), "{}", expect.id),
+            }
+            assert!(serialized["protocols"].get("gemini-generate-content").is_none(), "{}", expect.id);
+            assert!(serialized["protocols"].get("gemini-interactions").is_none(), "{}", expect.id);
+            let extras = provider_additional_endpoints(expect.id);
+            assert_eq!(extras.len(), expect.extras.len(), "{}", expect.id);
+            for (actual, expected) in extras.iter().zip(expect.extras.iter()) {
+                assert_eq!(actual.protocol, expected.protocol, "{}", expect.id);
+                assert_eq!(actual.base_url, expected.base_url, "{}", expect.id);
+            }
+            assert_eq!(serialized["model_discovery_supported"], true, "{}", expect.id);
+            assert_eq!(serialized["docs_url"], expect.docs_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["url"], expect.portal_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["kind"], expect.portal_kind, "{}", expect.id);
+        }
+    }
+
+    #[test]
+    fn maritaca_and_crowllm_templates_match_reviewed_connections() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        struct Extra {
+            protocol: ModelProtocol,
+            base_url: &'static str,
+        }
+        struct Expect {
+            id: &'static str,
+            name: &'static str,
+            category: &'static str,
+            default_base_url: &'static str,
+            base_url: &'static str,
+            completions: &'static str,
+            responses: Option<&'static str>,
+            messages: Option<&'static str>,
+            docs_url: &'static str,
+            portal_url: &'static str,
+            portal_kind: &'static str,
+            extras: Vec<Extra>,
+        }
+
+        let cases = [
+            Expect {
+                id: "maritaca",
+                name: "Maritaca AI",
+                category: "official",
+                default_base_url: "https://chat.maritaca.ai/api",
+                base_url: "https://chat.maritaca.ai",
+                completions: "/api/chat/completions",
+                responses: Some("/api/v1/responses"),
+                messages: None,
+                docs_url: "https://docs.maritaca.ai/en/s5-quick-start",
+                portal_url: "https://plataforma.maritaca.ai/chaves-de-api",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: OpenaiResponses,
+                    base_url: "https://chat.maritaca.ai/api/v1",
+                }],
+            },
+            Expect {
+                id: "crowllm",
+                name: "CrowLLM",
+                category: "gateway",
+                default_base_url: "https://crowllm.com/v1",
+                base_url: "https://crowllm.com",
+                completions: "/v1/chat/completions",
+                responses: None,
+                messages: Some("/v1/messages"),
+                docs_url: "https://crowllm.com/docs",
+                portal_url: "https://crowllm.com/console",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: AnthropicMessages,
+                    base_url: "https://crowllm.com",
+                }],
+            },
+        ];
+
+        assert_eq!(list_providers().len(), 208);
         for expect in cases {
             let provider = list_providers()
                 .iter()

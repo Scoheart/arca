@@ -4223,6 +4223,36 @@
       }
     },
     {
+      "id": "maritaca",
+      "name": "Maritaca AI",
+      "category": "official",
+      "baseUrl": "https://chat.maritaca.ai/api",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.maritaca.ai/en/s5-quick-start",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://plataforma.maritaca.ai/chaves-de-api"
+      }
+    },
+    {
+      "id": "crowllm",
+      "name": "CrowLLM",
+      "category": "gateway",
+      "baseUrl": "https://crowllm.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://crowllm.com/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://crowllm.com/console"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

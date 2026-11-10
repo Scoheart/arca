@@ -1433,5 +1433,19 @@
       "url": "https://console.hiapi.ai/en/dashboard/api-keys",
       "kind": "api-key"
     }
+  },
+  "maritaca": {
+    "docs_url": "https://docs.maritaca.ai/en/s5-quick-start",
+    "portal": {
+      "url": "https://plataforma.maritaca.ai/chaves-de-api",
+      "kind": "api-key"
+    }
+  },
+  "crowllm": {
+    "docs_url": "https://crowllm.com/docs",
+    "portal": {
+      "url": "https://crowllm.com/console",
+      "kind": "api-key"
+    }
   }
 }
