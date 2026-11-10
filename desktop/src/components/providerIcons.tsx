@@ -96,6 +96,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "fikra",
   "fireworks",
   "flock",
+  "fortytwo-engine",
   "friendli",
   "github-models",
   "gmi-cloud",

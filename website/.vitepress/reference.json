@@ -3824,6 +3824,110 @@
       }
     },
     {
+      "id": "fortytwo-engine",
+      "name": "Fortytwo Engine",
+      "category": "gateway",
+      "baseUrl": "https://api.fortytwo.network/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.fortytwo.network/docs/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.fortytwo.network/api-keys"
+      }
+    },
+    {
+      "id": "anyapi",
+      "name": "AnyAPI",
+      "category": "gateway",
+      "baseUrl": "https://api.anyapi.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://docs.anyapi.ai/get-started/quick-start",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://dash.anyapi.ai/?page=api-keys"
+      }
+    },
+    {
+      "id": "inferbase",
+      "name": "Inferbase",
+      "category": "gateway",
+      "baseUrl": "https://api.inferbase.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://inferbase.ai/docs/api",
+      "portal": {
+        "kind": "console",
+        "url": "https://inferbase.ai/register"
+      }
+    },
+    {
+      "id": "opentyphoon",
+      "name": "OpenTyphoon",
+      "category": "official",
+      "baseUrl": "https://api.opentyphoon.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.opentyphoon.ai/en/api-reference/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://playground.opentyphoon.ai/api-key"
+      }
+    },
+    {
+      "id": "regolo",
+      "name": "Regolo",
+      "category": "gateway",
+      "baseUrl": "https://api.regolo.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.regolo.ai/getting-started/quick-start/",
+      "portal": {
+        "kind": "console",
+        "url": "https://dashboard.regolo.ai"
+      }
+    },
+    {
+      "id": "itzi",
+      "name": "Itzi",
+      "category": "gateway",
+      "baseUrl": "https://itzi.app/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://itzi.app/developers",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://itzi.app/app/api"
+      }
+    },
+    {
+      "id": "gonka-broker",
+      "name": "Gonka Broker",
+      "category": "gateway",
+      "baseUrl": "https://proxy.gonkabroker.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://docs.gonkabroker.com/reference/api-compatibility/",
+      "portal": {
+        "kind": "console",
+        "url": "https://app.gonkabroker.com"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

@@ -1244,5 +1244,54 @@
       "url": "https://app.vllm-sr.ai",
       "kind": "api-key"
     }
+  },
+  "fortytwo-engine": {
+    "docs_url": "https://docs.fortytwo.network/docs/quickstart",
+    "portal": {
+      "url": "https://platform.fortytwo.network/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "anyapi": {
+    "docs_url": "https://docs.anyapi.ai/get-started/quick-start",
+    "portal": {
+      "url": "https://dash.anyapi.ai/?page=api-keys",
+      "kind": "api-key"
+    }
+  },
+  "inferbase": {
+    "docs_url": "https://inferbase.ai/docs/api",
+    "portal": {
+      "url": "https://inferbase.ai/register",
+      "kind": "console"
+    }
+  },
+  "opentyphoon": {
+    "docs_url": "https://docs.opentyphoon.ai/en/api-reference/",
+    "portal": {
+      "url": "https://playground.opentyphoon.ai/api-key",
+      "kind": "api-key"
+    }
+  },
+  "regolo": {
+    "docs_url": "https://docs.regolo.ai/getting-started/quick-start/",
+    "portal": {
+      "url": "https://dashboard.regolo.ai",
+      "kind": "console"
+    }
+  },
+  "itzi": {
+    "docs_url": "https://itzi.app/developers",
+    "portal": {
+      "url": "https://itzi.app/app/api",
+      "kind": "api-key"
+    }
+  },
+  "gonka-broker": {
+    "docs_url": "https://docs.gonkabroker.com/reference/api-compatibility/",
+    "portal": {
+      "url": "https://app.gonkabroker.com",
+      "kind": "console"
+    }
   }
 }
