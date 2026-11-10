@@ -1405,5 +1405,33 @@
       "url": "https://vectoree.ai/dashboard/api-keys",
       "kind": "api-key"
     }
+  },
+  "onysoft": {
+    "docs_url": "https://api.onysoft.com/docs",
+    "portal": {
+      "url": "https://api.onysoft.com/login",
+      "kind": "api-key"
+    }
+  },
+  "coarena": {
+    "docs_url": "https://coarena.ai/docs",
+    "portal": {
+      "url": "https://coarena.ai/account/api/keys",
+      "kind": "api-key"
+    }
+  },
+  "twigpine-opengateway": {
+    "docs_url": "https://twigpine.com/opengateway/docs",
+    "portal": {
+      "url": "https://twigpine.com/console/gateway",
+      "kind": "api-key"
+    }
+  },
+  "hiapi": {
+    "docs_url": "https://hiapi.ai/docs/text-api/chat-completions/",
+    "portal": {
+      "url": "https://console.hiapi.ai/en/dashboard/api-keys",
+      "kind": "api-key"
+    }
   }
 }
