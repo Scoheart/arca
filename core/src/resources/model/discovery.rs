@@ -236,6 +236,24 @@ const EXAONE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("k-exaone_v2.5", Some("K-EXAONE 2.5"), Some(524_288)),
 ];
 
+/// The models page lists one id. Context is that page's context window.
+/// `GET /v1/models` does not return a name or a context length.
+const FORTYTWO_ENGINE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen/qwen3.8-27b", Some("Qwen3.8-27B"), Some(262_144)),
+];
+
+/// Documented free-tier id. Anonymous `GET /v1/models` is not a catalog, and
+/// this id is not the full AnyAPI list. A saved key uses the OpenAI decoder.
+const ANYAPI_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen/qwen3.8-27b:free", None, None),
+];
+
+/// Time-limited promo id through 2026-11-17 00:00 UTC. It is not Itzi's full
+/// catalog. A saved key uses the OpenAI decoder.
+const ITZI_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("special-free/deepseek-v4.1-flash", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -276,6 +294,9 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "nararouter" => NARAROUTER_STATIC_MODELS,
         "exaone" => EXAONE_STATIC_MODELS,
         "sailresearch" => SAILRESEARCH_STATIC_MODELS,
+        "fortytwo-engine" => FORTYTWO_ENGINE_STATIC_MODELS,
+        "anyapi" => ANYAPI_STATIC_MODELS,
+        "itzi" => ITZI_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -305,6 +326,27 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // https://app.vllm-sr.ai/docs
         // GET /v1/models also lists System One decision models. Only this id is chat.
         "vllm-semantic-router" => &["vllm-sr/auto"],
+        // https://inferbase.ai/docs/api
+        // Public /v1/models mixes image, embedding, rerank, and speech rows.
+        "inferbase" => &["auto"],
+        // https://docs.opentyphoon.ai/en/models/
+        // Public /v1/models is a bare JSON array and includes OCR/ASR ids.
+        "opentyphoon" => &["typhoon-v2.5-30b-a3b-instruct"],
+        // https://regolo.ai/pricing/
+        // Public /v1/models mixes OCR, speech, image, embedding, and rerank rows.
+        "regolo" => &[
+            "qwen3.8-27b",
+            "gemma4-31b",
+            "glm5.2",
+            "gpt-oss-120b",
+        ],
+        // https://proxy.gonkabroker.com/v1/models
+        // The public list also includes the embedding model BAAI/bge-m3.
+        "gonka-broker" => &[
+            "MiniMaxAI/MiniMax-M2.7",
+            "zai-org/GLM-5.3-Flash",
+            "deepseek-ai/DeepSeek-V4-Flash-0731",
+        ],
         _ => return None,
     };
     Some(
@@ -400,6 +442,9 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "exaone"
         | "sailresearch"
         | "llm7"
+        | "fortytwo-engine"
+        | "anyapi"
+        | "itzi"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -1224,6 +1269,251 @@ mod tests {
         );
     }
 
+    fn assert_static_chat_seed(
+        provider_type: &str,
+        base_url: &str,
+        endpoint_path: &str,
+        expected: &[&str],
+        omitted: &[&str],
+    ) {
+        assert!(reviewed_discovery_spec(provider_type).is_none(), "{provider_type}");
+        assert!(reviewed_static_catalog(provider_type).is_none(), "{provider_type}");
+        assert!(model_discovery_supported(provider_type), "{provider_type}");
+        assert!(
+            !EXPECTED_OPENAI_COMPATIBLE.contains(&provider_type),
+            "{provider_type}"
+        );
+        let mut config = provider(
+            provider_type,
+            base_url,
+            ModelProtocol::OpenaiCompletions,
+            endpoint_path,
+        );
+        config.auth_requirement = AuthRequirement::Required;
+        assert!(discovery_spec_for_provider(&config)
+            .unwrap_err()
+            .contains("model_discovery_static_seed"));
+        let models = execute_provider_discovery(ModelDiscoveryInput {
+            provider: config.clone(),
+        })
+        .unwrap();
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            expected,
+            "{provider_type}"
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for id in omitted {
+            assert!(!models.iter().any(|model| model.id == *id), "{provider_type} {id}");
+        }
+        config.model_catalog_url = Some("https://catalog.example.test/models".into());
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://catalog.example.test/models"
+        );
+    }
+
+    #[test]
+    fn inferbase_seeds_auto_and_does_not_decode_the_mixed_public_catalog() {
+        assert_static_chat_seed(
+            "inferbase",
+            "https://api.inferbase.ai/v1",
+            "/chat/completions",
+            &["auto"],
+            &[],
+        );
+    }
+
+    #[test]
+    fn opentyphoon_seeds_the_documented_chat_model_and_skips_the_bare_models_array() {
+        assert_static_chat_seed(
+            "opentyphoon",
+            "https://api.opentyphoon.ai/v1",
+            "/chat/completions",
+            &["typhoon-v2.5-30b-a3b-instruct"],
+            &["typhoon-v2.1-12b-instruct"],
+        );
+    }
+
+    #[test]
+    fn regolo_seeds_core_chat_models_and_skips_mixed_modalities() {
+        assert_static_chat_seed(
+            "regolo",
+            "https://api.regolo.ai/v1",
+            "/chat/completions",
+            &["qwen3.8-27b", "gemma4-31b", "glm5.2", "gpt-oss-120b"],
+            &[
+                "deepseek-ocr-2",
+                "faster-whisper-large-v3",
+                "Qwen-Image",
+                "Qwen3-Embedding-8B",
+                "Qwen3-Reranker-4B",
+                "Llama-3.3-70B-Instruct",
+            ],
+        );
+    }
+
+    #[test]
+    fn gonka_broker_seeds_chat_models_and_skips_the_embedding_row() {
+        assert_static_chat_seed(
+            "gonka-broker",
+            "https://proxy.gonkabroker.com/v1",
+            "/chat/completions",
+            &[
+                "MiniMaxAI/MiniMax-M2.7",
+                "zai-org/GLM-5.3-Flash",
+                "deepseek-ai/DeepSeek-V4-Flash-0731",
+            ],
+            &["BAAI/bge-m3"],
+        );
+    }
+
+    #[test]
+    fn fortytwo_engine_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("fortytwo-engine").expect("fortytwo seed");
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].id, "qwen/qwen3.8-27b");
+        assert_eq!(models[0].name.as_deref(), Some("Qwen3.8-27B"));
+        assert_eq!(models[0].context_length, Some(262_144));
+        assert!(static_seed_models("fortytwo-engine").is_none());
+        let config = provider(
+            "fortytwo-engine",
+            "https://api.fortytwo.network/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.fortytwo.network/v1/models"
+        );
+        let _home = TestHome::new("fortytwo-engine-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "fortytwo-engine-instance".into(),
+                name: "Fortytwo Engine".into(),
+                provider: "fortytwo-engine".into(),
+                base_url: "https://api.fortytwo.network/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "qwen/qwen3.8-27b");
+        assert_eq!(seeded[0].context_length, Some(262_144));
+    }
+
+    #[test]
+    fn anyapi_seeds_the_documented_free_model_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("anyapi").expect("anyapi seed");
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].id, "qwen/qwen3.8-27b:free");
+        assert!(models[0].name.is_none());
+        assert!(models[0].context_length.is_none());
+        assert!(static_seed_models("anyapi").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"anyapi"));
+        let config = provider(
+            "anyapi",
+            "https://api.anyapi.ai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.anyapi.ai/v1/models"
+        );
+        let _home = TestHome::new("anyapi-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "anyapi-instance".into(),
+                name: "AnyAPI".into(),
+                provider: "anyapi".into(),
+                base_url: "https://api.anyapi.ai/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "qwen/qwen3.8-27b:free");
+    }
+
+    #[test]
+    fn itzi_seeds_the_time_limited_promo_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("itzi").expect("itzi seed");
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].id, "special-free/deepseek-v4.1-flash");
+        assert!(models[0].name.is_none());
+        assert!(models[0].context_length.is_none());
+        assert!(static_seed_models("itzi").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"itzi"));
+        let config = provider(
+            "itzi",
+            "https://itzi.app/v1",
+            ModelProtocol::OpenaiResponses,
+            "/responses",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://itzi.app/v1/models"
+        );
+        let _home = TestHome::new("itzi-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "itzi-instance".into(),
+                name: "Itzi".into(),
+                provider: "itzi".into(),
+                base_url: "https://itzi.app/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiResponses,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/responses".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "special-free/deepseek-v4.1-flash");
+    }
+
     #[test]
     fn inferx_has_no_reviewed_catalog_spec_and_falls_back_to_the_openai_models_path() {
         assert!(reviewed_discovery_spec("inferx").is_none());
@@ -1915,6 +2205,7 @@ mod tests {
         "exaone",
         "sailresearch",
         "llm7",
+        "fortytwo-engine",
         "mistral",
         "deepseek",
         "groq",
@@ -2111,7 +2402,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),

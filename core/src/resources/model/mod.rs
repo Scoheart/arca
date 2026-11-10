@@ -937,6 +937,34 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.sailresearch.com",
             },
         ],
+        "anyapi" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.anyapi.ai",
+        }],
+        "inferbase" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.inferbase.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.inferbase.ai",
+            },
+        ],
+        "itzi" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiCompletions,
+                base_url: "https://itzi.app/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://itzi.app",
+            },
+        ],
+        "gonka-broker" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://proxy.gonkabroker.com",
+        }],
         _ => &[],
     }
 }
@@ -1683,6 +1711,55 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "vllm-semantic-router",
         name: "vLLM Semantic Router",
         default_base_url: Some("https://app.vllm-sr.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "fortytwo-engine",
+        name: "Fortytwo Engine",
+        default_base_url: Some("https://api.fortytwo.network/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "anyapi",
+        name: "AnyAPI",
+        default_base_url: Some("https://api.anyapi.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "inferbase",
+        name: "Inferbase",
+        default_base_url: Some("https://api.inferbase.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "opentyphoon",
+        name: "OpenTyphoon",
+        default_base_url: Some("https://api.opentyphoon.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "regolo",
+        name: "Regolo",
+        default_base_url: Some("https://api.regolo.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "itzi",
+        name: "Itzi",
+        default_base_url: Some("https://itzi.app/v1"),
+        default_protocol: ModelProtocol::OpenaiResponses,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "gonka-broker",
+        name: "Gonka Broker",
+        default_base_url: Some("https://proxy.gonkabroker.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2455,6 +2532,13 @@ pub fn infer_provider(base_url: &str) -> String {
         "ai-gateway.edgeone.link" => "edgeone-makers",
         "api.sailresearch.com" => "sailresearch",
         "app.vllm-sr.ai" => "vllm-semantic-router",
+        "api.fortytwo.network" => "fortytwo-engine",
+        "api.anyapi.ai" => "anyapi",
+        "api.inferbase.ai" => "inferbase",
+        "api.opentyphoon.ai" => "opentyphoon",
+        "api.regolo.ai" => "regolo",
+        "itzi.app" => "itzi",
+        "proxy.gonkabroker.com" => "gonka-broker",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -8469,6 +8553,93 @@ mod tests {
             ("https://api.vllm-sr.ai/v1", "custom"),
             ("https://www.app.vllm-sr.ai/v1", "custom"),
             ("https://app.vllm-sr.ai.evil.test/v1", "custom"),
+            ("https://api.fortytwo.network/v1", "fortytwo-engine"),
+            ("https://api.fortytwo.network/v1/chat/completions", "fortytwo-engine"),
+            ("https://api.fortytwo.network/v1/models", "fortytwo-engine"),
+            ("https://api.fortytwo.network", "fortytwo-engine"),
+            ("https://engine.fortytwo.network/", "custom"),
+            ("https://engine.fortytwo.network/v1/models", "custom"),
+            ("https://docs.fortytwo.network/docs/quickstart", "custom"),
+            ("https://platform.fortytwo.network/api-keys", "custom"),
+            ("https://fortytwo.network/", "custom"),
+            ("https://www.fortytwo.network/", "custom"),
+            ("https://www.api.fortytwo.network/v1", "custom"),
+            ("https://api.fortytwo.ai/v1", "custom"),
+            ("https://api.fortytwo.network.evil.test/v1", "custom"),
+            ("https://api.anyapi.ai/v1", "anyapi"),
+            ("https://api.anyapi.ai/v1/chat/completions", "anyapi"),
+            ("https://api.anyapi.ai/v1/models", "anyapi"),
+            ("https://api.anyapi.ai", "anyapi"),
+            ("https://api.anyapi.ai/v1/messages", "anyapi"),
+            ("https://docs.anyapi.ai/get-started/quick-start", "custom"),
+            ("https://anyapi.ai/pricing", "custom"),
+            ("https://www.anyapi.ai/v1", "custom"),
+            ("https://dash.anyapi.ai/?page=api-keys", "custom"),
+            ("https://www.api.anyapi.ai/v1", "custom"),
+            ("https://api.anyapi.com/v1", "custom"),
+            ("https://api.anyapi.ai.evil.test/v1", "custom"),
+            ("https://api.inferbase.ai/v1", "inferbase"),
+            ("https://api.inferbase.ai/v1/chat/completions", "inferbase"),
+            ("https://api.inferbase.ai/v1/responses", "inferbase"),
+            ("https://api.inferbase.ai/v1/messages", "inferbase"),
+            ("https://api.inferbase.ai/v1/models", "inferbase"),
+            ("https://api.inferbase.ai", "inferbase"),
+            ("https://api.inferbase.ai/api/v1/inference", "inferbase"),
+            ("https://inferbase.ai/v1", "custom"),
+            ("https://inferbase.ai/register", "custom"),
+            ("https://inferbase.ai/docs/api", "custom"),
+            ("https://www.inferbase.ai/v1", "custom"),
+            ("https://www.api.inferbase.ai/v1", "custom"),
+            ("https://api.inferbase.ai.evil.test/v1", "custom"),
+            ("https://api.opentyphoon.ai/v1", "opentyphoon"),
+            ("https://api.opentyphoon.ai/v1/chat/completions", "opentyphoon"),
+            ("https://api.opentyphoon.ai/v1/models", "opentyphoon"),
+            ("https://api.opentyphoon.ai", "opentyphoon"),
+            ("https://opentyphoon.ai/", "custom"),
+            ("https://www.opentyphoon.ai/v1", "custom"),
+            ("https://docs.opentyphoon.ai/en/api-reference/", "custom"),
+            ("https://playground.opentyphoon.ai/api-key", "custom"),
+            ("https://www.api.opentyphoon.ai/v1", "custom"),
+            ("https://api.opentyphoon.ai.evil.test/v1", "custom"),
+            ("https://api.regolo.ai/v1", "regolo"),
+            ("https://api.regolo.ai/v1/chat/completions", "regolo"),
+            ("https://api.regolo.ai/v1/models", "regolo"),
+            ("https://api.regolo.ai", "regolo"),
+            ("https://regolo.ai/pricing/", "custom"),
+            ("https://www.regolo.ai/v1", "custom"),
+            ("https://dashboard.regolo.ai/", "custom"),
+            ("https://docs.regolo.ai/getting-started/quick-start/", "custom"),
+            ("https://docs.api.regolo.ai/", "custom"),
+            ("https://www.api.regolo.ai/v1", "custom"),
+            ("https://api.regolo.ai.evil.test/v1", "custom"),
+            ("https://itzi.app/v1", "itzi"),
+            ("https://itzi.app/v1/responses", "itzi"),
+            ("https://itzi.app/v1/chat/completions", "itzi"),
+            ("https://itzi.app/v1/messages", "itzi"),
+            ("https://itzi.app/v1/models", "itzi"),
+            ("https://itzi.app", "itzi"),
+            ("https://itzi.app/developers", "itzi"),
+            ("https://itzi.app/free-deepseek", "itzi"),
+            ("https://itzi.app/app/api", "itzi"),
+            ("https://www.itzi.app/v1", "custom"),
+            ("https://api.itzi.app/v1", "custom"),
+            ("https://itzi.com/v1", "custom"),
+            ("https://itzi.app.evil.test/v1", "custom"),
+            ("https://api.deepseek.com/v1", "deepseek"),
+            ("https://api.deepseek.com/v1/chat/completions", "deepseek"),
+            ("https://proxy.gonkabroker.com/v1", "gonka-broker"),
+            ("https://proxy.gonkabroker.com/v1/chat/completions", "gonka-broker"),
+            ("https://proxy.gonkabroker.com/v1/messages", "gonka-broker"),
+            ("https://proxy.gonkabroker.com/v1/models", "gonka-broker"),
+            ("https://proxy.gonkabroker.com", "gonka-broker"),
+            ("https://api.gonkarouter.io/v1", "gonkarouter"),
+            ("https://gonkabroker.com/free-llm-api/", "custom"),
+            ("https://www.gonkabroker.com/v1", "custom"),
+            ("https://app.gonkabroker.com/signup", "custom"),
+            ("https://docs.gonkabroker.com/reference/api-compatibility/", "custom"),
+            ("https://www.proxy.gonkabroker.com/v1", "custom"),
+            ("https://api.gonkabroker.com/v1", "custom"),
+            ("https://proxy.gonkabroker.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -8551,7 +8722,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 179);
+        assert_eq!(list_providers().len(), 186);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -9329,6 +9500,272 @@ mod tests {
         assert_eq!(serialized["docs_url"], "https://app.vllm-sr.ai/docs");
         assert_eq!(serialized["portal"]["url"], "https://app.vllm-sr.ai");
         assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let fortytwo = list_providers()
+            .iter()
+            .find(|provider| provider.id == "fortytwo-engine")
+            .unwrap();
+        let serialized = serde_json::to_value(fortytwo).unwrap();
+        assert_eq!(fortytwo.name, "Fortytwo Engine");
+        assert_eq!(fortytwo.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(fortytwo.category, "gateway");
+        assert_eq!(
+            fortytwo.default_base_url,
+            Some("https://api.fortytwo.network/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.fortytwo.network/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.fortytwo.network/docs/quickstart"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://platform.fortytwo.network/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let anyapi = list_providers()
+            .iter()
+            .find(|provider| provider.id == "anyapi")
+            .unwrap();
+        let serialized = serde_json::to_value(anyapi).unwrap();
+        assert_eq!(anyapi.name, "AnyAPI");
+        assert_eq!(anyapi.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(anyapi.category, "gateway");
+        assert_eq!(anyapi.default_base_url, Some("https://api.anyapi.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.anyapi.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.anyapi.ai"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.anyapi.ai/get-started/quick-start"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://dash.anyapi.ai/?page=api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let inferbase = list_providers()
+            .iter()
+            .find(|provider| provider.id == "inferbase")
+            .unwrap();
+        let serialized = serde_json::to_value(inferbase).unwrap();
+        assert_eq!(inferbase.name, "Inferbase");
+        assert_eq!(inferbase.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(inferbase.category, "gateway");
+        assert_eq!(
+            inferbase.default_base_url,
+            Some("https://api.inferbase.ai/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.inferbase.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.inferbase.ai/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-responses"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://api.inferbase.ai"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://inferbase.ai/docs/api");
+        assert_eq!(serialized["portal"]["url"], "https://inferbase.ai/register");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let opentyphoon = list_providers()
+            .iter()
+            .find(|provider| provider.id == "opentyphoon")
+            .unwrap();
+        let serialized = serde_json::to_value(opentyphoon).unwrap();
+        assert_eq!(opentyphoon.name, "OpenTyphoon");
+        assert_eq!(opentyphoon.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(opentyphoon.category, "official");
+        assert_eq!(
+            opentyphoon.default_base_url,
+            Some("https://api.opentyphoon.ai/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.opentyphoon.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.opentyphoon.ai/en/api-reference/"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://playground.opentyphoon.ai/api-key"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let regolo = list_providers()
+            .iter()
+            .find(|provider| provider.id == "regolo")
+            .unwrap();
+        let serialized = serde_json::to_value(regolo).unwrap();
+        assert_eq!(regolo.name, "Regolo");
+        assert_eq!(regolo.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(regolo.category, "gateway");
+        assert_eq!(regolo.default_base_url, Some("https://api.regolo.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.regolo.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.regolo.ai/getting-started/quick-start/"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://dashboard.regolo.ai");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let itzi = list_providers()
+            .iter()
+            .find(|provider| provider.id == "itzi")
+            .unwrap();
+        let serialized = serde_json::to_value(itzi).unwrap();
+        assert_eq!(itzi.name, "Itzi");
+        assert_eq!(itzi.default_protocol, ModelProtocol::OpenaiResponses);
+        assert_eq!(itzi.category, "gateway");
+        assert_eq!(itzi.default_base_url, Some("https://itzi.app/v1"));
+        assert_eq!(serialized["base_url"], "https://itzi.app");
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://itzi.app/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-completions"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://itzi.app"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://itzi.app/developers");
+        assert_eq!(serialized["portal"]["url"], "https://itzi.app/app/api");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let gonka_broker = list_providers()
+            .iter()
+            .find(|provider| provider.id == "gonka-broker")
+            .unwrap();
+        let serialized = serde_json::to_value(gonka_broker).unwrap();
+        assert_eq!(gonka_broker.name, "Gonka Broker");
+        assert_eq!(gonka_broker.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(gonka_broker.category, "gateway");
+        assert_eq!(
+            gonka_broker.default_base_url,
+            Some("https://proxy.gonkabroker.com/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://proxy.gonkabroker.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://proxy.gonkabroker.com"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.gonkabroker.com/reference/api-compatibility/"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://app.gonkabroker.com");
+        assert_eq!(serialized["portal"]["kind"], "console");
 
         let edenai = list_providers()
             .iter()
