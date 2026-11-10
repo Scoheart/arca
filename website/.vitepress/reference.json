@@ -4161,6 +4161,68 @@
       }
     },
     {
+      "id": "onysoft",
+      "name": "Onysoft",
+      "category": "gateway",
+      "baseUrl": "https://api.onysoft.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://api.onysoft.com/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://api.onysoft.com/login"
+      }
+    },
+    {
+      "id": "coarena",
+      "name": "Coarena",
+      "category": "gateway",
+      "baseUrl": "https://coarena.ai/api/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://coarena.ai/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://coarena.ai/account/api/keys"
+      }
+    },
+    {
+      "id": "twigpine-opengateway",
+      "name": "Twigpine OpenGateway",
+      "category": "gateway",
+      "baseUrl": "https://api.twigpine.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://twigpine.com/opengateway/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://twigpine.com/console/gateway"
+      }
+    },
+    {
+      "id": "hiapi",
+      "name": "HiAPI",
+      "category": "gateway",
+      "baseUrl": "https://api.hiapi.ai/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://hiapi.ai/docs/text-api/chat-completions/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.hiapi.ai/en/dashboard/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

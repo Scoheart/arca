@@ -1007,6 +1007,34 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://vectoree.ai/api",
             },
         ],
+        "onysoft" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.onysoft.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.onysoft.com",
+            },
+        ],
+        "coarena" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://coarena.ai/api/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://coarena.ai/api",
+            },
+        ],
+        "twigpine-opengateway" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.twigpine.com",
+        }],
+        "hiapi" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.hiapi.ai/v1",
+        }],
         _ => &[],
     }
 }
@@ -1918,6 +1946,34 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "onysoft",
+        name: "Onysoft",
+        default_base_url: Some("https://api.onysoft.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "coarena",
+        name: "Coarena",
+        default_base_url: Some("https://coarena.ai/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "twigpine-opengateway",
+        name: "Twigpine OpenGateway",
+        default_base_url: Some("https://api.twigpine.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "hiapi",
+        name: "HiAPI",
+        default_base_url: Some("https://api.hiapi.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2590,6 +2646,10 @@ pub fn infer_provider(base_url: &str) -> String {
     if host == "vectoree.ai" && in_path("/api") {
         return "vectoree".into();
     }
+    // The gateway is /api/v1. The same host is the marketing site, and bare /v1 is not the API.
+    if host == "coarena.ai" && in_path("/api") {
+        return "coarena".into();
+    }
     match host.as_str() {
         "openrouter.ai" | "api.openrouter.ai" => "openrouter",
         "api.anthropic.com" => "anthropic",
@@ -2715,6 +2775,9 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.kiosapi.id" => "kiosapi",
         "api.simplellm.eu" => "simplellm",
         "helyxai.space" => "helyx-ai",
+        "api.onysoft.com" => "onysoft",
+        "api.twigpine.com" => "twigpine-opengateway",
+        "api.hiapi.ai" => "hiapi",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -9022,6 +9085,61 @@ mod tests {
             ("https://api.vectoree.ai/v1", "custom"),
             ("https://vectoree.com/api/v1", "custom"),
             ("https://vectoree.ai.evil.test/api/v1", "custom"),
+            ("https://api.onysoft.com/v1", "onysoft"),
+            ("https://api.onysoft.com/v1/chat/completions", "onysoft"),
+            ("https://api.onysoft.com/v1/responses", "onysoft"),
+            ("https://api.onysoft.com/v1/messages", "onysoft"),
+            ("https://api.onysoft.com/v1/models", "onysoft"),
+            ("https://api.onysoft.com", "onysoft"),
+            ("https://api.onysoft.com/docs", "onysoft"),
+            ("https://api.onysoft.com/login", "onysoft"),
+            ("https://api.onysoft.com/dashboard/api-keys", "onysoft"),
+            ("https://onysoft.com/v1", "custom"),
+            ("https://www.onysoft.com/", "custom"),
+            ("https://www.api.onysoft.com/v1", "custom"),
+            ("https://api.onysoft.ai/v1", "custom"),
+            ("https://api.onysoft.com.evil.test/v1", "custom"),
+            ("https://coarena.ai/api/v1", "coarena"),
+            ("https://coarena.ai/api/v1/chat/completions", "coarena"),
+            ("https://coarena.ai/api/v1/responses", "coarena"),
+            ("https://coarena.ai/api/v1/messages", "coarena"),
+            ("https://coarena.ai/api/v1/models", "coarena"),
+            ("https://coarena.ai/api", "coarena"),
+            ("https://coarena.ai/v1", "custom"),
+            ("https://coarena.ai/v1/models", "custom"),
+            ("https://coarena.ai", "custom"),
+            ("https://coarena.ai/docs", "custom"),
+            ("https://coarena.ai/developers", "custom"),
+            ("https://coarena.ai/account/api/keys", "custom"),
+            ("https://www.coarena.ai/api/v1", "custom"),
+            ("https://api.coarena.ai/v1", "custom"),
+            ("https://coarena.com/api/v1", "custom"),
+            ("https://coarena.ai.evil.test/api/v1", "custom"),
+            ("https://api.twigpine.com/v1", "twigpine-opengateway"),
+            ("https://api.twigpine.com/v1/chat/completions", "twigpine-opengateway"),
+            ("https://api.twigpine.com/v1/messages", "twigpine-opengateway"),
+            ("https://api.twigpine.com/v1/models", "twigpine-opengateway"),
+            ("https://api.twigpine.com", "twigpine-opengateway"),
+            ("https://twigpine.com/v1", "custom"),
+            ("https://twigpine.com/opengateway/docs", "custom"),
+            ("https://twigpine.com/console/gateway", "custom"),
+            ("https://www.twigpine.com/v1", "custom"),
+            ("https://www.api.twigpine.com/v1", "custom"),
+            ("https://api.twigpine.ai/v1", "custom"),
+            ("https://api.gitlawb.com/v1", "custom"),
+            ("https://api.twigpine.com.evil.test/v1", "custom"),
+            ("https://api.hiapi.ai/v1", "hiapi"),
+            ("https://api.hiapi.ai/v1/chat/completions", "hiapi"),
+            ("https://api.hiapi.ai/v1/responses", "hiapi"),
+            ("https://api.hiapi.ai/v1/models", "hiapi"),
+            ("https://api.hiapi.ai", "hiapi"),
+            ("https://hiapi.ai/docs/text-api/chat-completions/", "custom"),
+            ("https://hiapi.ai/en", "custom"),
+            ("https://www.hiapi.ai/en", "custom"),
+            ("https://console.hiapi.ai/en/dashboard/api-keys", "custom"),
+            ("https://www.api.hiapi.ai/v1", "custom"),
+            ("https://api.hiapi.com/v1", "custom"),
+            ("https://api.hiapi.ai.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9099,7 +9217,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 202);
+        assert_eq!(list_providers().len(), 206);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -12458,7 +12576,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 202);
+        assert_eq!(list_providers().len(), 206);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -12587,7 +12705,152 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 202);
+        assert_eq!(list_providers().len(), 206);
+        for expect in cases {
+            let provider = list_providers()
+                .iter()
+                .find(|provider| provider.id == expect.id)
+                .unwrap_or_else(|| panic!("missing {}", expect.id));
+            let serialized = serde_json::to_value(provider).unwrap();
+            assert_eq!(provider.name, expect.name, "{}", expect.id);
+            assert_eq!(provider.default_protocol, OpenaiCompletions, "{}", expect.id);
+            assert_eq!(provider.category, expect.category, "{}", expect.id);
+            assert_eq!(provider.default_base_url, Some(expect.default_base_url), "{}", expect.id);
+            assert_eq!(serialized["base_url"], expect.base_url, "{}", expect.id);
+            assert_eq!(
+                serialized["protocols"]["openai-completions"]["endpoint_path"],
+                expect.completions,
+                "{}",
+                expect.id
+            );
+            match expect.responses {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["openai-responses"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("openai-responses").is_none(), "{}", expect.id),
+            }
+            match expect.messages {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("anthropic-messages").is_none(), "{}", expect.id),
+            }
+            assert!(serialized["protocols"].get("gemini-generate-content").is_none(), "{}", expect.id);
+            assert!(serialized["protocols"].get("gemini-interactions").is_none(), "{}", expect.id);
+            let extras = provider_additional_endpoints(expect.id);
+            assert_eq!(extras.len(), expect.extras.len(), "{}", expect.id);
+            for (actual, expected) in extras.iter().zip(expect.extras.iter()) {
+                assert_eq!(actual.protocol, expected.protocol, "{}", expect.id);
+                assert_eq!(actual.base_url, expected.base_url, "{}", expect.id);
+            }
+            assert_eq!(serialized["model_discovery_supported"], true, "{}", expect.id);
+            assert_eq!(serialized["docs_url"], expect.docs_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["url"], expect.portal_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["kind"], expect.portal_kind, "{}", expect.id);
+        }
+    }
+
+    #[test]
+    fn four_provider_templates_match_reviewed_connections() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        struct Extra {
+            protocol: ModelProtocol,
+            base_url: &'static str,
+        }
+        struct Expect {
+            id: &'static str,
+            name: &'static str,
+            category: &'static str,
+            default_base_url: &'static str,
+            base_url: &'static str,
+            completions: &'static str,
+            responses: Option<&'static str>,
+            messages: Option<&'static str>,
+            docs_url: &'static str,
+            portal_url: &'static str,
+            portal_kind: &'static str,
+            extras: Vec<Extra>,
+        }
+
+        let cases = [
+            Expect {
+                id: "onysoft",
+                name: "Onysoft",
+                category: "gateway",
+                default_base_url: "https://api.onysoft.com/v1",
+                base_url: "https://api.onysoft.com",
+                completions: "/v1/chat/completions",
+                responses: Some("/v1/responses"),
+                messages: Some("/v1/messages"),
+                docs_url: "https://api.onysoft.com/docs",
+                portal_url: "https://api.onysoft.com/login",
+                portal_kind: "api-key",
+                extras: vec![
+                    Extra { protocol: OpenaiResponses, base_url: "https://api.onysoft.com/v1" },
+                    Extra { protocol: AnthropicMessages, base_url: "https://api.onysoft.com" },
+                ],
+            },
+            Expect {
+                id: "coarena",
+                name: "Coarena",
+                category: "gateway",
+                default_base_url: "https://coarena.ai/api/v1",
+                base_url: "https://coarena.ai",
+                completions: "/api/v1/chat/completions",
+                responses: Some("/api/v1/responses"),
+                messages: Some("/api/v1/messages"),
+                docs_url: "https://coarena.ai/docs",
+                portal_url: "https://coarena.ai/account/api/keys",
+                portal_kind: "api-key",
+                extras: vec![
+                    Extra { protocol: OpenaiResponses, base_url: "https://coarena.ai/api/v1" },
+                    Extra { protocol: AnthropicMessages, base_url: "https://coarena.ai/api" },
+                ],
+            },
+            Expect {
+                id: "twigpine-opengateway",
+                name: "Twigpine OpenGateway",
+                category: "gateway",
+                default_base_url: "https://api.twigpine.com/v1",
+                base_url: "https://api.twigpine.com",
+                completions: "/v1/chat/completions",
+                responses: None,
+                messages: Some("/v1/messages"),
+                docs_url: "https://twigpine.com/opengateway/docs",
+                portal_url: "https://twigpine.com/console/gateway",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: AnthropicMessages,
+                    base_url: "https://api.twigpine.com",
+                }],
+            },
+            Expect {
+                id: "hiapi",
+                name: "HiAPI",
+                category: "gateway",
+                default_base_url: "https://api.hiapi.ai/v1",
+                base_url: "https://api.hiapi.ai/v1",
+                completions: "/chat/completions",
+                responses: Some("/responses"),
+                messages: None,
+                docs_url: "https://hiapi.ai/docs/text-api/chat-completions/",
+                portal_url: "https://console.hiapi.ai/en/dashboard/api-keys",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: OpenaiResponses,
+                    base_url: "https://api.hiapi.ai/v1",
+                }],
+            },
+        ];
+
+        assert_eq!(list_providers().len(), 206);
         for expect in cases {
             let provider = list_providers()
                 .iter()
