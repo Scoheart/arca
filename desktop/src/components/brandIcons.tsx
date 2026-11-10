@@ -98,6 +98,7 @@ const FULL_BLEED = new Set<string>([
   "cortex-code",
   "roo-code",
   "rovo-dev",
+  "velork",
   "warp",
 ]);
 

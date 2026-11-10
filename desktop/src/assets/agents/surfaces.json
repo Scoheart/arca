@@ -62,5 +62,6 @@
   "windsurf": "ide",
   "codebuddy-cn-ide": "ide",
   "deepseek-harness-desktop": "desktop",
-  "dl": "cli"
+  "dl": "cli",
+  "velork": "desktop"
 }

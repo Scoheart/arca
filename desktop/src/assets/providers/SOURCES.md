@@ -169,3 +169,11 @@ Provider slot, not a third-party brand.
 ## BlazeRail — 2026-10-24
 
 - `blazerail.svg`: official site icon served from <https://www.blazerail.com/favicon.svg> (the `rel="icon"` linked by <https://www.blazerail.com/>, <https://www.blazerail.com/docs>, and <https://www.blazerail.com/free>).
+
+## EXAONE API Platform — 2026-11-09
+
+- `exaone.svg`: official header mark served from <https://docs.exaone.ai/assets/images/ic-logo-chatexaone.svg> (the logo linked by <https://docs.exaone.ai/en/docs/overview> and the other EXAONE API Platform docs pages). Original bytes, retrieved 2026-11-09. The same knot is the docs favicon at <https://docs.exaone.ai/assets/images/favicon-96x96.png> and the showroom image at <https://asset-showroom.exaone.ai/image/showroom-logo.png>.
+
+## Sail Research — 2026-11-10
+
+- `sailresearch.png`: official 192×192 docs icon served from <https://docs.sailresearch.com/mintlify-assets/_mintlify/favicons/sailresearch/BWUDTf48u3tNnszQ/_generated/favicon/android-chrome-192x192.png> (the light-mode `rel="icon"` linked by <https://docs.sailresearch.com/>). Original bytes, retrieved 2026-11-10. The same sail mark is the docs favicon. The header wordmark is <https://mintcdn.com/sailresearch/X8kOeTTR9DVS13DJ/logo/solo.svg>, linked from those docs pages.

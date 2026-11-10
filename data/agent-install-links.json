@@ -522,5 +522,13 @@
   "dl": {
     "url": "https://directionallylocal.com/docs/install/",
     "label": "安装文档"
+  },
+  "nodecode": {
+    "url": "https://nodecode.ai/docs/install",
+    "label": "安装文档"
+  },
+  "velork": {
+    "url": "https://velork.com/download",
+    "label": "官方下载"
   }
 }

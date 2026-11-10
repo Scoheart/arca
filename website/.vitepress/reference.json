@@ -3626,6 +3626,36 @@
       }
     },
     {
+      "id": "xkiro",
+      "name": "xKiro",
+      "category": "gateway",
+      "baseUrl": "https://api.xkiro.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://docs.xkiro.com/api/chat-completions/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://xkiro.com/dashboard/api/keys"
+      }
+    },
+    {
+      "id": "optracloud",
+      "name": "OptraCloud",
+      "category": "gateway",
+      "baseUrl": "https://api.optracloud.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://optracloud.com/docs.html",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://optracloud.com/portal/apikeys"
+      }
+    },
+    {
       "id": "edenai",
       "name": "Eden AI",
       "category": "gateway",
@@ -3700,6 +3730,97 @@
       "portal": {
         "kind": "console",
         "url": "https://console.tencentcloud.com/edgeone/makers"
+      }
+    },
+    {
+      "id": "nodecode",
+      "name": "Nodecode",
+      "category": "gateway",
+      "baseUrl": "https://api.nodecode.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://nodecode.ai/docs/models",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://nodecode.ai/account/keys"
+      }
+    },
+    {
+      "id": "freeinference",
+      "name": "FreeInference",
+      "category": "gateway",
+      "baseUrl": "https://freeinference.org/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://doc.freeinference.org/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://freeinference.org/signup"
+      }
+    },
+    {
+      "id": "ifm",
+      "name": "IFM",
+      "category": "official",
+      "baseUrl": "https://api.ifm.ai/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.ifm.ai/docs/quickstart.md",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.ifm.ai/api-keys"
+      }
+    },
+    {
+      "id": "exaone",
+      "name": "EXAONE API Platform",
+      "category": "official",
+      "baseUrl": "https://api.exaone.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.exaone.ai/en/docs/k-exaone-2.5",
+      "portal": {
+        "kind": "console",
+        "url": "https://id.exaone.ai/mypage"
+      }
+    },
+    {
+      "id": "sailresearch",
+      "name": "Sail Research",
+      "category": "gateway",
+      "baseUrl": "https://api.sailresearch.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.sailresearch.com/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://app.sailresearch.com/sign-up"
+      }
+    },
+    {
+      "id": "vllm-semantic-router",
+      "name": "vLLM Semantic Router",
+      "category": "gateway",
+      "baseUrl": "https://app.vllm-sr.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://app.vllm-sr.ai/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://app.vllm-sr.ai"
       }
     },
     {

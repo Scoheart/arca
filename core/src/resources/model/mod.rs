@@ -861,6 +861,18 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.token360.ai/v1beta",
             },
         ],
+        "xkiro" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.xkiro.com",
+        }],
+        "optracloud" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.optracloud.com",
+        }],
+        "ifm" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.ifm.ai/v1",
+        }],
         "edenai" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -869,6 +881,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             ModelProviderEndpointView {
                 protocol: AnthropicMessages,
                 base_url: "https://api.edenai.run/v3",
+            },
+        ],
+        "freeinference" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://freeinference.org/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://freeinference.org/anthropic",
             },
         ],
         "nararouter" => &[
@@ -891,10 +913,30 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://zro.moonmath.ai",
             },
         ],
+        "nodecode" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.nodecode.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.nodecode.ai",
+            },
+        ],
         "edgeone-makers" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
             base_url: "https://ai-gateway.edgeone.link",
         }],
+        "sailresearch" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.sailresearch.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.sailresearch.com",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1554,6 +1596,20 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "xkiro",
+        name: "xKiro",
+        default_base_url: Some("https://api.xkiro.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "optracloud",
+        name: "OptraCloud",
+        default_base_url: Some("https://api.optracloud.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "edenai",
         name: "Eden AI",
         default_base_url: Some("https://api.edenai.run/v3"),
@@ -1585,6 +1641,48 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "edgeone-makers",
         name: "EdgeOne Makers Models",
         default_base_url: Some("https://ai-gateway.edgeone.link/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "nodecode",
+        name: "Nodecode",
+        default_base_url: Some("https://api.nodecode.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "freeinference",
+        name: "FreeInference",
+        default_base_url: Some("https://freeinference.org/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "ifm",
+        name: "IFM",
+        default_base_url: Some("https://api.ifm.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "exaone",
+        name: "EXAONE API Platform",
+        default_base_url: Some("https://api.exaone.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "sailresearch",
+        name: "Sail Research",
+        default_base_url: Some("https://api.sailresearch.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "vllm-semantic-router",
+        name: "vLLM Semantic Router",
+        default_base_url: Some("https://app.vllm-sr.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2345,10 +2443,18 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.token360.ai" => "token360",
         "zro.moonmath.ai" => "zro",
         "inference.asicloud.cudos.org" => "asi-cloud",
+        "api.xkiro.com" => "xkiro",
+        "api.optracloud.com" => "optracloud",
         "api.edenai.run" => "edenai",
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
+        "api.nodecode.ai" => "nodecode",
+        "freeinference.org" => "freeinference",
+        "api.ifm.ai" => "ifm",
+        "api.exaone.ai" => "exaone",
         "ai-gateway.edgeone.link" => "edgeone-makers",
+        "api.sailresearch.com" => "sailresearch",
+        "app.vllm-sr.ai" => "vllm-semantic-router",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -8137,6 +8243,27 @@ mod tests {
             ("https://a.singularitycompute.com/v1", "custom"),
             ("https://llm.singularitycompute.com/v1", "custom"),
             ("https://inference.asicloud.cudos.org.evil.test/v1", "custom"),
+            ("https://api.xkiro.com/v1", "xkiro"),
+            ("https://api.xkiro.com/v1/chat/completions", "xkiro"),
+            ("https://api.xkiro.com/v1/models", "xkiro"),
+            ("https://api.xkiro.com", "xkiro"),
+            ("https://api.xkiro.com/v1/messages", "xkiro"),
+            ("https://api.xkiro.com/v1/responses", "xkiro"),
+            ("https://api.xkiro.com/v1beta/models/gemini-2.5-flash:generateContent", "xkiro"),
+            ("https://xkiro.com/v1", "custom"),
+            ("https://xkiro.com/v1/models", "custom"),
+            ("https://xkiro.com/v1/chat/completions", "custom"),
+            ("https://xkiro.com/register", "custom"),
+            ("https://xkiro.com/dashboard/api/keys", "custom"),
+            ("https://www.xkiro.com/v1", "custom"),
+            ("https://docs.xkiro.com/", "custom"),
+            ("https://docs.xkiro.com/api/chat-completions/", "custom"),
+            ("https://app.xkiro.com/v1", "custom"),
+            ("https://xtrouter.com/", "custom"),
+            ("https://api.xtrouter.com/v1", "custom"),
+            ("https://cdn.xtrouter.com/tag-images/kimi-icon.svg", "custom"),
+            ("https://api.xkiro.ai/v1", "custom"),
+            ("https://api.xkiro.com.evil.test/v1", "custom"),
             ("https://api.edenai.run/v3", "edenai"),
             ("https://api.edenai.run/v3/chat/completions", "edenai"),
             ("https://api.edenai.run/v3/responses", "edenai"),
@@ -8195,6 +8322,107 @@ mod tests {
             ("https://dash.llm7.io/#/api-keys", "custom"),
             ("https://docs.llm7.io/", "custom"),
             ("https://api.llm7.io.evil.test/v1", "custom"),
+            ("https://api.nodecode.ai/v1", "nodecode"),
+            ("https://api.nodecode.ai/v1/chat/completions", "nodecode"),
+            ("https://api.nodecode.ai/v1/responses", "nodecode"),
+            ("https://api.nodecode.ai/v1/models", "nodecode"),
+            ("https://api.nodecode.ai", "nodecode"),
+            ("https://api.nodecode.ai/v1/messages", "nodecode"),
+            ("https://api.nodecode.ai/v1/images/generations", "nodecode"),
+            ("https://nodecode.ai/", "custom"),
+            ("https://nodecode.ai/docs/models", "custom"),
+            ("https://nodecode.ai/pricing", "custom"),
+            ("https://nodecode.ai/account/keys", "custom"),
+            ("https://www.nodecode.ai/", "custom"),
+            ("https://docs.nodecode.ai/", "custom"),
+            ("https://app.nodecode.ai/", "custom"),
+            ("https://dash.nodecode.ai/", "custom"),
+            ("https://console.nodecode.ai/", "custom"),
+            ("https://account.nodecode.ai/", "custom"),
+            ("https://www.api.nodecode.ai/v1", "custom"),
+            ("https://api.nodecode.com/v1", "custom"),
+            ("https://nodecode.com/", "custom"),
+            ("https://www.nodecode.com/", "custom"),
+            ("https://api.nodecode.ai.evil.test/v1", "custom"),
+            ("https://freeinference.org/v1", "freeinference"),
+            ("https://freeinference.org/v1/chat/completions", "freeinference"),
+            ("https://freeinference.org/v1/responses", "freeinference"),
+            ("https://freeinference.org/v1/models", "freeinference"),
+            ("https://freeinference.org", "freeinference"),
+            ("https://freeinference.org/anthropic/v1/messages", "freeinference"),
+            ("https://freeinference.org/signup", "freeinference"),
+            ("https://freeinference.org/dashboard/keys", "freeinference"),
+            ("https://doc.freeinference.org/quickstart", "custom"),
+            ("https://www.freeinference.org/v1", "custom"),
+            ("https://api.freeinference.org/v1", "custom"),
+            ("https://agents.freeinference.org/", "custom"),
+            ("https://status.freeinference.org/", "custom"),
+            ("https://openinfra.freeinference.org/", "custom"),
+            ("https://data.freeinference.org/", "custom"),
+            ("https://docs.freeinference.org/v1", "custom"),
+            ("https://freeinference.org.evil.test/v1", "custom"),
+            ("https://api.optracloud.com/v1", "optracloud"),
+            ("https://api.optracloud.com/v1/chat/completions", "optracloud"),
+            ("https://api.optracloud.com/v1/models", "optracloud"),
+            ("https://api.optracloud.com", "optracloud"),
+            ("https://api.optracloud.com/v1/messages", "optracloud"),
+            ("https://api.optracloud.com/v1/responses", "optracloud"),
+            ("https://api.optracloud.com/v1beta/models/optra-coder:generateContent", "optracloud"),
+            ("https://api.optracloud.com/portal/login", "optracloud"),
+            ("https://api.optracloud.com/portal/apikeys", "optracloud"),
+            ("https://optracloud.com/v1", "custom"),
+            ("https://optracloud.com/docs.html", "custom"),
+            ("https://optracloud.com/free.html", "custom"),
+            ("https://optracloud.com/portal/apikeys", "custom"),
+            ("https://optracloud.com/portal/join", "custom"),
+            ("https://www.optracloud.com/v1", "custom"),
+            ("https://www.optracloud.com/v1/models", "custom"),
+            ("https://portal.optracloud.com/v1", "custom"),
+            ("https://you.optracloud.com/v1", "custom"),
+            ("https://docs.optracloud.com/v1", "custom"),
+            ("https://api.optracloud.ai/v1", "custom"),
+            ("https://optracloud.ai/v1", "custom"),
+            ("https://globussoft.com/v1", "custom"),
+            ("https://www.globussoft.com/v1", "custom"),
+            ("https://api.optracloud.com.evil.test/v1", "custom"),
+            ("https://api.ifm.ai/v1", "ifm"),
+            ("https://api.ifm.ai/v1/chat/completions", "ifm"),
+            ("https://api.ifm.ai/v1/responses", "ifm"),
+            ("https://api.ifm.ai/v1/models", "ifm"),
+            ("https://api.ifm.ai", "ifm"),
+            ("https://api.ifm.ai/v1/messages", "ifm"),
+            ("https://api.ifm.ai/v1/audio/transcriptions", "ifm"),
+            ("https://docs.ifm.ai/docs/quickstart.md", "custom"),
+            ("https://platform.ifm.ai/api-keys", "custom"),
+            ("https://ifm.ai/", "custom"),
+            ("https://www.ifm.ai/v1", "custom"),
+            ("https://console.ifm.ai/", "custom"),
+            ("https://chat.ifm.ai/v1/models", "custom"),
+            ("https://ifm.mbzuai.ac.ae/", "custom"),
+            ("https://mbzuai.ac.ae/", "custom"),
+            ("https://app.ifm.ai/v1", "custom"),
+            ("https://api.ifm.com/v1", "custom"),
+            ("https://api.ifm.ai.evil.test/v1", "custom"),
+            ("https://api.exaone.ai/v1", "exaone"),
+            ("https://api.exaone.ai/v1/chat/completions", "exaone"),
+            ("https://api.exaone.ai/v1/models", "exaone"),
+            ("https://api.exaone.ai", "exaone"),
+            ("https://api.exaone.ai/v1/tabular/classification", "exaone"),
+            ("https://api.exaone.ai/v1/responses", "exaone"),
+            ("https://api.exaone.ai/v1/messages", "exaone"),
+            ("https://docs.exaone.ai/en/docs/k-exaone-2.5", "custom"),
+            ("https://docs.exaone.ai/en/docs/changelog", "custom"),
+            ("https://id.exaone.ai/mypage", "custom"),
+            ("https://id.exaone.ai/login", "custom"),
+            ("https://showroom.exaone.ai/", "custom"),
+            ("https://asset-showroom.exaone.ai/image/showroom-logo.png", "custom"),
+            ("https://www.exaone.ai/v1", "custom"),
+            ("https://exaone.ai/", "custom"),
+            ("https://console.exaone.ai/", "custom"),
+            ("https://platform.exaone.ai/", "custom"),
+            ("https://app.exaone.ai/", "custom"),
+            ("https://api.exaone.com/v1", "custom"),
+            ("https://api.exaone.ai.evil.test/v1", "custom"),
             ("https://ai-gateway.edgeone.link/v1", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link/v1/chat/completions", "edgeone-makers"),
             ("https://ai-gateway.edgeone.link", "edgeone-makers"),
@@ -8210,6 +8438,37 @@ mod tests {
             ("https://ai-gateway.edgeone.ai/v1", "custom"),
             ("https://gateway.edgeone.link/v1", "custom"),
             ("https://ai-gateway.edgeone.link.evil.test/v1", "custom"),
+            ("https://api.sailresearch.com/v1", "sailresearch"),
+            ("https://api.sailresearch.com/v1/chat/completions", "sailresearch"),
+            ("https://api.sailresearch.com/v1/responses", "sailresearch"),
+            ("https://api.sailresearch.com/v1/models", "sailresearch"),
+            ("https://api.sailresearch.com", "sailresearch"),
+            ("https://api.sailresearch.com/v1/messages", "sailresearch"),
+            ("https://www.sailresearch.com/", "custom"),
+            ("https://sailresearch.com/", "custom"),
+            ("https://docs.sailresearch.com/", "custom"),
+            ("https://app.sailresearch.com/sign-up", "custom"),
+            ("https://www.api.sailresearch.com/v1", "custom"),
+            ("https://api.sailresearch.com.evil.test/v1", "custom"),
+            ("https://app.vllm-sr.ai/v1", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/v1/chat/completions", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/v1/models", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/docs", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/v1/responses", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/v1/messages", "vllm-semantic-router"),
+            ("https://decision.vllm-sr.ai/v1", "custom"),
+            ("https://decision.vllm-sr.ai/v1/chat/completions", "custom"),
+            ("https://decision.vllm-sr.ai/v1/models", "custom"),
+            ("https://vllm-sr.ai/v1", "custom"),
+            ("https://www.vllm-sr.ai/", "custom"),
+            ("https://www.vllm-sr.ai/v1/models", "custom"),
+            ("https://mom.vllm-sr.ai/v1", "custom"),
+            ("https://pytorch.vllm-sr.ai/v1/chat/completions", "custom"),
+            ("https://docs.vllm-sr.ai/v1", "custom"),
+            ("https://api.vllm-sr.ai/v1", "custom"),
+            ("https://www.app.vllm-sr.ai/v1", "custom"),
+            ("https://app.vllm-sr.ai.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -8292,7 +8551,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 171);
+        assert_eq!(list_providers().len(), 179);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8874,6 +9133,203 @@ mod tests {
         );
         assert_eq!(serialized["portal"]["kind"], "console");
 
+        let xkiro = list_providers()
+            .iter()
+            .find(|provider| provider.id == "xkiro")
+            .unwrap();
+        let serialized = serde_json::to_value(xkiro).unwrap();
+        assert_eq!(xkiro.name, "xKiro");
+        assert_eq!(xkiro.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(xkiro.category, "gateway");
+        assert_eq!(xkiro.default_base_url, Some("https://api.xkiro.com/v1"));
+        assert_eq!(serialized["base_url"], "https://api.xkiro.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_some());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.xkiro.com"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"]
+                .as_array()
+                .map(|endpoints| endpoints.len()),
+            Some(1)
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.xkiro.com/api/chat-completions/"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://xkiro.com/dashboard/api/keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let freeinference = list_providers()
+            .iter()
+            .find(|provider| provider.id == "freeinference")
+            .unwrap();
+        let serialized = serde_json::to_value(freeinference).unwrap();
+        assert_eq!(freeinference.name, "FreeInference");
+        assert_eq!(freeinference.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(freeinference.category, "gateway");
+        assert_eq!(
+            freeinference.default_base_url,
+            Some("https://freeinference.org/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://freeinference.org");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/anthropic/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://freeinference.org/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-responses"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://freeinference.org/anthropic"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://doc.freeinference.org/quickstart"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://freeinference.org/signup");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let ifm = list_providers()
+            .iter()
+            .find(|provider| provider.id == "ifm")
+            .unwrap();
+        let serialized = serde_json::to_value(ifm).unwrap();
+        assert_eq!(ifm.name, "IFM");
+        assert_eq!(ifm.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(ifm.category, "official");
+        assert_eq!(ifm.default_base_url, Some("https://api.ifm.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.ifm.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/responses"
+        );
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.ifm.ai/v1"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "openai-responses"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"].as_array().map(|endpoints| endpoints.len()),
+            Some(1)
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://docs.ifm.ai/docs/quickstart.md");
+        assert_eq!(serialized["portal"]["url"], "https://platform.ifm.ai/api-keys");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let exaone = list_providers()
+            .iter()
+            .find(|provider| provider.id == "exaone")
+            .unwrap();
+        let serialized = serde_json::to_value(exaone).unwrap();
+        assert_eq!(exaone.name, "EXAONE API Platform");
+        assert_eq!(exaone.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(exaone.category, "official");
+        assert_eq!(exaone.default_base_url, Some("https://api.exaone.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.exaone.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.exaone.ai/en/docs/k-exaone-2.5"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://id.exaone.ai/mypage");
+        assert_eq!(serialized["portal"]["kind"], "console");
+
+        let vllm_semantic_router = list_providers()
+            .iter()
+            .find(|provider| provider.id == "vllm-semantic-router")
+            .unwrap();
+        let serialized = serde_json::to_value(vllm_semantic_router).unwrap();
+        assert_eq!(vllm_semantic_router.name, "vLLM Semantic Router");
+        assert_eq!(
+            vllm_semantic_router.default_protocol,
+            ModelProtocol::OpenaiCompletions
+        );
+        assert_eq!(vllm_semantic_router.category, "gateway");
+        assert_eq!(
+            vllm_semantic_router.default_base_url,
+            Some("https://app.vllm-sr.ai/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://app.vllm-sr.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://app.vllm-sr.ai/docs");
+        assert_eq!(serialized["portal"]["url"], "https://app.vllm-sr.ai");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
         let edenai = list_providers()
             .iter()
             .find(|provider| provider.id == "edenai")
@@ -8918,6 +9374,137 @@ mod tests {
             "https://app.edenai.run/settings/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let nodecode = list_providers()
+            .iter()
+            .find(|provider| provider.id == "nodecode")
+            .unwrap();
+        let serialized = serde_json::to_value(nodecode).unwrap();
+        assert_eq!(nodecode.name, "Nodecode");
+        assert_eq!(nodecode.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(nodecode.category, "gateway");
+        assert_eq!(nodecode.default_base_url, Some("https://api.nodecode.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://api.nodecode.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.nodecode.ai/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(serialized["additional_endpoints"][1]["base_url"], "https://api.nodecode.ai");
+        assert_eq!(serialized["additional_endpoints"][1]["protocol"], "anthropic-messages");
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://nodecode.ai/docs/models");
+        assert_eq!(serialized["portal"]["url"], "https://nodecode.ai/account/keys");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let optracloud = list_providers()
+            .iter()
+            .find(|provider| provider.id == "optracloud")
+            .unwrap();
+        let serialized = serde_json::to_value(optracloud).unwrap();
+        assert_eq!(optracloud.name, "OptraCloud");
+        assert_eq!(optracloud.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(optracloud.category, "gateway");
+        assert_eq!(
+            optracloud.default_base_url,
+            Some("https://api.optracloud.com/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.optracloud.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.optracloud.com"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"].as_array().map(|endpoints| endpoints.len()),
+            Some(1)
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://optracloud.com/docs.html");
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://optracloud.com/portal/apikeys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let sailresearch = list_providers()
+            .iter()
+            .find(|provider| provider.id == "sailresearch")
+            .unwrap();
+        let serialized = serde_json::to_value(sailresearch).unwrap();
+        assert_eq!(sailresearch.name, "Sail Research");
+        assert_eq!(sailresearch.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(sailresearch.category, "gateway");
+        assert_eq!(
+            sailresearch.default_base_url,
+            Some("https://api.sailresearch.com/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.sailresearch.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.sailresearch.com/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://api.sailresearch.com"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.sailresearch.com/quickstart"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://app.sailresearch.com/sign-up"
+        );
+        assert_eq!(serialized["portal"]["kind"], "console");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(
