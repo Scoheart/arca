@@ -895,6 +895,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://ai-gateway.edgeone.link",
         }],
+        "sailresearch" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.sailresearch.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.sailresearch.com",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1585,6 +1595,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "edgeone-makers",
         name: "EdgeOne Makers Models",
         default_base_url: Some("https://ai-gateway.edgeone.link/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "sailresearch",
+        name: "Sail Research",
+        default_base_url: Some("https://api.sailresearch.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "gateway",
     },
@@ -2349,6 +2366,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
         "ai-gateway.edgeone.link" => "edgeone-makers",
+        "api.sailresearch.com" => "sailresearch",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -8210,6 +8228,18 @@ mod tests {
             ("https://ai-gateway.edgeone.ai/v1", "custom"),
             ("https://gateway.edgeone.link/v1", "custom"),
             ("https://ai-gateway.edgeone.link.evil.test/v1", "custom"),
+            ("https://api.sailresearch.com/v1", "sailresearch"),
+            ("https://api.sailresearch.com/v1/chat/completions", "sailresearch"),
+            ("https://api.sailresearch.com/v1/responses", "sailresearch"),
+            ("https://api.sailresearch.com/v1/models", "sailresearch"),
+            ("https://api.sailresearch.com", "sailresearch"),
+            ("https://api.sailresearch.com/v1/messages", "sailresearch"),
+            ("https://www.sailresearch.com/", "custom"),
+            ("https://sailresearch.com/", "custom"),
+            ("https://docs.sailresearch.com/", "custom"),
+            ("https://app.sailresearch.com/sign-up", "custom"),
+            ("https://www.api.sailresearch.com/v1", "custom"),
+            ("https://api.sailresearch.com.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -8292,7 +8322,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 171);
+        assert_eq!(list_providers().len(), 172);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8918,6 +8948,57 @@ mod tests {
             "https://app.edenai.run/settings/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
+
+        let sailresearch = list_providers()
+            .iter()
+            .find(|provider| provider.id == "sailresearch")
+            .unwrap();
+        let serialized = serde_json::to_value(sailresearch).unwrap();
+        assert_eq!(sailresearch.name, "Sail Research");
+        assert_eq!(sailresearch.default_protocol, ModelProtocol::OpenaiCompletions);
+        assert_eq!(sailresearch.category, "gateway");
+        assert_eq!(
+            sailresearch.default_base_url,
+            Some("https://api.sailresearch.com/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.sailresearch.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.sailresearch.com/v1"
+        );
+        assert_eq!(serialized["additional_endpoints"][0]["protocol"], "openai-responses");
+        assert_eq!(
+            serialized["additional_endpoints"][1]["base_url"],
+            "https://api.sailresearch.com"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][1]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.sailresearch.com/quickstart"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://app.sailresearch.com/sign-up"
+        );
+        assert_eq!(serialized["portal"]["kind"], "console");
 
         for id in ["poe", "huggingface", "nebius", "requesty"] {
             assert_eq!(

@@ -169,3 +169,7 @@ Provider slot, not a third-party brand.
 ## BlazeRail — 2026-10-24
 
 - `blazerail.svg`: official site icon served from <https://www.blazerail.com/favicon.svg> (the `rel="icon"` linked by <https://www.blazerail.com/>, <https://www.blazerail.com/docs>, and <https://www.blazerail.com/free>).
+
+## Sail Research — 2026-11-10
+
+- `sailresearch.png`: official 192×192 docs icon served from <https://docs.sailresearch.com/mintlify-assets/_mintlify/favicons/sailresearch/BWUDTf48u3tNnszQ/_generated/favicon/android-chrome-192x192.png> (the light-mode `rel="icon"` linked by <https://docs.sailresearch.com/>). Original bytes, retrieved 2026-11-10. The same sail mark is the docs favicon. The header wordmark is <https://mintcdn.com/sailresearch/X8kOeTTR9DVS13DJ/logo/solo.svg>, linked from those docs pages.

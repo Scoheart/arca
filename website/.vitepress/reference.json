@@ -3703,6 +3703,22 @@
       }
     },
     {
+      "id": "sailresearch",
+      "name": "Sail Research",
+      "category": "gateway",
+      "baseUrl": "https://api.sailresearch.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.sailresearch.com/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://app.sailresearch.com/sign-up"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

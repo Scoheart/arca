@@ -1188,5 +1188,12 @@
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
     }
+  },
+  "sailresearch": {
+    "docs_url": "https://docs.sailresearch.com/quickstart",
+    "portal": {
+      "url": "https://app.sailresearch.com/sign-up",
+      "kind": "console"
+    }
   }
 }

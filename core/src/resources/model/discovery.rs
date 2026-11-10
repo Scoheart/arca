@@ -224,10 +224,44 @@ const ZRO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("auto", None, None),
 ];
 
+/// Documented model ids used when anonymous GET /v1/models is not a catalog.
+/// Ids and names are the current models page. Context values are the decimal
+/// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
+const SAILRESEARCH_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("moonshotai/Kimi-K3.1-Pro", Some("Kimi K3.1 Pro"), Some(1_000_000)),
+    ("moonshotai/Kimi-K3", Some("Kimi K3"), Some(1_000_000)),
+    ("zai-org/GLM-5.3", Some("GLM-5.3"), Some(1_000_000)),
+    ("zai-org/GLM-5.3-Flash", Some("GLM-5.3-Flash"), Some(1_000_000)),
+    (
+        "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        Some("DeepSeek V4.1 Flash 1017"),
+        Some(1_000_000),
+    ),
+    (
+        "deepseek-ai/DeepSeek-V4-Pro-0813",
+        Some("DeepSeek V4 Pro 0813"),
+        Some(1_000_000),
+    ),
+    (
+        "deepseek-ai/DeepSeek-V4-Flash-0731",
+        Some("DeepSeek V4 Flash 0731"),
+        Some(1_000_000),
+    ),
+    ("google/gemma-4-31B-it", Some("Gemma 4 31B IT"), Some(256_000)),
+    (
+        "nvidia/Gemma-4-31B-IT-NVFP4",
+        Some("Gemma 4 31B IT (NVFP4)"),
+        Some(262_000),
+    ),
+    ("google/gemma-4-12B-it", Some("Gemma 4 12B IT"), Some(16_000)),
+    ("Qwen/Qwen3.6-35B-A3B", Some("Qwen3.6 35B A3B"), Some(262_000)),
+];
+
 fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
     let entries = match provider_type {
         "zro" => ZRO_STATIC_MODELS,
         "nararouter" => NARAROUTER_STATIC_MODELS,
+        "sailresearch" => SAILRESEARCH_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -342,6 +376,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "nararouter"
         | "zro"
         | "llm7"
+        | "sailresearch"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -1220,6 +1255,79 @@ mod tests {
     }
 
     #[test]
+    fn sailresearch_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("sailresearch").expect("sailresearch seed");
+        let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            [
+                "moonshotai/Kimi-K3.1-Pro",
+                "moonshotai/Kimi-K3",
+                "zai-org/GLM-5.3",
+                "zai-org/GLM-5.3-Flash",
+                "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+                "deepseek-ai/DeepSeek-V4-Pro-0813",
+                "deepseek-ai/DeepSeek-V4-Flash-0731",
+                "google/gemma-4-31B-it",
+                "nvidia/Gemma-4-31B-IT-NVFP4",
+                "google/gemma-4-12B-it",
+                "Qwen/Qwen3.6-35B-A3B",
+            ]
+        );
+        assert_eq!(models[0].name.as_deref(), Some("Kimi K3.1 Pro"));
+        assert_eq!(models[0].context_length, Some(1_000_000));
+        assert_eq!(models[4].name.as_deref(), Some("DeepSeek V4.1 Flash 1017"));
+        assert_eq!(models[4].context_length, Some(1_000_000));
+        assert_eq!(models[7].context_length, Some(256_000));
+        assert_eq!(models[8].context_length, Some(262_000));
+        assert_eq!(models[9].context_length, Some(16_000));
+        assert_eq!(models[10].name.as_deref(), Some("Qwen3.6 35B A3B"));
+        assert_eq!(models[10].context_length, Some(262_000));
+        assert!(static_seed_models("sailresearch").is_none());
+        assert!(reviewed_static_catalog("decuff").is_none());
+
+        let config = provider(
+            "sailresearch",
+            "https://api.sailresearch.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.sailresearch.com/v1/models"
+        );
+
+        let _home = TestHome::new("sailresearch-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "sailresearch-instance".into(),
+                name: "Sail Research".into(),
+                provider: "sailresearch".into(),
+                base_url: "https://api.sailresearch.com".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), ids.len());
+        assert_eq!(seeded[0].id, "moonshotai/Kimi-K3.1-Pro");
+        assert_eq!(seeded[3].id, "zai-org/GLM-5.3-Flash");
+        assert_eq!(seeded[10].context_length, Some(262_000));
+    }
+
+    #[test]
     fn nararouter_seeds_the_documented_catalog_without_a_key_and_discovers_with_one() {
         let models = reviewed_static_catalog("nararouter").expect("nararouter seed");
         let ids: Vec<_> = models.iter().map(|model| model.id.as_str()).collect();
@@ -1522,6 +1630,7 @@ mod tests {
         "nararouter",
         "zro",
         "llm7",
+        "sailresearch",
         "mistral",
         "deepseek",
         "groq",
@@ -1714,7 +1823,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "sailresearch"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),

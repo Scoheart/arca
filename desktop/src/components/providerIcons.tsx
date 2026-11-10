@@ -149,6 +149,7 @@ export const NAMED_PROVIDER_ICON_IDS = [
   "routeway",
   "runanywhere",
   "runinfra",
+  "sailresearch",
   "sambanova",
   "sarashina",
   "scaleway",
