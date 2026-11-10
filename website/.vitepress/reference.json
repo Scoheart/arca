@@ -3703,6 +3703,20 @@
       }
     },
     {
+      "id": "vllm-semantic-router",
+      "name": "vLLM Semantic Router",
+      "category": "gateway",
+      "baseUrl": "https://app.vllm-sr.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://app.vllm-sr.ai/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://app.vllm-sr.ai"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

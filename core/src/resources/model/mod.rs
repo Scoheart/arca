@@ -1589,6 +1589,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "vllm-semantic-router",
+        name: "vLLM Semantic Router",
+        default_base_url: Some("https://app.vllm-sr.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2349,6 +2356,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "router.bynara.id" => "nararouter",
         "api.llm7.io" => "llm7",
         "ai-gateway.edgeone.link" => "edgeone-makers",
+        "app.vllm-sr.ai" => "vllm-semantic-router",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -8210,6 +8218,25 @@ mod tests {
             ("https://ai-gateway.edgeone.ai/v1", "custom"),
             ("https://gateway.edgeone.link/v1", "custom"),
             ("https://ai-gateway.edgeone.link.evil.test/v1", "custom"),
+            ("https://app.vllm-sr.ai/v1", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/v1/chat/completions", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/v1/models", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/docs", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/v1/responses", "vllm-semantic-router"),
+            ("https://app.vllm-sr.ai/v1/messages", "vllm-semantic-router"),
+            ("https://decision.vllm-sr.ai/v1", "custom"),
+            ("https://decision.vllm-sr.ai/v1/chat/completions", "custom"),
+            ("https://decision.vllm-sr.ai/v1/models", "custom"),
+            ("https://vllm-sr.ai/v1", "custom"),
+            ("https://www.vllm-sr.ai/", "custom"),
+            ("https://www.vllm-sr.ai/v1/models", "custom"),
+            ("https://mom.vllm-sr.ai/v1", "custom"),
+            ("https://pytorch.vllm-sr.ai/v1/chat/completions", "custom"),
+            ("https://docs.vllm-sr.ai/v1", "custom"),
+            ("https://api.vllm-sr.ai/v1", "custom"),
+            ("https://www.app.vllm-sr.ai/v1", "custom"),
+            ("https://app.vllm-sr.ai.evil.test/v1", "custom"),
             ("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", "volcengine-coding-plan"),
             ("https://qianfan.baidubce.com/anthropic/coding/v1/messages", "baidu-qianfan-coding-plan"),
             ("https://aiplatform.googleapis.com/v1", "custom"),
@@ -8292,7 +8319,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 171);
+        assert_eq!(list_providers().len(), 172);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -8873,6 +8900,38 @@ mod tests {
             "https://console.tencentcloud.com/edgeone/makers"
         );
         assert_eq!(serialized["portal"]["kind"], "console");
+
+        let vllm_semantic_router = list_providers()
+            .iter()
+            .find(|provider| provider.id == "vllm-semantic-router")
+            .unwrap();
+        let serialized = serde_json::to_value(vllm_semantic_router).unwrap();
+        assert_eq!(vllm_semantic_router.name, "vLLM Semantic Router");
+        assert_eq!(
+            vllm_semantic_router.default_protocol,
+            ModelProtocol::OpenaiCompletions
+        );
+        assert_eq!(vllm_semantic_router.category, "gateway");
+        assert_eq!(
+            vllm_semantic_router.default_base_url,
+            Some("https://app.vllm-sr.ai/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://app.vllm-sr.ai/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["additional_endpoints"]
+            .as_array()
+            .is_some_and(|endpoints| endpoints.is_empty()));
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://app.vllm-sr.ai/docs");
+        assert_eq!(serialized["portal"]["url"], "https://app.vllm-sr.ai");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
 
         let edenai = list_providers()
             .iter()

@@ -254,6 +254,9 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "@makers/kimi-k2.6",
             "@makers/zhuque-text",
         ],
+        // https://app.vllm-sr.ai/docs
+        // GET /v1/models also lists System One decision models. Only this id is chat.
+        "vllm-semantic-router" => &["vllm-sr/auto"],
         _ => return None,
     };
     Some(
@@ -1077,6 +1080,60 @@ mod tests {
             ]
         );
         assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()));
+
+        config.model_catalog_url = Some("https://catalog.example.test/models".into());
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://catalog.example.test/models"
+        );
+    }
+
+    #[test]
+    fn vllm_semantic_router_seeds_vllm_sr_auto_and_does_not_call_models() {
+        assert!(reviewed_discovery_spec("vllm-semantic-router").is_none());
+        assert!(model_discovery_supported("vllm-semantic-router"));
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"vllm-semantic-router"));
+        let mut config = provider(
+            "vllm-semantic-router",
+            "https://app.vllm-sr.ai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        config.auth_requirement = AuthRequirement::Required;
+        assert!(discovery_spec_for_provider(&config)
+            .unwrap_err()
+            .contains("model_discovery_static_seed"));
+        let models = execute_provider_discovery(ModelDiscoveryInput {
+            provider: config.clone(),
+        })
+        .unwrap();
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["vllm-sr/auto"]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "vllm-sr/d3-ultra",
+            "vllm-sr/d3-turbo",
+            "vllm-sr/d3",
+            "vllm-sr/d3-flash",
+            "vllm-sr/d3-mini",
+            "vllm-sr/d3-nano",
+            "vllm-sr/d3-lite",
+            "vllm-sr/d3-edge",
+            "vllm-sr/vela3-turbo",
+            "vllm-sr/vela3-flash",
+            "zai/glm-5.3-flash",
+            "qwen/qwen3.8-flash-next",
+            "qwen/qwen3.8-27b",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
 
         config.model_catalog_url = Some("https://catalog.example.test/models".into());
         let spec = discovery_spec_for_provider(&config).unwrap();

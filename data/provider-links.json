@@ -1188,5 +1188,12 @@
       "url": "https://console.tencentcloud.com/edgeone/makers",
       "kind": "console"
     }
+  },
+  "vllm-semantic-router": {
+    "docs_url": "https://app.vllm-sr.ai/docs",
+    "portal": {
+      "url": "https://app.vllm-sr.ai",
+      "kind": "api-key"
+    }
   }
 }
