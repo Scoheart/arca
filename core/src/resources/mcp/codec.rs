@@ -1,6 +1,7 @@
 //! Lossless MCP wire-format codecs.
 
 use crate::domain::types::{HttpConfig, McpConfig, StdioConfig};
+use crate::resources::deepseek_harness::valid_mcp_server_name;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
@@ -96,7 +97,16 @@ const TRANSPORT_FIELDS: &[&str] = &[
     "url",
     "headers",
 ];
-const DSH_FIELDS: &[&str] = &["transport", "command", "args", "env", "cwd", "url", "headers"];
+const DSH_FIELDS: &[&str] = &[
+    "serverName",
+    "transport",
+    "command",
+    "args",
+    "env",
+    "cwd",
+    "url",
+    "headers",
+];
 const TABNINE_FIELDS: &[&str] = &[
     "transport",
     "type",
@@ -387,8 +397,8 @@ impl Codec {
     }
 
     pub fn validate_update(self, value: &Value, config: &McpConfig) -> Result<(), String> {
-        if self == Codec::WorkBuddy {
-            self.decode_with_enabled(value).ok_or("invalid WorkBuddy MCP entry")?;
+        if self == Codec::WorkBuddy || self == Codec::DeepseekHarness {
+            self.decode_with_enabled(value).ok_or("invalid WorkBuddy or DeepSeek Harness MCP entry")?;
         } else if self == Codec::JunieCli {
             self.decode_with_enabled(value).ok_or("invalid Junie CLI MCP entry")?;
         } else {
@@ -400,9 +410,9 @@ impl Codec {
 
     pub fn decode_with_enabled(self, value: &Value) -> Option<(McpConfig, bool)> {
         let enabled = match self {
-            Codec::WorkBuddy => !value.as_object()?.get("disabled")
+            Codec::WorkBuddy | Codec::DeepseekHarness => !value.as_object()?.get("disabled")
                 .and_then(Value::as_bool).unwrap_or(false),
-            Codec::Pi | Codec::JunieCli | Codec::DeepseekHarness => value.as_object()?.get("enabled")
+            Codec::Pi | Codec::JunieCli => value.as_object()?.get("enabled")
                 .map(Value::as_bool).unwrap_or(Some(true))?,
             Codec::Jan => value.as_object()?.get("active")
                 .map(Value::as_bool).unwrap_or(Some(true))?,
@@ -415,8 +425,8 @@ impl Codec {
 
     pub fn decode(self, value: &Value) -> Option<McpConfig> {
         self.validate_existing_entry(value).ok()?;
-        if (self == Codec::WorkBuddy && value.get("disabled") == Some(&Value::Bool(true)))
-            || (matches!(self, Codec::Pi | Codec::JunieCli | Codec::Goose | Codec::DeepseekHarness) && value.get("enabled") == Some(&Value::Bool(false)))
+        if (matches!(self, Codec::WorkBuddy | Codec::DeepseekHarness) && value.get("disabled") == Some(&Value::Bool(true)))
+            || (matches!(self, Codec::Pi | Codec::JunieCli | Codec::Goose) && value.get("enabled") == Some(&Value::Bool(false)))
             || (self == Codec::Jan && value.get("active") == Some(&Value::Bool(false))) {
             return None;
         }
@@ -638,10 +648,8 @@ impl Codec {
                 Codec::Transport | Codec::DeepseekHarness => {
                     fields.push(("transport".into(), Value::String("stdio".into())));
                     push_stdio_fields(&mut fields, stdio, "cwd");
-                    if self == Codec::DeepseekHarness {
-                        if stdio.command.is_empty() { return Err("DeepSeek Harness requires a stdio command".into()); }
-                        defaults.push(("enabled".into(), Value::Bool(true)));
-                        validate_dsh_strings(&Value::Object(fields.iter().cloned().collect()))?;
+                    if self == Codec::DeepseekHarness && stdio.command.is_empty() {
+                        return Err("DeepSeek Harness requires a stdio command".into());
                     }
                 }
                 Codec::Tabnine => {
@@ -860,8 +868,6 @@ impl Codec {
                     if http.url.is_empty() { return Err("DeepSeek Harness requires a Streamable HTTP URL".into()); }
                     fields.push(("transport".into(), Value::String("streamable-http".into())));
                     push_http_fields(&mut fields, http, "url", "headers");
-                    defaults.push(("enabled".into(), Value::Bool(true)));
-                    validate_dsh_strings(&Value::Object(fields.iter().cloned().collect()))?;
                 }
                 Codec::Transport => {
                     fields.push((
@@ -1007,7 +1013,12 @@ impl Codec {
 }
 
 fn validate_deepseek_harness(object: &Map<String, Value>) -> Result<(), String> {
-    if object.get("enabled").is_some_and(|v| !v.is_boolean()) { return Err("DeepSeek Harness enabled must be boolean".into()); }
+    if object.get("disabled").is_some_and(|v| !v.is_boolean()) { return Err("DeepSeek Harness disabled must be boolean".into()); }
+    if let Some(server_name) = object.get("serverName") {
+        if !server_name.as_str().is_some_and(valid_mcp_server_name) {
+            return Err("DeepSeek Harness serverName must match [A-Za-z0-9_-]{1,32}".into());
+        }
+    }
     for key in ["command", "url", "cwd"] {
         if object.get(key).is_some_and(|v| !v.is_string()) { return Err(format!("DeepSeek Harness {key} must be a string")); }
     }
@@ -1021,26 +1032,6 @@ fn validate_deepseek_harness(object: &Map<String, Value>) -> Result<(), String> 
         Some("streamable-http") if nonempty("url") && !["command", "args", "env", "cwd"].iter().any(|k| nonempty(k)) => {},
         _ => return Err("DeepSeek Harness supports stdio or Streamable HTTP without cross-transport fields".into()),
     }
-    validate_dsh_strings(&Value::Object(object.clone()))
-}
-
-fn validate_dsh_strings(value: &Value) -> Result<(), String> {
-    fn text(s: &str) -> Result<(), String> {
-        let mut rest = s;
-        while let Some(start) = rest.find("${") {
-            rest = &rest[start + 2..];
-            let end = rest.find('}').ok_or("invalid DeepSeek Harness credential template")?;
-            let reference = rest[..end].strip_prefix("credential:").ok_or("DeepSeek Harness templates require credential:REF")?;
-            if reference.is_empty() || !reference.bytes().enumerate().all(|(i,b)| b.is_ascii_alphabetic() || b == b'_' || (i > 0 && b.is_ascii_digit())) { return Err("invalid DeepSeek Harness credential reference".into()); }
-            rest = &rest[end + 1..];
-        }
-        Ok(())
-    }
-    fn strings(value: &Value) -> Result<(), String> {
-        match value { Value::String(s) => text(s)?, Value::Array(a) => for v in a { strings(v)?; }, Value::Object(o) => for v in o.values() { strings(v)?; }, _ => {} }
-        Ok(())
-    }
-    for key in ["command", "args", "env", "cwd", "url", "headers"] { if let Some(v) = value.get(key) { strings(v)?; } }
     Ok(())
 }
 

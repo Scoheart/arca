@@ -787,7 +787,7 @@ pub(crate) fn normalize_configuration_patch(
                 return Err("MCP 配置键不能为空".into());
             }
             if current.layout.as_deref() == Some("cordis-patch") && key != "servers" {
-                return Err("DeepSeek Harness MCP 使用固定的 mcp-manager.config.servers；不能把配置键改成另一种原生结构".into());
+                return Err("DeepSeek Harness MCP 使用固定的 Cordis insert 配置；不能把配置键改成另一种原生结构".into());
             }
             let structured_key = current.key_path
                 || (current.format == "toml" && current.layout.as_deref() == Some("list"));

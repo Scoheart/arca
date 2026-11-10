@@ -74,22 +74,20 @@ Provider 时保持只读，避免接管一个模型时修改兄弟模型的端�
 
 ## MCP
 
-Web/Desktop 在 `mcp-manager` 条目内持久化 `config.servers`，每个 map key 是服务名。
-Arca 写入 stdio 或 Streamable HTTP 原生格式，并保留 `enabled`、超时、重连与未知
-策略。名字须符合原生 `[A-Za-z0-9_-]{1,32}`；SSE 和无法表达的跨 transport 参数
-明确拒绝，不静默丢弃。
+Web/Desktop 通过在 `cordis.patch.yml` 顶层 `- insert:` 列表中插入 `@deepseek-ai/dsh-mcp-client`
+插件项持久化 MCP 连接，每个条目分配独立的 `id: mcp-<serverName>` 与 `config.serverName`。
+Arca 写入 stdio 或 Streamable HTTP 原生格式，并保留超时、重连与未知策略。名字须符合原生
+`[A-Za-z0-9_-]{1,32}`；SSE 和无法表达的跨 transport 参数明确拒绝，不静默丢弃。
 
-原生 `enabled: false` 保留条目但不挂载连接。Arca 的观察、快照切换和删除均以完整
-条目为边界；清空服务器仍保留显式 `servers: {}`，避免删除 override 后继承的服务器
-重新出现。MCP 和 Models 可以共用同一个 Profile 文件，但只修改各自拥有的行与字段。
+原生通过插件条目级的 `disabled: true` 暂停挂载连接，缺省或 `disabled: false` 为启用。
+Arca 的观察、快照切换和删除均以完整插件条目为边界；清空 MCP 时清理所有 managed 客户端项，
+保留兄弟插件与模型的原有配置。MCP 和 Models 可以共用同一个 Profile 文件，但只修改各自拥有的行与字段。
 
 未接管的配置声明可以从 MCP 详情查看单项脱敏 JSON 和源路径。查看不要求密钥解锁，
-不会启动 MCP、执行 `!!js` 或写入配置。另行声明的 `dsh-mcp-client` 实例、agent preset
-内部实例与插件运行时的 `mcpManager.register()` 不能冒充此 manager 的可写条目。
+不会启动 MCP、执行 `!!js` 或写入配置。
 静态声明的查看也不证明原生会话已加载或已连通。
 
-官方依据：[MCP manager](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/mcp/mcp-manager/README.md)、
-[MCP client 与 credential 模板](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/mcp/mcp-client/README.md)。
+官方依据：[MCP client 与接入方法](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/mcp/mcp-client/README.md)。
 
 ## Skills 与 Instructions
 

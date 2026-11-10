@@ -67,6 +67,45 @@ pub fn read_text(path: &Path) -> Result<Option<String>, String> {
     #[cfg(not(unix))] { let _ = path; Err("secure Cordis patch access is unavailable on this platform".into()) }
 }
 
+pub const DSH_MCP_CLIENT_NAME: &str = "@deepseek-ai/dsh-mcp-client";
+
+pub fn valid_mcp_server_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.len() <= 32
+        && name.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'-'))
+}
+
+pub fn node_json_inert(node: &YamlNode) -> Result<Value, String> { node_json_inert_at(node, 0) }
+fn node_json_inert_at(node: &YamlNode, depth: usize) -> Result<Value, String> {
+    if depth > 64 { return Err(error()); }
+    match node {
+        YamlNode::Mapping(mapping) => {
+            let mut object = Map::new();
+            for entry in mapping.entries() {
+                let key = node_json_inert_at(&entry.key_node().ok_or_else(error)?, depth + 1)?;
+                let key = key.as_str().ok_or_else(error)?.to_string();
+                if key == "<<" || object.contains_key(&key) { return Err(error()); }
+                object.insert(key, node_json_inert_at(&entry.value_node().ok_or_else(error)?, depth + 1)?);
+            }
+            Ok(Value::Object(object))
+        }
+        YamlNode::Sequence(sequence) => sequence.into_iter().map(|n| node_json_inert_at(&n, depth + 1)).collect::<Result<Vec<_>, _>>().map(Value::Array),
+        YamlNode::Scalar(scalar) => if scalar.is_quoted() || scalar.value().starts_with(['|', '>']) {
+            Ok(Value::String(scalar.as_string()))
+        } else { serde_yaml::from_str(&scalar.value()).map_err(|_| error()) },
+        YamlNode::TaggedNode(tagged) => {
+            let tag = tagged.tag().unwrap_or_default();
+            let val = tagged.value().map(|s| s.as_string()).unwrap_or_else(|| tagged.to_string());
+            if tag.is_empty() {
+                Ok(Value::String(val))
+            } else {
+                Ok(Value::String(format!("{tag} {val}")))
+            }
+        }
+        _ => Err(error()),
+    }
+}
+
 pub fn node_json(node: &YamlNode) -> Result<Value, String> { node_json_at(node, 0) }
 fn node_json_at(node: &YamlNode, depth: usize) -> Result<Value, String> {
     if depth > 64 { return Err(error()); }
@@ -239,6 +278,301 @@ impl PatchFile {
         Self::from_text(&text)?;
         Ok(text)
     }
+
+    fn mcp_entries(&self) -> Result<Vec<(String, Mapping)>, String> {
+        let mut entries = Vec::new();
+        let mut names = BTreeSet::new();
+        let mut ids = BTreeSet::new();
+
+        for node in &self.sequence()? {
+            let Some(mapping) = node.as_mapping() else { return Err(error()); };
+            if let Some(id_node) = mapping.get("id") {
+                let id_str = node_json_inert(&id_node)?.as_str().ok_or_else(error)?.to_string();
+                if !ids.insert(id_str) { return Err("duplicate id in patch file".into()); }
+            }
+            if let Some(insert_seq) = mapping.get_sequence("insert") {
+                for item in &insert_seq {
+                    let Some(plugin) = item.as_mapping().cloned() else { continue; };
+                    if let Some(id_node) = plugin.get("id") {
+                        let id_str = node_json_inert(&id_node)?.as_str().ok_or_else(error)?.to_string();
+                        if !ids.insert(id_str) { return Err("duplicate id in patch file".into()); }
+                    }
+                    let is_mcp = plugin.get("name")
+                        .and_then(|n| node_json_inert(&n).ok())
+                        .and_then(|v| v.as_str().map(|s| s == DSH_MCP_CLIENT_NAME))
+                        .unwrap_or(false);
+                    if !is_mcp { continue; }
+                    let config_node = plugin.get("config").ok_or_else(error)?;
+                    let config_val = node_json_inert(&config_node)?;
+                    let Some(server_name) = config_val.get("serverName").and_then(Value::as_str) else {
+                        return Err(error());
+                    };
+                    if !valid_mcp_server_name(server_name) { return Err(error()); }
+                    if !names.insert(server_name.to_string()) {
+                        return Err("duplicate serverName in DeepSeek Harness patch".into());
+                    }
+                    entries.push((server_name.to_string(), plugin));
+                }
+            }
+        }
+        Ok(entries)
+    }
+
+    pub fn mcp_declaration_names(&self) -> Result<Vec<String>, String> {
+        let mut names = Vec::new();
+        for node in &self.sequence()? {
+            let Some(mapping) = node.as_mapping() else { continue; };
+            let Some(insert_seq) = mapping.get_sequence("insert") else { continue; };
+            for item in &insert_seq {
+                let Some(plugin) = item.as_mapping() else { continue; };
+                let is_mcp = plugin.get("name")
+                    .and_then(|n| node_json_inert(&n).ok())
+                    .and_then(|v| v.as_str().map(|s| s == DSH_MCP_CLIENT_NAME))
+                    .unwrap_or(false);
+                if !is_mcp { continue; }
+                if let Some(config_node) = plugin.get("config") {
+                    if let Ok(config_val) = node_json_inert(&config_node) {
+                        if let Some(server_name) = config_val.get("serverName").and_then(Value::as_str) {
+                            if valid_mcp_server_name(server_name) && !names.contains(&server_name.to_string()) {
+                                names.push(server_name.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(names)
+    }
+
+    pub fn inspect_mcp(&self, name: &str) -> Result<Option<Value>, String> {
+        for node in &self.sequence()? {
+            let Some(mapping) = node.as_mapping() else { continue; };
+            let Some(insert_seq) = mapping.get_sequence("insert") else { continue; };
+            for item in &insert_seq {
+                let Some(plugin) = item.as_mapping() else { continue; };
+                let is_mcp = plugin.get("name")
+                    .and_then(|n| node_json_inert(&n).ok())
+                    .and_then(|v| v.as_str().map(|s| s == DSH_MCP_CLIENT_NAME))
+                    .unwrap_or(false);
+                if !is_mcp { continue; }
+                let Some(config_node) = plugin.get("config") else { continue; };
+                let Ok(config_val) = node_json_inert(&config_node) else { continue; };
+                if config_val.get("serverName").and_then(Value::as_str) == Some(name) {
+                    let Value::Object(mut map) = config_val else { return Err(error()); };
+                    let disabled = plugin.get("disabled")
+                        .map(|n| node_json_inert(&n))
+                        .transpose()?
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(false);
+                    map.insert("disabled".into(), Value::Bool(disabled));
+                    return Ok(Some(Value::Object(map)));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    pub fn mcp_servers(&self) -> Result<Map<String, Value>, String> {
+        let mut map = Map::new();
+        for (name, plugin) in self.mcp_entries()? {
+            let config_node = plugin.get("config").ok_or_else(error)?;
+            let config_val = node_json_inert(&config_node)?;
+            let Value::Object(mut entry_map) = config_val else { return Err(error()); };
+            let disabled = plugin.get("disabled")
+                .map(|n| node_json_inert(&n))
+                .transpose()?
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            entry_map.insert("disabled".into(), Value::Bool(disabled));
+            map.insert(name, Value::Object(entry_map));
+        }
+        Ok(map)
+    }
+
+    pub fn set_mcp_enabled(&mut self, name: &str, enabled: bool) -> Result<(), String> {
+        let entries = self.mcp_entries()?;
+        for (server_name, plugin) in entries {
+            if server_name == name {
+                set(&plugin, "disabled", &Value::Bool(!enabled))?;
+                return Ok(());
+            }
+        }
+        Err("DeepSeek Harness MCP is missing".into())
+    }
+
+    pub fn upsert_mcp(
+        &mut self,
+        name: &str,
+        fields: &[(String, Value)],
+        controlled: &[&str],
+        defaults: &[(String, Value)],
+    ) -> Result<(), String> {
+        if !valid_mcp_server_name(name) {
+            return Err("DeepSeek Harness server name must match [A-Za-z0-9_-]{1,32}".into());
+        }
+
+        let existing_entry = self.mcp_entries()?.into_iter().find(|(n, _)| n == name);
+        if let Some((_, plugin)) = existing_entry {
+            if plugin.get("config").is_none() {
+                set(&plugin, "config", &serde_json::json!({}))?;
+            }
+            let config_node = plugin.get("config").ok_or_else(error)?;
+            let YamlNode::Mapping(config_map) = config_node else { return Err(error()); };
+
+            for key in controlled {
+                if *key != "serverName" && !fields.iter().any(|(f, _)| f == key) {
+                    config_map.remove(*key);
+                }
+            }
+            for (field, value) in fields {
+                set(&config_map, field, value)?;
+            }
+            set(&config_map, "serverName", &Value::String(name.into()))?;
+            for (field, value) in defaults {
+                if config_map.get(field).is_none() {
+                    set(&config_map, field, value)?;
+                }
+            }
+            return Ok(());
+        }
+
+        let target_id = format!("mcp-{}", name);
+        for node in &self.sequence()? {
+            if contains_id(&node, &target_id, 0)? {
+                return Err("DeepSeek Harness id already exists in patch".into());
+            }
+        }
+
+        let mut target_insert_seq = None;
+        for node in &self.sequence()? {
+            if let Some(mapping) = node.as_mapping() {
+                if let Some(seq) = mapping.get_sequence("insert") {
+                    target_insert_seq = Some(seq);
+                    break;
+                }
+            }
+        }
+
+        let insert_seq = match target_insert_seq {
+            Some(seq) => seq,
+            None => {
+                let node = json_node(&serde_json::json!({"insert": []}))?;
+                let YamlNode::Mapping(mapping) = node else { return Err(error()); };
+                self.sequence()?.push(mapping);
+                let last_node = self.sequence()?.into_iter().last().ok_or_else(error)?;
+                let last_mapping = last_node.as_mapping().ok_or_else(error)?;
+                last_mapping.get_sequence("insert").ok_or_else(error)?
+            }
+        };
+
+        let mut config_obj = Map::new();
+        config_obj.insert("serverName".into(), Value::String(name.into()));
+        for (field, value) in fields {
+            config_obj.insert(field.clone(), value.clone());
+        }
+        for (field, value) in defaults {
+            if !config_obj.contains_key(field) {
+                config_obj.insert(field.clone(), value.clone());
+            }
+        }
+
+        let plugin_val = serde_json::json!({
+            "id": target_id,
+            "name": DSH_MCP_CLIENT_NAME,
+            "config": config_obj,
+        });
+        let plugin_node = json_node(&plugin_val)?;
+        let YamlNode::Mapping(plugin_mapping) = plugin_node else { return Err(error()); };
+        insert_seq.push(plugin_mapping);
+        Ok(())
+    }
+
+    pub fn remove_mcp(&mut self, name: &str) -> Result<bool, String> {
+        let top_seq = self.sequence()?;
+        let mut found_pos = None;
+
+        for (top_idx, node) in top_seq.clone().into_iter().enumerate() {
+            let Some(mapping) = node.as_mapping().cloned() else { continue; };
+            let Some(insert_seq) = mapping.get_sequence("insert") else { continue; };
+            for (item_idx, item) in insert_seq.clone().into_iter().enumerate() {
+                let Some(plugin) = item.as_mapping() else { continue; };
+                let is_mcp = plugin.get("name")
+                    .and_then(|n| node_json_inert(&n).ok())
+                    .and_then(|v| v.as_str().map(|s| s == DSH_MCP_CLIENT_NAME))
+                    .unwrap_or(false);
+                if !is_mcp { continue; }
+                let Some(config_node) = plugin.get("config") else { continue; };
+                let Ok(config_val) = node_json_inert(&config_node) else { continue; };
+                if config_val.get("serverName").and_then(Value::as_str) == Some(name) {
+                    found_pos = Some((top_idx, mapping, insert_seq, item_idx));
+                    break;
+                }
+            }
+            if found_pos.is_some() { break; }
+        }
+
+        let Some((top_idx, mapping, insert_seq, item_idx)) = found_pos else { return Ok(false); };
+        insert_seq.remove(item_idx);
+        if insert_seq.is_empty() {
+            let remaining_keys = keys(&mapping)?;
+            if remaining_keys.len() == 1 && remaining_keys[0] == "insert" {
+                top_seq.remove(top_idx);
+            }
+        }
+        Ok(true)
+    }
+
+    pub fn restore_mcp(&mut self, name: &str, snapshot: &Value) -> Result<(), String> {
+        if self.inspect_mcp(name)?.is_some() {
+            return Err("DeepSeek Harness MCP was recreated before restore".into());
+        }
+        let Value::Object(snapshot_map) = snapshot else { return Err(error()); };
+        let mut config_obj = snapshot_map.clone();
+        let disabled = config_obj.remove("disabled").and_then(|v| v.as_bool()).unwrap_or(false);
+        config_obj.insert("serverName".into(), Value::String(name.into()));
+
+        let target_id = format!("mcp-{}", name);
+        for node in &self.sequence()? {
+            if contains_id(&node, &target_id, 0)? {
+                return Err("DeepSeek Harness id already exists in patch".into());
+            }
+        }
+
+        let mut target_insert_seq = None;
+        for node in &self.sequence()? {
+            if let Some(mapping) = node.as_mapping() {
+                if let Some(seq) = mapping.get_sequence("insert") {
+                    target_insert_seq = Some(seq);
+                    break;
+                }
+            }
+        }
+
+        let insert_seq = match target_insert_seq {
+            Some(seq) => seq,
+            None => {
+                let node = json_node(&serde_json::json!({"insert": []}))?;
+                let YamlNode::Mapping(mapping) = node else { return Err(error()); };
+                self.sequence()?.push(mapping);
+                let last_node = self.sequence()?.into_iter().last().ok_or_else(error)?;
+                let last_mapping = last_node.as_mapping().ok_or_else(error)?;
+                last_mapping.get_sequence("insert").ok_or_else(error)?
+            }
+        };
+
+        let mut plugin_val = serde_json::json!({
+            "id": target_id,
+            "name": DSH_MCP_CLIENT_NAME,
+            "config": config_obj,
+        });
+        if disabled {
+            plugin_val.as_object_mut().unwrap().insert("disabled".into(), Value::Bool(true));
+        }
+        let plugin_node = json_node(&plugin_val)?;
+        let YamlNode::Mapping(plugin_mapping) = plugin_node else { return Err(error()); };
+        insert_seq.push(plugin_mapping);
+        Ok(())
+    }
 }
 
 fn contains_id(node: &YamlNode, id: &str, depth: usize) -> Result<bool, String> {
@@ -254,7 +588,8 @@ fn contains_id(node: &YamlNode, id: &str, depth: usize) -> Result<bool, String> 
             }
         }
         YamlNode::Sequence(s) => for n in s { if contains_id(&n, id, depth + 1)? { return Ok(true); } },
-        YamlNode::TaggedNode(_) | YamlNode::Alias(_) => return Err(error()),
+        YamlNode::TaggedNode(_) => return Ok(false),
+        YamlNode::Alias(_) => return Err(error()),
         _ => {},
     }
     Ok(false)
@@ -285,8 +620,35 @@ pub fn guard_profile(path: &Path, ids: &[&str]) -> Result<(), String> {
             if ["dependencies", "devDependencies", "optionalDependencies"].iter().any(|key| manifest.get(key).and_then(|m| m.get(name)).is_some())
                 || fs::symlink_metadata(directory.join("node_modules").join(name)).is_ok() { return Err("profile-local bundle overrides cannot authorize inherited configuration replacement".into()); }
         }
-        if ids.contains(&"mcp-manager") && own.config("mcp-manager")?.is_none() {
-            super::deepseek_harness_installation::require_manager(profile)?;
+    }
+    Ok(())
+}
+
+pub fn guard_mcp_profile(path: &Path, names: &[&str]) -> Result<(), String> {
+    let home = home_dir();
+    let profile = path.parent().and_then(Path::file_name).and_then(|n| n.to_str()).ok_or_else(error)?;
+    if !matches!(profile, "web" | "desktop") || path != home.join("profiles").join(profile).join("cordis.patch.yml") {
+        return Err("DeepSeek Harness writer requires its verified web/desktop profile path".into());
+    }
+    let _own = PatchFile::read(path)?;
+    let higher = PatchFile::read(&home.join("cordis.patch.yml"))?;
+    for name in names {
+        let target_id = format!("mcp-{}", name);
+        if higher.has_row(&target_id)? || higher.has_row(name)? || higher.inspect_mcp(name)?.is_some() {
+            return Err("DeepSeek Harness home patch overrides this profile target".into());
+        }
+    }
+    let directory = path.parent().ok_or_else(error)?;
+    let text = read_text(&directory.join("package.json"))?.ok_or("DeepSeek Harness inherited bundle configuration is unknown")?;
+    let manifest: Value = serde_json::from_str(&text).map_err(|_| error())?;
+    let defaults = serde_json::json!(["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"]);
+    if manifest.pointer("/dsh/profile/bundles") != Some(&defaults) {
+        return Err("custom DeepSeek Harness bundles require an explicit complete profile config".into());
+    }
+    for name in ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"] {
+        if ["dependencies", "devDependencies", "optionalDependencies"].iter().any(|key| manifest.get(key).and_then(|m| m.get(name)).is_some())
+            || fs::symlink_metadata(directory.join("node_modules").join(name)).is_ok() {
+            return Err("profile-local bundle overrides cannot authorize inherited configuration replacement".into());
         }
     }
     Ok(())
