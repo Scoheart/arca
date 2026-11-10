@@ -254,6 +254,23 @@ const ITZI_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("special-free/deepseek-v4.1-flash", None, None),
 ];
 
+/// Documented Hyperbolic Inference chat ids. Anonymous `GET /models` is not a
+/// catalog. A saved key uses the OpenAI decoder. The overview states context
+/// windows; this seed stores ids only.
+const HYPERBOLIC_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("glm-5.3-flash", None, None),
+    ("glm-5.3", None, None),
+    ("kimi-k3", None, None),
+    ("minimax-m3", None, None),
+    ("deepseek-v4.1-flash", None, None),
+    ("deepseek-v4-flash-0731", None, None),
+    ("nemotron-3-ultra-550b-a55b", None, None),
+    ("step-5-preview", None, None),
+    ("mimo-v2.6-flash", None, None),
+    ("hy4-preview", None, None),
+    ("qwen3.8-27b", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -297,6 +314,7 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "fortytwo-engine" => FORTYTWO_ENGINE_STATIC_MODELS,
         "anyapi" => ANYAPI_STATIC_MODELS,
         "itzi" => ITZI_STATIC_MODELS,
+        "hyperbolic" => HYPERBOLIC_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -437,6 +455,21 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // https://simplellm.eu/docs/models.html
         // GET /v1/models is not a public catalog. The priced gemma-4-E4B id is not free.
         "simplellm" => &["free-gemma-4-E4B", "free-Llama-3.1-8B-Instruct"],
+        // https://helyxai.space/docs
+        // GET /v1/models is HTTP 404. The quickstart example claude-opus-5 is not in the catalog.
+        "helyx-ai" => &[
+            "agnes-3.0-flash",
+            "deepseek-v4.1-flash",
+            "gemini-3.1-flash-lite",
+            "gemma-4-31B-it",
+            "glm-5.3-flash",
+            "grok-4.3",
+            "grok-build-0.1",
+            "muse-spark-1.1",
+        ],
+        // https://docs.vectoree.ai/models
+        // GET /api/v1/models needs a key and includes speech, image, video, and embeddings.
+        "vectoree" => &["vectoree/auto"],
         _ => return None,
     };
     Some(
@@ -535,6 +568,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "fortytwo-engine"
         | "anyapi"
         | "itzi"
+        | "hyperbolic"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -2492,7 +2526,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi", "hyperbolic"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
@@ -3120,5 +3154,92 @@ mod tests {
             discovery_url(&config, spec.adapter).unwrap().as_str(),
             "https://api.bytez.com/models/v2/openai/v1/models"
         );
+    }
+
+    #[test]
+    fn helyx_and_vectoree_seed_only_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "helyx-ai",
+            "https://helyxai.space/v1",
+            "/chat/completions",
+            &[
+                "agnes-3.0-flash",
+                "deepseek-v4.1-flash",
+                "gemini-3.1-flash-lite",
+                "gemma-4-31B-it",
+                "glm-5.3-flash",
+                "grok-4.3",
+                "grok-build-0.1",
+                "muse-spark-1.1",
+            ],
+            &["claude-opus-5"],
+        );
+        assert_static_chat_seed(
+            "vectoree",
+            "https://vectoree.ai/api/v1",
+            "/chat/completions",
+            &["vectoree/auto"],
+            &["alibaba/wan-3.0"],
+        );
+    }
+
+    #[test]
+    fn hyperbolic_seeds_the_documented_chat_models_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("hyperbolic").expect("hyperbolic seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            [
+                "glm-5.3-flash",
+                "glm-5.3",
+                "kimi-k3",
+                "minimax-m3",
+                "deepseek-v4.1-flash",
+                "deepseek-v4-flash-0731",
+                "nemotron-3-ultra-550b-a55b",
+                "step-5-preview",
+                "mimo-v2.6-flash",
+                "hy4-preview",
+                "qwen3.8-27b",
+            ]
+        );
+        assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()));
+        assert!(static_seed_models("hyperbolic").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"hyperbolic"));
+        let config = provider(
+            "hyperbolic",
+            "https://api.hyperbolic.ai/inference/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.hyperbolic.ai/inference/v1/models"
+        );
+        let _home = TestHome::new("hyperbolic-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "hyperbolic-instance".into(),
+                name: "Hyperbolic".into(),
+                provider: "hyperbolic".into(),
+                base_url: "https://api.hyperbolic.ai/inference/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 11);
+        assert_eq!(seeded[0].id, "glm-5.3-flash");
     }
 }

@@ -99,6 +99,8 @@ Portkey 的[现行 OpenAI SDK 示例](https://portkey.ai/docs/integrations/llms/
 | Baichuan、01.AI、SenseNova、Ling 的直接服务 | 本次未取得足够明确的现行通用协议/认证资料。它们的模型可通过已接入网关使用，暂不猜测独立平台端点。 |
 | RunPod、Modal、Databricks 自定义部署 | 地址与用户的部署或工作区相关；适合后续增加资源型配置向导，当前可用 Custom。 |
 
+2026-11-10：上表 Hyperbolic 行已过时。共享对话推理入口是 `https://api.hyperbolic.ai/inference/v1`（Chat Completions，`GET /models` 需要密钥）。`https://api.hyperbolic.ai/v1` 仍是 GPU API，不是聊天；`api.hyperbolic.xyz` 不是该聊天基址。
+
 ## 实现位置与验收范围
 
 - Core：统一模板、协议地址、URL 识别与模型发现能力；Desktop 与 CLI 自动消费同一目录。

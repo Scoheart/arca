@@ -1384,5 +1384,26 @@
       "url": "https://app.simplellm.eu/keys",
       "kind": "api-key"
     }
+  },
+  "helyx-ai": {
+    "docs_url": "https://helyxai.space/docs",
+    "portal": {
+      "url": "https://helyxai.space/dashboard",
+      "kind": "api-key"
+    }
+  },
+  "hyperbolic": {
+    "docs_url": "https://hyperbolic.ai/docs/inference/overview",
+    "portal": {
+      "url": "https://app.hyperbolic.ai/settings/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "vectoree": {
+    "docs_url": "https://docs.vectoree.ai/models",
+    "portal": {
+      "url": "https://vectoree.ai/dashboard/api-keys",
+      "kind": "api-key"
+    }
   }
 }
