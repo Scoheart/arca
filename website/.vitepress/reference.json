@@ -2275,10 +2275,10 @@
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://ppio.com/model/ppio-4b",
+      "docs": "https://ppio.com/docs/home",
       "portal": {
-        "kind": "setup",
-        "url": "https://ppio.com/model/ppio-4b"
+        "kind": "api-key",
+        "url": "https://ppio.com/settings/key-management"
       }
     },
     {
@@ -2331,13 +2331,14 @@
       "id": "opencode-zen",
       "name": "OpenCode Zen",
       "category": "gateway",
-      "baseUrl": "https://opencode.ai/zen/v1",
+      "baseUrl": "https://opencode.ai/inference/openai/v1",
       "protocols": [
         "anthropic-messages",
+        "gemini-generate-content",
         "openai-completions",
         "openai-responses"
       ],
-      "docs": "https://opencode.ai/docs/zen/",
+      "docs": "https://opencode.ai/docs/console/models/",
       "portal": {
         "kind": "console",
         "url": "https://opencode.ai/auth"
@@ -2347,13 +2348,14 @@
       "id": "opencode-go",
       "name": "OpenCode Go",
       "category": "gateway",
-      "baseUrl": "https://opencode.ai/zen/go/v1",
+      "baseUrl": "https://opencode.ai/inference/go/openai/v1",
       "protocols": [
         "anthropic-messages",
+        "gemini-generate-content",
         "openai-completions",
         "openai-responses"
       ],
-      "docs": "https://opencode.ai/docs/go/",
+      "docs": "https://opencode.ai/docs/console/go/",
       "portal": {
         "kind": "console",
         "url": "https://opencode.ai/auth"
@@ -2363,7 +2365,7 @@
       "id": "kilo-gateway",
       "name": "Kilo Gateway",
       "category": "gateway",
-      "baseUrl": "https://api.kilo.ai/api/gateway",
+      "baseUrl": "https://ai-gateway.kilo.ai/api/v1",
       "protocols": [
         "openai-completions"
       ],
@@ -2428,8 +2430,8 @@
       ],
       "docs": "https://featherless.ai/docs/quickstart-guide",
       "portal": {
-        "kind": "console",
-        "url": "https://featherless.ai/dashboard"
+        "kind": "api-key",
+        "url": "https://featherless.ai/account/api-keys"
       }
     },
     {
@@ -2585,7 +2587,8 @@
       "baseUrl": "https://api.longcat.chat/openai/v1",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://longcat.chat/platform/docs/APIDocs.html",
       "portal": {
@@ -2630,7 +2633,7 @@
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://io.net/p/how-to-deploy-llama-3-on-io-net-step-by-step-guide",
+      "docs": "https://io.net/docs/guides/getting-started",
       "portal": {
         "kind": "console",
         "url": "https://ai.io.net/"
@@ -2944,7 +2947,7 @@
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://dphn.ai/docs/coupon-credits",
+      "docs": "https://dphn.ai/docs/dphn-api/",
       "portal": {
         "kind": "console",
         "url": "https://app.dphn.ai/"
@@ -3121,7 +3124,7 @@
     },
     {
       "id": "ant-ling",
-      "name": "Ant Ling (蚂蚁百灵)",
+      "name": "Ant Ling (\u8682\u8681\u767e\u7075)",
       "category": "official",
       "baseUrl": "https://api.ant-ling.com/v1",
       "protocols": [
@@ -3136,7 +3139,7 @@
     },
     {
       "id": "antdigital-dtmaas",
-      "name": "Ant Digital DTMaaS (蚂蚁数科)",
+      "name": "Ant Digital DTMaaS (\u8682\u8681\u6570\u79d1)",
       "category": "official",
       "baseUrl": "https://maas-api.antdigital.com/v1",
       "protocols": [
@@ -3151,7 +3154,7 @@
     },
     {
       "id": "unisound",
-      "name": "Unisound MaaS (云知声)",
+      "name": "Unisound MaaS (\u4e91\u77e5\u58f0)",
       "category": "official",
       "baseUrl": "https://maas-api.unisound.com/v1",
       "protocols": [
@@ -3167,7 +3170,7 @@
     },
     {
       "id": "bilibili-index-translate",
-      "name": "Bilibili Index-Translate (哔哩哔哩)",
+      "name": "Bilibili Index-Translate (\u54d4\u54e9\u54d4\u54e9)",
       "category": "official",
       "baseUrl": "https://index-translate.bilibili.com/v1",
       "protocols": [
@@ -3182,7 +3185,7 @@
     },
     {
       "id": "sensenova",
-      "name": "SenseNova Token Plan (商汤日日新)",
+      "name": "SenseNova Token Plan (\u5546\u6c64\u65e5\u65e5\u65b0)",
       "category": "official",
       "baseUrl": "https://token.sensenova.cn/v1",
       "protocols": [
@@ -3219,7 +3222,7 @@
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://indicstack.ai/blog/migrate-openai-to-india-hosted-api",
+      "docs": "https://indicstack.ai/docs",
       "portal": {
         "kind": "console",
         "url": "https://console.indicstack.ai/signup"
@@ -3316,7 +3319,7 @@
     },
     {
       "id": "scnet",
-      "name": "SCNet (超算互联网)",
+      "name": "SCNet (\u8d85\u7b97\u4e92\u8054\u7f51)",
       "category": "gateway",
       "baseUrl": "https://api.scnet.cn/api/llm/v1",
       "protocols": [
@@ -3374,17 +3377,17 @@
     },
     {
       "id": "larprouter",
-      "name": "LarpRouter",
+      "name": "Lutheos",
       "category": "gateway",
-      "baseUrl": "https://larprouter.com/v1",
+      "baseUrl": "https://lutheos.com/v1",
       "protocols": [
         "anthropic-messages",
         "openai-completions"
       ],
-      "docs": "https://larprouter.com/docs",
+      "docs": "https://lutheos.com/docs",
       "portal": {
         "kind": "api-key",
-        "url": "https://larprouter.com/api-keys"
+        "url": "https://lutheos.com/api-keys"
       }
     },
     {
@@ -3438,6 +3441,7 @@
       "category": "gateway",
       "baseUrl": "https://api.darkbloom.dev/v1",
       "protocols": [
+        "anthropic-messages",
         "openai-completions",
         "openai-responses"
       ],
@@ -3536,7 +3540,7 @@
     },
     {
       "id": "intern-inkstone",
-      "name": "Intern InkStone (书生·端砚)",
+      "name": "Intern InkStone (\u4e66\u751f\u00b7\u7aef\u781a)",
       "category": "gateway",
       "baseUrl": "https://discovery-api.intern-ai.org.cn/v1",
       "protocols": [
@@ -4278,7 +4282,7 @@
         "openai-completions",
         "openai-responses"
       ],
-      "docs": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic",
+      "docs": "https://learn.microsoft.com/en-us/azure/foundry/openai/api-version-lifecycle?view=foundry-classic",
       "portal": {
         "kind": "console",
         "url": "https://ai.azure.com/"
@@ -4292,7 +4296,7 @@
       "protocols": [
         "openai-responses"
       ],
-      "docs": "https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html",
+      "docs": "https://docs.aws.amazon.com/bedrock/latest/userguide/inference-responses-api.html",
       "portal": {
         "kind": "console",
         "url": "https://console.aws.amazon.com/bedrock/home"
@@ -4318,7 +4322,8 @@
       "category": "gateway",
       "baseUrl": null,
       "protocols": [
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://developers.cloudflare.com/workers-ai/",
       "portal": {
@@ -4362,7 +4367,9 @@
       "category": "gateway",
       "baseUrl": "https://api.sambanova.ai/v1",
       "protocols": [
-        "openai-completions"
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://docs.sambanova.ai/",
       "portal": {
@@ -4374,11 +4381,11 @@
       "id": "perplexity",
       "name": "Perplexity Sonar",
       "category": "official",
-      "baseUrl": "https://api.perplexity.ai",
+      "baseUrl": "https://api.perplexity.ai/v1",
       "protocols": [
-        "openai-completions"
+        "openai-responses"
       ],
-      "docs": "https://docs.perplexity.ai/",
+      "docs": "https://docs.perplexity.ai/docs/agent-api/openai-compatibility",
       "portal": {
         "kind": "api-key",
         "url": "https://www.perplexity.ai/account/api/keys"
@@ -4386,7 +4393,7 @@
     },
     {
       "id": "volcengine",
-      "name": "Volcengine Ark (火山方舟)",
+      "name": "Volcengine Ark (\u706b\u5c71\u65b9\u821f)",
       "category": "official",
       "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
       "protocols": [
@@ -4401,7 +4408,7 @@
     },
     {
       "id": "volcengine-coding-plan",
-      "name": "Volcengine Coding Plan (火山方舟)",
+      "name": "Volcengine Coding Plan (\u706b\u5c71\u65b9\u821f)",
       "category": "official",
       "baseUrl": "https://ark.cn-beijing.volces.com/api/coding/v3",
       "protocols": [
@@ -4416,7 +4423,7 @@
     },
     {
       "id": "baidu-qianfan",
-      "name": "Baidu Qianfan (百度千帆)",
+      "name": "Baidu Qianfan (\u767e\u5ea6\u5343\u5e06)",
       "category": "official",
       "baseUrl": "https://qianfan.baidubce.com/v2",
       "protocols": [
@@ -4430,7 +4437,7 @@
     },
     {
       "id": "baidu-qianfan-coding-plan",
-      "name": "Baidu Qianfan Coding Plan (百度千帆)",
+      "name": "Baidu Qianfan Coding Plan (\u767e\u5ea6\u5343\u5e06)",
       "category": "official",
       "baseUrl": "https://qianfan.baidubce.com/v2/coding",
       "protocols": [
@@ -4455,7 +4462,7 @@
       "docs": "https://platform.minimax.io/docs/guides/quickstart",
       "portal": {
         "kind": "api-key",
-        "url": "https://platform.minimax.io/console/access"
+        "url": "https://platform.minimax.io/console/keys"
       }
     },
     {
@@ -4479,9 +4486,10 @@
       "category": "official",
       "baseUrl": "https://api.stepfun.com/v1",
       "protocols": [
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
-      "docs": "https://platform.stepfun.com/docs/zh/overview/concept",
+      "docs": "https://platform.stepfun.com/docs/zh/guides/basic-concepts",
       "portal": {
         "kind": "api-key",
         "url": "https://platform.stepfun.com/interface-key"
@@ -4503,7 +4511,7 @@
     },
     {
       "id": "zhipuai",
-      "name": "Zhipu AI (智谱)",
+      "name": "Zhipu AI (\u667a\u8c31)",
       "category": "official",
       "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
       "protocols": [
@@ -4523,7 +4531,7 @@
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://platform.moonshot.cn/docs/api/chat",
+      "docs": "https://platform.kimi.com/docs/api/chat",
       "portal": {
         "kind": "api-key",
         "url": "https://platform.kimi.com/console/api-keys"
@@ -4563,6 +4571,7 @@
       "category": "gateway",
       "baseUrl": "https://openrouter.ai/api/v1",
       "protocols": [
+        "openai-completions",
         "openai-responses"
       ],
       "docs": "https://openrouter.ai/docs/quickstart",
@@ -4591,6 +4600,7 @@
       "category": "official",
       "baseUrl": "https://api.openai.com/v1",
       "protocols": [
+        "openai-completions",
         "openai-responses"
       ],
       "docs": "https://developers.openai.com/api/docs/",
@@ -4661,11 +4671,11 @@
       "id": "liquid-ai",
       "name": "Liquid AI",
       "category": "official",
-      "baseUrl": "https://inference.liquid.ai/v1",
+      "baseUrl": "https://api.liquid.ai/openai/v1",
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://docs.liquid.ai/",
+      "docs": "https://docs.liquid.ai/api/quickstart",
       "portal": {
         "kind": "console",
         "url": "https://console.liquid.ai/"
@@ -4707,7 +4717,9 @@
       "category": "official",
       "baseUrl": "https://api.deepseek.com",
       "protocols": [
-        "openai-completions"
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://api-docs.deepseek.com/",
       "portal": {
@@ -4797,7 +4809,7 @@
         "anthropic-messages",
         "openai-completions"
       ],
-      "docs": "https://www.alibabacloud.com/help/en/model-studio/token-plan-quickstart",
+      "docs": "https://www.alibabacloud.com/help/en/model-studio/token-plan-team-quickstart",
       "portal": {
         "kind": "console",
         "url": "https://modelstudio.console.alibabacloud.com/ap-southeast-1/subscription/overview"
@@ -4809,12 +4821,14 @@
       "category": "official",
       "baseUrl": "https://api.xiaomimimo.com/v1",
       "protocols": [
-        "openai-completions"
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call",
       "portal": {
-        "kind": "console",
-        "url": "https://platform.xiaomimimo.com/"
+        "kind": "api-key",
+        "url": "https://platform.xiaomimimo.com/#/console/api-keys"
       }
     },
     {
@@ -4824,12 +4838,13 @@
       "baseUrl": "https://token-plan-cn.xiaomimimo.com/v1",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
-      "docs": "https://mimo.mi.com/docs/zh-CN/tokenplan/Token%20Plan/quick-access",
+      "docs": "https://mimo.mi.com/static/docs/tokenplan/Token%20Plan/quick-access.md",
       "portal": {
-        "kind": "console",
-        "url": "https://platform.xiaomimimo.com/"
+        "kind": "api-key",
+        "url": "https://platform.xiaomimimo.com/#/console/plan-manage"
       }
     },
     {
@@ -4839,12 +4854,13 @@
       "baseUrl": "https://token-plan-sgp.xiaomimimo.com/v1",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
-      "docs": "https://mimo.mi.com/docs/en-US/tokenplan/Token%20Plan/quick-access",
+      "docs": "https://mimo.mi.com/static/docs/tokenplan/Token%20Plan/quick-access.md",
       "portal": {
-        "kind": "console",
-        "url": "https://platform.xiaomimimo.com/"
+        "kind": "api-key",
+        "url": "https://platform.xiaomimimo.com/#/console/plan-manage"
       }
     },
     {
@@ -4854,12 +4870,13 @@
       "baseUrl": "https://token-plan-ams.xiaomimimo.com/v1",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
-      "docs": "https://mimo.mi.com/docs/en-US/tokenplan/Token%20Plan/quick-access",
+      "docs": "https://mimo.mi.com/static/docs/tokenplan/Token%20Plan/quick-access.md",
       "portal": {
-        "kind": "console",
-        "url": "https://platform.xiaomimimo.com/"
+        "kind": "api-key",
+        "url": "https://platform.xiaomimimo.com/#/console/plan-manage"
       }
     },
     {
@@ -4868,9 +4885,10 @@
       "category": "official",
       "baseUrl": "https://api.moonshot.ai/v1",
       "protocols": [
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
-      "docs": "https://platform.moonshot.ai/docs/api/chat",
+      "docs": "https://platform.kimi.ai/docs/api/chat",
       "portal": {
         "kind": "api-key",
         "url": "https://platform.kimi.ai/console/api-keys"
@@ -4883,7 +4901,8 @@
       "baseUrl": "https://api.kimi.com/coding/v1",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://www.kimi.com/code/docs/en/",
       "portal": {
@@ -4912,7 +4931,8 @@
       "baseUrl": "https://api.z.ai/api/coding/paas/v4",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://docs.z.ai/devpack/overview",
       "portal": {
@@ -4927,7 +4947,8 @@
       "baseUrl": "https://open.bigmodel.cn/api/coding/paas/v4",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://docs.bigmodel.cn/cn/coding-plan/overview",
       "portal": {
@@ -4937,14 +4958,14 @@
     },
     {
       "id": "minimax-coding-plan",
-      "name": "MiniMax Token Plan (Global)",
+      "name": "MiniMax M Plan (Global)",
       "category": "official",
       "baseUrl": "https://api.minimax.io/v1",
       "protocols": [
         "anthropic-messages",
         "openai-completions"
       ],
-      "docs": "https://platform.minimax.io/docs/token-plan/intro",
+      "docs": "https://platform.minimax.io/docs/m-plan/intro",
       "portal": {
         "kind": "console",
         "url": "https://platform.minimax.io/console/plan"
@@ -4952,14 +4973,14 @@
     },
     {
       "id": "minimax-cn-coding-plan",
-      "name": "MiniMax Token Plan (China)",
+      "name": "MiniMax M Plan (China)",
       "category": "official",
       "baseUrl": "https://api.minimax.cn/v1",
       "protocols": [
         "anthropic-messages",
         "openai-completions"
       ],
-      "docs": "https://platform.minimax.cn/docs/token-plan/intro",
+      "docs": "https://platform.minimax.cn/docs/m-plan/intro",
       "portal": {
         "kind": "console",
         "url": "https://platform.minimax.cn/console/plan"
@@ -5004,7 +5025,7 @@
         "anthropic-messages",
         "openai-completions"
       ],
-      "docs": "https://cloud.tencent.com/document/product/1772/128947",
+      "docs": "https://cloud.tencent.com/document/product/1823/130092",
       "portal": {
         "kind": "console",
         "url": "https://console.cloud.tencent.com/tokenhub/"
@@ -5014,10 +5035,11 @@
       "id": "tencent-token-plan",
       "name": "Tencent Cloud Token Plan (China)",
       "category": "official",
-      "baseUrl": "https://api.lkeap.cloud.tencent.com/plan/v3",
+      "baseUrl": "https://tokenhub.tencentmaas.com/plan/v3",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://cloud.tencent.com/document/product/1823/130060",
       "portal": {
@@ -5032,7 +5054,8 @@
       "baseUrl": "https://tokenhub-intl.tencentcloudmaas.com/plan/v3",
       "protocols": [
         "anthropic-messages",
-        "openai-completions"
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://intl.cloud.tencent.com/document/product/1300/81315",
       "portal": {
@@ -5086,7 +5109,7 @@
       "id": "together",
       "name": "Together AI",
       "category": "gateway",
-      "baseUrl": "https://api.together.xyz/v1",
+      "baseUrl": "https://api.together.ai/v1",
       "protocols": [
         "openai-completions"
       ],
@@ -5102,6 +5125,7 @@
       "category": "gateway",
       "baseUrl": "https://api.fireworks.ai/inference/v1",
       "protocols": [
+        "anthropic-messages",
         "openai-completions"
       ],
       "docs": "https://docs.fireworks.ai/",
@@ -5116,6 +5140,7 @@
       "category": "gateway",
       "baseUrl": "https://api.poe.com/v1",
       "protocols": [
+        "openai-completions",
         "openai-responses"
       ],
       "docs": "https://creator.poe.com/docs/external-applications/openai-compatible-api",
@@ -5130,6 +5155,7 @@
       "category": "gateway",
       "baseUrl": "https://router.huggingface.co/v1",
       "protocols": [
+        "openai-completions",
         "openai-responses"
       ],
       "docs": "https://huggingface.co/docs/inference-providers",
@@ -5168,13 +5194,13 @@
     },
     {
       "id": "digitalocean",
-      "name": "DigitalOcean Gradient AI",
+      "name": "DigitalOcean Inference",
       "category": "gateway",
       "baseUrl": "https://inference.do-ai.run/v1",
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://docs.digitalocean.com/products/gradient-ai-platform/details/models/",
+      "docs": "https://docs.digitalocean.com/products/inference/details/models/",
       "portal": {
         "kind": "api-key",
         "url": "https://cloud.digitalocean.com/model-studio/manage-keys"
@@ -5214,6 +5240,7 @@
       "category": "gateway",
       "baseUrl": "https://api.tokenfactory.nebius.com/v1",
       "protocols": [
+        "openai-completions",
         "openai-responses"
       ],
       "docs": "https://docs.tokenfactory.nebius.com/",
@@ -5228,6 +5255,7 @@
       "category": "gateway",
       "baseUrl": "https://router.requesty.ai/v1",
       "protocols": [
+        "openai-completions",
         "openai-responses"
       ],
       "docs": "https://docs.requesty.ai/",
@@ -5242,7 +5270,9 @@
       "category": "gateway",
       "baseUrl": "https://inference.baseten.co/v1",
       "protocols": [
-        "openai-completions"
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
       ],
       "docs": "https://docs.baseten.co/inference/model-apis/overview",
       "portal": {
@@ -5252,13 +5282,13 @@
     },
     {
       "id": "wandb",
-      "name": "Weights & Biases",
+      "name": "Weights & Biases (CoreWeave)",
       "category": "gateway",
       "baseUrl": "https://api.inference.wandb.ai/v1",
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://docs.wandb.ai/inference",
+      "docs": "https://docs.coreweave.com/products/inference/serverless",
       "portal": {
         "kind": "console",
         "url": "https://forge.coreweave.com/wandb/settings"
@@ -5275,7 +5305,7 @@
       "docs": "https://docs.ollama.com/",
       "portal": {
         "kind": "setup",
-        "url": "https://docs.ollama.com/openai"
+        "url": "https://docs.ollama.com/api/openai-compatibility"
       }
     },
     {
@@ -5300,10 +5330,10 @@
       "protocols": [
         "openai-completions"
       ],
-      "docs": "https://docs.vllm.ai/en/latest/serving/openai_compatible_server/",
+      "docs": "https://docs.vllm.ai/en/latest/serving/online_serving/",
       "portal": {
         "kind": "setup",
-        "url": "https://docs.vllm.ai/en/latest/serving/openai_compatible_server/"
+        "url": "https://docs.vllm.ai/en/latest/serving/online_serving/"
       }
     },
     {
