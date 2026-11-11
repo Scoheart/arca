@@ -542,6 +542,34 @@ pub enum AgentInstallProbe {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BuiltinStartupAgent {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    #[serde(default)]
+    pub is_default: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AgentStartupAgentsCapability {
+    pub target_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cli_flag: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub config_file: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub config_format: Option<String>, // "json" | "toml" | "jsonc"
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub config_key: Option<String>, // e.g. "default_agent", "agent.name", "agent"
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub global_dir: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file_format: Option<String>, // "opencode-markdown" | "claude-markdown" | "vibe-toml"
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub builtins: Vec<BuiltinStartupAgent>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AgentSubagentsCapability {
     pub target_id: String,
     pub global_dir: String,
@@ -618,6 +646,8 @@ pub struct AgentDefinition {
     pub subagents: Option<AgentSubagentsCapability>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hooks: Option<AgentHooksCapability>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub startup_agents: Option<AgentStartupAgentsCapability>,
 }
 
 fn is_false(value: &bool) -> bool {

@@ -10,6 +10,7 @@ function Harness() {
   const content: Record<AgentResourceTab, string> = {
     mcps: "MCP content",
     models: "Model content",
+    agents: "Agent content",
     skills: "Skill content",
     subagents: "Subagent content",
     hooks: "Hook content",
@@ -20,7 +21,7 @@ function Harness() {
     <AgentResourcePanel
       value={tab}
       onChange={setTab}
-      counts={{ mcps: 2, models: 3, skills: 4, subagents: 1, hooks: 5 }}
+      counts={{ mcps: 2, models: 3, agents: 0, skills: 4, subagents: 1, hooks: 5 }}
     >
       {content[tab]}
     </AgentResourcePanel>
@@ -28,10 +29,11 @@ function Harness() {
 }
 
 describe("AgentResourcePanel", () => {
-  it("keeps Models, MCPs, Skills, Subagents, Hooks in a vertical navigation with counts", () => {
+  it("keeps Models, Agents, MCPs, Skills, Subagents, Hooks in a vertical navigation with counts", () => {
     render(<Harness />);
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
       "Models3",
+      "Agents0",
       "MCPs2",
       "Skills4",
       "Subagents1",
@@ -45,14 +47,14 @@ describe("AgentResourcePanel", () => {
     render(<Harness />);
     const tabs = screen.getAllByRole("tab");
     fireEvent.keyDown(tabs[0], { key: "End" });
-    expect(tabs[4]).toHaveFocus();
-    expect(tabs[4]).toHaveAttribute("aria-selected", "true");
+    expect(tabs[5]).toHaveFocus();
+    expect(tabs[5]).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tabpanel")).toHaveTextContent("Hook content");
-    expect(tabs[4]).toHaveAttribute("aria-controls", screen.getByRole("tabpanel").id);
-    fireEvent.keyDown(tabs[4], { key: "ArrowUp" });
-    expect(tabs[3]).toHaveFocus();
-    expect(screen.getByRole("tabpanel")).toHaveTextContent("Subagent content");
-    fireEvent.keyDown(tabs[3], { key: "ArrowDown" });
+    expect(tabs[5]).toHaveAttribute("aria-controls", screen.getByRole("tabpanel").id);
+    fireEvent.keyDown(tabs[5], { key: "ArrowUp" });
     expect(tabs[4]).toHaveFocus();
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("Subagent content");
+    fireEvent.keyDown(tabs[4], { key: "ArrowDown" });
+    expect(tabs[5]).toHaveFocus();
   });
 });

@@ -168,6 +168,8 @@ pub struct LaunchPreferences {
     pub profiles: Vec<LaunchProfile>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_profile_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub startup_agent: Option<String>,
 }
 
 impl LaunchPreferences {

@@ -33,7 +33,7 @@ import { formatError } from "../lib/format";
 import { keyOf, transportOf } from "../lib/mcp";
 import { consumptionsForAgent, externalForAgent } from "../lib/consumption";
 import { requiresAgentReview } from "../lib/agentOperation";
-import { listModelAgents, listModelProfiles, listSubagents, listAgentHooks, listHooks, projectHookToAgent, removeHookFromAgent } from "../lib/api";
+import { listModelAgents, listModelProfiles, listSubagents, listAgentHooks, listHooks, projectHookToAgent, removeHookFromAgent, getAgentStartupAgentsState, removeStartupAgentFromAgent } from "../lib/api";
 import {
   EditIcon,
   ChevronDownIcon,
@@ -52,6 +52,7 @@ import { AgentConfigurationDialog } from "./AgentConfigurationDialog";
 import { ToastNotice, useToast } from "./Toast";
 import { AgentResourcePanel, type AgentResourceTab } from "./AgentResourcePanel";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
+import { AgentStartupAgentsPanel } from "./AgentStartupAgentsPanel";
 import { GuidedModelsPanel } from "./GuidedModelsPanel";
 import {
   ConsumptionPickerDialog,
@@ -283,6 +284,18 @@ export function AgentView({
   );
   const [agentHooks, setAgentHooks] = useState<HookDefinition[]>([]);
   const [centralHooks, setCentralHooks] = useState<HookDefinition[]>([]);
+  const [startupAgentsCount, setStartupAgentsCount] = useState<number>(0);
+  const loadStartupAgentsCount = useCallback(async () => {
+    try {
+      const s = await getAgentStartupAgentsState(agentId);
+      setStartupAgentsCount(s.items.length);
+    } catch {
+      // Non-fatal
+    }
+  }, [agentId]);
+  useEffect(() => {
+    void loadStartupAgentsCount();
+  }, [loadStartupAgentsCount]);
   const loadHooks = useCallback(async () => {
     try {
       const [aList, cList] = await Promise.all([
@@ -630,6 +643,19 @@ export function AgentView({
       }
       return;
     }
+    if (asset.domain === "startup_agent") {
+      setPreparingChange(true);
+      try {
+        await removeStartupAgentFromAgent(agentId, asset.name);
+        showToast({ kind: "success", msg: `已从 ${agent.name} 移除 Agent` });
+        await loadStartupAgentsCount();
+      } catch (err) {
+        showToast({ kind: "error", msg: `无法移除 Agent: ${formatError(err)}` });
+      } finally {
+        setPreparingChange(false);
+      }
+      return;
+    }
     const id = asset.domain === "mcp" ? asset.key : asset.domain === "model" ? asset.profile_id : asset.name;
     return planSelection(
       asset.domain,
@@ -821,6 +847,7 @@ export function AgentView({
           counts={{
             mcps: mcpRows.length + mcpExternal.length + configuredMcps.length + hostMcps.length,
             models: modelVisibleCount,
+            agents: startupAgentsCount,
             skills: skillRows.length + skillExternal.length + nativeSkills.length,
             subagents: subagentRows.length + subagentExternal.length,
             hooks: agentHooks.length,
@@ -865,7 +892,14 @@ export function AgentView({
           <ToastNotice kind="warning" noticeKey={`mcp-declarations:${agent.id}`} message={nativeResources.inventory?.configured_unavailable ? t("mcpInspector.declarationsUnavailable") : null} />
           {mcpInspection?.request.agent_id === agentId && <McpConfigurationDialog name={mcpInspection.name}
             request={mcpInspection.request} onClose={() => setMcpInspection(null)} />}
-          {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "mcps" ? (
+          {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "agents" ? (
+            <AgentStartupAgentsPanel
+              key={agent.id}
+              agentId={agent.id}
+              agentName={agent.name}
+              onOpenCentralAgents={() => onOpenResource?.({ domain: "startup_agent", kind: "index" })}
+            />
+          ) : resourceTab === "mcps" ? (
             <AgentConsumptionPanel
               domain="mcp"
               title={RESOURCE_PRESENTATION.mcp.label}

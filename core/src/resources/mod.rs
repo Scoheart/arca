@@ -6,5 +6,6 @@ pub mod mcp;
 pub mod model;
 pub mod skill;
 pub mod subagent;
+pub mod startup_agent;
 
 pub mod plugin;

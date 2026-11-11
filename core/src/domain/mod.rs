@@ -11,6 +11,7 @@ pub mod mcp;
 pub mod hook;
 pub mod skill;
 pub mod subagent;
+pub mod startup_agent;
 pub mod types;
 
 pub mod plugin;

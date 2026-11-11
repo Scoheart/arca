@@ -34,6 +34,8 @@ pub struct LaunchInfo {
     pub profiles: Vec<LaunchProfile>,
     pub active_profile_id: String,
     pub profiles_revision: String,
+    pub active_startup_agent: Option<String>,
+    pub startup_agents: Vec<crate::domain::startup_agent::StartupAgentQuickOption>,
 }
 
 static LAUNCH_CATALOG: LazyLock<BTreeMap<String, CatalogTarget>> = LazyLock::new(|| {
@@ -261,12 +263,26 @@ pub(crate) fn info_unlocked(agent_id: &str) -> Result<LaunchInfo, String> {
         let profiles_revision = profiles_revision(&prefs);
         let installed = official_runtime_detected(agent_id, &category,
             definition.skills.as_ref().map(|capability| capability.probes.as_slice()).unwrap_or_default());
+        let startup_state = crate::resources::startup_agent::get_agent_startup_agents_state(agent_id).ok();
+        let (active_startup_agent, startup_agents) = match startup_state {
+            Some(state) => {
+                let options = state.items.into_iter().map(|item| crate::domain::startup_agent::StartupAgentQuickOption {
+                    id: item.id,
+                    name: item.name,
+                    description: item.description,
+                    is_active: item.is_active,
+                    is_default: item.is_default,
+                }).collect();
+                (state.active_agent, options)
+            }
+            None => (None, Vec::new()),
+        };
         Ok(LaunchInfo { agent_id: agent_id.into(), name, category, kind, supported, host_name, installed,
             available: supported && resolved_target.is_some(),
             install_url: links.get(agent_id).and_then(|v| v.get("url")).and_then(|v| v.as_str()).map(str::to_owned),
             directory_exists: directory.as_ref().is_some_and(|p| expand(p).is_dir()),
             directory, default_directory, configured_target, resolved_target, default_target,
-            profiles, active_profile_id, profiles_revision,
+            profiles, active_profile_id, profiles_revision, active_startup_agent, startup_agents,
         })
 }
 
@@ -572,9 +588,43 @@ pub(super) fn dispatch_command(mut command: Command) -> Result<(), String> {
 pub struct LaunchReceipt { pub directory_saved: bool }
 
 pub fn launch(agent_id: &str, directory: Option<String>) -> Result<LaunchReceipt, String> {
+    launch_with_startup_agent(agent_id, directory, None)
+}
+
+pub fn launch_with_startup_agent(
+    agent_id: &str,
+    directory: Option<String>,
+    startup_agent_override: Option<String>,
+) -> Result<LaunchReceipt, String> {
     let info = info(agent_id)?;
-    let target = info.resolved_target.ok_or("未找到可启动的 Agent，请安装或设置启动方式")?;
+    let mut target = info.resolved_target.ok_or("未找到可启动的 Agent，请安装或设置启动方式")?;
     super::codex_configuration::validate_launch(agent_id, &target)?;
+
+    let selected_startup_agent = startup_agent_override.or_else(|| info.active_startup_agent.clone());
+    if let (Some(agent_name), LaunchTarget::Cli { args, .. }) = (&selected_startup_agent, &mut target) {
+        let definitions = crate::agents::load_agents();
+        if let Some(agent_def) = definitions.get(agent_id) {
+            if let Some(startup_cap) = &agent_def.startup_agents {
+                if let Some(cli_flag) = &startup_cap.cli_flag {
+                    let has_flag = args.iter().any(|arg| {
+                        arg == cli_flag
+                            || arg == "--agent"
+                            || arg == "--agent-profile"
+                            || arg.starts_with("--agent-mode=")
+                    });
+                    if !has_flag && !agent_name.trim().is_empty() {
+                        if cli_flag.ends_with('=') {
+                            args.push(format!("{}{}", cli_flag, agent_name.trim()));
+                        } else {
+                            args.push(cli_flag.clone());
+                            args.push(agent_name.trim().to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     let chosen = if matches!(target, LaunchTarget::Cli { .. }) {
         let path = expand(&directory.or(info.directory).ok_or("请先选择工作目录")?);
         if !path.is_absolute() || !path.is_dir() { return Err("工作目录不存在，请重新选择".into()); }
@@ -595,6 +645,15 @@ pub fn launch(agent_id: &str, directory: Option<String>) -> Result<LaunchReceipt
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn launch_info_populates_startup_agents() {
+        let _home = crate::testenv::TestHome::new("launch-startup-agents");
+        let opencode_info = info("opencode").unwrap();
+        assert!(!opencode_info.startup_agents.is_empty());
+        assert!(opencode_info.startup_agents.iter().any(|a| a.id == "build"));
+        assert!(opencode_info.startup_agents.iter().any(|a| a.id == "plan"));
+    }
 
     #[test]
     fn launch_profiles_preserve_legacy_settings_and_select_independent_environments() {

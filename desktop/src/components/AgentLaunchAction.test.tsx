@@ -23,7 +23,7 @@ it("makes the launch entry available before the separate version probe completes
   vi.mocked(getAgentRuntimeVersion).mockReturnValue(new Promise((resolve) => { completeVersion = resolve; }));
 
   render(<ToastProvider><AgentLauncherContext.Provider value={{
-    busyId: null, revision: 0, launch: vi.fn(), configure: vi.fn(), refresh: vi.fn(),
+    busyId: null, revision: 0, launch: vi.fn(), launchWithStartupAgent: vi.fn(), configure: vi.fn(), refresh: vi.fn(),
   }}><AgentLaunchAction agentId="pi" showLabel /></AgentLauncherContext.Provider></ToastProvider>);
 
   await waitFor(() => expect(screen.getByRole("button", { name: "打开 Agent" })).toBeEnabled());
@@ -45,7 +45,7 @@ it("does not start a version probe for an Agent context menu", async () => {
     resolved_target: { kind: "cli", command: "/usr/local/bin/pi", args: [] },
   });
   render(<AgentLauncherContext.Provider value={{
-    busyId: null, revision: 0, launch: vi.fn(), configure: vi.fn(), refresh: vi.fn(),
+    busyId: null, revision: 0, launch: vi.fn(), launchWithStartupAgent: vi.fn(), configure: vi.fn(), refresh: vi.fn(),
   }}><AgentLaunchAction agentId="pi" contextMenu /></AgentLauncherContext.Provider>);
   await waitFor(() => expect(screen.getByRole("menuitem", { name: "打开 Agent" })).toBeEnabled());
   expect(getAgentRuntimeVersion).not.toHaveBeenCalled();

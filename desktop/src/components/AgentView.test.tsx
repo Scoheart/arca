@@ -22,7 +22,7 @@ import { renderWithNotifications } from "../test/renderWithNotifications";
 function render(ui: ReactNode, options?: RenderOptions) {
   return renderWithNotifications(ui, { ...options, wrapper: ({ children }) =>
     <AgentLauncherContext.Provider value={{ busyId: null, revision: 0,
-      launch: vi.fn(), configure: vi.fn(), refresh: vi.fn() }}>
+      launch: vi.fn(), launchWithStartupAgent: vi.fn(), configure: vi.fn(), refresh: vi.fn() }}>
       {children}
     </AgentLauncherContext.Provider>,
   });

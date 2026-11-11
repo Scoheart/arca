@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { StartupAgentQuickOption } from "./types";
 
 export type LaunchTarget = { kind: "app"; path: string; args?: string[]; new_instance?: boolean; env?: Record<string, string> }
   | { kind: "cli"; command: string; args: string[]; env?: Record<string, string> }
@@ -28,6 +29,8 @@ export interface AgentLaunchInfo {
   profiles?: LaunchProfile[];
   active_profile_id?: string;
   profiles_revision?: string;
+  active_startup_agent?: string | null;
+  startup_agents?: StartupAgentQuickOption[];
 }
 export const getAgentLaunchInfo = (agentId: string) => invoke<AgentLaunchInfo>("get_agent_launch_info", { agentId });
 export const getAgentRuntimeVersion = (agentId: string) => invoke<string | null>("get_agent_runtime_version", { agentId });
@@ -35,6 +38,8 @@ export const configureAgentLaunch = (agentId: string, target: LaunchTarget | nul
 export const configureAgentLaunchProfiles = (agentId: string, profiles: LaunchProfile[], activeProfileId: string, expectedRevision: string) =>
   invoke<AgentLaunchInfo>("configure_agent_launch_profiles", { agentId, profiles, activeProfileId, expectedRevision });
 export const launchAgent = (agentId: string, directory: string | null) => invoke<{ directory_saved: boolean }>("launch_agent", { agentId, directory });
+export const launchAgentWithStartupAgent = (agentId: string, directory: string | null, startupAgent: string | null) =>
+  invoke<{ directory_saved: boolean }>("launch_agent_with_startup_agent", { agentId, directory, startupAgent });
 
 export function splitLaunchArguments(text: string): string[] {
   const result: string[] = [];

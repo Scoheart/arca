@@ -367,7 +367,10 @@ export type ResourceNavigationRequest =
   | { domain: "subagent"; kind: "detail"; name: string }
   | { domain: "subagent"; kind: "create" }
   | { domain: "hook"; kind: "detail"; name: string }
-  | { domain: "hook"; kind: "create" };
+  | { domain: "hook"; kind: "create" }
+  | { domain: "startup_agent"; kind: "detail"; name: string }
+  | { domain: "startup_agent"; kind: "create" }
+  | { domain: "startup_agent"; kind: "index" };
 
 export type ResourceNavigationIntent = ResourceNavigationRequest & { id: number };
 export type SkillNavigationRequest = Extract<ResourceNavigationRequest, { domain: "skill" }>;
@@ -381,7 +384,8 @@ export type View =
   | { kind: "skills"; intent?: SkillNavigationIntent }
   | { kind: "subagents"; intent?: Extract<ResourceNavigationIntent, { domain: "subagent" }> }
   | { kind: "hooks"; intent?: Extract<ResourceNavigationIntent, { domain: "hook" }> }
-  | { kind: "agent"; id: string; tab?: "models" | "mcps" | "skills" | "subagents" | "hooks" | "instructions" | "plugins" }
+  | { kind: "startup_agents"; intent?: Extract<ResourceNavigationIntent, { domain: "startup_agent" }> }
+  | { kind: "agent"; id: string; tab?: "models" | "agents" | "mcps" | "skills" | "subagents" | "hooks" | "instructions" | "plugins" }
   | { kind: "capture"; agentId: string }
   | { kind: "traces"; agentId?: string };
 
@@ -613,13 +617,57 @@ export interface HookDefinition {
   updated_at?: string;
 }
 
+export interface StartupAgentDefinition {
+  name: string;
+  display_name: string;
+  description: string;
+  system_prompt: string;
+  model?: string;
+  tools?: string[];
+  mode?: string;
+  readonly?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type StartupAgentSource = "builtin" | "central" | "external";
+
+export interface AgentStartupAgentItemView {
+  id: string;
+  name: string;
+  description: string;
+  model?: string;
+  is_active: boolean;
+  is_default: boolean;
+  source: StartupAgentSource;
+  config_path?: string;
+}
+
+export interface AgentStartupAgentsStateView {
+  agent_id: string;
+  active_agent?: string;
+  default_agent?: string;
+  supports_config_persistence: boolean;
+  cli_flag?: string;
+  items: AgentStartupAgentItemView[];
+}
+
+export interface StartupAgentQuickOption {
+  id: string;
+  name: string;
+  description: string;
+  is_active: boolean;
+  is_default: boolean;
+}
+
 export type AssetRef =
   | { domain: "mcp"; key: string }
   | { domain: "model"; profile_id: string }
   | { domain: "model-provider"; provider_id: string }
   | { domain: "skill"; name: string }
   | { domain: "subagent"; name: string }
-  | { domain: "hook"; name: string };
+  | { domain: "hook"; name: string }
+  | { domain: "startup_agent"; name: string };
 
 export type ConsumptionStatus =
   | "synced"

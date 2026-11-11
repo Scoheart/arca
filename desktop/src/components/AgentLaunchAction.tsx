@@ -91,6 +91,32 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
       <DownloadIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.installationDocumentation")}</button>}
     <button type="button" role="menuitem" disabled={busy} onClick={() => choose(configure)}>
       <EditIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.launchSettings")}</button>
+    {info?.startup_agents && info.startup_agents.length > 0 && (
+      <>
+        <div className="arca-launch-menu-divider" />
+        <div className="arca-launch-menu-header text-[11px] font-semibold text-muted px-2 py-1 select-none">
+          启动 Agent
+        </div>
+        {info.startup_agents.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            role="menuitem"
+            disabled={busy}
+            className="flex items-center justify-between text-xs w-full text-left"
+            onClick={() => choose(() => { void launcher.launchWithStartupAgent(agentId, option.id); })}
+          >
+            <span className="flex items-center gap-1.5 truncate">
+              <span className={`w-1.5 h-1.5 rounded-full ${option.is_active ? "bg-emerald-500" : "bg-transparent border border-muted"}`} />
+              <span className={option.is_active ? "font-semibold text-foreground" : "text-muted"}>
+                {option.name}
+              </span>
+            </span>
+            {option.is_default && <span className="text-[10px] text-muted ml-2 shrink-0">(默认)</span>}
+          </button>
+        ))}
+      </>
+    )}
   </>;
   return <>
     {!contextMenu && version && info?.available && info.supported && <span className="arca-launch-version" role="status"
@@ -118,7 +144,7 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
     {contextMenu ? menu : <>
       <button type="button" className="arca-launch-primary" disabled={busy || (!info && !error) || info?.supported === false} onClick={launch}
         aria-label={actionLabel}
-        title={`${actionLabel}${info?.available ? ` · ${info.host_name ?? info.name}` : ""}${info?.directory && info.kind === "cli" ? `\n${info.directory}` : ""}`}>
+        title={`${actionLabel}${info?.active_startup_agent ? ` · Agent: ${info.active_startup_agent}` : ""}${info?.available ? ` · ${info.host_name ?? info.name}` : ""}${info?.directory && info.kind === "cli" ? `\n${info.directory}` : ""}`}>
         <span className="arca-launch-symbol" data-spinning={pending || undefined} aria-hidden="true">
           {pending || (!info && error) ? <RefreshIcon /> : missing ? <DownloadIcon /> : !ready ? <EditIcon /> : <PlayIcon />}
         </span>

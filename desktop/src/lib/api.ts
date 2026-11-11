@@ -50,6 +50,8 @@ import type {
   CommitOperationRequest,
   SubagentDefinition,
   HookDefinition,
+  StartupAgentDefinition,
+  AgentStartupAgentsStateView,
   CredentialValidationView,
   CancelOperationRequest,
   InstalledMcp,
@@ -382,3 +384,21 @@ export const removeHookFromAgent = (agentId: string, name: string) =>
   invoke<void>("remove_hook_from_agent", { agentId, name });
 export const adoptHook = (agentId: string, name: string) =>
   invoke<HookDefinition>("adopt_hook", { agentId, name });
+
+export const listStartupAgents = () => invoke<StartupAgentDefinition[]>("list_startup_agents");
+export const getStartupAgent = (name: string) =>
+  invoke<StartupAgentDefinition | null>("get_startup_agent", { name });
+export const saveStartupAgent = (definition: StartupAgentDefinition) =>
+  invoke<void>("save_startup_agent", { definition });
+export const deleteStartupAgent = (name: string) =>
+  invoke<void>("delete_startup_agent", { name });
+export const getAgentStartupAgentsState = (agentId: string) =>
+  invoke<AgentStartupAgentsStateView>("get_agent_startup_agents_state", { agentId });
+export const setActiveStartupAgent = (agentId: string, startupAgentId: string | null) =>
+  invoke<void>("set_active_startup_agent", { agentId, startupAgentId });
+export const projectStartupAgentToAgent = (agentId: string, definition: StartupAgentDefinition) =>
+  invoke<string>("project_startup_agent_to_agent", { agentId, definition });
+export const removeStartupAgentFromAgent = (agentId: string, name: string) =>
+  invoke<void>("remove_startup_agent_from_agent", { agentId, name });
+export const adoptStartupAgent = (agentId: string, name: string) =>
+  invoke<StartupAgentDefinition>("adopt_startup_agent", { agentId, name });

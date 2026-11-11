@@ -340,7 +340,7 @@ describe("AgentConsumptionPanel", () => {
             ? asset.profile_id
             : asset.domain === "model-provider"
               ? asset.provider_id
-              : asset.domain === "skill" || asset.domain === "subagent" || asset.domain === "hook"
+              : asset.domain === "skill" || asset.domain === "subagent" || asset.domain === "hook" || asset.domain === "startup_agent"
                 ? asset.name
                 : asset.key,
         })}

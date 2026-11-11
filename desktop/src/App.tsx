@@ -65,6 +65,11 @@ const SubagentsView = lazy(() =>
     default: module.SubagentsView,
   })),
 );
+const StartupAgentsView = lazy(() =>
+  import("./components/StartupAgentsView").then((module) => ({
+    default: module.StartupAgentsView,
+  })),
+);
 const HooksView = lazy(() =>
   import("./components/HooksView").then((module) => ({
     default: module.HooksView,
@@ -304,6 +309,7 @@ function App() {
       view={view}
       onSelectRegistry={() => setView({ kind: "registry" })}
       onSelectModels={() => setView({ kind: "models" })}
+      onSelectStartupAgents={() => setView({ kind: "startup_agents" })}
       onSelectSkills={() => setView({ kind: "skills" })}
       onSelectSubagents={() => setView({ kind: "subagents" })}
       onSelectHooks={() => setView({ kind: "hooks" })}
@@ -326,6 +332,13 @@ function App() {
             consumptionState={consumptionState}
             intent={view.intent}
             onIntentConsumed={consumeResourceIntent}
+          />
+        ) : view.kind === "startup_agents" ? (
+          <StartupAgentsView
+            consumptionState={consumptionState}
+            intent={view.intent}
+            onIntentConsumed={consumeResourceIntent}
+            onOpenAgent={(id) => setView({ kind: "agent", id, tab: "agents" })}
           />
         ) : view.kind === "subagents" ? (
           <SubagentsView

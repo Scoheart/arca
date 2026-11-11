@@ -1233,6 +1233,85 @@ pub async fn adopt_hook(
     asset_blocking(move || arca_core::application::hooks::adopt_hook(&agent_id, &name)).await
 }
 
+#[tauri::command]
+pub async fn list_startup_agents() -> Result<Vec<arca_core::domain::startup_agent::StartupAgentDefinition>, AssetCommandError> {
+    asset_blocking(arca_core::application::startup_agents::list_central_startup_agents).await
+}
+
+#[tauri::command]
+pub async fn get_startup_agent(
+    name: String,
+) -> Result<Option<arca_core::domain::startup_agent::StartupAgentDefinition>, AssetCommandError> {
+    asset_blocking(move || arca_core::application::startup_agents::get_central_startup_agent(&name)).await
+}
+
+#[tauri::command]
+pub async fn save_startup_agent(
+    definition: arca_core::domain::startup_agent::StartupAgentDefinition,
+) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::application::startup_agents::save_central_startup_agent(definition)).await
+}
+
+#[tauri::command]
+pub async fn delete_startup_agent(name: String) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::application::startup_agents::delete_central_startup_agent(&name)).await
+}
+
+#[tauri::command]
+pub async fn get_agent_startup_agents_state(
+    agent_id: String,
+) -> Result<arca_core::domain::startup_agent::AgentStartupAgentsStateView, AssetCommandError> {
+    asset_blocking(move || arca_core::application::startup_agents::get_agent_startup_agents_state(&agent_id)).await
+}
+
+#[tauri::command]
+pub async fn set_active_startup_agent(
+    agent_id: String,
+    startup_agent_id: Option<String>,
+) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::application::startup_agents::set_active_startup_agent(&agent_id, startup_agent_id)).await
+}
+
+#[tauri::command]
+pub async fn project_startup_agent_to_agent(
+    agent_id: String,
+    definition: arca_core::domain::startup_agent::StartupAgentDefinition,
+) -> Result<String, AssetCommandError> {
+    asset_blocking(move || {
+        arca_core::application::startup_agents::project_startup_agent_to_agent(&agent_id, &definition)
+            .map(|p| p.to_string_lossy().into_owned())
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn remove_startup_agent_from_agent(
+    agent_id: String,
+    name: String,
+) -> Result<(), AssetCommandError> {
+    asset_blocking(move || arca_core::application::startup_agents::remove_startup_agent_from_agent(&agent_id, &name)).await
+}
+
+#[tauri::command]
+pub async fn adopt_startup_agent(
+    agent_id: String,
+    name: String,
+) -> Result<arca_core::domain::startup_agent::StartupAgentDefinition, AssetCommandError> {
+    asset_blocking(move || arca_core::application::startup_agents::adopt_startup_agent(&agent_id, &name)).await
+}
+
+#[tauri::command]
+pub async fn launch_agent_with_startup_agent(
+    agent_id: String,
+    directory: Option<String>,
+    startup_agent: Option<String>,
+) -> Result<arca_core::application::agent_launch::LaunchReceipt, AssetCommandError> {
+    asset_blocking(move || {
+        arca_core::application::agent_launch::launch_with_startup_agent(&agent_id, directory, startup_agent)
+    })
+    .await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

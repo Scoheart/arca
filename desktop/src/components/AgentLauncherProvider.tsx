@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { getAgentLaunchInfo, launchAgent, type AgentLaunchInfo } from "../lib/agentLaunch";
+import { getAgentLaunchInfo, launchAgent, launchAgentWithStartupAgent, type AgentLaunchInfo } from "../lib/agentLaunch";
 import { formatError } from "../lib/format";
 import { AgentLaunchSettings } from "./AgentLaunchSettings";
 import { useToast } from "./Toast";
@@ -61,7 +61,30 @@ export function AgentLauncherProvider({ children }: { children: ReactNode }) {
     }
     finally { running.current = false; setBusyId(null); }
   }, [show]);
-  return <AgentLauncherContext.Provider value={{ busyId, revision: revision + sharedRevision, launch, configure, refresh }}>
+  const launchWithStartupAgent = useCallback(async (id: string, startupAgent: string | null) => {
+    if (running.current) return;
+    running.current = true; setBusyId(id);
+    try {
+      const info = await getAgentLaunchInfo(id);
+      if (!info.supported) throw new Error("当前平台暂不支持启动 Agent");
+      let directory = info.directory;
+      const result = await launchAgentWithStartupAgent(id, directory, startupAgent);
+      setRevision((value) => value + 1);
+      show({
+        kind: "success",
+        msg: info.kind === "cli"
+          ? `已向终端发送 ${info.name} 启动请求${startupAgent ? ` (Agent: ${startupAgent})` : ""}`
+          : `已打开 ${info.host_name ?? info.name}`,
+      });
+      if (!result.directory_saved) show({ kind: "error", msg: "已发送启动请求，但未能记住工作目录" });
+    } catch (error) {
+      show({ kind: "error", msg: `无法打开 Agent：${formatError(error)}` });
+    } finally {
+      running.current = false; setBusyId(null);
+    }
+  }, [show]);
+
+  return <AgentLauncherContext.Provider value={{ busyId, revision: revision + sharedRevision, launch, launchWithStartupAgent, configure, refresh }}>
     {children}
     {editing && <AgentLaunchSettings key={editing.info.agent_id} info={editing.info} onClose={() => setEditing(null)} onSaved={refresh}
       onLaunch={info => run(info, editing.chooseDirectory)} />}
