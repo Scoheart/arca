@@ -2161,6 +2161,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "hetzner-experiments",
+        name: "Hetzner Experiments Inference",
+        default_base_url: Some("https://inference.hetzner.com/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2996,6 +3003,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.twigpine.com" => "twigpine-opengateway",
         "api.hiapi.ai" => "hiapi",
         "gateway.respan.ai" | "api.respan.ai" => "respan",
+        "inference.hetzner.com" => "hetzner-experiments",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -9419,6 +9427,18 @@ mod tests {
             ("https://api.keywordsai.co/api", "custom"),
             ("https://gateway.respan.ai.evil.test/v1", "custom"),
             ("https://api.respan.ai.evil.test/api", "custom"),
+            ("https://inference.hetzner.com/api/v1", "hetzner-experiments"),
+            ("https://inference.hetzner.com/api/v1/chat/completions", "hetzner-experiments"),
+            ("https://inference.hetzner.com/api/v1/models", "hetzner-experiments"),
+            ("https://inference.hetzner.com/v1/models", "hetzner-experiments"),
+            ("https://inference.hetzner.com", "hetzner-experiments"),
+            ("https://experiments.hetzner.com/", "custom"),
+            ("https://community.hetzner.com/tutorials/opencode-with-hetzner-inference-api-systemd-sandbox/", "custom"),
+            ("https://www.hetzner.com/blog/inference-experiment/", "custom"),
+            ("https://www.inference.hetzner.com/api/v1", "custom"),
+            ("https://api.hetzner.com/v1", "custom"),
+            ("https://console.hetzner.com/", "custom"),
+            ("https://inference.hetzner.com.evil.test/api/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9496,7 +9516,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 209);
+        assert_eq!(list_providers().len(), 210);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -12952,7 +12972,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 209);
+        assert_eq!(list_providers().len(), 210);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13081,7 +13101,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 209);
+        assert_eq!(list_providers().len(), 210);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13226,7 +13246,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 209);
+        assert_eq!(list_providers().len(), 210);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13337,7 +13357,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 209);
+        assert_eq!(list_providers().len(), 210);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13435,7 +13455,43 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 209);
+        assert_eq!(list_providers().len(), 210);
+    }
+
+    #[test]
+    fn hetzner_experiments_template_matches_reviewed_connection() {
+        use ModelProtocol::OpenaiCompletions;
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "hetzner-experiments")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "Hetzner Experiments Inference");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://inference.hetzner.com/api/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://inference.hetzner.com/api/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert!(provider_additional_endpoints("hetzner-experiments").is_empty());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://community.hetzner.com/tutorials/opencode-with-hetzner-inference-api-systemd-sandbox/"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
+        assert_eq!(serialized["portal"]["kind"], "console");
+        assert_eq!(list_providers().len(), 210);
     }
 
 }
