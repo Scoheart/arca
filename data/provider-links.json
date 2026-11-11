@@ -1496,5 +1496,12 @@
       "url": "https://botscanner.ai/api-keys",
       "kind": "api-key"
     }
+  },
+  "cucloud": {
+    "docs_url": "https://www.cucloud.cn/product/tokenplan.html",
+    "portal": {
+      "url": "https://console.cucloud.cn/",
+      "kind": "console"
+    }
   }
 }

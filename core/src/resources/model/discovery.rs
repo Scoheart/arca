@@ -586,6 +586,17 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "autobench/beta-balanced",
             "autobench/beta-quality",
         ],
+        // https://www.cucloud.cn/product/tokenplan.html
+        // The console issues the Base URL. /v1/models is not public.
+        // HappyHorse1.1 is a video model on the Double 11 page and is not this seed.
+        // https://www.cucloud.cn/bwnnov.html
+        "cucloud" => &[
+            "DeepSeek-V4.1-Flash-1017",
+            "DeepSeek-V4-Pro",
+            "Qwen3.8-Max",
+            "Qwen3.8-Flash",
+            "glm-5.3",
+        ],
         _ => return None,
     };
     Some(
@@ -3556,6 +3567,23 @@ mod tests {
             ],
         );
         assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"botscanner"));
+    }
+
+    #[test]
+    fn cucloud_seeds_only_the_reviewed_console_model_names() {
+        assert_static_chat_seed(
+            "cucloud",
+            "https://console-issued.example/v1",
+            "/chat/completions",
+            &[
+                "DeepSeek-V4.1-Flash-1017",
+                "DeepSeek-V4-Pro",
+                "Qwen3.8-Max",
+                "Qwen3.8-Flash",
+                "glm-5.3",
+            ],
+            &["GLM-5.3", "HappyHorse1.1"],
+        );
     }
 
     #[test]

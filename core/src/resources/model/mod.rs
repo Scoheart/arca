@@ -2223,6 +2223,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "cucloud",
+        name: "联通云 Token Plan",
+        default_base_url: None,
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -9583,6 +9590,30 @@ mod tests {
             ("https://api.autobench.com/v1", "custom"),
             ("https://api.botscanner.ai/v1/models", "custom"),
             ("https://api.autobench.org.evil.test/v1", "custom"),
+            ("https://www.cucloud.cn/", "custom"),
+            ("https://www.cucloud.cn/product/tokenplan.html", "custom"),
+            ("https://www.cucloud.cn/bwnnov.html", "custom"),
+            ("https://cucloud.cn/", "custom"),
+            ("https://console.cucloud.cn/", "custom"),
+            ("https://console.cucloud.cn/console/cuig/onDemandBuy", "custom"),
+            ("https://gateway.cucloud.cn/", "custom"),
+            ("https://aigw.cucloud.cn/v1", "custom"),
+            ("https://aigw.cucloud.cn/v1/chat/completions", "custom"),
+            ("https://aigw.cucloud.cn/v1/models", "custom"),
+            ("https://aigw-gzgy2.cucloud.cn/v1", "custom"),
+            ("https://aigw-gzgy2.cucloud.cn/v1/chat/completions", "custom"),
+            ("https://aigw-gzgy2.cucloud.cn/v1/models", "custom"),
+            ("https://www.aigw.cucloud.cn/v1", "custom"),
+            ("https://api.cucloud.cn/v1", "custom"),
+            ("https://api.cucloud.com/v1", "custom"),
+            ("https://aigw.cucloud.cn.evil.test/v1", "custom"),
+            ("https://maas-api.ai-yuanjing.com/", "custom"),
+            ("https://maas-api.ai-yuanjing.com/v1", "custom"),
+            ("https://maas-api.ai-yuanjing.com/v1/chat/completions", "custom"),
+            ("https://maas-api.ai-yuanjing.com/v1/models", "custom"),
+            ("https://www.ai-yuanjing.com/", "custom"),
+            ("https://ai-yuanjing.com/v1", "custom"),
+            ("https://maas-api.ai-yuanjing.com.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9659,8 +9690,8 @@ mod tests {
             .filter(|provider| provider.default_base_url.is_none())
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
-            BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 215);
+            BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
+        assert_eq!(list_providers().len(), 216);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13116,7 +13147,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13245,7 +13276,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13390,7 +13421,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13501,7 +13532,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13599,7 +13630,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
     }
 
     #[test]
@@ -13635,7 +13666,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
     }
 
     #[test]
@@ -13681,7 +13712,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
     }
 
     #[test]
@@ -13733,7 +13764,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
     }
 
     #[test]
@@ -13763,7 +13794,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
     }
 
     #[test]
@@ -13796,7 +13827,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
     }
 
     #[test]
@@ -13829,7 +13860,42 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 215);
+        assert_eq!(list_providers().len(), 216);
+    }
+
+    #[test]
+    fn cucloud_template_matches_reviewed_connection() {
+        use ModelProtocol::OpenaiCompletions;
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "cucloud")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "联通云 Token Plan");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(provider.default_base_url, None);
+        assert!(serialized["base_url"].is_null());
+        assert!(serialized["default_base_url"].is_null());
+        assert!(serialized["setup"].is_null());
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        assert!(provider_additional_endpoints("cucloud").is_empty());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://www.cucloud.cn/product/tokenplan.html"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
+        assert_eq!(serialized["portal"]["kind"], "console");
+        assert_eq!(list_providers().len(), 216);
     }
 
 }
