@@ -4362,6 +4362,20 @@
       }
     },
     {
+      "id": "cucloud",
+      "name": "联通云 Token Plan",
+      "category": "official",
+      "baseUrl": null,
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://www.cucloud.cn/product/tokenplan.html",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.cucloud.cn/"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
