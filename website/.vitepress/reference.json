@@ -4334,6 +4334,20 @@
       }
     },
     {
+      "id": "suanli-maas",
+      "name": "共绩算力 MaaS",
+      "category": "gateway",
+      "baseUrl": "https://api.suanli.cn/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://www.suanli.cn/docs/large-model-cloud-service/quickstart/cqsrwzrbsim4idkkjbxcdux4nfg/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.suanli.cn/models"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

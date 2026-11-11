@@ -1482,5 +1482,12 @@
       "url": "https://free.ai/account/?tab=api",
       "kind": "api-key"
     }
+  },
+  "suanli-maas": {
+    "docs_url": "https://www.suanli.cn/docs/large-model-cloud-service/quickstart/cqsrwzrbsim4idkkjbxcdux4nfg/",
+    "portal": {
+      "url": "https://console.suanli.cn/models",
+      "kind": "api-key"
+    }
   }
 }
