@@ -331,6 +331,18 @@ const RADIUM_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("tycho-1.0", None, None),
 ];
 
+/// Public standard-tier chat ids from anonymous `GET https://logfare.ai/v1/models`
+/// on 2026-11-11. That body had 32 rows and mixed chat with image, audio,
+/// embedding, and decision ids, including premium chat ids. A saved key uses
+/// the OpenAI decoder. The response includes display names and context lengths;
+/// this seed stores ids only. `logfare/auto` and `stealth/funfly` are not seeded.
+const LOGFARE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen-3.8-27b", None, None),
+    ("gemma-4-31b-it", None, None),
+    ("gemma-4-26b", None, None),
+    ("economy/deepseek-v4.1-flash", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -379,6 +391,7 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "cheapllm-shop" => CHEAPLLM_SHOP_STATIC_MODELS,
         "ucloud-modelverse" => UCLOUD_MODELVERSE_STATIC_MODELS,
         "radium" => RADIUM_STATIC_MODELS,
+        "logfare" => LOGFARE_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -742,6 +755,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "cheapllm-shop"
         | "ucloud-modelverse"
         | "radium"
+        | "logfare"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -855,6 +869,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "cheapllm-shop"
             | "ucloud-modelverse"
             | "radium"
+            | "logfare"
     ) {
         CredentialPolicy::Optional
     } else {
@@ -2556,6 +2571,7 @@ mod tests {
         "cheapllm-shop",
         "ucloud-modelverse",
         "radium",
+        "logfare",
     ];
 
     fn provider(
@@ -2707,6 +2723,7 @@ mod tests {
             "cheapllm-shop",
             "ucloud-modelverse",
             "radium",
+            "logfare",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -3931,5 +3948,76 @@ mod tests {
         assert_eq!(seeded.len(), 3);
         assert_eq!(seeded[0].id, "hal-1.0");
         assert_eq!(seeded[2].id, "tycho-1.0");
+    }
+
+    #[test]
+    fn logfare_seeds_standard_chat_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("logfare").expect("logfare seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            [
+                "qwen-3.8-27b",
+                "gemma-4-31b-it",
+                "gemma-4-26b",
+                "economy/deepseek-v4.1-flash",
+            ]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "logfare/auto",
+            "auto",
+            "logfare/random",
+            "stealth/funfly",
+            "kimi-k2.5",
+            "kimi-k2.6",
+            "deepseek-v4.1-flash-1017",
+            "deepseek-v4.1-flash-eco",
+            "economy/deepseek-v4.1-flash-eco",
+            "flux-2-dev",
+            "8ball",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("logfare").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"logfare"));
+        let config = provider(
+            "logfare",
+            "https://logfare.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://logfare.ai/v1/models"
+        );
+        let _home = TestHome::new("logfare-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "logfare-instance".into(),
+                name: "Logfare".into(),
+                provider: "logfare".into(),
+                base_url: "https://logfare.ai".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 4);
+        assert_eq!(seeded[0].id, "qwen-3.8-27b");
+        assert_eq!(seeded[3].id, "economy/deepseek-v4.1-flash");
     }
 }

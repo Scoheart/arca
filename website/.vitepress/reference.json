@@ -4455,6 +4455,22 @@
       }
     },
     {
+      "id": "logfare",
+      "name": "Logfare",
+      "category": "gateway",
+      "baseUrl": "https://logfare.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://logfare.ai/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://logfare.ai/register"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
