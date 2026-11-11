@@ -578,6 +578,14 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "z-ai/glm-5.2",
             "qwen/qwen3.7-max",
         ],
+        // https://botscanner.ai/faq
+        // GET /v1/models requires a key. Unauthenticated returns HTTP 401, not an OpenAI list.
+        // Playground ids such as qwen/qwen3.7-flash are not router knobs and are not this seed.
+        "botscanner" => &[
+            "autobench/beta-cost",
+            "autobench/beta-balanced",
+            "autobench/beta-quality",
+        ],
         _ => return None,
     };
     Some(
@@ -3527,6 +3535,27 @@ mod tests {
             ],
         );
         assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"suanli-maas"));
+    }
+
+    #[test]
+    fn botscanner_seeds_only_the_reviewed_router_knobs() {
+        assert_static_chat_seed(
+            "botscanner",
+            "https://api.autobench.org/v1",
+            "/chat/completions",
+            &[
+                "autobench/beta-cost",
+                "autobench/beta-balanced",
+                "autobench/beta-quality",
+            ],
+            &[
+                "qwen/qwen3.7-flash",
+                "openai/gpt-6-luna",
+                "anthropic/claude-opus-5.5",
+                "google/gemini-4-argon",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"botscanner"));
     }
 
     #[test]

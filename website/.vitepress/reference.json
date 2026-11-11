@@ -4348,6 +4348,20 @@
       }
     },
     {
+      "id": "botscanner",
+      "name": "Botscanner (AutoBench Router)",
+      "category": "gateway",
+      "baseUrl": "https://api.autobench.org/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://botscanner.ai/faq",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://botscanner.ai/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
