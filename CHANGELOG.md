@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.73.1](https://github.com/Scoheart/arca/compare/v2.73.0...v2.73.1) (2026-11-11)
+
+### Changes
+
+* feat(models): add Free.ai provider (#302) ([2e5d77b](https://github.com/Scoheart/arca/commit/2e5d77beaba0abe33dd06c7cc7c7af6b0b6d727b))
+* feat(models): add Suanli (共绩算力) MaaS provider (#303) ([b71aa1c](https://github.com/Scoheart/arca/commit/b71aa1cb9949badabd6d40a0e124782f72241777))
+* test(dsh): add end-to-end asset transaction convergence test for deepseek harness mcps ([bae6d0d](https://github.com/Scoheart/arca/commit/bae6d0dd0000e2887deecc154b4b2a67c001f87a))
+
 ## [2.73.0](https://github.com/Scoheart/arca/compare/v2.72.0...v2.73.0) (2026-11-11)
 
 ### Changes
