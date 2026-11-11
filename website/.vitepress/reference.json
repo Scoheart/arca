@@ -1,5 +1,5 @@
 {
-  "version": "2.71.0",
+  "version": "2.72.0",
   "agents": [
     {
       "id": "agentkube",
@@ -3124,7 +3124,7 @@
     },
     {
       "id": "ant-ling",
-      "name": "Ant Ling (\u8682\u8681\u767e\u7075)",
+      "name": "Ant Ling (蚂蚁百灵)",
       "category": "official",
       "baseUrl": "https://api.ant-ling.com/v1",
       "protocols": [
@@ -3139,7 +3139,7 @@
     },
     {
       "id": "antdigital-dtmaas",
-      "name": "Ant Digital DTMaaS (\u8682\u8681\u6570\u79d1)",
+      "name": "Ant Digital DTMaaS (蚂蚁数科)",
       "category": "official",
       "baseUrl": "https://maas-api.antdigital.com/v1",
       "protocols": [
@@ -3154,7 +3154,7 @@
     },
     {
       "id": "unisound",
-      "name": "Unisound MaaS (\u4e91\u77e5\u58f0)",
+      "name": "Unisound MaaS (云知声)",
       "category": "official",
       "baseUrl": "https://maas-api.unisound.com/v1",
       "protocols": [
@@ -3170,7 +3170,7 @@
     },
     {
       "id": "bilibili-index-translate",
-      "name": "Bilibili Index-Translate (\u54d4\u54e9\u54d4\u54e9)",
+      "name": "Bilibili Index-Translate (哔哩哔哩)",
       "category": "official",
       "baseUrl": "https://index-translate.bilibili.com/v1",
       "protocols": [
@@ -3185,7 +3185,7 @@
     },
     {
       "id": "sensenova",
-      "name": "SenseNova Token Plan (\u5546\u6c64\u65e5\u65e5\u65b0)",
+      "name": "SenseNova Token Plan (商汤日日新)",
       "category": "official",
       "baseUrl": "https://token.sensenova.cn/v1",
       "protocols": [
@@ -3319,7 +3319,7 @@
     },
     {
       "id": "scnet",
-      "name": "SCNet (\u8d85\u7b97\u4e92\u8054\u7f51)",
+      "name": "SCNet (超算互联网)",
       "category": "gateway",
       "baseUrl": "https://api.scnet.cn/api/llm/v1",
       "protocols": [
@@ -3540,7 +3540,7 @@
     },
     {
       "id": "intern-inkstone",
-      "name": "Intern InkStone (\u4e66\u751f\u00b7\u7aef\u781a)",
+      "name": "Intern InkStone (书生·端砚)",
       "category": "gateway",
       "baseUrl": "https://discovery-api.intern-ai.org.cn/v1",
       "protocols": [
@@ -4393,7 +4393,7 @@
     },
     {
       "id": "volcengine",
-      "name": "Volcengine Ark (\u706b\u5c71\u65b9\u821f)",
+      "name": "Volcengine Ark (火山方舟)",
       "category": "official",
       "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
       "protocols": [
@@ -4408,7 +4408,7 @@
     },
     {
       "id": "volcengine-coding-plan",
-      "name": "Volcengine Coding Plan (\u706b\u5c71\u65b9\u821f)",
+      "name": "Volcengine Coding Plan (火山方舟)",
       "category": "official",
       "baseUrl": "https://ark.cn-beijing.volces.com/api/coding/v3",
       "protocols": [
@@ -4423,7 +4423,7 @@
     },
     {
       "id": "baidu-qianfan",
-      "name": "Baidu Qianfan (\u767e\u5ea6\u5343\u5e06)",
+      "name": "Baidu Qianfan (百度千帆)",
       "category": "official",
       "baseUrl": "https://qianfan.baidubce.com/v2",
       "protocols": [
@@ -4437,7 +4437,7 @@
     },
     {
       "id": "baidu-qianfan-coding-plan",
-      "name": "Baidu Qianfan Coding Plan (\u767e\u5ea6\u5343\u5e06)",
+      "name": "Baidu Qianfan Coding Plan (百度千帆)",
       "category": "official",
       "baseUrl": "https://qianfan.baidubce.com/v2/coding",
       "protocols": [
@@ -4511,7 +4511,7 @@
     },
     {
       "id": "zhipuai",
-      "name": "Zhipu AI (\u667a\u8c31)",
+      "name": "Zhipu AI (智谱)",
       "category": "official",
       "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
       "protocols": [

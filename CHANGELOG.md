@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.72.0](https://github.com/Scoheart/arca/compare/v2.71.0...v2.72.0) (2026-11-11)
+
+### Changes
+
+* feat(models): add thirteen provider templates (#294) ([1090804](https://github.com/Scoheart/arca/commit/1090804bd03e93bdadc69645f0bd8ae18dd72b72))
+* feat(models): add Helyx AI, Hyperbolic and Vectoree providers (#296) ([a561aac](https://github.com/Scoheart/arca/commit/a561aac1e78276d80fed131582dbbff406b0fa35))
+* feat(models): add Onysoft, Coarena, Twigpine OpenGateway and HiAPI providers (#297) ([5a39b8b](https://github.com/Scoheart/arca/commit/5a39b8b3e095b26aa2f1d1eae33e84ab7340a394))
+* feat(models): add Maritaca AI and CrowLLM providers (#298) ([13d4976](https://github.com/Scoheart/arca/commit/13d4976cd92e7f16ddc670575dcd32d5dd86bc2a))
+* feat(models): add Respan provider (#299) ([8b030c8](https://github.com/Scoheart/arca/commit/8b030c8adc44e7266f839c49534313e22d54faf6))
+* fix(models): correct provider templates from 2026-11 audit (#295) ([27a746c](https://github.com/Scoheart/arca/commit/27a746c37acf1c99191e8ee0d6b5f7012a8df311))
+
 ## [2.71.0](https://github.com/Scoheart/arca/compare/v2.70.2...v2.71.0) (2026-11-10)
 
 ### Changes
