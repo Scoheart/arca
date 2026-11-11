@@ -4391,6 +4391,23 @@
       }
     },
     {
+      "id": "ucloud-modelverse",
+      "name": "UCloud 星图 AstraFlow（ModelVerse）",
+      "category": "official",
+      "baseUrl": "https://api.modelverse.cn/v1",
+      "protocols": [
+        "anthropic-messages",
+        "gemini-generate-content",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://astraflow.ucloud.cn/docs/modelverse/quick-start",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.ucloud.cn/modelverse/experience/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
