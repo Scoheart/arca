@@ -1201,6 +1201,26 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://gateway.respan.ai/v1beta",
             },
         ],
+        "cheapllm-shop" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://cheapllm.shop/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://cheapllm.shop",
+            },
+        ],
+        "powertokens" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.powertokens.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.powertokens.ai",
+            },
+        ],
         _ => &[],
     }
 }
@@ -2168,6 +2188,20 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "cheapllm-shop",
+        name: "cheapllm.shop",
+        default_base_url: Some("https://cheapllm.shop/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "powertokens",
+        name: "PowerTokens",
+        default_base_url: Some("https://api.powertokens.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3004,6 +3038,8 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.hiapi.ai" => "hiapi",
         "gateway.respan.ai" | "api.respan.ai" => "respan",
         "inference.hetzner.com" => "hetzner-experiments",
+        "cheapllm.shop" => "cheapllm-shop",
+        "api.powertokens.ai" => "powertokens",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -9439,6 +9475,35 @@ mod tests {
             ("https://api.hetzner.com/v1", "custom"),
             ("https://console.hetzner.com/", "custom"),
             ("https://inference.hetzner.com.evil.test/api/v1", "custom"),
+            ("https://cheapllm.shop/v1", "cheapllm-shop"),
+            ("https://cheapllm.shop/v1/chat/completions", "cheapllm-shop"),
+            ("https://cheapllm.shop/v1/models", "cheapllm-shop"),
+            ("https://cheapllm.shop/v1/responses", "cheapllm-shop"),
+            ("https://cheapllm.shop/v1/messages", "cheapllm-shop"),
+            ("https://cheapllm.shop", "cheapllm-shop"),
+            ("https://cheapllm.shop/docs", "cheapllm-shop"),
+            ("https://cheapllm.shop/signup", "cheapllm-shop"),
+            ("https://cheapllm.shop/login", "cheapllm-shop"),
+            ("https://cheapllm.shop/dashboard", "cheapllm-shop"),
+            ("https://www.cheapllm.shop/v1", "custom"),
+            ("https://api.cheapllm.shop/v1", "custom"),
+            ("https://cheapllm.com/v1", "custom"),
+            ("https://cheapllm.shop.evil.test/v1", "custom"),
+            ("https://api.powertokens.ai/v1", "powertokens"),
+            ("https://api.powertokens.ai/v1/chat/completions", "powertokens"),
+            ("https://api.powertokens.ai/v1/models", "powertokens"),
+            ("https://api.powertokens.ai/v1/responses", "powertokens"),
+            ("https://api.powertokens.ai/v1/messages", "powertokens"),
+            ("https://api.powertokens.ai", "powertokens"),
+            ("https://api.powertokens.ai/v1beta/models/glm-4.7-flash:generateContent", "powertokens"),
+            ("https://docs.powertokens.ai/en/guides/api-key-and-model-call", "custom"),
+            ("https://docs.powertokens.ai/en/ecosystem-tools/text-model-protocols", "custom"),
+            ("https://powertokens.ai/api-keys", "custom"),
+            ("https://powertokens.ai/models/glm-4.7-flash", "custom"),
+            ("https://www.powertokens.ai/en/api-keys", "custom"),
+            ("https://www.api.powertokens.ai/v1", "custom"),
+            ("https://api.powertokens.com/v1", "custom"),
+            ("https://api.powertokens.ai.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9516,7 +9581,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 210);
+        assert_eq!(list_providers().len(), 212);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -12972,7 +13037,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 210);
+        assert_eq!(list_providers().len(), 212);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13101,7 +13166,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 210);
+        assert_eq!(list_providers().len(), 212);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13246,7 +13311,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 210);
+        assert_eq!(list_providers().len(), 212);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13357,7 +13422,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 210);
+        assert_eq!(list_providers().len(), 212);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13455,7 +13520,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 210);
+        assert_eq!(list_providers().len(), 212);
     }
 
     #[test]
@@ -13491,7 +13556,105 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 210);
+        assert_eq!(list_providers().len(), 212);
+    }
+
+    #[test]
+    fn cheapllm_shop_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "cheapllm-shop")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "cheapllm.shop");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(provider.default_base_url, Some("https://cheapllm.shop/v1"));
+        assert_eq!(serialized["base_url"], "https://cheapllm.shop");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("cheapllm-shop");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://cheapllm.shop/v1"),
+                (AnthropicMessages, "https://cheapllm.shop"),
+            ]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
+        assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 212);
+    }
+
+    #[test]
+    fn powertokens_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "powertokens")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "PowerTokens");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://api.powertokens.ai/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.powertokens.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("powertokens");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://api.powertokens.ai/v1"),
+                (AnthropicMessages, "https://api.powertokens.ai"),
+            ]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://docs.powertokens.ai/en/guides/api-key-and-model-call"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 212);
     }
 
 }

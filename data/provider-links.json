@@ -1461,5 +1461,19 @@
       "url": "https://experiments.hetzner.com/",
       "kind": "console"
     }
+  },
+  "cheapllm-shop": {
+    "docs_url": "https://cheapllm.shop/docs",
+    "portal": {
+      "url": "https://cheapllm.shop/signup",
+      "kind": "api-key"
+    }
+  },
+  "powertokens": {
+    "docs_url": "https://docs.powertokens.ai/en/guides/api-key-and-model-call",
+    "portal": {
+      "url": "https://powertokens.ai/api-keys",
+      "kind": "api-key"
+    }
   }
 }

@@ -301,6 +301,13 @@ const COARENA_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("qwen3-8-2-4t-a95b", None, None),
 ];
 
+/// Public cheapllm.shop chat id from anonymous `GET /v1/models` on 2026-11-11.
+/// That body was the whole catalog. A saved key uses the OpenAI decoder.
+/// The response has no display name and no context length.
+const CHEAPLLM_SHOP_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("deepseek-v4.1-flash-1017", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -346,6 +353,7 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "itzi" => ITZI_STATIC_MODELS,
         "hyperbolic" => HYPERBOLIC_STATIC_MODELS,
         "coarena" => COARENA_STATIC_MODELS,
+        "cheapllm-shop" => CHEAPLLM_SHOP_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -552,6 +560,10 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // https://community.hetzner.com/tutorials/opencode-with-hetzner-inference-api-systemd-sandbox/
         // GET /api/v1/models requires auth. Launch ids other than this FP8 id are not this seed.
         "hetzner-experiments" => &["Qwen/Qwen3.6-35B-A3B-FP8"],
+        // https://docs.powertokens.ai/en/guides/api-key-and-model-call
+        // GET /v1/models requires auth and mixes image, speech, and video rows.
+        // glm-4.7-flash is not supported on Responses. The quickstart example MiniMax-M3 is not this seed.
+        "powertokens" => &["glm-4.7-flash"],
         _ => return None,
     };
     Some(
@@ -652,6 +664,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "itzi"
         | "hyperbolic"
         | "coarena"
+        | "cheapllm-shop"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -762,6 +775,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "lm-studio"
             | "vllm"
             | "coarena"
+            | "cheapllm-shop"
     ) {
         CredentialPolicy::Optional
     } else {
@@ -2460,6 +2474,7 @@ mod tests {
         "lm-studio",
         "vllm",
         "coarena",
+        "cheapllm-shop",
     ];
 
     fn provider(
@@ -2608,6 +2623,7 @@ mod tests {
             "ifm",
             "llm7",
             "coarena",
+            "cheapllm-shop",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -3440,6 +3456,69 @@ mod tests {
             ],
         );
         assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"hetzner-experiments"));
+    }
+
+    #[test]
+    fn powertokens_seeds_only_the_free_chat_id() {
+        assert_static_chat_seed(
+            "powertokens",
+            "https://api.powertokens.ai/v1",
+            "/chat/completions",
+            &["glm-4.7-flash"],
+            &["MiniMax-M3", "glm-4.7", "glm-5.2"],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"powertokens"));
+    }
+
+    #[test]
+    fn cheapllm_shop_seeds_the_public_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("cheapllm-shop").expect("cheapllm seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["deepseek-v4.1-flash-1017"]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        assert!(models.iter().all(|model| model.id != "deepseek-v4.1-flash"));
+        assert!(static_seed_models("cheapllm-shop").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"cheapllm-shop"));
+        let config = provider(
+            "cheapllm-shop",
+            "https://cheapllm.shop",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://cheapllm.shop/v1/models"
+        );
+        let _home = TestHome::new("cheapllm-shop-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "cheapllm-shop-instance".into(),
+                name: "cheapllm.shop".into(),
+                provider: "cheapllm-shop".into(),
+                base_url: "https://cheapllm.shop".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "deepseek-v4.1-flash-1017");
     }
 
     #[test]
