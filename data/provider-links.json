@@ -1447,5 +1447,12 @@
       "url": "https://crowllm.com/console",
       "kind": "api-key"
     }
+  },
+  "respan": {
+    "docs_url": "https://www.respan.ai/docs/ai-gateway/quickstart",
+    "portal": {
+      "url": "https://platform.respan.ai/platform/gateway/api-keys",
+      "kind": "api-key"
+    }
   }
 }

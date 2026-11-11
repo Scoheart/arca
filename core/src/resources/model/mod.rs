@@ -1043,6 +1043,20 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://crowllm.com",
         }],
+        "respan" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://gateway.respan.ai",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://gateway.respan.ai",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://gateway.respan.ai/v1beta",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1996,6 +2010,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "respan",
+        name: "Respan",
+        default_base_url: Some("https://gateway.respan.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2810,6 +2831,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.onysoft.com" => "onysoft",
         "api.twigpine.com" => "twigpine-opengateway",
         "api.hiapi.ai" => "hiapi",
+        "gateway.respan.ai" | "api.respan.ai" => "respan",
         "api.sambanova.ai" => "sambanova",
         "api.perplexity.ai" => "perplexity",
         "ark.cn-beijing.volces.com" => "volcengine",
@@ -9203,6 +9225,30 @@ mod tests {
             ("https://api.crowllm.com/v1", "custom"),
             ("https://crowllm.ai/v1", "custom"),
             ("https://crowllm.com.evil.test/v1", "custom"),
+            ("https://gateway.respan.ai/v1", "respan"),
+            ("https://gateway.respan.ai/v1/chat/completions", "respan"),
+            ("https://gateway.respan.ai/v1/models", "respan"),
+            ("https://gateway.respan.ai/chat/completions", "respan"),
+            ("https://gateway.respan.ai/responses", "respan"),
+            ("https://gateway.respan.ai/v1/responses", "respan"),
+            ("https://gateway.respan.ai/v1/messages", "respan"),
+            ("https://gateway.respan.ai", "respan"),
+            ("https://gateway.respan.ai/v1beta", "respan"),
+            ("https://gateway.respan.ai/v1beta/models/gemini-2.5-flash:generateContent", "respan"),
+            ("https://api.respan.ai/api", "respan"),
+            ("https://api.respan.ai/api/chat/completions", "respan"),
+            ("https://api.respan.ai/api/models", "respan"),
+            ("https://api.respan.ai/api/responses", "respan"),
+            ("https://api.respan.ai", "respan"),
+            ("https://www.respan.ai/docs/ai-gateway/quickstart", "custom"),
+            ("https://respan.ai/", "custom"),
+            ("https://platform.respan.ai/platform/gateway/api-keys", "custom"),
+            ("https://www.gateway.respan.ai/v1", "custom"),
+            ("https://www.api.respan.ai/api", "custom"),
+            ("https://api.respan.com/api", "custom"),
+            ("https://api.keywordsai.co/api", "custom"),
+            ("https://gateway.respan.ai.evil.test/v1", "custom"),
+            ("https://api.respan.ai.evil.test/api", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9280,7 +9326,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 208);
+        assert_eq!(list_providers().len(), 209);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -12639,7 +12685,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 208);
+        assert_eq!(list_providers().len(), 209);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -12768,7 +12814,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 208);
+        assert_eq!(list_providers().len(), 209);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -12913,7 +12959,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 208);
+        assert_eq!(list_providers().len(), 209);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13024,7 +13070,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 208);
+        assert_eq!(list_providers().len(), 209);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13073,6 +13119,56 @@ url = "https://example.test/mcp"
             assert_eq!(serialized["portal"]["url"], expect.portal_url, "{}", expect.id);
             assert_eq!(serialized["portal"]["kind"], expect.portal_kind, "{}", expect.id);
         }
+    }
+
+    #[test]
+    fn respan_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, GeminiGenerateContent, OpenaiCompletions, OpenaiResponses};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "respan")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "Respan");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(provider.default_base_url, Some("https://gateway.respan.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://gateway.respan.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["protocols"]["gemini-generate-content"]["endpoint_path"],
+            "/v1beta/models/{model}:generateContent"
+        );
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("respan");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://gateway.respan.ai"),
+                (AnthropicMessages, "https://gateway.respan.ai"),
+                (GeminiGenerateContent, "https://gateway.respan.ai/v1beta"),
+            ]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
+        assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 209);
     }
 
 }
