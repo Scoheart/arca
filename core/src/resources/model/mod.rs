@@ -1225,6 +1225,20 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://api.puter.com/puterai/anthropic",
         }],
+        "ucloud-modelverse" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.modelverse.cn/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.modelverse.cn",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://api.modelverse.cn/v1beta",
+            },
+        ],
         _ => &[],
     }
 }
@@ -2241,6 +2255,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "ucloud-modelverse",
+        name: "UCloud 星图 AstraFlow（ModelVerse）",
+        default_base_url: Some("https://api.modelverse.cn/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3087,6 +3108,15 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.free.ai" => "free-ai",
         "api.suanli.cn" => "suanli-maas",
         "api.autobench.org" => "botscanner",
+        // Quick-start API hosts for UCloud ModelVerse. deepseek.modelverse.cn
+        // answers the same catalog and is not in that table, so it stays custom.
+        "api.modelverse.cn"
+        | "api.umodelverse.ai"
+        | "api-cn-wlcb.modelverse.cn"
+        | "api-cn-sh2.modelverse.cn"
+        | "api-us-ca.umodelverse.ai"
+        | "api-sg.umodelverse.ai"
+        | "api-ge-fra.umodelverse.ai" => "ucloud-modelverse",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -9660,6 +9690,58 @@ mod tests {
             ("https://www.api.puter.com/puterai/openai/v1", "custom"),
             ("https://api.puter.ai/puterai/openai/v1", "custom"),
             ("https://api.puter.com.evil.test/puterai/openai/v1", "custom"),
+            ("https://api.modelverse.cn/v1", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/v1/", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/v1/chat/completions", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/v1/models", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/v1/responses", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/v1/response", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/v1/messages", "ucloud-modelverse"),
+            ("https://api.modelverse.cn", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/v1beta", "ucloud-modelverse"),
+            ("https://api.modelverse.cn/v1beta/models/deepseek-v4.1-flash-1017:generateContent", "ucloud-modelverse"),
+            ("https://api.umodelverse.ai/v1", "ucloud-modelverse"),
+            ("https://api.umodelverse.ai/v1/chat/completions", "ucloud-modelverse"),
+            ("https://api.umodelverse.ai/v1/models", "ucloud-modelverse"),
+            ("https://api.umodelverse.ai/v1/responses", "ucloud-modelverse"),
+            ("https://api.umodelverse.ai/v1/messages", "ucloud-modelverse"),
+            ("https://api-cn-wlcb.modelverse.cn/v1", "ucloud-modelverse"),
+            ("https://api-cn-wlcb.modelverse.cn/v1/chat/completions", "ucloud-modelverse"),
+            ("https://api-cn-wlcb.modelverse.cn/v1/models", "ucloud-modelverse"),
+            ("https://api-cn-sh2.modelverse.cn/v1", "ucloud-modelverse"),
+            ("https://api-cn-sh2.modelverse.cn/v1/chat/completions", "ucloud-modelverse"),
+            ("https://api-cn-sh2.modelverse.cn/v1/models", "ucloud-modelverse"),
+            ("https://api-us-ca.umodelverse.ai/v1", "ucloud-modelverse"),
+            ("https://api-us-ca.umodelverse.ai/v1/chat/completions", "ucloud-modelverse"),
+            ("https://api-us-ca.umodelverse.ai/v1/models", "ucloud-modelverse"),
+            ("https://api-sg.umodelverse.ai/v1", "ucloud-modelverse"),
+            ("https://api-sg.umodelverse.ai/v1/chat/completions", "ucloud-modelverse"),
+            ("https://api-sg.umodelverse.ai/v1/models", "ucloud-modelverse"),
+            ("https://api-sg.umodelverse.ai/v1beta/models/glm-5.3:generateContent", "ucloud-modelverse"),
+            ("https://api-ge-fra.umodelverse.ai/v1", "ucloud-modelverse"),
+            ("https://api-ge-fra.umodelverse.ai/v1/chat/completions", "ucloud-modelverse"),
+            ("https://api-ge-fra.umodelverse.ai/v1/models", "ucloud-modelverse"),
+            ("https://api-ge-fra.umodelverse.ai/", "ucloud-modelverse"),
+            ("https://deepseek.modelverse.cn/v1", "custom"),
+            ("https://deepseek.modelverse.cn/v1/models", "custom"),
+            ("https://deepseek.modelverse.cn/v1/chat/completions", "custom"),
+            ("https://www.modelverse.cn/v1", "custom"),
+            ("https://modelverse.cn/v1", "custom"),
+            ("https://api.modelverse.com/v1", "custom"),
+            ("https://api.umodelverse.com/v1", "custom"),
+            ("https://umodelverse.ai/v1", "custom"),
+            ("https://www.api.modelverse.cn/v1", "custom"),
+            ("https://api.modelverse.ai/v1", "custom"),
+            ("https://notapi.modelverse.cn/v1", "custom"),
+            ("https://api.modelverse.cn.evil.test/v1", "custom"),
+            ("https://api-cn-wlcb.modelverse.com/v1", "custom"),
+            ("https://api-cn-wlcb.umodelverse.ai/v1", "custom"),
+            ("https://astraflow.ucloud.cn/docs/modelverse/quick-start", "custom"),
+            ("https://astraflow.ucloud.cn/modelverse/prices", "custom"),
+            ("https://console.ucloud.cn/modelverse/experience/api-keys", "custom"),
+            ("https://www.ucloud.cn/site/active/astraflow", "custom"),
+            ("https://www.ucloud.cn/", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9737,7 +9819,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13193,7 +13275,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13322,7 +13404,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13467,7 +13549,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13578,7 +13660,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13676,7 +13758,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
     }
 
     #[test]
@@ -13712,7 +13794,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
     }
 
     #[test]
@@ -13758,7 +13840,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
     }
 
     #[test]
@@ -13810,7 +13892,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
     }
 
     #[test]
@@ -13840,7 +13922,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
     }
 
     #[test]
@@ -13873,7 +13955,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
     }
 
     #[test]
@@ -13906,7 +13988,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
     }
 
     #[test]
@@ -13941,7 +14023,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
     }
 
     #[test]
@@ -14001,7 +14083,68 @@ url = "https://example.test/mcp"
             "https://puter.com/dashboard#account"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 217);
+        assert_eq!(list_providers().len(), 218);
+    }
+
+    #[test]
+    fn ucloud_modelverse_template_matches_reviewed_connection() {
+        use ModelProtocol::{
+            AnthropicMessages, GeminiGenerateContent, OpenaiCompletions, OpenaiResponses,
+        };
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "ucloud-modelverse")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "UCloud 星图 AstraFlow（ModelVerse）");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://api.modelverse.cn/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.modelverse.cn");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["protocols"]["gemini-generate-content"]["endpoint_path"],
+            "/v1beta/models/{model}:generateContent"
+        );
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("ucloud-modelverse");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://api.modelverse.cn/v1"),
+                (AnthropicMessages, "https://api.modelverse.cn"),
+                (GeminiGenerateContent, "https://api.modelverse.cn/v1beta"),
+            ]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://astraflow.ucloud.cn/docs/modelverse/quick-start"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://console.ucloud.cn/modelverse/experience/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 218);
     }
 
 }

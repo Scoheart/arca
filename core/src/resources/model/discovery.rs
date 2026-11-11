@@ -308,6 +308,19 @@ const CHEAPLLM_SHOP_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("deepseek-v4.1-flash-1017", None, None),
 ];
 
+/// Reviewed chat ids from anonymous `GET https://api.modelverse.cn/v1/models`
+/// on 2026-11-11. That body listed 129 rows and mixed chat with audio, image,
+/// video, embedding, rerank, and tool ids. A saved key uses the OpenAI decoder.
+/// This seed stores ids only, in the reviewed subset order.
+const UCLOUD_MODELVERSE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("deepseek-v4.1-flash-1017", None, None),
+    ("deepseek-v4-pro-0813", None, None),
+    ("glm-5.3-flash", None, None),
+    ("glm-5.3", None, None),
+    ("qwen3.7-flash", None, None),
+    ("kimi-k3.1-pro", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -354,6 +367,7 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "hyperbolic" => HYPERBOLIC_STATIC_MODELS,
         "coarena" => COARENA_STATIC_MODELS,
         "cheapllm-shop" => CHEAPLLM_SHOP_STATIC_MODELS,
+        "ucloud-modelverse" => UCLOUD_MODELVERSE_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -707,6 +721,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "hyperbolic"
         | "coarena"
         | "cheapllm-shop"
+        | "ucloud-modelverse"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -818,6 +833,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "vllm"
             | "coarena"
             | "cheapllm-shop"
+            | "ucloud-modelverse"
     ) {
         CredentialPolicy::Optional
     } else {
@@ -2517,6 +2533,7 @@ mod tests {
         "vllm",
         "coarena",
         "cheapllm-shop",
+        "ucloud-modelverse",
     ];
 
     fn provider(
@@ -2666,6 +2683,7 @@ mod tests {
             "llm7",
             "coarena",
             "cheapllm-shop",
+            "ucloud-modelverse",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -3737,5 +3755,75 @@ mod tests {
         assert_eq!(seeded.len(), 22);
         assert_eq!(seeded[0].id, "claude-fable-5");
         assert_eq!(seeded[21].id, "qwen3-8-2-4t-a95b");
+    }
+
+    #[test]
+    fn ucloud_modelverse_seeds_the_reviewed_chat_ids_and_discovers_with_a_key() {
+        let models = reviewed_static_catalog("ucloud-modelverse").expect("modelverse seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            [
+                "deepseek-v4.1-flash-1017",
+                "deepseek-v4-pro-0813",
+                "glm-5.3-flash",
+                "glm-5.3",
+                "qwen3.7-flash",
+                "kimi-k3.1-pro",
+            ]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "deepseek-v4.1-flash",
+            "qwen3.8-max",
+            "kimi-k3",
+            "auto",
+            "qwen-audio-3.1-tts-plus",
+            "BAAI/bge-m3",
+            "wan3.0-video",
+            "happyhorse-1.1-t2v",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("ucloud-modelverse").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"ucloud-modelverse"));
+        let config = provider(
+            "ucloud-modelverse",
+            "https://api.modelverse.cn",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.modelverse.cn/v1/models"
+        );
+        let _home = TestHome::new("ucloud-modelverse-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "ucloud-modelverse-instance".into(),
+                name: "UCloud 星图 AstraFlow（ModelVerse）".into(),
+                provider: "ucloud-modelverse".into(),
+                base_url: "https://api.modelverse.cn".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 6);
+        assert_eq!(seeded[0].id, "deepseek-v4.1-flash-1017");
+        assert_eq!(seeded[5].id, "kimi-k3.1-pro");
     }
 }

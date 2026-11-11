@@ -1510,5 +1510,12 @@
       "url": "https://puter.com/dashboard#account",
       "kind": "api-key"
     }
+  },
+  "ucloud-modelverse": {
+    "docs_url": "https://astraflow.ucloud.cn/docs/modelverse/quick-start",
+    "portal": {
+      "url": "https://console.ucloud.cn/modelverse/experience/api-keys",
+      "kind": "api-key"
+    }
   }
 }
