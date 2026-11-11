@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.74.0](https://github.com/Scoheart/arca/compare/v2.73.1...v2.74.0) (2026-11-11)
+
+### Changes
+
+* feat(models): add Botscanner (AutoBench Router) provider (#304) ([da60635](https://github.com/Scoheart/arca/commit/da606354659efab8d944455245776e9b795fcf5e))
+* feat(agents): support startup agent management and launch switching ([17b34e5](https://github.com/Scoheart/arca/commit/17b34e56b14f28f8cf9c1e9aed96f5f26460ad85))
+
 ## [2.73.1](https://github.com/Scoheart/arca/compare/v2.73.0...v2.73.1) (2026-11-11)
 
 ### Changes
