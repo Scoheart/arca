@@ -4376,6 +4376,21 @@
       }
     },
     {
+      "id": "puter",
+      "name": "Puter AI Gateway",
+      "category": "gateway",
+      "baseUrl": "https://api.puter.com/puterai/openai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://developer.puter.com/tutorials/use-openai-sdk-with-puter/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://puter.com/dashboard#account"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
