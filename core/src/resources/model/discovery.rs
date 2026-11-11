@@ -620,6 +620,14 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "gpt-5.4-nano",
             "claude-sonnet-5-5",
         ],
+        // https://platform.mosi.cn/docs/models/nex
+        // GET /v1/models requires a key. Unauthenticated returns HTTP 403, not an OpenAI list.
+        // The snapshot nex-n2.6-2026-11-05 is not this seed.
+        "moss" => &["nex-n2.6"],
+        // https://minekuai.cn/llm
+        // GET /v1/models requires a key. Unauthenticated returns HTTP 401, not an OpenAI list.
+        // The public price-table id deepseek-v4.1-flash-1017 is not this seed.
+        "minekuai" => &["deepseek-flash", "deepseek-v4-pro"],
         _ => return None,
     };
     Some(
@@ -3631,6 +3639,35 @@ mod tests {
             ],
         );
         assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"puter"));
+    }
+
+    #[test]
+    fn moss_seeds_only_the_reviewed_chat_id() {
+        assert_static_chat_seed(
+            "moss",
+            "https://api.mosi.cn/v1",
+            "/chat/completions",
+            &["nex-n2.6"],
+            &[
+                "nex-n2.6-2026-11-05",
+                "moss-tts-1.5-flash",
+                "moss-transcribe-diarize-pro",
+                "moss-vl-1.0",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"moss"));
+    }
+
+    #[test]
+    fn minekuai_seeds_only_the_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "minekuai",
+            "https://minekuai.cn/v1",
+            "/chat/completions",
+            &["deepseek-flash", "deepseek-v4-pro"],
+            &["deepseek-v4.1-flash-1017"],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"minekuai"));
     }
 
     #[test]

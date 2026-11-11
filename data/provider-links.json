@@ -1517,5 +1517,19 @@
       "url": "https://console.ucloud.cn/modelverse/experience/api-keys",
       "kind": "api-key"
     }
+  },
+  "moss": {
+    "docs_url": "https://platform.mosi.cn/docs/models/nex",
+    "portal": {
+      "url": "https://platform.mosi.cn/app/api-keys",
+      "kind": "api-key"
+    }
+  },
+  "minekuai": {
+    "docs_url": "https://minekuai.cn/api-docs",
+    "portal": {
+      "url": "https://minekuai.cn/api-keys",
+      "kind": "api-key"
+    }
   }
 }
