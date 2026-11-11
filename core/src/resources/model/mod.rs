@@ -1109,6 +1109,98 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: OpenaiCompletions,
             base_url: "https://router.huggingface.co/v1",
         }],
+        "bazaarlink" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.bazaarlink.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.bazaarlink.ai",
+            },
+        ],
+        "novai" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://aiapi-pro.com/v1",
+        }],
+        "dahl-inference" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://inference.dahl.global/v1",
+        }],
+        "runcrate" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.runcrate.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.runcrate.ai",
+            },
+        ],
+        "bytez" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.bytez.com/models/v2/openai/v1",
+        }],
+        "vectoree" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://vectoree.ai/api/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://vectoree.ai/api",
+            },
+        ],
+        "onysoft" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.onysoft.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.onysoft.com",
+            },
+        ],
+        "coarena" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://coarena.ai/api/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://coarena.ai/api",
+            },
+        ],
+        "twigpine-opengateway" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.twigpine.com",
+        }],
+        "hiapi" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.hiapi.ai/v1",
+        }],
+        "maritaca" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://chat.maritaca.ai/api/v1",
+        }],
+        "crowllm" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://crowllm.com",
+        }],
+        "respan" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://gateway.respan.ai",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://gateway.respan.ai",
+            },
+            ModelProviderEndpointView {
+                protocol: GeminiGenerateContent,
+                base_url: "https://gateway.respan.ai/v1beta",
+            },
+        ],
         _ => &[],
     }
 }
@@ -1908,6 +2000,167 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "bazaarlink",
+        name: "BazaarLink",
+        default_base_url: Some("https://api.bazaarlink.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "novai",
+        name: "NovAI",
+        default_base_url: Some("https://aiapi-pro.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "dahl-inference",
+        name: "Dahl Inference",
+        default_base_url: Some("https://inference.dahl.global/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "meganova",
+        name: "MegaNova AI",
+        default_base_url: Some("https://api.meganova.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "runcrate",
+        name: "Runcrate",
+        default_base_url: Some("https://api.runcrate.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "moark",
+        name: "模力方舟（Moark）",
+        default_base_url: Some("https://api.moark.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "bytez",
+        name: "Bytez",
+        default_base_url: Some("https://api.bytez.com/models/v2/openai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "llmkiwi",
+        name: "LLM.kiwi",
+        default_base_url: Some("https://api.llm.kiwi/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "sea-lion",
+        name: "SEA-LION（AI Singapore）",
+        default_base_url: Some("https://api.sea-lion.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "aion-labs",
+        name: "Aion Labs",
+        default_base_url: Some("https://api.aionlabs.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "publicai",
+        name: "Public AI",
+        default_base_url: Some("https://api.publicai.co/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "kiosapi",
+        name: "Kiosapi.id",
+        default_base_url: Some("https://api.kiosapi.id/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "simplellm",
+        name: "SimpleLLM",
+        default_base_url: Some("https://api.simplellm.eu/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "helyx-ai",
+        name: "Helyx AI",
+        default_base_url: Some("https://helyxai.space/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "hyperbolic",
+        name: "Hyperbolic",
+        default_base_url: Some("https://api.hyperbolic.ai/inference/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "vectoree",
+        name: "Vectoree",
+        default_base_url: Some("https://vectoree.ai/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "onysoft",
+        name: "Onysoft",
+        default_base_url: Some("https://api.onysoft.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "coarena",
+        name: "Coarena",
+        default_base_url: Some("https://coarena.ai/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "twigpine-opengateway",
+        name: "Twigpine OpenGateway",
+        default_base_url: Some("https://api.twigpine.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "hiapi",
+        name: "HiAPI",
+        default_base_url: Some("https://api.hiapi.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "maritaca",
+        name: "Maritaca AI",
+        default_base_url: Some("https://chat.maritaca.ai/api"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "crowllm",
+        name: "CrowLLM",
+        default_base_url: Some("https://crowllm.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "respan",
+        name: "Respan",
+        default_base_url: Some("https://gateway.respan.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2591,6 +2844,28 @@ pub fn infer_provider(base_url: &str) -> String {
     if host == "tokenhub.tencentmaas.com" && in_path("/plan") {
         return "tencent-token-plan".into();
     }
+    // Chat inference is only under /inference. /v1 on this host is the GPU API.
+    if host == "api.hyperbolic.ai" && in_path("/inference") {
+        return "hyperbolic".into();
+    }
+    // The gateway is /api/v1. The same host is the marketing site, and bare /v1 is not the API.
+    if host == "vectoree.ai" && in_path("/api") {
+        return "vectoree".into();
+    }
+    // The gateway is /api/v1. The same host is the marketing site, and bare /v1 is not the API.
+    if host == "coarena.ai" && in_path("/api") {
+        return "coarena".into();
+    }
+    // Chat Completions are under /api with no /v1. Responses are under /api/v1.
+    // The same host is the web chat, so the site root is not the API.
+    if host == "chat.maritaca.ai" && in_path("/api") {
+        return "maritaca".into();
+    }
+    // OpenAI-shaped calls are under /v1. The Anthropic base is the origin and is
+    // matched as that exact endpoint. The same host is the marketing site.
+    if host == "crowllm.com" && in_path("/v1") {
+        return "crowllm".into();
+    }
     match host.as_str() {
         "openrouter.ai" | "api.openrouter.ai" => "openrouter",
         "api.anthropic.com" => "anthropic",
@@ -2703,6 +2978,24 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.regolo.ai" => "regolo",
         "itzi.app" => "itzi",
         "proxy.gonkabroker.com" => "gonka-broker",
+        "api.bazaarlink.ai" => "bazaarlink",
+        "aiapi-pro.com" => "novai",
+        "inference.dahl.global" => "dahl-inference",
+        "api.meganova.ai" => "meganova",
+        "api.runcrate.ai" => "runcrate",
+        "api.moark.com" => "moark",
+        "api.bytez.com" => "bytez",
+        "api.llm.kiwi" => "llmkiwi",
+        "api.sea-lion.ai" => "sea-lion",
+        "api.aionlabs.ai" => "aion-labs",
+        "api.publicai.co" => "publicai",
+        "api.kiosapi.id" => "kiosapi",
+        "api.simplellm.eu" => "simplellm",
+        "helyxai.space" => "helyx-ai",
+        "api.onysoft.com" => "onysoft",
+        "api.twigpine.com" => "twigpine-opengateway",
+        "api.hiapi.ai" => "hiapi",
+        "gateway.respan.ai" | "api.respan.ai" => "respan",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -8815,6 +9108,317 @@ mod tests {
             ("https://aiplatform.googleapis.com/v1", "custom"),
             ("https://resource.openai.azure.com.evil.test/openai/v1", "custom"),
             ("https://api.cloudflare.com/client/v4/zones/tenant/ai/v1", "custom"),
+            ("https://api.bazaarlink.ai/v1", "bazaarlink"),
+            ("https://api.bazaarlink.ai/v1/chat/completions", "bazaarlink"),
+            ("https://api.bazaarlink.ai/v1/responses", "bazaarlink"),
+            ("https://api.bazaarlink.ai/v1/messages", "bazaarlink"),
+            ("https://api.bazaarlink.ai/v1/models", "bazaarlink"),
+            ("https://api.bazaarlink.ai", "bazaarlink"),
+            ("https://bazaarlink.ai/api/v1", "custom"),
+            ("https://bazaarlink.ai/api", "custom"),
+            ("https://bazaarlink.ai/en/docs", "custom"),
+            ("https://bazaarlink.ai/keys", "custom"),
+            ("https://bazaarlink.ai/free", "custom"),
+            ("https://www.bazaarlink.ai/v1", "custom"),
+            ("https://www.api.bazaarlink.ai/v1", "custom"),
+            ("https://api.bazaarlink.com/v1", "custom"),
+            ("https://api.bazaarlink.ai.evil.test/v1", "custom"),
+            ("https://aiapi-pro.com/v1", "novai"),
+            ("https://aiapi-pro.com/v1/chat/completions", "novai"),
+            ("https://aiapi-pro.com/v1/responses", "novai"),
+            ("https://aiapi-pro.com/v1/models", "novai"),
+            ("https://aiapi-pro.com", "novai"),
+            ("https://aiapi-pro.com/docs", "novai"),
+            ("https://aiapi-pro.com/dashboard", "novai"),
+            ("https://www.aiapi-pro.com/v1", "custom"),
+            ("https://api.aiapi-pro.com/v1", "custom"),
+            ("https://aiapi-pro.ai/v1", "custom"),
+            ("https://aiapi-pro.com.evil.test/v1", "custom"),
+            ("https://inference.dahl.global/v1", "dahl-inference"),
+            ("https://inference.dahl.global/v1/chat/completions", "dahl-inference"),
+            ("https://inference.dahl.global/v1/responses", "dahl-inference"),
+            ("https://inference.dahl.global/v1/models", "dahl-inference"),
+            ("https://inference.dahl.global", "dahl-inference"),
+            ("https://inference.dahl.global/docs/api/", "dahl-inference"),
+            ("https://inference.dahl.global/account", "dahl-inference"),
+            ("https://dahl.global/v1", "custom"),
+            ("https://www.dahl.global/v1", "custom"),
+            ("https://www.inference.dahl.global/v1", "custom"),
+            ("https://api.dahl.global/v1", "custom"),
+            ("https://inference.dahl.com/v1", "custom"),
+            ("https://inference.dahl.global.evil.test/v1", "custom"),
+            ("https://api.meganova.ai/v1", "meganova"),
+            ("https://api.meganova.ai/v1/chat/completions", "meganova"),
+            ("https://api.meganova.ai/v1/models", "meganova"),
+            ("https://api.meganova.ai", "meganova"),
+            ("https://meganova.ai/v1", "custom"),
+            ("https://www.meganova.ai/v1", "custom"),
+            ("https://docs.meganova.ai/api-reference/inference-models", "custom"),
+            ("https://console.meganova.ai/api-keys", "custom"),
+            ("https://www.api.meganova.ai/v1", "custom"),
+            ("https://api.meganova.com/v1", "custom"),
+            ("https://api.meganova.ai.evil.test/v1", "custom"),
+            ("https://api.runcrate.ai/v1", "runcrate"),
+            ("https://api.runcrate.ai/v1/chat/completions", "runcrate"),
+            ("https://api.runcrate.ai/v1/responses", "runcrate"),
+            ("https://api.runcrate.ai/v1/messages", "runcrate"),
+            ("https://api.runcrate.ai/v1/models", "runcrate"),
+            ("https://api.runcrate.ai", "runcrate"),
+            ("https://www.runcrate.ai/v1", "custom"),
+            ("https://www.runcrate.ai/api/v1", "custom"),
+            ("https://www.runcrate.ai/docs/getting-started/quickstart", "custom"),
+            ("https://www.runcrate.ai/dashboard/api-keys", "custom"),
+            ("https://runcrate.ai/v1", "custom"),
+            ("https://www.api.runcrate.ai/v1", "custom"),
+            ("https://api.runcrate.com/v1", "custom"),
+            ("https://api.runcrate.ai.evil.test/v1", "custom"),
+            ("https://api.moark.com/v1", "moark"),
+            ("https://api.moark.com/v1/chat/completions", "moark"),
+            ("https://api.moark.com/v1/models", "moark"),
+            ("https://api.moark.com", "moark"),
+            ("https://moark.com/v1", "custom"),
+            ("https://moark.com/anthropic", "custom"),
+            ("https://moark.com/anthropic/v1/messages", "custom"),
+            ("https://moark.com/docs/FAQ", "custom"),
+            ("https://moark.com/settings/access-token", "custom"),
+            ("https://www.moark.com/v1", "custom"),
+            ("https://www.api.moark.com/v1", "custom"),
+            ("https://api.moark.ai/v1", "custom"),
+            ("https://api.moark.com.evil.test/v1", "custom"),
+            ("https://api.bytez.com/models/v2/openai/v1", "bytez"),
+            ("https://api.bytez.com/models/v2/openai/v1/chat/completions", "bytez"),
+            ("https://api.bytez.com/models/v2/openai/v1/responses", "bytez"),
+            ("https://api.bytez.com/models/v2/openai/v1/models", "bytez"),
+            ("https://api.bytez.com", "bytez"),
+            ("https://api.bytez.com/v1/chat/completions", "bytez"),
+            ("https://bytez.com/api", "custom"),
+            ("https://bytez.com/v1", "custom"),
+            ("https://docs.bytez.com/model-api/docs/billing", "custom"),
+            ("https://www.bytez.com/v1", "custom"),
+            ("https://www.api.bytez.com/v1", "custom"),
+            ("https://api.bytez.ai/v1", "custom"),
+            ("https://api.bytez.com.evil.test/v1", "custom"),
+            ("https://api.llm.kiwi/v1", "llmkiwi"),
+            ("https://api.llm.kiwi/v1/chat/completions", "llmkiwi"),
+            ("https://api.llm.kiwi/v1/models", "llmkiwi"),
+            ("https://api.llm.kiwi", "llmkiwi"),
+            ("https://llm.kiwi/v1", "custom"),
+            ("https://llm.kiwi/dashboard", "custom"),
+            ("https://docs.llm.kiwi/quickstart", "custom"),
+            ("https://www.llm.kiwi/v1", "custom"),
+            ("https://www.api.llm.kiwi/v1", "custom"),
+            ("https://api.llm.kiwi.com/v1", "custom"),
+            ("https://api.llm.kiwi.evil.test/v1", "custom"),
+            ("https://api.sea-lion.ai/v1", "sea-lion"),
+            ("https://api.sea-lion.ai/v1/chat/completions", "sea-lion"),
+            ("https://api.sea-lion.ai/v1/models", "sea-lion"),
+            ("https://api.sea-lion.ai", "sea-lion"),
+            ("https://sea-lion.ai/v1", "custom"),
+            ("https://docs.sea-lion.ai/guides/inferencing/api", "custom"),
+            ("https://playground.sea-lion.ai/api-keys", "custom"),
+            ("https://www.sea-lion.ai/v1", "custom"),
+            ("https://www.api.sea-lion.ai/v1", "custom"),
+            ("https://api.sea-lion.com/v1", "custom"),
+            ("https://api.sea-lion.ai.evil.test/v1", "custom"),
+            ("https://api.aionlabs.ai/v1", "aion-labs"),
+            ("https://api.aionlabs.ai/v1/chat/completions", "aion-labs"),
+            ("https://api.aionlabs.ai/v1/models", "aion-labs"),
+            ("https://api.aionlabs.ai", "aion-labs"),
+            ("https://www.aionlabs.ai/v1", "custom"),
+            ("https://www.aionlabs.ai/docs/quickstart/", "custom"),
+            ("https://www.aionlabs.ai/app/api-keys/", "custom"),
+            ("https://aionlabs.ai/v1", "custom"),
+            ("https://www.api.aionlabs.ai/v1", "custom"),
+            ("https://api.aionlabs.com/v1", "custom"),
+            ("https://api.aionlabs.ai.evil.test/v1", "custom"),
+            ("https://api.publicai.co/v1", "publicai"),
+            ("https://api.publicai.co/v1/chat/completions", "publicai"),
+            ("https://api.publicai.co/v1/models", "publicai"),
+            ("https://api.publicai.co", "publicai"),
+            ("https://platform.publicai.co/docs", "custom"),
+            ("https://platform.publicai.co/settings/api-keys", "custom"),
+            ("https://publicai.co/v1", "custom"),
+            ("https://www.publicai.co/v1", "custom"),
+            ("https://www.api.publicai.co/v1", "custom"),
+            ("https://api.publicai.com/v1", "custom"),
+            ("https://api.publicai.co.evil.test/v1", "custom"),
+            ("https://api.kiosapi.id/v1", "kiosapi"),
+            ("https://api.kiosapi.id/v1/chat/completions", "kiosapi"),
+            ("https://api.kiosapi.id/v1/models", "kiosapi"),
+            ("https://api.kiosapi.id", "kiosapi"),
+            ("https://kiosapi.id/v1", "custom"),
+            ("https://kiosapi.id/docs", "custom"),
+            ("https://kiosapi.id/dashboard/keys", "custom"),
+            ("https://www.kiosapi.id/v1", "custom"),
+            ("https://www.api.kiosapi.id/v1", "custom"),
+            ("https://api.kiosapi.com/v1", "custom"),
+            ("https://api.kiosapi.id.evil.test/v1", "custom"),
+            ("https://api.simplellm.eu/v1", "simplellm"),
+            ("https://api.simplellm.eu/v1/chat/completions", "simplellm"),
+            ("https://api.simplellm.eu/v1/models", "simplellm"),
+            ("https://api.simplellm.eu", "simplellm"),
+            ("https://simplellm.eu/v1", "custom"),
+            ("https://simplellm.eu/api/models", "custom"),
+            ("https://simplellm.eu/docs/quickstart.html", "custom"),
+            ("https://app.simplellm.eu/keys", "custom"),
+            ("https://www.simplellm.eu/v1", "custom"),
+            ("https://www.api.simplellm.eu/v1", "custom"),
+            ("https://api.simplellm.com/v1", "custom"),
+            ("https://api.simplellm.eu.evil.test/v1", "custom"),
+            ("https://helyxai.space/v1", "helyx-ai"),
+            ("https://helyxai.space/v1/chat/completions", "helyx-ai"),
+            ("https://helyxai.space/v1/models", "helyx-ai"),
+            ("https://helyxai.space", "helyx-ai"),
+            ("https://helyxai.space/docs", "helyx-ai"),
+            ("https://helyxai.space/dashboard", "helyx-ai"),
+            ("https://www.helyxai.space/v1", "custom"),
+            ("https://api.helyxai.space/v1", "custom"),
+            ("https://helyxai.com/v1", "custom"),
+            ("https://helyxai.space.evil.test/v1", "custom"),
+            ("https://api.hyperbolic.ai/inference/v1", "hyperbolic"),
+            ("https://api.hyperbolic.ai/inference/v1/chat/completions", "hyperbolic"),
+            ("https://api.hyperbolic.ai/inference/v1/models", "hyperbolic"),
+            ("https://api.hyperbolic.ai/inference", "hyperbolic"),
+            ("https://api.hyperbolic.ai/v1", "custom"),
+            ("https://api.hyperbolic.ai/v1/models", "custom"),
+            ("https://api.hyperbolic.ai/v1/chat/completions", "custom"),
+            ("https://api.hyperbolic.ai/v2/openapi.json", "custom"),
+            ("https://api.hyperbolic.ai", "custom"),
+            ("https://api.hyperbolic.ai/inference-v1", "custom"),
+            ("https://api.hyperbolic.xyz/v1", "custom"),
+            ("https://api.hyperbolic.xyz/inference/v1", "custom"),
+            ("https://api.hyperbolic.xyz/inference/v1/models", "custom"),
+            ("https://app.hyperbolic.ai/settings/api-keys", "custom"),
+            ("https://hyperbolic.ai/docs/inference/overview", "custom"),
+            ("https://www.hyperbolic.ai/docs/inference/overview", "custom"),
+            ("https://www.api.hyperbolic.ai/inference/v1", "custom"),
+            ("https://api.hyperbolic.com/inference/v1", "custom"),
+            ("https://api.hyperbolic.ai.evil.test/inference/v1", "custom"),
+            ("https://vectoree.ai/api/v1", "vectoree"),
+            ("https://vectoree.ai/api/v1/chat/completions", "vectoree"),
+            ("https://vectoree.ai/api/v1/responses", "vectoree"),
+            ("https://vectoree.ai/api/v1/messages", "vectoree"),
+            ("https://vectoree.ai/api/v1/models", "vectoree"),
+            ("https://vectoree.ai/api", "vectoree"),
+            ("https://vectoree.ai/v1", "custom"),
+            ("https://vectoree.ai/v1/models", "custom"),
+            ("https://vectoree.ai", "custom"),
+            ("https://vectoree.ai/dashboard/api-keys", "custom"),
+            ("https://docs.vectoree.ai/models", "custom"),
+            ("https://www.vectoree.ai/api/v1", "custom"),
+            ("https://api.vectoree.ai/v1", "custom"),
+            ("https://vectoree.com/api/v1", "custom"),
+            ("https://vectoree.ai.evil.test/api/v1", "custom"),
+            ("https://api.onysoft.com/v1", "onysoft"),
+            ("https://api.onysoft.com/v1/chat/completions", "onysoft"),
+            ("https://api.onysoft.com/v1/responses", "onysoft"),
+            ("https://api.onysoft.com/v1/messages", "onysoft"),
+            ("https://api.onysoft.com/v1/models", "onysoft"),
+            ("https://api.onysoft.com", "onysoft"),
+            ("https://api.onysoft.com/docs", "onysoft"),
+            ("https://api.onysoft.com/login", "onysoft"),
+            ("https://api.onysoft.com/dashboard/api-keys", "onysoft"),
+            ("https://onysoft.com/v1", "custom"),
+            ("https://www.onysoft.com/", "custom"),
+            ("https://www.api.onysoft.com/v1", "custom"),
+            ("https://api.onysoft.ai/v1", "custom"),
+            ("https://api.onysoft.com.evil.test/v1", "custom"),
+            ("https://coarena.ai/api/v1", "coarena"),
+            ("https://coarena.ai/api/v1/chat/completions", "coarena"),
+            ("https://coarena.ai/api/v1/responses", "coarena"),
+            ("https://coarena.ai/api/v1/messages", "coarena"),
+            ("https://coarena.ai/api/v1/models", "coarena"),
+            ("https://coarena.ai/api", "coarena"),
+            ("https://coarena.ai/v1", "custom"),
+            ("https://coarena.ai/v1/models", "custom"),
+            ("https://coarena.ai", "custom"),
+            ("https://coarena.ai/docs", "custom"),
+            ("https://coarena.ai/developers", "custom"),
+            ("https://coarena.ai/account/api/keys", "custom"),
+            ("https://www.coarena.ai/api/v1", "custom"),
+            ("https://api.coarena.ai/v1", "custom"),
+            ("https://coarena.com/api/v1", "custom"),
+            ("https://coarena.ai.evil.test/api/v1", "custom"),
+            ("https://api.twigpine.com/v1", "twigpine-opengateway"),
+            ("https://api.twigpine.com/v1/chat/completions", "twigpine-opengateway"),
+            ("https://api.twigpine.com/v1/messages", "twigpine-opengateway"),
+            ("https://api.twigpine.com/v1/models", "twigpine-opengateway"),
+            ("https://api.twigpine.com", "twigpine-opengateway"),
+            ("https://twigpine.com/v1", "custom"),
+            ("https://twigpine.com/opengateway/docs", "custom"),
+            ("https://twigpine.com/console/gateway", "custom"),
+            ("https://www.twigpine.com/v1", "custom"),
+            ("https://www.api.twigpine.com/v1", "custom"),
+            ("https://api.twigpine.ai/v1", "custom"),
+            ("https://api.gitlawb.com/v1", "custom"),
+            ("https://api.twigpine.com.evil.test/v1", "custom"),
+            ("https://api.hiapi.ai/v1", "hiapi"),
+            ("https://api.hiapi.ai/v1/chat/completions", "hiapi"),
+            ("https://api.hiapi.ai/v1/responses", "hiapi"),
+            ("https://api.hiapi.ai/v1/models", "hiapi"),
+            ("https://api.hiapi.ai", "hiapi"),
+            ("https://hiapi.ai/docs/text-api/chat-completions/", "custom"),
+            ("https://hiapi.ai/en", "custom"),
+            ("https://www.hiapi.ai/en", "custom"),
+            ("https://console.hiapi.ai/en/dashboard/api-keys", "custom"),
+            ("https://www.api.hiapi.ai/v1", "custom"),
+            ("https://api.hiapi.com/v1", "custom"),
+            ("https://api.hiapi.ai.evil.test/v1", "custom"),
+            ("https://chat.maritaca.ai/api", "maritaca"),
+            ("https://chat.maritaca.ai/api/chat/completions", "maritaca"),
+            ("https://chat.maritaca.ai/api/v1", "maritaca"),
+            ("https://chat.maritaca.ai/api/v1/responses", "maritaca"),
+            ("https://chat.maritaca.ai/api/models", "maritaca"),
+            ("https://chat.maritaca.ai", "custom"),
+            ("https://chat.maritaca.ai/docs", "custom"),
+            ("https://docs.maritaca.ai/en/s5-quick-start", "custom"),
+            ("https://plataforma.maritaca.ai/chaves-de-api", "custom"),
+            ("https://maritaca.ai/", "custom"),
+            ("https://www.maritaca.ai/", "custom"),
+            ("https://www.chat.maritaca.ai/api", "custom"),
+            ("https://api.maritaca.ai/api", "custom"),
+            ("https://chat.maritaca.com/api", "custom"),
+            ("https://chat.maritaca.ai.evil.test/api", "custom"),
+            ("https://crowllm.com/v1", "crowllm"),
+            ("https://crowllm.com/v1/chat/completions", "crowllm"),
+            ("https://crowllm.com/v1/models", "crowllm"),
+            ("https://crowllm.com/v1/messages", "crowllm"),
+            ("https://crowllm.com/v1/responses", "crowllm"),
+            ("https://crowllm.com", "crowllm"),
+            ("https://crowllm.com/docs", "custom"),
+            ("https://crowllm.com/console", "custom"),
+            ("https://crowllm.com/llms.txt", "custom"),
+            ("https://crowllm.com/models", "custom"),
+            ("https://crowllm.com/v1beta", "custom"),
+            ("https://crowllm.com/v1beta/models/gemma-4-31b-it:free:generateContent", "custom"),
+            ("https://www.crowllm.com/v1", "custom"),
+            ("https://api.crowllm.com/v1", "custom"),
+            ("https://crowllm.ai/v1", "custom"),
+            ("https://crowllm.com.evil.test/v1", "custom"),
+            ("https://gateway.respan.ai/v1", "respan"),
+            ("https://gateway.respan.ai/v1/chat/completions", "respan"),
+            ("https://gateway.respan.ai/v1/models", "respan"),
+            ("https://gateway.respan.ai/chat/completions", "respan"),
+            ("https://gateway.respan.ai/responses", "respan"),
+            ("https://gateway.respan.ai/v1/responses", "respan"),
+            ("https://gateway.respan.ai/v1/messages", "respan"),
+            ("https://gateway.respan.ai", "respan"),
+            ("https://gateway.respan.ai/v1beta", "respan"),
+            ("https://gateway.respan.ai/v1beta/models/gemini-2.5-flash:generateContent", "respan"),
+            ("https://api.respan.ai/api", "respan"),
+            ("https://api.respan.ai/api/chat/completions", "respan"),
+            ("https://api.respan.ai/api/models", "respan"),
+            ("https://api.respan.ai/api/responses", "respan"),
+            ("https://api.respan.ai", "respan"),
+            ("https://www.respan.ai/docs/ai-gateway/quickstart", "custom"),
+            ("https://respan.ai/", "custom"),
+            ("https://platform.respan.ai/platform/gateway/api-keys", "custom"),
+            ("https://www.gateway.respan.ai/v1", "custom"),
+            ("https://www.api.respan.ai/api", "custom"),
+            ("https://api.respan.com/api", "custom"),
+            ("https://api.keywordsai.co/api", "custom"),
+            ("https://gateway.respan.ai.evil.test/v1", "custom"),
+            ("https://api.respan.ai.evil.test/api", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -8892,7 +9496,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "custom"]));
-        assert_eq!(list_providers().len(), 186);
+        assert_eq!(list_providers().len(), 209);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -12126,6 +12730,712 @@ url = "https://example.test/mcp"
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
+    }
+
+    #[test]
+    fn thirteen_provider_templates_match_reviewed_connections() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        struct Extra {
+            protocol: ModelProtocol,
+            base_url: &'static str,
+        }
+        struct Expect {
+            id: &'static str,
+            name: &'static str,
+            category: &'static str,
+            default_base_url: &'static str,
+            base_url: &'static str,
+            completions: &'static str,
+            responses: Option<&'static str>,
+            messages: Option<&'static str>,
+            docs_url: &'static str,
+            portal_url: &'static str,
+            portal_kind: &'static str,
+            extras: Vec<Extra>,
+        }
+
+        let cases = [
+            Expect {
+                id: "bazaarlink",
+                name: "BazaarLink",
+                category: "gateway",
+                default_base_url: "https://api.bazaarlink.ai/v1",
+                base_url: "https://api.bazaarlink.ai",
+                completions: "/v1/chat/completions",
+                responses: Some("/v1/responses"),
+                messages: Some("/v1/messages"),
+                docs_url: "https://bazaarlink.ai/en/docs",
+                portal_url: "https://bazaarlink.ai/keys",
+                portal_kind: "api-key",
+                extras: vec![
+                    Extra { protocol: OpenaiResponses, base_url: "https://api.bazaarlink.ai/v1" },
+                    Extra { protocol: AnthropicMessages, base_url: "https://api.bazaarlink.ai" },
+                ],
+            },
+            Expect {
+                id: "novai",
+                name: "NovAI",
+                category: "gateway",
+                default_base_url: "https://aiapi-pro.com/v1",
+                base_url: "https://aiapi-pro.com/v1",
+                completions: "/chat/completions",
+                responses: Some("/responses"),
+                messages: None,
+                docs_url: "https://aiapi-pro.com/docs",
+                portal_url: "https://aiapi-pro.com/dashboard",
+                portal_kind: "console",
+                extras: vec![Extra { protocol: OpenaiResponses, base_url: "https://aiapi-pro.com/v1" }],
+            },
+            Expect {
+                id: "dahl-inference",
+                name: "Dahl Inference",
+                category: "gateway",
+                default_base_url: "https://inference.dahl.global/v1",
+                base_url: "https://inference.dahl.global/v1",
+                completions: "/chat/completions",
+                responses: Some("/responses"),
+                messages: None,
+                docs_url: "https://inference.dahl.global/docs/api/",
+                portal_url: "https://inference.dahl.global/account",
+                portal_kind: "console",
+                extras: vec![Extra {
+                    protocol: OpenaiResponses,
+                    base_url: "https://inference.dahl.global/v1",
+                }],
+            },
+            Expect {
+                id: "meganova",
+                name: "MegaNova AI",
+                category: "gateway",
+                default_base_url: "https://api.meganova.ai/v1",
+                base_url: "https://api.meganova.ai/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://docs.meganova.ai/api-reference/inference-models",
+                portal_url: "https://console.meganova.ai/api-keys",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "runcrate",
+                name: "Runcrate",
+                category: "gateway",
+                default_base_url: "https://api.runcrate.ai/v1",
+                base_url: "https://api.runcrate.ai",
+                completions: "/v1/chat/completions",
+                responses: Some("/v1/responses"),
+                messages: Some("/v1/messages"),
+                docs_url: "https://www.runcrate.ai/docs/getting-started/quickstart",
+                portal_url: "https://www.runcrate.ai/dashboard/api-keys",
+                portal_kind: "api-key",
+                extras: vec![
+                    Extra { protocol: OpenaiResponses, base_url: "https://api.runcrate.ai/v1" },
+                    Extra { protocol: AnthropicMessages, base_url: "https://api.runcrate.ai" },
+                ],
+            },
+            Expect {
+                id: "moark",
+                name: "模力方舟（Moark）",
+                category: "gateway",
+                default_base_url: "https://api.moark.com/v1",
+                base_url: "https://api.moark.com/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://moark.com/docs/FAQ",
+                portal_url: "https://moark.com/settings/access-token",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "bytez",
+                name: "Bytez",
+                category: "gateway",
+                default_base_url: "https://api.bytez.com/models/v2/openai/v1",
+                base_url: "https://api.bytez.com/models/v2/openai/v1",
+                completions: "/chat/completions",
+                responses: Some("/responses"),
+                messages: None,
+                docs_url: "https://docs.bytez.com/http-reference/examples/openai-compliant/chatCompletionsExample",
+                portal_url: "https://bytez.com/api",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: OpenaiResponses,
+                    base_url: "https://api.bytez.com/models/v2/openai/v1",
+                }],
+            },
+            Expect {
+                id: "llmkiwi",
+                name: "LLM.kiwi",
+                category: "gateway",
+                default_base_url: "https://api.llm.kiwi/v1",
+                base_url: "https://api.llm.kiwi/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://docs.llm.kiwi/quickstart",
+                portal_url: "https://llm.kiwi/dashboard",
+                portal_kind: "console",
+                extras: vec![],
+            },
+            Expect {
+                id: "sea-lion",
+                name: "SEA-LION（AI Singapore）",
+                category: "official",
+                default_base_url: "https://api.sea-lion.ai/v1",
+                base_url: "https://api.sea-lion.ai/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://docs.sea-lion.ai/guides/inferencing/api",
+                portal_url: "https://playground.sea-lion.ai/api-keys",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "aion-labs",
+                name: "Aion Labs",
+                category: "official",
+                default_base_url: "https://api.aionlabs.ai/v1",
+                base_url: "https://api.aionlabs.ai/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://www.aionlabs.ai/docs/quickstart/",
+                portal_url: "https://www.aionlabs.ai/app/api-keys/",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "publicai",
+                name: "Public AI",
+                category: "gateway",
+                default_base_url: "https://api.publicai.co/v1",
+                base_url: "https://api.publicai.co/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://platform.publicai.co/docs",
+                portal_url: "https://platform.publicai.co/settings/api-keys",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "kiosapi",
+                name: "Kiosapi.id",
+                category: "gateway",
+                default_base_url: "https://api.kiosapi.id/v1",
+                base_url: "https://api.kiosapi.id/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://kiosapi.id/docs",
+                portal_url: "https://kiosapi.id/dashboard/keys",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "simplellm",
+                name: "SimpleLLM",
+                category: "gateway",
+                default_base_url: "https://api.simplellm.eu/v1",
+                base_url: "https://api.simplellm.eu/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://simplellm.eu/docs/quickstart.html",
+                portal_url: "https://app.simplellm.eu/keys",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+        ];
+
+        assert_eq!(list_providers().len(), 209);
+        let linked = list_providers()
+            .iter()
+            .filter(|provider| provider_docs_url(provider.id).is_some())
+            .count();
+        assert_eq!(linked, list_providers().len() - 1);
+        assert!(provider_docs_url("custom").is_none());
+
+        for expect in cases {
+            let provider = list_providers()
+                .iter()
+                .find(|provider| provider.id == expect.id)
+                .unwrap_or_else(|| panic!("missing {}", expect.id));
+            let serialized = serde_json::to_value(provider).unwrap();
+            assert_eq!(provider.name, expect.name, "{}", expect.id);
+            assert_eq!(provider.default_protocol, OpenaiCompletions, "{}", expect.id);
+            assert_eq!(provider.category, expect.category, "{}", expect.id);
+            assert_eq!(provider.default_base_url, Some(expect.default_base_url), "{}", expect.id);
+            assert_eq!(serialized["base_url"], expect.base_url, "{}", expect.id);
+            assert_eq!(
+                serialized["protocols"]["openai-completions"]["endpoint_path"],
+                expect.completions,
+                "{}",
+                expect.id
+            );
+            match expect.responses {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["openai-responses"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("openai-responses").is_none(), "{}", expect.id),
+            }
+            match expect.messages {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("anthropic-messages").is_none(), "{}", expect.id),
+            }
+            assert!(serialized["protocols"].get("gemini-generate-content").is_none(), "{}", expect.id);
+            assert!(serialized["protocols"].get("gemini-interactions").is_none(), "{}", expect.id);
+            let extras = provider_additional_endpoints(expect.id);
+            assert_eq!(extras.len(), expect.extras.len(), "{}", expect.id);
+            for (actual, expected) in extras.iter().zip(expect.extras.iter()) {
+                assert_eq!(actual.protocol, expected.protocol, "{}", expect.id);
+                assert_eq!(actual.base_url, expected.base_url, "{}", expect.id);
+            }
+            assert_eq!(serialized["model_discovery_supported"], true, "{}", expect.id);
+            assert_eq!(serialized["docs_url"], expect.docs_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["url"], expect.portal_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["kind"], expect.portal_kind, "{}", expect.id);
+        }
+    }
+
+    #[test]
+    fn three_provider_templates_match_reviewed_connections() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        struct Extra {
+            protocol: ModelProtocol,
+            base_url: &'static str,
+        }
+        struct Expect {
+            id: &'static str,
+            name: &'static str,
+            category: &'static str,
+            default_base_url: &'static str,
+            base_url: &'static str,
+            completions: &'static str,
+            responses: Option<&'static str>,
+            messages: Option<&'static str>,
+            docs_url: &'static str,
+            portal_url: &'static str,
+            portal_kind: &'static str,
+            extras: Vec<Extra>,
+        }
+
+        let cases = [
+            Expect {
+                id: "helyx-ai",
+                name: "Helyx AI",
+                category: "gateway",
+                default_base_url: "https://helyxai.space/v1",
+                base_url: "https://helyxai.space/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://helyxai.space/docs",
+                portal_url: "https://helyxai.space/dashboard",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "hyperbolic",
+                name: "Hyperbolic",
+                category: "gateway",
+                default_base_url: "https://api.hyperbolic.ai/inference/v1",
+                base_url: "https://api.hyperbolic.ai/inference/v1",
+                completions: "/chat/completions",
+                responses: None,
+                messages: None,
+                docs_url: "https://hyperbolic.ai/docs/inference/overview",
+                portal_url: "https://app.hyperbolic.ai/settings/api-keys",
+                portal_kind: "api-key",
+                extras: vec![],
+            },
+            Expect {
+                id: "vectoree",
+                name: "Vectoree",
+                category: "gateway",
+                default_base_url: "https://vectoree.ai/api/v1",
+                base_url: "https://vectoree.ai",
+                completions: "/api/v1/chat/completions",
+                responses: Some("/api/v1/responses"),
+                messages: Some("/api/v1/messages"),
+                docs_url: "https://docs.vectoree.ai/models",
+                portal_url: "https://vectoree.ai/dashboard/api-keys",
+                portal_kind: "api-key",
+                extras: vec![
+                    Extra { protocol: OpenaiResponses, base_url: "https://vectoree.ai/api/v1" },
+                    Extra { protocol: AnthropicMessages, base_url: "https://vectoree.ai/api" },
+                ],
+            },
+        ];
+
+        assert_eq!(list_providers().len(), 209);
+        for expect in cases {
+            let provider = list_providers()
+                .iter()
+                .find(|provider| provider.id == expect.id)
+                .unwrap_or_else(|| panic!("missing {}", expect.id));
+            let serialized = serde_json::to_value(provider).unwrap();
+            assert_eq!(provider.name, expect.name, "{}", expect.id);
+            assert_eq!(provider.default_protocol, OpenaiCompletions, "{}", expect.id);
+            assert_eq!(provider.category, expect.category, "{}", expect.id);
+            assert_eq!(provider.default_base_url, Some(expect.default_base_url), "{}", expect.id);
+            assert_eq!(serialized["base_url"], expect.base_url, "{}", expect.id);
+            assert_eq!(
+                serialized["protocols"]["openai-completions"]["endpoint_path"],
+                expect.completions,
+                "{}",
+                expect.id
+            );
+            match expect.responses {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["openai-responses"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("openai-responses").is_none(), "{}", expect.id),
+            }
+            match expect.messages {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("anthropic-messages").is_none(), "{}", expect.id),
+            }
+            assert!(serialized["protocols"].get("gemini-generate-content").is_none(), "{}", expect.id);
+            assert!(serialized["protocols"].get("gemini-interactions").is_none(), "{}", expect.id);
+            let extras = provider_additional_endpoints(expect.id);
+            assert_eq!(extras.len(), expect.extras.len(), "{}", expect.id);
+            for (actual, expected) in extras.iter().zip(expect.extras.iter()) {
+                assert_eq!(actual.protocol, expected.protocol, "{}", expect.id);
+                assert_eq!(actual.base_url, expected.base_url, "{}", expect.id);
+            }
+            assert_eq!(serialized["model_discovery_supported"], true, "{}", expect.id);
+            assert_eq!(serialized["docs_url"], expect.docs_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["url"], expect.portal_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["kind"], expect.portal_kind, "{}", expect.id);
+        }
+    }
+
+    #[test]
+    fn four_provider_templates_match_reviewed_connections() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        struct Extra {
+            protocol: ModelProtocol,
+            base_url: &'static str,
+        }
+        struct Expect {
+            id: &'static str,
+            name: &'static str,
+            category: &'static str,
+            default_base_url: &'static str,
+            base_url: &'static str,
+            completions: &'static str,
+            responses: Option<&'static str>,
+            messages: Option<&'static str>,
+            docs_url: &'static str,
+            portal_url: &'static str,
+            portal_kind: &'static str,
+            extras: Vec<Extra>,
+        }
+
+        let cases = [
+            Expect {
+                id: "onysoft",
+                name: "Onysoft",
+                category: "gateway",
+                default_base_url: "https://api.onysoft.com/v1",
+                base_url: "https://api.onysoft.com",
+                completions: "/v1/chat/completions",
+                responses: Some("/v1/responses"),
+                messages: Some("/v1/messages"),
+                docs_url: "https://api.onysoft.com/docs",
+                portal_url: "https://api.onysoft.com/login",
+                portal_kind: "api-key",
+                extras: vec![
+                    Extra { protocol: OpenaiResponses, base_url: "https://api.onysoft.com/v1" },
+                    Extra { protocol: AnthropicMessages, base_url: "https://api.onysoft.com" },
+                ],
+            },
+            Expect {
+                id: "coarena",
+                name: "Coarena",
+                category: "gateway",
+                default_base_url: "https://coarena.ai/api/v1",
+                base_url: "https://coarena.ai",
+                completions: "/api/v1/chat/completions",
+                responses: Some("/api/v1/responses"),
+                messages: Some("/api/v1/messages"),
+                docs_url: "https://coarena.ai/docs",
+                portal_url: "https://coarena.ai/account/api/keys",
+                portal_kind: "api-key",
+                extras: vec![
+                    Extra { protocol: OpenaiResponses, base_url: "https://coarena.ai/api/v1" },
+                    Extra { protocol: AnthropicMessages, base_url: "https://coarena.ai/api" },
+                ],
+            },
+            Expect {
+                id: "twigpine-opengateway",
+                name: "Twigpine OpenGateway",
+                category: "gateway",
+                default_base_url: "https://api.twigpine.com/v1",
+                base_url: "https://api.twigpine.com",
+                completions: "/v1/chat/completions",
+                responses: None,
+                messages: Some("/v1/messages"),
+                docs_url: "https://twigpine.com/opengateway/docs",
+                portal_url: "https://twigpine.com/console/gateway",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: AnthropicMessages,
+                    base_url: "https://api.twigpine.com",
+                }],
+            },
+            Expect {
+                id: "hiapi",
+                name: "HiAPI",
+                category: "gateway",
+                default_base_url: "https://api.hiapi.ai/v1",
+                base_url: "https://api.hiapi.ai/v1",
+                completions: "/chat/completions",
+                responses: Some("/responses"),
+                messages: None,
+                docs_url: "https://hiapi.ai/docs/text-api/chat-completions/",
+                portal_url: "https://console.hiapi.ai/en/dashboard/api-keys",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: OpenaiResponses,
+                    base_url: "https://api.hiapi.ai/v1",
+                }],
+            },
+        ];
+
+        assert_eq!(list_providers().len(), 209);
+        for expect in cases {
+            let provider = list_providers()
+                .iter()
+                .find(|provider| provider.id == expect.id)
+                .unwrap_or_else(|| panic!("missing {}", expect.id));
+            let serialized = serde_json::to_value(provider).unwrap();
+            assert_eq!(provider.name, expect.name, "{}", expect.id);
+            assert_eq!(provider.default_protocol, OpenaiCompletions, "{}", expect.id);
+            assert_eq!(provider.category, expect.category, "{}", expect.id);
+            assert_eq!(provider.default_base_url, Some(expect.default_base_url), "{}", expect.id);
+            assert_eq!(serialized["base_url"], expect.base_url, "{}", expect.id);
+            assert_eq!(
+                serialized["protocols"]["openai-completions"]["endpoint_path"],
+                expect.completions,
+                "{}",
+                expect.id
+            );
+            match expect.responses {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["openai-responses"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("openai-responses").is_none(), "{}", expect.id),
+            }
+            match expect.messages {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("anthropic-messages").is_none(), "{}", expect.id),
+            }
+            assert!(serialized["protocols"].get("gemini-generate-content").is_none(), "{}", expect.id);
+            assert!(serialized["protocols"].get("gemini-interactions").is_none(), "{}", expect.id);
+            let extras = provider_additional_endpoints(expect.id);
+            assert_eq!(extras.len(), expect.extras.len(), "{}", expect.id);
+            for (actual, expected) in extras.iter().zip(expect.extras.iter()) {
+                assert_eq!(actual.protocol, expected.protocol, "{}", expect.id);
+                assert_eq!(actual.base_url, expected.base_url, "{}", expect.id);
+            }
+            assert_eq!(serialized["model_discovery_supported"], true, "{}", expect.id);
+            assert_eq!(serialized["docs_url"], expect.docs_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["url"], expect.portal_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["kind"], expect.portal_kind, "{}", expect.id);
+        }
+    }
+
+    #[test]
+    fn maritaca_and_crowllm_templates_match_reviewed_connections() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        struct Extra {
+            protocol: ModelProtocol,
+            base_url: &'static str,
+        }
+        struct Expect {
+            id: &'static str,
+            name: &'static str,
+            category: &'static str,
+            default_base_url: &'static str,
+            base_url: &'static str,
+            completions: &'static str,
+            responses: Option<&'static str>,
+            messages: Option<&'static str>,
+            docs_url: &'static str,
+            portal_url: &'static str,
+            portal_kind: &'static str,
+            extras: Vec<Extra>,
+        }
+
+        let cases = [
+            Expect {
+                id: "maritaca",
+                name: "Maritaca AI",
+                category: "official",
+                default_base_url: "https://chat.maritaca.ai/api",
+                base_url: "https://chat.maritaca.ai",
+                completions: "/api/chat/completions",
+                responses: Some("/api/v1/responses"),
+                messages: None,
+                docs_url: "https://docs.maritaca.ai/en/s5-quick-start",
+                portal_url: "https://plataforma.maritaca.ai/chaves-de-api",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: OpenaiResponses,
+                    base_url: "https://chat.maritaca.ai/api/v1",
+                }],
+            },
+            Expect {
+                id: "crowllm",
+                name: "CrowLLM",
+                category: "gateway",
+                default_base_url: "https://crowllm.com/v1",
+                base_url: "https://crowllm.com",
+                completions: "/v1/chat/completions",
+                responses: None,
+                messages: Some("/v1/messages"),
+                docs_url: "https://crowllm.com/docs",
+                portal_url: "https://crowllm.com/console",
+                portal_kind: "api-key",
+                extras: vec![Extra {
+                    protocol: AnthropicMessages,
+                    base_url: "https://crowllm.com",
+                }],
+            },
+        ];
+
+        assert_eq!(list_providers().len(), 209);
+        for expect in cases {
+            let provider = list_providers()
+                .iter()
+                .find(|provider| provider.id == expect.id)
+                .unwrap_or_else(|| panic!("missing {}", expect.id));
+            let serialized = serde_json::to_value(provider).unwrap();
+            assert_eq!(provider.name, expect.name, "{}", expect.id);
+            assert_eq!(provider.default_protocol, OpenaiCompletions, "{}", expect.id);
+            assert_eq!(provider.category, expect.category, "{}", expect.id);
+            assert_eq!(provider.default_base_url, Some(expect.default_base_url), "{}", expect.id);
+            assert_eq!(serialized["base_url"], expect.base_url, "{}", expect.id);
+            assert_eq!(
+                serialized["protocols"]["openai-completions"]["endpoint_path"],
+                expect.completions,
+                "{}",
+                expect.id
+            );
+            match expect.responses {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["openai-responses"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("openai-responses").is_none(), "{}", expect.id),
+            }
+            match expect.messages {
+                Some(path) => assert_eq!(
+                    serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+                    path,
+                    "{}",
+                    expect.id
+                ),
+                None => assert!(serialized["protocols"].get("anthropic-messages").is_none(), "{}", expect.id),
+            }
+            assert!(serialized["protocols"].get("gemini-generate-content").is_none(), "{}", expect.id);
+            assert!(serialized["protocols"].get("gemini-interactions").is_none(), "{}", expect.id);
+            let extras = provider_additional_endpoints(expect.id);
+            assert_eq!(extras.len(), expect.extras.len(), "{}", expect.id);
+            for (actual, expected) in extras.iter().zip(expect.extras.iter()) {
+                assert_eq!(actual.protocol, expected.protocol, "{}", expect.id);
+                assert_eq!(actual.base_url, expected.base_url, "{}", expect.id);
+            }
+            assert_eq!(serialized["model_discovery_supported"], true, "{}", expect.id);
+            assert_eq!(serialized["docs_url"], expect.docs_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["url"], expect.portal_url, "{}", expect.id);
+            assert_eq!(serialized["portal"]["kind"], expect.portal_kind, "{}", expect.id);
+        }
+    }
+
+    #[test]
+    fn respan_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, GeminiGenerateContent, OpenaiCompletions, OpenaiResponses};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "respan")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "Respan");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(provider.default_base_url, Some("https://gateway.respan.ai/v1"));
+        assert_eq!(serialized["base_url"], "https://gateway.respan.ai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            serialized["protocols"]["gemini-generate-content"]["endpoint_path"],
+            "/v1beta/models/{model}:generateContent"
+        );
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("respan");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://gateway.respan.ai"),
+                (AnthropicMessages, "https://gateway.respan.ai"),
+                (GeminiGenerateContent, "https://gateway.respan.ai/v1beta"),
+            ]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
+        assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 209);
     }
 
 }

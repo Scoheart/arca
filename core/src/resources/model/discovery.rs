@@ -255,6 +255,52 @@ const ITZI_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("special-free/deepseek-v4.1-flash", None, None),
 ];
 
+/// Documented Hyperbolic Inference chat ids. Anonymous `GET /models` is not a
+/// catalog. A saved key uses the OpenAI decoder. The overview states context
+/// windows; this seed stores ids only.
+const HYPERBOLIC_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("glm-5.3-flash", None, None),
+    ("glm-5.3", None, None),
+    ("kimi-k3", None, None),
+    ("minimax-m3", None, None),
+    ("deepseek-v4.1-flash", None, None),
+    ("deepseek-v4-flash-0731", None, None),
+    ("nemotron-3-ultra-550b-a55b", None, None),
+    ("step-5-preview", None, None),
+    ("mimo-v2.6-flash", None, None),
+    ("hy4-preview", None, None),
+    ("qwen3.8-27b", None, None),
+];
+
+/// Public Coarena chat ids from anonymous `GET /api/v1/models` on 2026-11-10.
+/// That body was the whole catalog (`has_more` false). A saved key uses the
+/// OpenAI decoder. The response includes display names and context lengths;
+/// this seed stores ids only.
+const COARENA_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("claude-fable-5", None, None),
+    ("claude-fable-5-1", None, None),
+    ("claude-fable-5-2", None, None),
+    ("claude-haiku-5-5", None, None),
+    ("claude-opus-5-5", None, None),
+    ("claude-sonnet-5-5", None, None),
+    ("deepseek-v4-1-flash-1017", None, None),
+    ("gemini-3-8-flash", None, None),
+    ("gemini-4-argon", None, None),
+    ("gemini-4-carbon", None, None),
+    ("glm-5-3-flash", None, None),
+    ("gpt-6-1-sol", None, None),
+    ("gpt-6-1-terra", None, None),
+    ("gpt-6-astra", None, None),
+    ("gpt-6-luna", None, None),
+    ("grok-4-7", None, None),
+    ("hy4", None, None),
+    ("kimi-k3", None, None),
+    ("kimi-k3-1-pro", None, None),
+    ("mimo-v2-6-pro", None, None),
+    ("minimax-m3-1-flash", None, None),
+    ("qwen3-8-2-4t-a95b", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -298,6 +344,8 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "fortytwo-engine" => FORTYTWO_ENGINE_STATIC_MODELS,
         "anyapi" => ANYAPI_STATIC_MODELS,
         "itzi" => ITZI_STATIC_MODELS,
+        "hyperbolic" => HYPERBOLIC_STATIC_MODELS,
+        "coarena" => COARENA_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -347,6 +395,159 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "MiniMaxAI/MiniMax-M2.7",
             "zai-org/GLM-5.3-Flash",
             "deepseek-ai/DeepSeek-V4-Flash-0731",
+        ],
+        // https://bazaarlink.ai/free
+        // Public /v1/models mixes paid chat with image rows.
+        "bazaarlink" => &[
+            "auto:free",
+            "qwen/qwen3.7-flash",
+            "nvidia/nemotron-3.5-lightning-free",
+            "stealth/glyph-cluster",
+            "deepseek/deepseek-v4-flash-0731free",
+        ],
+        // https://aiapi-pro.com/docs
+        // Public /v1/models includes image, video, audio, and embedding rows.
+        "novai" => &[
+            "glm-4.7-flash",
+            "glm-4.6v-flash",
+            "glm-4.1v-thinking-flash",
+        ],
+        // https://inference.dahl.global/docs/tokens/
+        // The public list is these three chat ids. Embedding rows are not seeded.
+        "dahl-inference" => &[
+            "MiniMaxAI/MiniMax-M2.7",
+            "zai-org/GLM-5.3-Flash",
+            "deepseek-ai/DeepSeek-V4-Flash-0731",
+        ],
+        // https://docs.meganova.ai/tiers/tier-1
+        // Public /v1/models includes whisper, embeddings, rerankers, and image rows.
+        "meganova" => &[
+            "meganova-ai/manta-mini-1.0",
+            "meganova-ai/manta-flash-1.0",
+            "Sao10K/L3-8B-Stheno-v3.2",
+            "Sao10K/L3-70B-Euryale-v2.1",
+            "Steelskull/L3.3-MS-Nevoria-70b",
+            "BruhzWater/Sapphira-L3.3-70b-0.1",
+            "FallenMerick/MN-Violet-Lotus-12B",
+            "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        ],
+        // https://www.runcrate.ai/inference/free
+        // Public /v1/models includes audio, image, and video rows.
+        "runcrate" => &[
+            "deepseek-ai/DeepSeek-V4.1-Flash",
+            "zai-org/GLM-5.3-Flash",
+            "zai-org/GLM-5.3",
+            "openai/gpt-oss-120b",
+            "Qwen/Qwen3.8-Flash",
+        ],
+        // https://api.moark.com/v1/models
+        // The public list mixes chat with OCR, image, and embedding rows.
+        "moark" => &[
+            "MiniMax-M3.1-Flash",
+            "kimi-k3.1-pro",
+            "DeepSeek-V4.1-Flash-1017",
+            "deepseek-v4.1-flash",
+        ],
+        // https://docs.llm.kiwi/quickstart
+        "llmkiwi" => &[
+            "auto",
+            "minimax-m3",
+            "nemotron-3-ultra",
+            "nemotron-3-super",
+            "minimax-m2.5",
+        ],
+        // https://docs.sea-lion.ai/guides/inferencing/api
+        // Anonymous GET /v1/models is not a catalog. Embeddings and SEA-Guard are not chat.
+        "sea-lion" => &[
+            "aisingapore/Qwen-SEA-LION-v4.5-27B-IT",
+            "aisingapore/Llama-SEA-LION-v3.5-70B-R",
+        ],
+        // https://www.aionlabs.ai/docs/quickstart/
+        "aion-labs" => &[
+            "aion-labs/aion-3.5",
+            "aion-labs/aion-3.5-mini",
+            "aion-labs/aion-3.0",
+            "aion-labs/aion-3.0-mini",
+            "aion-labs/aion-2.0",
+            "aion-labs/aion-rp-llama-3.1-8b",
+        ],
+        // https://platform.publicai.co/docs
+        // Anonymous GET /v1/models is not a catalog.
+        "publicai" => &["swiss-ai/apertus-v1.5-8b"],
+        // https://kiosapi.id/docs
+        // Public /v1/models includes image, video, embedding, and rerank rows.
+        "kiosapi" => &[
+            "meta/llama-3.1-8b",
+            "qwen/qwen3-30b",
+            "zai/glm-4.7-flash",
+            "google/gemma-4-26b",
+            "aisingapore/sea-lion-27b",
+        ],
+        // https://simplellm.eu/docs/models.html
+        // GET /v1/models is not a public catalog. The priced gemma-4-E4B id is not free.
+        "simplellm" => &["free-gemma-4-E4B", "free-Llama-3.1-8B-Instruct"],
+        // https://helyxai.space/docs
+        // GET /v1/models is HTTP 404. The quickstart example claude-opus-5 is not in the catalog.
+        "helyx-ai" => &[
+            "agnes-3.0-flash",
+            "deepseek-v4.1-flash",
+            "gemini-3.1-flash-lite",
+            "gemma-4-31B-it",
+            "glm-5.3-flash",
+            "grok-4.3",
+            "grok-build-0.1",
+            "muse-spark-1.1",
+        ],
+        // https://docs.vectoree.ai/models
+        // GET /api/v1/models needs a key and includes speech, image, video, and embeddings.
+        "vectoree" => &["vectoree/auto"],
+        // https://api.onysoft.com/docs
+        // GET /v1/models needs a key. The quickstart example google/gemini-3.8-flash is not in this promo seed.
+        "onysoft" => &[
+            "tencent/hy4:tencent",
+            "tencent/hy4-preview:tencent",
+            "tencent/hy3:tencent",
+            "deepseek/deepseek-v4.1-flash:tencent",
+            "deepseek/deepseek-v4-flash-202605:tencent",
+            "deepseek/deepseek-v4-pro-202606:tencent",
+            "deepseek/deepseek-v4-pro-0813:tencent",
+            "z-ai/glm-5.3:tencent",
+            "z-ai/glm-5.3-flash:tencent",
+            "z-ai/glm-5.3-flashx:tencent",
+            "z-ai/glm-5.2:tencent",
+            "moonshotai/kimi-k3:tencent",
+            "moonshotai/kimi-k2.7-code:tencent",
+            "moonshotai/kimi-k2.7-code-highspeed:tencent",
+            "minimax/minimax-m3:tencent",
+            "minimax/minimax-m3.1-flash:tencent",
+        ],
+        // https://twigpine.com/opengateway/docs
+        // Public /v1/models includes paid chat rows. Only the router and the free ids are seeded.
+        "twigpine-opengateway" => &[
+            "auto",
+            "qwen/qwen3.8-max",
+            "qwen/qwen3.8-flash",
+            "nvidia/nemotron-3.5-super-vl:free",
+        ],
+        // https://hiapi.ai/docs/text-api/chat-completions/
+        // GET /v1/models needs a key. The curl example deepseek-v4-flash is not this seed.
+        "hiapi" => &["deepseek-v4.1-flash"],
+        // https://docs.maritaca.ai/en/s5-quick-start
+        // GET /api/models needs a key. Previous-generation ids such as sabia-4 are not this seed.
+        "maritaca" => &["S5-free", "S5", "S5-br-sp", "S5-nano"],
+        // https://crowllm.com/docs
+        // Public /v1/models mixes chat with embeddings, images, and other non-chat rows.
+        "crowllm" => &[
+            "qwen-3.8-27b:free",
+            "deepseek-v4.1-flash:free",
+            "longcat-2.5:free",
+            "gemma-4-31b-it:free",
+        ],
+        // https://www.respan.ai/docs/ai-gateway/quickstart
+        // GET https://gateway.respan.ai/v1/models is HTTP 404. Unsuffixed paid ids are not this seed.
+        "respan" => &[
+            "google_gemini_ai/gemini-4-carbon:free",
+            "meta/muse-ember:free",
         ],
         _ => return None,
     };
@@ -446,6 +647,8 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "fortytwo-engine"
         | "anyapi"
         | "itzi"
+        | "hyperbolic"
+        | "coarena"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -555,6 +758,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "ollama"
             | "lm-studio"
             | "vllm"
+            | "coarena"
     ) {
         CredentialPolicy::Optional
     } else {
@@ -2252,6 +2456,7 @@ mod tests {
         "ollama",
         "lm-studio",
         "vllm",
+        "coarena",
     ];
 
     fn provider(
@@ -2399,6 +2604,7 @@ mod tests {
             "optracloud",
             "ifm",
             "llm7",
+            "coarena",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -2406,7 +2612,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi", "hyperbolic"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
@@ -2837,5 +3043,455 @@ mod tests {
         assert!(unauthorized.contains("401"), "{unauthorized}");
         assert!(!unauthorized.contains("provider echoed"), "{unauthorized}");
         assert!(!unauthorized.contains("openai-secret"), "{unauthorized}");
+    }
+
+    #[test]
+    fn thirteen_provider_templates_seed_only_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "bazaarlink",
+            "https://api.bazaarlink.ai/v1",
+            "/chat/completions",
+            &[
+                "auto:free",
+                "qwen/qwen3.7-flash",
+                "nvidia/nemotron-3.5-lightning-free",
+                "stealth/glyph-cluster",
+                "deepseek/deepseek-v4-flash-0731free",
+            ],
+            &[
+                "qwen3.7-flash",
+                "qwen/qwen3.7-flash:free",
+                "deepseek-v4-flash-0731free",
+                "gemini-3.1-flash-image",
+            ],
+        );
+        assert_static_chat_seed(
+            "novai",
+            "https://aiapi-pro.com/v1",
+            "/chat/completions",
+            &[
+                "glm-4.7-flash",
+                "glm-4.6v-flash",
+                "glm-4.1v-thinking-flash",
+            ],
+            &[
+                "cogview-3-flash",
+                "cogvideox-flash",
+                "qwen3-tts-flash",
+                "qwen3.7-text-embedding",
+            ],
+        );
+        assert_static_chat_seed(
+            "dahl-inference",
+            "https://inference.dahl.global/v1",
+            "/chat/completions",
+            &[
+                "MiniMaxAI/MiniMax-M2.7",
+                "zai-org/GLM-5.3-Flash",
+                "deepseek-ai/DeepSeek-V4-Flash-0731",
+            ],
+            &["BAAI/bge-m3"],
+        );
+        assert_static_chat_seed(
+            "meganova",
+            "https://api.meganova.ai/v1",
+            "/chat/completions",
+            &[
+                "meganova-ai/manta-mini-1.0",
+                "meganova-ai/manta-flash-1.0",
+                "Sao10K/L3-8B-Stheno-v3.2",
+                "Sao10K/L3-70B-Euryale-v2.1",
+                "Steelskull/L3.3-MS-Nevoria-70b",
+                "BruhzWater/Sapphira-L3.3-70b-0.1",
+                "FallenMerick/MN-Violet-Lotus-12B",
+                "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+            ],
+            &[
+                "meganova-ai/manta-pro-1.0",
+                "zai-org/GLM-4.7-Flash",
+                "Systran/faster-whisper-large-v3",
+                "Qwen/Qwen3-Embedding-8B",
+                "BAAI/bge-reranker-v2-m3",
+                "Bytedance/seedream-4-5-251128",
+            ],
+        );
+        assert_static_chat_seed(
+            "runcrate",
+            "https://api.runcrate.ai/v1",
+            "/chat/completions",
+            &[
+                "deepseek-ai/DeepSeek-V4.1-Flash",
+                "zai-org/GLM-5.3-Flash",
+                "zai-org/GLM-5.3",
+                "openai/gpt-oss-120b",
+                "Qwen/Qwen3.8-Flash",
+            ],
+            &[
+                "openai/whisper-large-v3-turbo",
+                "Qwen/Qwen3-Embedding-8B",
+                "stabilityai/stable-diffusion-3-5-large",
+                "kuaishou/kling-v3-video",
+                "Qwen/Qwen3-TTS",
+            ],
+        );
+        assert_static_chat_seed(
+            "moark",
+            "https://api.moark.com/v1",
+            "/chat/completions",
+            &[
+                "MiniMax-M3.1-Flash",
+                "kimi-k3.1-pro",
+                "DeepSeek-V4.1-Flash-1017",
+                "deepseek-v4.1-flash",
+            ],
+            &[
+                "Unlimited-OCR-2",
+                "qwen-image-2.1-viggle-turbo",
+                "WeMM-Embedding-9B",
+            ],
+        );
+        assert_static_chat_seed(
+            "llmkiwi",
+            "https://api.llm.kiwi/v1",
+            "/chat/completions",
+            &[
+                "auto",
+                "minimax-m3",
+                "nemotron-3-ultra",
+                "nemotron-3-super",
+                "minimax-m2.5",
+            ],
+            &["hrllm"],
+        );
+        assert_static_chat_seed(
+            "sea-lion",
+            "https://api.sea-lion.ai/v1",
+            "/chat/completions",
+            &[
+                "aisingapore/Qwen-SEA-LION-v4.5-27B-IT",
+                "aisingapore/Llama-SEA-LION-v3.5-70B-R",
+            ],
+            &["aisingapore/SEA-Guard"],
+        );
+        assert_static_chat_seed(
+            "aion-labs",
+            "https://api.aionlabs.ai/v1",
+            "/chat/completions",
+            &[
+                "aion-labs/aion-3.5",
+                "aion-labs/aion-3.5-mini",
+                "aion-labs/aion-3.0",
+                "aion-labs/aion-3.0-mini",
+                "aion-labs/aion-2.0",
+                "aion-labs/aion-rp-llama-3.1-8b",
+            ],
+            &[],
+        );
+        assert_static_chat_seed(
+            "publicai",
+            "https://api.publicai.co/v1",
+            "/chat/completions",
+            &["swiss-ai/apertus-v1.5-8b"],
+            &[],
+        );
+        assert_static_chat_seed(
+            "kiosapi",
+            "https://api.kiosapi.id/v1",
+            "/chat/completions",
+            &[
+                "meta/llama-3.1-8b",
+                "qwen/qwen3-30b",
+                "zai/glm-4.7-flash",
+                "google/gemma-4-26b",
+                "aisingapore/sea-lion-27b",
+            ],
+            &[
+                "openai/text-embedding-3-small",
+                "baai/bge-reranker-base",
+                "deepseek/search",
+            ],
+        );
+        assert_static_chat_seed(
+            "simplellm",
+            "https://api.simplellm.eu/v1",
+            "/chat/completions",
+            &["free-gemma-4-E4B", "free-Llama-3.1-8B-Instruct"],
+            &["gemma-4-E4B"],
+        );
+    }
+
+    #[test]
+    fn bytez_has_no_seed_and_is_not_an_openai_compatible_catalog_provider() {
+        assert!(static_seed_models("bytez").is_none());
+        assert!(reviewed_static_catalog("bytez").is_none());
+        assert!(reviewed_discovery_spec("bytez").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"bytez"));
+        assert!(model_discovery_supported("bytez"));
+        let config = provider(
+            "bytez",
+            "https://api.bytez.com/models/v2/openai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.bytez.com/models/v2/openai/v1/models"
+        );
+    }
+
+    #[test]
+    fn helyx_and_vectoree_seed_only_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "helyx-ai",
+            "https://helyxai.space/v1",
+            "/chat/completions",
+            &[
+                "agnes-3.0-flash",
+                "deepseek-v4.1-flash",
+                "gemini-3.1-flash-lite",
+                "gemma-4-31B-it",
+                "glm-5.3-flash",
+                "grok-4.3",
+                "grok-build-0.1",
+                "muse-spark-1.1",
+            ],
+            &["claude-opus-5"],
+        );
+        assert_static_chat_seed(
+            "vectoree",
+            "https://vectoree.ai/api/v1",
+            "/chat/completions",
+            &["vectoree/auto"],
+            &["alibaba/wan-3.0"],
+        );
+    }
+
+    #[test]
+    fn hyperbolic_seeds_the_documented_chat_models_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("hyperbolic").expect("hyperbolic seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            [
+                "glm-5.3-flash",
+                "glm-5.3",
+                "kimi-k3",
+                "minimax-m3",
+                "deepseek-v4.1-flash",
+                "deepseek-v4-flash-0731",
+                "nemotron-3-ultra-550b-a55b",
+                "step-5-preview",
+                "mimo-v2.6-flash",
+                "hy4-preview",
+                "qwen3.8-27b",
+            ]
+        );
+        assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()));
+        assert!(static_seed_models("hyperbolic").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"hyperbolic"));
+        let config = provider(
+            "hyperbolic",
+            "https://api.hyperbolic.ai/inference/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.hyperbolic.ai/inference/v1/models"
+        );
+        let _home = TestHome::new("hyperbolic-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "hyperbolic-instance".into(),
+                name: "Hyperbolic".into(),
+                provider: "hyperbolic".into(),
+                base_url: "https://api.hyperbolic.ai/inference/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 11);
+        assert_eq!(seeded[0].id, "glm-5.3-flash");
+    }
+
+    #[test]
+    fn onysoft_twigpine_and_hiapi_seed_only_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "onysoft",
+            "https://api.onysoft.com/v1",
+            "/chat/completions",
+            &[
+                "tencent/hy4:tencent",
+                "tencent/hy4-preview:tencent",
+                "tencent/hy3:tencent",
+                "deepseek/deepseek-v4.1-flash:tencent",
+                "deepseek/deepseek-v4-flash-202605:tencent",
+                "deepseek/deepseek-v4-pro-202606:tencent",
+                "deepseek/deepseek-v4-pro-0813:tencent",
+                "z-ai/glm-5.3:tencent",
+                "z-ai/glm-5.3-flash:tencent",
+                "z-ai/glm-5.3-flashx:tencent",
+                "z-ai/glm-5.2:tencent",
+                "moonshotai/kimi-k3:tencent",
+                "moonshotai/kimi-k2.7-code:tencent",
+                "moonshotai/kimi-k2.7-code-highspeed:tencent",
+                "minimax/minimax-m3:tencent",
+                "minimax/minimax-m3.1-flash:tencent",
+            ],
+            &["google/gemini-3.8-flash"],
+        );
+        assert_static_chat_seed(
+            "twigpine-opengateway",
+            "https://api.twigpine.com/v1",
+            "/chat/completions",
+            &[
+                "auto",
+                "qwen/qwen3.8-max",
+                "qwen/qwen3.8-flash",
+                "nvidia/nemotron-3.5-super-vl:free",
+            ],
+            &[
+                "nvidia/nemotron-3.5-super-vl",
+                "openai/gpt-6-luna",
+                "qwen/qwen3.7-max",
+            ],
+        );
+        assert_static_chat_seed(
+            "hiapi",
+            "https://api.hiapi.ai/v1",
+            "/chat/completions",
+            &["deepseek-v4.1-flash"],
+            &["deepseek-v4-flash"],
+        );
+    }
+
+    #[test]
+    fn maritaca_and_crowllm_seed_only_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "maritaca",
+            "https://chat.maritaca.ai/api",
+            "/chat/completions",
+            &["S5-free", "S5", "S5-br-sp", "S5-nano"],
+            &["sabia-4", "s5-free"],
+        );
+        assert_static_chat_seed(
+            "crowllm",
+            "https://crowllm.com/v1",
+            "/chat/completions",
+            &[
+                "qwen-3.8-27b:free",
+                "deepseek-v4.1-flash:free",
+                "longcat-2.5:free",
+                "gemma-4-31b-it:free",
+            ],
+            &["agnes-2.5-flash:free", "qwen3.8-max"],
+        );
+    }
+
+    #[test]
+    fn respan_seeds_only_reviewed_free_chat_ids() {
+        assert_static_chat_seed(
+            "respan",
+            "https://gateway.respan.ai/v1",
+            "/chat/completions",
+            &[
+                "google_gemini_ai/gemini-4-carbon:free",
+                "meta/muse-ember:free",
+            ],
+            &[
+                "google_gemini_ai/gemini-4-carbon",
+                "meta/muse-ember",
+                "gpt-5.5",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"respan"));
+    }
+
+    #[test]
+    fn coarena_seeds_the_public_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("coarena").expect("coarena seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            [
+                "claude-fable-5",
+                "claude-fable-5-1",
+                "claude-fable-5-2",
+                "claude-haiku-5-5",
+                "claude-opus-5-5",
+                "claude-sonnet-5-5",
+                "deepseek-v4-1-flash-1017",
+                "gemini-3-8-flash",
+                "gemini-4-argon",
+                "gemini-4-carbon",
+                "glm-5-3-flash",
+                "gpt-6-1-sol",
+                "gpt-6-1-terra",
+                "gpt-6-astra",
+                "gpt-6-luna",
+                "grok-4-7",
+                "hy4",
+                "kimi-k3",
+                "kimi-k3-1-pro",
+                "mimo-v2-6-pro",
+                "minimax-m3-1-flash",
+                "qwen3-8-2-4t-a95b",
+            ]
+        );
+        assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()));
+        assert!(models.iter().all(|model| model.id != "anthropic/claude-fable-5"));
+        assert!(static_seed_models("coarena").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"coarena"));
+        let config = provider(
+            "coarena",
+            "https://coarena.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/api/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://coarena.ai/api/v1/models"
+        );
+        let _home = TestHome::new("coarena-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "coarena-instance".into(),
+                name: "Coarena".into(),
+                provider: "coarena".into(),
+                base_url: "https://coarena.ai".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/api/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 22);
+        assert_eq!(seeded[0].id, "claude-fable-5");
+        assert_eq!(seeded[21].id, "qwen3-8-2-4t-a95b");
     }
 }
