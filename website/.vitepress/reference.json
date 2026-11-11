@@ -4471,6 +4471,21 @@
       }
     },
     {
+      "id": "synap",
+      "name": "Synap",
+      "category": "gateway",
+      "baseUrl": "https://synap402.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://synap402.com/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://synap402.com/account.html#keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

@@ -343,6 +343,17 @@ const LOGFARE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("economy/deepseek-v4.1-flash", None, None),
 ];
 
+/// Public fleet chat ids from anonymous `GET https://synap402.com/v1/models`
+/// on 2026-11-11. That body had 15 rows and mixed fleet chat with routers,
+/// aliases, a vision row, and brokered upstream ids. A saved key uses the
+/// OpenAI decoder. The response includes names and context lengths; this
+/// seed stores ids only. `synap-v1` and `synap-v1-pro` are not seeded.
+const SYNAP_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen3-coder-30b", None, None),
+    ("gpt-oss-20b", None, None),
+    ("gemma-4-26b-a4b-it", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -392,6 +403,7 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "ucloud-modelverse" => UCLOUD_MODELVERSE_STATIC_MODELS,
         "radium" => RADIUM_STATIC_MODELS,
         "logfare" => LOGFARE_STATIC_MODELS,
+        "synap" => SYNAP_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -756,6 +768,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "ucloud-modelverse"
         | "radium"
         | "logfare"
+        | "synap"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -870,6 +883,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "ucloud-modelverse"
             | "radium"
             | "logfare"
+            | "synap"
     ) {
         CredentialPolicy::Optional
     } else {
@@ -2572,6 +2586,7 @@ mod tests {
         "ucloud-modelverse",
         "radium",
         "logfare",
+        "synap",
     ];
 
     fn provider(
@@ -2724,6 +2739,7 @@ mod tests {
             "ucloud-modelverse",
             "radium",
             "logfare",
+            "synap",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -4019,5 +4035,72 @@ mod tests {
         assert_eq!(seeded.len(), 4);
         assert_eq!(seeded[0].id, "qwen-3.8-27b");
         assert_eq!(seeded[3].id, "economy/deepseek-v4.1-flash");
+    }
+
+    #[test]
+    fn synap_seeds_fleet_chat_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("synap").expect("synap seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["qwen3-coder-30b", "gpt-oss-20b", "gemma-4-26b-a4b-it"]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "synap-v1",
+            "synap-v1-pro",
+            "team-planner",
+            "team-worker",
+            "qwen/qwen3-vl-30b-a3b-instruct",
+            "qwen/qwen3-30b-a3b-instruct-2507",
+            "meta/muse-glimmer-30b",
+            "qwen/qwen3.5-122b-a10b",
+            "z-ai/glm-5.3",
+            "z-ai/glm-5.3-flash",
+            "deepseek/deepseek-v4-pro",
+            "deepseek/deepseek-v4-flash",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("synap").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"synap"));
+        let config = provider(
+            "synap",
+            "https://synap402.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://synap402.com/v1/models"
+        );
+        let _home = TestHome::new("synap-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "synap-instance".into(),
+                name: "Synap".into(),
+                provider: "synap".into(),
+                base_url: "https://synap402.com".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 3);
+        assert_eq!(seeded[0].id, "qwen3-coder-30b");
+        assert_eq!(seeded[2].id, "gemma-4-26b-a4b-it");
     }
 }

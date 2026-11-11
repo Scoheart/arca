@@ -1545,5 +1545,12 @@
       "url": "https://logfare.ai/register",
       "kind": "api-key"
     }
+  },
+  "synap": {
+    "docs_url": "https://synap402.com/docs",
+    "portal": {
+      "url": "https://synap402.com/account.html#keys",
+      "kind": "api-key"
+    }
   }
 }
