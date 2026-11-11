@@ -4320,6 +4320,20 @@
       }
     },
     {
+      "id": "free-ai",
+      "name": "Free.ai",
+      "category": "gateway",
+      "baseUrl": "https://api.free.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://free.ai/api/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://free.ai/account/?tab=api"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

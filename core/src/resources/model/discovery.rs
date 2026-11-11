@@ -564,6 +564,10 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // GET /v1/models requires auth and mixes image, speech, and video rows.
         // glm-4.7-flash is not supported on Responses. The quickstart example MiniMax-M3 is not this seed.
         "powertokens" => &["glm-4.7-flash"],
+        // https://free.ai/api/
+        // Public GET /v1/models is {models,total,caller_country} and mixes image, speech, and video rows.
+        // Several self-hosted ids are labels for one Qwen model. qwen3-coder and the other aliases are not this seed.
+        "free-ai" => &["qwen7b", "qwen-coder"],
         _ => return None,
     };
     Some(
@@ -3468,6 +3472,28 @@ mod tests {
             &["MiniMax-M3", "glm-4.7", "glm-5.2"],
         );
         assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"powertokens"));
+    }
+
+    #[test]
+    fn free_ai_seeds_only_the_reviewed_self_hosted_chat_ids() {
+        assert_static_chat_seed(
+            "free-ai",
+            "https://api.free.ai/v1",
+            "/chat/completions",
+            &["qwen7b", "qwen-coder"],
+            &[
+                "qwen3-coder",
+                "deepseek-r1",
+                "mistral",
+                "qwen3-8b",
+                "deepseek-r1-7b",
+                "qwen-vl",
+                "qwen25-vl",
+                "Qwen/Qwen3-30B-A3B-Instruct",
+                "sdxl",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"free-ai"));
     }
 
     #[test]
