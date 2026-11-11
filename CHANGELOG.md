@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.73.0](https://github.com/Scoheart/arca/compare/v2.72.0...v2.73.0) (2026-11-11)
+
+### Changes
+
+* feat(models): add Hetzner Experiments Inference provider (#300) ([f90216d](https://github.com/Scoheart/arca/commit/f90216de98e4159a3f45117a53d94ffbd338c1d5))
+* feat(models): add cheapllm.shop and PowerTokens providers (#301) ([78205e6](https://github.com/Scoheart/arca/commit/78205e657299be7d33a7bd11bd1eb4a75f912853))
+
 ## [2.72.0](https://github.com/Scoheart/arca/compare/v2.71.0...v2.72.0) (2026-11-11)
 
 ### Changes
