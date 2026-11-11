@@ -1239,6 +1239,26 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.modelverse.cn/v1beta",
             },
         ],
+        "moss" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.mosi.cn/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.mosi.cn",
+            },
+        ],
+        "minekuai" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://minekuai.cn/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://minekuai.cn",
+            },
+        ],
         _ => &[],
     }
 }
@@ -2262,6 +2282,20 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "moss",
+        name: "MOSS API",
+        default_base_url: Some("https://api.mosi.cn/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "minekuai",
+        name: "麦块云",
+        default_base_url: Some("https://minekuai.cn/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3117,6 +3151,9 @@ pub fn infer_provider(base_url: &str) -> String {
         | "api-us-ca.umodelverse.ai"
         | "api-sg.umodelverse.ai"
         | "api-ge-fra.umodelverse.ai" => "ucloud-modelverse",
+        "api.mosi.cn" => "moss",
+        // Docs, keys, and the product page share this host with the API.
+        "minekuai.cn" => "minekuai",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -9742,6 +9779,44 @@ mod tests {
             ("https://console.ucloud.cn/modelverse/experience/api-keys", "custom"),
             ("https://www.ucloud.cn/site/active/astraflow", "custom"),
             ("https://www.ucloud.cn/", "custom"),
+            ("https://api.mosi.cn/v1", "moss"),
+            ("https://api.mosi.cn/v1/", "moss"),
+            ("https://api.mosi.cn/v1/chat/completions", "moss"),
+            ("https://api.mosi.cn/v1/models", "moss"),
+            ("https://api.mosi.cn/v1/responses", "moss"),
+            ("https://api.mosi.cn/v1/messages", "moss"),
+            ("https://api.mosi.cn", "moss"),
+            ("https://api.mosi.cn/", "moss"),
+            ("https://api.mosi.cn/v1beta/models/nex-n2.6:generateContent", "moss"),
+            ("https://platform.mosi.cn/docs/models/nex", "custom"),
+            ("https://platform.mosi.cn/docs/getting-started/quickstart", "custom"),
+            ("https://platform.mosi.cn/app/api-keys", "custom"),
+            ("https://platform.mosi.cn/v1/models", "custom"),
+            ("https://www.moss.cn/", "custom"),
+            ("https://moss.cn/", "custom"),
+            ("https://mosi.cn/v1", "custom"),
+            ("https://www.api.mosi.cn/v1", "custom"),
+            ("https://api.mosi.com/v1", "custom"),
+            ("https://api.mosi.cn.evil.test/v1", "custom"),
+            ("https://minekuai.cn/v1", "minekuai"),
+            ("https://minekuai.cn/v1/", "minekuai"),
+            ("https://minekuai.cn/v1/chat/completions", "minekuai"),
+            ("https://minekuai.cn/v1/models", "minekuai"),
+            ("https://minekuai.cn/v1/responses", "minekuai"),
+            ("https://minekuai.cn/v1/messages", "minekuai"),
+            ("https://minekuai.cn", "minekuai"),
+            ("https://minekuai.cn/", "minekuai"),
+            ("https://minekuai.cn/api-docs", "minekuai"),
+            ("https://minekuai.cn/api-keys", "minekuai"),
+            ("https://minekuai.cn/llm", "minekuai"),
+            ("https://minekuai.cn/legal/terms", "minekuai"),
+            ("https://minekuai.cn/app/llm/models/public", "minekuai"),
+            ("https://minekuai.cn/v1beta/models/deepseek-flash:generateContent", "minekuai"),
+            ("https://www.minekuai.cn/v1", "custom"),
+            ("https://api.minekuai.cn/v1", "custom"),
+            ("https://api.minekuai.cn/v1/models", "custom"),
+            ("https://minekuai.com/v1", "custom"),
+            ("https://minekuai.cn.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9819,7 +9894,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13275,7 +13350,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13404,7 +13479,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13549,7 +13624,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13660,7 +13735,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13758,7 +13833,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -13794,7 +13869,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -13840,7 +13915,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -13892,7 +13967,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -13922,7 +13997,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -13955,7 +14030,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -13988,7 +14063,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -14023,7 +14098,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -14083,7 +14158,7 @@ url = "https://example.test/mcp"
             "https://puter.com/dashboard#account"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
     }
 
     #[test]
@@ -14144,7 +14219,105 @@ url = "https://example.test/mcp"
             "https://console.ucloud.cn/modelverse/experience/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 218);
+        assert_eq!(list_providers().len(), 220);
+    }
+
+    #[test]
+    fn moss_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "moss")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "MOSS API");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(provider.default_base_url, Some("https://api.mosi.cn/v1"));
+        assert_eq!(serialized["base_url"], "https://api.mosi.cn");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("moss");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://api.mosi.cn/v1"),
+                (AnthropicMessages, "https://api.mosi.cn"),
+            ]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://platform.mosi.cn/docs/models/nex"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://platform.mosi.cn/app/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 220);
+    }
+
+    #[test]
+    fn minekuai_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "minekuai")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "麦块云");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(provider.default_base_url, Some("https://minekuai.cn/v1"));
+        assert_eq!(serialized["base_url"], "https://minekuai.cn");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("minekuai");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://minekuai.cn/v1"),
+                (AnthropicMessages, "https://minekuai.cn"),
+            ]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://minekuai.cn/api-docs");
+        assert_eq!(serialized["portal"]["url"], "https://minekuai.cn/api-keys");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 220);
     }
 
 }

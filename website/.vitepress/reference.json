@@ -4408,6 +4408,38 @@
       }
     },
     {
+      "id": "moss",
+      "name": "MOSS API",
+      "category": "official",
+      "baseUrl": "https://api.mosi.cn/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://platform.mosi.cn/docs/models/nex",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.mosi.cn/app/api-keys"
+      }
+    },
+    {
+      "id": "minekuai",
+      "name": "麦块云",
+      "category": "gateway",
+      "baseUrl": "https://minekuai.cn/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://minekuai.cn/api-docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://minekuai.cn/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
