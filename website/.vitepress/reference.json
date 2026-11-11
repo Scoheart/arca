@@ -4253,6 +4253,23 @@
       }
     },
     {
+      "id": "respan",
+      "name": "Respan",
+      "category": "gateway",
+      "baseUrl": "https://gateway.respan.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "gemini-generate-content",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://www.respan.ai/docs/ai-gateway/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.respan.ai/platform/gateway/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

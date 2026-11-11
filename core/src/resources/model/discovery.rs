@@ -542,6 +542,12 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "longcat-2.5:free",
             "gemma-4-31b-it:free",
         ],
+        // https://www.respan.ai/docs/ai-gateway/quickstart
+        // GET https://gateway.respan.ai/v1/models is HTTP 404. Unsuffixed paid ids are not this seed.
+        "respan" => &[
+            "google_gemini_ai/gemini-4-carbon:free",
+            "meta/muse-ember:free",
+        ],
         _ => return None,
     };
     Some(
@@ -3391,6 +3397,25 @@ mod tests {
             ],
             &["agnes-2.5-flash:free", "qwen3.8-max"],
         );
+    }
+
+    #[test]
+    fn respan_seeds_only_reviewed_free_chat_ids() {
+        assert_static_chat_seed(
+            "respan",
+            "https://gateway.respan.ai/v1",
+            "/chat/completions",
+            &[
+                "google_gemini_ai/gemini-4-carbon:free",
+                "meta/muse-ember:free",
+            ],
+            &[
+                "google_gemini_ai/gemini-4-carbon",
+                "meta/muse-ember",
+                "gpt-5.5",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"respan"));
     }
 
     #[test]
