@@ -1259,6 +1259,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://minekuai.cn",
             },
         ],
+        "radium" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.radium.cloud",
+        }],
         _ => &[],
     }
 }
@@ -2296,6 +2300,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "radium",
+        name: "Radium",
+        default_base_url: Some("https://api.radium.cloud/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3154,6 +3165,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.mosi.cn" => "moss",
         // Docs, keys, and the product page share this host with the API.
         "minekuai.cn" => "minekuai",
+        "api.radium.cloud" => "radium",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -9817,6 +9829,31 @@ mod tests {
             ("https://api.minekuai.cn/v1/models", "custom"),
             ("https://minekuai.com/v1", "custom"),
             ("https://minekuai.cn.evil.test/v1", "custom"),
+            ("https://api.radium.cloud/v1", "radium"),
+            ("https://api.radium.cloud/v1/", "radium"),
+            ("https://api.radium.cloud/v1/chat/completions", "radium"),
+            ("https://api.radium.cloud/v1/models", "radium"),
+            ("https://api.radium.cloud/v1/responses", "radium"),
+            ("https://api.radium.cloud/v1/messages", "radium"),
+            ("https://api.radium.cloud", "radium"),
+            ("https://api.radium.cloud/", "radium"),
+            ("https://api.radium.cloud/v1beta/models/hal-1.0:generateContent", "radium"),
+            ("https://docs.radium.cloud/quickstart", "custom"),
+            ("https://docs.radium.cloud/guides/provenance", "custom"),
+            ("https://docs.radium.cloud/v1/models", "custom"),
+            ("https://deploy.radium.cloud/keys", "custom"),
+            ("https://deploy.radium.cloud/v1/models", "custom"),
+            ("https://radium.cloud/", "custom"),
+            ("https://radium.cloud/pricing", "custom"),
+            ("https://radium.cloud/faq", "custom"),
+            ("https://radium.cloud/legal/terms-of-service", "custom"),
+            ("https://radium.cloud/v1/models", "custom"),
+            ("https://www.radium.cloud/", "custom"),
+            ("https://www.api.radium.cloud/v1", "custom"),
+            ("https://api.radium.com/v1", "custom"),
+            ("https://api.radium.ai/v1", "custom"),
+            ("https://radium.ai/v1", "custom"),
+            ("https://api.radium.cloud.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9894,7 +9931,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13350,7 +13387,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13479,7 +13516,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13624,7 +13661,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13735,7 +13772,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13833,7 +13870,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -13869,7 +13906,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -13915,7 +13952,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -13967,7 +14004,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -13997,7 +14034,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -14030,7 +14067,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -14063,7 +14100,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -14098,7 +14135,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -14158,7 +14195,7 @@ url = "https://example.test/mcp"
             "https://puter.com/dashboard#account"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -14219,7 +14256,7 @@ url = "https://example.test/mcp"
             "https://console.ucloud.cn/modelverse/experience/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -14271,7 +14308,7 @@ url = "https://example.test/mcp"
             "https://platform.mosi.cn/app/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
     }
 
     #[test]
@@ -14317,7 +14354,53 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://minekuai.cn/api-docs");
         assert_eq!(serialized["portal"]["url"], "https://minekuai.cn/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 220);
+        assert_eq!(list_providers().len(), 221);
+    }
+
+    #[test]
+    fn radium_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "radium")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "Radium");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://api.radium.cloud/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.radium.cloud");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("radium");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![(AnthropicMessages, "https://api.radium.cloud")]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://docs.radium.cloud/quickstart");
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://deploy.radium.cloud/keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 221);
     }
 
 }

@@ -4440,6 +4440,21 @@
       }
     },
     {
+      "id": "radium",
+      "name": "Radium",
+      "category": "official",
+      "baseUrl": "https://api.radium.cloud/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://docs.radium.cloud/quickstart",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://deploy.radium.cloud/keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
