@@ -275,3 +275,130 @@ fn shared_reader_and_writer_reject_symlink_parents_and_alias_targets() {
     assert!(guard_mcp_profile(&f.path, &["safe"]).is_err());
     let _ = Value::Null;
 }
+
+#[test]
+fn e2e_plan_and_commit_deepseek_harness_mcps() {
+    use arca_core::consumption::{
+        commit_asset_operation, plan_set_agent_consumption, AgentConsumptionSelection,
+        AssetCommitRequest, PlanSetAgentConsumptionRequest,
+    };
+    use arca_core::registry::write_manual_entry;
+    use arca_core::types::{HttpConfig, RegistryConfig, RegistryEntry, StdioConfig};
+
+    let f = Fixture::new("web");
+
+    // Write initial clean cordis.patch.yml
+    fs::write(&f.path, "- id: ui-settings-general\n  name: '@deepseek-ai/dsh-client-ui-settings-general'\n  config:\n    welcomeNoticeVersion: 2026-09-28.1\n").unwrap();
+
+    // Register Exa (HTTP) and Jenkins (STDIO) in central registry
+    write_manual_entry(&RegistryEntry {
+        name: "exa".into(),
+        description: "Exa search".into(),
+        tags: vec![],
+        config: RegistryConfig {
+            http: Some(HttpConfig {
+                kind: "http".into(),
+                url: "https://mcp.exa.ai/mcp".into(),
+                headers: None,
+            }),
+            stdio: None,
+        },
+        origin: None,
+        repo: None,
+    })
+    .unwrap();
+
+    write_manual_entry(&RegistryEntry {
+        name: "jenkins-qx".into(),
+        description: "Jenkins QX".into(),
+        tags: vec![],
+        config: RegistryConfig {
+            stdio: Some(StdioConfig {
+                command: "jenkins-cli".into(),
+                args: Some(vec!["--server".into(), "http://jenkins.local".into()]),
+                env: None,
+                cwd: None,
+            }),
+            http: None,
+        },
+        origin: None,
+        repo: None,
+    })
+    .unwrap();
+
+    // Plan setting consumption for deepseek-harness
+    let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
+        agent_id: "deepseek-harness".into(),
+        selection: AgentConsumptionSelection::Mcp {
+            asset_keys: vec![
+                "exa::http".into(),
+                "jenkins-qx::stdio".into(),
+            ],
+        },
+    })
+    .unwrap();
+
+    // Commit operation
+    let inventory = commit_asset_operation(AssetCommitRequest {
+        operation_id: plan.operation_id.clone(),
+        candidate_hash: plan.candidate_hash.clone(),
+    })
+    .unwrap();
+
+    // Verify convergence!
+    let converged = !inventory
+        .target_incidents
+        .iter()
+        .any(|incident| incident.operation_id == plan.operation_id);
+    assert!(converged, "Expected plan to converge, but had target incidents: {:?}", inventory.target_incidents);
+
+    // Verify file content on disk
+    let content = fs::read_to_string(&f.path).unwrap();
+    assert!(content.contains("@deepseek-ai/dsh-mcp-client"));
+    assert!(content.contains("\"serverName\":\"exa\"") || content.contains("serverName: exa"));
+    assert!(content.contains("\"serverName\":\"jenkins-qx\"") || content.contains("serverName: jenkins-qx"));
+
+    // Toggle jenkins-qx to disabled
+    use arca_core::consumption::{plan_set_mcp_enabled, PlanSetMcpEnabledRequest};
+    let toggle_plan = plan_set_mcp_enabled(PlanSetMcpEnabledRequest {
+        agent_id: "deepseek-harness".into(),
+        asset_key: "jenkins-qx::stdio".into(),
+        enabled: false,
+    })
+    .unwrap();
+    let inventory = commit_asset_operation(AssetCommitRequest {
+        operation_id: toggle_plan.operation_id.clone(),
+        candidate_hash: toggle_plan.candidate_hash.clone(),
+    })
+    .unwrap();
+    let converged = !inventory
+        .target_incidents
+        .iter()
+        .any(|incident| incident.operation_id == toggle_plan.operation_id);
+    assert!(converged);
+    let content_after_toggle = fs::read_to_string(&f.path).unwrap();
+    assert!(content_after_toggle.contains("\"disabled\": true") || content_after_toggle.contains("\"disabled\":true") || content_after_toggle.contains("disabled: true"));
+
+    // Remove exa
+    let remove_plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
+        agent_id: "deepseek-harness".into(),
+        selection: AgentConsumptionSelection::Mcp {
+            asset_keys: vec!["jenkins-qx::stdio".into()],
+        },
+    })
+    .unwrap();
+    let inventory = commit_asset_operation(AssetCommitRequest {
+        operation_id: remove_plan.operation_id.clone(),
+        candidate_hash: remove_plan.candidate_hash.clone(),
+    })
+    .unwrap();
+    let converged = !inventory
+        .target_incidents
+        .iter()
+        .any(|incident| incident.operation_id == remove_plan.operation_id);
+    assert!(converged);
+    let content_after_remove = fs::read_to_string(&f.path).unwrap();
+    assert!(!content_after_remove.contains("exa"));
+    assert!(content_after_remove.contains("jenkins-qx"));
+}
+
