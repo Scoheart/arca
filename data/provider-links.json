@@ -1531,5 +1531,12 @@
       "url": "https://minekuai.cn/api-keys",
       "kind": "api-key"
     }
+  },
+  "radium": {
+    "docs_url": "https://docs.radium.cloud/quickstart",
+    "portal": {
+      "url": "https://deploy.radium.cloud/keys",
+      "kind": "api-key"
+    }
   }
 }
