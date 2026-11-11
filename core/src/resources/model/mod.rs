@@ -1273,6 +1273,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://logfare.ai",
             },
         ],
+        "synap" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://synap402.com",
+        }],
         _ => &[],
     }
 }
@@ -2324,6 +2328,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "synap",
+        name: "Synap",
+        default_base_url: Some("https://synap402.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3186,6 +3197,9 @@ pub fn infer_provider(base_url: &str) -> String {
         // Docs, registration, and the product page share this host with the API.
         // api.logfare.ai is not an official API host.
         "logfare.ai" => "logfare",
+        // Docs, keys, and the product page share these hosts with the API.
+        // www.synap402.com and linkrra.com answered GET /v1/models and are not reviewed hosts.
+        "synap402.com" | "synap.linkrra.com" => "synap",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -9896,6 +9910,48 @@ mod tests {
             ("https://logfare.com/v1", "custom"),
             ("https://logfare.com/v1/models", "custom"),
             ("https://logfare.ai.evil.test/v1", "custom"),
+            ("https://synap402.com/v1", "synap"),
+            ("https://synap402.com/v1/", "synap"),
+            ("https://synap402.com/v1/chat/completions", "synap"),
+            ("https://synap402.com/v1/models", "synap"),
+            ("https://synap402.com/v1/responses", "synap"),
+            ("https://synap402.com/v1/messages", "synap"),
+            ("https://synap402.com", "synap"),
+            ("https://synap402.com/", "synap"),
+            ("https://synap402.com/docs", "synap"),
+            ("https://synap402.com/account.html", "synap"),
+            ("https://synap402.com/free.html", "synap"),
+            ("https://synap402.com/pricing.html", "synap"),
+            ("https://synap402.com/terms.html", "synap"),
+            ("https://synap402.com/privacy.html", "synap"),
+            ("https://synap402.com/llms.txt", "synap"),
+            ("https://synap402.com/openapi.json", "synap"),
+            ("https://synap402.com/guides/claude-code.html", "synap"),
+            ("https://synap402.com/.well-known/x402", "synap"),
+            ("https://synap402.com/v1beta/models/qwen3-coder-30b:generateContent", "synap"),
+            ("https://synap.linkrra.com/v1", "synap"),
+            ("https://synap.linkrra.com/v1/", "synap"),
+            ("https://synap.linkrra.com/v1/chat/completions", "synap"),
+            ("https://synap.linkrra.com/v1/models", "synap"),
+            ("https://synap.linkrra.com/v1/responses", "synap"),
+            ("https://synap.linkrra.com/v1/messages", "synap"),
+            ("https://synap.linkrra.com", "synap"),
+            ("https://synap.linkrra.com/", "synap"),
+            ("https://synap.linkrra.com/docs", "synap"),
+            ("https://synap.linkrra.com/v1beta/models/qwen3-coder-30b:generateContent", "synap"),
+            ("https://www.synap402.com/v1", "custom"),
+            ("https://www.synap402.com/v1/models", "custom"),
+            ("https://api.synap402.com/v1", "custom"),
+            ("https://api.synap402.com/v1/models", "custom"),
+            ("https://synap.com/v1", "custom"),
+            ("https://synap.com/v1/models", "custom"),
+            ("https://synap.ai/v1", "custom"),
+            ("https://linkrra.com/v1", "custom"),
+            ("https://linkrra.com/v1/models", "custom"),
+            ("https://www.synap.linkrra.com/v1", "custom"),
+            ("https://pool.linkrra.com/v1", "custom"),
+            ("https://synap402.com.evil.test/v1", "custom"),
+            ("https://synap.linkrra.com.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9973,7 +10029,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13429,7 +13485,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13558,7 +13614,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13703,7 +13759,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13814,7 +13870,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13912,7 +13968,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -13948,7 +14004,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -13994,7 +14050,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14046,7 +14102,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14076,7 +14132,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14109,7 +14165,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14142,7 +14198,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14177,7 +14233,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14237,7 +14293,7 @@ url = "https://example.test/mcp"
             "https://puter.com/dashboard#account"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14298,7 +14354,7 @@ url = "https://example.test/mcp"
             "https://console.ucloud.cn/modelverse/experience/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14350,7 +14406,7 @@ url = "https://example.test/mcp"
             "https://platform.mosi.cn/app/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14396,7 +14452,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://minekuai.cn/api-docs");
         assert_eq!(serialized["portal"]["url"], "https://minekuai.cn/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14442,7 +14498,7 @@ url = "https://example.test/mcp"
             "https://deploy.radium.cloud/keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
     }
 
     #[test]
@@ -14488,7 +14544,50 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://logfare.ai/docs");
         assert_eq!(serialized["portal"]["url"], "https://logfare.ai/register");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 222);
+        assert_eq!(list_providers().len(), 223);
+    }
+
+    #[test]
+    fn synap_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "synap")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "Synap");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(provider.default_base_url, Some("https://synap402.com/v1"));
+        assert_eq!(serialized["base_url"], "https://synap402.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("synap");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![(AnthropicMessages, "https://synap402.com")]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://synap402.com/docs");
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://synap402.com/account.html#keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 223);
     }
 
 }
