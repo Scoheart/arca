@@ -1221,6 +1221,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.powertokens.ai",
             },
         ],
+        "puter" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.puter.com/puterai/anthropic",
+        }],
         _ => &[],
     }
 }
@@ -2230,6 +2234,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "puter",
+        name: "Puter AI Gateway",
+        default_base_url: Some("https://api.puter.com/puterai/openai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -2934,6 +2945,11 @@ pub fn infer_provider(base_url: &str) -> String {
     // matched as that exact endpoint. The same host is the marketing site.
     if host == "crowllm.com" && in_path("/v1") {
         return "crowllm".into();
+    }
+    // The AI gateway is /puterai/openai and /puterai/anthropic. The same host
+    // serves the rest of the Puter API, so other paths stay custom.
+    if host == "api.puter.com" && (in_path("/puterai/openai") || in_path("/puterai/anthropic")) {
+        return "puter".into();
     }
     match host.as_str() {
         "openrouter.ai" | "api.openrouter.ai" => "openrouter",
@@ -9614,6 +9630,36 @@ mod tests {
             ("https://www.ai-yuanjing.com/", "custom"),
             ("https://ai-yuanjing.com/v1", "custom"),
             ("https://maas-api.ai-yuanjing.com.evil.test/v1", "custom"),
+            ("https://api.puter.com/puterai/openai/v1", "puter"),
+            ("https://api.puter.com/puterai/openai/v1/", "puter"),
+            ("https://api.puter.com/puterai/openai/v1/chat/completions", "puter"),
+            ("https://api.puter.com/puterai/openai/v1/models", "puter"),
+            ("https://api.puter.com/puterai/openai/v1/responses", "puter"),
+            ("https://api.puter.com/puterai/openai/v1/messages", "puter"),
+            ("https://api.puter.com/puterai/openai", "puter"),
+            ("https://api.puter.com/puterai/openai/v1beta/models/gemini-3.5-flash-lite:generateContent", "puter"),
+            ("https://api.puter.com/puterai/anthropic", "puter"),
+            ("https://api.puter.com/puterai/anthropic/", "puter"),
+            ("https://api.puter.com/puterai/anthropic/v1", "puter"),
+            ("https://api.puter.com/puterai/anthropic/v1/messages", "puter"),
+            ("https://api.puter.com/", "custom"),
+            ("https://api.puter.com/v1", "custom"),
+            ("https://api.puter.com/v1/chat/completions", "custom"),
+            ("https://api.puter.com/puterai", "custom"),
+            ("https://api.puter.com/puterai/gemini", "custom"),
+            ("https://api.puter.com/puterai/openai-compat/v1", "custom"),
+            ("https://api.puter.com/puterai/anthropic-messages/v1/messages", "custom"),
+            ("https://puter.com/", "custom"),
+            ("https://puter.com/dashboard", "custom"),
+            ("https://developer.puter.com/", "custom"),
+            ("https://developer.puter.com/tutorials/use-openai-sdk-with-puter/", "custom"),
+            ("https://developer.puter.com/ai/models/", "custom"),
+            ("https://docs.puter.com/", "custom"),
+            ("https://docs.puter.com/rate-limits-and-quotas/", "custom"),
+            ("https://www.puter.com/", "custom"),
+            ("https://www.api.puter.com/puterai/openai/v1", "custom"),
+            ("https://api.puter.ai/puterai/openai/v1", "custom"),
+            ("https://api.puter.com.evil.test/puterai/openai/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9691,7 +9737,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13147,7 +13193,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13276,7 +13322,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13421,7 +13467,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13532,7 +13578,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13630,7 +13676,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
     }
 
     #[test]
@@ -13666,7 +13712,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
     }
 
     #[test]
@@ -13712,7 +13758,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
     }
 
     #[test]
@@ -13764,7 +13810,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
     }
 
     #[test]
@@ -13794,7 +13840,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
     }
 
     #[test]
@@ -13827,7 +13873,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
     }
 
     #[test]
@@ -13860,7 +13906,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
     }
 
     #[test]
@@ -13895,7 +13941,67 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 216);
+        assert_eq!(list_providers().len(), 217);
+    }
+
+    #[test]
+    fn puter_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "puter")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "Puter AI Gateway");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://api.puter.com/puterai/openai/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.puter.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/puterai/openai/v1/chat/completions"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/puterai/anthropic/v1/messages"
+        );
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("puter");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![(
+                AnthropicMessages,
+                "https://api.puter.com/puterai/anthropic"
+            )]
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["base_url"],
+            "https://api.puter.com/puterai/anthropic"
+        );
+        assert_eq!(
+            serialized["additional_endpoints"][0]["protocol"],
+            "anthropic-messages"
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://developer.puter.com/tutorials/use-openai-sdk-with-puter/"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://puter.com/dashboard#account"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 217);
     }
 
 }

@@ -1503,5 +1503,12 @@
       "url": "https://console.cucloud.cn/",
       "kind": "console"
     }
+  },
+  "puter": {
+    "docs_url": "https://developer.puter.com/tutorials/use-openai-sdk-with-puter/",
+    "portal": {
+      "url": "https://puter.com/dashboard#account",
+      "kind": "api-key"
+    }
   }
 }

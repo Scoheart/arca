@@ -597,6 +597,15 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "Qwen3.8-Flash",
             "glm-5.3",
         ],
+        // https://developer.puter.com/tutorials/use-openai-sdk-with-puter/
+        // https://developer.puter.com/tutorials/use-anthropic-sdk-with-puter/
+        // GET /puterai/openai/v1/models is HTTP 404. The catalog data-id
+        // openai/gpt-5.4-nano is not the tutorial string and is not this seed.
+        "puter" => &[
+            "meta/muse-wonder",
+            "gpt-5.4-nano",
+            "claude-sonnet-5-5",
+        ],
         _ => return None,
     };
     Some(
@@ -3584,6 +3593,26 @@ mod tests {
             ],
             &["GLM-5.3", "HappyHorse1.1"],
         );
+    }
+
+    #[test]
+    fn puter_seeds_only_the_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "puter",
+            "https://api.puter.com/puterai/openai/v1",
+            "/chat/completions",
+            &["meta/muse-wonder", "gpt-5.4-nano", "claude-sonnet-5-5"],
+            &[
+                "openai/gpt-5.4-nano",
+                "anthropic/claude-sonnet-5-5",
+                "gemini-3.5-flash-lite",
+                "grok-4.7",
+                "claude-opus-5-5",
+                "claude-haiku-5-5",
+                "meta/muse-ember",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"puter"));
     }
 
     #[test]
