@@ -4288,6 +4288,38 @@
       }
     },
     {
+      "id": "cheapllm-shop",
+      "name": "cheapllm.shop",
+      "category": "gateway",
+      "baseUrl": "https://cheapllm.shop/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://cheapllm.shop/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://cheapllm.shop/signup"
+      }
+    },
+    {
+      "id": "powertokens",
+      "name": "PowerTokens",
+      "category": "gateway",
+      "baseUrl": "https://api.powertokens.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.powertokens.ai/en/guides/api-key-and-model-call",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://powertokens.ai/api-keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",
