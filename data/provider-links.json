@@ -1489,5 +1489,12 @@
       "url": "https://console.suanli.cn/models",
       "kind": "api-key"
     }
+  },
+  "botscanner": {
+    "docs_url": "https://botscanner.ai/faq",
+    "portal": {
+      "url": "https://botscanner.ai/api-keys",
+      "kind": "api-key"
+    }
   }
 }
