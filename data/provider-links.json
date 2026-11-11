@@ -1475,5 +1475,12 @@
       "url": "https://powertokens.ai/api-keys",
       "kind": "api-key"
     }
+  },
+  "free-ai": {
+    "docs_url": "https://free.ai/api/",
+    "portal": {
+      "url": "https://free.ai/account/?tab=api",
+      "kind": "api-key"
+    }
   }
 }
