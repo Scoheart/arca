@@ -568,6 +568,16 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // Public GET /v1/models is {models,total,caller_country} and mixes image, speech, and video rows.
         // Several self-hosted ids are labels for one Qwen model. qwen3-coder and the other aliases are not this seed.
         "free-ai" => &["qwen7b", "qwen-coder"],
+        // https://www.suanli.cn/docs/large-model-cloud-service/quickstart/cqsrwzrbsim4idkkjbxcdux4nfg/
+        // GET /v1/models requires a key. Unauthenticated returns a custom 400, not an OpenAI list.
+        // The product page also lists kimi-k2.6, glm-5, glm-5.1, and tencent/hy3-preview. Those are not this seed.
+        "suanli-maas" => &[
+            "deepseek/deepseek-v4-flash",
+            "deepseek/deepseek-v4-pro",
+            "moonshotai/kimi-k3",
+            "z-ai/glm-5.2",
+            "qwen/qwen3.7-max",
+        ],
         _ => return None,
     };
     Some(
@@ -3494,6 +3504,29 @@ mod tests {
             ],
         );
         assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"free-ai"));
+    }
+
+    #[test]
+    fn suanli_maas_seeds_only_the_reviewed_chat_ids() {
+        assert_static_chat_seed(
+            "suanli-maas",
+            "https://api.suanli.cn/v1",
+            "/chat/completions",
+            &[
+                "deepseek/deepseek-v4-flash",
+                "deepseek/deepseek-v4-pro",
+                "moonshotai/kimi-k3",
+                "z-ai/glm-5.2",
+                "qwen/qwen3.7-max",
+            ],
+            &[
+                "moonshotai/kimi-k2.6",
+                "z-ai/glm-5",
+                "z-ai/glm-5.1",
+                "tencent/hy3-preview",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"suanli-maas"));
     }
 
     #[test]
