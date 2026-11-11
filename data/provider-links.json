@@ -1538,5 +1538,12 @@
       "url": "https://deploy.radium.cloud/keys",
       "kind": "api-key"
     }
+  },
+  "logfare": {
+    "docs_url": "https://logfare.ai/docs",
+    "portal": {
+      "url": "https://logfare.ai/register",
+      "kind": "api-key"
+    }
   }
 }
