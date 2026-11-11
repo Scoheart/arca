@@ -4274,6 +4274,20 @@
       }
     },
     {
+      "id": "hetzner-experiments",
+      "name": "Hetzner Experiments Inference",
+      "category": "official",
+      "baseUrl": "https://inference.hetzner.com/api/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://community.hetzner.com/tutorials/opencode-with-hetzner-inference-api-systemd-sandbox/",
+      "portal": {
+        "kind": "console",
+        "url": "https://experiments.hetzner.com/"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

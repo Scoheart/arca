@@ -1454,5 +1454,12 @@
       "url": "https://platform.respan.ai/platform/gateway/api-keys",
       "kind": "api-key"
     }
+  },
+  "hetzner-experiments": {
+    "docs_url": "https://community.hetzner.com/tutorials/opencode-with-hetzner-inference-api-systemd-sandbox/",
+    "portal": {
+      "url": "https://experiments.hetzner.com/",
+      "kind": "console"
+    }
   }
 }

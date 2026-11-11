@@ -549,6 +549,9 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             "google_gemini_ai/gemini-4-carbon:free",
             "meta/muse-ember:free",
         ],
+        // https://community.hetzner.com/tutorials/opencode-with-hetzner-inference-api-systemd-sandbox/
+        // GET /api/v1/models requires auth. Launch ids other than this FP8 id are not this seed.
+        "hetzner-experiments" => &["Qwen/Qwen3.6-35B-A3B-FP8"],
         _ => return None,
     };
     Some(
@@ -3420,6 +3423,23 @@ mod tests {
             ],
         );
         assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"respan"));
+    }
+
+    #[test]
+    fn hetzner_experiments_seeds_only_the_documented_chat_id() {
+        assert_static_chat_seed(
+            "hetzner-experiments",
+            "https://inference.hetzner.com/api/v1",
+            "/chat/completions",
+            &["Qwen/Qwen3.6-35B-A3B-FP8"],
+            &[
+                "Qwen/Qwen3.6-35B-A3B",
+                "Kimi-K2.7-Code",
+                "GLM-5.2",
+                "DeepSeek-V4-Flash-0731",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"hetzner-experiments"));
     }
 
     #[test]
