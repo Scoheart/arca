@@ -1552,5 +1552,12 @@
       "url": "https://synap402.com/account.html#keys",
       "kind": "api-key"
     }
+  },
+  "flonno": {
+    "docs_url": "https://www.flonno.com/docs",
+    "portal": {
+      "url": "https://www.flonno.com/dashboard/keys",
+      "kind": "api-key"
+    }
   }
 }

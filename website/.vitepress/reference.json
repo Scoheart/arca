@@ -4486,6 +4486,21 @@
       }
     },
     {
+      "id": "flonno",
+      "name": "Flonno",
+      "category": "official",
+      "baseUrl": "https://www.flonno.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://www.flonno.com/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://www.flonno.com/dashboard/keys"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

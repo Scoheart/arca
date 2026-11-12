@@ -1277,6 +1277,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://synap402.com",
         }],
+        "flonno" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://www.flonno.com",
+        }],
         _ => &[],
     }
 }
@@ -2335,6 +2339,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "flonno",
+        name: "Flonno",
+        default_base_url: Some("https://www.flonno.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3200,6 +3211,9 @@ pub fn infer_provider(base_url: &str) -> String {
         // Docs, keys, and the product page share these hosts with the API.
         // www.synap402.com and linkrra.com answered GET /v1/models and are not reviewed hosts.
         "synap402.com" | "synap.linkrra.com" => "synap",
+        // Docs, keys, signup, and the product page share www.flonno.com with the API.
+        // flonno.com redirects to www.flonno.com.
+        "www.flonno.com" | "flonno.com" => "flonno",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -9977,6 +9991,46 @@ mod tests {
             ("https://pool.linkrra.com/v1", "custom"),
             ("https://synap402.com.evil.test/v1", "custom"),
             ("https://synap.linkrra.com.evil.test/v1", "custom"),
+            ("https://www.flonno.com/v1", "flonno"),
+            ("https://www.flonno.com/v1/", "flonno"),
+            ("https://www.flonno.com/v1/chat/completions", "flonno"),
+            ("https://www.flonno.com/v1/models", "flonno"),
+            ("https://www.flonno.com/v1/responses", "flonno"),
+            ("https://www.flonno.com/v1/messages", "flonno"),
+            ("https://www.flonno.com", "flonno"),
+            ("https://www.flonno.com/", "flonno"),
+            ("https://www.flonno.com/docs", "flonno"),
+            ("https://www.flonno.com/dashboard", "flonno"),
+            ("https://www.flonno.com/dashboard/keys", "flonno"),
+            ("https://www.flonno.com/sign-up", "flonno"),
+            ("https://www.flonno.com/pricing", "flonno"),
+            ("https://www.flonno.com/terms", "flonno"),
+            ("https://www.flonno.com/privacy", "flonno"),
+            ("https://www.flonno.com/legal", "flonno"),
+            ("https://www.flonno.com/llms.txt", "flonno"),
+            ("https://www.flonno.com/integrations/openapi.json", "flonno"),
+            ("https://www.flonno.com/models/qwen3-8-flash-27b", "flonno"),
+            ("https://www.flonno.com/coding-agents", "flonno"),
+            ("https://www.flonno.com/status", "flonno"),
+            ("https://www.flonno.com/v1beta/models/qwen3.8-27b:generateContent", "flonno"),
+            ("https://flonno.com/v1", "flonno"),
+            ("https://flonno.com/v1/", "flonno"),
+            ("https://flonno.com/v1/chat/completions", "flonno"),
+            ("https://flonno.com/v1/models", "flonno"),
+            ("https://flonno.com/v1/responses", "flonno"),
+            ("https://flonno.com/v1/messages", "flonno"),
+            ("https://flonno.com", "flonno"),
+            ("https://flonno.com/", "flonno"),
+            ("https://flonno.com/docs", "flonno"),
+            ("https://flonno.com/dashboard/keys", "flonno"),
+            ("https://api.flonno.com/v1", "custom"),
+            ("https://api.flonno.com/v1/models", "custom"),
+            ("https://flonno.ai/v1", "custom"),
+            ("https://flonno.ai/v1/models", "custom"),
+            ("https://www.flonno.ai/v1", "custom"),
+            ("https://flonno.io/v1", "custom"),
+            ("https://www.flonno.com.evil.test/v1", "custom"),
+            ("https://flonno.com.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -10054,7 +10108,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13510,7 +13564,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13639,7 +13693,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13784,7 +13838,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13895,7 +13949,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13993,7 +14047,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14029,7 +14083,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14075,7 +14129,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14127,7 +14181,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14157,7 +14211,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14190,7 +14244,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14223,7 +14277,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14258,7 +14312,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14318,7 +14372,7 @@ url = "https://example.test/mcp"
             "https://puter.com/dashboard#account"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14379,7 +14433,7 @@ url = "https://example.test/mcp"
             "https://console.ucloud.cn/modelverse/experience/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14431,7 +14485,7 @@ url = "https://example.test/mcp"
             "https://platform.mosi.cn/app/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14477,7 +14531,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://minekuai.cn/api-docs");
         assert_eq!(serialized["portal"]["url"], "https://minekuai.cn/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14523,7 +14577,7 @@ url = "https://example.test/mcp"
             "https://deploy.radium.cloud/keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14569,7 +14623,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://logfare.ai/docs");
         assert_eq!(serialized["portal"]["url"], "https://logfare.ai/register");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
     }
 
     #[test]
@@ -14612,7 +14666,50 @@ url = "https://example.test/mcp"
             "https://synap402.com/account.html#keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 223);
+        assert_eq!(list_providers().len(), 224);
+    }
+
+    #[test]
+    fn flonno_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "flonno")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "Flonno");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(provider.default_base_url, Some("https://www.flonno.com/v1"));
+        assert_eq!(serialized["base_url"], "https://www.flonno.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("flonno");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![(AnthropicMessages, "https://www.flonno.com")]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://www.flonno.com/docs");
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://www.flonno.com/dashboard/keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 224);
     }
 
 }
