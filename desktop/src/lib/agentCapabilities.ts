@@ -35,6 +35,7 @@ function projectedAgentInfo(
     project: legacy?.project ?? null,
     skills_global_dir: skill?.global_dir ?? null,
     skills_global_dirs: skillsGlobalDirs,
+    native_profiles: capabilities.native_profiles,
     docs: identity.docs ?? null,
     note: identity.note ?? null,
     category: identity.category,

@@ -52,7 +52,7 @@ export function SubscribeDialog({
       onClose={onClose}
       footerEnd={
         <>
-          <button onClick={onClose} disabled={busy} className="btn-ghost">取消</button>
+          <button onClick={onClose} disabled={busy} className="btn-secondary">取消</button>
           <button disabled={!canSubmit} onClick={submit} className="btn-primary">
             {busy ? "订阅中…" : "订阅"}
           </button>

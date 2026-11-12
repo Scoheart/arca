@@ -6,33 +6,73 @@
 //! references handled by Harness, never copies of its credential document.
 
 use super::*;
-use crate::resources::deepseek_harness::{guard_profile, PatchFile};
+use crate::resources::deepseek_harness::{agent_profile_at, guard_profile, home_patch_path, model_default_entry, profile_at, PatchFile};
+use crate::resources::mcp::scanner::collapse_home;
 
 const PROVIDERS: &str = "llm-pi-ai";
-const DEFAULT_MODEL: &str = "agent-default-model";
 
-fn guarded(path: &Path) -> Result<PatchFile, String> {
-    guard_profile(path, &[PROVIDERS, DEFAULT_MODEL])?;
-    PatchFile::read(path)
+pub(crate) fn guard_registry(path: &Path) -> Result<Option<&'static str>, String> {
+    let default = model_default_entry(path)?;
+    if let Some(entry) = default {
+        guard_profile(path, &[PROVIDERS, entry])?;
+    } else {
+        guard_profile(path, &[PROVIDERS])?;
+    }
+    Ok(default)
 }
 
 fn config_or_empty(patch: &PatchFile, id: &str) -> Result<Value, String> {
     Ok(patch.config(id)?.unwrap_or_else(|| json!({})))
 }
 
-/// Read only the two model-owned configuration entries. Never open the
-/// Harness credential store or evaluate Cordis expressions.
-pub(crate) fn read_registry(path: &Path) -> Result<Option<Value>, String> {
-    let patch = PatchFile::read(path)?;
-    if patch.original().is_none() { return Ok(None); }
-    let routes = config_or_empty(&patch, PROVIDERS)?;
-    let default = config_or_empty(&patch, DEFAULT_MODEL)?;
-    let providers = match routes.get("providers") {
+pub(crate) struct Registry {
+    pub providers: serde_json::Map<String, Value>,
+    pub providers_path: PathBuf,
+    pub default: Value,
+}
+
+/// A home-layer config replaces the profile entry's config. This observation
+/// does not grant a writer for the shared home layer.
+pub(crate) fn read_registry(path: &Path) -> Result<Option<Registry>, String> {
+    profile_at(path)?;
+    let profile = PatchFile::read(path)?;
+    let home_path = home_patch_path();
+    let home = PatchFile::read(&home_path)?;
+    if profile.original().is_none() && home.original().is_none() { return Ok(None); }
+    let (routes, providers_path) = match home.config(PROVIDERS)? {
+        Some(config) => (config, home_path),
+        None => (config_or_empty(&profile, PROVIDERS)?, path.to_path_buf()),
+    };
+    let default = match model_default_entry(path)? {
+        Some(entry) => match home.config(entry)? {
+            Some(config) => config,
+            None => config_or_empty(&profile, entry)?,
+        },
         None => json!({}),
-        Some(value) if value.is_object() => value.clone(),
+    };
+    let providers = match routes.get("providers") {
+        None => serde_json::Map::new(),
+        Some(Value::Object(value)) => value.clone(),
         Some(_) => return Err("deepseek_harness_model_conflicted: providers must be a mapping".into()),
     };
-    Ok(Some(json!({"providers": providers, "default": default})))
+    Ok(Some(Registry { providers, providers_path, default }))
+}
+
+pub(crate) fn read_default(path: &Path) -> Result<Option<crate::domain::plugin::NativeDefaultModelObservation>, String> {
+    let Some(default_entry) = model_default_entry(path)? else { return Ok(None); };
+    for source in [home_patch_path(), path.to_path_buf()] {
+        let patch = PatchFile::read(&source)?;
+        let Some(default) = patch.config(default_entry)? else { continue; };
+        let identity = |field| default.get(field).and_then(Value::as_str)
+            .filter(|value| !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control))
+            .map(str::to_owned);
+        return Ok(identity("provider").zip(identity("model")).map(|(provider, model)| {
+            crate::domain::plugin::NativeDefaultModelObservation {
+                provider, model, source_path: collapse_home(&source.to_string_lossy()),
+            }
+        }));
+    }
+    Ok(None)
 }
 
 fn protocol(profile: &ModelProfile) -> Result<&'static str, String> {
@@ -78,11 +118,13 @@ fn prepared(path: &Path, patch: PatchFile) -> Result<PreparedModelFile, String> 
 pub(super) fn prepare(
     agent_id: &str, path: &Path, profile: &ModelProfile, active: bool,
 ) -> Result<PreparedModelFile, String> {
+    agent_profile_at(agent_id, path)?;
     let api = protocol(profile)?;
     let route = provider_identity(agent_id, profile)?;
     let env = profile.env_key.as_deref().filter(|key| !key.is_empty())
         .ok_or("deepseek_harness_env_reference_required: configure a Harness credential/environment reference; Arca does not export Keychain secrets to .credentials.yaml")?;
-    let mut patch = guarded(path)?;
+    let default_entry = guard_registry(path)?;
+    let mut patch = PatchFile::read(path)?;
     let config = config_or_empty(&patch, PROVIDERS)?;
     let providers = config.get("providers");
     if providers.is_some_and(|value| !value.is_object()) {
@@ -144,39 +186,44 @@ pub(super) fn prepare(
             patch.set_config_path(PROVIDERS, &keys, &json!({"off": null, "high": "high"}))?;
         }
     }
-    if active {
-        patch.set_config_path(DEFAULT_MODEL, &["provider"], &json!(route))?;
-        patch.set_config_path(DEFAULT_MODEL, &["model"], &json!(profile.model))?;
-        patch.remove_config_path(DEFAULT_MODEL, &["reasoningEffort"])?;
+    if let Some(default_entry) = default_entry.filter(|_| active) {
+        patch.set_config_path(default_entry, &["provider"], &json!(route))?;
+        patch.set_config_path(default_entry, &["model"], &json!(profile.model))?;
+        if default_entry == "agent-default-model" {
+            patch.remove_config_path(default_entry, &["reasoningEffort"])?;
+        }
     }
     prepared(path, patch)
 }
 
 fn clear_default_if(
-    patch: &mut PatchFile, removed: &BTreeSet<String>, model: Option<&str>,
+    patch: &mut PatchFile, default_entry: &str, removed: &BTreeSet<String>, model: Option<&str>,
 ) -> Result<(), String> {
-    let Some(config) = patch.config(DEFAULT_MODEL)? else { return Ok(()); };
+    let Some(config) = patch.config(default_entry)? else { return Ok(()); };
     let current = config.get("provider").and_then(Value::as_str);
     if !current.is_some_and(|id| removed.contains(id))
         || model.is_some_and(|model| config.get("model").and_then(Value::as_str) != Some(model)) {
         return Ok(());
     }
     if config.as_object().is_none_or(|object| object.keys().any(|key|
-        !matches!(key.as_str(), "provider" | "model" | "reasoningEffort"))) {
+        !matches!(key.as_str(), "provider" | "model")
+            && !(default_entry == "agent-default-model" && key == "reasoningEffort"))) {
         return Err("deepseek_harness_default_policy_conflicted: removing this default would discard unowned policy; choose another native default first".into());
     }
     // Removing both required fields but retaining config:{} would break boot.
     // Removing the override restores the selected bundle's native default.
-    patch.remove_config_path(DEFAULT_MODEL, &[])
+    patch.remove_config_path(default_entry, &[])
 }
 
 pub(super) fn clear(
     agent_id: &str, path: &Path, profile: &ModelProfile,
 ) -> Result<PreparedModelFile, String> {
+    agent_profile_at(agent_id, path)?;
     if PatchFile::read(path)?.original().is_none() {
         return Ok(PreparedModelFile { path: path.into(), original: None, content: None });
     }
-    let mut patch = guarded(path)?;
+    let default_entry = guard_registry(path)?;
+    let mut patch = PatchFile::read(path)?;
     let route = provider_identity(agent_id, profile)?;
     let config = config_or_empty(&patch, PROVIDERS)?;
     let provider = config.get("providers").and_then(|providers| providers.get(&route));
@@ -187,15 +234,19 @@ pub(super) fn clear(
         }
         patch.remove_config_path(PROVIDERS, &["providers", &route])?;
     }
-    clear_default_if(&mut patch, &BTreeSet::from([route]), Some(&profile.model))?;
+    if let Some(default_entry) = default_entry {
+        clear_default_if(&mut patch, default_entry, &BTreeSet::from([route]), Some(&profile.model))?;
+    }
     prepared(path, patch)
 }
 
-pub(super) fn clear_all(path: &Path) -> Result<PreparedModelFile, String> {
+pub(super) fn clear_all(agent_id: &str, path: &Path) -> Result<PreparedModelFile, String> {
+    agent_profile_at(agent_id, path)?;
     if PatchFile::read(path)?.original().is_none() {
         return Ok(PreparedModelFile { path: path.into(), original: None, content: None });
     }
-    let mut patch = guarded(path)?;
+    let default_entry = guard_registry(path)?;
+    let mut patch = PatchFile::read(path)?;
     let config = config_or_empty(&patch, PROVIDERS)?;
     let Some(providers) = config.get("providers") else { return prepared(path, patch); };
     let providers = providers.as_object().ok_or("deepseek_harness_model_conflicted: providers must be a mapping")?;
@@ -211,19 +262,19 @@ pub(super) fn clear_all(path: &Path) -> Result<PreparedModelFile, String> {
     // Keep the complete providers override empty. Removing it could restore
     // a bundle provider which the reviewed operation intended to clear.
     for id in &ids { patch.remove_config_path(PROVIDERS, &["providers", id])?; }
-    clear_default_if(&mut patch, &ids, None)?;
+    if let Some(default_entry) = default_entry {
+        clear_default_if(&mut patch, default_entry, &ids, None)?;
+    }
     prepared(path, patch)
 }
 
 pub(super) fn observe_external(path: &Path) -> crate::resources::model::ExternalModelObservedState {
     use crate::resources::model::ExternalModelObservedState::{Absent, Conflicted, Present};
-    if matches!(read_registry(path), Ok(None)) { return Absent; }
-    if guard_profile(path, &[PROVIDERS, DEFAULT_MODEL]).is_err() { return Conflicted; }
     match read_registry(path) {
         Err(_) => Conflicted,
         Ok(None) => Absent,
-        Ok(Some(root)) => if root["providers"].as_object().is_some_and(|providers| !providers.is_empty())
-            || root["default"].get("provider").is_some() { Present } else { Absent },
+        Ok(Some(_)) if guard_registry(path).is_err() => Conflicted,
+        Ok(Some(root)) => if !root.providers.is_empty() || root.default.get("provider").is_some() { Present } else { Absent },
     }
 }
 
@@ -235,8 +286,8 @@ pub(super) fn observe_active(
         Ok(None) => return ObservedActiveModel::None,
         Ok(Some(root)) => root,
     };
-    if guard_profile(path, &[PROVIDERS, DEFAULT_MODEL]).is_err() { return ObservedActiveModel::Conflicted; }
-    let (Some(provider), Some(model)) = (root["default"].get("provider").and_then(Value::as_str), root["default"].get("model").and_then(Value::as_str)) else {
+    if guard_registry(path).is_err() { return ObservedActiveModel::Conflicted; }
+    let (Some(provider), Some(model)) = (root.default.get("provider").and_then(Value::as_str), root.default.get("model").and_then(Value::as_str)) else {
         return ObservedActiveModel::None;
     };
     let matches = profiles.values().filter(|profile|
@@ -286,16 +337,16 @@ mod tests {
         let content = prepare("deepseek-harness", &path, &second, false).unwrap().content.unwrap();
         fs::write(&path, content).unwrap();
         let root = read_registry(&path).unwrap().unwrap();
-        assert_eq!(root["providers"].as_object().unwrap().len(), 2);
-        assert_eq!(root["default"]["model"], first.model);
+        assert_eq!(root.providers.len(), 2);
+        assert_eq!(root.default["model"], first.model);
         let unchanged = prepare("deepseek-harness", &path, &first, true).unwrap();
         assert_eq!(unchanged.original, unchanged.content);
         let content = clear("deepseek-harness", &path, &first).unwrap().content.unwrap();
         fs::write(&path, content).unwrap();
         let root = read_registry(&path).unwrap().unwrap();
-        assert_eq!(root["providers"].as_object().unwrap().len(), 1);
-        assert!(root["default"].get("provider").is_none());
-        assert!(root["default"].get("model").is_none());
+        assert_eq!(root.providers.len(), 1);
+        assert!(root.default.get("provider").is_none());
+        assert!(root.default.get("model").is_none());
         assert!(fs::read_to_string(&path).unwrap().contains("# keep MCP policy"));
         assert!(!home.home.join(".dsh/.credentials.yaml").exists());
     }

@@ -1,7 +1,7 @@
 import { ResourceIcon } from "./resourcePresentation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { AssetRef, ConfiguredMcpObservation, ConsumptionView, ConvergenceAction, HostMcpObservation, NativeSkillObservation } from "../lib/types";
-import { ConfiguredMcpCard, HostMcpCard, NativeSkillCard } from "./NativePluginsPanel";
+import type { AssetRef, ConfiguredMcpObservation, ConsumptionView, ConvergenceAction, HostMcpObservation, NativeFileSkillObservation, NativeSkillObservation } from "../lib/types";
+import { ConfiguredMcpCard, HostMcpCard, NativeFileSkillCard, NativeSkillCard } from "./NativePluginsPanel";
 import { assetIdentity } from "../lib/consumption";
 import {
   DownloadIcon,
@@ -142,6 +142,7 @@ export function AgentConsumptionPanel({
   hostMcps = [],
   configuredMcps = [],
   nativeSkills = [],
+  fileSkills = [],
   externalMode = "summary",
   externalTitle = "外部配置",
   externalDescription = "尚未由 Arca 管理",
@@ -175,13 +176,14 @@ export function AgentConsumptionPanel({
 }: {
   domain: AssetRef["domain"];
   title: string;
-  description?: string;
+  description?: ReactNode;
   manageLabel: string;
   rows: ConsumptionView[];
   external: ConsumptionView[];
   hostMcps?: HostMcpObservation[];
   configuredMcps?: ConfiguredMcpObservation[];
   nativeSkills?: NativeSkillObservation[];
+  fileSkills?: NativeFileSkillObservation[];
   externalMode?: "summary" | "cards";
   externalTitle?: string;
   externalDescription?: string;
@@ -226,11 +228,13 @@ export function AgentConsumptionPanel({
   const hosts = domain === "mcp" ? hostMcps : [];
   const declarations = domain === "mcp" ? configuredMcps : [];
   const skills = domain === "skill" ? nativeSkills : [];
+  const skillFiles = domain === "skill" ? fileSkills : [];
   const filteredHosts = hosts.filter(item => !needle || `${item.name} ${item.server_id} ${item.provider}`.toLocaleLowerCase().includes(needle));
   const filteredDeclarations = declarations.filter(item => !needle || `${item.name} ${item.source_path}`.toLocaleLowerCase().includes(needle));
   const filteredSkills = skills.filter(item => !needle || `${item.name} ${item.plugin_name} ${item.plugin_id}`.toLocaleLowerCase().includes(needle));
-  const total = items.length + hosts.length + declarations.length + skills.length;
-  const visible = filteredHosts.length + filteredDeclarations.length + filteredSkills.length;
+  const filteredSkillFiles = skillFiles.filter(item => !needle || `${item.name} ${item.description} ${item.source_path}`.toLocaleLowerCase().includes(needle));
+  const total = items.length + hosts.length + declarations.length + skills.length + skillFiles.length;
+  const visible = filteredHosts.length + filteredDeclarations.length + filteredSkills.length + filteredSkillFiles.length;
   const filtered = items.filter(({ item }) => {
     const presentation = present(item.asset);
     return !needle || `${presentation.name} ${presentation.description ?? ""} ${assetIdentity(item.asset)}`.toLocaleLowerCase().includes(needle);
@@ -319,8 +323,9 @@ export function AgentConsumptionPanel({
       ) : filtered.length + visible === 0 ? <p role="status" className="arca-consumption-empty">没有匹配的 {title}</p> : (
         <ul className="arca-consumption-list" data-columns={columns}>
           {filteredHosts.map(item => <HostMcpCard key={`${item.agent_id}:${item.source_fingerprint}`} item={item} />)}
-          {filteredDeclarations.map(item => <ConfiguredMcpCard key={`${item.agent_id}:configured:${item.name}`} item={item} />)}
+          {filteredDeclarations.map(item => <ConfiguredMcpCard key={JSON.stringify([item.agent_id, item.source_path, item.name])} item={item} />)}
           {filteredSkills.map(item => <NativeSkillCard key={item.id} item={item} />)}
+          {filteredSkillFiles.map(item => <NativeFileSkillCard key={item.source_path} item={item} />)}
           {filtered.map(({ item, external: isExternal }) => {
             const presentation = present(item.asset);
             const presentationDescription = presentation.description?.trim();

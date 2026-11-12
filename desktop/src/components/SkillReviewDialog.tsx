@@ -347,7 +347,7 @@ export function SkillReviewDialog({
       onClose={closeReview}
       footerEnd={
         <>
-          <button type="button" className="btn-ghost" disabled={busy} onClick={closeReview}>取消</button>
+          <button type="button" className="btn-secondary" disabled={busy} onClick={closeReview}>取消</button>
           <button
             type="button"
             className={needsRiskAcknowledgment ? "btn-danger" : "btn-primary"}

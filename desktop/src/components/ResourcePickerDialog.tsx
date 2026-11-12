@@ -72,7 +72,7 @@ export function ResourcePickerDialog({
       footerStart={<span className="arca-picker-count">{filtered.length} 个可选项</span>}
       footerEnd={
         <>
-          <button type="button" className="btn-ghost" disabled={busy} onClick={onClose}>取消</button>
+          <button type="button" className="btn-secondary" disabled={busy} onClick={onClose}>取消</button>
           <button type="button" className="btn-primary" disabled={!selected || selected.disabled || busy} onClick={() => void add()}>
             {busy && <RefreshIcon className="arca-button-progress-icon" data-spinning="true" />}
             {busy ? "添加中…" : addLabel}

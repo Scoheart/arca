@@ -47,7 +47,7 @@ export function ProxySettingsDialog({
       onClose={onClose}
       footerEnd={(
         <>
-          <button type="button" className="btn-ghost" disabled={saving} onClick={onClose}>
+          <button type="button" className="btn-secondary" disabled={saving} onClick={onClose}>
             取消
           </button>
           <button type="submit" className="btn-primary" form="arca-proxy-settings-form" disabled={saving}>

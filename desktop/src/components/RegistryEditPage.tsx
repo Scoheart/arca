@@ -334,7 +334,7 @@ export function RegistryEditPage({
   ) : null;
   const footerEnd = (
     <>
-      <button onClick={onBack} disabled={saving} className="btn-ghost">{t("common.cancel")}</button>
+      <button onClick={onBack} disabled={saving} className="btn-secondary">{t("common.cancel")}</button>
       <button onClick={isPaste ? handlePaste : handleSave} disabled={(isPaste ? !pasteValid : !valid) || saving} className="btn-primary">
         <SaveIcon className="w-4 h-4" />
         {saving ? t(isPaste ? "mcpEditor.importing" : isNew ? "mcpEditor.adding" : "common.saving")
@@ -374,13 +374,8 @@ export function RegistryEditPage({
         avatar={<McpAvatar assetKey={keyOf(existing)} entry={existing} preference={iconPreference} size={40} />}
         subtitle={`编辑 · ${transport === "stdio" ? "stdio" : "HTTP"} · 全局配置`}
         onClose={onBack}
-        footer={
-          <>
-            {footerStart}
-            <div className="flex-1" />
-            {footerEnd}
-          </>
-        }
+        footerStart={footerStart}
+        footer={footerEnd}
       >
         {form}
       </ResourceInspector>

@@ -993,13 +993,14 @@ fn extract_qoder(agent_id: &str, path: &Path) -> Result<Vec<ExtractedModel>, Str
 }
 
 fn extract_deepseek_harness(agent_id: &str, path: &Path) -> Result<Vec<ExtractedModel>, String> {
+    crate::resources::deepseek_harness::agent_profile_at(agent_id, path)?;
     let Some(root) = crate::resources::model::adapters::read_deepseek_harness_registry(path)? else {
         return Ok(Vec::new());
     };
-    let providers = root["providers"].as_object().ok_or("Harness providers must be a mapping")?;
-    let blocked = crate::resources::deepseek_harness::guard_profile(path, &["llm-pi-ai", "agent-default-model"]).err();
+    let blocked = crate::resources::model::adapters::guard_deepseek_harness_registry(path).err();
+    let target_paths = vec![root.providers_path.clone()];
     let mut rows = Vec::new();
-    for (native_id, provider) in providers {
+    for (native_id, provider) in &root.providers {
         let Some(models) = provider.get("models").and_then(Value::as_array) else { continue; };
         let protocol = match provider.get("api").and_then(Value::as_str) {
             Some("openai-completions") => ModelProtocol::OpenaiCompletions,
@@ -1010,19 +1011,28 @@ fn extract_deepseek_harness(agent_id: &str, path: &Path) -> Result<Vec<Extracted
             _ => {
                 let mut row = invalid_candidate(agent_id,
                     format!("Harness provider {native_id} inherits an unobserved catalog protocol or uses an unsupported custom API; configure it in Harness"),
-                    vec![path.into()]);
+                    target_paths.clone());
                 row.native_id = native_id.clone();
                 row.name = native_id.clone();
                 rows.push(row);
                 continue;
             }
         };
-        let Some(base_url) = provider.get("baseURL").and_then(Value::as_str) else {
-            rows.push(invalid_candidate(agent_id, "Harness custom provider is missing its explicit baseURL".into(), vec![path.into()]));
+        let base_url = provider.get("baseURL").and_then(Value::as_str)
+            .and_then(|url| crate::resources::model::normalize_provider_base_url(url).ok());
+        let Some(base_url) = base_url else {
+            let mut row = invalid_candidate(agent_id,
+                "Harness provider needs an explicit HTTP(S) baseURL without credentials, query or fragment".into(),
+                target_paths.clone());
+            row.native_id = native_id.clone();
+            row.name = native_id.clone();
+            rows.push(row);
             continue;
         };
         let (env_key, credential) = match provider.get("apiKeyEnv") {
-            Some(Value::String(key)) if !key.is_empty() => (Some(key.clone()), ExtractedCredential::Env(key.clone())),
+            Some(Value::String(key)) if crate::resources::model::credential::validate_env_name(key).is_ok() => {
+                (Some(key.clone()), ExtractedCredential::Env(key.clone()))
+            }
             _ => (None, ExtractedCredential::Invalid("Arca requires a named Harness credential/environment reference; account and implicit authentication stay native".into())),
         };
         let mut ids = BTreeSet::new();
@@ -1035,17 +1045,16 @@ fn extract_deepseek_harness(agent_id: &str, path: &Path) -> Result<Vec<Extracted
             rows.push(ExtractedModel {
                 agent_id: agent_id.into(), native_id: native_id.clone(),
                 name: model.get("name").and_then(Value::as_str).unwrap_or(model_id).into(),
-                protocol: protocol.clone(), base_url: base_url.into(), model: model_id.into(),
+                protocol: protocol.clone(), base_url: base_url.clone(), model: model_id.into(),
                 env_key: env_key.clone(),
                 context_window: model.get("contextWindow").and_then(Value::as_u64),
                 max_output_tokens: model.get("maxTokens").and_then(Value::as_u64),
                 reasoning: model.get("reasoningEfforts").map(|value| value.is_object()),
                 enabled: None,
-                active: blocked.is_none()
-                    && root["default"].get("provider").and_then(Value::as_str) == Some(native_id.as_str())
-                    && root["default"].get("model").and_then(Value::as_str) == Some(model_id),
+                active: root.default.get("provider").and_then(Value::as_str) == Some(native_id.as_str())
+                    && root.default.get("model").and_then(Value::as_str) == Some(model_id),
                 credential: issue.map(ExtractedCredential::Invalid).unwrap_or_else(|| credential.clone()),
-                target_paths: vec![path.into()],
+                target_paths: target_paths.clone(),
             });
         }
     }

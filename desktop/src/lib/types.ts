@@ -44,12 +44,18 @@ export interface AgentInfo {
   global: string | null; project: string | null;
   skills_global_dir: string | null;
   skills_global_dirs?: string[];
+  native_profiles?: AgentNativeProfile[];
   docs: string | null;
   note: string | null;
   category: string;
   evidence: "official" | "official-source" | "catalog" | "custom" | string;
   verified_at: string | null;
   builtin: boolean;
+}
+
+export interface AgentNativeProfile {
+  name: string;
+  path: string;
 }
 
 export interface AgentIdentityView {
@@ -71,6 +77,7 @@ export interface AgentCapabilityView {
   config_detected?: boolean;
   capabilities: {
     instructions?: boolean;
+    native_profiles?: AgentNativeProfile[];
     mcp?: {
       writable: boolean;
       config_path?: string | null;
@@ -1140,13 +1147,14 @@ export interface HostMcpObservation {
 
 export interface McpInspectionRequest {
   agent_id: string;
-  source: { kind: "configured"; key: string } | { kind: "configured_name"; name: string } | { kind: "host"; source_fingerprint: string };
+  source: { kind: "configured"; key: string } | { kind: "configured_name" | "harness_home"; name: string } | { kind: "host"; source_fingerprint: string };
 }
 
 export interface ConfiguredMcpObservation {
   agent_id: string;
   name: string;
   source_path: string;
+  layer?: "harness_home";
 }
 
 export interface McpConfigurationView {
@@ -1171,11 +1179,21 @@ export interface NativeSkillObservation {
   docs_url: string;
 }
 
+export interface NativeFileSkillObservation {
+  name: string;
+  description: string;
+  source_path: string;
+  model_invocable: boolean;
+  user_invocable: boolean;
+}
+
 export interface NativeResourceInventory {
   native_plugin_agents: string[];
   host_mcps: HostMcpObservation[];
   native_plugins: NativePluginObservation[];
   native_skills: NativeSkillObservation[];
+  file_skills?: NativeFileSkillObservation[];
+  native_default_model?: { provider: string; model: string; source_path: string };
   configured_mcps?: ConfiguredMcpObservation[];
   configured_unavailable?: boolean;
   unavailable: boolean;

@@ -92,6 +92,10 @@ export function AgentConfigurationDialog({
   const hasMcp = agent.has_global;
   const hasModel = modelAgent?.mode === "managed" && modelPaths.length > 0;
   const hasSkills = agent.skills_global_dir !== null;
+  const nativeProfiles = agent.native_profiles ?? [];
+  const usesNativeProfile = nativeProfiles.length > 0;
+  const selectedNativeProfile = nativeProfiles.find((profile) =>
+    profile.path === mcpPath && (!hasModel || profile.path === modelPaths[0]));
 
   const configurationPatch = (): AgentConfigurationPatch => ({
     ...(hasMcp ? { mcp: { path: mcpPath.trim(), key: mcpKey.trim() } } : {}),
@@ -315,7 +319,7 @@ export function AgentConfigurationDialog({
       footerStart={configurationChanged ? <span className="arca-agent-config-hint">{t("agentConfiguration.pathChangeHint")}</span> : null}
       footerEnd={(
         <>
-          <button type="button" className="btn-ghost" disabled={busy || browsing} onClick={onClose}>{t("common.cancel")}</button>
+          <button type="button" className="btn-secondary" disabled={busy || browsing} onClick={onClose}>{t("common.cancel")}</button>
           <button type="button" className="btn-primary" disabled={!canSubmit} onClick={() => void save()}>
             {busy ? t("common.saving") : configurationChanged ? t("agentConfiguration.continue") : t("common.save")}
           </button>
@@ -327,8 +331,32 @@ export function AgentConfigurationDialog({
         <button type="button" className="btn-secondary" disabled={busy || browsing} onClick={() => setEditingCodex(true)}>{t("agentConfiguration.codex.editConfiguration")}</button>
       </div>}
       <fieldset className="arca-agent-config-form arca-agent-config-fields arca-agent-config-sections" disabled={busy || browsing}>
+        {usesNativeProfile && <div className="arca-agent-config-section" aria-label={t("agentConfiguration.nativeProfile")}>
+          <div className="arca-agent-config-section-head">
+            <div className="arca-agent-config-section-title">
+              <strong>{t("agentConfiguration.nativeProfile")}</strong>
+              <span className="arca-agent-config-section-badge">Models · MCPs</span>
+            </div>
+          </div>
+          <div className="arca-agent-config-section-body">
+            <FormSelect
+              ariaLabel={t("agentConfiguration.nativeProfile")}
+              value={selectedNativeProfile?.path ?? ""}
+              options={nativeProfiles.map(({ name, path }) => ({ value: path, label: name }))}
+              disabled={nativeProfiles.length === 1 && Boolean(selectedNativeProfile)}
+              onChange={(path) => { setMcpPath(path); setModelPaths([path]); }}
+            />
+            <ConfigField
+              label={t("agentConfiguration.filePath", "文件路径")}
+              value={selectedNativeProfile?.path ?? mcpPath}
+              readOnly
+              openKind="file"
+            />
+            <p className="arca-agent-instruction-hint">{t("agentConfiguration.nativeProfileHint")}</p>
+          </div>
+        </div>}
         {/* Models Section */}
-        <div className="arca-agent-config-section" aria-label="Models">
+        {!usesNativeProfile && <div className="arca-agent-config-section" aria-label="Models">
           <div className="arca-agent-config-section-head">
             <div className="arca-agent-config-section-title">
               <span className="arca-agent-config-section-icon"><ResourceIcon domain="model" /></span>
@@ -359,10 +387,10 @@ export function AgentConfigurationDialog({
               />
             )}
           </div>
-        </div>
+        </div>}
 
         {/* MCPs Section */}
-        <div className="arca-agent-config-section" aria-label="MCPs">
+        {!usesNativeProfile && <div className="arca-agent-config-section" aria-label="MCPs">
           <div className="arca-agent-config-section-head">
             <div className="arca-agent-config-section-title">
               <span className="arca-agent-config-section-icon"><ResourceIcon domain="mcp" /></span>
@@ -401,7 +429,7 @@ export function AgentConfigurationDialog({
               />
             )}
           </div>
-        </div>
+        </div>}
 
         {/* Skills Section */}
         <div className="arca-agent-config-section" aria-label="Skills">

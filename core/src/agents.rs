@@ -513,6 +513,11 @@ fn prepare_agent_definition(
         .map(str::trim)
         .filter(|s| !s.is_empty())
         .map(collapse_home);
+    if crate::resources::deepseek_harness::default_profile(id).is_some()
+        && existing.is_some_and(|current| current.global != definition.global)
+    {
+        return Err("Use Agent configuration to select a DeepSeek Harness profile for both Models and MCPs".into());
+    }
     definition.project = definition
         .project
         .as_deref()
@@ -770,7 +775,8 @@ pub(crate) fn normalize_configuration_patch(
     }
 
     let agents = load_agents();
-    let mcp = match patch.mcp {
+    let harness = crate::resources::deepseek_harness::default_profile(id).is_some();
+    let mut mcp = match patch.mcp {
         Some(input) => {
             let current = agents
                 .get(id)
@@ -795,26 +801,45 @@ pub(crate) fn normalize_configuration_patch(
                 return Err("MCP 配置键路径无效：不能包含空层级".into());
             }
             Some(McpConfigurationPatch {
-                path: collapse_home(path),
+                path: if harness {
+                    crate::resources::deepseek_harness::normalize_agent_patch_path(id, path)?
+                } else {
+                    collapse_home(path)
+                },
                 key: Some(key.to_string()),
             })
         }
         None => None,
     };
 
-    let model = match patch.model {
+    let mut model = match patch.model {
         Some(input) => {
-            let defaults = crate::resources::model::default_config_paths(id)
-                .ok_or_else(|| "该 Agent 尚未接入 Model writer".to_string())?;
-            Some(ModelConfigurationPatch {
-                paths: crate::resources::model::normalize_config_paths(
-                    &input.paths,
-                    defaults.len(),
-                )?,
-            })
+            let paths = if harness {
+                let [path] = input.paths.as_slice() else {
+                    return Err("DeepSeek Harness Models use one profile patch".into());
+                };
+                vec![crate::resources::deepseek_harness::normalize_agent_patch_path(id, path)?]
+            } else {
+                let defaults = crate::resources::model::default_config_paths(id)
+                    .ok_or_else(|| "该 Agent 尚未接入 Model writer".to_string())?;
+                crate::resources::model::normalize_config_paths(&input.paths, defaults.len())?
+            };
+            Some(ModelConfigurationPatch { paths })
         }
         None => None,
     };
+    if harness {
+        match (&mcp, &model) {
+            (Some(mcp), Some(model)) if model.paths[0] != mcp.path => {
+                return Err("DeepSeek Harness Models and MCPs must use the same profile patch".into());
+            }
+            (Some(mcp), None) => model = Some(ModelConfigurationPatch { paths: vec![mcp.path.clone()] }),
+            (None, Some(model)) => mcp = Some(McpConfigurationPatch {
+                path: model.paths[0].clone(), key: Some("servers".into()),
+            }),
+            _ => {}
+        }
+    }
 
     let skill = match patch.skill {
         Some(input) => {

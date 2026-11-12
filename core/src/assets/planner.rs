@@ -610,6 +610,9 @@ pub fn plan_set_active_model(
     request: PlanSetActiveModelRequest,
 ) -> Result<AssetOperationPlan, String> {
     if !crate::resources::model::supports_global_model_selection(&request.agent_id) {
+        if crate::resources::deepseek_harness::default_profile(&request.agent_id).is_some() {
+            return Err("model_selection_per_session: choose the provider and model when initializing the Harness SDK client".into());
+        }
         return Err("model_selection_per_conversation: choose the model inside a Qoder Desktop conversation".into());
     }
     validate_agent_id(&request.agent_id)?;

@@ -49,7 +49,7 @@ export function AgentLaunchSettings({ info, onClose, onSaved, onLaunch }: {
   if (editingConfiguration) return <CodexConfigurationEditor initialSource={editingConfiguration.source} codexHome={editingConfiguration.codexHome} onClose={() => setEditingConfiguration(null)} />;
   return <DialogShell className="arca-dialog-agent-launch" kind="editor" size="lg" title={info.name} subtitle={t("agentConfiguration.launchSettings")} busy={busy} onClose={onClose}
     leading={<AgentGlyph id={info.agent_id} name={info.name} size={32} />}
-    footerEnd={<><button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>{t("common.cancel")}</button>
+    footerEnd={<><button type="button" className="btn-secondary" onClick={onClose} disabled={busy}>{t("common.cancel")}</button>
       <button type="button" className="btn-secondary" disabled={busy || !valid || !changed} onClick={() => void submit(false)}>{action === "save" ? t("common.saving") : t("common.save")}</button>
       <button type="button" className="btn-primary" disabled={busy || !canRun} onClick={() => void submit(true)}>
         {action === "run" ? t("agentConfiguration.running") : t(changed ? "agentConfiguration.saveAndRun" : "agentConfiguration.run")}

@@ -337,7 +337,7 @@ pub fn validate_source(source: &ApiKeySource) -> Result<(), String> {
     }
 }
 
-fn validate_env_name(name: &str) -> Result<(), String> {
+pub(crate) fn validate_env_name(name: &str) -> Result<(), String> {
     let mut bytes = name.bytes();
     let valid = bytes
         .next()

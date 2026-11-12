@@ -615,15 +615,14 @@ function RegistryDetail({
         </div>
       }
       onClose={onClose}
+      footerStart={onDelete && (
+        <button onClick={onDelete} className="arca-btn-soft-danger" title="删除中央 MCP 资产">
+          <TrashIcon className="w-4 h-4" />
+          删除
+        </button>
+      )}
       footer={
         <>
-          {onDelete && (
-            <button onClick={onDelete} className="arca-btn-soft-danger" title="删除中央 MCP 资产">
-              <TrashIcon className="w-4 h-4" />
-              删除
-            </button>
-          )}
-          <div className="flex-1" />
           <IconButton onClick={onCustomizeIcon} title={t("mcpIcons.action")}>
             <SparklesIcon className="w-4 h-4" />
           </IconButton>

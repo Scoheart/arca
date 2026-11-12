@@ -1,36 +1,6 @@
 /* Arca Agent Hand Picker — Elevated Command Studio */
 
-[data-modal-overlay="true"][data-modal-layer="agent-hand"] {
-  background: color-mix(in srgb, #000 50%, transparent) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 24px 16px !important;
-  overscroll-behavior: contain;
-}
-.dark [data-modal-overlay="true"][data-modal-layer="agent-hand"] {
-  background: rgba(0, 0, 0, 0.72) !important;
-}
-
-[role="dialog"][data-modal-layer="agent-hand"] {
-  background: var(--surface-raised) !important;
-  border: 1px solid var(--border-hairline) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.18) !important;
-  overflow: hidden !important;
-  width: min(860px, calc(100vw - 32px)) !important;
-  max-width: 860px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  padding: 0 !important;
-}
-.dark [role="dialog"][data-modal-layer="agent-hand"] {
-  background: color-mix(in srgb, var(--surface-raised) 96%, #000) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
-}
+.arca-agent-hand-shell { --arca-picker-overflow-y: auto; }
 
 .arca-agent-hand-picker {
   display: flex;
@@ -38,58 +8,6 @@
   width: 100%;
   min-width: 0;
   color: var(--text-primary);
-}
-
-/* Header bar */
-.arca-agent-hand-topbar {
-  display: flex !important;
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  width: 100% !important;
-  height: 56px !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 14px !important;
-  padding: 0 20px !important;
-  border-bottom: 1px solid var(--border-hairline) !important;
-  background: var(--surface-frame) !important;
-  box-sizing: border-box !important;
-  flex-shrink: 0;
-}
-
-.arca-agent-hand-header-start {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-}
-
-.arca-agent-hand-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
-  font-weight: 680;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
-.arca-agent-hand-title svg {
-  color: var(--color-blue);
-  flex-shrink: 0;
-}
-
-.arca-agent-hand-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: 9px;
-  background: var(--surface-item);
-  color: var(--text-secondary);
-  font: 600 10.5px/1 var(--font-mono);
 }
 
 .arca-agent-hand-filters {
@@ -138,7 +56,9 @@
 .arca-agent-hand-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -146,7 +66,7 @@
   position: relative;
   display: flex;
   height: 32px;
-  width: 220px;
+  width: min(220px, 100%);
   align-items: center;
   gap: 7px;
   padding: 0 10px;
@@ -207,25 +127,6 @@
   color: var(--text-primary);
 }
 
-.arca-agent-hand-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background .12s ease, color .12s ease;
-}
-
-.arca-agent-hand-close-btn:hover {
-  background: var(--surface-section);
-  color: var(--text-primary);
-}
-
 /* Card stage & board */
 .arca-agent-hand-stage {
   position: relative;
@@ -233,7 +134,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 24px 20px 22px;
+  padding: 16px 20px;
   box-sizing: border-box;
 }
 
@@ -433,23 +334,9 @@
   margin: 0;
 }
 
-/* Footer */
-.arca-agent-hand-footer {
-  display: flex !important;
-  position: relative !important;
-  bottom: auto !important;
-  left: auto !important;
-  transform: none !important;
-  width: 100% !important;
-  max-width: none !important;
-  height: 48px !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 0 20px !important;
-  border-top: 1px solid var(--border-hairline) !important;
-  background: var(--surface-frame) !important;
-  box-sizing: border-box !important;
-  flex-shrink: 0;
+/* Pagination and keyboard hints share the dialog footer. */
+.arca-agent-hand-footer-info {
+  display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px 16px;
 }
 
 .arca-agent-hand-shortcuts {
@@ -513,12 +400,6 @@
   width: 14px;
   background: var(--color-blue);
   opacity: 1;
-}
-
-.arca-agent-hand-footer-dock {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .arca-agent-hand-pinned {

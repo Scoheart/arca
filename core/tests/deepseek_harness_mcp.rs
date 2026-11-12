@@ -75,6 +75,72 @@ fn native_profile_creates_mcp_client_in_insert_block() {
 }
 
 #[test]
+fn legacy_manager_entry_is_visible_and_assignment_moves_only_that_server() {
+    let f = Fixture::new("web");
+    fs::write(&f.path, r#"# keep profile comment
+- id: mcp-manager
+  config:
+    servers:
+      old: # keep server name comment
+        transport: stdio
+        command: fixture-command
+        enabled: false
+        toolCallTimeoutMs: 21000 # keep selected policy
+      sibling: {transport: stdio, command: sibling-command} # keep sibling
+"#).unwrap();
+    let adapter = DeepseekHarnessAdapter;
+    assert!(!adapter.read_with_enabled(&f.path).contains_key("old"));
+    assert_eq!(adapter.declaration_names(&fs::read_to_string(&f.path).unwrap()).unwrap(), ["old", "sibling"]);
+
+    adapter.upsert(&f.path, "old", &local()).unwrap();
+    let rendered = fs::read_to_string(&f.path).unwrap();
+    let file = PatchFile::from_text(&rendered).unwrap();
+    let installed = file.inspect_mcp("old").unwrap().unwrap();
+    assert_eq!(installed["toolCallTimeoutMs"], 21000);
+    assert_eq!(installed["disabled"], true);
+    let manager = file.config("mcp-manager").unwrap().unwrap();
+    assert!(manager["servers"].get("old").is_none());
+    assert_eq!(manager["servers"]["sibling"]["command"], "sibling-command");
+    for comment in ["# keep profile comment", "# keep server name comment", "# keep selected policy", "# keep sibling"] {
+        assert!(rendered.contains(comment));
+    }
+}
+
+#[test]
+fn legacy_flow_entry_migrates_without_copying_its_separator() {
+    let f = Fixture::new("web");
+    fs::write(&f.path, r#"- {"id":"mcp-manager","config":{"servers":{"old":{"transport":"stdio","command":"fixture-command"},"sibling":{"transport":"stdio","command":"sibling"}}}}
+"#).unwrap();
+
+    DeepseekHarnessAdapter.upsert(&f.path, "old", &local()).unwrap();
+    let rendered = fs::read_to_string(&f.path).unwrap();
+    serde_yaml::from_str::<serde_yaml::Value>(&rendered).unwrap();
+    let file = PatchFile::from_text(&rendered).unwrap();
+    assert!(file.inspect_mcp("old").unwrap().is_some());
+    let manager = file.config("mcp-manager").unwrap().unwrap();
+    assert!(manager["servers"].get("old").is_none());
+    assert_eq!(manager["servers"]["sibling"]["command"], "sibling");
+}
+
+#[test]
+fn legacy_credential_template_is_observable_and_stays_in_place() {
+    let f = Fixture::new("desktop");
+    let text = r#"- id: mcp-manager
+  config:
+    servers:
+      old:
+        transport: streamable-http
+        url: https://example.test/mcp
+        headers: {Authorization: 'Bearer ${credential:LEGACY_MCP}'}
+"#;
+    fs::write(&f.path, text).unwrap();
+    let adapter = DeepseekHarnessAdapter;
+    assert_eq!(adapter.declaration_names(text).unwrap(), ["old"]);
+    assert!(adapter.upsert(&f.path, "old", &local()).is_err());
+    assert_eq!(fs::read_to_string(&f.path).unwrap(), text);
+}
+
+#[test]
 fn native_web_and_desktop_patch_keeps_paused_state_policy_comments_and_unrelated_js() {
     for profile in ["web", "desktop"] {
         let f = Fixture::new(profile);

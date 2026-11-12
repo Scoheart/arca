@@ -95,6 +95,7 @@ pub(crate) fn list_capabilities_with_skills(
         });
         let installed = mcp.as_ref().is_some_and(|(observed, _)| *observed);
         let instructions = super::instructions::supported(&info.id);
+        let native_profiles = crate::resources::deepseek_harness::profile_options(&info.id);
         views.insert(
             info.id.clone(),
             AgentCapabilityView {
@@ -115,6 +116,7 @@ pub(crate) fn list_capabilities_with_skills(
                 capabilities: AgentCapabilitySet {
                     instructions,
                     mcp: mcp.map(|(_, capability)| capability),
+                    native_profiles,
                     ..AgentCapabilitySet::default()
                 },
             },

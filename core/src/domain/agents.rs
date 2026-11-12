@@ -103,6 +103,12 @@ pub struct SkillAgentCapabilityView {
     pub affected_agent_ids: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AgentNativeProfile {
+    pub name: String,
+    pub path: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct AgentCapabilitySet {
     /// Native file inspection/editing; this is not a central asset domain.
@@ -114,6 +120,8 @@ pub struct AgentCapabilitySet {
     pub model: Option<ModelAgentCapabilityView>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skill: Option<SkillAgentCapabilityView>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub native_profiles: Vec<AgentNativeProfile>,
 }
 
 /// Unified Agent projection used by every frontend. Domain-specific details

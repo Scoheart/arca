@@ -1,4 +1,4 @@
-.arca-dialog-shell.arca-dialog-codex-config { height: min(620px, calc(100dvh - 80px)); }
+.arca-dialog-shell.arca-dialog-codex-config { height: 620px; }
 .arca-dialog-codex-config .arca-dialog-shell-body { display: flex; flex-direction: column; gap: 14px; }
 .arca-codex-config-tabs { display: inline-flex; align-self: flex-start; gap: 3px; padding: 3px; border-radius: 8px; background: var(--surface-section); }
 .arca-codex-config-tabs > button { padding: 6px 10px; border: 0; border-radius: 5px; background: transparent; color: var(--text-secondary); font: 12px var(--font-sans); cursor: pointer; }

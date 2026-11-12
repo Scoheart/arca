@@ -1,5 +1,5 @@
 import { ImeInput, isImeKey } from "./ImeInput";
-import { CSSProperties, ReactNode, type KeyboardEvent as ReactKeyboardEvent, useLayoutEffect, useRef } from "react";
+import { CSSProperties, ReactNode, type KeyboardEvent as ReactKeyboardEvent, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { SearchIcon, XIcon } from "./icons";
 import { transportLabel, transportOf } from "../lib/mcp";
@@ -248,7 +248,7 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
-const mountedDialogs = new Set<HTMLElement>();
+const mountedDialogs = new Map<HTMLElement, HTMLElement[]>();
 const hiddenModalLayers = new Map<HTMLElement, () => void>();
 
 function topmostModal(): HTMLElement | null {
@@ -259,7 +259,7 @@ function topmostModal(): HTMLElement | null {
 function syncModalLayers(): void {
   const top = topmostModal();
   const hidden = new Set<HTMLElement>();
-  mountedDialogs.forEach((dialog) => {
+  mountedDialogs.forEach((_, dialog) => {
     const overlay = dialog.closest<HTMLElement>("[data-modal-overlay]");
     if (dialog !== top && overlay) hidden.add(overlay);
   });
@@ -363,35 +363,45 @@ export function wasHandledByLayer(event: KeyboardEvent): boolean {
 
 /** Portal-backed modal shell with explicit stack, focus, and inert semantics. */
 export function Modal({
-  width = 520,
-  maxHeight = "82vh",
-  borderRadius = "20px",
+  width = 560,
+  presentation = "panel",
   ariaLabel = "对话框",
   busy = false,
   layer,
+  returnFocus,
   onClose,
   children,
 }: {
   width?: CSSProperties["width"];
-  maxHeight?: CSSProperties["maxHeight"];
-  borderRadius?: CSSProperties["borderRadius"];
+  presentation?: "panel" | "canvas";
   ariaLabel?: string;
   busy?: boolean;
   layer?: string;
+  returnFocus?: HTMLElement | null;
   onClose: () => void;
   children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const openerRef = useRef(document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  const backdropPress = useRef<{ pointerId: number; released: boolean } | null>(null);
+  const [openers] = useState(() => {
+    const active = document.activeElement;
+    const opener = returnFocus ?? (active instanceof HTMLElement && active !== document.body ? active : null);
+    const previousDialog = topmostModal();
+    // A confirmation may replace its editor. Keep the editor's opener
+    // available when the focused control is removed with the old dialog.
+    const inherited = previousDialog ? mountedDialogs.get(previousDialog) ?? [] : [];
+    return opener ? [...new Set([opener, ...inherited])] : inherited;
+  });
   const onCloseRef = useRef(onClose);
+  const busyRef = useRef(busy);
   onCloseRef.current = onClose;
+  busyRef.current = busy;
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    const opener = openerRef.current;
-    mountedDialogs.add(dialog);
+    mountedDialogs.set(dialog, openers);
     syncModalLayers();
     const releaseRootInert = acquireRootInert();
     const focusFrame = requestAnimationFrame(() => {
@@ -411,7 +421,7 @@ export function Modal({
       if (event.key === "Escape") {
         claimLayerKeyboardEvent(event);
         event.preventDefault();
-        onCloseRef.current();
+        if (!busyRef.current) onCloseRef.current();
         return;
       }
 
@@ -445,98 +455,66 @@ export function Modal({
       syncModalLayers();
       releaseRootInert();
       requestAnimationFrame(() => {
-        if (!opener?.isConnected) return;
         const remainingModal = topmostModal();
-        if (!remainingModal || remainingModal.contains(opener)) opener.focus({ preventScroll: true });
+        const opener = openers.find((element) => element.isConnected
+          && (!remainingModal || remainingModal.contains(element))
+          && modalElementVisible(element, remainingModal ?? document.body));
+        opener?.focus({ preventScroll: true });
       });
     };
-  }, []);
+  }, [openers]);
 
   return createPortal(
     <div
-      className="fixed inset-0 flex items-center justify-center z-40"
+      className="arca-modal-overlay"
       data-modal-overlay="true"
       data-modal-layer={layer}
-      style={{ background: "var(--surface-modal-scrim)", zIndex: 700 }}
+      onPointerDown={(event) => {
+        if (!event.isPrimary) return;
+        backdropPress.current = event.target === event.currentTarget && event.button === 0 && !busyRef.current
+          ? { pointerId: event.pointerId, released: false }
+          : null;
+      }}
+      onPointerUp={(event) => {
+        const press = backdropPress.current;
+        if (!press || press.pointerId !== event.pointerId) return;
+        const target = event.currentTarget.hasPointerCapture?.(event.pointerId)
+          ? document.elementFromPoint(event.clientX, event.clientY)
+          : event.target;
+        if (target === event.currentTarget) press.released = true;
+        else backdropPress.current = null;
+      }}
+      onPointerCancel={(event) => {
+        if (backdropPress.current?.pointerId === event.pointerId) backdropPress.current = null;
+      }}
       onClick={(event) => {
+        const backdropClicked = backdropPress.current?.released;
+        backdropPress.current = null;
         if (event.target === event.currentTarget) event.stopPropagation();
         if (
-          event.target !== event.currentTarget ||
-          topmostModal() !== dialogRef.current
+          !backdropClicked || event.target !== event.currentTarget ||
+          topmostModal() !== dialogRef.current || busyRef.current
         ) return;
         onCloseRef.current();
       }}
     >
       <div
         ref={dialogRef}
-        className="flex flex-col rounded-mac-lg overflow-hidden"
+        className="arca-modal-panel"
         role="dialog"
         aria-modal="true"
         aria-busy={busy || undefined}
         aria-label={ariaLabel}
         data-modal-layer={layer}
+        data-modal-presentation={presentation}
         tabIndex={-1}
-        style={{
-          width,
-          maxHeight,
-          background: "var(--surface-overlay)",
-          border: 0,
-          borderRadius,
-          boxShadow: "var(--shadow-sheet)",
-        }}
+        style={presentation === "panel" ? { width } : undefined}
         onClick={(event) => event.stopPropagation()}
       >
         {children}
       </div>
     </div>,
     document.body,
-  );
-}
-
-/** Standard form-dialog header: brand-gradient glyph tile + title + subtitle + ✕. */
-export function ModalHeader({
-  glyph,
-  title,
-  subtitle,
-  onClose,
-}: {
-  glyph: ReactNode;
-  title: string;
-  subtitle: ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <div className="flex items-start gap-4 px-6 py-5">
-      <div
-        className="w-11 h-11 rounded-mac flex-shrink-0 flex items-center justify-center text-2xl font-semibold leading-none"
-        style={{ background: "var(--surface-selected)", color: "var(--text-accent)" }}
-      >
-        {glyph}
-      </div>
-      <div className="flex-1 min-w-0">
-        <h2
-          className="text-base font-semibold m-0 mb-1"
-          data-modal-title
-          tabIndex={-1}
-          style={{ color: "var(--text-primary)" }}
-        >
-          {title}
-        </h2>
-        <p className="text-xs m-0 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          {subtitle}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={onClose}
-        title="关闭"
-        aria-label="关闭"
-        className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center border-0 cursor-pointer mt-0.5"
-        style={{ background: "var(--border-hairline)", color: "var(--text-secondary)" }}
-      >
-        <XIcon className="w-3.5 h-3.5" />
-      </button>
-    </div>
   );
 }
 

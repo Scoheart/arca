@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { ConfiguredMcpObservation, HostMcpObservation, NativePluginObservation, NativeSkillObservation, PluginComponent, PluginPresence } from "../lib/types";
+import type { ConfiguredMcpObservation, HostMcpObservation, NativeFileSkillObservation, NativePluginObservation, NativeSkillObservation, PluginComponent, PluginPresence } from "../lib/types";
 import { SearchBar } from "./ui";
 import { ResourceIcon } from "./resourcePresentation";
 import { DialogShell } from "./DialogShell";
@@ -14,10 +14,12 @@ export function ConfiguredMcpCard({ item }: { item: ConfiguredMcpObservation }) 
   return <li data-domain="mcp" data-configuration-only="true" className="arca-host-mcp-card">
     <ResourceRow name={item.name} icon={<ResourceIcon domain="mcp" className="w-6 h-6" />}
       onOpen={() => setOpen(true)} open={open}>
-      <span className="arca-native-row-context" title={item.source_path}>{t("mcpInspector.declaration")}</span>
+      <span className="arca-native-row-context" title={item.source_path}>
+        {t(item.layer === "harness_home" ? "nativePlugins.harnessHomeMcp" : "mcpInspector.declaration")}
+      </span>
     </ResourceRow>
     {open && <McpConfigurationDialog name={item.name}
-      request={{ agent_id: item.agent_id, source: { kind: "configured_name", name: item.name } }}
+      request={{ agent_id: item.agent_id, source: { kind: item.layer ?? "configured_name", name: item.name } }}
       onClose={() => setOpen(false)} />}
   </li>;
 }
@@ -78,6 +80,28 @@ export function NativeSkillCard({ item }: { item: NativeSkillObservation }) {
           : item.plugin_enabled ? "nativePlugins.pluginEnabled" : "nativePlugins.pluginDisabled")}</Fact>
         {item.native_id && <Fact label={t("nativePlugins.skillId")}><code>{item.native_id}</code></Fact>}
         <Fact label={t("nativePlugins.sourceFingerprint")}><code>{item.source_fingerprint}</code></Fact>
+      </dl>
+      <SourcePaths paths={[item.source_path]} />
+    </DialogShell>}
+  </li>;
+}
+
+export function NativeFileSkillCard({ item }: { item: NativeFileSkillObservation }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  return <li data-domain="skill" data-host-managed="true" className="arca-native-skill-card">
+    <ResourceRow name={item.name} icon={<ResourceIcon domain="skill" className="w-6 h-6" />}
+      onOpen={() => setOpen(true)} open={open}>
+      <span className="arca-native-row-context" title={item.source_path}>{t("nativePlugins.fileSkill")}</span>
+    </ResourceRow>
+    {open && <DialogShell kind="detail" size="wide" className="arca-native-dialog" title={item.name}
+      leading={<ResourceIcon domain="skill" className="w-6 h-6" />} subtitle={t("nativePlugins.readOnly")}
+      onClose={() => setOpen(false)}
+      footerEnd={<button type="button" className="btn-ghost" onClick={() => setOpen(false)}>{t("common.close")}</button>}>
+      <p>{item.description}</p>
+      <dl className="arca-native-facts">
+        <Fact label={t("nativePlugins.modelInvocable")}>{t(item.model_invocable ? "nativePlugins.skillAllowed" : "nativePlugins.skillBlocked")}</Fact>
+        <Fact label={t("nativePlugins.userInvocable")}>{t(item.user_invocable ? "nativePlugins.skillAllowed" : "nativePlugins.skillBlocked")}</Fact>
       </dl>
       <SourcePaths paths={[item.source_path]} />
     </DialogShell>}

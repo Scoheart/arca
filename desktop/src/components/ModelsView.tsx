@@ -1024,13 +1024,10 @@ function ModelInspector({
       subtitle={<Badge tone="neutral">{protocolLabel(profile.protocol)}</Badge>}
       onClose={onClose}
       footer={
-        <>
-          <div className="flex-1" />
           <button className="btn-primary" type="button" disabled={!onEdit} onClick={onEdit}>
             <EditIcon className="w-4 h-4" />
             {t("common.edit")}
           </button>
-        </>
       }
     >
       {(contextWindow || maxOutputTokens || capabilities.length > 0 || priceSummary) && (
@@ -1148,7 +1145,7 @@ function ProviderCatalogDialog({
       ) : undefined}
       footerEnd={(
         <>
-          <button type="button" className="btn-ghost" onClick={onClose}>{t("common.cancel")}</button>
+          <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
           <button
             type="button"
             className="btn-primary"
@@ -1323,7 +1320,7 @@ function ModelProfileDialog({
       name={providerInstance?.name ?? initial?.name ?? "Provider"} size={30} />
   </span>;
   const footer = <>
-    <button type="button" className="btn-ghost" disabled={busy} onClick={onClose}>{t("common.cancel")}</button>
+    <button type="button" className="btn-secondary" disabled={busy} onClick={onClose}>{t("common.cancel")}</button>
     <button type="button" className="btn-primary" disabled={!valid} onClick={() => void save()}>
       {initial ? busy ? t("common.saving") : t("common.save")
         : busy ? t("models.addingAction") : t("models.addAction")}
@@ -1404,7 +1401,7 @@ function ModelProfileDialog({
   );
   if (presentation === "inspector" && initial) {
     return <ResourceInspector title={t("models.editTitle")} avatar={providerAvatar}
-      subtitle={providerIdentity} onClose={onClose} footer={<><div className="flex-1" />{footer}</>}>
+      subtitle={providerIdentity} onClose={onClose} footer={footer}>
       {form}
     </ResourceInspector>;
   }
@@ -1611,7 +1608,6 @@ function ModelProviderDialog({
       className="arca-dialog-provider-editor"
       kind="editor"
       size="wide"
-      borderRadius="10px"
       title={initial
         ? t("models.editProviderNamed", { name: dialogName })
         : t("models.addProviderNamed", { name: dialogName })}

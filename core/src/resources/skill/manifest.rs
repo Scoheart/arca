@@ -22,7 +22,7 @@ struct RawManifest {
 
 static NAME: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-z0-9]+(?:-[a-z0-9]+)*$").unwrap());
 
-fn frontmatter_between_delimiters(text: &str) -> Option<&str> {
+pub(crate) fn frontmatter_between_delimiters(text: &str) -> Option<&str> {
     let first_newline = text.find('\n')?;
     if text[..first_newline].trim_end_matches('\r') != "---" {
         return None;

@@ -71,7 +71,7 @@ export function CodexConfigurationEditor({ initialSource = "native", codexHome, 
   };
   return <DialogShell className="arca-dialog-codex-config" kind="editor" size="lg" title={t("agentConfiguration.codex.title")}
     busy={busy} onClose={onClose} footerEnd={<>
-      <button type="button" className="btn-ghost" disabled={busy} onClick={onClose}>{t("common.close")}</button>
+      <button type="button" className="btn-secondary" disabled={busy} onClick={onClose}>{t("common.close")}</button>
       <button type="button" className="btn-primary" disabled={busy || !draft || (!dirty && draft.snapshot.exists)} onClick={() => void save()}>{t(busy ? "common.saving" : "common.save")}</button>
     </>}>
     <div className="arca-codex-config-tabs" role="group" aria-label={t("agentConfiguration.codex.source")}>

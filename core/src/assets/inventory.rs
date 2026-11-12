@@ -156,11 +156,21 @@ pub fn list_native_resources(agent_id: &str) -> crate::domain::plugin::NativeRes
     sort_inventory(&mut inventory);
     let native_skills = crate::resources::plugin::skill_observations(&inventory.native_plugins);
     let (configured_mcps, configured_unavailable) = crate::resources::mcp::inspection::configured_observations(agent_id);
+    let native_default_model = crate::resources::deepseek_harness::default_profile(agent_id)
+        .and_then(|_| crate::settings::load_agent_preferences().ok())
+        .and_then(|settings| crate::resources::model::configured_path_strings_checked(&settings, agent_id).ok().flatten())
+        .and_then(|paths| {
+            let path = crate::resources::mcp::scanner::expand_tilde(paths.first()?);
+            crate::resources::deepseek_harness::agent_profile_at(agent_id, &path).ok()?;
+            crate::resources::model::adapters::read_deepseek_harness_default(&path).ok().flatten()
+        });
     crate::domain::plugin::NativeResourceInventory {
         native_plugin_agents: inventory.native_plugin_agents,
         host_mcps: inventory.host_mcps,
         native_plugins: inventory.native_plugins,
         native_skills,
+        file_skills: crate::resources::deepseek_harness::observe_file_skills(agent_id),
+        native_default_model,
         configured_mcps,
         configured_unavailable,
         unavailable: !inventory.capability_errors.is_empty(),

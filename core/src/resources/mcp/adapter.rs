@@ -73,6 +73,15 @@ pub fn get_agent_adapter(format: &str, key: &str, agent_id: &str) -> Box<dyn Ada
 
 pub fn get_agent_adapter_for(definition: &AgentDefinition, agent_id: &str) -> Box<dyn Adapter> {
     if definition.layout.as_deref() == Some("cordis-patch") {
+        if crate::resources::deepseek_harness::default_profile(agent_id).is_some() {
+            let valid_path = definition.global.as_deref().is_some_and(|path| {
+                let path = super::scanner::expand_tilde(path);
+                crate::resources::deepseek_harness::agent_profile_at(agent_id, &path).is_ok()
+            });
+            if !valid_path {
+                return Box::new(UnsupportedAdapter::new("DeepSeek Harness MCP path belongs to a different native profile"));
+            }
+        }
         return if definition.format == "yaml" && definition.key == "servers"
             && definition.codec.as_deref() == Some("deepseek-harness") {
             Box::new(super::deepseek_harness_adapter::DeepseekHarnessAdapter)

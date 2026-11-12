@@ -50,6 +50,13 @@ pub fn observation_watch_targets() -> Vec<ObservationWatchTarget> {
             });
         }
     }
+    if agents.iter().any(|(id, agent)| agent.enabled
+        && crate::resources::deepseek_harness::default_profile(id).is_some()) {
+        let path = crate::resources::deepseek_harness::home_patch_path();
+        for domain in [ObservationDomain::Mcp, ObservationDomain::Model] {
+            targets.insert(ObservationWatchTarget { domain, path: path.clone(), recursive: false });
+        }
+    }
     for path in crate::resources::mcp::builtin::watch_paths(&agents) {
         targets.insert(ObservationWatchTarget { domain: ObservationDomain::Mcp, path, recursive: false });
     }

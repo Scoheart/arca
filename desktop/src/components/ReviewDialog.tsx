@@ -40,10 +40,9 @@ export function ReviewDialog({
   return (
     <DialogShell
       kind="review"
-      width="min(408px, calc(100vw - 32px))"
       className={`arca-review-dialog arca-review-dialog-${tone}`}
       leading={tone === "danger" ? (
-        <span className="arca-review-dialog-glyph" aria-hidden="true">
+        <span className="arca-dialog-shell-glyph arca-review-dialog-glyph" aria-hidden="true">
           <TrashIcon className="w-4 h-4" />
         </span>
       ) : undefined}
@@ -54,7 +53,7 @@ export function ReviewDialog({
       onClose={onClose}
       footerEnd={
         <>
-          <button type="button" className="btn-ghost" disabled={busy} onClick={onClose}>取消</button>
+          <button type="button" className="btn-secondary" disabled={busy} onClick={onClose}>取消</button>
           <button
             type="button"
             className={tone === "danger" ? "btn-danger-solid" : "btn-primary"}

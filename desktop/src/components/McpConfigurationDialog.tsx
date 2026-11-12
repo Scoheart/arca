@@ -47,7 +47,7 @@ export function McpConfigurationDialog({ name, request, onClose }: {
   const { t } = useTranslation();
   return <DialogShell kind="review" size="wide" title={name} subtitle={t("mcpInspector.readOnly")}
     leading={<ResourceIcon domain="mcp" className="w-6 h-6" />} onClose={onClose}
-    footerEnd={<button type="button" className="btn-ghost" onClick={onClose}>{t("common.close")}</button>}>
+    footerEnd={<button type="button" className="btn-secondary" onClick={onClose}>{t("common.close")}</button>}>
     <McpConfigurationSection request={request} />
   </DialogShell>;
 }

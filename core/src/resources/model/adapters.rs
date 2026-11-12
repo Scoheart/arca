@@ -12,6 +12,8 @@ pub(crate) use zcode::read_registry as read_zcode_registry;
 
 pub(crate) use qoder::read_registry as read_qoder_registry;
 pub(crate) use deepseek_harness::read_registry as read_deepseek_harness_registry;
+pub(crate) use deepseek_harness::read_default as read_deepseek_harness_default;
+pub(crate) use deepseek_harness::guard_registry as guard_deepseek_harness_registry;
 
 use crate::domain::types::{ModelProfile, ModelProtocol};
 use crate::resources::mcp::scanner::expand_tilde;
@@ -127,7 +129,7 @@ pub fn prepare_clear_all_for_targets(
         "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => Ok(vec![prepare_clear_all_open_code(&paths[0])?]),
         "zcode" => Ok(vec![zcode::clear_all(&paths[0])?]),
         "qoder-desktop" | "qoder-cli" => Ok(vec![qoder::clear_all(&paths[0])?]),
-        "deepseek-harness" | "deepseek-harness-desktop" => Ok(vec![deepseek_harness::clear_all(&paths[0])?]),
+        "deepseek-harness" | "deepseek-harness-desktop" => Ok(vec![deepseek_harness::clear_all(agent_id, &paths[0])?]),
         "qwen-code" => Ok(vec![prepare_clear_all_qwen(&paths[0])?]),
         "crush" => Ok(vec![prepare_clear_all_crush(&paths[0])?]),
         "mistral-vibe" => Ok(vec![prepare_clear_all_vibe(&paths[0])?]),

@@ -1,5 +1,6 @@
 //! Bounded reads of inert Electron package metadata. Never loads an app module.
 use super::*;
+use serde_json::Map;
 use std::io::{Seek, SeekFrom};
 
 #[derive(Deserialize)]
@@ -25,54 +26,116 @@ pub(super) fn guarded_json(path: &Path, guard: &Guard, budget: &mut ScanBudget) 
     serde_json::from_slice(&data).map_err(|_| ())
 }
 
-pub(super) fn app_version(app: &Path, bundle: &str, name: &str, budget: &mut ScanBudget) -> Result<String, ()> {
+pub(super) fn app_info(app: &Path, bundle: &str, name: &str, budget: &mut ScanBudget) -> Result<plist::Dictionary, ()> {
     let mut file = open_confined_file(&relative(app, "Contents/Info.plist")?)?;
     let length = file.metadata().map_err(|_| ())?.len();
     if length > 1_048_576 { return Err(()); }
     let value = plist::Value::from_reader(std::io::Cursor::new(bytes(&mut file, length as usize, budget)?)).map_err(|_| ())?;
-    let info = value.as_dictionary().ok_or(())?;
+    let plist::Value::Dictionary(info) = value else { return Err(()); };
     if info.get("CFBundleIdentifier").and_then(plist::Value::as_string) != Some(bundle)
         || info.get("CFBundleName").and_then(plist::Value::as_string) != Some(name) { return Err(()); }
-    info.get("CFBundleShortVersionString").and_then(plist::Value::as_string).and_then(metadata_name).ok_or(())
+    Ok(info)
+}
+
+pub(super) fn app_version(app: &Path, bundle: &str, name: &str, budget: &mut ScanBudget) -> Result<String, ()> {
+    app_info(app, bundle, name, budget)?.get("CFBundleShortVersionString")
+        .and_then(plist::Value::as_string).and_then(metadata_name).ok_or(())
+}
+
+/// ASAR paths are local archive members. Symlinks and unpacked entries do
+/// not count as evidence of a member in this archive.
+pub(super) struct AsarArchive {
+    path: PathBuf,
+    file: fs::File,
+    before: fs::Metadata,
+    header: Value,
+    base: u64,
+}
+
+impl AsarArchive {
+    pub(super) fn open(path: &Path, expected_header_hash: Option<&str>, budget: &mut ScanBudget) -> Result<Self, ()> {
+        let mut file = open_confined_file(path)?;
+        let before = file.metadata().map_err(|_| ())?;
+        if !before.is_file() { return Err(()); }
+        let prefix = bytes(&mut file, 16, budget)?;
+        let word = |offset| u32::from_le_bytes(prefix[offset..offset+4].try_into().expect("four bytes")) as u64;
+        let pickle = word(4);
+        let payload = word(8);
+        let length = word(12);
+        if word(0) != 4 || pickle % 4 != 0 || payload.checked_add(4) != Some(pickle)
+            || length > 8 * 1_048_576 || length.checked_add(8).is_none_or(|n| n > pickle)
+            || pickle > length + 11 { return Err(()); }
+        let base = pickle.checked_add(8).filter(|n| *n <= before.len()).ok_or(())?;
+        let data = bytes(&mut file, length as usize, budget)?;
+        if expected_header_hash.is_some_and(|hash| hex::encode(Sha256::digest(&data)) != hash) { return Err(()); }
+        let header = serde_json::from_slice(&data).map_err(|_| ())?;
+        Ok(Self { path: path.into(), file, before, header, base })
+    }
+
+    fn node(&self, path: &str) -> Result<&Value, ()> {
+        let mut node = &self.header;
+        for part in qoder::local_path(path)?.split('/') {
+            node = node.get("files").and_then(|v| v.get(part)).ok_or(())?;
+            if node.get("link").is_some() || node.get("unpacked").is_some_and(|v| v != &Value::Bool(false)) { return Err(()); }
+        }
+        Ok(node)
+    }
+
+    pub(super) fn children(&self, path: &str) -> Result<&Map<String, Value>, ()> {
+        self.node(path)?.get("files").and_then(Value::as_object).ok_or(())
+    }
+
+    fn member(&self, path: &str) -> Result<(u64, u64), ()> {
+        let node = self.node(path)?;
+        if node.get("files").is_some() { return Err(()); }
+        let size = node.get("size").and_then(Value::as_u64).ok_or(())?;
+        let offset = node.get("offset").and_then(Value::as_str).ok_or(())?.parse::<u64>().map_err(|_| ())?;
+        let offset = self.base.checked_add(offset).ok_or(())?;
+        if offset.checked_add(size).is_none_or(|end| end > self.before.len()) { return Err(()); }
+        Ok((offset, size))
+    }
+
+    pub(super) fn has_file(&self, path: &str) -> bool {
+        self.member(path).is_ok_and(|(_, size)| size > 0)
+    }
+
+    pub(super) fn json(&mut self, path: &str, budget: &mut ScanBudget) -> Result<Value, ()> {
+        let (offset, size) = self.member(path)?;
+        if size > 2_097_152 { return Err(()); }
+        let hash = self.node(path)?.pointer("/integrity/hash").and_then(Value::as_str).ok_or(())?.to_owned();
+        let data = self.read(offset, size, budget)?;
+        if hex::encode(Sha256::digest(&data)) != hash { return Err(()); }
+        serde_json::from_slice(&data).map_err(|_| ())
+    }
+
+    fn read(&mut self, offset: u64, size: u64, budget: &mut ScanBudget) -> Result<Vec<u8>, ()> {
+        self.file.seek(SeekFrom::Start(offset)).map_err(|_| ())?;
+        bytes(&mut self.file, usize::try_from(size).map_err(|_| ())?, budget)
+    }
+
+    pub(super) fn recheck(&self) -> Result<(), ()> {
+        let after = self.file.metadata().map_err(|_| ())?;
+        let bound = fs::symlink_metadata(&self.path).map_err(|_| ())?;
+        if !bound.file_type().is_file() || self.before.len() != after.len()
+            || self.before.modified().map_err(|_| ())? != after.modified().map_err(|_| ())? { return Err(()); }
+        #[cfg(unix)] {
+            use std::os::unix::fs::MetadataExt;
+            if self.before.dev() != bound.dev() || self.before.ino() != bound.ino()
+                || self.before.ctime() != after.ctime() || self.before.ctime_nsec() != after.ctime_nsec() { return Err(()); }
+        }
+        Ok(())
+    }
 }
 
 pub(super) fn guard_asar(path: &Path, guards: &[Guard], budget: &mut ScanBudget) -> Result<(), ()> {
     if guards.is_empty() || guards.len() > 32 { return Err(()); }
-    let mut file = open_confined_file(path)?;
-    let before = file.metadata().map_err(|_| ())?;
-    if !before.is_file() { return Err(()); }
-    let prefix = bytes(&mut file, 16, budget)?;
-    let word = |offset| u32::from_le_bytes(prefix[offset..offset+4].try_into().expect("four bytes")) as u64;
-    let pickle = word(4); let payload = word(8); let length = word(12);
-    if word(0) != 4 || pickle % 4 != 0 || payload.checked_add(4) != Some(pickle)
-        || length > 8 * 1_048_576 || length.checked_add(8).is_none_or(|n| n > pickle)
-        || pickle > length + 11 { return Err(()); }
-    let base = pickle.checked_add(8).filter(|n| *n <= before.len()).ok_or(())?;
-    let header: Value = serde_json::from_slice(&bytes(&mut file, length as usize, budget)?).map_err(|_| ())?;
+    let mut archive = AsarArchive::open(path, None, budget)?;
     for guard in guards {
-        let mut node = &header;
-        for part in qoder::local_path(&guard.path)?.split('/') {
-            node = node.get("files").and_then(|v| v.get(part)).ok_or(())?;
-            if node.get("link").is_some() || node.get("unpacked").is_some_and(|v| v != &Value::Bool(false)) { return Err(()); }
-        }
-        if node.get("files").is_some() || node.get("size").and_then(Value::as_u64) != Some(guard.bytes) { return Err(()); }
-        let offset = node.get("offset").and_then(Value::as_str).ok_or(())?.parse::<u64>().map_err(|_| ())?;
-        let offset = base.checked_add(offset).ok_or(())?;
-        if offset.checked_add(guard.bytes).is_none_or(|end| end > before.len()) { return Err(()); }
-        file.seek(SeekFrom::Start(offset)).map_err(|_| ())?;
-        let count = usize::try_from(guard.bytes).map_err(|_| ())?;
-        if hex::encode(Sha256::digest(bytes(&mut file, count, budget)?)) != guard.sha256 { return Err(()); }
+        let (offset, size) = archive.member(&guard.path)?;
+        if size != guard.bytes
+            || hex::encode(Sha256::digest(archive.read(offset, size, budget)?)) != guard.sha256 { return Err(()); }
     }
-    let after = file.metadata().map_err(|_| ())?;
-    let bound = fs::symlink_metadata(path).map_err(|_| ())?;
-    if !bound.file_type().is_file() || before.len() != after.len()
-        || before.modified().map_err(|_| ())? != after.modified().map_err(|_| ())? { return Err(()); }
-    #[cfg(unix)] {
-        use std::os::unix::fs::MetadataExt;
-        if before.dev() != bound.dev() || before.ino() != bound.ino()
-            || before.ctime() != after.ctime() || before.ctime_nsec() != after.ctime_nsec() { return Err(()); }
-    }
-    Ok(())
+    archive.recheck()
 }
 
 #[cfg(test)]

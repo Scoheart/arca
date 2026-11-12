@@ -11,6 +11,7 @@ export const agentConfigurationZhCN = {
   instructionsDirectory: "Instructions 目录 {{index}}",
   selectInstructionsDirectory: "选择 Instructions 目录", selectInstructionsDirectoryLabel: "选择 Instructions 目录 {{index}}", resetInstructionsDirectory: "恢复 Instructions 目录 {{index}} 默认值",
   instructionsPathHint: "只配置 Arca 读取与编辑的位置，不迁移文件，也不改变 Agent 的原生加载设置。",
+  nativeProfile: "Harness Profile", nativeProfileHint: "Models 和 MCPs 共用此配置文件。启动时使用对应的 Harness Profile。",
   tabs: "配置分类", launch: "启动", paths: "配置文件", unsaved: "未保存",
   pathChangeHint: "配置路径变更将显示影响范围", continue: "继续", unavailable: "未接入",
   configKey: "配置键", removeSkillsDirectory: "移除 Skills 目录 {{index}}", addSkillsDirectory: "添加 Skills 目录",
@@ -40,6 +41,7 @@ export const agentConfigurationZhCN = {
 };
 
 export const agentConfigurationEnUS = {
+  nativeProfile: "Harness Profile", nativeProfileHint: "Models and MCPs share this file. Launch Harness with the corresponding profile.",
   codex: {
     title: "Codex CLI configuration", editConfiguration: "Edit configuration", source: "Configuration source", native: "Native configuration", arca: "Arca configuration",
     nativeHint: "Edit the native Codex file. Saved changes affect Codex clients that load this file.",

@@ -189,7 +189,7 @@ export function AddAgentDialog({
       )}
       footerEnd={(
         <>
-          <button type="button" onClick={onClose} disabled={busy} className="btn-ghost">
+          <button type="button" onClick={onClose} disabled={busy} className="btn-secondary">
             {t("common.cancel")}
           </button>
           <button

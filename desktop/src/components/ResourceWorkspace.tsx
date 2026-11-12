@@ -1,4 +1,5 @@
 import { readLocalSetting, writeLocalSetting } from "../lib/localSettings";
+import { useTranslation } from "react-i18next";
 import {
   createContext,
   type CSSProperties,
@@ -14,8 +15,8 @@ import {
   useState,
 } from "react";
 import { AgentGlyph, agentName, isAgentVisible } from "./brandIcons";
-import { MODAL_DIALOG_SELECTOR, Modal, SearchBar, wasHandledByLayer } from "./ui";
-import { XIcon } from "./icons";
+import { Modal, SearchBar } from "./ui";
+import { DialogFrame } from "./DialogShell";
 import {
   MAX_SIDEBAR_WIDTH,
   MIN_SIDEBAR_WIDTH,
@@ -143,7 +144,6 @@ export function ResourceWorkspace({
   children,
   filters,
   inspector,
-  inspectorWidth,
   onInspectorClose,
 }: {
   sidebar?: ReactNode;
@@ -159,7 +159,6 @@ export function ResourceWorkspace({
   children: ReactNode;
   filters?: ReactNode;
   inspector?: ReactNode;
-  inspectorWidth?: string;
   onInspectorClose?: () => void;
 }) {
   const hasSidebar = sidebar !== null && sidebar !== undefined;
@@ -314,13 +313,11 @@ export function ResourceWorkspace({
               </div>
               {inspector && (
                 <Modal
-                  width={inspectorWidth ?? "min(560px, calc(100vw - 32px))"}
-                  maxHeight="calc(100vh - 32px)"
                   ariaLabel="资源详情"
                   layer="detail"
                   onClose={() => onInspectorClose?.()}
                 >
-                  <div className="arca-workspace-inspector-surface">{inspector}</div>
+                  {inspector}
                 </Modal>
               )}
             </div>
@@ -510,6 +507,7 @@ export function ResourceInspector({
   avatar,
   onClose,
   children,
+  footerStart,
   footer,
 }: {
   title: string;
@@ -517,39 +515,24 @@ export function ResourceInspector({
   avatar: ReactNode;
   onClose: () => void;
   children: ReactNode;
+  footerStart?: ReactNode;
   footer?: ReactNode;
 }) {
-  useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (wasHandledByLayer(event) || document.querySelector(MODAL_DIALOG_SELECTOR)) return;
-      onClose();
-    };
-    document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [onClose]);
-
+  const { t } = useTranslation();
   return (
-    <aside
-      className="arca-resource-inspector"
-      data-resource-inspector
-      data-modal-initial-focus
-      tabIndex={-1}
-      aria-label={`${title} 详情`}
+    <DialogFrame
+      kind="detail"
+      title={title}
+      subtitle={subtitle}
+      leading={avatar}
+      label={t("resourceWorkspace.details", { value0: title })}
+      closeLabel={t("resourceWorkspace.closeDetails")}
+      onClose={onClose}
+      footerStart={footerStart}
+      footerEnd={footer}
     >
-      <header className="arca-resource-inspector-head">
-        {avatar}
-        <div className="min-w-0 flex-1">
-          <h2 title={title}>{title}</h2>
-          {subtitle && <div className="arca-resource-inspector-subtitle">{subtitle}</div>}
-        </div>
-        <button type="button" className="arca-inspector-close" onClick={onClose} title="关闭" aria-label="关闭详情">
-          <XIcon className="w-4 h-4" />
-        </button>
-      </header>
-      <div className="arca-resource-inspector-body">{children}</div>
-      {footer && <footer className="arca-resource-inspector-footer">{footer}</footer>}
-    </aside>
+      {children}
+    </DialogFrame>
   );
 }
 

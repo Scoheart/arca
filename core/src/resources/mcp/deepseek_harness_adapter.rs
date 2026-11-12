@@ -1,4 +1,4 @@
-//! DeepSeek Harness's global configured MCP fleet, not plugin registrations.
+//! User-level MCP client entries in the DeepSeek Harness profile patch.
 use super::{adapter::Adapter, codec::Codec};
 use crate::{
     domain::types::McpConfig,
@@ -45,7 +45,7 @@ impl Adapter for DeepseekHarnessAdapter {
     }
 
     fn inspect_text(&self, text: &str, name: &str) -> Result<Option<Value>, String> {
-        PatchFile::from_text(text)?.inspect_mcp(name)
+        PatchFile::from_text(text)?.inspect_mcp_declaration(name)
     }
 
     fn read(&self, path: &Path) -> BTreeMap<String, McpConfig> {
@@ -110,7 +110,7 @@ impl Adapter for DeepseekHarnessAdapter {
         check_name(name)?;
         let patch = Codec::DeepseekHarness.patch(config)?;
         let mut file = Self::load(path, &[name])?;
-        let current = file.inspect_mcp(name)?;
+        let current = file.inspect_mcp_declaration(name)?;
         if let Some(value) = &current {
             Self::require(value)?;
         }
@@ -146,18 +146,17 @@ impl Adapter for DeepseekHarnessAdapter {
     fn clear(&self, path: &Path) -> Result<(), String> {
         let mut file = Self::load(path, &[])?;
         let servers = file.mcp_servers()?;
-        let mut changed = false;
-        for (name, value) in servers {
-            if valid_mcp_server_name(&name) && Self::managed(&value) {
-                if file.remove_mcp(&name)? {
-                    changed = true;
-                }
-            }
+        let names = servers.iter().filter_map(|(name, value)| {
+            (valid_mcp_server_name(name) && Self::managed(value)).then_some(name.as_str())
+        }).collect::<Vec<_>>();
+        if names.is_empty() {
+            return Ok(());
         }
-        if changed {
-            Self::save(path, &file, &[])?;
+        guard_mcp_profile(path, &names)?;
+        for name in &names {
+            file.remove_mcp(name)?;
         }
-        Ok(())
+        Self::save(path, &file, &names)
     }
 
     fn has_entries(&self, path: &Path) -> Result<bool, String> {

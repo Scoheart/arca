@@ -4115,8 +4115,7 @@ pub fn default_config_paths(agent_id: &str) -> Option<Vec<String>> {
     if agent_id == claude_desktop::AGENT_ID {
         return Some(claude_desktop::default_paths());
     }
-    if matches!(agent_id, "deepseek-harness" | "deepseek-harness-desktop") {
-        let profile = if agent_id == "deepseek-harness-desktop" { "desktop" } else { "web" };
+    if let Some(profile) = crate::resources::deepseek_harness::default_profile(agent_id) {
         return Some(vec![crate::resources::deepseek_harness::profile_path(profile)]);
     }
     let paths: &[&str] = match agent_id {
@@ -4187,6 +4186,15 @@ pub(crate) fn configured_path_strings_checked(
         .and_then(|overrides| overrides.get(agent_id))
         .and_then(|path_override| path_override.model_paths.clone())
         .unwrap_or(defaults);
+    if let [path] = paths.as_slice() {
+        if crate::resources::deepseek_harness::default_profile(agent_id).is_some() {
+            let expanded = expand_tilde(path);
+            if let Ok(profile) = crate::resources::deepseek_harness::agent_profile_at(agent_id, &expanded) {
+                // A deliberately relocated DSH_HOME can live outside HOME.
+                return Ok(Some(vec![crate::resources::deepseek_harness::profile_path(profile)]));
+            }
+        }
+    }
     let normalized = normalize_config_paths(&paths, expected)?;
     if agent_id == claude_desktop::AGENT_ID {
         let expanded = normalized
@@ -5735,7 +5743,7 @@ pub fn list_agents() -> Vec<ModelAgentView> {
         let mut view = managed_agent_view(
             &settings, id, if profile == "web" { &["dsh"] } else { &[] }, &[],
             "https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/docs/user/guide/providers.md",
-            "管理当前用户的 Harness Profile：CLI/Web 使用 web，Desktop 使用 desktop。支持三种自定义 API、多模型和新会话默认模型；API Key 使用环境变量/原生 credential 引用，不导出 Arca Keychain 密钥。Profile 需由 Harness 初始化；高层 home patch 冲突或自定义继承不明时拒绝写入。",
+            "Models 使用选中的 Harness Profile。Web、Desktop、Headless 和 ACP 可设置新会话默认模型，SDK 由调用方在初始化时选择。支持三种自定义 API，API Key 由 Harness 通过环境变量或原生凭据引用解析。",
         );
         if profile == "desktop" {
             view.installed = agent_installed(&[], &[], &["/Applications/DeepSeek Harness.app", "~/Applications/DeepSeek Harness.app"]);
@@ -5803,7 +5811,20 @@ pub fn list_agents() -> Vec<ModelAgentView> {
 
 /// Desktop has per-conversation selection; CLI settings.model is not its current model.
 pub(crate) fn supports_global_model_selection(agent_id: &str) -> bool {
+    if crate::resources::deepseek_harness::default_profile(agent_id).is_some() {
+        return crate::settings::load_agent_preferences().map_or(true, |settings| {
+            harness_has_global_model_selection(&settings, agent_id)
+        });
+    }
     !matches!(agent_id, "qoder-desktop" | "zcode" | "kilo-desktop" | "warp")
+}
+
+fn harness_has_global_model_selection(settings: &crate::settings::Settings, agent_id: &str) -> bool {
+    let default_entry = configured_path_strings(settings, agent_id).and_then(|paths| {
+        let path = expand_tilde(paths.first()?);
+        crate::resources::deepseek_harness::model_default_entry(&path).ok()
+    });
+    !matches!(default_entry, Some(None))
 }
 
 pub(crate) fn normalize_model_selection(agent_id: &str, selection: &mut crate::domain::assets::ModelAgentSelection) {
@@ -5842,7 +5863,11 @@ fn managed_agent_view(
         assigned_profiles: selection.profiles.keys().cloned().collect(),
         active_profile: selection.active_profile_id,
         supports_multiple: true,
-        supports_global_selection: supports_global_model_selection(id),
+        supports_global_selection: if crate::resources::deepseek_harness::default_profile(id).is_some() {
+            harness_has_global_model_selection(settings, id)
+        } else {
+            supports_global_model_selection(id)
+        },
         credential_mode: "environment-reference".into(),
         credential_capabilities: credential::agent_capabilities(id),
         credential_policies,

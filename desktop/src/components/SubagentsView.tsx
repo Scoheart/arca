@@ -228,28 +228,20 @@ export function SubagentsView({
               title={selectedSubagent.display_name || selectedSubagent.name}
               subtitle={selectedSubagent.name}
               onClose={() => setSelectedName(null)}
+              footerStart={
+                <button type="button" className="arca-btn-soft-danger" onClick={() => setDeletingSubagent(selectedSubagent)}>
+                  <TrashIcon className="w-3.5 h-3.5" />
+                  <span>删除</span>
+                </button>
+              }
               footer={
-                <div className="flex items-center justify-between w-full">
-                  <button
-                    type="button"
-                    className="btn-secondary text-xs text-rose-500 hover:text-rose-600 flex items-center gap-1.5"
-                    onClick={() => setDeletingSubagent(selectedSubagent)}
-                  >
-                    <TrashIcon className="w-3.5 h-3.5" />
-                    <span>删除</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-secondary text-xs flex items-center gap-1.5"
-                    onClick={() => {
-                      setEditingSubagent(selectedSubagent);
-                      setEditorOpen(true);
-                    }}
-                  >
-                    <EditIcon className="w-3.5 h-3.5" />
-                    <span>编辑</span>
-                  </button>
-                </div>
+                <button type="button" className="btn-primary" onClick={() => {
+                  setEditingSubagent(selectedSubagent);
+                  setEditorOpen(true);
+                }}>
+                  <EditIcon className="w-3.5 h-3.5" />
+                  <span>编辑</span>
+                </button>
               }
             >
               <InspectorMetrics>

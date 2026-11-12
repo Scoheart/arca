@@ -3,7 +3,13 @@ use serde_json::{Map, Value};
 use std::{collections::BTreeSet, fs, io::Read, path::{Component, Path, PathBuf}, str::FromStr};
 use yaml_edit::{Document, Mapping, Sequence, YamlFile, YamlNode};
 
+mod file_skills;
+pub(crate) use file_skills::observe_file_skills;
+
 const LIMIT: usize = 2 * 1024 * 1024;
+const ACP_BUNDLE: &str = "@deepseek-ai/dsh-acp-app";
+const SDK_BUNDLE: &str = "@deepseek-ai/dsh-sdk-app";
+const SDK_MINIMAL_BUNDLE: &str = "@deepseek-ai/dsh-sdk-minimal";
 fn error() -> String { "DeepSeek Harness patch is ambiguous or cannot be edited safely".into() }
 
 /// Native resolveRoot: a nonblank env value is used verbatim, then tilde-expanded
@@ -28,12 +34,83 @@ pub fn home_dir() -> PathBuf { resolve_home_env("DSH_HOME", ".dsh") }
 
 pub fn agents_home_dir() -> PathBuf { resolve_home_env("DSH_AGENTS_HOME", ".agents") }
 
-pub fn profile_path(profile: &str) -> String {
-    let path = home_dir().join("profiles").join(profile).join("cordis.patch.yml");
-    if let Some(home) = dirs::home_dir() {
-        if let Ok(tail) = path.strip_prefix(home) { return format!("~/{}", tail.to_string_lossy()); }
+pub(crate) fn home_patch_path() -> PathBuf { home_dir().join("cordis.patch.yml") }
+
+pub(crate) fn default_profile(agent_id: &str) -> Option<&'static str> {
+    match agent_id {
+        "deepseek-harness" => Some("web"),
+        "deepseek-harness-desktop" => Some("desktop"),
+        _ => None,
     }
-    path.to_string_lossy().into_owned()
+}
+
+fn profiles_dir() -> PathBuf { home_dir().join("profiles") }
+
+fn valid_profile_name(name: &str) -> bool {
+    !name.is_empty() && name.len() <= 255 && !matches!(name, "." | "..")
+        && !name.eq_ignore_ascii_case("node_modules")
+        && !name.contains(['/', '\\']) && !name.chars().any(char::is_control)
+}
+
+pub fn profile_path(profile: &str) -> String {
+    super::mcp::scanner::collapse_home(
+        &profiles_dir().join(profile).join("cordis.patch.yml").to_string_lossy(),
+    )
+}
+
+pub(crate) fn profile_at(path: &Path) -> Result<&str, String> {
+    let profile = path.parent().and_then(Path::file_name).and_then(|name| name.to_str())
+        .filter(|name| valid_profile_name(name))
+        .ok_or_else(|| "Invalid DeepSeek Harness profile path".to_string())?;
+    if path != profiles_dir().join(profile).join("cordis.patch.yml") {
+        return Err("DeepSeek Harness requires a cordis.patch.yml directly under $DSH_HOME/profiles/<name>".into());
+    }
+    Ok(profile)
+}
+
+pub(crate) fn agent_profile_at<'a>(agent_id: &str, path: &'a Path) -> Result<&'a str, String> {
+    let profile = profile_at(path)?;
+    let default = default_profile(agent_id).ok_or_else(|| "Unknown DeepSeek Harness Agent".to_string())?;
+    if (default == "desktop" && profile != "desktop")
+        || (default == "web" && profile.eq_ignore_ascii_case("desktop"))
+    {
+        return Err("DeepSeek Harness Desktop and CLI use separate profiles".into());
+    }
+    Ok(profile)
+}
+
+pub(crate) fn normalize_agent_patch_path(agent_id: &str, value: &str) -> Result<String, String> {
+    let path = super::mcp::scanner::expand_tilde(value.trim());
+    let profile = agent_profile_at(agent_id, &path)?;
+    if Some(profile) != default_profile(agent_id) {
+        profile_bundles(path.parent().ok_or_else(error)?)?;
+    }
+    Ok(profile_path(profile))
+}
+
+pub(crate) fn profile_options(agent_id: &str) -> Vec<crate::domain::agents::AgentNativeProfile> {
+    let Some(default) = default_profile(agent_id) else { return Vec::new(); };
+    let mut options = vec![crate::domain::agents::AgentNativeProfile {
+        name: default.into(), path: profile_path(default),
+    }];
+    if default == "web" {
+        let directory = profiles_dir();
+        if let Ok(entries) = fs::read_dir(directory) {
+            options.extend(entries.take(256).filter_map(|entry| {
+                let entry = entry.ok()?;
+                let name = entry.file_name().into_string().ok()?;
+                if !entry.file_type().ok()?.is_dir() || !valid_profile_name(&name)
+                    || name.starts_with('.') || name.eq_ignore_ascii_case("web")
+                    || name.eq_ignore_ascii_case("desktop") || profile_bundles(&entry.path()).is_err()
+                {
+                    return None;
+                }
+                Some(crate::domain::agents::AgentNativeProfile { path: profile_path(&name), name })
+            }));
+            options[1..].sort_by(|left, right| left.name.cmp(&right.name));
+        }
+    }
+    options
 }
 
 /// Metadata/text only, bounded and opened one real parent at a time. Missing
@@ -68,6 +145,7 @@ pub fn read_text(path: &Path) -> Result<Option<String>, String> {
 }
 
 pub const DSH_MCP_CLIENT_NAME: &str = "@deepseek-ai/dsh-mcp-client";
+const DSH_MCP_MANAGER_ID: &str = "mcp-manager";
 
 pub fn valid_mcp_server_name(name: &str) -> bool {
     !name.is_empty()
@@ -220,7 +298,13 @@ impl PatchFile {
         for key in keys(&row)? {
             if key == "disabled" && row.get("disabled").map(|n| node_json(&n)).transpose()? == Some(Value::Bool(false)) { continue; }
             if key == "name" {
-                let expected = match id { "mcp-manager" => "@deepseek-ai/dsh-mcp-manager", "llm-pi-ai" => "@deepseek-ai/dsh-llm-pi-ai", "agent-default-model" => "@deepseek-ai/dsh-agent-default-model", _ => "" };
+                let expected = match id {
+                    "mcp-manager" => "@deepseek-ai/dsh-mcp-manager",
+                    "llm-pi-ai" => "@deepseek-ai/dsh-llm-pi-ai",
+                    "agent-default-model" => "@deepseek-ai/dsh-agent-default-model",
+                    "acp" => "@deepseek-ai/dsh-acp",
+                    _ => "",
+                };
                 let name = row.get("name").map(|n| node_json(&n)).transpose()?;
                 if name.as_ref().and_then(Value::as_str).is_some_and(|n| n.is_empty() || (!expected.is_empty() && n == expected)) { continue; }
             }
@@ -279,6 +363,17 @@ impl PatchFile {
         Ok(text)
     }
 
+    fn legacy_mcp_servers(&self) -> Result<Option<Mapping>, String> {
+        let Some(row) = self.row(DSH_MCP_MANAGER_ID)? else { return Ok(None); };
+        let Some(config) = row.get("config") else { return Ok(None); };
+        let YamlNode::Mapping(config) = config else { return Err(error()); };
+        match config.get("servers") {
+            Some(YamlNode::Mapping(servers)) => Ok(Some(servers)),
+            None => Ok(None),
+            _ => Err(error()),
+        }
+    }
+
     fn mcp_entries(&self) -> Result<Vec<(String, Mapping)>, String> {
         let mut entries = Vec::new();
         let mut names = BTreeSet::new();
@@ -290,7 +385,8 @@ impl PatchFile {
                 let id_str = node_json_inert(&id_node)?.as_str().ok_or_else(error)?.to_string();
                 if !ids.insert(id_str) { return Err("duplicate id in patch file".into()); }
             }
-            if let Some(insert_seq) = mapping.get_sequence("insert") {
+            if let Some(insert) = mapping.get("insert") {
+                let YamlNode::Sequence(insert_seq) = insert else { return Err(error()); };
                 for item in &insert_seq {
                     let Some(plugin) = item.as_mapping().cloned() else { continue; };
                     if let Some(id_node) = plugin.get("id") {
@@ -341,7 +437,22 @@ impl PatchFile {
                 }
             }
         }
+        if let Some(servers) = self.legacy_mcp_servers()? {
+            for name in keys(&servers)? {
+                if valid_mcp_server_name(&name) && !names.contains(&name) {
+                    names.push(name);
+                }
+            }
+        }
         Ok(names)
+    }
+
+    pub fn inspect_mcp_declaration(&self, name: &str) -> Result<Option<Value>, String> {
+        if let Some(client) = self.inspect_mcp(name)? {
+            return Ok(Some(client));
+        }
+        self.legacy_mcp_servers()?.and_then(|servers| servers.get(name))
+            .map(|entry| node_json_inert(&entry)).transpose()
     }
 
     pub fn inspect_mcp(&self, name: &str) -> Result<Option<Value>, String> {
@@ -359,12 +470,9 @@ impl PatchFile {
                 let Ok(config_val) = node_json_inert(&config_node) else { continue; };
                 if config_val.get("serverName").and_then(Value::as_str) == Some(name) {
                     let Value::Object(mut map) = config_val else { return Err(error()); };
-                    let disabled = plugin.get("disabled")
-                        .map(|n| node_json_inert(&n))
-                        .transpose()?
-                        .and_then(|v| v.as_bool())
-                        .unwrap_or(false);
-                    map.insert("disabled".into(), Value::Bool(disabled));
+                    let disabled = plugin.get("disabled").map(|n| node_json_inert(&n))
+                        .transpose()?.unwrap_or(Value::Bool(false));
+                    map.insert("disabled".into(), disabled);
                     return Ok(Some(Value::Object(map)));
                 }
             }
@@ -378,12 +486,9 @@ impl PatchFile {
             let config_node = plugin.get("config").ok_or_else(error)?;
             let config_val = node_json_inert(&config_node)?;
             let Value::Object(mut entry_map) = config_val else { return Err(error()); };
-            let disabled = plugin.get("disabled")
-                .map(|n| node_json_inert(&n))
-                .transpose()?
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
-            entry_map.insert("disabled".into(), Value::Bool(disabled));
+            let disabled = plugin.get("disabled").map(|n| node_json_inert(&n))
+                .transpose()?.unwrap_or(Value::Bool(false));
+            entry_map.insert("disabled".into(), disabled);
             map.insert(name, Value::Object(entry_map));
         }
         Ok(map)
@@ -413,57 +518,53 @@ impl PatchFile {
 
         let existing_entry = self.mcp_entries()?.into_iter().find(|(n, _)| n == name);
         if let Some((_, plugin)) = existing_entry {
-            if plugin.get("config").is_none() {
-                set(&plugin, "config", &serde_json::json!({}))?;
-            }
-            let config_node = plugin.get("config").ok_or_else(error)?;
-            let YamlNode::Mapping(config_map) = config_node else { return Err(error()); };
-
-            for key in controlled {
-                if *key != "serverName" && !fields.iter().any(|(f, _)| f == key) {
-                    config_map.remove(*key);
-                }
-            }
-            for (field, value) in fields {
-                set(&config_map, field, value)?;
-            }
-            set(&config_map, "serverName", &Value::String(name.into()))?;
-            for (field, value) in defaults {
-                if config_map.get(field).is_none() {
-                    set(&config_map, field, value)?;
-                }
-            }
-            return Ok(());
+            let config = plugin.get_mapping("config").ok_or_else(error)?;
+            return update_mcp_config(&config, name, fields, controlled, defaults);
         }
 
-        let target_id = format!("mcp-{}", name);
+        let target_id = format!("mcp-{name}");
         for node in &self.sequence()? {
             if contains_id(&node, &target_id, 0)? {
                 return Err("DeepSeek Harness id already exists in patch".into());
             }
         }
 
-        let mut target_insert_seq = None;
-        for node in &self.sequence()? {
-            if let Some(mapping) = node.as_mapping() {
-                if let Some(seq) = mapping.get_sequence("insert") {
-                    target_insert_seq = Some(seq);
-                    break;
+        if let Some(servers) = self.legacy_mcp_servers()? {
+            if let Some(legacy) = servers.find_entry_by_key(name) {
+                // Older Arca versions wrote an override for a manager absent
+                // from the published carriers. Move only the selected server.
+                self.config_node(DSH_MCP_MANAGER_ID, false)?;
+                let entry = node_json(&legacy.value_node().ok_or_else(error)?)?;
+                let enabled = match entry.get("enabled") {
+                    None => true,
+                    Some(Value::Bool(enabled)) => *enabled,
+                    _ => return Err("DeepSeek Harness MCP enabled must be boolean".into()),
+                };
+                if entry.get("serverName").is_some() || entry.get("disabled").is_some()
+                    || contains_credential_template(&entry)
+                {
+                    return Err("DeepSeek Harness MCP uses manager-only configuration; convert it in Harness before assigning".into());
                 }
+                // Copy the whole pair so the server key's comment travels
+                // with its configuration, including in a flow-style map.
+                let pair = legacy.to_string();
+                let copied = if servers.is_flow_style() { format!("{{{pair}}}") } else { pair };
+                let row = Document::from_str(&copied).map_err(|_| error())?;
+                let plugin = row.as_mapping().ok_or_else(error)?;
+                if keys(&plugin)? != [name] || !plugin.rename_key(name, "config") { return Err(error()); }
+                set(&plugin, "id", &Value::String(target_id))?;
+                set(&plugin, "name", &Value::String(DSH_MCP_CLIENT_NAME.into()))?;
+                let config = plugin.get_mapping("config").ok_or_else(error)?;
+                config.remove("enabled");
+                update_mcp_config(&config, name, fields, controlled, defaults)?;
+                if !enabled {
+                    set(&plugin, "disabled", &Value::Bool(true))?;
+                }
+                self.mcp_insert_sequence()?.push(plugin);
+                servers.remove(name);
+                return Ok(());
             }
         }
-
-        let insert_seq = match target_insert_seq {
-            Some(seq) => seq,
-            None => {
-                let node = json_node(&serde_json::json!({"insert": []}))?;
-                let YamlNode::Mapping(mapping) = node else { return Err(error()); };
-                self.sequence()?.push(mapping);
-                let last_node = self.sequence()?.into_iter().last().ok_or_else(error)?;
-                let last_mapping = last_node.as_mapping().ok_or_else(error)?;
-                last_mapping.get_sequence("insert").ok_or_else(error)?
-            }
-        };
 
         let mut config_obj = Map::new();
         config_obj.insert("serverName".into(), Value::String(name.into()));
@@ -483,7 +584,7 @@ impl PatchFile {
         });
         let plugin_node = json_node(&plugin_val)?;
         let YamlNode::Mapping(plugin_mapping) = plugin_node else { return Err(error()); };
-        insert_seq.push(plugin_mapping);
+        self.mcp_insert_sequence()?.push(plugin_mapping);
         Ok(())
     }
 
@@ -538,28 +639,6 @@ impl PatchFile {
             }
         }
 
-        let mut target_insert_seq = None;
-        for node in &self.sequence()? {
-            if let Some(mapping) = node.as_mapping() {
-                if let Some(seq) = mapping.get_sequence("insert") {
-                    target_insert_seq = Some(seq);
-                    break;
-                }
-            }
-        }
-
-        let insert_seq = match target_insert_seq {
-            Some(seq) => seq,
-            None => {
-                let node = json_node(&serde_json::json!({"insert": []}))?;
-                let YamlNode::Mapping(mapping) = node else { return Err(error()); };
-                self.sequence()?.push(mapping);
-                let last_node = self.sequence()?.into_iter().last().ok_or_else(error)?;
-                let last_mapping = last_node.as_mapping().ok_or_else(error)?;
-                last_mapping.get_sequence("insert").ok_or_else(error)?
-            }
-        };
-
         let mut plugin_val = serde_json::json!({
             "id": target_id,
             "name": DSH_MCP_CLIENT_NAME,
@@ -570,8 +649,57 @@ impl PatchFile {
         }
         let plugin_node = json_node(&plugin_val)?;
         let YamlNode::Mapping(plugin_mapping) = plugin_node else { return Err(error()); };
-        insert_seq.push(plugin_mapping);
+        self.mcp_insert_sequence()?.push(plugin_mapping);
         Ok(())
+    }
+
+    fn mcp_insert_sequence(&self) -> Result<Sequence, String> {
+        let sequence = self.sequence()?;
+        for node in &sequence {
+            let mapping = node.as_mapping().ok_or_else(error)?;
+            if keys(mapping)? == ["insert"] {
+                return mapping.get_sequence("insert").ok_or_else(error);
+            }
+        }
+        // An insertion on another patch row is relative to that target.
+        let row = json_node(&serde_json::json!({"insert": []}))?;
+        let YamlNode::Mapping(row) = row else { return Err(error()); };
+        sequence.push(row);
+        sequence.into_iter().last()
+            .and_then(|node| node.as_mapping()?.get_sequence("insert")).ok_or_else(error)
+    }
+}
+
+fn update_mcp_config(
+    config: &Mapping,
+    name: &str,
+    fields: &[(String, Value)],
+    controlled: &[&str],
+    defaults: &[(String, Value)],
+) -> Result<(), String> {
+    for key in controlled {
+        if *key != "serverName" && !fields.iter().any(|(field, _)| field == key) {
+            config.remove(*key);
+        }
+    }
+    for (field, value) in fields {
+        set(config, field, value)?;
+    }
+    set(config, "serverName", &Value::String(name.into()))?;
+    for (field, value) in defaults {
+        if config.get(field).is_none() {
+            set(config, field, value)?;
+        }
+    }
+    Ok(())
+}
+
+fn contains_credential_template(value: &Value) -> bool {
+    match value {
+        Value::String(text) => text.contains("${credential:"),
+        Value::Array(values) => values.iter().any(contains_credential_template),
+        Value::Object(fields) => fields.values().any(contains_credential_template),
+        _ => false,
     }
 }
 
@@ -595,61 +723,90 @@ fn contains_id(node: &YamlNode, id: &str, depth: usize) -> Result<bool, String> 
     Ok(false)
 }
 
-/// Home patches override profile configs. Creating a whole config can also
-/// erase inherited bundle fields: only the verified default tuple is admitted
-/// when the profile does not already own a complete config object.
+fn profile_bundles(directory: &Path) -> Result<(Value, Vec<String>), String> {
+    let text = read_text(&directory.join("package.json"))?
+        .ok_or("Initialize this DeepSeek Harness profile before configuring it in Arca")?;
+    let manifest: Value = serde_json::from_str(&text).map_err(|_| error())?;
+    let bundles = manifest.pointer("/dsh/profile/bundles").and_then(Value::as_array)
+        .ok_or("DeepSeek Harness profile has no bundle declaration")?
+        .iter().map(|name| name.as_str().map(str::to_owned).ok_or_else(error))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok((manifest, bundles))
+}
+
+/// The ACP bridge gives each new session an explicit model, overriding the
+/// base bundle's otherwise shared agent-default-model service.
+pub(crate) fn model_default_entry(path: &Path) -> Result<Option<&'static str>, String> {
+    profile_at(path)?;
+    let (_, bundles) = profile_bundles(path.parent().ok_or_else(error)?)?;
+    if bundles.iter().any(|name| matches!(name.as_str(), SDK_BUNDLE | SDK_MINIMAL_BUNDLE)) {
+        // SDK initialize supplies the provider/model from its client.
+        return Ok(None);
+    }
+    Ok(Some(if bundles.iter().any(|name| name == ACP_BUNDLE) { "acp" } else { "agent-default-model" }))
+}
+
+fn guard_bundle_inheritance(path: &Path, needs_defaults: bool) -> Result<(), String> {
+    const BASE: &str = "@deepseek-ai/dsh-base";
+    const WEB: &str = "@deepseek-ai/dsh-web-app";
+    const HEADLESS: &str = "@deepseek-ai/dsh-headless";
+    let directory = path.parent().ok_or_else(error)?;
+    let (manifest, bundles) = profile_bundles(directory)?;
+    let names: Vec<_> = bundles.iter().map(String::as_str).collect();
+    if names.first() != Some(&BASE) {
+        return Err("This DeepSeek Harness profile does not select the standard base bundle".into());
+    }
+    if needs_defaults && !matches!(names.as_slice(),
+        [BASE] | [BASE, WEB | HEADLESS | ACP_BUNDLE | SDK_BUNDLE] | [BASE, WEB, HEADLESS])
+    {
+        return Err("Arca cannot verify inherited configuration from this profile's custom bundles".into());
+    }
+    for name in names.into_iter().filter(|name| matches!(*name, BASE | WEB | HEADLESS | ACP_BUNDLE | SDK_BUNDLE)) {
+        if ["dependencies", "devDependencies", "optionalDependencies"].iter()
+            .any(|key| manifest.get(key).and_then(|m| m.get(name)).is_some())
+            || fs::symlink_metadata(directory.join("node_modules").join(name)).is_ok()
+        {
+            return Err("DeepSeek Harness has a profile-local override of an official bundle".into());
+        }
+    }
+    Ok(())
+}
+
+/// Home patches override profile configs. Creating a complete config over a
+/// bundle requires a verified inherited entry; an existing profile-owned
+/// object can be edited leaf by leaf without guessing inherited values.
 pub fn guard_profile(path: &Path, ids: &[&str]) -> Result<(), String> {
-    let home = home_dir();
-    let profile = path.parent().and_then(Path::file_name).and_then(|n| n.to_str()).ok_or_else(error)?;
-    if !matches!(profile, "web" | "desktop") || path != home.join("profiles").join(profile).join("cordis.patch.yml") { return Err("DeepSeek Harness writer requires its verified web/desktop profile path".into()); }
+    profile_at(path)?;
     let own = PatchFile::read(path)?;
-    let higher = PatchFile::read(&home.join("cordis.patch.yml"))?;
+    let higher = PatchFile::read(&home_patch_path())?;
     let mut needs_defaults = false;
     for id in ids {
         if higher.has_row(id)? { return Err("DeepSeek Harness home patch overrides this profile target".into()); }
         own.config_node(id, false)?;
         if own.config(id)?.is_none() { needs_defaults = true; }
     }
-    if needs_defaults {
-        let directory = path.parent().ok_or_else(error)?;
-        let text = read_text(&directory.join("package.json"))?.ok_or("DeepSeek Harness inherited bundle configuration is unknown")?;
-        let manifest: Value = serde_json::from_str(&text).map_err(|_| error())?;
-        let defaults = serde_json::json!(["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"]);
-        if manifest.pointer("/dsh/profile/bundles") != Some(&defaults) { return Err("custom DeepSeek Harness bundles require an explicit complete profile config".into()); }
-        for name in ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"] {
-            if ["dependencies", "devDependencies", "optionalDependencies"].iter().any(|key| manifest.get(key).and_then(|m| m.get(name)).is_some())
-                || fs::symlink_metadata(directory.join("node_modules").join(name)).is_ok() { return Err("profile-local bundle overrides cannot authorize inherited configuration replacement".into()); }
-        }
-    }
-    Ok(())
+    guard_bundle_inheritance(path, needs_defaults)
 }
 
 pub fn guard_mcp_profile(path: &Path, names: &[&str]) -> Result<(), String> {
-    let home = home_dir();
-    let profile = path.parent().and_then(Path::file_name).and_then(|n| n.to_str()).ok_or_else(error)?;
-    if !matches!(profile, "web" | "desktop") || path != home.join("profiles").join(profile).join("cordis.patch.yml") {
-        return Err("DeepSeek Harness writer requires its verified web/desktop profile path".into());
-    }
-    let _own = PatchFile::read(path)?;
-    let higher = PatchFile::read(&home.join("cordis.patch.yml"))?;
+    profile_at(path)?;
+    let own = PatchFile::read(path)?;
+    let higher = PatchFile::read(&home_patch_path())?;
+    let entries = if names.is_empty() { Vec::new() } else { own.mcp_entries()? };
     for name in names {
-        let target_id = format!("mcp-{}", name);
-        if higher.has_row(&target_id)? || higher.has_row(name)? || higher.inspect_mcp(name)?.is_some() {
+        let target_id = format!("mcp-{name}");
+        let own_id = entries.iter().find(|(server, _)| server == name)
+            .and_then(|(_, plugin)| plugin.get("id")).map(|node| node_json(&node)).transpose()?;
+        let shadowed = match own_id.as_ref().and_then(Value::as_str) {
+            Some(id) => higher.has_row(id)?,
+            None => false,
+        };
+        if higher.has_row(&target_id)? || higher.has_row(name)?
+            || higher.inspect_mcp_declaration(name)?.is_some()
+            || shadowed
+        {
             return Err("DeepSeek Harness home patch overrides this profile target".into());
         }
     }
-    let directory = path.parent().ok_or_else(error)?;
-    let text = read_text(&directory.join("package.json"))?.ok_or("DeepSeek Harness inherited bundle configuration is unknown")?;
-    let manifest: Value = serde_json::from_str(&text).map_err(|_| error())?;
-    let defaults = serde_json::json!(["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"]);
-    if manifest.pointer("/dsh/profile/bundles") != Some(&defaults) {
-        return Err("custom DeepSeek Harness bundles require an explicit complete profile config".into());
-    }
-    for name in ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"] {
-        if ["dependencies", "devDependencies", "optionalDependencies"].iter().any(|key| manifest.get(key).and_then(|m| m.get(name)).is_some())
-            || fs::symlink_metadata(directory.join("node_modules").join(name)).is_ok() {
-            return Err("profile-local bundle overrides cannot authorize inherited configuration replacement".into());
-        }
-    }
-    Ok(())
+    guard_bundle_inheritance(path, true)
 }

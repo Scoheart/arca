@@ -78,7 +78,9 @@ export function SkillInspector({
       avatar={<Avatar seed={item.name} kind="skill" size={40} />}
       subtitle={<Badge tone={item.source?.kind === "github" ? "info" : "neutral"}>{sourceKindLabel(item)}</Badge>}
       onClose={onClose}
-      footer={onPlan ? <div className="flex gap-2">
+      footerStart={onPlan && central ? <button type="button" className="arca-btn-soft-danger" disabled={blocked}
+        onClick={() => submit({ kind: "remove", skillName: item.name })}>删除</button> : undefined}
+      footer={onPlan && (external || canUpdate || needsRepair) ? <>
         {external ? <button type="button" className="btn-primary" disabled={blocked}
           onClick={() => submit({ kind: "import", identity: item.identity, replaceConflicts })}>导入</button> : null}
         {canUpdate ? <button type="button" className="btn-secondary" disabled={blocked}
@@ -87,9 +89,7 @@ export function SkillInspector({
           onClick={() => submit({ kind: "repair", skillName: item.name,
             repair: item.location.kind === "central" ? { kind: "central" }
               : { kind: "target", target_id: item.location.target_id } })}>修复</button> : null}
-        {central ? <button type="button" className="btn-danger" disabled={blocked}
-          onClick={() => submit({ kind: "remove", skillName: item.name })}>删除</button> : null}
-      </div> : undefined}
+      </> : undefined}
     >
       <article className="arca-skill-reading" key={item.identity}>
         {onSelectCopy && visibleCopies.length > 1 && <FormSelect ariaLabel="Skill 位置" value={item.identity}

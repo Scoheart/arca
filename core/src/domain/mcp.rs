@@ -18,7 +18,14 @@ pub struct McpInspectionRequest {
 pub enum McpInspectionSource {
     Configured { key: String },
     ConfiguredName { name: String },
+    HarnessHome { name: String },
     Host { source_fingerprint: String },
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum McpConfigurationLayer {
+    HarnessHome,
 }
 
 /// A native declaration remains visible even when its transport or credential
@@ -28,6 +35,8 @@ pub struct ConfiguredMcpObservation {
     pub agent_id: String,
     pub name: String,
     pub source_path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layer: Option<McpConfigurationLayer>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

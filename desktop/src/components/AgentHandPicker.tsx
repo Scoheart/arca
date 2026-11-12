@@ -8,7 +8,7 @@ import { MAX_PINNED_AGENTS } from "../lib/pinnedAgents";
 import { useHandTrackpadPaging } from "../hooks/useHandTrackpadPaging";
 import { AgentGlyph, isAgentEntryVisible } from "./brandIcons";
 import { ArrowLeftIcon, PackageIcon, PinIcon, PinOffIcon, PlusIcon, SearchIcon, XIcon } from "./icons";
-import { Modal } from "./ui";
+import { DialogShell } from "./DialogShell";
 import { PinnedAgentDock } from "./PinnedAgentDock";
 import { AgentEntryTransition, type AgentEntryOrigin } from "./AgentEntryTransition";
 import "./AgentHandPicker.css";
@@ -400,57 +400,84 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
   };
   const changeGroup = (next: Group) => { if (busy || saving) return; setGroup(next); setQuery(""); setPage(0); setReplacement(null); setAnnouncement(""); setHighlighted(null); };
 
-  return <Modal width="min(860px, calc(100vw - 32px))" maxHeight="calc(100dvh - 120px)" ariaLabel="选择和置顶 Agent" layer="agent-hand" onClose={() => void close()}>
+  const footerStart = <div className="arca-agent-hand-footer-info">
+    <div className="arca-agent-hand-shortcuts">
+      <span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> 导航</span>
+      <span><kbd>↵</kbd> 打开</span>
+      <span><kbd>Esc</kbd> 关闭</span>
+    </div>
+    {pageCount > 1 ? (
+      <div className="arca-agent-hand-pagination">
+        <nav aria-label="Agent 分页">
+          {Array.from({ length: pageCount }, (_, index) => (
+            <button key={index} type="button"
+              className="arca-agent-hand-dot" aria-label={`第 ${index + 1} 页，共 ${pageCount} 页${actualPage === index ? "（当前页）" : ""}`}
+              aria-current={actualPage === index ? "page" : undefined} title={`第 ${index + 1} 页`}
+              disabled={busy || saving || Boolean(replacement)}
+              onClick={() => turnPage(index)} />
+          ))}
+        </nav>
+      </div>
+    ) : null}
+  </div>;
+  const footerEnd = (
+    <div ref={dockRef} className="arca-agent-hand-pinned">
+      <PinnedAgentDock expanded agents={agents} ids={pinnedIds} selectedId={selectedAgentId} disabled={!ready || saving || busy}
+        replacementName={replacement?.name} onReplace={(index) => {
+          if (!replacement) return;
+          const next = [...pinnedIds]; next[index] = replacement.id;
+          void savePins(next, replacement, index);
+        }} onSelect={(id) => void select(id)} onEmpty={() => searchRef.current?.focus()}
+        onReorder={(next, id) => {
+          if (next.join("\0") === pinnedIds.join("\0") || !ready || lock.current) return;
+          const agent = agents.find((agent) => agent.id === id);
+          if (agent) void savePins(next, agent);
+        }} />
+    </div>
+  );
+
+  return <DialogShell kind="picker" size="xl" layer="agent-hand" className="arca-agent-hand-shell"
+    title="选择 Agent" ariaLabel="选择和置顶 Agent" subtitle={`${rows.length} 个 Agent`}
+    leading={<span className="arca-dialog-shell-glyph" aria-hidden="true"><PackageIcon /></span>}
+    busy={busy || saving} onClose={() => void close()} footerStart={footerStart} footerEnd={footerEnd}>
     <div className="arca-agent-hand-picker" data-busy={busy || saving || undefined} data-playing={playing || undefined} data-entering={entryTransition ? "true" : undefined} data-closing={closing || undefined}>
-      <header className="arca-agent-hand-topbar">
-        <div className="arca-agent-hand-header-start">
-          <div className="arca-agent-hand-title">
-            <PackageIcon className="w-4 h-4" />
-            <span>选择 Agent</span>
-            <span className="arca-agent-hand-count">{rows.length}</span>
-          </div>
-          <div className="arca-agent-hand-filters" role="group" aria-label="Agent 分类">
-            {([['builtin', '内置'], ['pinned', '常用'], ['custom', '自定义']] as const).map(([id, label]) => (
-              <button type="button" key={id}
-                aria-pressed={group === id && !query.trim()} disabled={busy || saving} onClick={() => changeGroup(id)}>
-                {label}
-              </button>
-            ))}
-          </div>
+      <div className="arca-agent-hand-toolbar">
+        <div className="arca-agent-hand-filters" role="group" aria-label="Agent 分类">
+          {([['builtin', '内置'], ['pinned', '常用'], ['custom', '自定义']] as const).map(([id, label]) => (
+            <button type="button" key={id}
+              aria-pressed={group === id && !query.trim()} disabled={busy || saving} onClick={() => changeGroup(id)}>
+              {label}
+            </button>
+          ))}
         </div>
-        <div className="arca-agent-hand-toolbar">
-          <label className="arca-agent-hand-search" data-active={selectedAgent ? "true" : undefined}>
-            <SearchIcon className="w-3.5 h-3.5 flex-shrink-0" />
-            <ImeInput ref={searchRef} data-modal-initial-focus type="search" autoComplete="off" spellCheck={false} placeholder="搜索名称或 ID" aria-label="搜索 Agent" aria-describedby={searchHintId}
-              onKeyDown={(event) => {
-                if (event.altKey || event.metaKey || event.ctrlKey) return;
-                if (event.key === "ArrowDown" && visible.length) {
-                  event.preventDefault();
-                  cardRefs.current.get(visible[0].id)?.querySelector<HTMLButtonElement>(".arca-agent-hand-select")?.focus();
-                }
-                if (event.key !== "Enter" || !query.trim()) return;
+        <label className="arca-agent-hand-search" data-active={selectedAgent ? "true" : undefined}>
+          <SearchIcon className="w-3.5 h-3.5 flex-shrink-0" />
+          <ImeInput ref={searchRef} data-modal-initial-focus type="search" autoComplete="off" spellCheck={false} placeholder="搜索名称或 ID" aria-label="搜索 Agent" aria-describedby={searchHintId}
+            onKeyDown={(event) => {
+              if (event.altKey || event.metaKey || event.ctrlKey) return;
+              if (event.key === "ArrowDown" && visible.length) {
                 event.preventDefault();
-                const needle = query.trim().toLocaleLowerCase();
-                const idMatch = rows.find((agent) => agent.id.toLocaleLowerCase() === needle);
-                const nameMatches = rows.filter((agent) => agent.name.toLocaleLowerCase() === needle);
-                const match = idMatch ?? (nameMatches.length === 1 ? nameMatches[0] : rows.length === 1 ? rows[0] : undefined);
-                if (match) select(match.id, true);
-                else setAnnouncement(rows.length ? "存在多个匹配，请输入完整名称或 ID" : "未找到匹配的 Agent");
-              }}
-              value={query} disabled={busy || saving} onChange={(event) => { setQuery(event.target.value); setPage(0); setReplacement(null); setAnnouncement(""); }} />
-            {query.trim() ? (
-              <button type="button" className="arca-agent-hand-search-clear" onClick={() => { setQuery(""); searchRef.current?.focus(); }} title="清除搜索">
-                <XIcon className="w-3 h-3" />
-              </button>
-            ) : (
-              <span className="arca-agent-hand-search-kbd">⌘K</span>
-            )}
-          </label>
-          <button type="button" className="arca-agent-hand-close-btn" aria-label="关闭" title="Esc" onClick={() => void close()}>
-            <XIcon className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
+                cardRefs.current.get(visible[0].id)?.querySelector<HTMLButtonElement>(".arca-agent-hand-select")?.focus();
+              }
+              if (event.key !== "Enter" || !query.trim()) return;
+              event.preventDefault();
+              const needle = query.trim().toLocaleLowerCase();
+              const idMatch = rows.find((agent) => agent.id.toLocaleLowerCase() === needle);
+              const nameMatches = rows.filter((agent) => agent.name.toLocaleLowerCase() === needle);
+              const match = idMatch ?? (nameMatches.length === 1 ? nameMatches[0] : rows.length === 1 ? rows[0] : undefined);
+              if (match) select(match.id, true);
+              else setAnnouncement(rows.length ? "存在多个匹配，请输入完整名称或 ID" : "未找到匹配的 Agent");
+            }}
+            value={query} disabled={busy || saving} onChange={(event) => { setQuery(event.target.value); setPage(0); setReplacement(null); setAnnouncement(""); }} />
+          {query.trim() ? (
+            <button type="button" className="arca-agent-hand-search-clear" onClick={() => { setQuery(""); searchRef.current?.focus(); }} title="清除搜索">
+              <XIcon className="w-3 h-3" />
+            </button>
+          ) : (
+            <span className="arca-agent-hand-search-kbd">⌘K</span>
+          )}
+        </label>
+      </div>
 
       <p id={searchHintId} className="sr-only">输入完整名称或 ID 后按回车直接打开{query.trim() ? `，找到 ${rows.length} 个 Agent` : ""}</p>
 
@@ -523,44 +550,9 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
         )}
       </div>
 
-      <footer className="arca-agent-hand-footer">
-        <div className="arca-agent-hand-shortcuts">
-          <span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> 导航</span>
-          <span><kbd>↵</kbd> 打开</span>
-          <span><kbd>Esc</kbd> 关闭</span>
-        </div>
-        {pageCount > 1 ? (
-          <div className="arca-agent-hand-pagination">
-            <nav aria-label="Agent 分页">
-              {Array.from({ length: pageCount }, (_, index) => (
-                <button key={index} type="button"
-                  className="arca-agent-hand-dot" aria-label={`第 ${index + 1} 页，共 ${pageCount} 页${actualPage === index ? "（当前页）" : ""}`}
-                  aria-current={actualPage === index ? "page" : undefined} title={`第 ${index + 1} 页`}
-                  disabled={busy || saving || Boolean(replacement)}
-                  onClick={() => turnPage(index)} />
-              ))}
-            </nav>
-          </div>
-        ) : null}
-        <div className="arca-agent-hand-footer-dock">
-          <div ref={dockRef} className="arca-agent-hand-pinned">
-            <PinnedAgentDock expanded agents={agents} ids={pinnedIds} selectedId={selectedAgentId} disabled={!ready || saving || busy}
-              replacementName={replacement?.name} onReplace={(index) => {
-                if (!replacement) return;
-                const next = [...pinnedIds]; next[index] = replacement.id;
-                void savePins(next, replacement, index);
-              }} onSelect={(id) => void select(id)} onEmpty={() => searchRef.current?.focus()}
-              onReorder={(next, id) => {
-                if (next.join("\0") === pinnedIds.join("\0") || !ready || lock.current) return;
-                const agent = agents.find((agent) => agent.id === id);
-                if (agent) void savePins(next, agent);
-              }} />
-          </div>
-        </div>
-        {replacement && <p className="arca-agent-hand-announcement">{`在上方选择要替换为 ${replacement.name} 的置顶位，按 Esc 取消`}</p>}
-        <ToastNotice kind={notice.kind} message={announcement} />
-      </footer>
+      {replacement && <p className="arca-agent-hand-announcement">{`选择要替换为 ${replacement.name} 的置顶位，按 Esc 取消`}</p>}
+      <ToastNotice kind={notice.kind} message={announcement} />
     </div>
     {entryTransition && <AgentEntryTransition {...entryTransition} onDone={onClose} />}
-  </Modal>;
+  </DialogShell>;
 }

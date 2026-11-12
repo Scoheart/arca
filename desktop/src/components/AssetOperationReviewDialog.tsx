@@ -427,7 +427,7 @@ export function AssetOperationReviewDialog({
       ) : undefined}
       footerEnd={(
         <>
-          <button type="button" className="btn-ghost" disabled={busy} onClick={() => void onCancel()}>
+          <button type="button" className="btn-secondary" disabled={busy} onClick={() => void onCancel()}>
             {cancelLabel}
           </button>
           <button

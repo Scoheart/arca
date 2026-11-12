@@ -198,20 +198,17 @@ export function HooksView({
             title={selectedHook.display_name || selectedHook.name}
             subtitle={selectedHook.name}
             onClose={() => setSelectedName(null)}
+            footerStart={
+              <button type="button" className="arca-btn-soft-danger" onClick={() => setDeletingHook(selectedHook)}>
+                <TrashIcon className="w-3.5 h-3.5" />
+                <span>删除</span>
+              </button>
+            }
             footer={
-              <div className="flex items-center justify-between w-full">
-                <button
-                  type="button"
-                  className="btn-secondary text-xs text-rose-500 hover:text-rose-600 flex items-center gap-1.5"
-                  onClick={() => setDeletingHook(selectedHook)}
-                >
-                  <TrashIcon className="w-3.5 h-3.5" />
-                  <span>删除</span>
-                </button>
-                <div className="flex items-center gap-2">
+              <>
                   <button
                     type="button"
-                    className="btn-secondary text-xs flex items-center gap-1"
+                    className="btn-secondary"
                     onClick={() => copyDefinitionJson(selectedHook)}
                   >
                     <CopyIcon className="w-3.5 h-3.5" />
@@ -219,7 +216,7 @@ export function HooksView({
                   </button>
                   <button
                     type="button"
-                    className="btn-secondary text-xs flex items-center gap-1.5"
+                    className="btn-primary"
                     onClick={() => {
                       setEditingHook(selectedHook);
                       setEditorOpen(true);
@@ -228,8 +225,7 @@ export function HooksView({
                     <EditIcon className="w-3.5 h-3.5" />
                     <span>编辑</span>
                   </button>
-                </div>
-              </div>
+              </>
             }
           >
             <InspectorMetrics>

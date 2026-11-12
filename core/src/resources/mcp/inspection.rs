@@ -1,8 +1,9 @@
 //! On-demand, read-only configuration projection for a single discovered MCP.
 
 use crate::domain::error::{CoreError, CoreResult};
-use crate::domain::mcp::{ConfiguredMcpObservation, McpConfigurationDocument, McpConfigurationView, McpInspectionRequest, McpInspectionSource};
+use crate::domain::mcp::{ConfiguredMcpObservation, McpConfigurationDocument, McpConfigurationLayer, McpConfigurationView, McpInspectionRequest, McpInspectionSource};
 use crate::domain::types::AgentDefinition;
+use crate::resources::deepseek_harness as cordis;
 use super::adapter::{get_agent_adapter_for, Adapter};
 use super::json_adapter::JsonAdapter;
 use super::scanner::{collapse_home, expand_tilde};
@@ -28,6 +29,14 @@ pub(crate) fn inspect(request: McpInspectionRequest) -> CoreResult<McpConfigurat
         McpInspectionSource::ConfiguredName { name } => {
             if !valid_name(&name) { return Err(CoreError::new("invalid_mcp_identity", "MCP 名称无效。")); }
             let document = configured_document(definition, &request.agent_id, &name)?;
+            (name, vec![document])
+        }
+        McpInspectionSource::HarnessHome { name } => {
+            if cordis::default_profile(&request.agent_id).is_none() || !cordis::valid_mcp_server_name(&name) {
+                return Err(CoreError::new("invalid_mcp_identity", "MCP 名称无效。"));
+            }
+            let path = cordis::home_patch_path();
+            let document = configured_document_at(definition, &request.agent_id, &name, &path);
             (name, vec![document])
         }
         McpInspectionSource::Host { source_fingerprint } => {
@@ -68,11 +77,25 @@ fn valid_name(name: &str) -> bool {
 fn configured_document(definition: &AgentDefinition, agent_id: &str, name: &str) -> CoreResult<McpConfigurationDocument> {
     let target = definition.global.as_deref()
         .ok_or_else(|| CoreError::new("mcp_configuration_unavailable", "此 Agent 没有已核验的用户级 MCP 配置入口。"))?;
-    let path = expand_tilde(target);
-    Ok(match open_configuration(&path).and_then(|file| read_bounded(file, &path)) {
-        Ok(text) => document(&path, get_agent_adapter_for(definition, agent_id).inspect_text(&text, name)),
-        Err(()) => unavailable(&path, "配置文件不存在、不可读或已变化，未返回配置内容。"),
-    })
+    Ok(configured_document_at(definition, agent_id, name, &expand_tilde(target)))
+}
+
+fn configured_document_at(definition: &AgentDefinition, agent_id: &str, name: &str, path: &Path) -> McpConfigurationDocument {
+    match configuration_text(agent_id, path) {
+        Ok(Some(text)) => document(path, get_agent_adapter_for(definition, agent_id).inspect_text(&text, name)),
+        _ => unavailable(path, "配置文件不存在、不可读或已变化，未返回配置内容。"),
+    }
+}
+
+fn configuration_text(agent_id: &str, path: &Path) -> Result<Option<String>, ()> {
+    if cordis::default_profile(agent_id).is_some() {
+        if path != cordis::home_patch_path() && cordis::agent_profile_at(agent_id, path).is_err() { return Err(()); }
+        return cordis::read_text(path).map_err(|_| ());
+    }
+    if std::fs::symlink_metadata(path).is_err_and(|error| error.kind() == std::io::ErrorKind::NotFound) {
+        return Ok(None);
+    }
+    open_configuration(path).and_then(|file| read_bounded(file, path)).map(Some)
 }
 
 /// Configuration names have a read path separate from connection decoding and
@@ -81,20 +104,34 @@ pub(crate) fn configured_observations(agent_id: &str) -> (Vec<ConfiguredMcpObser
     let agents = crate::agents::load_agents();
     let Some(definition) = agents.get(agent_id) else { return (Vec::new(), false); };
     let Some(target) = definition.global.as_deref() else { return (Vec::new(), false); };
-    let path = expand_tilde(target);
-    if std::fs::symlink_metadata(&path).is_err_and(|error| error.kind() == std::io::ErrorKind::NotFound) {
-        return (Vec::new(), false);
+    let mut rows = Vec::new();
+    let mut incomplete = false;
+    let mut paths = vec![(expand_tilde(target), None)];
+    if cordis::default_profile(agent_id).is_some() {
+        paths.push((cordis::home_patch_path(), Some(McpConfigurationLayer::HarnessHome)));
     }
-    let names = open_configuration(&path).and_then(|file| read_bounded(file, &path))
-        .and_then(|text| get_agent_adapter_for(definition, agent_id).declaration_names(&text).map_err(|_| ()));
-    let Ok(mut names) = names else { return (Vec::new(), true); };
-    if names.len() > 4096 || names.iter().any(|name| !valid_name(name)) { return (Vec::new(), true); }
-    names.sort();
-    if names.windows(2).any(|pair| pair[0] == pair[1]) { return (Vec::new(), true); }
-    let source_path = collapse_home(&path.to_string_lossy());
-    (names.into_iter().map(|name| ConfiguredMcpObservation {
-        agent_id: agent_id.into(), name, source_path: source_path.clone(),
-    }).collect(), false)
+    let adapter = get_agent_adapter_for(definition, agent_id);
+    for (path, layer) in paths {
+        let names = configuration_text(agent_id, &path).and_then(|text|
+            text.map(|text| adapter.declaration_names(&text)).transpose().map_err(|_| ()));
+        let mut names = match names {
+            Ok(Some(names)) => names,
+            Ok(None) => continue,
+            Err(()) => { incomplete = true; continue; }
+        };
+        names.sort();
+        if names.len() > 4096 || names.iter().any(|name| !valid_name(name))
+            || names.windows(2).any(|pair| pair[0] == pair[1])
+        {
+            incomplete = true;
+            continue;
+        }
+        let source_path = collapse_home(&path.to_string_lossy());
+        rows.extend(names.into_iter().map(|name| ConfiguredMcpObservation {
+            agent_id: agent_id.into(), name, source_path: source_path.clone(), layer,
+        }));
+    }
+    (rows, incomplete)
 }
 
 fn stale() -> CoreError {

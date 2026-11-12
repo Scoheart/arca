@@ -70,6 +70,22 @@ pub struct NativeSkillObservation {
     pub docs_url: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct NativeFileSkillObservation {
+    pub name: String,
+    pub description: String,
+    pub source_path: String,
+    pub model_invocable: bool,
+    pub user_invocable: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct NativeDefaultModelObservation {
+    pub provider: String,
+    pub model: String,
+    pub source_path: String,
+}
+
 /// Host metadata has its own read path; it never waits for model credentials.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NativeResourceInventory {
@@ -77,6 +93,10 @@ pub struct NativeResourceInventory {
     pub host_mcps: Vec<HostMcpObservation>,
     pub native_plugins: Vec<NativePluginObservation>,
     pub native_skills: Vec<NativeSkillObservation>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub file_skills: Vec<NativeFileSkillObservation>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub native_default_model: Option<NativeDefaultModelObservation>,
     #[serde(default)]
     pub configured_mcps: Vec<super::mcp::ConfiguredMcpObservation>,
     #[serde(default)]

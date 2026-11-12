@@ -99,7 +99,7 @@ export function ConsumptionPickerDialog({
       }
       footerEnd={
         <>
-          <button type="button" className="btn-ghost" disabled={busy} onClick={onClose}>取消</button>
+          <button type="button" className="btn-secondary" disabled={busy} onClick={onClose}>取消</button>
           <button type="button" className="btn-primary" disabled={selected.length === 0 || busy} onClick={() => void apply()}>
             {busy && <RefreshIcon className="arca-button-progress-icon" data-spinning="true" />}
             {busy

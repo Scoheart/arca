@@ -265,6 +265,8 @@ export function AgentView({
   const hostMcps = nativeResources.inventory?.host_mcps ?? [];
   const nativePlugins = nativeResources.inventory?.native_plugins ?? [];
   const nativeSkills = nativeResources.inventory?.native_skills ?? [];
+  const fileSkills = nativeResources.inventory?.file_skills ?? [];
+  const nativeDefaultModel = nativeResources.inventory?.native_default_model;
   const nativePluginSupported = nativeResources.inventory?.native_plugin_agents.includes(agentId) ?? false;
   const nativePluginCount = new Set(nativePlugins.map(item => item.plugin_id)).size;
   useEffect(() => {
@@ -345,7 +347,7 @@ export function AgentView({
     const represented = new Set([...mcpRows, ...mcpExternal].flatMap(item =>
       item.asset.domain === "mcp" ? [item.asset.key.replace(/::(?:stdio|http)$/, "")] : []));
     return (nativeResources.inventory?.configured_mcps ?? [])
-      .filter(item => item.agent_id === agentId && !represented.has(item.name));
+      .filter(item => item.agent_id === agentId && (item.layer === "harness_home" || !represented.has(item.name)));
   }, [agentId, mcpRows, mcpExternal, nativeResources.inventory]);
   const displayedMcpRows = useMemo(
     () => mcpRows.map((item) => (
@@ -420,6 +422,9 @@ export function AgentView({
   ]), [entries, modelProfiles, centralSkills]);
 
   if (!agent) return <div className="arca-agent-state">未找到该 Agent</div>;
+  const modelSelectionHint = modelAgent?.supports_global_selection === false
+    ? agent.native_profiles?.length ? t("nativePlugins.sdkModelSelection") : `重启 ${agent.name} 后在会话中选用`
+    : modelAgent?.supports_multiple ? "同一时间使用其中一个" : "";
 
   if (false as boolean) {
     return (
@@ -848,7 +853,7 @@ export function AgentView({
             mcps: mcpRows.length + mcpExternal.length + configuredMcps.length + hostMcps.length,
             models: modelVisibleCount,
             agents: startupAgentsCount,
-            skills: skillRows.length + skillExternal.length + nativeSkills.length,
+            skills: skillRows.length + skillExternal.length + nativeSkills.length + fileSkills.length,
             subagents: subagentRows.length + subagentExternal.length,
             hooks: agentHooks.length,
           }}
@@ -970,9 +975,13 @@ export function AgentView({
               <AgentConsumptionPanel
                 domain="model"
                 title={RESOURCE_PRESENTATION.model.label}
-                description={modelAgent?.storage_authority === "native-registry"
-                  ? `配置中 ${modelVisibleCount} 个${modelAgent.supports_global_selection === false ? ` · 重启 ${agent.name} 后在会话中选用` : modelAgent.supports_multiple ? " · 同一时间使用其中一个" : ""}`
-                  : `Arca 管理 ${modelVisibleCount} 个`}
+                description={<>{modelAgent?.storage_authority === "native-registry"
+                  ? `配置中 ${modelVisibleCount} 个${modelSelectionHint ? ` · ${modelSelectionHint}` : ""}`
+                  : `Arca 管理 ${modelVisibleCount} 个`}{nativeDefaultModel && (
+                    <span title={nativeDefaultModel.source_path}> · {t("nativePlugins.defaultModel")}{" "}
+                      <code>{nativeDefaultModel.provider}/{nativeDefaultModel.model}</code>
+                    </span>
+                  )}</>}
                 manageLabel="添加 Models"
                 rows={displayedModelRows}
                 columns={3}
@@ -1129,13 +1138,14 @@ export function AgentView({
               domain="skill"
               title={RESOURCE_PRESENTATION.skill.label}
               description={nativeSkills.length > 0
-                ? t("nativePlugins.skillCounts", { configured: skillRows.length + skillExternal.length, builtin: nativeSkills.length })
-                : `${skillRows.length} 项`}
+                ? t("nativePlugins.skillCounts", { configured: skillRows.length + skillExternal.length + fileSkills.length, builtin: nativeSkills.length })
+                : `${skillRows.length + skillExternal.length + fileSkills.length} 项`}
               manageLabel="添加 Skills"
               rows={displayedSkillRows}
               columns={3}
               external={skillExternal}
               nativeSkills={nativeSkills}
+              fileSkills={fileSkills}
               externalMode="cards"
               onManage={() => setPickerDomain("skill")}
               onOpenAsset={openAsset}

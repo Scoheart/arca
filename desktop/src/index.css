@@ -1342,54 +1342,44 @@ body {
 .arca-agent-stack-icon:first-child { margin-left: 0; }
 .arca-resource-usage-empty { color: var(--text-secondary); font-size: 10px; }
 
-.arca-workspace-inspector-surface {
-  display: flex; width: 100%; max-height: inherit; min-width: 0; min-height: 0;
-  overflow: hidden; border-radius: inherit;
+.arca-modal-overlay {
+  position: fixed; inset: 0; z-index: 700; display: flex; align-items: center; justify-content: center;
+  background: var(--surface-modal-scrim); overscroll-behavior: contain;
 }
-.arca-resource-inspector {
-  display: flex; width: 100%; max-height: inherit; min-height: 0; flex-direction: column; overflow: hidden;
-  border: 0; border-radius: inherit; background: var(--surface-overlay);
-  box-shadow: none;
+.arca-modal-overlay[inert] { background: transparent; }
+.arca-modal-panel {
+  display: flex; flex-direction: column; min-width: 0; min-height: 0;
+  max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); overflow: hidden;
+  border-radius: var(--radius-canvas); background: var(--surface-overlay); box-shadow: var(--shadow-sheet);
 }
-.arca-resource-inspector-head {
-  display: flex; min-height: var(--arca-dialog-header-height); flex: 0 0 auto; align-items: center; gap: 11px;
-  padding: 10px var(--arca-dialog-inline); border-bottom: 1px solid var(--border-hairline);
+.arca-modal-panel[data-modal-presentation="canvas"] {
+  width: 100%; height: 100%; max-width: none; max-height: none;
+  border-radius: 0; background: transparent; box-shadow: none;
 }
-.arca-resource-inspector-head h2 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
-.arca-resource-inspector-subtitle { margin-top: 3px; color: var(--text-secondary); font-size: 11px; }
-.arca-inspector-close {
-  display: inline-flex; width: 30px; height: 30px; flex: 0 0 auto; align-items: center; justify-content: center;
-  padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary); cursor: pointer;
-  transition: background-color .12s ease, color .12s ease;
-}
-.arca-inspector-close:hover { background: var(--surface-section); color: var(--text-primary); }
-.arca-resource-inspector-body {
-  flex: 0 1 auto; min-height: 0; max-height: calc(100vh - 140px); overflow-y: auto;
-  padding: var(--arca-dialog-block) var(--arca-dialog-inline); overscroll-behavior: contain;
-}
-.arca-resource-inspector-footer {
-  display: flex; min-height: var(--arca-dialog-footer-height); flex: 0 0 auto; align-items: center; gap: 7px;
-  margin: 0; padding: 9px var(--arca-dialog-inline); border-top: 1px solid var(--border-hairline); background: transparent;
-}
-.arca-dialog-shell { display: flex; width: 100%; max-height: inherit; min-height: 0; flex-direction: column; overflow: hidden; padding: 0; }
+.arca-dialog-shell { display: flex; width: 100%; max-height: inherit; min-width: 0; min-height: 0; flex-direction: column; overflow: hidden; }
 .arca-dialog-shell-header {
   display: flex; min-height: var(--arca-dialog-header-height); flex: 0 0 auto; align-items: center; gap: 11px;
   padding: 10px var(--arca-dialog-inline); border-bottom: 1px solid var(--border-hairline); background: var(--surface-overlay);
 }
 .arca-dialog-shell-heading { min-width: 0; flex: 1; }
-.arca-dialog-shell-leading { display: inline-flex; flex: 0 0 auto; }
+.arca-dialog-shell-leading { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; }
+.arca-dialog-shell-leading > * { max-width: 100%; max-height: 100%; }
 .arca-dialog-shell-glyph {
   display: inline-flex; width: 32px; height: 32px; flex: 0 0 32px; align-items: center; justify-content: center;
   border-radius: 9px; background: color-mix(in srgb, var(--color-blue) 10%, transparent); color: var(--color-blue);
 }
 .arca-dialog-shell-glyph svg { width: 15px; height: 15px; }
-.arca-dialog-shell-heading h2 { margin: 0; color: var(--text-primary); font-size: 14px; font-weight: 680; line-height: 1.3; }
-.arca-dialog-shell-subtitle { margin-top: 2px; color: var(--text-secondary); font-size: 9px; line-height: 1.4; }
+.arca-dialog-shell-heading h2 {
+  margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-primary); font-size: 15px; font-weight: 700; line-height: 1.3;
+}
+.arca-dialog-shell-subtitle { margin-top: 3px; color: var(--text-secondary); font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 .arca-dialog-shell-close {
-  display: inline-flex; width: 28px; height: 28px; flex: 0 0 auto; align-items: center; justify-content: center;
-  padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); cursor: pointer;
+  display: inline-flex; width: 32px; height: 32px; flex: 0 0 auto; align-items: center; justify-content: center;
+  padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text-secondary); cursor: pointer;
 }
 .arca-dialog-shell-close:hover:not(:disabled) { background: var(--surface-section); color: var(--text-primary); }
+.arca-dialog-shell-close:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
 .arca-dialog-shell-close:disabled { cursor: default; opacity: .45; }
 .arca-dialog-shell-status { flex: 0 0 auto; margin: 10px var(--arca-dialog-inline) 0; padding: 9px 10px; border: 0; border-radius: 8px; background: var(--surface-section); }
 .arca-dialog-shell-status:empty { display: none; }
@@ -1403,16 +1393,19 @@ body {
   overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
 }
 .arca-dialog-shell[data-dialog-kind="picker"] .arca-dialog-shell-body {
-  display: flex; flex-direction: column; overflow: hidden;
+  display: flex; flex-direction: column; overflow-y: var(--arca-picker-overflow-y, hidden);
 }
 .arca-dialog-shell-footer {
-  display: flex; min-height: var(--arca-dialog-footer-height); flex: 0 0 auto; align-items: center; justify-content: space-between;
+  display: flex; min-height: var(--arca-dialog-footer-height); flex: 0 0 auto; flex-wrap: wrap; align-items: center;
   gap: 12px; margin: 0; padding: 9px var(--arca-dialog-inline); border-top: 1px solid var(--border-hairline);
   background: var(--surface-overlay);
 }
 .arca-dialog-shell-footer-start,
-.arca-dialog-shell-footer-end { display: flex; align-items: center; gap: 7px; }
-.arca-dialog-shell-footer-end { margin-left: auto; }
+.arca-dialog-shell-footer-end { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px; }
+.arca-dialog-shell-footer-end { margin-inline-start: auto; justify-content: flex-end; }
+.arca-dialog-shell-footer :is(.btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .btn-danger-solid) {
+  min-height: 32px; padding-block: 5px; padding-inline: 12px; border-radius: var(--radius-control);
+}
 .arca-dialog-disclosure { min-width: 0; border-top: 1px solid var(--border-hairline); }
 .arca-dialog-disclosure > summary {
   display: flex; align-items: center; gap: 8px; padding: 12px 0;
@@ -1427,13 +1420,11 @@ body {
 .arca-dialog-disclosure-body { display: grid; min-width: 0; gap: 14px; padding: 2px 0 12px; }
 .arca-dialog-disclosure-body > .arca-provider-form-section { border-top: 0; padding-top: 0; }
 :is(.arca-agent-identity-fields, .arca-agent-detail-fields) > .arca-dialog-disclosure { grid-column: 1 / -1; }
-.arca-dialog-shell-footer-start { min-width: 0; flex: 1; color: var(--text-secondary); font-size: 10px; }
-.arca-dialog-shell-footer-end { flex: 0 0 auto; }
+.arca-dialog-shell-footer-start { flex: 1 1 auto; color: var(--text-secondary); font-size: 11px; line-height: 1.4; }
+.arca-dialog-shell-footer-end { flex: 0 1 auto; max-width: 100%; }
 .arca-dialog-shell-body :is(input, textarea, select) { max-width: 100%; }
-@media (max-width: 600px), (max-height: 640px) {
-  .arca-dialog-shell { --arca-dialog-inline: 16px; --arca-dialog-block: 14px; }
-  .arca-dialog-shell-subtitle { max-width: 48ch; }
-}
+@media (max-width: 620px) { .arca-dialog-shell { --arca-dialog-inline: 14px; } }
+@media (max-height: 640px) { .arca-dialog-shell { --arca-dialog-block: 12px; } }
 .arca-proxy-form { display: grid; gap: 10px; padding: 0; border-radius: 0; background: transparent; }
 .arca-proxy-form label { color: var(--text-primary); font-size: 10px; font-weight: 680; }
 .arca-proxy-form input {
@@ -1465,11 +1456,7 @@ body {
 .arca-dialog-input { height: 34px; padding: 0 10px; font: 11px/1 var(--font-sans); }
 .arca-dialog-input-mono { font-family: var(--font-mono); }
 .arca-paste-config-input { min-height: 230px; padding: 10px 11px; resize: vertical; font: 10px/1.55 var(--font-mono); }
-.arca-dialog-mcp-editor .arca-dialog-shell-header { min-height: 72px; gap: 12px; padding: 16px 20px; }
-.arca-dialog-mcp-editor .arca-dialog-shell-heading h2 { font-size: 16px; font-weight: 720; }
-.arca-dialog-mcp-editor .arca-dialog-shell-body { padding: 18px 20px; }
-.arca-dialog-mcp-editor .arca-dialog-shell-footer { padding-inline: 20px; }
-.arca-dialog-mcp-editor .arca-dialog-shell-footer-start { max-width: 31ch; font-size: 10px; line-height: 1.5; }
+.arca-dialog-mcp-editor .arca-dialog-shell-footer-start { max-width: 31ch; }
 .arca-mcp-add-modes { width: fit-content; margin-bottom: 18px; }
 .arca-mcp-add-modes .arca-seg-item { min-height: 30px; padding-inline: 16px; font-size: 12px; }
 .arca-mcp-add-modes .arca-seg-item[aria-pressed="true"] { background: var(--surface-selected); color: var(--color-blue); }
@@ -1538,8 +1525,6 @@ body {
 .arca-mcp-import-action { color: var(--color-blue); font-size: 10px; }
 .arca-mcp-import-action[data-update] { color: var(--text-secondary); }
 @media (max-height: 640px) {
-  .arca-dialog-mcp-editor .arca-dialog-shell-header { min-height: 60px; padding-block: 12px; }
-  .arca-dialog-mcp-editor .arca-dialog-shell-body { padding-block: 14px; }
   .arca-mcp-paste-fields .arca-paste-config-input { min-height: 180px; }
 }
 @media (max-width: 520px) {
@@ -1548,34 +1533,18 @@ body {
 }
 .arca-dialog-input:focus,
 .arca-paste-config-input:focus { border-color: color-mix(in srgb, var(--color-blue) 58%, var(--border-hairline)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 10%, transparent); }
-.arca-dialog-paste-config .arca-dialog-shell-subtitle code { font: 9px/1.4 var(--font-mono); }
+.arca-dialog-paste-config .arca-dialog-shell-subtitle code { font-family: var(--font-mono); }
 .arca-review-content { color: var(--text-primary); font-size: 12px; line-height: 1.55; }
 .arca-review-content p { margin: 0; }
 .arca-review-content strong { font-weight: 690; }
 .arca-review-content code { font: 10px/1.5 var(--font-mono); overflow-wrap: anywhere; }
 .arca-review-error { color: var(--color-red); font-size: 11px; line-height: 1.45; }
-.arca-dialog-shell.arca-review-dialog-danger { padding: 0; }
-.arca-review-dialog-danger .arca-dialog-shell-header {
-  min-height: var(--arca-dialog-header-height); align-items: center; gap: 11px;
-  padding: 10px var(--arca-dialog-inline);
-}
-.arca-review-dialog-danger .arca-dialog-shell-heading h2 { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
-.arca-review-dialog-danger .arca-dialog-shell-subtitle { margin-top: 2px; font-size: 9px; }
-.arca-review-dialog-danger .arca-dialog-shell-close { background: transparent; }
-.arca-review-dialog-danger .arca-dialog-shell-close:hover:not(:disabled) { background: var(--color-gray-150); }
 .arca-review-dialog-glyph {
-  display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
-  border-radius: 7px; background: color-mix(in srgb, var(--color-red) 10%, var(--surface-raised));
+  background: color-mix(in srgb, var(--color-red) 10%, var(--surface-raised));
   color: var(--color-red);
 }
-.arca-review-dialog-glyph svg { width: 15px; height: 15px; }
-.arca-review-dialog-danger .arca-dialog-shell-status { margin: 0 var(--arca-dialog-inline) 8px; background: color-mix(in srgb, var(--color-red) 7%, var(--surface-raised)); }
-.arca-review-dialog-danger .arca-dialog-shell-body { padding: var(--arca-dialog-block) var(--arca-dialog-inline); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+.arca-review-dialog-danger .arca-dialog-shell-status { background: color-mix(in srgb, var(--color-red) 7%, var(--surface-raised)); }
 .arca-review-dialog-danger .arca-review-content { display: grid; gap: 10px; }
-.arca-review-dialog-danger .arca-dialog-shell-footer {
-  min-height: var(--arca-dialog-footer-height); margin: 0; padding: 9px var(--arca-dialog-inline);
-  border-top: 1px solid var(--border-hairline); border-radius: 0; background: transparent;
-}
 .arca-clear-models-impact {
   display: grid; gap: 4px; padding: 0; border: 0; border-radius: 0; background: transparent;
 }
@@ -1587,15 +1556,6 @@ body {
 .arca-clear-models-preserved::before {
   position: absolute; top: .55em; left: 2px; width: 4px; height: 4px;
   border-radius: 50%; background: var(--color-green); content: "";
-}
-.arca-review-dialog-danger .arca-dialog-shell-close:focus-visible,
-.arca-review-dialog-danger .btn-ghost:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-blue) 48%, transparent); outline-offset: 2px;
-}
-@media (max-width: 520px) {
-  .arca-review-dialog-danger .arca-dialog-shell-header,
-  .arca-review-dialog-danger .arca-dialog-shell-body,
-  .arca-review-dialog-danger .arca-dialog-shell-footer { padding-right: 14px; padding-left: 14px; }
 }
 .arca-picker-search { width: 100%; min-width: 0; flex: 0 0 auto; margin-bottom: 12px; }
 .arca-picker-list {
@@ -1635,12 +1595,6 @@ body {
 @media (max-width: 620px) {
   .arca-model-inspector-fields { grid-template-columns: minmax(0, 1fr); }
   .arca-model-inspector-fields .arca-inspector-field[data-wide="true"] { grid-column: auto; }
-  .arca-dialog-shell-header,
-  .arca-resource-inspector-head { padding-right: 14px; padding-left: 14px; }
-  .arca-dialog-shell-body,
-  .arca-resource-inspector-body { padding-right: 14px; padding-left: 14px; }
-  .arca-dialog-shell-footer,
-  .arca-resource-inspector-footer { padding-right: 14px; padding-left: 14px; }
   .arca-inspector-metrics { gap: 12px; }
   .arca-inspector-field { grid-template-columns: 22px 64px minmax(0, 1fr) auto; }
 }
@@ -1651,8 +1605,6 @@ body {
   .arca-resource-overview h1 { font-size: 20px; }
   .arca-workspace-sidebar-head { min-height: 56px; padding-top: 16px; }
   .arca-workspace-sidebar-actions { padding-bottom: 10px; }
-  .arca-dialog-shell-body,
-  .arca-resource-inspector-body { padding-top: 12px; padding-bottom: 12px; }
   .arca-picker-list { max-height: calc(100vh - 190px); }
 }
 .arca-inspector-field {
@@ -1882,16 +1834,7 @@ body {
   visibility: hidden; left: calc(var(--card-index) * 39px); transform: translateY(0) rotate(0);
 }
 .arca-skill-agent-orbit {
-  position: fixed; inset: 0; z-index: 700; pointer-events: auto; overscroll-behavior: contain;
-}
-.arca-skill-agent-orbit::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
-  background: color-mix(in srgb, var(--surface-app) 14%, transparent);
-  animation: arca-skill-orbit-label-in .22s ease-out both;
-}
-.arca-skill-agent-orbit[data-closing="true"]::before {
-  animation: arca-skill-orbit-label-out .28s ease-in both;
+  position: relative; flex: 1; min-height: 0; pointer-events: auto;
 }
 .arca-skill-agent-orbit-scroll { position: absolute; inset: 0; pointer-events: none; }
 .arca-skill-agent-orbit-cards { position: relative; width: 100%; pointer-events: none; }
@@ -1928,7 +1871,6 @@ body {
 @keyframes arca-skill-orbit-label-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes arca-skill-orbit-label-out { from { opacity: 1; } to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .arca-skill-agent-orbit::before, .arca-skill-agent-orbit[data-closing="true"]::before { animation: none; }
   .arca-skill-agent-orbit *, .arca-skill-agent-orbit[data-closing="true"] * { animation: none; transition: none; }
   .arca-skill-agent-orbit-card[data-highlighted="true"]:not(:disabled) .arca-skill-agent-orbit-tile { transform: none; }
 }
@@ -2912,11 +2854,6 @@ body {
 .arca-asset-review-warnings { padding: 10px !important; border: 0 !important; border-radius: 7px !important; background: var(--surface-attention) !important; }
 
 /* Model editor: fixed Provider context, all fields visible. */
-.arca-dialog-model-editor .arca-dialog-shell-header { min-height: 76px; gap: 12px; padding: 16px 20px; }
-.arca-dialog-model-editor .arca-dialog-shell-heading h2 { font-size: 16px; font-weight: 720; }
-.arca-dialog-model-editor .arca-dialog-shell-subtitle { margin-top: 4px; font-size: 12px; }
-.arca-dialog-model-editor .arca-dialog-shell-body { padding: 20px; }
-.arca-dialog-model-editor .arca-dialog-shell-footer { padding-inline: 20px; }
 .arca-model-editor-avatar { display: flex; align-items: center; justify-content: center; flex: 0 0 42px; width: 42px; height: 42px; border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-control); }
 .arca-model-editor-provider-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
 .arca-model-editor-provider-select { width: min(240px, 100%); }
@@ -2942,8 +2879,6 @@ body {
 .arca-model-editor-endpoint .arca-model-card-action { width: 24px; height: 24px; }
 .arca-model-editor-endpoint > code { display: block; margin-top: 3px; color: var(--text-primary); font: 11px/1.6 var(--font-mono); overflow-wrap: anywhere; user-select: text; }
 @media (max-height: 640px) {
-  .arca-dialog-model-editor .arca-dialog-shell-header { min-height: 64px; padding-block: 12px; }
-  .arca-dialog-model-editor .arca-dialog-shell-body { padding-block: 14px; }
   .arca-model-form.arca-model-editor-form { gap: 12px; }
   .arca-model-editor-limits { padding-top: 12px; }
 }

@@ -75,8 +75,6 @@
 }
 
 /* Configuration and launch dialogs share compact, aligned fields. */
-:is(.arca-dialog-agent-config, .arca-dialog-agent-launch) .arca-dialog-shell-header { padding-top: 16px; padding-bottom: 14px; }
-:is(.arca-dialog-agent-config, .arca-dialog-agent-launch) .arca-dialog-shell-body { padding-top: 20px; padding-bottom: 20px; }
 .arca-dialog-agent-config .arca-agent-config-fields { gap: 14px; }
 .arca-agent-config-sections { display: flex; flex-direction: column; gap: 14px; }
 .arca-agent-config-section { display: flex; flex-direction: column; gap: 12px; padding: 13px 15px 14px; border: 1px solid var(--border-hairline); border-radius: var(--radius-mac-lg, 12px); background: var(--surface-item, rgba(255, 255, 255, 0.6)); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02); transition: border-color .15s ease, background-color .15s ease; }
@@ -105,9 +103,8 @@
 .arca-dialog-agent-config .arca-agent-config-add { margin-left: 0; justify-self: start; padding: 0; }
 .arca-agent-config-credential { border-top: 1px solid var(--border-hairline); }
 .arca-agent-config-credential-row { display: grid; grid-template-columns: 1fr minmax(150px, 220px); align-items: center; gap: 12px; }
-.arca-dialog-shell.arca-dialog-agent-launch { height: min(620px, calc(100dvh - 80px)); max-height: min(620px, calc(100dvh - 80px)); }
-.arca-dialog-agent-launch .arca-dialog-shell-header { padding-block: 12px; }
-.arca-dialog-agent-launch .arca-dialog-shell-body { display: flex; overflow: hidden; padding-block: 16px; }
+.arca-dialog-shell.arca-dialog-agent-launch { height: 620px; }
+.arca-dialog-agent-launch .arca-dialog-shell-body { display: flex; overflow: hidden; }
 .arca-dialog-agent-launch .arca-launch-settings { gap: 12px; }
 .arca-dialog-agent-launch .arca-launch-value-preview { padding-block: 8px; }
 .arca-dialog-agent-launch .arca-launch-environment-list { max-height: 144px; }

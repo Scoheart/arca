@@ -1,8 +1,8 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { AgentGlyph, agentName } from "./brandIcons";
-import { acquireRootInert, claimLayerKeyboardEvent, wasHandledByLayer } from "./ui";
+import { Modal } from "./ui";
+import { isImeKey } from "./ImeInput";
 import { agentHandMetrics } from "../lib/agentHandLayout";
 
 type Point = { x: number; y: number };
@@ -193,50 +193,12 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
     animation.onfinish = () => exitRef.current(id);
   };
 
-  const closeRef = useRef(close);
-  closeRef.current = close;
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const opener = sourceRef.current?.querySelector<HTMLElement>(".arca-skill-agent-more");
-    const releaseRootInert = acquireRootInert();
-    const frame = requestAnimationFrame(() => {
-      // Focus the modal, not a card: opening the hand has no selected Agent.
-      stage.focus({ preventScroll: true });
-    });
-    const keydown = (event: KeyboardEvent) => {
-      if (wasHandledByLayer(event) || !["Escape", "Tab", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-      claimLayerKeyboardEvent(event);
-      event.preventDefault();
-      event.stopPropagation();
-      if (event.key === "Escape") { closeRef.current(); return; }
-      keyboardSelection.current = true;
-      const available = Array.from(cardRefs.current.values()).filter((card) => !card.disabled);
-      const index = available.findIndex((card) => card === document.activeElement);
-      const backwards = event.key === "ArrowLeft" || (event.key === "Tab" && event.shiftKey);
-      const next = event.key === "Home" ? 0 : event.key === "End" ? available.length - 1 : backwards
-        ? (index <= 0 ? available.length - 1 : index - 1)
-        : (index + 1) % available.length;
-      const nextCard = available[next];
-      setHighlighted(nextCard ? ids.find((id) => cardRefs.current.get(id) === nextCard) ?? null : null);
-      (nextCard ?? stage).focus({ preventScroll: true });
-    };
-    document.addEventListener("keydown", keydown, true);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("keydown", keydown, true);
-      releaseRootInert();
-      requestAnimationFrame(() => {
-        if (!navigating.current && opener?.isConnected && !opener.closest("[inert]")) {
-          opener.focus({ preventScroll: true });
-        }
-      });
-    };
-  }, [sourceRef, ids]);
-
-  return createPortal(
-    <div ref={stageRef} className="arca-skill-agent-orbit" role="dialog" aria-modal="true" tabIndex={-1}
-      aria-label={[skillName, t("skillLibrary.allAgents")].filter(Boolean).join(" · ")}
+  return (
+    <Modal presentation="canvas" layer="skill-agents" busy={closing || playing !== null}
+      ariaLabel={[skillName, t("skillLibrary.allAgents")].filter(Boolean).join(" · ")}
+      returnFocus={sourceRef.current?.querySelector<HTMLElement>(".arca-skill-agent-more")}
+      onClose={close}>
+    <div ref={stageRef} className="arca-skill-agent-orbit" data-modal-initial-focus tabIndex={-1}
       data-closing={closing || undefined}
       data-playing={playing ? "true" : undefined}
       onPointerMove={(event) => {
@@ -258,7 +220,19 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
       }}
       onPointerLeave={() => { if (!keyboardSelection.current) setHighlighted(null); }}
       onPointerDown={(event) => { event.stopPropagation(); }}
-      onKeyDown={(event) => { event.stopPropagation(); }}
+      onKeyDown={(event) => {
+        if (isImeKey(event.nativeEvent) || event.altKey || event.metaKey || event.ctrlKey
+          || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        const available = ids.map((id) => cardRefs.current.get(id)).filter((card) => card && !card.disabled);
+        if (!available.length) return;
+        event.preventDefault();
+        keyboardSelection.current = true;
+        const index = available.findIndex((card) => card === document.activeElement);
+        const last = available.length - 1;
+        const next = event.key === "Home" ? 0 : event.key === "End" ? last : event.key === "ArrowLeft"
+          ? (index <= 0 ? last : index - 1) : (index + 1) % available.length;
+        available[next]?.focus({ preventScroll: true });
+      }}
       onClick={(event) => {
         event.stopPropagation();
         if (!(event.target instanceof Element) || !event.target.closest("button")) close();
@@ -272,7 +246,12 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
               style={{ width: cardWidth, "--fan-angle": `${layout.points[index].rotation}deg`, "--hand-index": index } as CSSProperties}
               data-playing={playing === id ? "true" : undefined}
               data-highlighted={highlighted === id ? "true" : undefined}
-              onFocus={() => { if (keyboardSelection.current) setHighlighted(id); }}
+              onFocus={(event) => {
+                if (keyboardSelection.current || event.currentTarget.matches(":focus-visible")) {
+                  keyboardSelection.current = true;
+                  setHighlighted(id);
+                }
+              }}
               onBlur={() => setHighlighted((current) => current === id ? null : current)}
               disabled={closing || playing !== null} title={name} aria-label={t("skillLibrary.openAgent", { name })}
               onClick={(event) => openAgent(event.detail > 0 ? highlighted ?? id : id)}>
@@ -284,7 +263,7 @@ export function SkillAgentOrbit({ ids, names, skillName, sourceRef, onExit }: {
           })}
         </div>
       </div>
-    </div>,
-    document.body,
+    </div>
+    </Modal>
   );
 }
