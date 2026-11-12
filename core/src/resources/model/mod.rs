@@ -1281,6 +1281,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: AnthropicMessages,
             base_url: "https://www.flonno.com",
         }],
+        "fumolab" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://capi.fumolab.ai/api/fusion/v1",
+        }],
         _ => &[],
     }
 }
@@ -2346,6 +2350,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "fumolab",
+        name: "FUMO Lab",
+        default_base_url: Some("https://capi.fumolab.ai/api/fusion/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3214,6 +3225,9 @@ pub fn infer_provider(base_url: &str) -> String {
         // Docs, keys, signup, and the product page share www.flonno.com with the API.
         // flonno.com redirects to www.flonno.com.
         "www.flonno.com" | "flonno.com" => "flonno",
+        // The documented API host is capi.fumolab.ai. fumolab.ai and www.fumolab.ai
+        // are the website. api.fumolab.ai is not a documented API host.
+        "capi.fumolab.ai" => "fumolab",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -10031,6 +10045,27 @@ mod tests {
             ("https://flonno.io/v1", "custom"),
             ("https://www.flonno.com.evil.test/v1", "custom"),
             ("https://flonno.com.evil.test/v1", "custom"),
+            ("https://capi.fumolab.ai/api/fusion/v1", "fumolab"),
+            ("https://capi.fumolab.ai/api/fusion/v1/", "fumolab"),
+            ("https://capi.fumolab.ai/api/fusion/v1/chat/completions", "fumolab"),
+            ("https://capi.fumolab.ai/api/fusion/v1/models", "fumolab"),
+            ("https://capi.fumolab.ai/api/fusion/v1/responses", "fumolab"),
+            ("https://capi.fumolab.ai/api/fusion/v1/messages", "fumolab"),
+            ("https://capi.fumolab.ai", "fumolab"),
+            ("https://capi.fumolab.ai/", "fumolab"),
+            ("https://capi.fumolab.ai/en/", "fumolab"),
+            ("https://fumolab.ai/en/", "custom"),
+            ("https://fumolab.ai/en/docs/getting-started/", "custom"),
+            ("https://fumolab.ai/en/docs/api/", "custom"),
+            ("https://fumolab.ai/en/dashboard/api-keys/", "custom"),
+            ("https://fumolab.ai/en/register/", "custom"),
+            ("https://www.fumolab.ai/en/", "custom"),
+            ("https://www.fumolab.ai/", "custom"),
+            ("https://api.fumolab.ai/api/fusion/v1", "custom"),
+            ("https://api.fumolab.ai/api/fusion/v1/models", "custom"),
+            ("https://api.fumolab.ai/v1", "custom"),
+            ("https://capi.fumolab.ai.evil.test/api/fusion/v1", "custom"),
+            ("https://capi.fumolab.ai.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -10108,7 +10143,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13564,7 +13599,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13693,7 +13728,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13838,7 +13873,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13949,7 +13984,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -14047,7 +14082,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14083,7 +14118,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14129,7 +14164,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14181,7 +14216,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14211,7 +14246,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14244,7 +14279,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14277,7 +14312,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14312,7 +14347,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14372,7 +14407,7 @@ url = "https://example.test/mcp"
             "https://puter.com/dashboard#account"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14433,7 +14468,7 @@ url = "https://example.test/mcp"
             "https://console.ucloud.cn/modelverse/experience/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14485,7 +14520,7 @@ url = "https://example.test/mcp"
             "https://platform.mosi.cn/app/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14531,7 +14566,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://minekuai.cn/api-docs");
         assert_eq!(serialized["portal"]["url"], "https://minekuai.cn/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14577,7 +14612,7 @@ url = "https://example.test/mcp"
             "https://deploy.radium.cloud/keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14623,7 +14658,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://logfare.ai/docs");
         assert_eq!(serialized["portal"]["url"], "https://logfare.ai/register");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14666,7 +14701,7 @@ url = "https://example.test/mcp"
             "https://synap402.com/account.html#keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
     }
 
     #[test]
@@ -14709,7 +14744,76 @@ url = "https://example.test/mcp"
             "https://www.flonno.com/dashboard/keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 224);
+        assert_eq!(list_providers().len(), 225);
+    }
+
+    #[test]
+    fn fumolab_template_matches_reviewed_connection() {
+        use ModelProtocol::{OpenaiCompletions, OpenaiResponses};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "fumolab")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "FUMO Lab");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://capi.fumolab.ai/api/fusion/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://capi.fumolab.ai/api/fusion/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/responses"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["openai-completions"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://capi.fumolab.ai/api/fusion/v1/chat/completions"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["openai-responses"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://capi.fumolab.ai/api/fusion/v1/responses"
+        );
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(serialized["protocols"].get("gemini-generate-content").is_none());
+        assert!(serialized["protocols"].get("gemini-interactions").is_none());
+        let extras = provider_additional_endpoints("fumolab");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![(OpenaiResponses, "https://capi.fumolab.ai/api/fusion/v1")]
+        );
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://fumolab.ai/en/docs/getting-started/"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://fumolab.ai/en/dashboard/api-keys/"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 225);
     }
 
 }

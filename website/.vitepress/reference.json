@@ -4501,6 +4501,21 @@
       }
     },
     {
+      "id": "fumolab",
+      "name": "FUMO Lab",
+      "category": "gateway",
+      "baseUrl": "https://capi.fumolab.ai/api/fusion/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://fumolab.ai/en/docs/getting-started/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://fumolab.ai/en/dashboard/api-keys/"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

@@ -1559,5 +1559,12 @@
       "url": "https://www.flonno.com/dashboard/keys",
       "kind": "api-key"
     }
+  },
+  "fumolab": {
+    "docs_url": "https://fumolab.ai/en/docs/getting-started/",
+    "portal": {
+      "url": "https://fumolab.ai/en/dashboard/api-keys/",
+      "kind": "api-key"
+    }
   }
 }
