@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.75.1](https://github.com/Scoheart/arca/compare/v2.75.0...v2.75.1) (2026-11-12)
+
+### Changes
+
+* feat(models): add Flonno provider (#312) ([39de297](https://github.com/Scoheart/arca/commit/39de29770c24e3ef223810ea26c4719d92f4cd67))
+* fix(arca): reduce desktop notification noise and expose error details ([52b91eb](https://github.com/Scoheart/arca/commit/52b91eb9d4ec0af75cc3fb405a41554d2b371eff))
+
 ## [2.75.0](https://github.com/Scoheart/arca/compare/v2.74.0...v2.75.0) (2026-11-12)
 
 ### Changes
