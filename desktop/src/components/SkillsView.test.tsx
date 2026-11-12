@@ -541,8 +541,10 @@ describe("SkillsView", () => {
         })}
       />,
     );
-    expect(screen.getByRole("alert")).toHaveTextContent("读取 Skills 失败");
-    expect(screen.getByRole("alert")).toHaveTextContent("读取失败，请检查目录权限。");
+    expect(screen.getByText("读取 Skills 失败")).toBeVisible();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "错误详情" }));
+    expect(screen.getByText(/读取失败，请检查目录权限。/)).toBeVisible();
     await userEvent.click(screen.getByRole("button", { name: "重试" }));
     expect(refresh).toHaveBeenCalledOnce();
 
@@ -551,9 +553,11 @@ describe("SkillsView", () => {
     rerender(
       <SkillsView state={stateWith(recovery, { loading: false, error: null })} />,
     );
-    expect(screen.getByRole("alert")).toHaveTextContent("上次 Skill 操作未完成");
-    expect(screen.getByRole("alert")).toHaveTextContent("请重新打开 Arca，程序会自动重试恢复。");
+    expect(screen.getByText(/上次 Skill 操作未完成.*请重新打开 Arca/)).toBeVisible();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.queryByText("检测到未完成事务，请先恢复。")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "错误详情" }));
+    expect(screen.getByText("检测到未完成事务，请先恢复。")).toBeVisible();
     expect(screen.getByRole("heading", { name: "review-changes" })).toBeVisible();
     expect(screen.getByRole("button", { name: "检查更新" })).toBeDisabled();
   });
@@ -575,9 +579,11 @@ describe("SkillsView", () => {
       />,
     );
 
-    expect(screen.getByRole("alert")).toHaveTextContent("上次 Skill 操作未完成");
-    expect(screen.getByRole("alert")).toHaveTextContent("请重新打开 Arca，程序会自动重试恢复。");
+    expect(screen.getByText("上次 Skill 操作未完成")).toBeVisible();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.queryByText("journal recovery required")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "错误详情" }));
+    expect(screen.getByText(/请重新打开 Arca.*journal recovery required/s)).toBeVisible();
     expect(screen.queryByRole("button", { name: "重试" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "检查更新" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "添加 Skills" })).toBeDisabled();
@@ -623,7 +629,8 @@ describe("SkillsView", () => {
     );
     await waitFor(() => expect(cancel).toHaveBeenCalledWith("resolve-fixture"));
     expect(cancel).toHaveBeenCalledOnce();
-    expect(screen.getByRole("alert")).toHaveTextContent("上次 Skill 操作未完成");
+    expect(screen.getByText(/上次 Skill 操作未完成/)).toBeVisible();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("keeps cached inventory under hook errors and runs only a manual metadata check", async () => {
@@ -639,8 +646,9 @@ describe("SkillsView", () => {
     );
 
     expect(screen.getByRole("heading", { name: "review-changes" })).toBeVisible();
-    expect(screen.getByText("GitHub 暂时限流。")).toBeVisible();
-    expect(screen.getByRole("alert")).toHaveTextContent("GitHub 暂时限流。");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "错误详情" }));
+    expect(screen.getByText(/GitHub 暂时限流。/)).toBeVisible();
     await userEvent.click(screen.getByRole("button", { name: "检查更新" }));
     expect(checkUpdates).toHaveBeenCalledWith(true);
     expect(screen.getByRole("button", { name: "检查中…" })).toBeDisabled();

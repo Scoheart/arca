@@ -5,7 +5,7 @@ import { expect, it, vi } from "vitest";
 import type { StartupSyncState } from "../hooks/useStartupSync";
 import { StartupSyncBar } from "./StartupSyncBar";
 
-it("names the failed capability and makes successful startup work explicit", async () => {
+it("reports the failed startup task with expandable details and retry", async () => {
   const retryFailed = vi.fn(async () => undefined);
   const state: StartupSyncState = {
     tasks: [
@@ -42,16 +42,17 @@ it("names the failed capability and makes successful startup work explicit", asy
 
   const alert = screen.getByRole("alert");
   expect(alert).toHaveAttribute("data-kind", "warning");
-  expect(alert).toHaveTextContent("部分配置暂不可用");
+  expect(alert).toHaveTextContent("启动时读取失败");
   expect(alert).toHaveTextContent("资产关系");
-  expect(alert).toHaveTextContent("其余 2 项已可用");
-  expect(alert).toHaveTextContent("2/3");
+  expect(alert).not.toHaveTextContent("snapshot failed");
+  await userEvent.click(screen.getByRole("button", { name: "错误详情" }));
+  expect(alert).toHaveTextContent("snapshot failed");
 
   await userEvent.click(screen.getByRole("button", { name: "仅重试失败项" }));
   expect(retryFailed).toHaveBeenCalledOnce();
 });
 
-it("labels the one-shot settled state as complete instead of still syncing", async () => {
+it("keeps normal startup progress and completion quiet", () => {
   const state: StartupSyncState = {
     tasks: [{
       id: "agents",
@@ -69,10 +70,10 @@ it("labels the one-shot settled state as complete instead of still syncing", asy
     retryFailed: vi.fn(async () => undefined),
   };
 
-  render(<StartupSyncBar state={state} />);
+  const { rerender } = render(<StartupSyncBar state={{ ...state, settled: false, syncing: true }} />);
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 
-  const status = await screen.findByRole("status");
-  expect(status).toHaveTextContent("最新配置已同步");
-  expect(status).not.toHaveTextContent("正在同步最新配置");
-  expect(status).toHaveTextContent("1/1");
+  rerender(<StartupSyncBar state={state} />);
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });

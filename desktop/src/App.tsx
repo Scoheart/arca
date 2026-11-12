@@ -95,19 +95,25 @@ function capabilityLabel(capability: "mcp" | "model" | "skill") {
 }
 
 async function runRefreshes(
-  refreshes: Array<() => Promise<unknown>>,
+  refreshes: Array<Pick<StartupTask, "id" | "run">>,
   concurrency = 2,
 ) {
   let cursor = 0;
+  const failures: Array<{ task: string; error: unknown }> = [];
   const worker = async () => {
     while (cursor < refreshes.length) {
       const refresh = refreshes[cursor++];
-      await refresh().catch(() => undefined);
+      try {
+        await refresh.run();
+      } catch (error) {
+        failures.push({ task: refresh.id, error });
+      }
     }
   };
   await Promise.all(
     Array.from({ length: Math.min(concurrency, refreshes.length) }, worker),
   );
+  return failures;
 }
 
 function App() {
@@ -128,7 +134,6 @@ function App() {
   const skillsState = useSkillsState({ autoLoad: false });
   const consumptionState = useConsumptionState({ autoLoad: false });
   const networkSettings = useNetworkSettings();
-  const updater = useUpdater(networkSettings.settings.proxy_url, { autoCheck: false });
   useEffect(() => {
     getBackendStatus()
       .then(setBackendStatus)
@@ -147,19 +152,21 @@ function App() {
     // Start both hook generations now. A later mutation/read still supersedes
     // either result, while this pair shares exactly one filesystem scan.
     const observation = getResourceObservation();
-    const results = await Promise.allSettled([
+    const [relationships, skills] = await Promise.allSettled([
       consumptionState.refresh(async () => observationValue((await observation).relationships)),
       skillsState.refreshSilently(async () => observationValue((await observation).skills)),
     ]);
-    const failure = results.find((result) => result.status === "rejected");
-    if (failure?.status === "rejected") throw failure.reason;
+    const failures = [];
+    if (relationships.status === "rejected") failures.push({ task: "relationships", error: relationships.reason });
+    if (skills.status === "rejected") failures.push({ task: "skills", error: skills.reason });
+    if (failures.length > 0) throw failures;
   }, [consumptionState.refresh, skillsState.refreshSilently]);
   const foregroundStartupTasks = useMemo<StartupTask[]>(
     () => [
       { id: "registry", label: "registry", run: async () => { await observationSubscription.ready; return state.refreshRegistry(); } },
       { id: "agents", label: "agents", run: async () => { await observationSubscription.ready; return state.refreshAgents(); } },
       { id: "agent-capabilities", label: "agent-capabilities", run: async () => { await observationSubscription.ready; return consumptionState.refreshAgents(); } },
-      { id: "relationships", label: "relationships", run: async () => { await observationSubscription.ready; return refreshResourceInventory(); } },
+      { id: "relationships", label: "resource-inventory", run: async () => { await observationSubscription.ready; return refreshResourceInventory(); } },
     ],
     [
       consumptionState.refreshAgents,
@@ -171,19 +178,8 @@ function App() {
   );
 
   const deferredStartupTasks = useMemo<StartupTask[]>(
-    () => [
-      { id: "external-models", label: "external-models", run: refreshExternalModels },
-      {
-        id: "updates",
-        label: "updates",
-        run: async () => {
-          if (await updater.checkNow() === "error") {
-            throw new Error("update_check_failed");
-          }
-        },
-      },
-    ],
-    [refreshExternalModels, updater.checkNow],
+    () => [{ id: "external-models", label: "external-models", run: refreshExternalModels }],
+    [refreshExternalModels],
   );
 
   const startupSync = useStartupSync({
@@ -191,6 +187,8 @@ function App() {
     deferred: deferredStartupTasks,
     foregroundConcurrency: 2,
   });
+  // Update checks are optional network activity, separate from local asset reads.
+  const updater = useUpdater(networkSettings.settings.proxy_url, { autoCheck: startupSync.settled });
   // CLI link repair is useful but irrelevant to the first interaction. Run it
   // only after all fresh read-only startup work has settled.
   useCliTool({ start: startupSync.settled });
@@ -221,14 +219,14 @@ function App() {
     async (taskIds: readonly ObservationTaskId[]) => {
       const ids = new Set(taskIds);
       if (ids.has("registry")) ids.delete("sources");
-      const selected: (() => Promise<unknown>)[] = [];
+      const selected: Array<Pick<StartupTask, "id" | "run">> = [];
       if (ids.has("skills") && ids.has("relationships")) {
         ids.delete("skills");
         ids.delete("relationships");
-        selected.push(refreshResourceInventory);
+        selected.push({ id: "relationships / skills", run: refreshResourceInventory });
       }
-      selected.push(...[...ids].map((taskId) => observationTasks[taskId]));
-      await runRefreshes(selected);
+      selected.push(...[...ids].map((id) => ({ id, run: observationTasks[id] })));
+      return runRefreshes(selected);
     },
     [observationTasks, refreshResourceInventory],
   );
@@ -299,6 +297,11 @@ function App() {
     setView((current) => clearResourceIntent(current, id));
   }, []);
 
+  const assetDiagnostics = (consumptionState.inventory?.capability_errors ?? [])
+    // Host scans are shown on the affected Agent. Skill read failures already
+    // have their own resource state and, at launch, the startup notice.
+    .filter(({ code }) => code !== "mcp_host_observation_unavailable" && code !== "skill_inventory_unavailable");
+
   return (
     <Layout
       updater={updater}
@@ -315,7 +318,10 @@ function App() {
       onSelectHooks={() => setView({ kind: "hooks" })}
       onSelectAgent={(id) => setView({ kind: "agent", id })}
       onAddAgent={() => setAddAgentOpen(true)}
-      onRescan={() => refreshObservedTasks(ALL_OBSERVATION_TASK_IDS)}
+      onRescan={async () => {
+        const failures = await refreshObservedTasks(ALL_OBSERVATION_TASK_IDS);
+        if (failures.length > 0) throw failures;
+      }}
       startupSync={startupSync}
     >
       <InstructionDraftGuard />
@@ -404,17 +410,23 @@ function App() {
       )}
 
       <ToastNotice kind="warning" noticeKey="backend-recovery" message={backendStatus?.state === "read_only"
-        ? `${t("migration.recoveryTitle")} · ${t("migration.recoveryMessage", { stage: backendStatus.stage })}` : null} />
+        ? t("migration.recoveryTitle") : null} details={backendStatus?.state === "read_only" ? {
+          ...backendStatus, description: t("migration.recoveryMessage", { stage: backendStatus.stage }),
+        } : null} />
       <ToastNotice kind="warning" noticeKey="backend-capability" message={backendStatus?.state === "capability_unavailable"
-        ? `${t("migration.capabilityTitle")} · ${t("migration.capabilityMessage", { stage: backendStatus.stage })}` : null} />
-      {backendStatus?.state !== "capability_unavailable"
-        && (consumptionState.inventory?.capability_errors ?? [])
-          .filter((diagnostic) => diagnostic.capability !== "skill" || view.kind !== "skills")
-          .map((diagnostic) => <ToastNotice kind="warning" key={`${diagnostic.capability}:${diagnostic.code}`}
-            message={diagnostic.code === "mcp_host_observation_unavailable" ? t("nativePlugins.scanUnavailable") : `${t("observations.capabilityUnavailable", { capability: capabilityLabel(diagnostic.capability) })} · ${
-              diagnostic.code === "skill_inventory_unavailable" ? t("observations.skillInventoryUnavailable")
-              : diagnostic.code === "skill_recovery_required" ? t("observations.skillRecoveryRequired")
-              : t("observations.capabilityFallback")}`} />)}
+        ? t("migration.capabilityTitle") : null} details={backendStatus?.state === "capability_unavailable" ? {
+          ...backendStatus, description: t("migration.capabilityMessage", { stage: backendStatus.stage }),
+        } : null} />
+      <ToastNotice kind="warning" noticeKey="asset-observation"
+        message={backendStatus?.state !== "capability_unavailable" && assetDiagnostics.length > 0
+          ? t("observations.incompleteTitle", { capabilities: [...new Set(assetDiagnostics.map(({ capability }) => capabilityLabel(capability)))].join(" / ") })
+          : null}
+        details={assetDiagnostics.map((diagnostic) => ({
+          ...diagnostic,
+          message: diagnostic.code === "skill_recovery_required"
+            ? skillsState.inventory?.recovery_error ?? t("observations.skillRecoveryRequired")
+            : t("observations.capabilityFallback"),
+        }))} />
 
       <UpdateBanner updater={updater} />
       <CredentialSession />

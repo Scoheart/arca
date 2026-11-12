@@ -16,13 +16,14 @@ const RESTORE_OBSERVATIONS = new Set([
 ]);
 
 export function AssetSyncReviewDialog({
-  plan, assets, agents, busy, error, cancelLabel, onCommit, onCancel,
+  plan, assets, agents, busy, error, errorDetails, cancelLabel, onCommit, onCancel,
 }: {
   plan: AssetOperationPlan;
   assets: Array<{ key: string; name: string }>;
   agents: Array<{ id: string; name: string }>;
   busy: boolean;
   error: string | null;
+  errorDetails?: unknown;
   cancelLabel: string;
   onCommit(): Promise<unknown> | unknown;
   onCancel(): Promise<unknown> | unknown;
@@ -39,7 +40,8 @@ export function AssetSyncReviewDialog({
   return <DialogShell kind="review" size="sm" title={t("syncReview.title")}
     className="arca-sync-dialog" busy={busy} onClose={() => void onCancel()}
     leading={<span className="arca-dialog-shell-glyph"><RefreshIcon className="w-4 h-4" aria-hidden="true" /></span>}
-    status={(!plan.can_commit || error) ? <ToastNotice message={error || t("syncReview.blocked")} /> : undefined}
+    status={(!plan.can_commit || error) ? <ToastNotice message={error || t("syncReview.blocked")}
+      details={errorDetails === error ? null : errorDetails} /> : undefined}
     footerEnd={<>
       <button type="button" className="btn-secondary" disabled={busy} onClick={() => void onCancel()}>{cancelLabel}</button>
       <button type="button" className="btn-primary" disabled={busy || !plan.can_commit} onClick={() => void onCommit()}>

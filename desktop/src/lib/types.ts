@@ -1125,6 +1125,7 @@ export interface UpdateCheckOutcome {
 export interface SkillCommandError {
   code: string;
   message: string;
+  details?: Record<string, unknown>;
   retry_at?: string;
   findings_hash?: string;
 }

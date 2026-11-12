@@ -172,9 +172,10 @@ it("keeps MCP workspace actions visible through loading, error retry, and empty 
       />
     </ToastProvider>,
   );
-  expect(screen.getByRole("alert")).toHaveTextContent("读取 MCP 失败");
-  expect(screen.getByText("暂无可显示的内容")).toBeVisible();
-  expect(screen.getByRole("alert")).toHaveTextContent("registry unavailable");
+  expect(screen.getByText("读取 MCP 失败")).toBeVisible();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "错误详情" }));
+  expect(screen.getByText("registry unavailable")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "重试" }));
   expect(retry).toHaveBeenCalledTimes(1);
   errorView.unmount();

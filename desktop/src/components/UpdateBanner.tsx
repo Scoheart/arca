@@ -29,10 +29,10 @@ export function UpdateBanner({ updater }: { updater: UpdaterState }) {
     message="请先安装 Arca · 将 Arca.app 拖入应用程序后重新打开，再进行更新。" action={<>
       <button type="button" className="btn-ghost" onClick={updater.later}>关闭</button>
       <button type="button" className="btn-primary" onClick={() => void openUrl(LATEST_RELEASE_URL)
-        .catch(() => toast.show({ kind: "error", msg: "无法打开下载页面，请稍后重试。" }))}>下载最新版</button>
+        .catch((error) => toast.show({ kind: "error", msg: "无法打开下载页面", details: error }))}>下载最新版</button>
     </>} />;
-  return <ToastNotice noticeKey="update-error" message={`${phase.operation === "install" ? "安装更新失败"
-    : phase.operation === "restart" ? "重启失败" : "检查更新失败"} · ${phase.message}`} action={<>
+  return <ToastNotice noticeKey="update-error" message={phase.operation === "install" ? "安装更新失败"
+    : phase.operation === "restart" ? "重启失败" : "检查更新失败"} details={phase.message} action={<>
       <button type="button" className="btn-ghost" onClick={updater.later}>关闭</button>
       <button type="button" className="btn-primary" onClick={() => void (phase.operation === "install"
         ? updater.download() : phase.operation === "restart" ? updater.restart() : updater.checkNow({ manual: true }))}>重试</button>

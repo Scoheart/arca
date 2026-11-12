@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { formatErrorDetails } from "../lib/format";
 
 export type StartupTaskStatus = "pending" | "running" | "complete" | "error";
 
@@ -140,7 +141,7 @@ export function useStartupSync({
             id: task.id,
             label: task.label,
             status: "error",
-            error: String(error),
+            error: formatErrorDetails(error),
           },
         }));
       }

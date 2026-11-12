@@ -217,7 +217,8 @@ export function Layout({
             </div>
           </div>
           <div className="arca-settings-section">
-            {onRescan && <button type="button" className="arca-settings-action" disabled={rescanning} onClick={() => void handleRescan().catch((error) => toast.show({ kind: "error", msg: formatError(error) }))}>
+            {onRescan && <button type="button" className="arca-settings-action" disabled={rescanning}
+              onClick={() => void handleRescan().catch((error) => toast.show({ kind: "error", msg: t("notifications.rescanFailed"), details: error }))}>
               <RefreshIcon className="w-4 h-4" /><span>{rescanning ? t("layout.scanning") : t("layout.rescan")}</span></button>}
             <button type="button" className="arca-settings-action" disabled={!updater || checkingUpdate} onClick={() => { setSettingsOpen(false); void handleCheckUpdate(); }}>
               <DownloadIcon className="w-4 h-4" /><span>{checkingUpdate ? t("layout.checking") : t("layout.checkUpdate")}</span><small>{version && `v${version}`}</small></button>

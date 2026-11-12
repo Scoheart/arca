@@ -57,6 +57,9 @@ export function normalizeSkillCommandError(value: unknown): SkillCommandError {
     code: candidate.code,
     message: candidate.message,
   };
+  if (candidate.details && typeof candidate.details === "object" && !Array.isArray(candidate.details)) {
+    normalized.details = candidate.details as Record<string, unknown>;
+  }
   if (typeof candidate.retry_at === "string") {
     normalized.retry_at = candidate.retry_at;
   }

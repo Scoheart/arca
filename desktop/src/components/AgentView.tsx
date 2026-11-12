@@ -29,7 +29,7 @@ import type {
   SubagentDefinition,
   HookDefinition,
 } from "../lib/types";
-import { formatError } from "../lib/format";
+import { formatError, formatErrorDetails } from "../lib/format";
 import { keyOf, transportOf } from "../lib/mcp";
 import { consumptionsForAgent, externalForAgent } from "../lib/consumption";
 import { requiresAgentReview } from "../lib/agentOperation";
@@ -50,7 +50,8 @@ import { AgentGlyph } from "./brandIcons";
 import { ProviderGlyph } from "./providerIcons";
 import { AgentConfigurationDialog } from "./AgentConfigurationDialog";
 import { ToastNotice, useToast } from "./Toast";
-import { AgentResourcePanel, type AgentResourceTab } from "./AgentResourcePanel";
+import { AgentResourceActions, AgentResourcePanel, type AgentResourceTab } from "./AgentResourcePanel";
+import { ResourceState } from "./ResourceState";
 import { AgentConsumptionPanel } from "./AgentConsumptionPanel";
 import { AgentStartupAgentsPanel } from "./AgentStartupAgentsPanel";
 import { GuidedModelsPanel } from "./GuidedModelsPanel";
@@ -232,7 +233,7 @@ export function AgentView({
       setModelsError(null);
     } catch (error) {
       if (generation !== modelQueryGeneration.current) return;
-      setModelsError(formatError(error));
+      setModelsError(formatErrorDetails(error));
       throw error;
     } finally {
       if (pendingModelQuery.current === request) pendingModelQuery.current = null;
@@ -244,10 +245,10 @@ export function AgentView({
     setModelsLoading(true);
     setModelsError(null);
     refreshModels(true)
-      .catch((error) => { if (active) showToast({ kind: "error", msg: "读取模型配置失败：" + formatError(error) }); })
+      .catch(() => undefined)
       .finally(() => { if (active) setModelsLoading(false); });
     return () => { active = false; modelQueryGeneration.current += 1; };
-  }, [refreshModels, showToast, modelRevision]);
+  }, [refreshModels]);
 
   const modelAgent = useMemo(
     () => modelAgents.find((item) => item.id === agentId) ?? null,
@@ -603,7 +604,7 @@ export function AgentView({
         await commitPlan(plan);
       }
     } catch (error) {
-      showToast({ kind: "error", msg: "无法准备变更：" + formatError(error) });
+      showToast({ kind: "error", msg: `无法准备 ${agent.name} 的 ${domain} 变更`, details: error });
     } finally {
       setPreparingChange(false);
     }
@@ -694,7 +695,7 @@ export function AgentView({
       await consumptionState.clearAgentMcp(agentId);
       showToast({ kind: "success", msg: t("nativePlugins.configuredRemoved", { agent: agent.name }) });
     } catch (error) {
-      showToast({ kind: "error", msg: "移除全部 MCP 失败：" + formatError(error) });
+      showToast({ kind: "error", msg: `${agent.name} 的 MCP 移除失败`, details: error });
     } finally {
       setPreparingChange(false);
     }
@@ -713,7 +714,15 @@ export function AgentView({
           ?? (activePlan ? completedMessage(activePlan, agent.name) : `${agent.name} 的配置已更新。`),
       });
     } catch (error) {
-      showToast({ kind: "error", msg: "同步失败：" + formatError(error) });
+      // Core closes the review after the central write, even if an Agent
+      // target still needs reconciliation.
+      const pending = typeof error === "object" && error !== null
+        && "code" in error && error.code === "pending_convergence";
+      if (preparedPlan || pending) showToast({
+        kind: pending ? "warning" : "error",
+        msg: pending ? `${agent.name} 有配置待同步` : `${agent.name} 配置同步失败`,
+        details: { error, target_files: activePlan?.target_files },
+      });
     }
   };
 
@@ -727,7 +736,7 @@ export function AgentView({
       await consumptionState.setMcpEnabled(agentId, key, enabled);
       showToast({ kind: "success", msg: `${name} 已${enabled ? "启用" : "停用"}。` });
     } catch (error) {
-      showToast({ kind: "error", msg: `${enabled ? "启用" : "停用"}失败：${formatError(error)}` });
+      showToast({ kind: "error", msg: `${enabled ? "启用" : "停用"} MCP「${name}」失败`, details: error });
     } finally {
       setTogglingMcp((current) => current?.key === key ? null : current);
     }
@@ -744,7 +753,8 @@ export function AgentView({
     } catch (error) {
       showToast({
         kind: "error",
-        msg: `${enabled ? "启用" : "停用"}全部 MCP 失败：${formatError(error)}`,
+        msg: `${enabled ? "启用" : "停用"} ${agent.name} 的全部 MCP 失败`,
+        details: error,
       });
     } finally {
       setTogglingAllMcp(null);
@@ -759,7 +769,7 @@ export function AgentView({
       await consumptionState.setSkillEnabled(agentId, name, enabled, item.target?.target_id);
       showToast({ kind: "success", msg: `${name} 已${enabled ? "启用" : "停用"}。` });
     } catch (error) {
-      showToast({ kind: "error", msg: `${enabled ? "启用" : "停用"}失败：${formatError(error)}` });
+      showToast({ kind: "error", msg: `${enabled ? "启用" : "停用"} Skill「${name}」失败`, details: error });
     } finally {
       setTogglingSkill((current) => current?.name === name ? null : current);
     }
@@ -774,7 +784,7 @@ export function AgentView({
       await consumptionState.setActiveModel(agentId, profileId);
       showToast({ kind: "success", msg: `${agent.name} 已切换到 ${name}。` });
     } catch (error) {
-      showToast({ kind: "error", msg: `切换失败：${formatError(error)}` });
+      showToast({ kind: "error", msg: `${agent.name} 切换到「${name}」失败`, details: error });
     } finally {
       setChangingModel((current) => current?.profileId === profileId ? null : current);
     }
@@ -821,6 +831,14 @@ export function AgentView({
       navigateResource({ domain: "hook", kind: "detail", name: asset.name });
     }
   };
+
+  const scanDiagnostics = [
+    nativeResources.error && { operation: "list_native_resources", message: nativeResources.error },
+    nativeResources.inventory?.unavailable && { code: "mcp_host_observation_unavailable", message: t("nativePlugins.scanUnavailable") },
+    resourceTab === "mcps" && nativeResources.inventory?.configured_unavailable && {
+      code: "mcp_declarations_unavailable", message: t("mcpInspector.declarationsUnavailable"), configuration_entry: agent.global,
+    },
+  ].filter(Boolean);
 
   return (
     <div className="arca-agent-page">
@@ -893,8 +911,14 @@ export function AgentView({
           ) : null}
           <ToastNotice kind="info" persistent noticeKey={`agent-operation:${agent.id}`}
             message={preparingChange ? `正在检查并同步 ${agent.name} 的资产…` : null} />
-          <ToastNotice kind="warning" noticeKey={`native-plugins:${agent.id}`} message={nativeResources.error || nativeResources.inventory?.unavailable ? t("nativePlugins.scanUnavailable") : null} />
-          <ToastNotice kind="warning" noticeKey={`mcp-declarations:${agent.id}`} message={nativeResources.inventory?.configured_unavailable ? t("mcpInspector.declarationsUnavailable") : null} />
+          {(resourceTab === "plugins" || resourceTab === "mcps" || resourceTab === "skills") && scanDiagnostics.length > 0 && (
+            <AgentResourceActions>
+              <button type="button" className="arca-agent-tool" onClick={() => showToast({
+                kind: "warning", msg: t("notifications.scanIncomplete", { agent: agent.name }),
+                details: { agent_id: agent.id, diagnostics: scanDiagnostics },
+              })}>{t("notifications.scanStatus")}</button>
+            </AgentResourceActions>
+          )}
           {mcpInspection?.request.agent_id === agentId && <McpConfigurationDialog name={mcpInspection.name}
             request={mcpInspection.request} onClose={() => setMcpInspection(null)} />}
           {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "agents" ? (
@@ -964,7 +988,7 @@ export function AgentView({
             modelsLoading ? (
               <div className="arca-agent-inline-state">正在读取 Model…</div>
             ) : modelsError ? (
-              <div className="arca-agent-inline-state">Model 读取失败：{modelsError}</div>
+              <ResourceState kind="read-error" title={t("models.readFailedTitle")} detail={modelsError} />
             ) : modelAgent?.mode === "guided" ? (
               <GuidedModelsPanel agent={modelAgent} onOpenDocs={() => {
                 void openUrl(modelAgent.docs).catch((error) => showToast({

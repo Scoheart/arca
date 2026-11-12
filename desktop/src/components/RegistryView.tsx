@@ -30,7 +30,7 @@ import { Badge, IconButton, TransportPill } from "./ui";
 import { McpAvatar } from "./McpIcon";
 import { McpIconPickerDialog } from "./McpIconPickerDialog";
 import { ResourceState } from "./ResourceState";
-import { ToastNotice, useToast } from "./Toast";
+import { useToast } from "./Toast";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
 import { RegistryEditPage } from "./RegistryEditPage";
 import {
@@ -224,7 +224,7 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
           sourceId,
         );
       } catch (e) {
-        toast.show({ kind: "error", msg: `无法删除：${String(e)}` });
+        toast.show({ kind: "error", msg: `无法删除 MCP「${entry.name}」`, details: e });
       }
     },
     [consumptionState, deletable, toast]
@@ -416,7 +416,7 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
           onCancel={consumptionState.cancel}
           onCommit={async () => {
             const kind = consumptionState.plan?.kind;
-            let pendingConvergence = false;
+            let convergenceError: unknown = null;
             try {
               await consumptionState.commit();
             } catch (error) {
@@ -426,22 +426,23 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
                 return;
               }
               // Core committed the central deletion; only Agent projection is pending.
-              pendingConvergence = true;
+              convergenceError = error;
             }
             if (kind === "delete-asset") {
               closeDetail();
               setIconPickerEntry(null);
             }
-            void state.refreshRegistry().catch((error) => {
-              toast.show({ kind: "error", msg: `操作已完成，但列表刷新失败：${formatError(error)}` });
-            });
+            const refreshError: unknown = await state.refreshRegistry().then(() => null, (error) => error);
             toast.show({
-              kind: pendingConvergence ? "error" : "success",
-              msg: pendingConvergence
+              kind: convergenceError || refreshError ? "warning" : "success",
+              msg: convergenceError
                 ? kind === "delete-asset"
                   ? "MCP 已从中央库删除，部分 Agent 尚未同步完成，请在对应 Agent 页面处理。"
                   : "MCP 已保存，部分 Agent 尚未同步完成，请在对应 Agent 页面处理。"
-                : kind === "delete-asset" ? "MCP 资产已删除。" : "MCP 资产已保存。",
+                : refreshError ? "MCP 操作已完成，列表刷新失败"
+                  : kind === "delete-asset" ? "MCP 资产已删除。" : "MCP 资产已保存。",
+              details: convergenceError && refreshError ? { convergence: convergenceError, refresh: refreshError }
+                : convergenceError ?? refreshError,
             });
           }}
         />
@@ -638,7 +639,7 @@ function RegistryDetail({
         </>
       }
     >
-      {overriddenBy && <ToastNotice kind="info" message={`已被覆盖 · 当前使用「${overriddenBy}」，此副本不参与安装。`} />}
+      {overriddenBy && <p className="arca-inspector-description">已被覆盖 · 当前使用「{overriddenBy}」</p>}
 
       {entry.description && <p className="arca-inspector-description">{entry.description}</p>}
 

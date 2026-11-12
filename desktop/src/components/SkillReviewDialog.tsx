@@ -361,7 +361,7 @@ export function SkillReviewDialog({
     >
       <div className="arca-skill-review-dialog">
         <div className="arca-skill-review-body">
-          <ToastNotice message={error?.message} />
+          <ToastNotice message={error?.message} details={error} />
 
           <section className="arca-skill-review-section" aria-label="Skill 变更">
             {plan.skills.map((skill) => (

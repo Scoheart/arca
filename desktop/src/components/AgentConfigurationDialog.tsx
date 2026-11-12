@@ -80,7 +80,7 @@ export function AgentConfigurationDialog({
   const deliveryChanged = hasDelivery && delivery !== savedDelivery;
   const [busy, setBusy] = useState(false);
   const [plan, setPlan] = useState<AssetOperationPlan | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; cause: unknown } | null>(null);
   const [browsing, setBrowsing] = useState(false);
   const [instructionPaths, setInstructionPaths] = useState<InstructionPathConfiguration | null>(null);
   const [instructionEdits, setInstructionEdits] = useState<Record<string, string | null>>({});
@@ -167,9 +167,7 @@ export function AgentConfigurationDialog({
       reviewedConfiguration.current = JSON.stringify(patch);
       setPlan(result.plan);
     } catch (error) {
-      const message = formatError(error);
-      setError(message);
-      toast.show({ kind: "error", msg: t("agentConfiguration.saveFailed", { error: message }) });
+      setError({ message: formatError(error), cause: error });
     } finally {
       setBusy(false);
     }
@@ -205,9 +203,13 @@ export function AgentConfigurationDialog({
       toast.show({ kind: "success", msg: t("agentConfiguration.updated", { name: agent.name }) });
       onClose();
     } catch (commitError) {
-      setError(configurationCommitted
-        ? t(preferencesCommitted ? "agentConfiguration.refreshFailed" : "agentConfiguration.preferencesIncomplete", { error: formatError(commitError) })
-        : formatError(commitError));
+      const message = formatError(commitError);
+      setError({
+        message: configurationCommitted
+          ? t(preferencesCommitted ? "agentConfiguration.refreshFailed" : "agentConfiguration.preferencesIncomplete", { error: message })
+          : message,
+        cause: commitError,
+      });
       if (configurationCommitted && !preferencesCommitted) {
         // Keep unsaved preferences so retry does not repeat committed changes.
         try { await onSaved(); } catch { /* The original save error stays visible. */ }
@@ -229,7 +231,7 @@ export function AgentConfigurationDialog({
       plaintextApproved.current = false;
       setError(null);
     } catch (cancelError) {
-      setError(formatError(cancelError));
+      setError({ message: formatError(cancelError), cause: cancelError });
     } finally {
       setBusy(false);
     }
@@ -297,7 +299,8 @@ export function AgentConfigurationDialog({
       <AssetOperationReviewDialog
         plan={plan}
         busy={busy || browsing}
-        error={error}
+        error={error?.message}
+        errorDetails={error?.cause}
         agentName={agent.name}
         cancelLabel={t("agentConfiguration.backToEdit")}
         onCommit={commit}
@@ -579,7 +582,8 @@ export function AgentConfigurationDialog({
           </div>
         )}
       </fieldset>
-      {error && <ToastNotice message={t("agentConfiguration.saveFailed", { error })} />}
+      {error && <ToastNotice message={t("agentConfiguration.saveFailed", { error: error.message })}
+        details={typeof error.cause === "string" && error.cause === error.message ? null : error.cause} />}
     </DialogShell>
   );
 }

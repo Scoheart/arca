@@ -380,6 +380,16 @@ body {
 .arca-toast-icon[data-kind="info"] { background: var(--color-blue); }
 .arca-toast-icon span { color: white; font: 700 12px/1 var(--font-mono); }
 .arca-toast-message { flex: 1; min-width: 0; max-height: min(220px, calc(100vh - 64px)); overflow-y: auto; overflow-wrap: anywhere; line-height: 1.4; }
+.arca-toast[data-expanded="true"] { align-items: flex-start; }
+.arca-toast-summary { white-space: pre-wrap; }
+.arca-error-details { min-width: 0; max-width: min(520px, 100%); margin-top: 4px; }
+.arca-error-details button { min-height: 26px; padding: 3px 8px; font-size: 11px; }
+.arca-error-details pre {
+  max-height: min(150px, 30vh); overflow: auto; margin: 4px 0; padding: 8px;
+  border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--surface-section);
+  font: 11px/1.5 var(--font-mono); text-align: left; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.arca-error-details-copy { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: 11px; }
 .arca-toast-actions { display: flex; gap: 6px; margin-top: 6px; }
 .arca-toast-actions button { min-height: 26px; padding: 3px 8px; font-size: 11px; }
 .arca-toast-progress { width: 100%; height: 4px; overflow: hidden; border-radius: 4px; background: var(--surface-section); }

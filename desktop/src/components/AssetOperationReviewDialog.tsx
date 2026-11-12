@@ -247,6 +247,7 @@ export function AssetOperationReviewDialog({
   plan,
   busy,
   error,
+  errorDetails = error,
   agentId,
   agentName,
   convergenceAction,
@@ -259,6 +260,7 @@ export function AssetOperationReviewDialog({
   plan: AssetOperationPlan;
   busy: boolean;
   error?: AssetCommandError | string | null;
+  errorDetails?: unknown;
   agentId?: string;
   agentName?: string;
   convergenceAction?: ConvergenceAction;
@@ -304,6 +306,7 @@ export function AssetOperationReviewDialog({
   const isRemoveOnly = hasRemove && !hasAdd;
   const isDanger = isRemoveOnly || plan.kind === "delete-asset";
   const reviewError = error ? assetReviewErrorMessage(error, plan) : null;
+  const diagnostic = errorDetails === reviewError ? null : errorDetails;
   const agentCopy = agentName && plan.kind === "set-consumption"
     ? agentActionCopy(plan)
     : null;
@@ -331,7 +334,7 @@ export function AssetOperationReviewDialog({
     && plan.relationship_changes.length === 0
     && consumptionStateChanges.length === 0 && plan.model_state_changes.length === 0) {
     return <AssetSyncReviewDialog
-      plan={plan} busy={busy} error={reviewError} cancelLabel={cancelLabel}
+      plan={plan} busy={busy} error={reviewError} errorDetails={diagnostic} cancelLabel={cancelLabel}
       assets={plan.central_changes.map((change) => ({
         key: assetKey(change.asset), name: displayAssetName(change.asset, assetDisplayNames),
       }))}
@@ -379,7 +382,7 @@ export function AssetOperationReviewDialog({
               </span>;
             })}
           </div>}
-          <ToastNotice message={reviewError} />
+          <ToastNotice message={reviewError} details={diagnostic} />
           {!plan.can_commit && <ToastNotice kind="warning" message="暂时无法删除，请查看原因。" />}
           {plan.warnings.length > 0 && <section className="arca-provider-update-issues">
             {plan.warnings.map((warning) => <p key={warning}>{warningCopy(warning)}</p>)}
@@ -404,7 +407,7 @@ export function AssetOperationReviewDialog({
             </span>;
           })}
         </div>}
-        <ToastNotice message={reviewError} />
+        <ToastNotice message={reviewError} details={diagnostic} />
         {!plan.can_commit && <ToastNotice kind="warning" message="部分配置暂时无法更新，请查看原因。" />}
         {plan.warnings.length > 0 && <section className="arca-provider-update-issues">
           {plan.warnings.map((warning) => <p key={warning}>{warningCopy(warning)}</p>)}
@@ -423,7 +426,7 @@ export function AssetOperationReviewDialog({
       status={!plan.can_commit ? (
         <ToastNotice kind="warning" message="存在冲突，暂不可继续。" />
       ) : reviewError ? (
-        <ToastNotice message={`操作未完成 · ${reviewError}`} />
+        <ToastNotice message={`操作未完成 · ${reviewError}`} details={diagnostic} />
       ) : undefined}
       footerEnd={(
         <>

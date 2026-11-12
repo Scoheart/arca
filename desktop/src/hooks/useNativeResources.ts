@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { listNativeResources } from "../lib/api";
+import { formatErrorDetails } from "../lib/format";
 import type { NativeResourceInventory } from "../lib/types";
 import type { ObservationChange } from "../lib/observationRefresh";
 
 /** Host metadata stays available while credential-backed asset reads are pending. */
 export function useNativeResources(agentId: string) {
-  const [state, setState] = useState<{ agentId: string; inventory: NativeResourceInventory | null; error: boolean }>({ agentId, inventory: null, error: false });
+  const [state, setState] = useState<{ agentId: string; inventory: NativeResourceInventory | null; error: string | null }>({ agentId, inventory: null, error: null });
   useEffect(() => {
     let active = true;
     let generation = 0;
@@ -15,9 +16,9 @@ export function useNativeResources(agentId: string) {
       if (!active) return;
       const request = ++generation;
       void listNativeResources(agentId).then(inventory => {
-        if (active && request === generation) setState({ agentId, inventory, error: false });
-      }).catch(() => {
-        if (active && request === generation) setState({ agentId, inventory: null, error: true });
+        if (active && request === generation) setState({ agentId, inventory, error: null });
+      }).catch((error) => {
+        if (active && request === generation) setState({ agentId, inventory: null, error: formatErrorDetails(error) });
       });
     };
     const subscription = listen<ObservationChange>("asset-observation-changed", event => {
@@ -31,5 +32,5 @@ export function useNativeResources(agentId: string) {
     void subscription.then(() => { if (active) refresh(); }).catch(() => { if (active) refresh(); });
     return () => { active = false; clearTimeout(timer); void subscription.then(unlisten => unlisten()).catch(() => undefined); };
   }, [agentId]);
-  return state.agentId === agentId ? state : { agentId, inventory: null, error: false };
+  return state.agentId === agentId ? state : { agentId, inventory: null, error: null };
 }

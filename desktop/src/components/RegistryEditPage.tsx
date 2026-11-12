@@ -119,10 +119,10 @@ export function RegistryEditPage({
       const failure = error as AssetCommandError | null;
       if (failure?.code === "target_convergence_failed" && failure.details?.central_saved === true) {
         const remaining = Number(failure.details.remaining_count ?? 0);
-        toast.show({ kind: "error", msg: `已保存 ${failure.details.saved_count} 个 MCP，但后续校验或同步未完成。${remaining > 0 ? `另有 ${remaining} 个尚未添加。` : "可在 MCP 列表中查看。"}` });
+        toast.show({ kind: "error", msg: `已保存 ${failure.details.saved_count} 个 MCP，但后续校验或同步未完成。${remaining > 0 ? `另有 ${remaining} 个尚未添加。` : "可在 MCP 列表中查看。"}`, details: failure });
         if (remaining === 0) onBack();
       } else {
-        toast.show({ kind: "error", msg: `添加失败：${formatError(error)}` });
+        toast.show({ kind: "error", msg: "添加 MCP 失败", details: error });
       }
     } finally {
       setSaving(false);
@@ -191,14 +191,14 @@ export function RegistryEditPage({
       }, { reviewOnlyWhenNeeded: true });
       if (!requiresAgentReview(plan)) {
         await consumptionState.commit({ background: true });
-        toast.show({ kind: "success", msg: "MCP 资产已保存。" });
         onBack();
-        void state.refreshRegistry().catch((error) => {
-          toast.show({ kind: "error", msg: `已保存，但列表刷新失败：${String(error)}` });
-        });
+        void state.refreshRegistry().then(
+          () => toast.show({ kind: "success", msg: "MCP 资产已保存。" }),
+          (error) => toast.show({ kind: "warning", msg: "MCP 已保存，列表刷新失败", details: error }),
+        );
       }
     } catch (err) {
-      toast.show({ kind: "error", msg: `无法保存：${String(err)}` });
+      toast.show({ kind: "error", msg: `保存 MCP「${draft.name}」失败`, details: err });
     } finally {
       setSaving(false);
     }
@@ -214,7 +214,7 @@ export function RegistryEditPage({
         sourceId,
       );
     } catch (err) {
-      toast.show({ kind: "error", msg: `恢复失败: ${String(err)}` });
+      toast.show({ kind: "error", msg: `恢复 MCP「${name}」失败`, details: err });
     } finally {
       setSaving(false);
     }
@@ -354,14 +354,11 @@ export function RegistryEditPage({
       onCommit={async () => {
         const kind = consumptionState.plan?.kind;
         await consumptionState.commit();
-        void state.refreshRegistry().catch((error) => {
-          toast.show({ kind: "error", msg: `操作已完成，但列表刷新失败：${String(error)}` });
-        });
-        toast.show({
-          kind: "success",
-          msg: kind === "delete-asset" ? "MCP 资产已删除。" : "MCP 资产已保存。",
-        });
         onBack();
+        void state.refreshRegistry().then(
+          () => toast.show({ kind: "success", msg: kind === "delete-asset" ? "MCP 资产已删除。" : "MCP 资产已保存。" }),
+          (error) => toast.show({ kind: "warning", msg: "MCP 操作已完成，列表刷新失败", details: error }),
+        );
       }}
     />
   ) : null;

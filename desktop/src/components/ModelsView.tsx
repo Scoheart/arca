@@ -22,7 +22,7 @@ import type {
   ProviderModelSummary,
   ResourceNavigationIntent,
 } from "../lib/types";
-import { formatError } from "../lib/format";
+import { formatError, formatErrorDetails } from "../lib/format";
 import { readLocalSetting, writeLocalSetting } from "../lib/localSettings";
 import { requiresAgentReview } from "../lib/agentOperation";
 import { ManualModelCard, ProviderModelCatalog } from "./ProviderModelCatalog";
@@ -368,7 +368,6 @@ export function ModelsView({
   const deferredQuery = useDeferredValue(query);
   const [modelsDevByProfileId, setModelsDevByProfileId] = useState<Record<string, ModelsDevMetadata>>({});
   const toast = useToast();
-  const showToast = toast.show;
   const { t } = useTranslation();
   const lastConsumedIntentId = useRef<number | null>(null);
 
@@ -394,14 +393,11 @@ export function ModelsView({
     refresh()
       .then(() => { if (active) setReadError(null); })
       .catch((error) => {
-        if (!active) return;
-        const message = formatError(error);
-        setReadError(message);
-        showToast({ kind: "error", msg: t("models.readFailed", { error: message }) });
+        if (active) setReadError(formatErrorDetails(error));
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; queryGeneration.current += 1; };
-  }, [refresh, showToast, t, modelRevision]);
+  }, [refresh, modelRevision]);
 
   useEffect(() => {
     let active = true;
@@ -439,7 +435,7 @@ export function ModelsView({
 
   const refreshAfterSave = () => {
     void refresh(true).catch((error) => {
-      setReadError(formatError(error));
+      setReadError(formatErrorDetails(error));
     });
   };
   const saveDraft = async (draft: CentralAssetDraft) => {
@@ -448,7 +444,7 @@ export function ModelsView({
     if (requiresAgentReview(plan)) return false;
     await consumptionState.commit({ background: true });
     toast.show({ kind: "success", msg: t("models.saved") });
-    await refresh(true).catch((error) => setReadError(formatError(error)));
+    await refresh(true).catch((error) => setReadError(formatErrorDetails(error)));
     return true;
   };
 
@@ -668,7 +664,7 @@ export function ModelsView({
               setLoading(true);
               setReadError(null);
               void refresh(true)
-                .catch((error) => setReadError(formatError(error)))
+                .catch((error) => setReadError(formatErrorDetails(error)))
                 .finally(() => setLoading(false));
             }}>{t("common.retry")}</button>}
           />
@@ -1293,7 +1289,7 @@ function ModelProfileDialog({
     try {
       await onReview({ ...draft, id: initial?.id ?? "", name: draft.name.trim(), model: draft.model.trim() });
     } catch (error) {
-      toast.show({ kind: "error", msg: t("models.saveFailed", { error: formatError(error) }) });
+      toast.show({ kind: "error", msg: t("models.saveFailed"), details: error });
     } finally {
       setBusy(false);
     }
@@ -1595,7 +1591,7 @@ function ModelProviderDialog({
         ? initial?.credential_saved ? "" : undefined
         : hasNewCredential ? credential : clearCredential ? "" : undefined);
     } catch (error) {
-      toast.show({ kind: "error", msg: t("models.saveFailed", { error: formatError(error) }) });
+      toast.show({ kind: "error", msg: t("models.saveFailed"), details: error });
     } finally {
       setBusy(false);
     }

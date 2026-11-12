@@ -195,8 +195,10 @@ it("keeps the Models workspace visible through loading, error recovery, and empt
     </ToastProvider>,
   );
 
-  expect(await screen.findByRole("alert")).toHaveTextContent("读取模型资产失败");
-  expect(screen.getByRole("alert")).toHaveTextContent("model registry unavailable");
+  expect(await screen.findByText("读取模型资产失败")).toBeVisible();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "错误详情" }));
+  expect(screen.getByText(/model registry unavailable/)).toBeVisible();
   await user.click(screen.getByRole("button", { name: "重试" }));
   expect(await screen.findByText("暂无 Models")).toBeVisible();
   expect(screen.getByText("添加一个可复用的模型配置。")).toBeVisible();

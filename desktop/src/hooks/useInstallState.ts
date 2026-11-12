@@ -19,6 +19,7 @@ import type {
   SourceView,
 } from "../lib/types";
 import { installedKey } from "../lib/mcp";
+import { formatErrorDetails } from "../lib/format";
 
 /**
  * Read model for the MCP asset library and observed Agent files. Mutating an
@@ -94,7 +95,7 @@ export function useInstallState({ autoLoad = true }: { autoLoad?: boolean } = {}
       if (mounted.current && sourceGeneration === generations.current.sources) setSources(next.sources);
       return next.entries;
     } catch (error) {
-      if (current()) setRegistryError(String(error));
+      if (current()) setRegistryError(formatErrorDetails(error));
       throw error;
     } finally {
       if (current()) setLoading(false);

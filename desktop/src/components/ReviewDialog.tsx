@@ -22,7 +22,7 @@ export function ReviewDialog({
   onClose: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; reason: unknown } | null>(null);
 
   const confirm = async () => {
     if (busy) return;
@@ -31,7 +31,7 @@ export function ReviewDialog({
     try {
       await onConfirm();
     } catch (reason) {
-      setError(formatError(reason));
+      setError({ message: formatError(reason), reason });
     } finally {
       setBusy(false);
     }
@@ -48,7 +48,8 @@ export function ReviewDialog({
       ) : undefined}
       title={title}
       subtitle={subtitle}
-      status={error ? <ToastNotice message={error} /> : undefined}
+      status={error ? <ToastNotice message={error.message}
+        details={typeof error.reason === "string" ? null : error.reason} /> : undefined}
       busy={busy}
       onClose={onClose}
       footerEnd={

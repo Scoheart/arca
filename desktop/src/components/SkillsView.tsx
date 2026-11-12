@@ -42,7 +42,8 @@ import {
   type SkillLifecycleIntent,
 } from "./SkillInspector";
 import { SkillReviewDialog } from "./SkillReviewDialog";
-import { ToastNotice, useToast } from "./Toast";
+import { ErrorDetails, ToastNotice, useToast } from "./Toast";
+import { formatErrorDetails } from "../lib/format";
 import {
   ResourceWorkspace,
   ResourceOverview,
@@ -329,7 +330,7 @@ export function SkillsView({
         lifecyclePlanRef.current = null;
         if (failedPlan) await cleanupLifecyclePlan(failedPlan, false);
         if (stillCurrent) {
-          toast.show({ kind: "error", msg: error.message });
+          toast.show({ kind: "error", msg: error.message, details: error });
         }
       }
     } finally {
@@ -367,7 +368,7 @@ export function SkillsView({
       }
       if (mounted.current) {
         setRemoveGroup(null);
-        toast.show({ kind: "error", msg: `已删除 ${removed}/${names.length} 个 Skill，剩余项已停止处理：${error.message}` });
+        toast.show({ kind: "error", msg: `已删除 ${removed}/${names.length} 个 Skill，剩余项已停止处理`, details: error });
       }
     } finally {
       lifecyclePendingRef.current = false;
@@ -546,8 +547,8 @@ export function SkillsView({
     setChecking(true);
     try {
       await state.checkUpdates(true);
-    } catch {
-      // The app-owned hook retains and presents the structured error.
+    } catch (reason) {
+      if (mounted.current) toast.show({ kind: "error", msg: "检查 Skill 更新失败", details: reason });
     } finally {
       if (mounted.current) setChecking(false);
     }
@@ -559,9 +560,8 @@ export function SkillsView({
 
   return (
     <div className="arca-skill-workspace">
-      <ToastNotice kind="warning" noticeKey="skill-recovery" message={recoveryError && state.inventory
-        ? `${t("skillLibrary.recoveryTitle")} · ${t("skillLibrary.recoveryMessage")}` : null} />
-      <ToastNotice message={!recoveryError && state.inventory && !installOpen && !lifecycleReview ? state.error?.message : null} />
+      <ToastNotice kind="warning" noticeKey="skill-recovery" message={recoveryRequired
+        ? `${t("skillLibrary.recoveryTitle")} · ${t("skillLibrary.recoveryMessage")}` : null} details={recoveryRequired} />
       <ToastNotice message={navigationNotice} />
       <ResourceWorkspace
         overview={
@@ -570,7 +570,8 @@ export function SkillsView({
               ? `${t(`skillLibrary.${selectedSource.category}`)} · ${selectedSource.count} Skills`
               : `${items.length} Skills · ${sources.length} ${t("skillLibrary.sources")}`}
             title={selectedSource ? selectedSource.label || t("skillLibrary.unknown") : t("skillLibrary.all")}
-            description={selectedSource ? undefined : t("skillLibrary.description")}
+            description={recoveryError ? `${t("skillLibrary.recoveryTitle")} · ${t("skillLibrary.recoveryMessage")}`
+              : selectedSource ? undefined : t("skillLibrary.description")}
             icon={<ResourceIcon domain="skill" className="w-6 h-6" />}
             actions={selectedSource && items.some((item) => skillSourceGroup(item).id === selectedSource.id && item.location.kind === "central") ? (
               <button type="button" className="btn-ghost" disabled={checkDisabled || removingGroup}
@@ -579,6 +580,9 @@ export function SkillsView({
               </button>
             ) : undefined}
           >
+            {state.inventory && (recoveryError || state.error) && <ErrorDetails
+              summary={recoveryError ? t("skillLibrary.recoveryTitle") : "Skills"}
+              text={formatErrorDetails(state.error ?? recoveryError)} />}
             {sourceLocation && <dl className="arca-resource-overview-facts">
               <div>
                 <dt>{selectedSource?.category === "github" ? "GitHub" : t("skillLibrary.sources")}</dt>
@@ -677,14 +681,14 @@ export function SkillsView({
             kind="recovery"
             icon={<ResourceIcon domain="skill" className="w-6 h-6" />}
             title={t("skillLibrary.recoveryTitle")}
-            detail={t("skillLibrary.recoveryMessage")}
+            detail={[t("skillLibrary.recoveryMessage"), formatErrorDetails(state.error ?? recoveryError)].join("\n\n")}
           />
         ) : !state.inventory && state.error ? (
           <ResourceState
             kind="read-error"
             icon={<ResourceIcon domain="skill" className="w-6 h-6" />}
             title="读取 Skills 失败"
-            detail={state.error.message}
+            detail={formatErrorDetails(state.error)}
             action={
               <button className="btn-primary" type="button" onClick={retry}>
                 重试

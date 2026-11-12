@@ -4,6 +4,7 @@ import { check } from "@tauri-apps/plugin-updater";
 import type { Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { updateEnvironment } from "../lib/api";
+import { formatErrorDetails } from "../lib/format";
 
 // Remember the version the user clicked "稍后" on, so the startup check stops
 // nagging about it. A manual check (点版本号) always ignores this.
@@ -42,6 +43,7 @@ export function useUpdater(
   const [phase, setPhase] = useState<UpdatePhase>({ kind: "idle" });
   const updateRef = useRef<Update | null>(null);
   const proxyUrlRef = useRef(proxyUrl);
+  const checked = useRef(false);
 
   useEffect(() => {
     proxyUrlRef.current = proxyUrl;
@@ -49,6 +51,7 @@ export function useUpdater(
 
   const checkNow = useCallback(
     async ({ manual = false }: { manual?: boolean } = {}) => {
+      checked.current = true;
       setPhase({ kind: "checking" });
       try {
         const update = await check({ proxy: proxyUrlRef.current ?? undefined });
@@ -73,7 +76,7 @@ export function useUpdater(
         // surface UI; only manual checks report the error.
         setPhase(
           manual
-            ? { kind: "error", operation: "check", message: String(e) }
+            ? { kind: "error", operation: "check", message: formatErrorDetails(e) }
             : { kind: "idle" },
         );
         return "error" as const;
@@ -120,7 +123,7 @@ export function useUpdater(
       });
       setPhase({ kind: "ready", version: update.version });
     } catch (e) {
-      const message = String(e);
+      const message = formatErrorDetails(e);
       if (/read-only file system|os error 30/i.test(message)) {
         setPhase({ kind: "requires-install", reason: "read-only-volume" });
       } else {
@@ -133,7 +136,7 @@ export function useUpdater(
     try {
       await relaunch();
     } catch (e) {
-      setPhase({ kind: "error", operation: "restart", message: String(e) });
+      setPhase({ kind: "error", operation: "restart", message: formatErrorDetails(e) });
     }
   }, []);
 
@@ -148,8 +151,8 @@ export function useUpdater(
   // Silent check shortly after launch — delayed so it never competes with the
   // startup scan, and any failure is swallowed by checkNow itself.
   useEffect(() => {
-    if (!autoCheck) return;
-    const t = setTimeout(() => void checkNow(), 2500);
+    if (!autoCheck || checked.current) return;
+    const t = setTimeout(() => { if (!checked.current) void checkNow(); }, 2500);
     return () => clearTimeout(t);
   }, [autoCheck, checkNow]);
 
