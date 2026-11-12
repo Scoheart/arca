@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.75.0](https://github.com/Scoheart/arca/compare/v2.74.0...v2.75.0) (2026-11-12)
+
+### Changes
+
+* feat(models): add 联通云 Token Plan (cucloud) provider (#305) ([9d153ac](https://github.com/Scoheart/arca/commit/9d153aceb6675b12e28da782850135c0c2a50ce8))
+* feat(models): add Puter AI Gateway provider (#306) ([387f3c6](https://github.com/Scoheart/arca/commit/387f3c6cfd1269d73c522811b4d46dedd4413cf7))
+* feat(models): add UCloud AstraFlow ModelVerse provider (#307) ([29ec436](https://github.com/Scoheart/arca/commit/29ec436d65d123818a1748d7578e514958e45bcb))
+* feat(models): add MOSS API and 麦块云 providers (#308) ([3b8335e](https://github.com/Scoheart/arca/commit/3b8335eaf3919287942c18412836515af833cb15))
+* feat(models): add Radium provider (#309) ([5df19fc](https://github.com/Scoheart/arca/commit/5df19fcadc1f3bf351a8a60893fe8c00262ef7ce))
+* feat(models): add Logfare provider (#310) ([5525a99](https://github.com/Scoheart/arca/commit/5525a99388157da187e1e83d5363cdae5174f86f))
+* feat(models): add Synap provider (#311) ([b57bed1](https://github.com/Scoheart/arca/commit/b57bed1a0d14ef041c0eb98ca29966e48d10b0b1))
+* feat(arca): unify dialogs and expand DeepSeek Harness support ([84b47cd](https://github.com/Scoheart/arca/commit/84b47cd475202b747fc2f5dc4b63cc2470bac1be))
+
 ## [2.74.0](https://github.com/Scoheart/arca/compare/v2.73.1...v2.74.0) (2026-11-11)
 
 ### Changes
