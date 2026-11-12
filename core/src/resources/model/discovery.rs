@@ -354,6 +354,13 @@ const SYNAP_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("gemma-4-26b-a4b-it", None, None),
 ];
 
+/// Documented Flonno chat id. Anonymous `GET /v1/models` is not a catalog.
+/// A saved key uses the OpenAI decoder. The docs name this model and its
+/// context window; this seed stores the id only.
+const FLONNO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen3.8-27b", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -404,6 +411,7 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "radium" => RADIUM_STATIC_MODELS,
         "logfare" => LOGFARE_STATIC_MODELS,
         "synap" => SYNAP_STATIC_MODELS,
+        "flonno" => FLONNO_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -769,6 +777,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "radium"
         | "logfare"
         | "synap"
+        | "flonno"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -2747,7 +2756,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi", "hyperbolic"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi", "hyperbolic", "flonno"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
@@ -4102,5 +4111,66 @@ mod tests {
         assert_eq!(seeded.len(), 3);
         assert_eq!(seeded[0].id, "qwen3-coder-30b");
         assert_eq!(seeded[2].id, "gemma-4-26b-a4b-it");
+    }
+
+    #[test]
+    fn flonno_seeds_the_documented_model_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("flonno").expect("flonno seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["qwen3.8-27b"]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "Qwen/Qwen3.8-27B",
+            "WarlaxZ/Qwen3.8-27B-NInfer-3090",
+            "qwen/qwen3.8-27b",
+            "gpt-5.4",
+            "claude-sonnet-5",
+            "gemini-3.5-flash",
+            "grok-4",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("flonno").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"flonno"));
+        let config = provider(
+            "flonno",
+            "https://www.flonno.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://www.flonno.com/v1/models"
+        );
+        let _home = TestHome::new("flonno-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "flonno-instance".into(),
+                name: "Flonno".into(),
+                provider: "flonno".into(),
+                base_url: "https://www.flonno.com".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/v1/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 1);
+        assert_eq!(seeded[0].id, "qwen3.8-27b");
     }
 }
