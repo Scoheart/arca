@@ -116,11 +116,14 @@ pub(super) fn clear(path: &Path, profile: &ModelProfile) -> Result<PreparedModel
     if top.get("provider").is_none() { return Ok(prepared_json(path, original, root)); }
     let providers = object(&top, "provider")?;
     let id = provider_id_for(AGENT, profile);
-    if providers.get(&id).is_none() { return Ok(prepared_json(path, original, root)); }
+    if providers.get(&id).is_none() {
+        return Ok(prepared_json(path, original, root));
+    }
     let provider = object(&providers, &id)?;
     let identity = provider.to_serde_value().ok_or("zcode_config_conflicted")?;
     if identity.get("kind").and_then(Value::as_str) != Some("openai-compatible")
-        || identity.get("source").and_then(Value::as_str) != Some("custom") {
+        || identity.get("source").and_then(Value::as_str) != Some("custom")
+    {
         return Err("zcode_provider_conflicted: provider identity changed".into());
     }
     if provider.get("models").is_some() {

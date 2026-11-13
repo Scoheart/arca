@@ -150,24 +150,52 @@ pub(super) fn clear(agent_id: &str, path: &Path, profile: &ModelProfile) -> Resu
     if top.get("providers").is_none() { return Ok(prepared_json(path, original, root)); }
     let providers = object(&top, "providers", path)?;
     let id = provider_id_for(agent_id, profile);
-    if providers.get(&id).is_none() { return Ok(prepared_json(path, original, root)); }
+    if providers.get(&id).is_none() {
+        return Ok(prepared_json(path, original, root));
+    }
     let provider = object(&providers, &id, path)?;
-    let models = provider.get("models").and_then(|p| p.array_value())
+    let models = provider
+        .get("models")
+        .and_then(|p| p.array_value())
         .ok_or("qoder_config_conflicted: provider models must be an array")?;
     let mut remaining = Vec::new();
     let mut removed = false;
     let mut ids = BTreeSet::new();
     for element in models.elements() {
-        let value = element.to_serde_value().ok_or("qoder_config_conflicted: invalid model")?;
-        let id = value.get("model").and_then(Value::as_str).ok_or("qoder_config_conflicted: model id missing")?;
-        if !ids.insert(id.to_string()) { return Err("qoder_config_conflicted: duplicate model id".into()); }
-        if id == profile.model { element.remove(); removed = true; } else { remaining.push(id.to_string()); }
+        let value = element
+            .to_serde_value()
+            .ok_or("qoder_config_conflicted: invalid model")?;
+        let model_id = value
+            .get("model")
+            .and_then(Value::as_str)
+            .ok_or("qoder_config_conflicted: model id missing")?;
+        if !ids.insert(model_id.to_string()) {
+            return Err("qoder_config_conflicted: duplicate model id".into());
+        }
+        if model_id == profile.model {
+            element.remove();
+            removed = true;
+        } else {
+            remaining.push(model_id.to_string());
+        }
     }
-    if !removed { return Ok(prepared_json(path, original, root)); }
-    clear_selection(&top, path, &BTreeSet::from([format!("{id}/{}", profile.model)]))?;
+    if !removed {
+        return Ok(prepared_json(path, original, root));
+    }
+    clear_selection(
+        &top,
+        path,
+        &BTreeSet::from([format!("{id}/{}", profile.model)]),
+    )?;
     if remaining.is_empty() {
         set_json(&providers, &id, None);
-    } else if provider.get("model").and_then(|p| p.value()).and_then(|v| v.to_serde_value()).as_ref() == Some(&json!(profile.model)) {
+    } else if provider
+        .get("model")
+        .and_then(|p| p.value())
+        .and_then(|v| v.to_serde_value())
+        .as_ref()
+        == Some(&json!(profile.model))
+    {
         set_json(&provider, "model", Some(json!(remaining[0])));
     }
     Ok(prepared_json(path, original, root))

@@ -4441,14 +4441,14 @@ mod tests {
             &fs::read_to_string(home.home.join(".pi/agent/settings.json")).unwrap(),
         )
         .unwrap();
-        assert_eq!(native["defaultProvider"], "mux-backup");
+        assert_eq!(native["defaultProvider"], "arca_backup");
         assert_eq!(native["defaultModel"], "backup-model");
         let providers: serde_json::Value = serde_json::from_str(
             &fs::read_to_string(home.home.join(".pi/agent/models.json")).unwrap(),
         )
         .unwrap();
-        assert!(providers["providers"].get("mux-current").is_some());
-        assert!(providers["providers"].get("mux-backup").is_some());
+        assert!(providers["providers"].get("arca_current").is_some());
+        assert!(providers["providers"].get("arca_backup").is_some());
     }
 
     fn claude_desktop_provider_profile() -> ModelProfile {

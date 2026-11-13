@@ -3564,8 +3564,7 @@ fn materialize_profile_for_agent(
         };
         let existing = materialized.native_ids.get(agent_id)
             .or_else(|| siblings.iter().find_map(|id| materialized.native_ids.get(*id)));
-        if existing.is_none_or(|id| id == &arca_profile_id(&profile.id)
-            || id.starts_with("mux_desktop_") || id.starts_with("mux_kilo_desktop_")) {
+        if existing.is_none() {
             let id = generated_open_code_provider_id(&settings, profile);
             materialized.native_ids.insert(agent_id.into(), id.clone());
             materialized.native_ids.insert("__mux_generated_opencode_provider".into(), id);
@@ -5997,12 +5996,12 @@ pub(crate) fn observe_active_model_for_settings(
         .filter(|profile| match agent_id {
             "grok-build" => selected == grok_model_id(profile),
             "pi" => {
-                selected
-                    == profile
-                        .native_ids
-                        .get("pi")
-                        .cloned()
-                        .unwrap_or_else(|| generated_pi_provider_id(settings, profile))
+                let expected = profile
+                    .native_ids
+                    .get("pi")
+                    .cloned()
+                    .unwrap_or_else(|| generated_pi_provider_id(settings, profile));
+                selected == expected
                     && selected_pi_model.as_deref() == Some(profile.model.as_str())
             }
             _ => selected == profile.id,
@@ -7432,12 +7431,46 @@ fn codex_provider_id(profile: &ModelProfile) -> String {
     native_profile_id(profile, "codex", arca_profile_id(&profile.id))
 }
 
-fn arca_profile_id(profile_id: &str) -> String {
-    let mut encoded = String::from("mux_");
-    for byte in profile_id.bytes() {
-        encoded.push_str(&format!("{byte:02x}"));
+pub(crate) fn arca_prefixed_profile_id(prefix: &str, profile_id: &str) -> String {
+    let max_hex = 128usize.saturating_sub(prefix.len());
+    if profile_id.len().saturating_mul(2) <= max_hex {
+        let mut encoded = String::from(prefix);
+        for byte in profile_id.bytes() {
+            encoded.push_str(&format!("{byte:02x}"));
+        }
+        encoded
+    } else {
+        format!(
+            "{prefix}{}",
+            &hex::encode(Sha256::digest(profile_id.as_bytes()))[..24]
+        )
     }
-    encoded
+}
+
+pub(crate) fn arca_profile_id(profile_id: &str) -> String {
+    arca_prefixed_profile_id("arca_", profile_id)
+}
+
+fn ensure_arca_prefix(value: &str) -> String {
+    if value.starts_with("arca_") {
+        value.to_string()
+    } else {
+        format!("arca_{value}")
+    }
+}
+
+fn pi_fallback_provider_id(profile_id: &str) -> String {
+    let safe_raw = !profile_id.is_empty()
+        && profile_id.bytes().all(|byte| {
+            byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_')
+        });
+    if safe_raw {
+        let prefixed = ensure_arca_prefix(profile_id);
+        if prefixed.len() <= 128 {
+            return prefixed;
+        }
+    }
+    arca_profile_id(profile_id)
 }
 
 fn grok_model_id(profile: &ModelProfile) -> String {
@@ -7445,7 +7478,7 @@ fn grok_model_id(profile: &ModelProfile) -> String {
 }
 
 fn pi_provider_id(profile: &ModelProfile) -> String {
-    native_profile_id(profile, "pi", format!("mux-{}", profile.id))
+    native_profile_id(profile, "pi", pi_fallback_provider_id(&profile.id))
 }
 
 fn pi_provider_slug(value: &str) -> String {
@@ -7482,26 +7515,33 @@ pub(crate) fn generated_pi_provider_id(
     profile: &ModelProfile,
 ) -> String {
     let Some(provider_id) = profile.provider_id.as_deref() else {
-        return format!("mux-{}", profile.id);
+        return pi_fallback_provider_id(&profile.id);
     };
     let Some(providers) = settings.model_providers.as_ref() else {
-        return format!("mux-{}", profile.id);
+        return pi_fallback_provider_id(&profile.id);
     };
     let Some(provider) = providers.get(provider_id) else {
-        return format!("mux-{}", profile.id);
+        return pi_fallback_provider_id(&profile.id);
     };
     let base = pi_provider_config_slug(provider);
     let collides = providers.iter().any(|(candidate_id, candidate)| {
         candidate_id != provider_id && pi_provider_config_slug(candidate) == base
     });
-    if !collides {
-        return base;
-    }
-    let suffix = pi_provider_slug(&provider.id);
-    if suffix.is_empty() {
-        format!("{base}-provider")
+    let raw = if !collides {
+        base
     } else {
-        format!("{base}-{suffix}")
+        let suffix = pi_provider_slug(&provider.id);
+        if suffix.is_empty() {
+            format!("{base}-provider")
+        } else {
+            format!("{base}-{suffix}")
+        }
+    };
+    let id = ensure_arca_prefix(&raw);
+    if id.len() <= 128 {
+        id
+    } else {
+        arca_profile_id(&profile.id)
     }
 }
 
@@ -7515,7 +7555,12 @@ pub(crate) fn generated_open_code_provider_id(
     };
     let mut id = generated_pi_provider_id(settings, profile);
     if !id.is_ascii() {
-        id = pi_provider_slug(&provider.id);
+        let fallback = pi_provider_slug(&provider.id);
+        id = if fallback.is_empty() {
+            arca_profile_id(&profile.id)
+        } else {
+            ensure_arca_prefix(&fallback)
+        };
     }
     // OpenCode has one SDK/base URL per provider. Different protocols cannot
     // share that object even when they originate from the same Arca Provider.
@@ -7532,7 +7577,7 @@ pub(crate) fn generated_open_code_provider_id(
         };
         id = format!("{id}-{protocol}");
     }
-    if id.is_empty() || id.len() > 128 || !id.is_ascii() {
+    if id == "arca_" || id.len() > 128 || !id.is_ascii() || !id.starts_with("arca_") {
         return arca_profile_id(&profile.id);
     }
     id
@@ -7954,19 +7999,6 @@ fn clear_pi_profile_from_provider(
     Ok(())
 }
 
-fn clear_legacy_pi_profile_provider(
-    providers: &CstObject,
-    provider_id: &str,
-    profile: &ModelProfile,
-    path: &Path,
-) -> Result<(), String> {
-    let legacy_id = format!("mux-{}", profile.id);
-    if legacy_id == provider_id {
-        return Ok(());
-    }
-    clear_pi_profile_from_provider(providers, &legacy_id, profile, path)
-}
-
 #[cfg(test)]
 fn prepare_pi_models(
     path: &Path,
@@ -7998,7 +8030,6 @@ fn prepare_pi_models_with_api_key(
     ensure_unique_keys(&providers, path, "providers")?;
     let provider_id = pi_provider_id(profile);
     upsert_pi_provider(&providers, &provider_id, profile, api_key, path)?;
-    clear_legacy_pi_profile_provider(&providers, &provider_id, profile, path)?;
     Ok((original, root.to_string()))
 }
 
@@ -8101,7 +8132,6 @@ fn prepare_clear_pi_models(
         ensure_unique_keys(&providers, path, "providers")?;
         let provider_id = pi_provider_id(profile);
         clear_pi_profile_from_provider(&providers, &provider_id, profile, path)?;
-        clear_legacy_pi_profile_provider(&providers, &provider_id, profile, path)?;
     }
     Ok((original, root.to_string()))
 }
@@ -12469,7 +12499,7 @@ mod tests {
         fs::create_dir_all(models_path.parent().unwrap()).unwrap();
         fs::write(
             &models_path,
-            r#"{"providers":{"mux-team-openai":{"baseUrl":"https://gateway.example.test/v1","api":"openai-responses","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
+            r#"{"providers":{"openrouter":{"baseUrl":"https://gateway.example.test/v1","api":"openai-responses","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
         )
         .unwrap();
 
@@ -12589,7 +12619,7 @@ wire_api = "responses"
         assert!(content.contains("keep this comment"));
         assert!(content.contains("mcp_servers.github"));
         assert!(content.contains("model_providers.existing"));
-        assert!(content.contains("model_providers.mux_7465616d2d6f70656e6169"));
+        assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
         assert!(content.contains("find-generic-password"));
     }
 
@@ -12637,7 +12667,7 @@ wire_api = "responses"
 
         assert_eq!(
             generated_pi_provider_id(&settings, &profile),
-            "open-router-openrouter-provider"
+            "arca_open-router-openrouter-provider"
         );
 
         let settings = crate::settings::Settings {
@@ -12647,7 +12677,10 @@ wire_api = "responses"
             )])),
             ..Default::default()
         };
-        assert_eq!(generated_pi_provider_id(&settings, &profile), "openrouter");
+        assert_eq!(
+            generated_pi_provider_id(&settings, &profile),
+            "arca_openrouter"
+        );
     }
 
     #[test]
@@ -12672,7 +12705,7 @@ wire_api = "responses"
         fs::create_dir_all(settings_path.parent().unwrap()).unwrap();
         fs::write(
             &settings_path,
-            r#"{"defaultProvider":"openrouter","defaultModel":"second-model"}"#,
+            r#"{"defaultProvider":"arca_openrouter","defaultModel":"second-model"}"#,
         )
         .unwrap();
         let provider = openrouter_provider("openrouter-provider", "OpenRouter");
@@ -12762,27 +12795,6 @@ wire_api = "responses"
         assert_eq!(
             models["providers"]["openrouter"]["models"],
             serde_json::json!([{ "id": "second-model", "name": "Second", "input": ["text"], "reasoning": true, "contextWindow": 128000, "maxTokens": 16000 }])
-        );
-    }
-
-    #[test]
-    fn pi_write_migrates_the_matching_legacy_managed_profile_provider() {
-        let th = TestHome::new("model-pi-legacy-provider");
-        let path = th.home.join(".pi/agent/models.json");
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        fs::write(
-            &path,
-            r#"{"providers":{"mux-team-openai":{"baseUrl":"https://gateway.example.test/v1","models":[{"id":"gpt-custom","name":"Team OpenAI"}]}}}"#,
-        )
-        .unwrap();
-
-        let profile = pi_profile("team-openai", "gpt-custom", "Team OpenAI");
-        let (_, content) = prepare_pi_models(&path, &profile, false).unwrap();
-        let models: Value = serde_json::from_str(&content).unwrap();
-        assert!(models["providers"].get("mux-team-openai").is_none());
-        assert_eq!(
-            models["providers"]["openrouter"]["models"][0]["id"],
-            "gpt-custom"
         );
     }
 
@@ -12939,8 +12951,8 @@ fork_secondary_model = "private-fork"
         assert!(content.contains("model.private"));
         assert!(content.contains("mcp_servers.keep"));
         assert!(content.contains("permission"));
-        assert!(content.contains("default = \"mux_7465616d2d6f70656e6169\""));
-        assert!(content.contains("model.mux_7465616d2d6f70656e6169"));
+        assert!(content.contains("default = \"arca_7465616d2d6f70656e6169\""));
+        assert!(content.contains("model.arca_7465616d2d6f70656e6169"));
         assert!(content.contains("api_backend = \"responses\""));
         assert!(content.contains("env_key = \"TEAM_OPENAI_API_KEY\""));
         assert!(content.contains("fork_secondary_model = \"private-fork\""));
@@ -12983,7 +12995,7 @@ fork_secondary_model = "private-fork"
         let content = fs::read_to_string(path).unwrap();
         assert!(content.contains("model.private"));
         assert!(content.contains("web_search = \"grok-4.5\""));
-        assert!(!content.contains("mux_7465616d2d6f70656e6169"));
+        assert!(!content.contains("arca_7465616d2d6f70656e6169"));
         assert!(!content.contains("fork_secondary_model"));
     }
 
@@ -13120,7 +13132,7 @@ url = "https://example.test/mcp"
         assert_eq!(result.files, vec![path.display().to_string()]);
         let content = fs::read_to_string(&path).unwrap();
         assert!(content.contains("mcp_servers.keep"));
-        assert!(content.contains("model_providers.mux_7465616d2d6f70656e6169"));
+        assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
         assert!(!content.contains("find-generic-password"));
         assert_eq!(
             load_settings()
@@ -13163,6 +13175,51 @@ url = "https://example.test/mcp"
     fn codex_provider_ids_do_not_collapse_profile_punctuation() {
         assert_ne!(arca_profile_id("a-b"), arca_profile_id("a_b"));
         assert_ne!(arca_profile_id("a.b"), arca_profile_id("a_b"));
+    }
+
+    #[test]
+    fn generated_opencode_provider_id_always_has_arca_prefix_and_bounded_ascii() {
+        let long_name = "通义千问 ".to_string() + &"a".repeat(200);
+        let mut provider = openrouter_provider("provider-1", &long_name);
+        provider.provider = "dashscope".into();
+        let mut profile = responses_profile();
+        profile.provider_id = Some(provider.id.clone());
+        let settings = crate::settings::Settings {
+            model_providers: Some(BTreeMap::from([(provider.id.clone(), provider)])),
+            ..Default::default()
+        };
+
+        let generated = generated_open_code_provider_id(&settings, &profile);
+        assert!(generated.starts_with("arca_"), "{generated}");
+        assert!(generated.is_ascii(), "{generated}");
+        assert!(generated.len() <= 128, "len={} for {generated}", generated.len());
+
+        let mut cjk_only_provider = openrouter_provider("provider-2", "通义千问");
+        cjk_only_provider.provider = "自定义".into();
+        let mut cjk_profile = responses_profile();
+        cjk_profile.id = "custom-cjk-id-测试".into();
+        cjk_profile.provider_id = Some(cjk_only_provider.id.clone());
+        let cjk_settings = crate::settings::Settings {
+            model_providers: Some(BTreeMap::from([(
+                cjk_only_provider.id.clone(),
+                cjk_only_provider,
+            )])),
+            ..Default::default()
+        };
+        let cjk_id = generated_open_code_provider_id(&cjk_settings, &cjk_profile);
+        assert!(cjk_id.starts_with("arca_"), "{cjk_id}");
+        assert!(cjk_id.is_ascii(), "{cjk_id}");
+        assert!(cjk_id.len() <= 128, "len={} for {cjk_id}", cjk_id.len());
+
+        let mut adopted = responses_profile();
+        adopted
+            .native_ids
+            .insert("opencode".into(), "my-custom-provider".into());
+        let preserved = materialize_profile_for_agent("opencode", &adopted).unwrap();
+        assert_eq!(
+            preserved.native_ids.get("opencode").map(String::as_str),
+            Some("my-custom-provider")
+        );
     }
 
     #[test]

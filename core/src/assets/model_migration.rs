@@ -139,7 +139,7 @@ impl ExtractedModel {
     }
 
     fn status(&self) -> (ModelAdoptionStatus, Option<String>) {
-        if self.agent_id == "qoder-desktop" && self.native_id.starts_with("mux_cli_") {
+        if self.agent_id == "qoder-desktop" && self.native_id.starts_with("arca_cli_") {
             return (ModelAdoptionStatus::Unsupported, Some("此条目由 Qoder CLI 管理，请在 CLI 页面操作".into()));
         }
         if matches!(self.credential, ExtractedCredential::Conflict) {
@@ -1580,7 +1580,13 @@ fn profile_owns_candidate(
 fn generated_native_id(settings: &Settings, agent_id: &str, profile: &ModelProfile) -> String {
     match agent_id {
         "claude-code" => "claude-settings".into(),
-        "qoder-cli" | "opencode-desktop" | "kilo-desktop" | "deepseek-harness" | "deepseek-harness-desktop" => crate::resources::model::adapters::native_provider_id(agent_id, profile),
+        "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => {
+            crate::resources::model::generated_open_code_provider_id(settings, profile)
+        }
+        "qoder-desktop" | "qoder-cli" | "zcode" | "crush" | "mistral-vibe" | "hermes" | "goose"
+        | "deepseek-harness" | "deepseek-harness-desktop" => {
+            crate::resources::model::adapters::native_provider_id(agent_id, profile)
+        }
         "pi" => crate::resources::model::generated_pi_provider_id(settings, profile),
         "qwen-code" => format!(
             "{}:{}:{}",
@@ -1593,13 +1599,7 @@ fn generated_native_id(settings: &Settings, agent_id: &str, profile: &ModelProfi
             profile.base_url
         ),
         "factory-droid" => format!("{}:{}", profile.model, profile.base_url),
-        _ => {
-            let mut id = String::from("mux_");
-            for byte in profile.id.bytes() {
-                id.push_str(&format!("{byte:02x}"));
-            }
-            id
-        }
+        _ => crate::resources::model::arca_profile_id(&profile.id),
     }
 }
 
@@ -1863,7 +1863,7 @@ mod tests {
     fn qoder_cli_observes_selection_and_matches_its_distinct_native_identity() {
         let home = TestHome::new("qoder-cli-discovery");
         let path = home.home.join("settings.json");
-        fs::write(&path, r#"{"providers":{"mux_cli_66697874757265":{"baseUrl":"https://example.invalid/v1","apiKey":"${QODER_FIXTURE_KEY}","protocol":"openai-responses","models":[{"model":"vendor/model"}]}},"model":{"name":"mux_cli_66697874757265/vendor/model"}}"#).unwrap();
+        fs::write(&path, r#"{"providers":{"arca_cli_66697874757265":{"baseUrl":"https://example.invalid/v1","apiKey":"${QODER_FIXTURE_KEY}","protocol":"openai-responses","models":[{"model":"vendor/model"}]}},"model":{"name":"arca_cli_66697874757265/vendor/model"}}"#).unwrap();
         let rows = extract_qoder("qoder-cli", &path).unwrap();
         assert_eq!(rows.len(), 1);
         assert!(rows[0].active);

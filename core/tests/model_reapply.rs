@@ -43,7 +43,7 @@ fn commit(plan: arca_core::consumption::AssetOperationPlan) {
 
 fn native_profile_id(profile_id: &str) -> String {
     format!(
-        "mux_{}",
+        "arca_{}",
         profile_id
             .bytes()
             .map(|byte| format!("{byte:02x}"))

@@ -169,17 +169,17 @@ pub fn target_files(
             .parent()
             .unwrap_or_else(|| Path::new("."))
             .join("custom_providers");
-        paths.extend(profile_ids.iter().filter_map(|profile_id| {
+        for profile_id in profile_ids {
             let provider = profiles
                 .get(profile_id)
                 .map(|profile| provider_id_for("goose", profile))
                 .unwrap_or_else(|| provider_id(profile_id));
-            safe_provider_id(&provider).then(|| {
-                crate::resources::mcp::scanner::collapse_home(
+            if safe_provider_id(&provider) {
+                paths.push(crate::resources::mcp::scanner::collapse_home(
                     &directory.join(format!("{provider}.json")).to_string_lossy(),
-                )
-            })
-        }));
+                ));
+            }
+        }
     }
     paths.sort();
     paths.dedup();
@@ -379,15 +379,7 @@ pub fn observe_active(
         .values()
         .filter(|profile| match agent_id {
             "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => {
-                let current_id = provider_id_for(agent_id, profile);
-                let legacy_id = provider_id(&profile.id);
-                let desktop_legacy_id = format!("mux_desktop_{}", &legacy_id[4..]);
-                let kilo_legacy_id = format!("mux_kilo_desktop_{}", &legacy_id[4..]);
-                selected == format!("{current_id}/{}", profile.model)
-                    || (matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop")
-                        && (selected == format!("{legacy_id}/{}", profile.model)
-                            || selected == format!("{desktop_legacy_id}/{}", profile.model)
-                            || selected == format!("{kilo_legacy_id}/{}", profile.model)))
+                selected == format!("{}/{}", provider_id_for(agent_id, profile), profile.model)
             }
             "qwen-code" => selected == format!("{}::{}", qwen_auth_type(profile), profile.model),
             "factory-droid" => selected == profile.model,
@@ -423,11 +415,7 @@ fn yaml_string(path: &Path, keys: &[&str]) -> Option<String> {
 }
 
 fn provider_id(profile_id: &str) -> String {
-    let mut encoded = String::from("mux_");
-    for byte in profile_id.bytes() {
-        encoded.push_str(&format!("{byte:02x}"));
-    }
-    encoded
+    super::arca_profile_id(profile_id)
 }
 
 /// Display name of the Arca Provider that owns this profile (falls back to the
@@ -441,23 +429,20 @@ fn provider_id_for(agent_id: &str, profile: &ModelProfile) -> String {
         .native_ids
         .get(agent_id)
         .cloned()
-        .filter(|id| {
-            if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
-                id != &provider_id(&profile.id) && !id.starts_with("mux_desktop_") && !id.starts_with("mux_kilo_desktop_")
-            } else {
-                true
-            }
-        })
         .unwrap_or_else(|| {
-            if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
+            if matches!(
+                agent_id,
+                "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop"
+            ) {
                 super::generated_open_code_provider_id(&crate::settings::load_settings(), profile)
-            } else if agent_id == "kilo-desktop" {
-                format!("mux_kilo_desktop_{}", &provider_id(&profile.id)[4..])
             } else if agent_id == "qoder-cli" {
-                format!("mux_cli_{}", &provider_id(&profile.id)[4..])
+                super::arca_prefixed_profile_id("arca_cli_", &profile.id)
             } else if matches!(agent_id, "deepseek-harness" | "deepseek-harness-desktop") {
                 // Keep native identities bounded even for long central IDs.
-                format!("arca_{}", &hex::encode(Sha256::digest(profile.id.as_bytes()))[..24])
+                format!(
+                    "arca_{}",
+                    &hex::encode(Sha256::digest(profile.id.as_bytes()))[..24]
+                )
             } else {
                 provider_id(&profile.id)
             }
@@ -589,18 +574,6 @@ fn open_code_package(protocol: &ModelProtocol) -> Result<&'static str, String> {
     })
 }
 
-fn merge_missing_json(target: &mut Value, source: &Value) {
-    if let (Some(target), Some(source)) = (target.as_object_mut(), source.as_object()) {
-        for (key, value) in source {
-            if let Some(existing) = target.get_mut(key) {
-                merge_missing_json(existing, value);
-            } else {
-                target.insert(key.clone(), value.clone());
-            }
-        }
-    }
-}
-
 fn open_code_provider(
     profile: &ModelProfile,
     existing: Option<Value>,
@@ -713,7 +686,7 @@ fn prepare_open_code(
     })?;
     ensure_unique(&providers, path, "provider")?;
     let native_id = provider_id_for(agent_id, profile);
-    let mut existing = providers
+    let existing = providers
         .get(&native_id)
         .and_then(|property| property.value())
         .and_then(|value| value.to_serde_value());
@@ -727,41 +700,6 @@ fn prepare_open_code(
                 .is_some_and(|url| url.trim_end_matches('/') != profile.base_url.trim_end_matches('/'));
             if incompatible_package || incompatible_endpoint {
                 return Err(format!("provider_name_conflict: OpenCode provider '{native_id}' already uses another connection; refusing to overwrite it"));
-            }
-        }
-    }
-    let legacy_ids = [
-        provider_id(&profile.id),
-        format!("mux_desktop_{}", &provider_id(&profile.id)[4..]),
-        format!("mux_kilo_desktop_{}", &provider_id(&profile.id)[4..]),
-    ];
-    if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
-        for legacy_id in legacy_ids {
-            if legacy_id != native_id {
-                if let Some(mut legacy) = providers.get(&legacy_id)
-                    .and_then(|property| property.value()).and_then(|value| value.to_serde_value()) {
-                    let mut inherited = legacy.clone();
-                    let models = legacy.get_mut("models").and_then(Value::as_object_mut)
-                        .ok_or_else(|| "provider_migration_conflict: Legacy OpenCode models is not an object".to_string())?;
-                    if let Some(model) = models.remove(&profile.model) {
-                        let empty = models.is_empty();
-                        inherited["models"] = serde_json::json!({ (profile.model.clone()): model });
-                        if let Some(current) = existing.as_mut() {
-                            merge_missing_json(current, &inherited);
-                        } else {
-                            existing = Some(inherited);
-                        }
-                        set_json(&providers, &legacy_id, if empty { None } else { Some(legacy) });
-                        let old_selection = format!("{legacy_id}/{}", profile.model);
-                        for key in ["model", "small_model"] {
-                            let value = object.get(key).and_then(|property| property.value())
-                                .and_then(|value| value.to_serde_value());
-                            if value.as_ref().and_then(Value::as_str) == Some(old_selection.as_str()) {
-                                set_json(&object, key, Some(Value::String(format!("{native_id}/{}", profile.model))));
-                            }
-                        }
-                    }
-                }
             }
         }
     }
@@ -793,55 +731,51 @@ fn prepare_clear_open_code(
     let (root, original) = read_jsonc(path)?;
     let object = root_object(&root, path)?;
     ensure_unique(&object, path, "$root")?;
-    let mut ids = vec![provider_id_for(agent_id, profile)];
-    let legacy = provider_id(&profile.id);
-    let desktop_legacy = format!("mux_desktop_{}", &legacy[4..]);
-    let kilo_legacy = format!("mux_kilo_desktop_{}", &legacy[4..]);
-    if matches!(agent_id, "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
-        if !ids.contains(&legacy) { ids.push(legacy); }
-        if !ids.contains(&desktop_legacy) { ids.push(desktop_legacy); }
-        if !ids.contains(&kilo_legacy) { ids.push(kilo_legacy); }
-    }
-    for provider_id in ids {
-        if let Some(providers) = object.object_value("provider") {
-            ensure_unique(&providers, path, "provider")?;
-            if let Some(property) = providers.get(&provider_id) {
-                let mut provider = property
-                    .value()
-                    .and_then(|value| value.to_serde_value())
-                    .and_then(|value| value.as_object().cloned())
-                    .ok_or_else(|| {
-                        format!(
-                            "refusing to modify {}: OpenCode provider entry is not an object",
-                            path.display()
-                        )
-                    })?;
-                let mut models = provider
-                    .remove("models")
-                    .and_then(|value| value.as_object().cloned())
-                    .ok_or_else(|| {
-                        format!(
-                            "refusing to modify {}: OpenCode provider models is not an object",
-                            path.display()
-                        )
-                    })?;
-                models.remove(&profile.model);
-                if models.is_empty() {
-                    set_json(&providers, &provider_id, None);
-                } else {
-                    provider.insert("models".into(), Value::Object(models));
-                    set_json(&providers, &provider_id, Some(Value::Object(provider)));
-                }
+    let provider_id = provider_id_for(agent_id, profile);
+    if let Some(providers) = object.object_value("provider") {
+        ensure_unique(&providers, path, "provider")?;
+        if let Some(property) = providers.get(&provider_id) {
+            let mut provider = property
+                .value()
+                .and_then(|value| value.to_serde_value())
+                .and_then(|value| value.as_object().cloned())
+                .ok_or_else(|| {
+                    format!(
+                        "refusing to modify {}: OpenCode provider entry is not an object",
+                        path.display()
+                    )
+                })?;
+            let mut models = provider
+                .remove("models")
+                .and_then(|value| value.as_object().cloned())
+                .ok_or_else(|| {
+                    format!(
+                        "refusing to modify {}: OpenCode provider models is not an object",
+                        path.display()
+                    )
+                })?;
+            models.remove(&profile.model);
+            if models.is_empty() {
+                set_json(&providers, &provider_id, None);
+            } else {
+                provider.insert("models".into(), Value::Object(models));
+                set_json(&providers, &provider_id, Some(Value::Object(provider)));
             }
         }
-        let selected = format!("{provider_id}/{}", profile.model);
-        let pointer_keys: &[&str] = if matches!(agent_id, "opencode" | "opencode-desktop") { &["model", "small_model"] } else { &["model"] };
-        for key in pointer_keys {
-            let value = object.get(key).and_then(|property| property.value())
-                .and_then(|value| value.to_serde_value());
-            if value.as_ref().and_then(Value::as_str) == Some(selected.as_str()) {
-                set_json(&object, key, None);
-            }
+    }
+    let selected = format!("{provider_id}/{}", profile.model);
+    let pointer_keys: &[&str] = if matches!(agent_id, "opencode" | "opencode-desktop") {
+        &["model", "small_model"]
+    } else {
+        &["model"]
+    };
+    for key in pointer_keys {
+        let value = object
+            .get(key)
+            .and_then(|property| property.value())
+            .and_then(|value| value.to_serde_value());
+        if value.as_ref().and_then(Value::as_str) == Some(selected.as_str()) {
+            set_json(&object, key, None);
         }
     }
     Ok(prepared_json(path, original, root))
@@ -1078,14 +1012,11 @@ fn prepare_crush(
     let (root, original) = read_jsonc(path)?;
     let object = root_object(&root, path)?;
     ensure_unique(&object, path, "$root")?;
+    let id = provider_id_for("crush", profile);
     let providers = object
         .object_value_or_create("providers")
         .ok_or_else(|| "Crush providers is not an object".to_string())?;
-    set_json(
-        &providers,
-        &provider_id_for("crush", profile),
-        Some(crush_provider(profile)),
-    );
+    set_json(&providers, &id, Some(crush_provider(profile)));
     if active {
         let models = object
             .object_value_or_create("models")
@@ -1093,23 +1024,24 @@ fn prepare_crush(
         set_json(
             &models,
             "large",
-            Some(json!({"model": profile.model, "provider": provider_id_for("crush", profile)})),
+            Some(json!({"model": profile.model, "provider": id})),
         );
     }
     Ok(prepared_json(path, original, root))
 }
 
 fn selected_model_matches(value: &Value, profile: &ModelProfile) -> bool {
-    value.get("provider").and_then(Value::as_str)
-        == Some(provider_id_for("crush", profile).as_str())
+    let id = provider_id_for("crush", profile);
+    value.get("provider").and_then(Value::as_str) == Some(id.as_str())
         && value.get("model").and_then(Value::as_str) == Some(profile.model.as_str())
 }
 
 fn prepare_clear_crush(path: &Path, profile: &ModelProfile) -> Result<PreparedModelFile, String> {
     let (root, original) = read_jsonc(path)?;
     let object = root_object(&root, path)?;
+    let id = provider_id_for("crush", profile);
     if let Some(providers) = object.object_value("providers") {
-        set_json(&providers, &provider_id_for("crush", profile), None);
+        set_json(&providers, &id, None);
     }
     if let Some(models) = object.object_value("models") {
         let slots: Vec<String> = models
@@ -1655,9 +1587,7 @@ fn prepare_clear_yaml_model(
             validate_yaml_mapping_section(&root, "model_aliases", path)?;
             yaml_text_remove_mapping_entry(&mut content, "providers", &id)?;
             yaml_text_remove_mapping_entry(&mut content, "model_aliases", &id)?;
-            let active = state["model"]["provider"]
-                .as_str()
-                .is_some_and(|value| value == format!("custom:{id}"));
+            let active = state["model"]["provider"].as_str() == Some(&format!("custom:{id}"));
             if active {
                 let mut owned = vec!["default", "provider"];
                 if state["model"]["base_url"].as_str() == Some(profile.base_url.as_str()) {
@@ -2301,7 +2231,7 @@ mod tests {
             let content = files[0].content.as_deref().unwrap();
             assert!(content.contains("// keep me"));
             assert!(content.contains("{env:WORK_API_KEY}"));
-            assert!(content.contains("mux_776f726b/vendor/model"));
+            assert!(content.contains("arca_776f726b/vendor/model"));
             fs::remove_file(path).unwrap();
         }
     }
@@ -2446,7 +2376,7 @@ mod tests {
         assert_eq!(value["models"]["small"]["model"], "tiny");
         assert_eq!(value["models"]["large"]["model"], "vendor/model");
         assert_eq!(
-            value["providers"]["mux_776f726b"]["api_key"],
+            value["providers"]["arca_776f726b"]["api_key"],
             "$WORK_API_KEY"
         );
         fs::remove_file(path).unwrap();
@@ -2465,7 +2395,7 @@ mod tests {
         .unwrap()[0];
         let content = file.content.as_deref().unwrap();
         assert!(content.contains("# keep me"));
-        assert!(content.contains("active_model = \"mux_776f726b\""));
+        assert!(content.contains("active_model = \"arca_776f726b\""));
         assert!(content.contains("api_key_env_var = \"WORK_API_KEY\""));
         fs::remove_file(path).unwrap();
     }
@@ -2546,7 +2476,7 @@ model:
         );
         assert!(content.contains("key_env: WORK_API_KEY"), "{content}");
         assert!(
-            content.contains("provider: custom:mux_776f726b"),
+            content.contains("provider: custom:arca_776f726b"),
             "{content}"
         );
         assert!(!content.contains("model:\n  base_url:"), "{content}");
@@ -2569,7 +2499,7 @@ model:
             &path,
             r#"auxiliary:
   compression:
-    provider: custom:mux_776f726b
+    provider: custom:arca_776f726b
     model: gpt-custom
     timeout: 90 # keep task policy
   vision:
@@ -2578,15 +2508,15 @@ model:
 providers:
   external:
     api: https://external.example/v1 # keep external provider
-  mux_776f726b:
+  arca_776f726b:
     api: https://gateway.example.test/v1
 model_aliases:
-  mux_776f726b:
+  arca_776f726b:
     model: gpt-custom
-    provider: custom:mux_776f726b
+    provider: custom:arca_776f726b
 model:
   default: gpt-custom
-  provider: custom:mux_776f726b
+  provider: custom:arca_776f726b
   temperature: 0.2 # keep model policy
 "#,
         )
@@ -2662,25 +2592,25 @@ extensions: {}
 providers:
   external:
     enabled: true # keep external provider
-  mux_776f726b:
+  arca_776f726b:
     enabled: true
     model: gpt-custom
     configured: true
-active_provider: mux_776f726b
+active_provider: arca_776f726b
 other_policy: strict # keep policy
 "#,
         )
         .unwrap();
         let profile = profile(ModelProtocol::OpenaiCompletions);
         let provider_path = goose_provider_path(&path, &profile).unwrap();
-        fs::write(&provider_path, "{\"name\":\"mux_776f726b\"}\n").unwrap();
+        fs::write(&provider_path, "{\"name\":\"arca_776f726b\"}\n").unwrap();
 
         let files = prepare_clear("goose", std::slice::from_ref(&path), &profile).unwrap();
         assert_eq!(files.len(), 2);
         let content = files[0].content.as_deref().unwrap();
         let value: Value = serde_yaml::from_str(content).unwrap();
         assert_eq!(value["providers"]["external"]["enabled"], true);
-        assert!(value["providers"].get("mux_776f726b").is_none());
+        assert!(value["providers"].get("arca_776f726b").is_none());
         assert!(value.get("active_provider").is_none());
         assert_eq!(value["other_policy"], "strict");
         assert!(content.contains("# keep root comment"));
@@ -2692,7 +2622,7 @@ other_policy: strict # keep policy
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
-    fn opencode_desktop_uses_readable_provider_and_migrates_legacy_desktop_entries() {
+    fn opencode_desktop_uses_readable_provider_and_preserves_policy() {
         let home = crate::testenv::TestHome::new("opencode-desktop-models");
         let path = home.home.join("opencode.json");
         let mut managed = profile(ModelProtocol::OpenaiCompletions);
@@ -2703,17 +2633,12 @@ other_policy: strict # keep policy
         let paths = std::slice::from_ref(&path);
         let desktop_id = native_provider_id("opencode-desktop", &managed);
         assert_eq!(desktop_id, "ai-studio");
-        let legacy_id = format!("mux_desktop_{}", &provider_id(&managed.id)[4..]);
-        std::fs::write(&path, format!(
-            "{{\n// user policy\n\"permission\": {{\"edit\": \"ask\"}},\n\"provider\": {{\"{legacy_id}\": {{\"npm\": \"@ai-sdk/openai-compatible\", \"options\": {{\"baseURL\": \"https://example.invalid/v1\"}}, \"models\": {{\"{}\": {{\"name\": \"Qwen\"}}}}}}}},\n\"model\": \"{legacy_id}/{}\"\n}}",
-            managed.model, managed.model
-        )).unwrap();
+        std::fs::write(&path, "{\n// user policy\n\"permission\": {\"edit\": \"ask\"}\n}").unwrap();
         let prepared = prepare_apply("opencode-desktop", paths, &managed, true).unwrap();
         let content = prepared[0].content.as_ref().unwrap();
         assert!(content.contains("// user policy"));
         std::fs::write(&path, content).unwrap();
         let after = read_jsonc(&path).unwrap().0.to_serde_value().unwrap();
-        assert!(after["provider"].get(&legacy_id).is_none());
         assert_eq!(after["provider"]["ai-studio"]["name"], "AI Studio");
         assert_eq!(after["model"], "ai-studio/qwen-test");
         assert_eq!(after["permission"], serde_json::json!({"edit": "ask"}));
@@ -2723,7 +2648,6 @@ other_policy: strict # keep policy
         std::fs::write(&path, cleared_content).unwrap();
         let final_json = read_jsonc(&path).unwrap().0.to_serde_value().unwrap();
         assert!(final_json["provider"].get("ai-studio").is_none());
-        assert!(final_json["provider"].get(&legacy_id).is_none());
     }
 
     #[test]
@@ -2754,5 +2678,4 @@ other_policy: strict # keep policy
         assert!(after["provider"].get(&desktop_id).is_none());
         assert_eq!(fs::read_to_string(cli_path).unwrap(), "{\"model\":\"external/cli-model\"}");
     }
-
 }
