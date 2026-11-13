@@ -12,6 +12,83 @@ const OFFICIAL_SOURCE = {
   name: "Arca 精选",
 };
 
+/** Shared subscription form fields reused across the standalone dialog and Add MCP editor. */
+export function SubscriptionFields({
+  url,
+  name,
+  disabled = false,
+  autoFocus = false,
+  urlLabel,
+  nameLabel,
+  namePlaceholder,
+  presetLabel = "使用 Arca 精选",
+  onUrlChange,
+  onNameChange,
+  onUsePreset,
+  onSubmit,
+}: {
+  url: string;
+  name: string;
+  disabled?: boolean;
+  autoFocus?: boolean;
+  urlLabel?: string;
+  nameLabel?: string;
+  namePlaceholder?: string;
+  presetLabel?: string;
+  onUrlChange: (url: string) => void;
+  onNameChange: (name: string) => void;
+  onUsePreset?: () => void;
+  onSubmit?: () => void;
+}) {
+  return (
+    <div className="arca-subscription-form">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => {
+          if (onUsePreset) onUsePreset();
+          else {
+            onUrlChange(OFFICIAL_SOURCE.url);
+            onNameChange(OFFICIAL_SOURCE.name);
+          }
+        }}
+        className="arca-subscription-preset"
+        title={presetLabel}
+      >
+        <SparklesIcon className="w-4 h-4" />
+        <span>{presetLabel}</span>
+      </button>
+      <label className="arca-dialog-field">
+        <span><LinkIcon className="w-4 h-4" />{urlLabel ?? "配置 URL"} <i>*</i></span>
+        <ImeInput
+          autoFocus={autoFocus}
+          disabled={disabled}
+          className="arca-dialog-input arca-dialog-input-mono"
+          placeholder="https://example.com/mcp.json"
+          value={url}
+          onChange={(e) => onUrlChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onSubmit?.();
+          }}
+        />
+      </label>
+      <label className="arca-dialog-field">
+        <span>{nameLabel ?? "名称"}</span>
+        <ImeInput
+          disabled={disabled}
+          className="arca-dialog-input"
+          placeholder={namePlaceholder ?? "留空则用 URL 主机名"}
+          value={name}
+          onChange={(e) => onNameChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onSubmit?.();
+          }}
+        />
+      </label>
+    </div>
+  );
+}
+
 /** Add a remote MCP config source, optionally using the Arca curated preset. */
 export function SubscribeDialog({
   state,
@@ -59,38 +136,15 @@ export function SubscribeDialog({
         </>
       }
     >
-      <div className="arca-subscription-form">
-        <button
-          type="button"
-          onClick={() => { setUrl(OFFICIAL_SOURCE.url); setName(OFFICIAL_SOURCE.name); }}
-          className="arca-subscription-preset"
-          title="使用 Arca 精选"
-        >
-          <SparklesIcon className="w-4 h-4" />
-          <span>使用 Arca 精选</span>
-        </button>
-        <label className="arca-dialog-field">
-          <span><LinkIcon className="w-4 h-4" />配置 URL <i>*</i></span>
-          <ImeInput
-            autoFocus
-            className="arca-dialog-input arca-dialog-input-mono"
-            placeholder="https://example.com/mcp.json"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
-          />
-        </label>
-        <label className="arca-dialog-field">
-          <span>名称</span>
-          <ImeInput
-            className="arca-dialog-input"
-            placeholder="留空则用 URL 主机名"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
-          />
-        </label>
-      </div>
+      <SubscriptionFields
+        url={url}
+        name={name}
+        disabled={busy}
+        autoFocus
+        onUrlChange={setUrl}
+        onNameChange={setName}
+        onSubmit={submit}
+      />
     </DialogShell>
   );
 }

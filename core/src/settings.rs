@@ -53,6 +53,8 @@ pub struct UiSettings {
     pub locale: Option<String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub mcp_icons: BTreeMap<String, McpIconPreference>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub mcp_tags: BTreeMap<String, Vec<String>>,
     #[serde(flatten)]
     pub extra: BTreeMap<String, Value>,
 }

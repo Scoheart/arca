@@ -1128,26 +1128,59 @@ body {
   color: var(--text-secondary); font: 650 10px/1 var(--font-mono); letter-spacing: .04em; text-overflow: ellipsis; white-space: nowrap;
 }
 :where(.arca-registry-workspace, .arca-models-workspace, .arca-skill-workspace) .arca-asset-list-status { display: flex; min-width: 0; flex: 0 0 auto; align-items: center; }
+.arca-registry-workspace .arca-mcp-card { height: 100%; }
 .arca-registry-workspace .arca-mcp-list-row {
-  display: flex; flex-direction: column; align-items: stretch; justify-content: space-between;
-  min-height: 114px; gap: 10px; padding: 13px 15px 10px;
+  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
+  height: 100%; min-height: 102px; gap: 9px; padding: 13px 14px 10px;
   transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 .arca-registry-workspace .arca-mcp-list-row:hover {
   transform: translateY(-1px);
 }
-.arca-mcp-card:has(.arca-model-card-actions) .arca-mcp-list-row .arca-asset-list-identity {
-  padding-right: 36px;
+.arca-mcp-card:has(.arca-model-card-actions[data-count="2"]) .arca-mcp-list-row .arca-asset-list-identity {
+  padding-right: 60px;
+}
+.arca-mcp-card:has(.arca-model-card-actions[data-count="1"]) .arca-mcp-list-row .arca-asset-list-identity {
+  padding-right: 32px;
+}
+.arca-mcp-card .arca-model-card-actions {
+  top: 11px; right: 11px; gap: 4px; opacity: .76; transition: opacity .14s ease;
+}
+.arca-mcp-card .arca-model-card-action {
+  width: 26px; height: 26px; border-radius: 6px;
+}
+.arca-mcp-card:is(:hover, :focus-within) .arca-model-card-actions,
+.arca-mcp-card:has(.arca-mcp-list-row[data-selected="true"]) .arca-model-card-actions {
+  opacity: 1;
 }
 .arca-mcp-card-top {
-  display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 10px;
+  display: flex; min-width: 0; align-items: flex-start; gap: 10px;
 }
 .arca-mcp-card-top .arca-asset-list-identity { flex: 1; min-width: 0; align-items: center; gap: 11px; }
+.arca-mcp-card-top .arca-asset-list-copy > code { color: var(--text-tertiary); font-size: 10.5px; margin-top: 2px; }
+.arca-mcp-card-tags {
+  display: flex; min-width: 0; flex-wrap: nowrap; align-items: center; gap: 5px;
+  overflow: hidden; margin-top: -1px;
+}
+.arca-mcp-tag-chip {
+  display: inline-flex; min-width: 0; max-width: 116px; height: 20px; align-items: center; padding: 0 7px;
+  border: 1px solid color-mix(in srgb, var(--color-blue) 18%, var(--border-subtle));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-blue) 7%, var(--surface-item));
+  color: var(--color-blue); font: 560 10.5px/1 var(--font-sans);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.arca-mcp-tag-more {
+  flex: 0 0 auto; color: var(--text-tertiary); font: 550 10px/1 var(--font-sans); font-variant-numeric: tabular-nums;
+}
 .arca-mcp-card-meta {
   display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 10px;
-  padding-top: 8px; border-top: 1px solid var(--border-subtle);
+  margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-subtle);
 }
-.arca-mcp-card-tags { display: flex; min-width: 0; flex: 1; align-items: center; gap: 7px; }
+.arca-mcp-card-meta-left {
+  display: flex; min-width: 0; flex: 1; align-items: center; gap: 6px;
+}
+.arca-mcp-card-dot { flex: 0 0 auto; color: var(--text-tertiary); font-size: 10px; }
 .arca-mcp-card-agents { display: inline-flex; flex: 0 0 auto; align-items: center; }
 .arca-models-workspace :is(.arca-model-list-header, .arca-model-list-row) {
   min-height: 118px;
@@ -1403,7 +1436,7 @@ body {
   overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
 }
 .arca-dialog-shell[data-dialog-kind="picker"] .arca-dialog-shell-body {
-  display: flex; flex-direction: column; overflow-y: var(--arca-picker-overflow-y, hidden);
+  display: flex; flex-direction: column; overflow: hidden; overflow-y: var(--arca-picker-overflow-y, hidden);
 }
 .arca-dialog-shell-footer {
   display: flex; min-height: var(--arca-dialog-footer-height); flex: 0 0 auto; flex-wrap: wrap; align-items: center;
@@ -1467,9 +1500,26 @@ body {
 .arca-dialog-input-mono { font-family: var(--font-mono); }
 .arca-paste-config-input { min-height: 230px; padding: 10px 11px; resize: vertical; font: 10px/1.55 var(--font-mono); }
 .arca-dialog-mcp-editor .arca-dialog-shell-footer-start { max-width: 31ch; }
-.arca-mcp-add-modes { width: fit-content; margin-bottom: 18px; }
-.arca-mcp-add-modes .arca-seg-item { min-height: 30px; padding-inline: 16px; font-size: 12px; }
+.arca-mcp-add-modes { display: inline-flex; flex-wrap: wrap; max-width: 100%; width: fit-content; margin-bottom: 18px; }
+.arca-mcp-add-modes .arca-seg-item { min-height: 30px; padding-inline: 14px; font-size: 12px; }
 .arca-mcp-add-modes .arca-seg-item[aria-pressed="true"] { background: var(--surface-selected); color: var(--color-blue); }
+.arca-mcp-import-panel {
+  display: flex; align-items: flex-start; gap: 14px; padding: 18px;
+  border: 1px dashed var(--border-hairline); border-radius: 12px; background: var(--surface-section);
+}
+.arca-mcp-import-icon {
+  display: flex; width: 42px; height: 42px; flex: 0 0 42px; align-items: center; justify-content: center;
+  border-radius: 10px; background: var(--surface-selected); color: var(--color-blue);
+}
+.arca-mcp-import-copy { display: grid; gap: 6px; min-width: 0; }
+.arca-mcp-import-copy strong { color: var(--text-primary); font-size: 13px; font-weight: 650; }
+.arca-mcp-import-copy p { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.arca-mcp-import-formats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.arca-mcp-import-formats > span {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 7px;
+  border: 1px solid var(--border-subtle); border-radius: 5px; background: var(--surface-asset);
+  color: var(--text-secondary); font: 600 10px/1 var(--font-mono);
+}
 .arca-mcp-form.arca-mcp-editor-form { min-width: 0; margin: 0; padding: 0; gap: 16px; border: 0; overflow: visible; }
 .arca-mcp-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .arca-mcp-connection-fields { display: grid; min-width: 0; gap: 16px; }
@@ -1534,6 +1584,82 @@ body {
 .arca-mcp-paste-result code { color: var(--text-tertiary); font: 10px/1 var(--font-mono); }
 .arca-mcp-import-action { color: var(--color-blue); font-size: 10px; }
 .arca-mcp-import-action[data-update] { color: var(--text-secondary); }
+.arca-mcp-tag-editor { display: grid; gap: 9px; }
+.arca-mcp-tag-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.arca-mcp-tag-pill {
+  display: inline-flex; max-width: 100%; height: 24px; align-items: center; gap: 5px; padding: 0 6px 0 8px;
+  border: 1px solid color-mix(in srgb, var(--color-blue) 22%, var(--border-hairline));
+  border-radius: 999px; background: color-mix(in srgb, var(--color-blue) 8%, var(--surface-control));
+  color: var(--color-blue); font: 560 11px/1 var(--font-sans);
+}
+.arca-mcp-tag-pill > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arca-mcp-tag-pill-remove {
+  display: inline-flex; width: 16px; height: 16px; align-items: center; justify-content: center;
+  border: 0; border-radius: 999px; background: transparent; color: currentColor; cursor: pointer; opacity: .72;
+}
+.arca-mcp-tag-pill-remove:hover:not(:disabled) { opacity: 1; background: color-mix(in srgb, var(--color-blue) 14%, transparent); }
+.arca-mcp-tag-input-row { display: flex; align-items: center; gap: 8px; }
+.arca-mcp-tag-input-row .arca-dialog-input { flex: 1; min-width: 0; height: 34px; border-radius: 8px; padding-inline: 10px; font-size: 12px; }
+.arca-mcp-tag-add-btn { height: 34px; min-height: 34px; padding-inline: 11px; flex-shrink: 0; }
+.arca-mcp-tag-suggestions { display: grid; gap: 6px; }
+.arca-mcp-tag-suggestions-label { color: var(--text-tertiary); font-size: 11px; font-weight: 500; }
+.arca-mcp-tag-suggestions-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.arca-mcp-tag-suggestion {
+  display: inline-flex; height: 24px; align-items: center; gap: 4px; padding: 0 9px;
+  border: 1px solid var(--border-hairline); border-radius: 999px; background: var(--surface-control);
+  color: var(--text-secondary); font-size: 11px; cursor: pointer;
+  transition: border-color .12s ease, color .12s ease, background-color .12s ease;
+}
+.arca-mcp-tag-suggestion:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-blue) 42%, var(--border-hairline)); color: var(--color-blue);
+}
+.arca-mcp-tag-suggestion[data-selected="true"] {
+  border-color: var(--color-blue); background: var(--surface-selected); color: var(--color-blue); font-weight: 600;
+}
+.arca-mcp-tag-dialog-body { display: grid; gap: 14px; }
+.arca-mcp-tag-target {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-section);
+}
+.arca-mcp-tag-target-copy { display: grid; min-width: 0; gap: 2px; }
+.arca-mcp-tag-target-copy strong { color: var(--text-primary); font-size: 13px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arca-mcp-tag-target-copy code { color: var(--text-tertiary); font: 10.5px/1.3 var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arca-mcp-tag-manager { display: grid; gap: 12px; }
+.arca-mcp-tag-manager .arca-dialog-input { height: 34px; border-radius: 8px; padding-inline: 10px; font-size: 12px; }
+.arca-mcp-tag-manager-list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--text-secondary); font-size: 12px; font-weight: 600; }
+.arca-mcp-tag-manager-bulk { display: flex; align-items: center; gap: 10px; }
+.arca-mcp-tag-bulk-btn {
+  padding: 2px 0; border: 0; background: transparent; color: var(--color-blue); font-size: 11px; font-weight: 500; cursor: pointer;
+}
+.arca-mcp-tag-bulk-btn:disabled { color: var(--text-tertiary); cursor: default; }
+.arca-mcp-tag-checklist {
+  display: grid; max-height: 240px; overflow-y: auto; gap: 4px; padding: 6px;
+  border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-section);
+}
+.arca-mcp-tag-check-row {
+  display: flex; width: 100%; min-width: 0; align-items: center; gap: 10px; padding: 7px 9px;
+  border: 1px solid transparent; border-radius: 8px; background: transparent; text-align: left; cursor: pointer;
+  transition: background-color .12s ease, border-color .12s ease;
+}
+.arca-mcp-tag-check-row:hover:not(:disabled) { background: var(--surface-asset); }
+.arca-mcp-tag-check-row[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--color-blue) 28%, var(--border-hairline));
+  background: color-mix(in srgb, var(--surface-selected) 58%, var(--surface-asset));
+}
+.arca-mcp-tag-checkbox {
+  display: inline-flex; width: 16px; height: 16px; flex: 0 0 16px; align-items: center; justify-content: center;
+  border: 1px solid var(--border-hairline); border-radius: 4px; background: var(--surface-control); color: #fff;
+}
+.arca-mcp-tag-check-row[data-selected="true"] .arca-mcp-tag-checkbox {
+  border-color: var(--color-blue); background: var(--color-blue);
+}
+.arca-mcp-tag-check-copy { display: grid; flex: 1; min-width: 0; gap: 1px; }
+.arca-mcp-tag-check-copy strong { color: var(--text-primary); font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arca-mcp-tag-check-copy span { color: var(--text-tertiary); font: 10px/1.2 var(--font-mono); }
+.arca-mcp-tag-check-existing {
+  flex: 0 0 auto; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-tertiary); font-size: 10.5px;
+}
 @media (max-height: 640px) {
   .arca-mcp-paste-fields .arca-paste-config-input { min-height: 180px; }
 }
@@ -2380,8 +2506,13 @@ body {
 .arca-agent-state { display: flex; height: 100%; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 12px; }
 .arca-agent-page { height: 100%; min-height: 0; overflow-y: auto; background: var(--surface-workspace); }
 .arca-agent-shell { width: min(100%, 1180px); margin: 0 auto; padding: 18px 24px 32px; }
+.arca-agent-page:has(.arca-agent-workbench) {
+  overflow: hidden;
+  height: 100%;
+  min-height: 0;
+}
 .arca-agent-page:has(.arca-agent-workbench) .arca-agent-shell {
-  display: flex; flex-direction: column; width: 100%; max-width: none; min-height: 100%; padding: 0;
+  display: flex; flex-direction: column; width: 100%; max-width: none; height: 100%; min-height: 0; padding: 0; overflow: hidden;
 }
 .arca-agent-context { padding: 20px; border: 1px solid var(--border-hairline); border-radius: var(--radius-canvas); background: var(--surface-asset); }
 .arca-agent-header {

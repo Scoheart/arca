@@ -15,6 +15,8 @@ use std::path::{Component, Path, PathBuf};
 
 pub const SUPPORTED_UI_LOCALES: [&str; 2] = ["zh-CN", "en-US"];
 pub const MAX_MCP_ICON_BYTES: usize = 1_048_576;
+pub const MAX_MCP_TAGS_PER_ASSET: usize = 20;
+pub const MAX_MCP_TAG_LEN: usize = 48;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct McpIconDefinition { pub id: String, pub tone: String }
@@ -189,6 +191,59 @@ pub fn reset_mcp_icon(
     list_mcp_icon_preferences()
 }
 
+pub fn list_mcp_tags() -> Result<BTreeMap<String, Vec<String>>, String> {
+    super::gate::read(|| {
+        let settings = load_settings_strict().map_err(|error| error.to_string())?;
+        Ok(mcp_tag_views(&settings))
+    })
+}
+
+pub fn set_mcp_tags(
+    asset_key: String,
+    tags: Vec<String>,
+) -> Result<BTreeMap<String, Vec<String>>, String> {
+    set_mcp_tags_batch(BTreeMap::from([(asset_key, tags)]))
+}
+
+pub fn set_mcp_tags_batch(
+    updates: BTreeMap<String, Vec<String>>,
+) -> Result<BTreeMap<String, Vec<String>>, String> {
+    super::gate::write_independent(|| {
+        let catalog = crate::resources::mcp::registry::read_registry_all();
+        let current_keys: BTreeSet<String> =
+            catalog.iter().map(|item| item.entry.key()).collect();
+        let source_backed_keys: BTreeSet<String> = catalog
+            .iter()
+            .filter(|item| !item.entry.tags.is_empty())
+            .map(|item| item.entry.key())
+            .collect();
+
+        let mut normalized_updates = Vec::with_capacity(updates.len());
+        for (asset_key, tags) in updates {
+            if !current_keys.contains(&asset_key) {
+                return Err(format!("unknown MCP asset: {asset_key}"));
+            }
+            let normalized = normalize_mcp_tags(tags)?;
+            let keep_empty = source_backed_keys.contains(&asset_key);
+            normalized_updates.push((asset_key, normalized, keep_empty));
+        }
+
+        mutate_settings_checked(move |settings| {
+            let ui = settings.ui.get_or_insert_with(UiSettings::default);
+            for (asset_key, normalized, keep_empty) in normalized_updates {
+                if normalized.is_empty() && !keep_empty {
+                    ui.mcp_tags.remove(&asset_key);
+                } else {
+                    ui.mcp_tags.insert(asset_key, normalized);
+                }
+            }
+            Ok(())
+        })
+        .map_err(|error| error.to_string())
+    })?;
+    list_mcp_tags()
+}
+
 fn require_asset(asset_key: &str) -> Result<(), String> {
     let exists = crate::resources::mcp::registry::read_registry()
         .iter()
@@ -307,6 +362,55 @@ fn normalize_locale(locale: Option<String>) -> Result<Option<String>, String> {
     } else {
         Err(format!("unsupported UI locale: {locale}"))
     }
+}
+
+fn normalize_mcp_tags(tags: Vec<String>) -> Result<Vec<String>, String> {
+    let mut normalized = Vec::new();
+    let mut seen = BTreeSet::new();
+    for raw in tags {
+        let trimmed = raw.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        if trimmed.chars().any(char::is_control) {
+            return Err("MCP tag cannot contain control characters".into());
+        }
+        if trimmed.chars().count() > MAX_MCP_TAG_LEN {
+            return Err(format!(
+                "MCP tag exceeds the {MAX_MCP_TAG_LEN}-character limit"
+            ));
+        }
+        let folded = trimmed.to_lowercase();
+        if seen.insert(folded) {
+            normalized.push(trimmed.to_string());
+        }
+    }
+    if normalized.len() > MAX_MCP_TAGS_PER_ASSET {
+        return Err(format!(
+            "at most {MAX_MCP_TAGS_PER_ASSET} tags can be assigned to one MCP"
+        ));
+    }
+    Ok(normalized)
+}
+
+fn mcp_tag_views(settings: &Settings) -> BTreeMap<String, Vec<String>> {
+    let current_keys: BTreeSet<String> = crate::resources::mcp::registry::read_registry()
+        .into_iter()
+        .map(|entry| entry.key())
+        .collect();
+    let Some(ui) = settings.ui.as_ref() else {
+        return BTreeMap::new();
+    };
+    let mut views = BTreeMap::new();
+    for (asset_key, tags) in &ui.mcp_tags {
+        if !current_keys.contains(asset_key) {
+            continue;
+        }
+        if let Ok(normalized) = normalize_mcp_tags(tags.clone()) {
+            views.insert(asset_key.clone(), normalized);
+        }
+    }
+    views
 }
 
 #[cfg(test)]
@@ -472,5 +576,69 @@ mod tests {
         })
         .unwrap();
         assert!(!list_mcp_icon_preferences().unwrap().contains_key(&key));
+    }
+
+    #[test]
+    fn mcp_tags_roundtrip_normalize_and_preserve_unknown_settings() {
+        let home = TestHome::new("ui-mcp-tags-roundtrip");
+        let path = home.home.join(".arca/settings.json");
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(
+            &path,
+            r#"{"ui":{"future_ui_key":{"keep":true}},"future_section":{"keep":true}}"#,
+        )
+        .unwrap();
+        let key = register_mcp("aone-km");
+
+        let tags = set_mcp_tags(
+            key.clone(),
+            vec![
+                "  Work ".into(),
+                "".into(),
+                "work".into(),
+                "知识库".into(),
+                "Search".into(),
+            ],
+        )
+        .unwrap();
+        assert_eq!(tags[&key], vec!["Work", "知识库", "Search"]);
+        assert_eq!(list_mcp_tags().unwrap(), tags);
+
+        let value: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(value["ui"]["future_ui_key"]["keep"], true);
+        assert_eq!(value["future_section"]["keep"], true);
+
+        let cleared = set_mcp_tags(key.clone(), Vec::new()).unwrap();
+        assert!(!cleared.contains_key(&key));
+        let value: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        assert!(value["ui"].get("mcp_tags").is_none());
+    }
+
+    #[test]
+    fn mcp_tags_rejects_invalid_inputs_and_supports_atomic_batch() {
+        let _home = TestHome::new("ui-mcp-tags-batch");
+        let first = register_mcp("alpha");
+        let second = register_mcp("beta");
+
+        assert!(set_mcp_tags("missing::stdio".into(), vec!["Work".into()]).is_err());
+        assert!(set_mcp_tags(first.clone(), vec!["bad\nline".into()]).is_err());
+        assert!(set_mcp_tags(first.clone(), vec!["x".repeat(MAX_MCP_TAG_LEN + 1)]).is_err());
+        let too_many: Vec<String> = (0..=MAX_MCP_TAGS_PER_ASSET).map(|i| format!("t-{i}")).collect();
+        assert!(set_mcp_tags(first.clone(), too_many).is_err());
+
+        let batch = set_mcp_tags_batch(BTreeMap::from([
+            (first.clone(), vec!["Core".into()]),
+            (second.clone(), vec!["Core".into(), "Beta".into()]),
+        ]))
+        .unwrap();
+        assert_eq!(batch[&first], vec!["Core"]);
+        assert_eq!(batch[&second], vec!["Core", "Beta"]);
+
+        assert!(set_mcp_tags_batch(BTreeMap::from([
+            (first.clone(), vec!["Changed".into()]),
+            ("missing::stdio".into(), vec!["Invalid".into()]),
+        ]))
+        .is_err());
+        assert_eq!(list_mcp_tags().unwrap()[&first], vec!["Core"]);
     }
 }

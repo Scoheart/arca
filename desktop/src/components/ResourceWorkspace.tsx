@@ -525,8 +525,8 @@ export function ResourceInspector({
       title={title}
       subtitle={subtitle}
       leading={avatar}
-      label={t("resourceWorkspace.details", { value0: title })}
-      closeLabel={t("resourceWorkspace.closeDetails")}
+      label={t("desktop.resourceWorkspace.details", { value0: title })}
+      closeLabel={t("desktop.resourceWorkspace.closeDetails")}
       onClose={onClose}
       footerStart={footerStart}
       footerEnd={footer}

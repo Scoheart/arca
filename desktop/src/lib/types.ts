@@ -24,6 +24,7 @@ export interface McpIconPreference {
   path?: string;
 }
 export type McpIconPreferences = Record<string, McpIconPreference>;
+export type McpTagPreferences = Record<string, string[]>;
 /** One entry copy from a source, plus whether it's the in-effect (winning) copy
  *  for its composite key. Copies with `in_effect === false` are shadowed by a
  *  higher-precedence source but still shown so nothing is hidden. */

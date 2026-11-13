@@ -424,3 +424,36 @@ it.each(["mcp", "model"] as const)("does not mix plugin Skills into the %s panel
   expect(screen.queryByText("review")).not.toBeInTheDocument();
   expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
 });
+
+it("orders added MCP servers before built-in host MCPs in the Agent MCP panel", () => {
+  const hostMcp = {
+    agent_id: "chatgpt",
+    server_id: "codex-app",
+    name: "codex_app",
+    provider: "codex-app-tools",
+    origin: "builtin" as const,
+    presence: "bundled" as const,
+    versions: ["1.0.0"],
+    source_paths: [],
+    docs_url: "",
+    source_fingerprint: "host-codex-app",
+  };
+  render(
+    <AgentConsumptionPanel
+      domain="mcp"
+      title="MCPs"
+      manageLabel="添加 MCPs"
+      rows={[syncedRow]}
+      external={[]}
+      hostMcps={[hostMcp]}
+      present={(asset) => ({
+        name: asset.domain === "mcp" ? asset.key.split("::")[0] : "",
+      })}
+      onManage={vi.fn()}
+    />,
+  );
+  const items = screen.getAllByRole("listitem");
+  expect(items).toHaveLength(2);
+  expect(items[0]).toHaveTextContent(syncedRow.asset.domain === "mcp" ? syncedRow.asset.key.split("::")[0] : "github");
+  expect(items[1]).toHaveTextContent("codex_app");
+});

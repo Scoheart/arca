@@ -92,18 +92,21 @@
 
 /* Agent identity and actions above a split-pane capability workbench. */
 .arca-agent-workbench {
-  display: flex; flex-direction: column; flex: 1; min-height: 100%;
+  display: flex; flex-direction: column; flex: 1; height: 100%; min-height: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: var(--surface-workspace);
+  overflow: hidden;
 }
 .arca-agent-workbench .arca-agent-overview-header {
+  flex: 0 0 auto;
   display: flex; flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap;
   min-height: 70px; padding: 14px 24px; gap: 14px;
   background: var(--surface-navigation);
   border-bottom: 1px solid var(--border-hairline);
 }
+.arca-agent-workbench .arca-agent-scope-note { flex: 0 0 auto; }
 .arca-agent-workbench .arca-agent-header-identity { grid-column: auto; grid-row: auto; flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px; }
 .arca-agent-workbench .arca-agent-header-copy > div { flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; }
 .arca-agent-workbench .arca-agent-header h2 { max-width: 100%; font-size: 18px; font-weight: 720; letter-spacing: -.02em; line-height: 1.3; }
@@ -143,15 +146,24 @@
 .arca-agent-workbench .arca-launch-more { width: 20px; border-radius: 0 7px 7px 0; border-left-color: #ffffff26; display: inline-flex; align-items: center; justify-content: center; }
 .arca-agent-workbench .arca-launch-action[data-ready="true"] button:hover:not(:disabled) { background: #ffffff18; }
 .arca-agent-workbench .arca-agent-resource-panel {
-  display: grid; grid-template-columns: 232px minmax(0, 1fr); flex: 1; align-items: stretch; gap: 0;
-  margin: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible;
+  display: grid; grid-template-columns: 232px minmax(0, 1fr); flex: 1; min-height: 0; height: 100%; align-items: stretch; gap: 0;
+  margin: 0; padding: 0; border-radius: 0; background: transparent; overflow: hidden;
 }
 .arca-agent-resource-navigation {
-  position: relative; top: 0; min-width: 0; padding: 16px 10px;
+  position: relative; top: 0; min-width: 0; height: 100%; min-height: 0; overflow-y: auto;
+  padding: 16px 10px;
   background: var(--surface-sidebar); border-right: 1px solid var(--border-hairline);
 }
 .arca-agent-resource-main { min-width: 0; width: 100%; max-width: 1320px; padding: 18px 24px 32px; }
-.arca-agent-workbench .arca-agent-resource-panel-head { min-height: 40px; margin: 0 0 16px; padding: 0 0 12px; gap: 12px; align-items: center; flex-direction: row; flex-wrap: wrap; background: transparent; border-radius: 0; border-bottom: 1px solid var(--border-hairline); }
+.arca-agent-workbench .arca-agent-resource-main {
+  display: flex; flex-direction: column; flex: 1; min-width: 0; width: 100%; max-width: 1320px; height: 100%; min-height: 0;
+  padding: 0; overflow: hidden;
+}
+.arca-agent-workbench .arca-agent-resource-panel-head {
+  flex: 0 0 auto; min-height: 56px; margin: 0; padding: 14px 24px 12px; gap: 12px;
+  align-items: center; flex-direction: row; flex-wrap: wrap; background: var(--surface-workspace);
+  border-radius: 0; border-bottom: 1px solid var(--border-hairline); z-index: 1;
+}
 .arca-agent-workbench .arca-agent-resource-panel-head h3 { font-size: 15px; font-weight: 700; letter-spacing: -.015em; }
 .arca-agent-workbench .arca-agent-resource-tabs { display: flex; flex-direction: column; align-items: stretch; gap: 3px; padding: 0; border: 0; background: transparent; border-radius: 0; overflow: visible; }
 .arca-agent-workbench .arca-agent-resource-tabs button { position: relative; justify-content: flex-start; width: 100%; min-width: 0; height: 36px; padding: 0 10px; gap: 9px; font-size: 12.5px; font-weight: 540; background: transparent; color: var(--text-primary); border-radius: 8px; flex: none; transition: background .12s ease, color .12s ease; }
@@ -185,7 +197,12 @@
 .arca-agent-active-config .arca-config-body { padding: 0; border: 0; }
 .arca-agent-active-config .arca-agent-file-paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
 .arca-agent-active-config .arca-agent-file-path { background: var(--surface-control); border: 1px solid var(--border-subtle); }
-.arca-agent-workbench .arca-agent-resource-panel-body { padding: 0; }
+.arca-agent-workbench .arca-agent-resource-panel-body {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 16px 24px 32px;
+}
+.arca-agent-workbench .arca-agent-resource-panel-body > .arca-agent-resource-content {
+  padding-top: 0;
+}
 .arca-agent-workbench .arca-consumption-panel > .arca-agent-section-head { display: none; }
 .arca-consumption-model-note { margin: 0 0 14px; color: var(--text-secondary); font-size: 11.5px; }
 .arca-guided-models { padding: 18px; border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-asset); }
@@ -340,6 +357,8 @@
   .arca-agent-workbench .arca-consumption-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .arca-agent-workbench .arca-agent-resource-panel { grid-template-columns: 196px minmax(0, 1fr); }
   .arca-agent-workbench .arca-agent-overview-header { padding: 12px 18px; }
+  .arca-agent-workbench .arca-agent-resource-panel-head { padding: 12px 18px 10px; }
+  .arca-agent-workbench .arca-agent-resource-panel-body { padding: 14px 18px 26px; }
   .arca-agent-resource-main { padding: 16px 18px 26px; }
 }
 @media (max-width: 720px) {
@@ -350,6 +369,8 @@
   .arca-agent-workbench .arca-consumption-list { grid-template-columns: minmax(0, 1fr); }
   .arca-agent-workbench .arca-agent-resource-panel { grid-template-columns: 140px minmax(0, 1fr); }
   .arca-agent-resource-navigation { padding: 12px 6px; }
+  .arca-agent-workbench .arca-agent-resource-panel-head { padding: 10px 12px 8px; }
+  .arca-agent-workbench .arca-agent-resource-panel-body { padding: 12px 12px 22px; }
   .arca-agent-resource-main { padding: 14px 12px 22px; }
   .arca-agent-workbench .arca-agent-resource-tabs { gap: 2px; }
   .arca-agent-workbench .arca-agent-resource-tabs button { padding: 0 7px; gap: 6px; font-size: 11px; }

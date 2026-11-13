@@ -24,9 +24,61 @@ it("routes central MCP changes through the shared asset plan", () => {
   expect(source).not.toMatch(/<ModalHeader/);
 });
 
-it("hides manual tag editing while preserving existing asset tags", () => {
-  expect(source).not.toMatch(/tagsText|标签（逗号分隔）|official, builtin/);
-  expect(source).toMatch(/tags: existing\?\.tags \?\? \[\]/);
+it("supports assigning user tags on manual MCP creation and preserves remote asset tags", async () => {
+  const user = userEvent.setup();
+  const planUpdate = vi.fn().mockResolvedValue({ operation_id: "mcp-create" });
+  const state = {
+    entries: [],
+    catalog: [],
+    customKeys: new Set<string>(),
+    subscribe: vi.fn().mockResolvedValue({ name: "Arca 精选", server_count: 3 }),
+    pickLocalSource: vi.fn().mockResolvedValue({ name: "team-mcp.json", server_count: 2 }),
+  } as unknown as InstallState;
+  const consumptionState = { planUpdate } as unknown as ConsumptionState;
+  const onBack = vi.fn();
+
+  render(
+    <ToastProvider>
+      <RegistryEditPage
+        state={state}
+        consumptionState={consumptionState}
+        name={null}
+        onBack={onBack}
+      />
+    </ToastProvider>,
+  );
+
+  // Add MCP converges paste, manual, subscribe, and import flows in one modal.
+  expect(screen.getByRole("button", { name: "粘贴配置" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "手动配置" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "添加订阅" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "导入配置" })).toBeVisible();
+
+  await user.click(screen.getByRole("button", { name: "手动配置" }));
+  await user.type(screen.getByRole("textbox", { name: "名称" }), "tagged-mcp");
+  await user.type(screen.getByPlaceholderText("npx / uvx / node"), "npx");
+  await user.type(screen.getByRole("textbox", { name: "标签名称" }), "工作{enter}");
+  await user.click(screen.getByRole("button", { name: "添加 MCP" }));
+  await waitFor(() => expect(planUpdate).toHaveBeenCalledTimes(1));
+  expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
+    domain: "mcp",
+    entry: expect.objectContaining({
+      name: "tagged-mcp",
+      tags: ["工作"],
+    }),
+  }), { reviewOnlyWhenNeeded: true });
+
+  await user.click(screen.getByRole("button", { name: "添加订阅" }));
+  await user.click(screen.getByRole("button", { name: "使用 Arca 精选" }));
+  await user.click(screen.getByRole("button", { name: "订阅" }));
+  await waitFor(() => expect(state.subscribe).toHaveBeenCalledWith(
+    "https://raw.githubusercontent.com/Scoheart/arca/main/data/registry.json",
+    "Arca 精选",
+  ));
+
+  await user.click(screen.getByRole("button", { name: "导入配置" }));
+  await user.click(screen.getByRole("button", { name: "选择配置文件…" }));
+  await waitFor(() => expect(state.pickLocalSource).toHaveBeenCalledTimes(1));
 });
 
 it("creates a manual override with custom env for a subscribed MCP", async () => {

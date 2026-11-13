@@ -1,5 +1,11 @@
 export const mcpEditorZhCN = {
-  addTitle: "添加 MCP", editTitle: "编辑 MCP", paste: "粘贴配置", manual: "手动配置", addMode: "添加方式",
+  addTitle: "添加 MCP", editTitle: "编辑 MCP", paste: "粘贴配置", manual: "手动配置", subscribe: "添加订阅", importConfig: "导入配置", addMode: "添加方式",
+  tags: "标签",
+  importTitle: "导入本地 MCP 配置文件",
+  importDescription: "选择本机现有的 MCP 配置文件（支持 JSON / TOML / YAML），导入后将作为本地来源持续同步与管理。",
+  importChooseFile: "选择配置文件…",
+  importActionHint: "导入的来源可在左侧「来源」中刷新或移除，不会修改原文件。",
+  subscribeHint: "订阅远程配置文件 URL 后，将按来源统一管理与刷新。",
   local: "本地运行", remote: "远程连接", localHint: "stdio · 启动命令", remoteHint: "HTTP · 服务地址",
   connection: "连接方式", name: "名称", description: "说明", optional: "可选", namePlaceholder: "例如 playwright",
   descriptionPlaceholder: "这个 MCP 可以做什么", command: "启动命令", directory: "工作目录", directoryPlaceholder: "使用默认目录",
@@ -18,7 +24,13 @@ export const mcpEditorZhCN = {
 };
 
 export const mcpEditorEnUS: { [K in keyof typeof mcpEditorZhCN]: string } = {
-  addTitle: "Add MCP", editTitle: "Edit MCP", paste: "Paste configuration", manual: "Configure manually", addMode: "Add method",
+  addTitle: "Add MCP", editTitle: "Edit MCP", paste: "Paste configuration", manual: "Configure manually", subscribe: "Subscribe", importConfig: "Import file", addMode: "Add method",
+  tags: "Tags",
+  importTitle: "Import local MCP configuration",
+  importDescription: "Choose an existing MCP configuration file (JSON, TOML, or YAML) on this machine to sync and manage as a local source.",
+  importChooseFile: "Choose config file…",
+  importActionHint: "Imported sources can be refreshed or removed from Sources without modifying the original file.",
+  subscribeHint: "Subscribe to a remote configuration URL to keep its MCPs updated cleanly.",
   local: "Local process", remote: "Remote server", localHint: "stdio · Launch command", remoteHint: "HTTP · Server URL",
   connection: "Connection", name: "Name", description: "Description", optional: "Optional", namePlaceholder: "e.g. playwright",
   descriptionPlaceholder: "What this MCP can do", command: "Command", directory: "Working directory", directoryPlaceholder: "Default directory",

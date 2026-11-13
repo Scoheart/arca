@@ -322,10 +322,6 @@ export function AgentConsumptionPanel({
         </div>
       ) : filtered.length + visible === 0 ? <p role="status" className="arca-consumption-empty">没有匹配的 {title}</p> : (
         <ul className="arca-consumption-list" data-columns={columns}>
-          {filteredHosts.map(item => <HostMcpCard key={`${item.agent_id}:${item.source_fingerprint}`} item={item} />)}
-          {filteredDeclarations.map(item => <ConfiguredMcpCard key={JSON.stringify([item.agent_id, item.source_path, item.name])} item={item} />)}
-          {filteredSkills.map(item => <NativeSkillCard key={item.id} item={item} />)}
-          {filteredSkillFiles.map(item => <NativeFileSkillCard key={item.source_path} item={item} />)}
           {filtered.map(({ item, external: isExternal }) => {
             const presentation = present(item.asset);
             const presentationDescription = presentation.description?.trim();
@@ -466,6 +462,10 @@ export function AgentConsumptionPanel({
               </li>
             );
           })}
+          {filteredDeclarations.map(item => <ConfiguredMcpCard key={JSON.stringify([item.agent_id, item.source_path, item.name])} item={item} />)}
+          {filteredSkillFiles.map(item => <NativeFileSkillCard key={item.source_path} item={item} />)}
+          {filteredHosts.map(item => <HostMcpCard key={`${item.agent_id}:${item.source_fingerprint}`} item={item} />)}
+          {filteredSkills.map(item => <NativeSkillCard key={item.id} item={item} />)}
         </ul>
       )}
     </section>

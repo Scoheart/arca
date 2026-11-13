@@ -5,12 +5,16 @@ import { type ReactNode, useMemo, useState } from "react";
 import type { InstallState } from "../hooks/useInstallState";
 import type { SourceView } from "../lib/types";
 import { IconButton } from "./ui";
-import { CloudIcon, FolderIcon, PlusIcon, RefreshIcon, TrashIcon, EditIcon, SearchIcon } from "./icons";
-import { SubscribeDialog } from "./SubscribeDialog";
+import { CloudIcon, FolderIcon, PlusIcon, RefreshIcon, TagIcon, TrashIcon, EditIcon } from "./icons";
 import { useToast } from "./Toast";
 import { formatError } from "../lib/format";
 import { SidebarItem, SidebarSection, WorkspaceSidebar } from "./ResourceWorkspace";
 import { ReviewDialog } from "./ReviewDialog";
+
+export interface McpTagSummary {
+  name: string;
+  count: number;
+}
 
 /** Sort rank: remote (0) → user local (1) → managed manual/discovered (2). */
 function rank(s: SourceView): number {
@@ -19,67 +23,56 @@ function rank(s: SourceView): number {
 }
 
 function kindIconOf(s: SourceView) {
-  if (s.kind === "remote") return <CloudIcon className="w-3.5 h-3.5" />;      // 订阅（远程 URL）
-  if (s.managed) {
-    // 手动添加（用户手建/编辑）vs 自动探索（扫描各 agent 发现）
-    return s.id === "discovered" ? <SearchIcon className="w-3.5 h-3.5" /> : <EditIcon className="w-3.5 h-3.5" />;
-  }
-  return <FolderIcon className="w-3.5 h-3.5" />;                              // 本地文件
+  if (s.kind === "remote") return <CloudIcon className="w-3.5 h-3.5" />;
+  return <FolderIcon className="w-3.5 h-3.5" />;
 }
 
 /**
- * Left column that both *organizes* the catalog (click a source to filter the
- * grid) and *manages* sources (subscribe / import, plus per-source
- * enable / refresh / remove). Replaces the old standalone 来源 page.
+ * Left column that organizes the MCP catalog by source and user-defined tags.
  */
 export function SourcesSidebar({
   state,
   selectedId,
+  selectedTag = null,
+  tags = [],
   onSelect,
+  onSelectTag,
+  onManageTags,
   onCreate,
   footer,
 }: {
   state: InstallState;
   /** null = 全部 (all sources). */
   selectedId: string | null;
+  selectedTag?: string | null;
+  tags?: McpTagSummary[];
   onSelect: (id: string | null) => void;
+  onSelectTag?: (tag: string | null) => void;
+  onManageTags?: (tag?: string | null) => void;
   onCreate: () => void;
   footer?: ReactNode;
 }) {
   useTranslation();
   const { sources, catalog } = state;
   const toast = useToast();
-  const [subscribeOpen, setSubscribeOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [deleteReview, setDeleteReview] = useState<SourceView | null>(null);
 
-  const sorted = useMemo(
+  const visibleSources = useMemo(
     () =>
-      [...sources].sort(
-        (a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-      ),
+      [...sources]
+        .filter((s) => !s.managed)
+        .sort(
+          (a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        ),
     [sources]
   );
-
-  const pickLocal = async () => {
-    try {
-      const v = await state.pickLocalSource();
-      if (v) toast.show({ kind: "success", msg: i18n.t("desktop.sourcesSidebar.importedItems", { value0: v.name, value1: v.server_count }) });
-    } catch (e) {
-      toast.show({ kind: "error", msg: i18n.t("desktop.sourcesSidebar.importFailed") + formatError(e) });
-    }
-  };
 
   const doRefresh = async (s: SourceView) => {
     setBusyId(s.id);
     try {
-      if (s.id === "discovered") {
-        await state.rescanDiscovered();
-        toast.show({ kind: "success", msg: i18n.t("desktop.sourcesSidebar.agentConfigurationsRediscovered") });
-      } else {
-        await state.refreshOneSource(s.id);
-        toast.show({ kind: "success", msg: i18n.t("desktop.sourcesSidebar.refreshed", { value0: s.name }) });
-      }
+      await state.refreshOneSource(s.id);
+      toast.show({ kind: "success", msg: i18n.t("desktop.sourcesSidebar.refreshed", { value0: s.name }) });
     } catch (e) {
       toast.show({ kind: "error", msg: i18n.t("desktop.sourcesSidebar.refreshFailed") + formatError(e) });
     } finally {
@@ -105,68 +98,85 @@ export function SourcesSidebar({
   return (
     <>
     <WorkspaceSidebar title="MCPs" count={catalog.length} footer={footer}
-      actions={<>
+      actions={
         <button className="btn-primary" type="button" onClick={onCreate}>
           <PlusIcon className="w-4 h-4" />
-          <span>{i18n.t("desktop.sourcesSidebar.addMCPs")}</span></button>
-        <div className="arca-sidebar-action-pair">
-          <button className="btn-secondary" type="button" onClick={() => setSubscribeOpen(true)}>
-            <CloudIcon className="w-4 h-4" />
-            <span>{i18n.t("desktop.sourcesSidebar.addSubscription")}</span></button>
-          <button className="btn-secondary" type="button" onClick={pickLocal}>
-            <FolderIcon className="w-4 h-4" />
-            <span>{i18n.t("desktop.sourcesSidebar.importConfiguration")}</span></button>
-        </div>
-      </>}
+          <span>{i18n.t("desktop.sourcesSidebar.addMCPs")}</span>
+        </button>
+      }
     >
       <SidebarSection title={i18n.t("desktop.sourcesSidebar.source")}>
         <SidebarItem
-          active={selectedId === null}
+          active={selectedId === null && selectedTag === null}
           icon={<ResourceIcon domain="mcp" className="w-3.5 h-3.5" />}
           label={i18n.t("desktop.sourcesSidebar.allSources")}
           count={catalog.length}
           onClick={() => onSelect(null)}
         />
-        {sorted.length === 0 ? (
-          <div className="arca-sidebar-empty">{i18n.t("desktop.sourcesSidebar.noSources")}</div>
+        {visibleSources.map((source) => (
+          <SidebarItem
+            key={source.id}
+            active={selectedId === source.id}
+            icon={kindIconOf(source)}
+            label={source.name}
+            count={source.server_count}
+            onClick={() => onSelect(source.id)}
+            actions={
+              <>
+                <IconButton
+                  title={i18n.t("desktop.sourcesSidebar.refreshSource")}
+                  onClick={() => doRefresh(source)}
+                  disabled={busyId === source.id}
+                >
+                  <RefreshIcon className="w-3.5 h-3.5" style={busyId === source.id ? { animation: "spin 0.8s linear infinite" } : undefined} />
+                </IconButton>
+                <IconButton title={i18n.t("desktop.sourcesSidebar.deleteSource")} onClick={() => setDeleteReview(source)} disabled={busyId === source.id}>
+                  <TrashIcon className="w-3.5 h-3.5" />
+                </IconButton>
+              </>
+            }
+          />
+        ))}
+      </SidebarSection>
+
+      <SidebarSection
+        title={i18n.t("desktop.sourcesSidebar.tags")}
+        actions={
+          onManageTags && (
+            <IconButton
+              title={i18n.t("desktop.sourcesSidebar.createTag")}
+              onClick={() => onManageTags(null)}
+            >
+              <PlusIcon className="w-3.5 h-3.5" />
+            </IconButton>
+          )
+        }
+      >
+        {tags.length === 0 ? (
+          <div className="arca-sidebar-empty">{i18n.t("desktop.sourcesSidebar.noTags")}</div>
         ) : (
-          sorted.map((source) => (
+          tags.map((tag) => (
             <SidebarItem
-              key={source.id}
-              active={selectedId === source.id}
-              icon={kindIconOf(source)}
-              label={source.name}
-              count={source.server_count}
-              onClick={() => onSelect(source.id)}
+              key={tag.name}
+              active={selectedTag !== null && selectedTag.toLowerCase() === tag.name.toLowerCase()}
+              icon={<TagIcon className="w-3.5 h-3.5" />}
+              label={tag.name}
+              count={tag.count}
+              onClick={() => onSelectTag?.(tag.name)}
               actions={
-                <>
-                  {(source.kind === "remote" || !source.managed || source.id === "discovered") && (
-                    <IconButton
-                      title={source.id === "discovered" ? i18n.t("desktop.sourcesSidebar.rediscover") : i18n.t("desktop.sourcesSidebar.refreshSource")}
-                      onClick={() => doRefresh(source)}
-                      disabled={busyId === source.id}
-                    >
-                      <RefreshIcon className="w-3.5 h-3.5" style={busyId === source.id ? { animation: "spin 0.8s linear infinite" } : undefined} />
-                    </IconButton>
-                  )}
-                  {!source.managed && (
-                    <IconButton title={i18n.t("desktop.sourcesSidebar.deleteSource")} onClick={() => setDeleteReview(source)} disabled={busyId === source.id}>
-                      <TrashIcon className="w-3.5 h-3.5" />
-                    </IconButton>
-                  )}
-                </>
+                onManageTags && (
+                  <IconButton
+                    title={i18n.t("desktop.sourcesSidebar.editTag", { value0: tag.name })}
+                    onClick={() => onManageTags(tag.name)}
+                  >
+                    <EditIcon className="w-3.5 h-3.5" />
+                  </IconButton>
+                )
               }
             />
           ))
         )}
       </SidebarSection>
-
-      {subscribeOpen && (
-        <SubscribeDialog
-          state={state}
-          onClose={() => setSubscribeOpen(false)}
-        />
-      )}
     </WorkspaceSidebar>
     {deleteReview && (
       <ReviewDialog

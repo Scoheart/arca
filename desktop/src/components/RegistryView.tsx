@@ -4,14 +4,15 @@ import { useTranslation } from "react-i18next";
 import type { InstallState } from "../hooks/useInstallState";
 import type { ConsumptionState } from "../hooks/useConsumptionState";
 import type { McpIconPreference, RegistryEntry, RegistryOrigin, CatalogItem, ResourceNavigationIntent } from "../lib/types";
-import { keyOf, transportOf } from "../lib/mcp";
+import { keyOf, resolveMcpTags, transportOf } from "../lib/mcp";
 import { assetIdentity, observedAgentIndex } from "../lib/consumption";
 import { exportEffectiveDialog } from "../lib/api";
 import { useMcpIconPreferences } from "../hooks/useMcpIconPreferences";
+import { useMcpTags } from "../hooks/useMcpTags";
 import { formatError } from "../lib/format";
 import { redactSensitiveConfig } from "../lib/resourceWorkspace";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { SourcesSidebar } from "./SourcesSidebar";
+import { SourcesSidebar, type McpTagSummary } from "./SourcesSidebar";
 import { AgentGlyph, agentName } from "./brandIcons";
 import {
   CopyIcon,
@@ -20,15 +21,16 @@ import {
   CloudIcon,
   DownloadIcon,
   FolderIcon,
-  LayersIcon,
   NetworkIcon,
   SparklesIcon,
+  TagIcon,
   TerminalIcon,
   TrashIcon,
 } from "./icons";
 import { Badge, IconButton, TransportPill } from "./ui";
 import { McpAvatar } from "./McpIcon";
 import { McpIconPickerDialog } from "./McpIconPickerDialog";
+import { McpTagInput, McpTagManagerDialog, McpTagPickerDialog } from "./McpTagEditor";
 import { ResourceState } from "./ResourceState";
 import { useToast } from "./Toast";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
@@ -161,13 +163,20 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
   const { catalog, entries, sources } = state;
   const toast = useToast();
   const mcpIcons = useMcpIconPreferences();
+  const mcpTags = useMcpTags();
 
   const [q, setQ] = useState("");
   const deferredQuery = useDeferredValue(q);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [detail, setDetail] = useState<CatalogItem | null>(null);
   const [editingDetail, setEditingDetail] = useState(false);
   const [iconPickerEntry, setIconPickerEntry] = useState<RegistryEntry | null>(null);
+  const [tagPickerEntry, setTagPickerEntry] = useState<RegistryEntry | null>(null);
+  const [tagManagerState, setTagManagerState] = useState<{ open: boolean; initialTag: string | null }>({
+    open: false,
+    initialTag: null,
+  });
   const lastConsumedIntentId = useRef<number | null>(null);
   const observedAgents = useMemo(
     () => observedAgentIndex(consumptionState?.inventory ?? null, "mcp"),
@@ -191,11 +200,40 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
     return m;
   }, [catalog]);
 
+  const tagSummary = useMemo<McpTagSummary[]>(() => {
+    const counts = new Map<string, McpTagSummary>();
+    for (const item of catalog) {
+      for (const tag of resolveMcpTags(item.entry, mcpTags.tagsByKey)) {
+        const folded = tag.toLowerCase();
+        const existing = counts.get(folded);
+        if (existing) existing.count += 1;
+        else counts.set(folded, { name: tag, count: 1 });
+      }
+    }
+    const collator = new Intl.Collator(undefined, { sensitivity: "base" });
+    return [...counts.values()].sort((a, b) => collator.compare(a.name, b.name));
+  }, [catalog, mcpTags.tagsByKey]);
+
+  const availableTags = useMemo(() => tagSummary.map((item) => item.name), [tagSummary]);
+
+  const activeTagSummary = useMemo(
+    () => selectedTag === null
+      ? undefined
+      : tagSummary.find((item) => item.name.toLowerCase() === selectedTag.toLowerCase()),
+    [tagSummary, selectedTag],
+  );
+
   const sourceScoped = useMemo(() => {
+    if (selectedTag !== null) {
+      const needle = selectedTag.toLowerCase();
+      return catalog.filter((item) =>
+        resolveMcpTags(item.entry, mcpTags.tagsByKey).some((tag) => tag.toLowerCase() === needle),
+      );
+    }
     if (selectedSource === null) return catalog;
     return catalog.filter((item) => inSource(item.entry, selectedSource));
-  }, [catalog, selectedSource]);
-  const activeSource = sources.find((source) => source.id === selectedSource);
+  }, [catalog, selectedSource, selectedTag, mcpTags.tagsByKey]);
+  const activeSource = selectedTag === null ? sources.find((source) => source.id === selectedSource) : undefined;
   const sourceLocation = activeSource?.url ? sourceAddress(activeSource.url) : activeSource?.path;
 
   const searchIndex = useMemo(() => {
@@ -206,8 +244,14 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
         collator.compare(a.entry.name, b.entry.name) ||
         transportOf(a.entry).localeCompare(transportOf(b.entry)) ||
         Number(b.in_effect) - Number(a.in_effect)
-    ).map((item) => ({ item, text: `${item.entry.name}\n${item.entry.description}`.toLowerCase() }));
-  }, [sourceScoped]);
+    ).map((item) => {
+      const tags = resolveMcpTags(item.entry, mcpTags.tagsByKey);
+      return {
+        item,
+        text: `${item.entry.name}\n${item.entry.description}\n${tags.join("\n")}`.toLowerCase(),
+      };
+    });
+  }, [sourceScoped, mcpTags.tagsByKey]);
 
   // Every catalog copy can be edited. Source-owned edits are materialized as a
   // manual override by the central lifecycle planner; deletion remains limited
@@ -234,14 +278,24 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
     const needle = deferredQuery.trim().toLowerCase();
     return searchIndex.filter((row) => !needle || row.text.includes(needle)).map((row) => row.item);
   }, [deferredQuery, searchIndex]);
-  const cards = useMemo(() => filtered.map((item) => (
-    <div role="listitem" key={`${keyOf(item.entry)}@${item.entry.origin?.source ?? item.entry.origin?.kind ?? ""}`} className="arca-model-card arca-mcp-card">
-      <RegistryCard item={item} iconPreference={mcpIcons.preferences[keyOf(item.entry)]}
-        selected={detail === item} installedAgents={agentsForServer(keyOf(item.entry))}
-        sourceName={sourceName} onOpen={() => { setEditingDetail(false); setDetail(item); }}
-        onDelete={consumptionState && deletable(item.entry) && item.in_effect ? () => void deleteEntry(item.entry) : undefined} />
-    </div>
-  )), [filtered, mcpIcons.preferences, detail, agentsForServer, sourceName, consumptionState, deletable, deleteEntry]);
+  const cards = useMemo(() => filtered.map((item) => {
+    const assetKey = keyOf(item.entry);
+    return (
+      <div role="listitem" key={`${assetKey}@${item.entry.origin?.source ?? item.entry.origin?.kind ?? ""}`} className="arca-model-card arca-mcp-card">
+        <RegistryCard
+          item={item}
+          tags={resolveMcpTags(item.entry, mcpTags.tagsByKey)}
+          iconPreference={mcpIcons.preferences[assetKey]}
+          selected={detail === item}
+          installedAgents={agentsForServer(assetKey)}
+          sourceName={sourceName}
+          onOpen={() => { setEditingDetail(false); setDetail(item); }}
+          onEditTags={() => setTagPickerEntry(item.entry)}
+          onDelete={consumptionState && deletable(item.entry) && item.in_effect ? () => void deleteEntry(item.entry) : undefined}
+        />
+      </div>
+    );
+  }), [filtered, mcpTags.tagsByKey, mcpIcons.preferences, detail, agentsForServer, sourceName, consumptionState, deletable, deleteEntry]);
 
   useEffect(() => {
     if (!intent || state.loading || lastConsumedIntentId.current === intent.id) return;
@@ -263,11 +317,19 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
     );
     setQ("");
     setSelectedSource(null);
+    setSelectedTag(null);
     setDetail(item ?? null);
     setEditingDetail(false);
     if (!item) toast.show({ kind: "error", msg: `未找到 MCP“${intent.name}”。` });
     onIntentConsumed?.(intent.id);
   }, [catalog, intent, onCreate, onIntentConsumed, state.loading, toast]);
+
+  useEffect(() => {
+    if (!selectedTag || state.loading) return;
+    if (!tagSummary.some((item) => item.name.toLowerCase() === selectedTag.toLowerCase())) {
+      setSelectedTag(null);
+    }
+  }, [selectedTag, state.loading, tagSummary]);
 
   const changeQuery = (value: string) => {
     setDetail(null);
@@ -278,7 +340,15 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
   const changeSource = (sourceId: string | null) => {
     setDetail(null);
     setEditingDetail(false);
+    setSelectedTag(null);
     setSelectedSource(sourceId);
+  };
+
+  const changeTag = (tag: string | null) => {
+    setDetail(null);
+    setEditingDetail(false);
+    setSelectedSource(null);
+    setSelectedTag(tag);
   };
 
   const closeDetail = useCallback(() => {
@@ -324,14 +394,32 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
       <ResourceWorkspace
       overview={
         <ResourceOverview
-          eyebrow={activeSource ? `来源 · ${sourceScoped.length} MCPs` : `${catalog.length} MCPs · ${sources.length} 个来源`}
-          title={activeSource?.name ?? "全部 MCPs"}
-          description={activeSource
-            ? activeSource.kind === "remote" ? "订阅来源" : activeSource.managed ? "Arca 管理的来源" : "本地配置来源"
-            : "集中管理可复用的 MCP 连接、来源与配置"}
-          icon={activeSource?.kind === "remote"
-            ? <CloudIcon className="w-6 h-6" />
-            : <ResourceIcon domain="mcp" className="w-6 h-6" />}
+          eyebrow={
+            selectedTag !== null
+              ? `${t("mcpTags.label")} · ${sourceScoped.length} MCPs`
+              : activeSource
+                ? `来源 · ${sourceScoped.length} MCPs`
+                : `${catalog.length} MCPs · ${sources.length} 个来源`
+          }
+          title={
+            selectedTag !== null
+              ? (activeTagSummary?.name ?? selectedTag)
+              : (activeSource?.name ?? "全部 MCPs")
+          }
+          description={
+            selectedTag !== null
+              ? t("mcpTags.filterDescription", { tag: activeTagSummary?.name ?? selectedTag })
+              : activeSource
+                ? activeSource.kind === "remote" ? "订阅来源" : activeSource.managed ? "Arca 管理的来源" : "本地配置来源"
+                : "集中管理可复用的 MCP 连接、来源与配置"
+          }
+          icon={
+            selectedTag !== null
+              ? <TagIcon className="w-6 h-6" />
+              : activeSource?.kind === "remote"
+                ? <CloudIcon className="w-6 h-6" />
+                : <ResourceIcon domain="mcp" className="w-6 h-6" />
+          }
         >
           {activeSource && <>
             <dl className="arca-resource-overview-facts">
@@ -353,7 +441,11 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
         <SourcesSidebar
           state={state}
           selectedId={selectedSource}
+          selectedTag={selectedTag}
+          tags={tagSummary}
           onSelect={changeSource}
+          onSelectTag={changeTag}
+          onManageTags={(initialTag) => setTagManagerState({ open: true, initialTag: initialTag ?? null })}
           onCreate={() => {
             closeDetail();
             onCreate();
@@ -366,7 +458,13 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
       }
       query={q}
       onQueryChange={changeQuery}
-      searchPlaceholder={activeSource ? `搜索 ${activeSource.name} 中的 MCPs` : "搜索 MCPs"}
+      searchPlaceholder={
+        selectedTag !== null
+          ? t("mcpTags.searchInTag", { tag: activeTagSummary?.name ?? selectedTag })
+          : activeSource
+            ? `搜索 ${activeSource.name} 中的 MCPs`
+            : "搜索 MCPs"
+      }
       listLabel="MCPs"
       resultCount={filtered.length}
       inspector={
@@ -377,6 +475,9 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
             name={detail.entry.name}
             entry={detail.entry}
             iconPreference={mcpIcons.preferences[keyOf(detail.entry)]}
+            resolvedTags={resolveMcpTags(detail.entry, mcpTags.tagsByKey)}
+            availableTags={availableTags}
+            onTagsSync={(assetKey, nextTags) => mcpTags.setTags(assetKey, nextTags)}
             transport={transportOf(detail.entry)}
             presentation="inspector"
             onBack={closeDetail}
@@ -384,6 +485,9 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
         ) : detail ? (
           <RegistryDetail
             entry={detail.entry}
+            tags={resolveMcpTags(detail.entry, mcpTags.tagsByKey)}
+            availableTags={availableTags}
+            tagsSaving={mcpTags.busyKey === keyOf(detail.entry)}
             iconPreference={mcpIcons.preferences[keyOf(detail.entry)]}
             overriddenBy={
               detail.in_effect
@@ -395,6 +499,14 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
             onClose={closeDetail}
             onCopy={() => copyConfig(detail.entry)}
             onCustomizeIcon={() => setIconPickerEntry(detail.entry)}
+            onSaveTags={async (nextTags) => {
+              const targetKey = keyOf(detail.entry);
+              try {
+                await mcpTags.setTags(targetKey, nextTags);
+              } catch (e) {
+                toast.show({ kind: "error", msg: `保存「${detail.entry.name}」标签失败`, details: e });
+              }
+            }}
             onEdit={
               consumptionState
                 ? () => setEditingDetail(true)
@@ -476,6 +588,7 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
             <button type="button" className="btn-secondary" onClick={() => {
               setQ("");
               setSelectedSource(null);
+              setSelectedTag(null);
             }}>清除筛选</button>
           )}
         />
@@ -501,25 +614,51 @@ export function RegistryView({ state, consumptionState, intent, onIntentConsumed
           onClose={() => setIconPickerEntry(null)}
         />
       )}
+      {tagPickerEntry && (
+        <McpTagPickerDialog
+          assetKey={keyOf(tagPickerEntry)}
+          entry={tagPickerEntry}
+          iconPreference={mcpIcons.preferences[keyOf(tagPickerEntry)]}
+          initialTags={resolveMcpTags(tagPickerEntry, mcpTags.tagsByKey)}
+          availableTags={availableTags}
+          onSave={(nextTags) => mcpTags.setTags(keyOf(tagPickerEntry), nextTags)}
+          onClose={() => setTagPickerEntry(null)}
+        />
+      )}
+      {tagManagerState.open && (
+        <McpTagManagerDialog
+          catalog={catalog}
+          tagPreferences={mcpTags.tagsByKey}
+          iconPreferences={mcpIcons.preferences}
+          initialTag={tagManagerState.initialTag}
+          availableTags={availableTags}
+          onSaveBatch={mcpTags.setTagsBatch}
+          onClose={() => setTagManagerState({ open: false, initialTag: null })}
+        />
+      )}
     </div>
   );
 }
 
 function RegistryCard({
   item,
+  tags,
   iconPreference,
   selected,
   installedAgents,
   sourceName,
   onOpen,
+  onEditTags,
   onDelete,
 }: {
   item: CatalogItem;
+  tags: string[];
   iconPreference?: McpIconPreference;
   selected: boolean;
   installedAgents: string[];
   sourceName: (id: string) => string;
   onOpen: () => void;
+  onEditTags: () => void;
   onDelete?: () => void;
 }) {
   const { t } = useTranslation();
@@ -542,25 +681,56 @@ function RegistryCard({
         aria-pressed={selected}
         onClick={onOpen}
       >
-        <span className="arca-asset-list-identity">
-          <McpAvatar assetKey={keyOf(entry)} entry={entry} preference={iconPreference} />
-          <span className="arca-asset-list-copy">
-            <strong title={entry.name}>{entry.name}</strong>
-            <code title={ep.text}>{ep.text}</code>
+        <span className="arca-mcp-card-top">
+          <span className="arca-asset-list-identity">
+            <McpAvatar assetKey={keyOf(entry)} entry={entry} preference={iconPreference} size={36} />
+            <span className="arca-asset-list-copy">
+              <strong title={entry.name}>{entry.name}</strong>
+              <code title={ep.text}>{ep.text}</code>
+            </span>
           </span>
         </span>
-        <span className="arca-asset-list-transport">{transport}</span>
-        <span className="arca-asset-list-source" title={source}>{source}</span>
-        <span className="arca-asset-list-status">
-          <Badge tone={item.in_effect ? "success" : "info"}>
-            {item.in_effect
-              ? t("centralAssets.effective")
-              : t("centralAssets.shadowed")}
-          </Badge>
+        {tags.length > 0 && (
+          <span className="arca-mcp-card-tags">
+            {tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="arca-mcp-tag-chip" title={tag}>
+                {tag}
+              </span>
+            ))}
+            {tags.length > 3 && (
+              <span className="arca-mcp-tag-more">+{tags.length - 3}</span>
+            )}
+          </span>
+        )}
+        <span className="arca-mcp-card-meta">
+          <span className="arca-mcp-card-meta-left">
+            <span className="arca-asset-list-transport">{transport}</span>
+            <span className="arca-mcp-card-dot" aria-hidden="true">·</span>
+            <span className="arca-asset-list-source" title={source}>{source}</span>
+          </span>
+          <span className="arca-asset-list-status">
+            <Badge tone={item.in_effect ? "success" : "info"}>
+              {item.in_effect
+                ? t("centralAssets.effective")
+                : t("centralAssets.shadowed")}
+            </Badge>
+          </span>
         </span>
       </button>
-      {onDelete && (
-        <div className="arca-model-card-actions">
+      <div className="arca-model-card-actions" data-count={onDelete ? "2" : "1"}>
+        <button
+          type="button"
+          className="arca-model-card-action arca-mcp-card-tag-btn"
+          aria-label={t("mcpTags.editFor", { name: entry.name })}
+          title={t("mcpTags.editFor", { name: entry.name })}
+          onClick={(event) => {
+            event.stopPropagation();
+            onEditTags();
+          }}
+        >
+          <TagIcon className="w-3.5 h-3.5" />
+        </button>
+        {onDelete && (
           <button
             type="button"
             className="arca-model-card-action arca-model-card-delete"
@@ -573,14 +743,17 @@ function RegistryCard({
           >
             <TrashIcon className="w-4 h-4" />
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }
 
 function RegistryDetail({
   entry,
+  tags,
+  availableTags,
+  tagsSaving,
   iconPreference,
   overriddenBy,
   installedAgents,
@@ -588,10 +761,14 @@ function RegistryDetail({
   onClose,
   onCopy,
   onCustomizeIcon,
+  onSaveTags,
   onEdit,
   onDelete,
 }: {
   entry: RegistryEntry;
+  tags: string[];
+  availableTags: string[];
+  tagsSaving?: boolean;
   iconPreference?: McpIconPreference;
   overriddenBy?: string;
   installedAgents: string[];
@@ -599,6 +776,7 @@ function RegistryDetail({
   onClose: () => void;
   onCopy: () => void;
   onCustomizeIcon: () => void;
+  onSaveTags: (nextTags: string[]) => Promise<void>;
   onEdit?: () => void;
   onDelete?: () => void;
 }) {
@@ -672,13 +850,15 @@ function RegistryDetail({
         )}
       </InspectorSection>
 
-      {entry.tags.length > 0 && (
-        <InspectorSection title="标签" icon={<LayersIcon className="w-4 h-4" />}>
-          <div className="flex flex-wrap gap-1.5">
-            {entry.tags.map((tag) => <Badge key={tag} tone="info">{tag}</Badge>)}
-          </div>
-        </InspectorSection>
-      )}
+      <InspectorSection title={t("mcpTags.label")} icon={<TagIcon className="w-4 h-4" />}>
+        <McpTagInput
+          key={keyOf(entry)}
+          tags={tags}
+          availableTags={availableTags}
+          disabled={tagsSaving}
+          onChange={(next) => void onSaveTags(next)}
+        />
+      </InspectorSection>
 
       <InspectorSection title="配置" icon={<TerminalIcon className="w-4 h-4" />}>
         <div className="arca-config-card">

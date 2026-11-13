@@ -382,7 +382,7 @@ export function Modal({
   children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const backdropPress = useRef<{ pointerId: number; released: boolean } | null>(null);
+  const dragMismatch = useRef(false);
   const [openers] = useState(() => {
     const active = document.activeElement;
     const opener = returnFocus ?? (active instanceof HTMLElement && active !== document.body ? active : null);
@@ -471,29 +471,27 @@ export function Modal({
       data-modal-layer={layer}
       onPointerDown={(event) => {
         if (!event.isPrimary) return;
-        backdropPress.current = event.target === event.currentTarget && event.button === 0 && !busyRef.current
-          ? { pointerId: event.pointerId, released: false }
-          : null;
+        dragMismatch.current = event.target !== event.currentTarget;
       }}
       onPointerUp={(event) => {
-        const press = backdropPress.current;
-        if (!press || press.pointerId !== event.pointerId) return;
+        if (!event.isPrimary) return;
         const target = event.currentTarget.hasPointerCapture?.(event.pointerId)
           ? document.elementFromPoint(event.clientX, event.clientY)
           : event.target;
-        if (target === event.currentTarget) press.released = true;
-        else backdropPress.current = null;
+        if (target !== event.currentTarget) dragMismatch.current = true;
       }}
-      onPointerCancel={(event) => {
-        if (backdropPress.current?.pointerId === event.pointerId) backdropPress.current = null;
+      onPointerCancel={() => {
+        dragMismatch.current = false;
       }}
       onClick={(event) => {
-        const backdropClicked = backdropPress.current?.released;
-        backdropPress.current = null;
+        const invalid = dragMismatch.current;
+        dragMismatch.current = false;
         if (event.target === event.currentTarget) event.stopPropagation();
         if (
-          !backdropClicked || event.target !== event.currentTarget ||
-          topmostModal() !== dialogRef.current || busyRef.current
+          invalid ||
+          event.target !== event.currentTarget ||
+          topmostModal() !== dialogRef.current ||
+          busyRef.current
         ) return;
         onCloseRef.current();
       }}

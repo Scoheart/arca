@@ -1006,6 +1006,38 @@ pub async fn reset_mcp_icon(
 }
 
 #[tauri::command]
+pub async fn list_mcp_tags() -> CoreResult<BTreeMap<String, Vec<String>>> {
+    core_blocking(|| {
+        arca_core::application::ui::list_mcp_tags()
+            .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn set_mcp_tags(
+    asset_key: String,
+    tags: Vec<String>,
+) -> CoreResult<BTreeMap<String, Vec<String>>> {
+    core_blocking(move || {
+        arca_core::application::ui::set_mcp_tags(asset_key, tags)
+            .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn set_mcp_tags_batch(
+    updates: BTreeMap<String, Vec<String>>,
+) -> CoreResult<BTreeMap<String, Vec<String>>> {
+    core_blocking(move || {
+        arca_core::application::ui::set_mcp_tags_batch(updates)
+            .map_err(|error| core_error_from_legacy(error, "ui_preference_failed"))
+    })
+    .await
+}
+
+#[tauri::command]
 pub async fn import_mcp_icon_dialog(
     app: tauri::AppHandle,
     asset_key: String,

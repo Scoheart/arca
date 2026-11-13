@@ -62,6 +62,7 @@ import type {
   ProviderModelSummary,
   ModelProfileView,
   McpIconPreferences,
+  McpTagPreferences,
   ModelProviderInstanceView,
   OperationPlan,
   OperationCommitResult,
@@ -261,6 +262,12 @@ export const importMcpIconDialog = (assetKey: string) =>
   invoke<McpIconPreferences | null>("import_mcp_icon_dialog", { assetKey });
 export const resetMcpIcon = (assetKey: string) =>
   invoke<McpIconPreferences>("reset_mcp_icon", { assetKey });
+export const listMcpTags = () =>
+  invoke<McpTagPreferences>("list_mcp_tags");
+export const setMcpTags = (assetKey: string, tags: string[]) =>
+  invoke<McpTagPreferences>("set_mcp_tags", { assetKey, tags });
+export const setMcpTagsBatch = (updates: McpTagPreferences) =>
+  invoke<McpTagPreferences>("set_mcp_tags_batch", { updates });
 export const getProxySettings = () =>
   invoke<ProxySettings>("get_proxy_settings");
 export const setProxySettings = (proxyUrl: string | null) =>

@@ -13,6 +13,9 @@ const apiMocks = vi.hoisted(() => ({
   setMcpBuiltinIcon: vi.fn(),
   importMcpIconDialog: vi.fn(),
   resetMcpIcon: vi.fn(),
+  listMcpTags: vi.fn().mockResolvedValue({}),
+  setMcpTags: vi.fn().mockResolvedValue({}),
+  setMcpTagsBatch: vi.fn().mockResolvedValue({}),
 }));
 
 vi.mock("../lib/api", async () => {
@@ -26,6 +29,7 @@ afterEach(() => {
   cleanup();
   vi.clearAllMocks();
   apiMocks.listMcpIconPreferences.mockResolvedValue({});
+  apiMocks.listMcpTags.mockResolvedValue({});
 });
 
 function registryState(overrides: Record<string, unknown> = {}) {
@@ -117,8 +121,8 @@ it("renders effective and shadowed MCP rows and opens the existing Inspector", a
   expect(screen.getByRole("button", { name: "添加 MCPs" })).toBeVisible();
   expect(screen.queryByRole("tablist", { name: "MCP 状态" })).not.toBeInTheDocument();
   expect(screen.getByRole("separator", { name: "调整侧边栏宽度" })).toBeVisible();
-  expect(screen.getByRole("button", { name: "添加订阅" })).toBeVisible();
-  expect(screen.getByRole("button", { name: "导入配置" })).toBeVisible();
+  expect(screen.queryByRole("button", { name: "添加订阅" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "导入配置" })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: /全部来源.*2/ })).toBeVisible();
   await user.click(screen.getByRole("button", { name: /Team catalog.*1/ }));
   expect(screen.getByRole("button", { name: /^打开 MCP filesystem-old 详情 ·/ })).toBeVisible();
@@ -220,4 +224,122 @@ it("offers editing for source-owned MCPs while keeping deletion user-owned", () 
   expect(source).toMatch(/onEdit=\{\s*consumptionState/);
   expect(source).toMatch(/const deletable = useCallback\(\(entry: RegistryEntry\) => isUserOwned\(entry\)/);
   expect(source).not.toMatch(/const editable = useCallback/);
+});
+
+it("hides managed sources in the sidebar, renders tag classification tabs, and updates MCP tags", async () => {
+  const manualEntry: RegistryEntry = {
+    name: "exa",
+    description: "Exa search",
+    tags: [],
+    config: { http: { type: "http", url: "https://mcp.exa.ai/mcp" } },
+    origin: { kind: "manual", source: "manual" },
+  };
+  const discoveredEntry: RegistryEntry = {
+    name: "context7",
+    description: "Docs lookup",
+    tags: ["docs"],
+    config: { stdio: { command: "npx", args: ["-y", "context7"] } },
+    origin: { kind: "discovered", agent: "codex" },
+  };
+  apiMocks.listMcpTags.mockResolvedValue({
+    "exa::http": ["搜索", "常用"],
+  });
+  apiMocks.setMcpTags.mockResolvedValue({
+    "exa::http": ["搜索", "常用"],
+    "context7::stdio": ["docs", "研发"],
+  });
+  apiMocks.setMcpTagsBatch.mockResolvedValue({
+    "exa::http": ["搜索", "常用", "工具"],
+    "context7::stdio": ["docs", "研发", "工具"],
+  });
+
+  const state = registryState({
+    entries: [manualEntry, discoveredEntry],
+    catalog: [
+      { entry: manualEntry, in_effect: true },
+      { entry: discoveredEntry, in_effect: true },
+    ],
+    sources: [
+      {
+        id: "manual",
+        kind: "local",
+        name: "手动添加",
+        url: null,
+        path: null,
+        format: null,
+        enabled: true,
+        added_at: null,
+        synced_at: null,
+        server_count: 1,
+        error: null,
+        managed: true,
+      },
+      {
+        id: "discovered",
+        kind: "local",
+        name: "自动探索",
+        url: null,
+        path: null,
+        format: null,
+        enabled: true,
+        added_at: null,
+        synced_at: null,
+        server_count: 1,
+        error: null,
+        managed: true,
+      },
+    ],
+  });
+  const user = userEvent.setup();
+
+  render(
+    <ToastProvider>
+      <RegistryView state={state} onCreate={vi.fn()} />
+    </ToastProvider>,
+  );
+
+  // Managed sources are hidden from the sidebar filter list, while 全部来源 remains.
+  const sidebar = document.querySelector(".arca-workspace-sidebar") as HTMLElement;
+  expect(within(sidebar).getByRole("button", { name: /全部来源.*2/ })).toBeVisible();
+  expect(within(sidebar).queryByRole("button", { name: /手动添加/ })).not.toBeInTheDocument();
+  expect(within(sidebar).queryByRole("button", { name: /自动探索/ })).not.toBeInTheDocument();
+
+  // Sidebar renders each tag as its own clickable classification tab.
+  const searchTab = await screen.findByRole("button", { name: /搜索.*1/ });
+  expect(searchTab).toBeVisible();
+  expect(screen.getByRole("button", { name: /常用.*1/ })).toBeVisible();
+  expect(screen.getByRole("button", { name: /docs.*1/ })).toBeVisible();
+
+  // Clicking a tag tab filters the workspace to matching MCP cards.
+  await user.click(searchTab);
+  expect(screen.getByRole("heading", { name: "搜索" })).toBeVisible();
+  expect(screen.getByRole("button", { name: /^打开 MCP exa 详情/ })).toBeVisible();
+  expect(screen.queryByRole("button", { name: /^打开 MCP context7 详情/ })).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: /全部来源.*2/ }));
+  expect(screen.getByRole("button", { name: /^打开 MCP context7 详情/ })).toBeVisible();
+
+  // Quick-tag button on a card opens McpTagPickerDialog and saves custom tags.
+  await user.click(screen.getByRole("button", { name: "设置「context7」标签" }));
+  const picker = screen.getByRole("dialog", { name: "设置 MCP 标签" });
+  const tagInput = within(picker).getByRole("textbox", { name: "标签名称" });
+  await user.type(tagInput, "研发");
+  await waitFor(() => expect(tagInput).toHaveValue("研发"));
+  await user.click(within(picker).getByRole("button", { name: "添加" }));
+  await user.click(within(picker).getByRole("button", { name: "保存" }));
+  await waitFor(() => expect(apiMocks.setMcpTags).toHaveBeenCalledWith(
+    "context7::stdio",
+    ["docs", "研发"],
+  ));
+
+  // Tag manager modal supports creating a new tag and batch-assigning MCPs.
+  await user.click(screen.getByRole("button", { name: "新建或管理标签" }));
+  const manager = screen.getByRole("dialog", { name: "标签分类管理" });
+  await user.type(within(manager).getByPlaceholderText("例如 工作、搜索、本地工具"), "工具");
+  await user.click(within(manager).getByRole("button", { name: "全选当前" }));
+  await user.click(within(manager).getByRole("button", { name: "保存" }));
+  await waitFor(() => expect(apiMocks.setMcpTagsBatch).toHaveBeenCalledWith({
+    "context7::stdio": ["docs", "研发", "工具"],
+    "exa::http": ["搜索", "常用", "工具"],
+  }));
 });
