@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.76.2](https://github.com/Scoheart/arca/compare/v2.76.1...v2.76.2) (2026-11-13)
+
+### Changes
+
+* style(desktop): refine preview dialogs and remove redundant copy ([7a56b09](https://github.com/Scoheart/arca/commit/7a56b090d1617d3bdbe3f912a1d09920a82fde66))
+
 ## [2.76.1](https://github.com/Scoheart/arca/compare/v2.76.0...v2.76.1) (2026-11-13)
 
 ### Changes
