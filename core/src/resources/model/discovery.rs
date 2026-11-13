@@ -361,6 +361,14 @@ const FLONNO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("qwen3.8-27b", None, None),
 ];
 
+/// Documented FUMO Lab Fusion chat ids. The docs do not publish a public
+/// Models list. A saved key uses the OpenAI decoder. Legacy `fusion-max-1.0`
+/// is documented for existing integrations and is not seeded.
+const FUMOLAB_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("fusion-max-2.0", None, None),
+    ("fusion-code-1.0", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -412,6 +420,7 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "logfare" => LOGFARE_STATIC_MODELS,
         "synap" => SYNAP_STATIC_MODELS,
         "flonno" => FLONNO_STATIC_MODELS,
+        "fumolab" => FUMOLAB_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -778,6 +787,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "logfare"
         | "synap"
         | "flonno"
+        | "fumolab"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -2756,7 +2766,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi", "hyperbolic", "flonno"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi", "hyperbolic", "flonno", "fumolab"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
@@ -4172,5 +4182,57 @@ mod tests {
         .unwrap();
         assert_eq!(seeded.len(), 1);
         assert_eq!(seeded[0].id, "qwen3.8-27b");
+    }
+
+    #[test]
+    fn fumolab_seeds_documented_fusion_models_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("fumolab").expect("fumolab seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["fusion-max-2.0", "fusion-code-1.0"]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "fusion-max-1.0",
+            "fusion-max-1",
+            "fusion-origin",
+            "gpt-5.4",
+            "claude-sonnet-5",
+            "gemini-3.5-flash",
+            "grok-4",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("fumolab").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"fumolab"));
+        let mut config = provider(
+            "fumolab",
+            "https://capi.fumolab.ai/api/fusion/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        config.protocols.insert(
+            ModelProtocol::OpenaiResponses,
+            crate::domain::types::ModelProviderProtocolConfig {
+                endpoint_path: "/responses".into(),
+            },
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://capi.fumolab.ai/api/fusion/v1/models"
+        );
+        let _home = TestHome::new("fumolab-static-catalog");
+        config.auth_requirement = AuthRequirement::Required;
+        config.id = "fumolab-instance".into();
+        config.name = "FUMO Lab".into();
+        let seeded = execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
+        assert_eq!(seeded.len(), 2);
+        assert_eq!(seeded[0].id, "fusion-max-2.0");
+        assert_eq!(seeded[1].id, "fusion-code-1.0");
     }
 }
