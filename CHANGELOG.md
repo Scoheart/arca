@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.0.0](https://github.com/Scoheart/arca/compare/v2.76.2...v3.0.0) (2026-11-13)
+
+### Changes
+
+* refactor(models)!: prefix generated agent provider IDs with arca_ ([31f014b](https://github.com/Scoheart/arca/commit/31f014b5cedb3a53e973ad18fc8184dbd2f1c16e))
+
 ## [2.76.2](https://github.com/Scoheart/arca/compare/v2.76.1...v2.76.2) (2026-11-13)
 
 ### Changes
