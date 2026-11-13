@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.76.0](https://github.com/Scoheart/arca/compare/v2.75.1...v2.76.0) (2026-11-13)
+
+### Changes
+
+* feat(models): add FUMO Lab provider (#313) ([90e2c3c](https://github.com/Scoheart/arca/commit/90e2c3cfce7c0d206087dacbc6aea289127153dc))
+* feat(mcp): add MCP tags, converge add flows, refine cards, and prioritize added MCPs in agents ([235f316](https://github.com/Scoheart/arca/commit/235f3160a4d963def8a18a63e8c8712016fa7262))
+
 ## [2.75.1](https://github.com/Scoheart/arca/compare/v2.75.0...v2.75.1) (2026-11-12)
 
 ### Changes
