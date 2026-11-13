@@ -36,7 +36,7 @@ function shortDate(value: string | null) {
 }
 
 // Metadata is already supplied by Core; the reading area shows only the body.
-function skillBody(text: string) {
+export function skillBody(text: string) {
   return text.replace(/^\uFEFF?---[ \t]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/, "").trimStart();
 }
 

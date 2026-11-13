@@ -18,17 +18,20 @@ import {
 import { Avatar, Badge } from "./ui";
 import { StartupAgentEditorDialog } from "./StartupAgentEditorDialog";
 import { DialogShell } from "./DialogShell";
+import { AgentAssetPreviewDialog, type AgentAssetPreviewTarget } from "./AgentAssetPreviewDialog";
 
 interface AgentStartupAgentsPanelProps {
   agentId: string;
   agentName: string;
   onOpenCentralAgents?: () => void;
+  onOpenCentralAgent?: (name: string) => void;
 }
 
 export function AgentStartupAgentsPanel({
   agentId,
   agentName,
   onOpenCentralAgents,
+  onOpenCentralAgent,
 }: AgentStartupAgentsPanelProps) {
   const toast = useToast();
   const [state, setState] = useState<AgentStartupAgentsStateView | null>(null);
@@ -37,6 +40,24 @@ export function AgentStartupAgentsPanel({
   const [saving, setSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [previewItem, setPreviewItem] = useState<AgentStartupAgentItemView | null>(null);
+
+  const centralAgentsByName = useMemo(
+    () => new Map(centralAgents.map((agent) => [agent.name, agent])),
+    [centralAgents],
+  );
+
+  const previewTarget = useMemo<AgentAssetPreviewTarget | null>(() => {
+    if (!previewItem) return null;
+    const definition = centralAgentsByName.get(previewItem.id) ?? centralAgentsByName.get(previewItem.name);
+    return {
+      kind: "startup_agent",
+      agentName,
+      item: previewItem,
+      definition,
+      cliFlag: state?.cli_flag,
+    };
+  }, [previewItem, centralAgentsByName, agentName, state?.cli_flag]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -242,17 +263,30 @@ export function AgentStartupAgentsPanel({
           {state.items.map((item) => (
             <div
               key={item.id}
-              className="arca-card p-4 flex flex-col justify-between space-y-3 border transition-colors hover:border-primary/50"
+              className="arca-card p-4 flex flex-col justify-between space-y-3 border transition-colors hover:border-primary/50 cursor-pointer"
               data-active={item.is_active ? "true" : undefined}
+              onClick={() => setPreviewItem(item)}
             >
               <div>
                 <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <Avatar seed={item.name} kind="startup_agent" size={28} />
-                    <div className="min-w-0">
-                      <div className="font-semibold text-xs truncate">
-                        {item.name}
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        className="arca-consumption-inspect"
+                        aria-label={`查看 ${item.name} 详情`}
+                        aria-haspopup="dialog"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          event.currentTarget.focus({ preventScroll: true });
+                          setPreviewItem(item);
+                        }}
+                      >
+                        <strong className="font-semibold text-xs truncate block">
+                          {item.name}
+                        </strong>
+                      </button>
                       <span className="text-[11px] text-muted font-mono truncate block">
                         {item.id}
                       </span>
@@ -284,7 +318,10 @@ export function AgentStartupAgentsPanel({
                 )}
               </div>
 
-              <div className="pt-2 border-t border-subtle flex items-center justify-between gap-2">
+              <div
+                className="pt-2 border-t border-subtle flex items-center justify-between gap-2"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <div className="flex items-center gap-1.5">
                   {item.is_active ? (
                     <span className="flex items-center gap-1 text-emerald-500 text-xs font-semibold">
@@ -415,6 +452,17 @@ export function AgentStartupAgentsPanel({
           onClose={() => setEditorOpen(false)}
         />
       )}
+
+      {/* Detail Preview Dialog */}
+      <AgentAssetPreviewDialog
+        target={previewTarget}
+        onClose={() => setPreviewItem(null)}
+        onOpenDefinition={
+          previewTarget?.kind === "startup_agent" && onOpenCentralAgent
+            ? () => onOpenCentralAgent(previewTarget.definition?.name ?? previewTarget.item.name)
+            : undefined
+        }
+      />
     </div>
   );
 }

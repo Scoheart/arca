@@ -68,6 +68,7 @@ import { McpAvatar } from "./McpIcon";
 import { NativePluginsPanel } from "./NativePluginsPanel";
 import { InstructionsEditor } from "./InstructionsEditor";
 import { McpConfigurationDialog } from "./McpConfigurationDialog";
+import { AgentAssetPreviewDialog, type AgentAssetPreviewTarget } from "./AgentAssetPreviewDialog";
 
 type PickerDomain = "mcp" | "model" | "skill" | "subagent" | "hook";
 type ConfigLocationKind = "file" | "folder";
@@ -156,7 +157,11 @@ export function AgentView({
   const [modelsError, setModelsError] = useState<string | null>(null);
   const [resourceTab, setResourceTab] = useState<AgentResourceTab>(initialTab);
   const [mcpInspection, setMcpInspection] = useState<{ name: string; request: McpInspectionRequest } | null>(null);
-  useEffect(() => setMcpInspection(null), [agentId]);
+  const [inspectedAsset, setInspectedAsset] = useState<ConsumptionView | null>(null);
+  useEffect(() => {
+    setMcpInspection(null);
+    setInspectedAsset(null);
+  }, [agentId]);
   const mcpIcons = useMcpIconPreferences(resourceTab === "mcps");
   const [preparingChange, setPreparingChange] = useState(false);
   const [togglingMcp, setTogglingMcp] = useState<{
@@ -829,8 +834,67 @@ export function AgentView({
       navigateResource({ domain: "subagent", kind: "detail", name: asset.name });
     } else if (asset.domain === "hook") {
       navigateResource({ domain: "hook", kind: "detail", name: asset.name });
+    } else if (asset.domain === "startup_agent") {
+      navigateResource({ domain: "startup_agent", kind: "detail", name: asset.name });
     }
   };
+
+  const assetPreviewTarget = useMemo<AgentAssetPreviewTarget | null>(() => {
+    if (!inspectedAsset) return null;
+    const { asset } = inspectedAsset;
+    if (asset.domain === "model") {
+      const profileId = asset.profile_id;
+      const externalCandidate = profileId.startsWith("external-")
+        ? agentModelMigrationCandidates.find((candidate) => `external-${candidate.candidate_id}` === profileId)
+        : undefined;
+      return {
+        kind: "model",
+        agentName: agent.name,
+        consumption: inspectedAsset,
+        profile: externalCandidate ? undefined : modelProfilesById.get(profileId),
+        externalCandidate,
+      };
+    }
+    if (asset.domain === "skill") {
+      return {
+        kind: "skill",
+        agentName: agent.name,
+        consumption: inspectedAsset,
+        centralSkill: centralSkillsByName.get(asset.name),
+        externalSkill: externalSkillsByName.get(asset.name),
+      };
+    }
+    if (asset.domain === "subagent") {
+      return {
+        kind: "subagent",
+        agentName: agent.name,
+        consumption: inspectedAsset,
+        subagent: subagentsByName.get(asset.name),
+      };
+    }
+    if (asset.domain === "hook") {
+      const agentHook = agentHooks.find((item) => item.name === asset.name);
+      const centralHook = centralHooksByName.get(asset.name);
+      return {
+        kind: "hook",
+        agentName: agent.name,
+        consumption: inspectedAsset,
+        hook: agentHook ?? centralHook,
+        centralExists: Boolean(centralHook),
+      };
+    }
+    return null;
+  }, [
+    inspectedAsset,
+    agent.name,
+    agentModelMigrationCandidates,
+    modelProfilesById,
+    centralSkillsByName,
+    externalSkillsByName,
+    subagentsByName,
+    agentHooks,
+    centralHooksByName,
+  ]);
 
   const scanDiagnostics = [
     nativeResources.error && { operation: "list_native_resources", message: nativeResources.error },
@@ -921,12 +985,18 @@ export function AgentView({
           )}
           {mcpInspection?.request.agent_id === agentId && <McpConfigurationDialog name={mcpInspection.name}
             request={mcpInspection.request} onClose={() => setMcpInspection(null)} />}
+          <AgentAssetPreviewDialog
+            target={assetPreviewTarget}
+            onClose={() => setInspectedAsset(null)}
+            onOpenDefinition={inspectedAsset ? () => openAsset(inspectedAsset.asset) : undefined}
+          />
           {resourceTab === "plugins" ? <NativePluginsPanel key={agent.id} plugins={nativePlugins} /> : resourceTab === "instructions" ? <InstructionsEditor key={`${agent.id}:${instructionsRevision}`} agentId={agent.id} /> : resourceTab === "agents" ? (
             <AgentStartupAgentsPanel
               key={agent.id}
               agentId={agent.id}
               agentName={agent.name}
               onOpenCentralAgents={() => onOpenResource?.({ domain: "startup_agent", kind: "index" })}
+              onOpenCentralAgent={(name) => navigateResource({ domain: "startup_agent", kind: "detail", name })}
             />
           ) : resourceTab === "mcps" ? (
             <AgentConsumptionPanel
@@ -1022,7 +1092,7 @@ export function AgentView({
                 onBulkRemove={() => void clearModels()}
                 onManage={() => setPickerDomain("model")}
                 manageDisabled={preparingChange || modelAgent?.mode !== "managed"}
-                onOpenAsset={openAsset}
+                onInspect={setInspectedAsset}
                 onEnabledChange={modelAgent?.supports_global_selection === false ? undefined : switchActiveModel}
                   toggleKind="current"
                   enabledChangeDisabled={(item) => changingModel !== null
@@ -1094,7 +1164,7 @@ export function AgentView({
               external={subagentExternal}
               externalMode="cards"
               onManage={() => setPickerDomain("subagent")}
-              onOpenAsset={openAsset}
+              onInspect={setInspectedAsset}
               onRemove={(asset) => void planRemoval(asset)}
               onConverge={(item, action) => void converge(item, action)}
               convergenceDisabled={preparingChange}
@@ -1131,7 +1201,7 @@ export function AgentView({
               rows={hookRows}
               external={[]}
               onManage={() => setPickerDomain("hook")}
-              onOpenAsset={openAsset}
+              onInspect={setInspectedAsset}
               onRemove={(asset) => void planRemoval(asset)}
               removeLabel={(name) => `从 ${agent.name} 移除 ${name}`}
               removeDisabled={preparingChange}
@@ -1148,7 +1218,7 @@ export function AgentView({
               }
               present={(asset) => {
                 const name = asset.domain === "hook" ? asset.name : "";
-                const hook = centralHooksByName.get(name) || agentHooks.find((h) => h.name === name);
+                const hook = agentHooks.find((h) => h.name === name) ?? centralHooksByName.get(name);
                 return {
                   name: hook?.display_name || name,
                   description: hook ? `${hook.event} · ${hook.command}` : "Hook 资产",
@@ -1172,7 +1242,7 @@ export function AgentView({
               fileSkills={fileSkills}
               externalMode="cards"
               onManage={() => setPickerDomain("skill")}
-              onOpenAsset={openAsset}
+              onInspect={setInspectedAsset}
               manageDisabled={preparingChange || !agent.skills_global_dir}
               onEnabledChange={(item, enabled) => void toggleSkillEnabled(item, enabled)}
               enabledChangeDisabled={(item) => togglingSkill?.name === (item.asset.domain === "skill" ? item.asset.name : "")

@@ -53,6 +53,19 @@ const apiMocks = vi.hoisted(() => ({
   listMcpIconPreferences: vi.fn().mockResolvedValue({
     "github::stdio": { kind: "builtin", value: "database" },
   }),
+  getSkillDetail: vi.fn(),
+  copyToClipboard: vi.fn().mockResolvedValue(undefined),
+  listSubagents: vi.fn().mockResolvedValue([]),
+  listHooks: vi.fn().mockResolvedValue([]),
+  listAgentHooks: vi.fn().mockResolvedValue([]),
+  getAgentStartupAgentsState: vi.fn().mockResolvedValue({
+    agent_id: "codex",
+    supports_config_persistence: true,
+    cli_flag: "--agent",
+    items: [],
+  }),
+  listStartupAgents: vi.fn().mockResolvedValue([]),
+  setActiveStartupAgent: vi.fn().mockResolvedValue(undefined),
 }));
 const openerMocks = vi.hoisted(() => ({
   openPath: vi.fn().mockResolvedValue(undefined),
@@ -78,6 +91,19 @@ beforeEach(() => {
   apiMocks.listModelAgents.mockReset().mockResolvedValue([]);
   apiMocks.listModelProfiles.mockReset().mockResolvedValue([]);
   apiMocks.listNativeResources.mockReset().mockResolvedValue({ native_plugin_agents: [], host_mcps: [], native_plugins: [], native_skills: [], unavailable: false });
+  apiMocks.getSkillDetail.mockReset();
+  apiMocks.copyToClipboard.mockReset().mockResolvedValue(undefined);
+  apiMocks.listSubagents.mockReset().mockResolvedValue([]);
+  apiMocks.listHooks.mockReset().mockResolvedValue([]);
+  apiMocks.listAgentHooks.mockReset().mockResolvedValue([]);
+  apiMocks.getAgentStartupAgentsState.mockReset().mockResolvedValue({
+    agent_id: "codex",
+    supports_config_persistence: true,
+    cli_flag: "--agent",
+    items: [],
+  });
+  apiMocks.listStartupAgents.mockReset().mockResolvedValue([]);
+  apiMocks.setActiveStartupAgent.mockReset().mockResolvedValue(undefined);
 });
 
 const skillsOnlyAgent: AgentInfo = {
@@ -1358,4 +1384,331 @@ it("plans one reviewed empty Model selection when clearing an Agent", async () =
     </ToastProvider>,
   );
   expect(screen.getByRole("button", { name: "清空全部 Models" })).toBeEnabled();
+});
+
+it("previews Hook, Subagent, Model, Skill, and Startup Agent cards in modals instead of navigating away", async () => {
+  const onOpenResource = vi.fn();
+  const fullAgent: AgentInfo = {
+    id: "chatgpt",
+    name: "ChatGPT",
+    format: "toml",
+    key: "mcp_servers",
+    has_global: true,
+    has_project: false,
+    enabled: true,
+    has_model: true,
+    has_subagents: true,
+    has_hooks: true,
+    supported_transports: ["stdio", "http"],
+    global: "~/.codex/config.toml",
+    project: null,
+    skills_global_dir: "~/.codex/skills",
+    docs: null,
+    note: null,
+    category: "desktop",
+    evidence: "official",
+    verified_at: "2026-07-22",
+    builtin: true,
+  };
+  const modelProfile: ModelProfileView = {
+    id: "claude-sonnet",
+    catalog_key: "anthropic/claude-sonnet-4-5",
+    name: "Claude Sonnet",
+    provider: "anthropic",
+    protocol: "anthropic-messages",
+    base_url: "https://api.anthropic.com",
+    model: "claude-sonnet-4-5",
+    reasoning: true,
+    credential_saved: true,
+  };
+  const externalModel: ModelAdoptionCandidate = {
+    candidate_id: "cand-1",
+    agent_id: "chatgpt",
+    native_id: "hy3",
+    name: "HY3",
+    provider: "custom",
+    protocol: "openai-responses",
+    base_url: "https://example.invalid/v1",
+    model: "hy3-preview",
+    active: false,
+    credential_kind: "environment-reference",
+    env_key: "HY3_API_KEY",
+    status: "adoptable",
+    fingerprint: "fp-hy3",
+    settings_hash: "sh",
+    target_hash: "th",
+    candidate_hash: "ch",
+  };
+  const centralSkill = {
+    identity: "central:review-changes",
+    name: "review-changes",
+    description: "Review pending changes",
+    content_kind: "instructions" as const,
+    states: ["managed" as const],
+    location: { kind: "central" as const },
+    source: { kind: "local" as const, path: "/tmp/review-changes", subpath: "" },
+    resolved_revision: null,
+    content_hash: "hash-1",
+    risk: null,
+    update: { available: false, checked_at: null, resolved_revision: null, etag: null, error: null, retry_at: null },
+    assigned_target_ids: ["codex-user"],
+    affected_agent_ids: ["chatgpt"],
+    consumer_agent_ids: ["chatgpt"],
+    installed_at: null,
+    updated_at: null,
+  };
+
+  apiMocks.listModelAgents.mockResolvedValue([
+    {
+      id: "chatgpt",
+      name: "ChatGPT",
+      mode: "managed",
+      storage_authority: "native-registry",
+      installed: true,
+      config_path: "~/.codex/config.toml",
+      config_paths: ["~/.codex/config.toml"],
+      docs: "",
+      assigned_profile: "claude-sonnet",
+      assigned_profiles: ["claude-sonnet"],
+      active_profile: "claude-sonnet",
+      supports_multiple: true,
+      supports_global_selection: true,
+      credential_mode: "keychain-command",
+      supported_protocols: ["anthropic-messages"],
+      note: "",
+    },
+  ]);
+  apiMocks.listModelProfiles.mockResolvedValue([modelProfile]);
+  apiMocks.listHooks.mockResolvedValue([
+    {
+      name: "codex-pretooluse",
+      display_name: "Codex PreToolUse 钩子",
+      description: "在工具调用前记录审阅日志",
+      event: "PreToolUse",
+      matcher: "Bash|Edit",
+      command: 'bash "/Users/scoheart/pre.sh"',
+      hook_type: "command",
+      timeout: 30,
+      enabled: true,
+    },
+  ]);
+  apiMocks.listAgentHooks.mockResolvedValue([
+    {
+      name: "codex-pretooluse",
+      display_name: "Codex PreToolUse 钩子",
+      description: "在工具调用前记录审阅日志",
+      event: "PreToolUse",
+      matcher: "Bash|Edit",
+      command: 'bash "/Users/scoheart/pre.sh"',
+      hook_type: "command",
+      timeout: 30,
+      enabled: true,
+    },
+  ]);
+  apiMocks.listSubagents.mockResolvedValue([
+    {
+      name: "code-reviewer",
+      display_name: "代码审阅助手",
+      description: "专注 diff 与回归检查",
+      system_prompt: "You are a strict code reviewer.",
+      model: "sonnet",
+      tools: ["read", "grep"],
+      mcp_dependencies: ["github"],
+      readonly: true,
+      allow_subagents: false,
+    },
+  ]);
+  apiMocks.getSkillDetail.mockResolvedValue({
+    item: centralSkill,
+    files: [{ path: "SKILL.md", kind: "file", size: 120, executable: false, link_target: null, sha256: "abc" }],
+    skill_md: "---\nname: review-changes\n---\n\nAlways inspect the diff carefully.",
+    skill_md_truncated: false,
+  });
+  apiMocks.listStartupAgents.mockResolvedValue([
+    {
+      name: "reviewer",
+      display_name: "Reviewer",
+      description: "严格审查改动",
+      system_prompt: "Focus on correctness and edge cases.",
+      model: "claude-sonnet-4-5",
+      mode: "review",
+      readonly: true,
+      tools: ["read"],
+    },
+  ]);
+  apiMocks.getAgentStartupAgentsState.mockResolvedValue({
+    agent_id: "chatgpt",
+    active_agent: "default",
+    supports_config_persistence: true,
+    cli_flag: "--agent",
+    items: [
+      {
+        id: "reviewer",
+        name: "reviewer",
+        description: "严格审查改动",
+        model: "claude-sonnet-4-5",
+        is_active: false,
+        is_default: false,
+        source: "central",
+      },
+    ],
+  });
+
+  const testState = {
+    ...state,
+    agents: [fullAgent],
+  } as InstallState;
+  const testSkillsState = {
+    inventory: {
+      items: [centralSkill],
+      agents: [],
+      targets: [],
+      recovery_error: null,
+    },
+    loading: false,
+    error: null,
+    refresh: vi.fn(),
+  } as unknown as SkillsState;
+  const consumptionState = {
+    agents: [],
+    inventory: {
+      native_plugin_agents: [],
+      host_mcps: [],
+      native_plugins: [],
+      revision: "rev-preview",
+      observed_at: "2026-07-22T00:00:00Z",
+      consumptions: [
+        {
+          agent_id: "chatgpt",
+          asset: { domain: "model", profile_id: "claude-sonnet" },
+          ownership: "managed",
+          desired: true,
+          observed: true,
+          active: true,
+          desired_active: true,
+          status: "synced",
+          reason: null,
+          available_actions: [],
+          affected_agent_ids: ["chatgpt"],
+        },
+        {
+          agent_id: "chatgpt",
+          asset: { domain: "skill", name: "review-changes" },
+          ownership: "managed",
+          desired: true,
+          observed: true,
+          enabled: true,
+          observed_enabled: true,
+          status: "synced",
+          reason: null,
+          available_actions: [],
+          affected_agent_ids: ["chatgpt"],
+        },
+        {
+          agent_id: "chatgpt",
+          asset: { domain: "subagent", name: "code-reviewer" },
+          ownership: "managed",
+          desired: true,
+          observed: true,
+          status: "synced",
+          reason: null,
+          available_actions: [],
+          affected_agent_ids: ["chatgpt"],
+        },
+      ],
+      external: [
+        {
+          agent_id: "chatgpt",
+          asset: { domain: "model", profile_id: "external-cand-1" },
+          ownership: "external",
+          desired: false,
+          observed: true,
+          status: "external-added",
+          reason: null,
+          available_actions: [],
+          affected_agent_ids: ["chatgpt"],
+        },
+      ],
+      target_incidents: [],
+    },
+    plan: null,
+    committing: false,
+    error: null,
+    prepareOperation: vi.fn(),
+    commitPlan: vi.fn(),
+    cancel: vi.fn(),
+  } as unknown as ConsumptionState;
+
+  render(
+    <ToastProvider>
+      <AgentView
+        state={testState}
+        skillsState={testSkillsState}
+        consumptionState={consumptionState}
+        externalModelCandidates={[externalModel]}
+        agentId="chatgpt"
+        initialTab="hooks"
+        onOpenResource={onOpenResource}
+      />
+    </ToastProvider>,
+  );
+
+  // 1. Hooks card -> opens preview dialog without navigating away
+  const hookCardButton = await screen.findByRole("button", { name: "查看 Codex PreToolUse 钩子 详情" });
+  expect(hookCardButton).toHaveAttribute("aria-haspopup", "dialog");
+  await userEvent.click(hookCardButton);
+  expect(onOpenResource).not.toHaveBeenCalled();
+  const hookDialog = screen.getByRole("dialog", { name: "Codex PreToolUse 钩子" });
+  expect(within(hookDialog).getByText("Bash|Edit")).toBeVisible();
+  expect(within(hookDialog).getByText('bash "/Users/scoheart/pre.sh"')).toBeVisible();
+  await userEvent.click(within(hookDialog).getByRole("button", { name: "关闭" }));
+  expect(screen.queryByRole("dialog", { name: "Codex PreToolUse 钩子" })).not.toBeInTheDocument();
+
+  // 2. Subagents card -> opens preview dialog
+  await userEvent.click(screen.getByRole("tab", { name: /Subagents/ }));
+  await userEvent.click(await screen.findByRole("button", { name: "查看 代码审阅助手 详情" }));
+  expect(onOpenResource).not.toHaveBeenCalled();
+  const subagentDialog = screen.getByRole("dialog", { name: "代码审阅助手" });
+  expect(within(subagentDialog).getByText("You are a strict code reviewer.")).toBeVisible();
+  expect(within(subagentDialog).getByText("只读沙盒")).toBeVisible();
+  await userEvent.click(within(subagentDialog).getByRole("button", { name: "关闭" }));
+
+  // 3. Managed and external Model cards -> open preview dialogs
+  await userEvent.click(screen.getByRole("tab", { name: /Models/ }));
+  await userEvent.click(await screen.findByRole("button", { name: "查看 Claude Sonnet 详情" }));
+  expect(onOpenResource).not.toHaveBeenCalled();
+  const modelDialog = screen.getByRole("dialog", { name: "Claude Sonnet" });
+  expect(within(modelDialog).getByText("https://api.anthropic.com")).toBeVisible();
+  await userEvent.click(within(modelDialog).getByRole("button", { name: "关闭" }));
+
+  const externalModelCard = screen.getByText("HY3").closest("li")!;
+  await userEvent.click(externalModelCard);
+  expect(onOpenResource).not.toHaveBeenCalled();
+  const extModelDialog = screen.getByRole("dialog", { name: "HY3" });
+  expect(within(extModelDialog).getByText("https://example.invalid/v1")).toBeVisible();
+  await userEvent.click(within(extModelDialog).getByRole("button", { name: "关闭" }));
+
+  // 4. Skills card -> opens preview dialog and fetches SKILL.md
+  await userEvent.click(screen.getByRole("tab", { name: /Skills/ }));
+  await userEvent.click(await screen.findByRole("button", { name: "查看 review-changes 详情" }));
+  expect(onOpenResource).not.toHaveBeenCalled();
+  const skillDialog = screen.getByRole("dialog", { name: "review-changes" });
+  await waitFor(() => expect(apiMocks.getSkillDetail).toHaveBeenCalledWith("central:review-changes"));
+  expect(await within(skillDialog).findByText("Always inspect the diff carefully.")).toBeVisible();
+  await userEvent.click(within(skillDialog).getByRole("button", { name: "关闭" }));
+
+  // 5. Startup Agents card -> opens preview dialog, while footer action stays isolated
+  await userEvent.click(screen.getByRole("tab", { name: /Agents/ }));
+  const switchButton = await screen.findByRole("button", { name: "设为当前启动" });
+  await userEvent.click(switchButton);
+  expect(apiMocks.setActiveStartupAgent).toHaveBeenCalledWith("chatgpt", "reviewer");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole("button", { name: "查看 reviewer 详情" }));
+  expect(onOpenResource).not.toHaveBeenCalled();
+  const startupDialog = screen.getByRole("dialog", { name: "Reviewer" });
+  expect(within(startupDialog).getByText("--agent reviewer")).toBeVisible();
+  expect(within(startupDialog).getByText("Focus on correctness and edge cases.")).toBeVisible();
+  await userEvent.click(within(startupDialog).getByRole("button", { name: "打开中央定义" }));
+  expect(onOpenResource).toHaveBeenCalledWith({ domain: "startup_agent", kind: "detail", name: "reviewer" });
 });

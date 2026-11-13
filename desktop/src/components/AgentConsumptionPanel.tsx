@@ -336,17 +336,17 @@ export function AgentConsumptionPanel({
               : enabled
                 ? `停用 ${presentation.name}`
                 : `启用 ${presentation.name}`;
-            const canInspect = domain === "mcp" && Boolean(onInspect);
+            const canInspect = Boolean(onInspect);
             const canOpen = !isExternal && Boolean(onOpenAsset);
-            const canViewDetail = canInspect || canOpen || Boolean(onOpenAsset);
+            const canViewDetail = canInspect || Boolean(onOpenAsset);
             const openDetail = () => {
               if (canInspect) onInspect?.(item);
               else if (onOpenAsset) onOpenAsset?.(item.asset);
             };
-            const openDetailLabel = canInspect
+            const openDetailLabel = canInspect && domain === "mcp"
               ? `查看 ${presentation.name} 配置`
               : `查看 ${presentation.name} 详情`;
-            const hasTitleButton = canInspect || canOpen;
+            const hasTitleButton = (canInspect && (!isExternal || domain === "mcp")) || canOpen;
             const canRemoveDirect = !isExternal && Boolean(onRemove);
             const canDetachDirect = Boolean(onConverge) && item.available_actions.includes("detach");
             const canDelete = canRemoveDirect || canDetachDirect;

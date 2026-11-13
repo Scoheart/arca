@@ -457,3 +457,46 @@ it("orders added MCP servers before built-in host MCPs in the Agent MCP panel", 
   expect(items[0]).toHaveTextContent(syncedRow.asset.domain === "mcp" ? syncedRow.asset.key.split("::")[0] : "github");
   expect(items[1]).toHaveTextContent("codex_app");
 });
+
+it("prefers in-context inspection over navigation across managed and external non-MCP cards", async () => {
+  const onInspect = vi.fn();
+  const onOpenAsset = vi.fn();
+  const managedSkill: ConsumptionView = {
+    ...syncedRow,
+    asset: { domain: "skill", name: "managed-skill" },
+  };
+  const externalSkill: ConsumptionView = {
+    ...externalRow,
+    asset: { domain: "skill", name: "external-skill" },
+    available_actions: [],
+  };
+
+  render(
+    <AgentConsumptionPanel
+      domain="skill"
+      title="Skills"
+      manageLabel="添加 Skills"
+      rows={[managedSkill]}
+      external={[externalSkill]}
+      externalMode="cards"
+      present={(asset) => ({ name: asset.domain === "skill" ? asset.name : "" })}
+      onManage={vi.fn()}
+      onInspect={onInspect}
+      onOpenAsset={onOpenAsset}
+    />,
+  );
+
+  const inspectButton = screen.getByRole("button", { name: "查看 managed-skill 详情" });
+  expect(inspectButton).toHaveAttribute("aria-haspopup", "dialog");
+  await userEvent.click(inspectButton);
+  expect(onInspect).toHaveBeenCalledTimes(1);
+  expect(onInspect).toHaveBeenCalledWith(managedSkill);
+  expect(onOpenAsset).not.toHaveBeenCalled();
+
+  const externalCard = screen.getByText("external-skill").closest("li")!;
+  expect(within(externalCard).queryByRole("button", { name: /查看/ })).not.toBeInTheDocument();
+  await userEvent.click(externalCard);
+  expect(onInspect).toHaveBeenCalledTimes(2);
+  expect(onInspect).toHaveBeenLastCalledWith(externalSkill);
+  expect(onOpenAsset).not.toHaveBeenCalled();
+});
