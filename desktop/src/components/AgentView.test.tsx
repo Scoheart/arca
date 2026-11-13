@@ -653,6 +653,8 @@ it("shows an external MCP configuration without importing, toggling or removing 
   const dialog = screen.getByRole("dialog", { name: "computer-use" });
   expect(await within(dialog).findByText(/external-computer-use/)).toBeVisible();
   expect(within(dialog).getByText("~/.codex/config.toml")).toBeVisible();
+  expect(within(dialog).getByText("STDIO")).toBeVisible();
+  expect(within(dialog).queryByText("Agent 配置 · 只读查看")).not.toBeInTheDocument();
   expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
   expect(within(dialog).queryByRole("button", { name: /保存|删除|移除|收录/ })).not.toBeInTheDocument();
   expect(apiMocks.inspectMcpConfiguration).toHaveBeenCalledWith({ agent_id: "codex", source: { kind: "configured", key: "computer-use::stdio" } });
@@ -1695,6 +1697,10 @@ it("previews Hook, Subagent, Model, Skill, and Startup Agent cards in modals ins
   const skillDialog = screen.getByRole("dialog", { name: "review-changes" });
   await waitFor(() => expect(apiMocks.getSkillDetail).toHaveBeenCalledWith("central:review-changes"));
   expect(await within(skillDialog).findByText("Always inspect the diff carefully.")).toBeVisible();
+  expect(within(skillDialog).queryByText("中央 Skill 资产")).not.toBeInTheDocument();
+  expect(within(skillDialog).queryByText(/只读预览/)).not.toBeInTheDocument();
+  await userEvent.click(within(skillDialog).getByRole("button", { name: "复制" }));
+  await waitFor(() => expect(apiMocks.copyToClipboard).toHaveBeenCalledWith("Always inspect the diff carefully."));
   await userEvent.click(within(skillDialog).getByRole("button", { name: "关闭" }));
 
   // 5. Startup Agents card -> opens preview dialog, while footer action stays isolated

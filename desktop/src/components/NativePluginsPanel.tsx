@@ -33,8 +33,8 @@ export function HostMcpCard({ item }: { item: HostMcpObservation }) {
       <Presence values={[item.presence]} />
       {item.origin === "plugin" && <span className="arca-native-row-context" title={item.provider}>{item.provider}</span>}
     </ResourceRow>
-    {open && <DialogShell kind="review" size="wide" className="arca-native-dialog" title={item.name}
-      leading={<ResourceIcon domain="mcp" className="w-6 h-6" />} subtitle={t("nativePlugins.mcpDetails")}
+    {open && <DialogShell kind="review" size="md" className="arca-native-dialog" title={item.name}
+      leading={<ResourceIcon domain="mcp" className="w-6 h-6" />}
       onClose={() => setOpen(false)}
       footerEnd={<button type="button" className="btn-ghost" onClick={() => setOpen(false)}>{t("common.close")}</button>}>
       <p className="arca-native-notice">{t(item.presence === "cache_only" ? "nativePlugins.cacheRuntime" : "nativePlugins.hostRuntime")}</p>
@@ -62,8 +62,8 @@ export function NativeSkillCard({ item }: { item: NativeSkillObservation }) {
       <span className="arca-native-row-context" title={sourceLabel}>{sourceLabel}</span>
       {item.presence !== "bundled" && <Presence values={[item.presence]} />}
     </ResourceRow>
-    {open && <DialogShell kind="review" size="wide" className="arca-native-dialog" title={item.name}
-      leading={<ResourceIcon domain="skill" className="w-6 h-6" />} subtitle={t("nativePlugins.skillDetails")}
+    {open && <DialogShell kind="review" size="md" className="arca-native-dialog" title={item.name}
+      leading={<ResourceIcon domain="skill" className="w-6 h-6" />}
       onClose={() => setOpen(false)}
       footerEnd={<button type="button" className="btn-ghost" onClick={() => setOpen(false)}>{t("common.close")}</button>}>
       <p className="arca-native-notice">{t("nativePlugins.skillRuntime")}</p>
@@ -94,8 +94,8 @@ export function NativeFileSkillCard({ item }: { item: NativeFileSkillObservation
       onOpen={() => setOpen(true)} open={open}>
       <span className="arca-native-row-context" title={item.source_path}>{t("nativePlugins.fileSkill")}</span>
     </ResourceRow>
-    {open && <DialogShell kind="detail" size="wide" className="arca-native-dialog" title={item.name}
-      leading={<ResourceIcon domain="skill" className="w-6 h-6" />} subtitle={t("nativePlugins.readOnly")}
+    {open && <DialogShell kind="detail" size="md" className="arca-native-dialog" title={item.name}
+      leading={<ResourceIcon domain="skill" className="w-6 h-6" />}
       onClose={() => setOpen(false)}
       footerEnd={<button type="button" className="btn-ghost" onClick={() => setOpen(false)}>{t("common.close")}</button>}>
       <p>{item.description}</p>
@@ -204,7 +204,7 @@ export function NativePluginsPanel({ plugins }: { plugins: NativePluginObservati
         </li>;
       })}</ul>}
     {selected && <DialogShell kind="review" size="wide" className="arca-native-dialog" title={selected[0].name}
-      leading={<PackageIcon className="w-5 h-5" />} subtitle={t("nativePlugins.readOnly")}
+      leading={<PackageIcon className="w-5 h-5" />}
       onClose={() => setSelectedKey(null)}
       footerEnd={<button type="button" className="btn-ghost" onClick={() => setSelectedKey(null)}>{t("common.close")}</button>}>
       <p className="arca-native-notice">{t("nativePlugins.hostRuntime")}</p>

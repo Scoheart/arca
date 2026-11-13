@@ -5,17 +5,20 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { McpConfigurationView, McpInspectionRequest } from "../lib/types";
 import { McpConfigurationDialog } from "./McpConfigurationDialog";
 
-const { inspect } = vi.hoisted(() => ({ inspect: vi.fn() }));
-vi.mock("../lib/api", () => ({ inspectMcpConfiguration: inspect }));
+const { inspect, copy } = vi.hoisted(() => ({ inspect: vi.fn(), copy: vi.fn() }));
+vi.mock("../lib/api", () => ({ inspectMcpConfiguration: inspect, copyToClipboard: copy }));
 const request: McpInspectionRequest = { agent_id: "codex", source: { kind: "configured", key: "docs::stdio" } };
 const view: McpConfigurationView = { agent_id: "codex", server_id: "docs", documents: [{
   source_path: "~/.codex/config.toml", configuration: { command: "fixture-command", env: { TOKEN: "[已隐藏]" } }, unavailable_reason: null,
 }] };
 
-beforeEach(() => inspect.mockReset().mockResolvedValue(view));
+beforeEach(() => {
+  inspect.mockReset().mockResolvedValue(view);
+  copy.mockReset().mockResolvedValue(undefined);
+});
 afterEach(cleanup);
 
-it("reads once in StrictMode and offers only a read-only configuration and close action", async () => {
+it("reads once in StrictMode and offers only a read-only configuration, copy action, and close action", async () => {
   const close = vi.fn();
   render(<StrictMode><McpConfigurationDialog name="docs" request={request} onClose={close} /></StrictMode>);
   const dialog = screen.getByRole("dialog", { name: "docs" });
@@ -23,8 +26,13 @@ it("reads once in StrictMode and offers only a read-only configuration and close
   expect(inspect).toHaveBeenCalledTimes(1);
   expect(inspect).toHaveBeenCalledWith(request);
   expect(within(dialog).getByText("~/.codex/config.toml")).toBeVisible();
+  expect(within(dialog).queryByText("Agent 配置 · 只读查看")).not.toBeInTheDocument();
+  expect(within(dialog).queryByText(/以 JSON 展示已解析的配置/)).not.toBeInTheDocument();
   expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
   expect(within(dialog).queryByRole("button", { name: /保存|删除|移除|收录|切换/ })).not.toBeInTheDocument();
+  await userEvent.click(within(dialog).getByRole("button", { name: "复制" }));
+  await waitFor(() => expect(copy).toHaveBeenCalledWith(JSON.stringify(view.documents[0].configuration, null, 2)));
+  expect(await within(dialog).findByRole("button", { name: "已复制" })).toBeVisible();
   await userEvent.keyboard("{Escape}");
   expect(close).toHaveBeenCalledTimes(1);
 });

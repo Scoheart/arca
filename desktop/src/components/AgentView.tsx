@@ -983,8 +983,26 @@ export function AgentView({
               })}>{t("notifications.scanStatus")}</button>
             </AgentResourceActions>
           )}
-          {mcpInspection?.request.agent_id === agentId && <McpConfigurationDialog name={mcpInspection.name}
-            request={mcpInspection.request} onClose={() => setMcpInspection(null)} />}
+          {mcpInspection?.request.agent_id === agentId && (() => {
+            const key = mcpInspection.request.source.kind === "configured" ? mcpInspection.request.source.key : "";
+            const entry = key ? mcpEntriesByKey.get(key) : undefined;
+            const iconEntry = entry ?? {
+              name: mcpInspection.name,
+              description: "",
+              tags: [],
+              config: {},
+            };
+            const transport = (entry ? transportOf(entry) : key.split("::").at(-1) ?? "").toUpperCase();
+            return (
+              <McpConfigurationDialog
+                name={mcpInspection.name}
+                leading={<McpAvatar assetKey={key} entry={iconEntry} preference={mcpIcons.preferences[key]} size={32} />}
+                subtitle={transport ? <div className="arca-preview-badges"><Badge tone="neutral">{transport}</Badge></div> : undefined}
+                request={mcpInspection.request}
+                onClose={() => setMcpInspection(null)}
+              />
+            );
+          })()}
           <AgentAssetPreviewDialog
             target={assetPreviewTarget}
             onClose={() => setInspectedAsset(null)}

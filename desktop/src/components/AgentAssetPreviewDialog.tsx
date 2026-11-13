@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import protocolDefinitions from "../../../data/model-protocols.json";
 import * as api from "../lib/api";
 import { formatError } from "../lib/format";
@@ -9,8 +9,8 @@ import type {
   ModelAdoptionCandidate,
   ModelProfileView,
   ModelProtocol,
-  SkillDetail,
   SkillContentKind,
+  SkillDetail,
   SkillInventoryItem,
   StartupAgentDefinition,
   SubagentDefinition,
@@ -20,7 +20,7 @@ import { skillRiskLabel, skillSourceText } from "./SkillCard";
 import { skillBody } from "./SkillInspector";
 import { ProviderGlyph } from "./providerIcons";
 import { useToast } from "./Toast";
-import { BrainIcon, CopyIcon, ExternalLinkIcon, HookMarkIcon } from "./icons";
+import { BrainIcon, CheckIcon, CopyIcon, ExternalLinkIcon, HookMarkIcon } from "./icons";
 import { Avatar, Badge } from "./ui";
 import "./NativePluginsPanel.css";
 
@@ -60,13 +60,20 @@ export type AgentAssetPreviewTarget =
       cliFlag?: string;
     };
 
+interface PreviewFact {
+  key: string;
+  label: string;
+  value: ReactNode;
+  wide?: boolean;
+}
+
 interface PreviewContent {
+  size: "md" | "wide";
   title: string;
-  subtitle: string;
+  subtitle?: ReactNode;
   leading: ReactNode;
   body: ReactNode;
   canOpenDefinition: boolean;
-  footerNote: string;
 }
 
 function protocolLabel(protocol: ModelProtocol): string {
@@ -88,15 +95,21 @@ function consumptionStatusLabel(item: ConsumptionView): string {
     case "ambiguous":
       return "存在配置冲突";
     case "unsupported":
-      return "当前配置不兼容";
+      return "不兼容";
   }
 }
 
+function consumptionStatusTone(item: ConsumptionView): "neutral" | "success" | "warning" | "info" {
+  if (item.status === "synced") return item.enabled === false ? "neutral" : "success";
+  if (item.status === "external-added" || item.status === "external-changed") return "warning";
+  return "neutral";
+}
+
 const SKILL_CONTENT_KIND_LABELS: Record<SkillContentKind, string> = {
-  instructions: "指令规范 (SKILL.md)",
-  automation: "包含可执行脚本",
+  instructions: "指令规范",
+  automation: "含可执行脚本",
   reference: "参考文档",
-  assets: "辅助资源与模板",
+  assets: "资源与模板",
 };
 
 function startupSourceLabel(source: AgentStartupAgentItemView["source"]): string {
@@ -108,22 +121,27 @@ function startupSourceLabel(source: AgentStartupAgentItemView["source"]): string
 function credentialKindLabel(kind: ModelAdoptionCandidate["credential_kind"]): string {
   switch (kind) {
     case "environment-reference":
-      return "环境变量引用";
+      return "环境变量";
     case "literal":
       return "明文凭据";
     case "external-command":
-      return "外部命令获取";
+      return "外部命令";
     case "none":
       return "无凭据";
   }
 }
 
-function Fact({ label, children }: { label: string; children: ReactNode }) {
+function FactsCard({ facts }: { facts: PreviewFact[] }) {
+  if (facts.length === 0) return null;
   return (
-    <div>
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
+    <dl className="arca-native-facts">
+      {facts.map((fact) => (
+        <div key={fact.key} className={fact.wide ? "arca-native-fact-wide" : undefined}>
+          <dt>{fact.label}</dt>
+          <dd>{fact.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -131,27 +149,48 @@ function CopyableCodeSection({
   heading,
   code,
   copyLabel,
+  prose = false,
   onCopy,
 }: {
   heading: string;
   code: string;
   copyLabel: string;
+  prose?: boolean;
   onCopy: (label: string, value: string) => void;
 }) {
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setCopied(false);
+    return () => {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [code]);
+
+  const handleClick = () => {
+    onCopy(copyLabel, code);
+    setCopied(true);
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      setCopied(false);
+      timerRef.current = null;
+    }, 1500);
+  };
+
   return (
-    <section className="arca-native-detail-section arca-mcp-configuration">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <h3 style={{ margin: 0 }}>{heading}</h3>
-        <button
-          type="button"
-          className="btn-ghost text-xs py-1 px-2 inline-flex items-center gap-1"
-          onClick={() => onCopy(copyLabel, code)}
-        >
-          <CopyIcon className="w-3.5 h-3.5" />
-          <span>复制</span>
+    <section className="arca-preview-card" aria-label={heading}>
+      <div className="arca-preview-card-bar">
+        <span className="arca-preview-card-title">{heading}</span>
+        <button type="button" className="arca-preview-copy-btn" onClick={handleClick}>
+          {copied ? <CheckIcon className="w-3 h-3" /> : <CopyIcon className="w-3 h-3" />}
+          <span>{copied ? "已复制" : "复制"}</span>
         </button>
       </div>
-      <pre style={{ maxHeight: 320, overflowY: "auto" }}>
+      <pre tabIndex={0} className={prose ? "arca-preview-prose" : undefined}>
         <code>{code}</code>
       </pre>
     </section>
@@ -170,8 +209,8 @@ function BadgeGroupSection({
   if (items.length === 0) return null;
   return (
     <section className="arca-native-detail-section">
-      <h3>{heading}</h3>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="arca-preview-section-label">{heading}</div>
+      <div className="arca-preview-badges">
         {items.map((entry) => (
           <Badge key={entry} tone={tone}>
             {entry}
@@ -192,54 +231,65 @@ function buildModelPreview(
   const title = profile?.name ?? externalCandidate?.name ?? externalCandidate?.model ?? profileId;
   const provider = profile?.provider ?? externalCandidate?.provider ?? "custom";
   const protocol = profile?.protocol ?? externalCandidate?.protocol;
+  const isActive = Boolean(consumption.desired_active ? consumption.active !== false : consumption.active);
   const activeState = consumption.desired_active
     ? consumption.active === false
-      ? "期望设为当前"
+      ? "待切换"
       : "当前使用"
     : consumption.active
-      ? "Agent 实际当前"
-      : "已配置（备用）";
+      ? "当前使用"
+      : "备用";
+
+  const facts: PreviewFact[] = [
+    {
+      key: "model",
+      label: "模型",
+      value: <code>{profile?.model ?? externalCandidate?.model ?? profileId}</code>,
+    },
+    { key: "provider", label: "渠道", value: provider },
+  ];
+  if (profile) {
+    facts.push({
+      key: "reasoning",
+      label: "思考模式",
+      value: profile.reasoning === true ? "开启" : profile.reasoning === false ? "关闭" : "跟随宿主",
+    });
+  }
+  if (profile?.context_window != null) {
+    facts.push({
+      key: "context",
+      label: "上下文窗口",
+      value: profile.context_window.toLocaleString(),
+    });
+  }
+  if (profile?.max_output_tokens != null) {
+    facts.push({
+      key: "max-output",
+      label: "最大输出",
+      value: profile.max_output_tokens.toLocaleString(),
+    });
+  }
+  const envKey = profile?.env_key ?? externalCandidate?.env_key;
+  if (envKey) {
+    facts.push({ key: "env-key", label: "环境变量", value: <code>{envKey}</code> });
+  }
+  if (externalCandidate) {
+    facts.push({
+      key: "cred",
+      label: "凭据",
+      value: credentialKindLabel(externalCandidate.credential_kind),
+    });
+  } else if (profile?.credential_saved) {
+    facts.push({ key: "cred", label: "凭据", value: "已保存" });
+  }
 
   const body = (
     <>
       {!profile && !externalCandidate && (
-        <p className="arca-native-notice">
-          当前仅在 {agentName} 中观测到此 Model 引用，未能匹配到中央资产定义或完整外部元数据。
-        </p>
+        <p className="arca-native-notice">仅在 {agentName} 中观测到此 Model 引用。</p>
       )}
-      {consumption.reason && <p className="arca-native-notice">同步说明：{consumption.reason}</p>}
-      <dl className="arca-native-facts">
-        <Fact label="模型标识">
-          <code>{profile?.model ?? externalCandidate?.model ?? profileId}</code>
-        </Fact>
-        <Fact label="接入渠道">{provider}</Fact>
-        <Fact label="通信协议">{protocol ? protocolLabel(protocol) : "—"}</Fact>
-        <Fact label="使用状态">{activeState}</Fact>
-        <Fact label="资产来源">{isExternal ? "本地外部配置" : "中央 Models 资产库"}</Fact>
-        <Fact label="同步状态">{consumptionStatusLabel(consumption)}</Fact>
-        {profile && (
-          <Fact label="思考模式">
-            {profile.reasoning === true ? "已开启" : profile.reasoning === false ? "已关闭" : "由宿主决定"}
-          </Fact>
-        )}
-        {profile?.context_window != null && (
-          <Fact label="上下文窗口">{profile.context_window.toLocaleString()}</Fact>
-        )}
-        {profile?.max_output_tokens != null && (
-          <Fact label="最大输出 Tokens">{profile.max_output_tokens.toLocaleString()}</Fact>
-        )}
-        {(profile?.env_key || externalCandidate?.env_key) && (
-          <Fact label="环境变量键">
-            <code>{profile?.env_key ?? externalCandidate?.env_key}</code>
-          </Fact>
-        )}
-        {externalCandidate && (
-          <Fact label="凭据形态">{credentialKindLabel(externalCandidate.credential_kind)}</Fact>
-        )}
-        {profile && (
-          <Fact label="凭据状态">{profile.credential_saved ? "已保存" : "未保存或环境变量提供"}</Fact>
-        )}
-      </dl>
+      {consumption.reason && <p className="arca-native-notice">{consumption.reason}</p>}
+      <FactsCard facts={facts} />
       {(profile?.base_url || externalCandidate?.base_url) && (
         <CopyableCodeSection
           heading="Base URL"
@@ -252,20 +302,23 @@ function buildModelPreview(
   );
 
   return {
+    size: "md",
     title,
-    subtitle: externalCandidate
-      ? "外部 Model 配置 · 未纳入中央模型库"
-      : profile
-        ? `${protocolLabel(profile.protocol)} · ${profile.provider}`
-        : "Model 资产预览",
-    leading: profile || externalCandidate ? (
-      <ProviderGlyph id={provider} name={title} size={32} />
-    ) : (
-      <BrainIcon className="w-5 h-5 text-primary" />
+    subtitle: (
+      <div className="arca-preview-badges">
+        <Badge tone={isActive ? "info" : "neutral"}>{activeState}</Badge>
+        {protocol && <Badge tone="neutral">{protocolLabel(protocol)}</Badge>}
+        {isExternal && <Badge tone="warning">外部配置</Badge>}
+      </div>
     ),
+    leading:
+      profile || externalCandidate ? (
+        <ProviderGlyph id={provider} name={title} size={32} />
+      ) : (
+        <BrainIcon className="w-5 h-5 text-primary" />
+      ),
     body,
     canOpenDefinition: !isExternal && Boolean(profile),
-    footerNote: isExternal ? `只读预览 · ${agentName} 外部配置` : `只读预览 · ${agentName}`,
   };
 }
 
@@ -273,35 +326,39 @@ function buildSubagentPreview(
   target: Extract<AgentAssetPreviewTarget, { kind: "subagent" }>,
   onCopy: (label: string, value: string) => void,
 ): PreviewContent {
-  const { consumption, subagent, agentName } = target;
+  const { consumption, subagent } = target;
   const name = consumption.asset.domain === "subagent" ? consumption.asset.name : "";
   const isExternal = consumption.ownership === "external";
+  const title = subagent?.display_name || name;
+  const identifier = subagent?.name ?? name;
+
+  const facts: PreviewFact[] = [];
+  if (identifier && identifier !== title) {
+    facts.push({ key: "id", label: "标识", value: <code>{identifier}</code> });
+  }
+  facts.push({ key: "model", label: "模型", value: subagent?.model || "inherit" });
+  if (subagent?.allow_subagents) {
+    facts.push({ key: "nested", label: "子代理", value: "允许嵌套" });
+  }
+  if (consumption.target?.global_dir) {
+    facts.push({
+      key: "dir",
+      label: "目录",
+      value: <code>{consumption.target.global_dir}</code>,
+      wide: true,
+    });
+  }
 
   const body = (
     <>
-      {!subagent && (
-        <p className="arca-native-notice">未找到名为 “{name}” 的中央 Subagent 定义。</p>
-      )}
-      {subagent?.description && <p className="arca-native-notice">{subagent.description}</p>}
-      <dl className="arca-native-facts">
-        <Fact label="标识符">
-          <code>{subagent?.name ?? name}</code>
-        </Fact>
-        <Fact label="模型绑定">{subagent?.model || "inherit（继承宿主）"}</Fact>
-        <Fact label="权限模式">{subagent?.readonly ? "只读沙盒" : "标准读写"}</Fact>
-        <Fact label="嵌套调用">{subagent?.allow_subagents ? "允许" : "禁止"}</Fact>
-        <Fact label="同步状态">{consumptionStatusLabel(consumption)}</Fact>
-        {consumption.target?.global_dir && (
-          <Fact label="生效目录">
-            <code>{consumption.target.global_dir}</code>
-          </Fact>
-        )}
-      </dl>
+      {subagent?.description && <p className="arca-preview-summary">{subagent.description}</p>}
+      {!subagent && <p className="arca-native-notice">未找到 “{name}” 的中央定义。</p>}
+      <FactsCard facts={facts} />
       <BadgeGroupSection heading="允许工具" items={subagent?.tools ?? []} />
       <BadgeGroupSection heading="MCP 依赖" items={subagent?.mcp_dependencies ?? []} tone="success" />
       {subagent?.system_prompt && (
         <CopyableCodeSection
-          heading="系统提示词 (System Prompt)"
+          heading="System Prompt"
           code={subagent.system_prompt}
           copyLabel="System Prompt"
           onCopy={onCopy}
@@ -311,12 +368,17 @@ function buildSubagentPreview(
   );
 
   return {
-    title: subagent?.display_name || name,
-    subtitle: subagent ? `${subagent.name} · Subagent 详情` : `${name} · Subagent 资产`,
+    size: subagent?.system_prompt ? "wide" : "md",
+    title,
+    subtitle: (
+      <div className="arca-preview-badges">
+        <Badge tone="neutral">{subagent?.readonly ? "只读沙盒" : "标准读写"}</Badge>
+        <Badge tone={consumptionStatusTone(consumption)}>{consumptionStatusLabel(consumption)}</Badge>
+      </div>
+    ),
     leading: <Avatar seed={name} kind="subagent" size={32} />,
     body,
     canOpenDefinition: !isExternal && Boolean(subagent),
-    footerNote: `只读预览 · ${agentName}`,
   };
 }
 
@@ -326,23 +388,23 @@ function buildHookPreview(
 ): PreviewContent {
   const { consumption, hook, centralExists, agentName } = target;
   const name = consumption.asset.domain === "hook" ? consumption.asset.name : "";
+  const title = hook?.display_name || name;
+  const identifier = hook?.name ?? name;
+
+  const facts: PreviewFact[] = [];
+  if (identifier && identifier !== title) {
+    facts.push({ key: "id", label: "标识", value: <code>{identifier}</code>, wide: true });
+  }
+  facts.push({ key: "matcher", label: "Matcher", value: <code>{hook?.matcher || "*"}</code> });
+  if (hook) {
+    facts.push({ key: "timeout", label: "超时", value: `${hook.timeout} 秒` });
+  }
 
   const body = (
     <>
+      {hook?.description && <p className="arca-preview-summary">{hook.description}</p>}
       {!hook && <p className="arca-native-notice">未找到 Hook “{name}” 的详细定义。</p>}
-      {hook?.description && <p className="arca-native-notice">{hook.description}</p>}
-      <dl className="arca-native-facts">
-        <Fact label="标识符">
-          <code>{hook?.name ?? name}</code>
-        </Fact>
-        <Fact label="触发事件">{hook?.event || "—"}</Fact>
-        <Fact label="启用状态">{hook ? (hook.enabled ? "已启用" : "已停用") : "—"}</Fact>
-        <Fact label="匹配器 (Matcher)">
-          <code>{hook?.matcher || "全局 (*)"}</code>
-        </Fact>
-        <Fact label="超时时间">{hook ? `${hook.timeout} 秒` : "—"}</Fact>
-        <Fact label="资产来源">{centralExists ? "中央 Hooks 资产库" : `仅 ${agentName} 本地`}</Fact>
-      </dl>
+      <FactsCard facts={facts} />
       {hook?.command && (
         <CopyableCodeSection
           heading="执行命令"
@@ -353,7 +415,7 @@ function buildHookPreview(
       )}
       {hook?.command_windows && (
         <CopyableCodeSection
-          heading="Windows 执行命令"
+          heading="Windows 命令"
           code={hook.command_windows}
           copyLabel="Windows Hook 命令"
           onCopy={onCopy}
@@ -363,12 +425,22 @@ function buildHookPreview(
   );
 
   return {
-    title: hook?.display_name || name,
-    subtitle: hook ? `${hook.event} · ${hook.enabled ? "已启用" : "已停用"}` : `${name} · Hook 详情`,
+    size: "md",
+    title,
+    subtitle: (
+      <div className="arca-preview-badges">
+        {hook?.event && <Badge tone="info">{hook.event}</Badge>}
+        {hook && (
+          <Badge tone={hook.enabled ? "success" : "neutral"}>
+            {hook.enabled ? "已启用" : "已停用"}
+          </Badge>
+        )}
+        {!centralExists && <Badge tone="neutral">{agentName} 本地</Badge>}
+      </div>
+    ),
     leading: <HookMarkIcon className="w-5 h-5 text-blue-500" />,
     body,
     canOpenDefinition: centralExists,
-    footerNote: centralExists ? `只读预览 · ${agentName}` : `只读预览 · ${agentName} 本地 Hook`,
   };
 }
 
@@ -376,65 +448,65 @@ function buildStartupAgentPreview(
   target: Extract<AgentAssetPreviewTarget, { kind: "startup_agent" }>,
   onCopy: (label: string, value: string) => void,
 ): PreviewContent {
-  const { item, definition, cliFlag, agentName } = target;
+  const { item, definition, cliFlag } = target;
+  const title = definition?.display_name || item.name;
   const description = item.description || definition?.description;
   const cliCommand = `${cliFlag || "--agent"} ${item.name}`;
 
+  const facts: PreviewFact[] = [];
+  if (item.id && item.id !== title) {
+    facts.push({ key: "id", label: "标识", value: <code>{item.id}</code> });
+  }
+  facts.push({ key: "model", label: "模型", value: definition?.model || item.model || "默认" });
+  if (definition?.mode) {
+    facts.push({ key: "mode", label: "模式", value: definition.mode });
+  }
+  if (item.config_path) {
+    facts.push({
+      key: "config",
+      label: "配置",
+      value: <code>{item.config_path}</code>,
+      wide: true,
+    });
+  }
+
   const body = (
     <>
-      {description && <p className="arca-native-notice">{description}</p>}
-      <dl className="arca-native-facts">
-        <Fact label="Agent 标识">
-          <code>{item.id}</code>
-        </Fact>
-        <Fact label="来源">{startupSourceLabel(item.source)}</Fact>
-        <Fact label="当前状态">
-          {item.is_active ? "当前启动身份" : item.is_default ? "默认身份" : "可选身份"}
-        </Fact>
-        <Fact label="默认模型">{definition?.model || item.model || "跟随宿主配置"}</Fact>
-        {definition && (
-          <>
-            <Fact label="运行模式">{definition.mode || "标准"}</Fact>
-            <Fact label="权限模式">{definition.readonly ? "只读沙盒" : "标准读写"}</Fact>
-          </>
-        )}
-        {item.config_path && (
-          <Fact label="配置文件">
-            <code>{item.config_path}</code>
-          </Fact>
-        )}
-      </dl>
+      {description && <p className="arca-preview-summary">{description}</p>}
+      <FactsCard facts={facts} />
       <CopyableCodeSection
-        heading="CLI 启动参数"
+        heading="CLI 参数"
         code={cliCommand}
         copyLabel="CLI 参数"
         onCopy={onCopy}
       />
       <BadgeGroupSection heading="允许工具" items={definition?.tools ?? []} />
-      {definition?.system_prompt ? (
+      {definition?.system_prompt && (
         <CopyableCodeSection
-          heading="系统提示词 (System Prompt)"
+          heading="System Prompt"
           code={definition.system_prompt}
           copyLabel="System Prompt"
           onCopy={onCopy}
         />
-      ) : (
-        <p className="arca-native-muted" style={{ marginTop: 14 }}>
-          {item.source === "central"
-            ? "未配置独立的 System Prompt。"
-            : "该启动身份由宿主内置或本地配置提供，未包含中央定义正文。"}
-        </p>
       )}
     </>
   );
 
   return {
-    title: definition?.display_name || item.name,
-    subtitle: `${item.id} · ${startupSourceLabel(item.source)}${item.is_active ? " · 当前使用" : ""}`,
+    size: definition?.system_prompt ? "wide" : "md",
+    title,
+    subtitle: (
+      <div className="arca-preview-badges">
+        <Badge tone={item.is_active ? "info" : "neutral"}>
+          {item.is_active ? "当前使用" : item.is_default ? "默认" : startupSourceLabel(item.source)}
+        </Badge>
+        {item.is_active && <Badge tone="neutral">{startupSourceLabel(item.source)}</Badge>}
+        {definition?.readonly && <Badge tone="neutral">只读沙盒</Badge>}
+      </div>
+    ),
     leading: <Avatar seed={item.name} kind="startup_agent" size={32} />,
     body,
     canOpenDefinition: item.source === "central",
-    footerNote: `只读预览 · ${agentName}`,
   };
 }
 
@@ -451,45 +523,41 @@ function buildSkillPreview({
   error: string | null;
   onCopy: (label: string, value: string) => void;
 }): PreviewContent {
-  const { consumption, centralSkill, externalSkill, agentName } = target;
+  const { consumption, centralSkill, externalSkill } = target;
   const name = consumption.asset.domain === "skill" ? consumption.asset.name : "";
   const item = centralSkill ?? externalSkill;
   const isExternal = consumption.ownership === "external";
-  const locationLabel = item?.location.kind === "central"
-    ? "中央 Skills 资产库"
-    : item?.location.global_dir || consumption.target?.global_dir || "Agent 本地目录";
+  const localDir = item?.location.kind !== "central"
+    ? item?.location.global_dir || consumption.target?.global_dir
+    : undefined;
   const bodyText = detail ? skillBody(detail.skill_md) : "";
+
+  const facts: PreviewFact[] = [];
+  if (item?.source) {
+    facts.push({ key: "source", label: "来源", value: skillSourceText(item.source), wide: true });
+  } else if (isExternal) {
+    facts.push({ key: "source", label: "来源", value: "本地外部副本" });
+  }
+  if (item) {
+    facts.push({
+      key: "kind",
+      label: "内容",
+      value: `${SKILL_CONTENT_KIND_LABELS[item.content_kind]}${detail ? ` · ${detail.files.length} 个文件` : ""}`,
+    });
+  }
+  if (localDir) {
+    facts.push({ key: "dir", label: "位置", value: <code>{localDir}</code>, wide: true });
+  }
 
   const body = (
     <>
+      {item?.description && <p className="arca-preview-summary">{item.description}</p>}
       {!item && (
-        <p className="arca-native-notice">
-          当前未能加载 “{name}” 的 Skill 资产清单，可能已从本地目录或中央仓库移除。
-        </p>
+        <p className="arca-native-notice">未加载到 “{name}” 的 Skill 资产清单。</p>
       )}
-      {item?.description && <p className="arca-native-notice">{item.description}</p>}
-      <dl className="arca-native-facts">
-        <Fact label="Skill 标识">
-          <code>{name}</code>
-        </Fact>
-        <Fact label="状态">{consumptionStatusLabel(consumption)}</Fact>
-        <Fact label="资产来源">{item ? skillSourceText(item.source) : isExternal ? "外部副本 · 来源未知" : "中央资产库"}</Fact>
-        <Fact label="存储位置">
-          <code>{locationLabel}</code>
-        </Fact>
-        <Fact label="内容形态">
-          {item ? `${SKILL_CONTENT_KIND_LABELS[item.content_kind]}${detail ? ` · ${detail.files.length} 个文件` : ""}` : "—"}
-        </Fact>
-        {item?.risk && (
-          <Fact label="风险检查">
-            {item.risk.finding_count > 0
-              ? `${skillRiskLabel(item.risk.level)} (${item.risk.finding_count})`
-              : skillRiskLabel(item.risk.level)}
-          </Fact>
-        )}
-      </dl>
-      {consumption.reason && <p className="arca-native-notice">同步说明：{consumption.reason}</p>}
-      {loading && <p className="arca-native-muted">正在读取 SKILL.md 正文…</p>}
+      {consumption.reason && <p className="arca-native-notice">{consumption.reason}</p>}
+      <FactsCard facts={facts} />
+      {loading && <p className="arca-native-muted">正在加载正文…</p>}
       {!loading && error && (
         <p className="arca-native-notice" role="alert" style={{ color: "var(--color-red)" }}>
           读取 SKILL.md 失败：{error}
@@ -498,12 +566,13 @@ function buildSkillPreview({
       {!loading && !error && detail && (
         <>
           {detail.skill_md_truncated && (
-            <p className="arca-native-notice">正文内容较长，以下展示已按预览上限截断。</p>
+            <p className="arca-native-notice">正文内容较长，以下展示已截断。</p>
           )}
           <CopyableCodeSection
-            heading="SKILL.md 正文"
+            heading="SKILL.md"
             code={bodyText || "暂无正文内容。"}
-            copyLabel="SKILL.md 正文"
+            copyLabel="SKILL.md"
+            prose
             onCopy={onCopy}
           />
         </>
@@ -512,12 +581,21 @@ function buildSkillPreview({
   );
 
   return {
+    size: "wide",
     title: item?.name || name,
-    subtitle: centralSkill ? "中央 Skill 资产" : externalSkill ? "本地外部 Skill" : "Skill 详情",
+    subtitle: (
+      <div className="arca-preview-badges">
+        <Badge tone={consumptionStatusTone(consumption)}>{consumptionStatusLabel(consumption)}</Badge>
+        {item?.risk && item.risk.finding_count > 0 && (
+          <Badge tone="warning">
+            {`${skillRiskLabel(item.risk.level)} · ${item.risk.finding_count}`}
+          </Badge>
+        )}
+      </div>
+    ),
     leading: <Avatar seed={name} kind="skill" size={32} />,
     body,
     canOpenDefinition: !isExternal && Boolean(centralSkill),
-    footerNote: isExternal ? `只读预览 · ${agentName} 外部配置` : `只读预览 · ${agentName}`,
   };
 }
 
@@ -608,14 +686,13 @@ export function AgentAssetPreviewDialog({
   return (
     <DialogShell
       kind="detail"
-      size="wide"
+      size={preview.size}
       className="arca-native-dialog"
       title={preview.title}
       subtitle={preview.subtitle}
       leading={preview.leading}
       closeLabel="关闭详情"
       onClose={onClose}
-      footerStart={<span>{preview.footerNote}</span>}
       footerEnd={
         <>
           {preview.canOpenDefinition && onOpenDefinition && (

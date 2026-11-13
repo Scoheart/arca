@@ -40,21 +40,74 @@
 .arca-native-row-affordance > svg { width: 12px; height: 12px; }
 .arca-native-row-affordance > .arca-native-row-chevron { width: 14px; height: 14px; transform: rotate(-90deg); }
 .arca-native-dialog { color: var(--text-primary); }
+.arca-native-dialog .arca-dialog-shell-header { padding: 13px var(--arca-dialog-inline); }
 .arca-native-dialog .arca-dialog-shell-heading { min-width: 0; }
-.arca-native-dialog .arca-dialog-shell-heading h2 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.arca-native-notice, .arca-native-muted { color: var(--text-secondary); font-size: 11px; line-height: 1.6; }
-.arca-native-notice { margin: 0 0 12px; }
-.arca-native-dialog code { font: 11px/1.6 var(--font-mono); overflow-wrap: anywhere; white-space: pre-wrap; user-select: text; }
-.arca-native-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; margin: 0 0 18px; }
+.arca-native-dialog .arca-dialog-shell-heading h2 {
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis; letter-spacing: -0.01em;
+}
+.arca-native-dialog .arca-dialog-shell-subtitle { margin-top: 4px; }
+.arca-native-dialog .arca-dialog-shell-body { padding: 16px var(--arca-dialog-inline) 18px; }
+.arca-native-dialog .arca-dialog-shell-footer { min-height: 48px; padding: 10px var(--arca-dialog-inline); }
+.arca-preview-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.arca-preview-summary { margin: 0 0 14px; color: var(--text-secondary); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.arca-native-muted { color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.arca-native-notice {
+  margin: 0 0 14px; padding: 10px 12px; border: 1px solid var(--border-subtle);
+  border-radius: 10px; background: var(--surface-section);
+  color: var(--text-secondary); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere;
+}
+.arca-native-dialog code { font: 12px/1.55 var(--font-mono); overflow-wrap: anywhere; white-space: pre-wrap; user-select: text; }
+.arca-native-facts {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px;
+  margin: 0 0 14px; padding: 12px 14px;
+  border: 1px solid var(--border-subtle); border-radius: 10px; background: var(--surface-section);
+}
 .arca-native-facts > div { min-width: 0; }
-.arca-native-facts dt { margin: 0 0 4px; color: var(--text-secondary); font-size: 10px; }
-.arca-native-facts dd { margin: 0; color: var(--text-primary); font-size: 12px; overflow-wrap: anywhere; }
-.arca-native-facts code { display: block; }
-.arca-native-detail-section { min-width: 0; margin-top: 18px; }
-.arca-native-detail-section > h3 { margin: 0 0 8px; color: var(--text-primary); font-size: 12px; font-weight: 650; }
-.arca-mcp-configuration-source { min-width: 0; margin-top: 12px; }
-.arca-mcp-configuration-path { display: block; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 11px; }
-.arca-mcp-configuration pre { max-width: 100%; margin: 8px 0 0; padding: 12px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--surface-asset); color: var(--text-primary); font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: auto; }
+.arca-native-facts > .arca-native-fact-wide { grid-column: 1 / -1; }
+.arca-native-facts dt { margin: 0 0 3px; color: var(--text-tertiary); font-size: 11px; font-weight: 500; line-height: 1.3; }
+.arca-native-facts dd { margin: 0; color: var(--text-primary); font-size: 12.5px; font-weight: 500; line-height: 1.45; overflow-wrap: anywhere; }
+.arca-native-facts code { display: inline-block; max-width: 100%; }
+.arca-native-detail-section { min-width: 0; margin-top: 16px; }
+.arca-native-detail-section > h3,
+.arca-preview-section-label { margin: 0 0 8px; color: var(--text-secondary); font-size: 11.5px; font-weight: 600; }
+.arca-mcp-configuration { min-width: 0; }
+.arca-mcp-configuration:not(:first-child) { margin-top: 14px; }
+.arca-preview-card,
+.arca-mcp-configuration-source {
+  min-width: 0; margin-top: 14px; overflow: hidden;
+  border: 1px solid var(--border-hairline); border-radius: 10px; background: var(--surface-asset);
+}
+.arca-mcp-configuration-source:first-child { margin-top: 0; }
+.arca-preview-card-bar {
+  display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 6px 10px 6px 12px; background: var(--surface-section); border-bottom: 1px solid var(--border-hairline);
+}
+.arca-preview-card-title {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-secondary); font-size: 11.5px; font-weight: 600;
+}
+.arca-mcp-configuration-path {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-secondary); font: 11.5px/1.4 var(--font-mono); user-select: text;
+}
+.arca-preview-copy-btn {
+  display: inline-flex; height: 24px; flex: 0 0 auto; align-items: center; gap: 4px;
+  padding: 0 8px; border: 1px solid var(--border-hairline); border-radius: 6px;
+  background: var(--surface-control); color: var(--text-secondary);
+  font-size: 11.5px; font-weight: 500; cursor: pointer;
+  transition: background-color .14s ease, color .14s ease, border-color .14s ease;
+}
+.arca-preview-copy-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+.arca-preview-copy-btn:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+.arca-preview-card pre,
+.arca-mcp-configuration-source pre {
+  max-width: 100%; max-height: 340px; margin: 0; padding: 12px 14px; border: 0; border-radius: 0;
+  background: var(--surface-asset); color: var(--text-primary);
+  font: 12px/1.6 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere;
+  overflow-x: auto; overflow-y: auto; tab-size: 2;
+}
+.arca-preview-card pre.arca-preview-prose { padding: 14px 16px; font: 13px/1.68 var(--font-sans); }
+.arca-mcp-configuration-empty { margin: 0; padding: 12px 14px; }
 .arca-native-source-list { margin: 0; padding: 0; list-style: none; }
 .arca-native-source-list > li { padding: 6px 0; }
 .arca-native-source-list code { display: block; color: var(--text-secondary); }
@@ -75,5 +128,6 @@
   .arca-native-facts { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .arca-native-row { transition: none; }
+  .arca-native-row,
+  .arca-preview-copy-btn { transition: none; }
 }
