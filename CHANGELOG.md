@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.76.1](https://github.com/Scoheart/arca/compare/v2.76.0...v2.76.1) (2026-11-13)
+
+### Changes
+
+* fix(desktop): preview agent resource cards in modal dialogs ([96e3512](https://github.com/Scoheart/arca/commit/96e35126f55376b55d7a22ff35ad16b6e2cd14dc))
+
 ## [2.76.0](https://github.com/Scoheart/arca/compare/v2.75.1...v2.76.0) (2026-11-13)
 
 ### Changes
