@@ -4516,6 +4516,79 @@
       }
     },
     {
+      "id": "plamo",
+      "name": "PLaMo",
+      "category": "official",
+      "baseUrl": "https://api.platform.preferredai.jp/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://docs.plamo.preferredai.jp/ja/api",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.platform.preferredai.jp"
+      }
+    },
+    {
+      "id": "amd-token-lab",
+      "name": "AMD Token Lab",
+      "category": "official",
+      "baseUrl": "https://api.tokenlab.amd.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions"
+      ],
+      "docs": "https://developer.amd.com/ai-developer-program/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://notebooks.amd.com/tokenlab"
+      }
+    },
+    {
+      "id": "telnyx",
+      "name": "Telnyx Inference",
+      "category": "gateway",
+      "baseUrl": "https://api.telnyx.com/v2/ai/openai",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://developers.telnyx.com/docs/inference/getting-started",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://portal.telnyx.com/#/app/api-keys"
+      }
+    },
+    {
+      "id": "ecloud-moma",
+      "name": "移动云 MoMA",
+      "category": "official",
+      "baseUrl": "https://moma.cmecloud.cn/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://ecloud.10086.cn/op-help-center/doc/article/92837",
+      "portal": {
+        "kind": "console",
+        "url": "https://ecloud.10086.cn/"
+      }
+    },
+    {
+      "id": "mara",
+      "name": "MARA Cloud",
+      "category": "gateway",
+      "baseUrl": "https://api.cloud.mara.com/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://mara-cloud-docs-qa.vercel.app/get-started/api-keys-and-urls",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://cloud.mara.com/apis"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

@@ -1285,6 +1285,20 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: OpenaiResponses,
             base_url: "https://capi.fumolab.ai/api/fusion/v1",
         }],
+        "amd-token-lab" => &[ModelProviderEndpointView {
+            protocol: AnthropicMessages,
+            base_url: "https://api.tokenlab.amd.com",
+        }],
+        "mara" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.cloud.mara.com/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.cloud.mara.com",
+            },
+        ],
         _ => &[],
     }
 }
@@ -2357,6 +2371,41 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "plamo",
+        name: "PLaMo",
+        default_base_url: Some("https://api.platform.preferredai.jp/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "amd-token-lab",
+        name: "AMD Token Lab",
+        default_base_url: Some("https://api.tokenlab.amd.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "telnyx",
+        name: "Telnyx Inference",
+        default_base_url: Some("https://api.telnyx.com/v2/ai/openai"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "ecloud-moma",
+        name: "移动云 MoMA",
+        default_base_url: Some("https://moma.cmecloud.cn/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "mara",
+        name: "MARA Cloud",
+        default_base_url: Some("https://api.cloud.mara.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3067,6 +3116,11 @@ pub fn infer_provider(base_url: &str) -> String {
     if host == "api.puter.com" && (in_path("/puterai/openai") || in_path("/puterai/anthropic")) {
         return "puter".into();
     }
+    // OpenAI-compatible inference is under /v2/ai. The same host serves the
+    // rest of the Telnyx API, so voice, messaging, and other paths stay custom.
+    if host == "api.telnyx.com" && in_path("/v2/ai") {
+        return "telnyx".into();
+    }
     match host.as_str() {
         "openrouter.ai" | "api.openrouter.ai" => "openrouter",
         "api.anthropic.com" => "anthropic",
@@ -3228,6 +3282,16 @@ pub fn infer_provider(base_url: &str) -> String {
         // The documented API host is capi.fumolab.ai. fumolab.ai and www.fumolab.ai
         // are the website. api.fumolab.ai is not a documented API host.
         "capi.fumolab.ai" => "fumolab",
+        // Chat Completions live on this host. docs.plamo.preferredai.jp,
+        // plamo.preferredai.jp, and console.platform.preferredai.jp do not.
+        "api.platform.preferredai.jp" => "plamo",
+        // Distinct from developer.amd.com.cn, which is AMD Token Factory and is
+        // matched by its /radeon/api path. notebooks.amd.com is the sign-in portal.
+        "api.tokenlab.amd.com" => "amd-token-lab",
+        // The inference host. ecloud.10086.cn is the portal and stays custom.
+        "moma.cmecloud.cn" => "ecloud-moma",
+        // The API host and the plans/keys host. api.sambanova.ai stays sambanova.
+        "api.cloud.mara.com" | "cloud.mara.com" => "mara",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -10096,6 +10160,91 @@ mod tests {
             ("https://api.fumolab.ai/v1", "custom"),
             ("https://capi.fumolab.ai.evil.test/api/fusion/v1", "custom"),
             ("https://capi.fumolab.ai.evil.test/v1", "custom"),
+            ("https://api.platform.preferredai.jp/v1", "plamo"),
+            ("https://api.platform.preferredai.jp/v1/", "plamo"),
+            ("https://api.platform.preferredai.jp/v1/chat/completions", "plamo"),
+            ("https://api.platform.preferredai.jp/v1/models", "plamo"),
+            ("https://api.platform.preferredai.jp/v1/responses", "plamo"),
+            ("https://api.platform.preferredai.jp", "plamo"),
+            ("https://api.platform.preferredai.jp/", "plamo"),
+            ("https://docs.plamo.preferredai.jp/en/api", "custom"),
+            ("https://docs.plamo.preferredai.jp/ja/api", "custom"),
+            ("https://plamo.preferredai.jp/api", "custom"),
+            ("https://console.platform.preferredai.jp", "custom"),
+            ("https://console.platform.preferredai.jp/", "custom"),
+            ("https://platform.preferredai.jp/v1", "custom"),
+            ("https://api.platform.preferredai.jp.evil.test/v1", "custom"),
+            ("https://api.tokenlab.amd.com/v1", "amd-token-lab"),
+            ("https://api.tokenlab.amd.com/v1/", "amd-token-lab"),
+            ("https://api.tokenlab.amd.com/v1/chat/completions", "amd-token-lab"),
+            ("https://api.tokenlab.amd.com/v1/models", "amd-token-lab"),
+            ("https://api.tokenlab.amd.com/v1/messages", "amd-token-lab"),
+            ("https://api.tokenlab.amd.com/v1/responses", "amd-token-lab"),
+            ("https://api.tokenlab.amd.com", "amd-token-lab"),
+            ("https://api.tokenlab.amd.com/", "amd-token-lab"),
+            ("https://api.tokenlab.amd.com/messages", "amd-token-lab"),
+            ("https://developer.amd.com.cn/radeon/api/v1", "amd-token-factory"),
+            ("https://developer.amd.com.cn/radeon/api/v1/chat/completions", "amd-token-factory"),
+            ("https://developer.amd.com.cn/radeon/api", "amd-token-factory"),
+            ("https://developer.amd.com.cn/radeon/api/v1/messages", "amd-token-factory"),
+            ("https://developer.amd.com.cn", "custom"),
+            ("https://developer.amd.com.cn/", "custom"),
+            ("https://developer.amd.com/ai-developer-program/", "custom"),
+            ("https://developer.amd.com/radeon/api/v1", "custom"),
+            ("https://notebooks.amd.com/tokenlab", "custom"),
+            ("https://notebooks.amd.com/", "custom"),
+            ("https://tokenlab.amd.com/v1", "custom"),
+            ("https://api.tokenlab.amd.com.cn/v1", "custom"),
+            ("https://api.tokenlab.amd.com.evil.test/v1", "custom"),
+            ("https://api.telnyx.com/v2/ai/openai", "telnyx"),
+            ("https://api.telnyx.com/v2/ai/openai/", "telnyx"),
+            ("https://api.telnyx.com/v2/ai/openai/chat/completions", "telnyx"),
+            ("https://api.telnyx.com/v2/ai/openai/models", "telnyx"),
+            ("https://api.telnyx.com/v2/ai/openai/embeddings", "telnyx"),
+            ("https://api.telnyx.com/v2/ai", "telnyx"),
+            ("https://api.telnyx.com/v2/ai/", "telnyx"),
+            ("https://api.telnyx.com", "custom"),
+            ("https://api.telnyx.com/", "custom"),
+            ("https://api.telnyx.com/v2", "custom"),
+            ("https://api.telnyx.com/v2/messages", "custom"),
+            ("https://developers.telnyx.com/docs/inference/getting-started", "custom"),
+            ("https://portal.telnyx.com/", "custom"),
+            ("https://telnyx.com/sign-up", "custom"),
+            ("https://api.telnyx.com.evil.test/v2/ai/openai", "custom"),
+            ("https://moma.cmecloud.cn/v1", "ecloud-moma"),
+            ("https://moma.cmecloud.cn/v1/", "ecloud-moma"),
+            ("https://moma.cmecloud.cn/v1/chat/completions", "ecloud-moma"),
+            ("https://moma.cmecloud.cn/v1/models", "ecloud-moma"),
+            ("https://moma.cmecloud.cn/v1/responses", "ecloud-moma"),
+            ("https://moma.cmecloud.cn/v1/messages", "ecloud-moma"),
+            ("https://moma.cmecloud.cn", "ecloud-moma"),
+            ("https://moma.cmecloud.cn/", "ecloud-moma"),
+            ("https://ecloud.10086.cn/", "custom"),
+            ("https://ecloud.10086.cn/op-help-center/doc/article/92837", "custom"),
+            ("https://cmecloud.cn/v1", "custom"),
+            ("https://moma.cmecloud.cn.evil.test/v1", "custom"),
+            ("https://api.cloud.mara.com/v1", "mara"),
+            ("https://api.cloud.mara.com/v1/", "mara"),
+            ("https://api.cloud.mara.com/v1/chat/completions", "mara"),
+            ("https://api.cloud.mara.com/v1/models", "mara"),
+            ("https://api.cloud.mara.com/v1/responses", "mara"),
+            ("https://api.cloud.mara.com/v1/messages", "mara"),
+            ("https://api.cloud.mara.com", "mara"),
+            ("https://api.cloud.mara.com/", "mara"),
+            ("https://api.cloud.mara.com/messages", "mara"),
+            ("https://cloud.mara.com/plans", "mara"),
+            ("https://cloud.mara.com/apis", "mara"),
+            ("https://cloud.mara.com", "mara"),
+            ("https://cloud.mara.com/", "mara"),
+            ("https://api.sambanova.ai/v1", "sambanova"),
+            ("https://api.sambanova.ai/v1/chat/completions", "sambanova"),
+            ("https://api.sambanova.ai", "sambanova"),
+            ("https://cloud.sambanova.ai/apis", "custom"),
+            ("https://www.mara.com/legal/ai-policies", "custom"),
+            ("https://mara.com/", "custom"),
+            ("https://snova.ai/", "custom"),
+            ("https://api.cloud.mara.com.evil.test/v1", "custom"),
+            ("https://cloud.mara.com.evil.test/plans", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -10173,7 +10322,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13656,7 +13805,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13785,7 +13934,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -13930,7 +14079,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -14041,7 +14190,7 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -14139,7 +14288,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14175,7 +14324,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14221,7 +14370,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14273,7 +14422,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14303,7 +14452,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14336,7 +14485,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14369,7 +14518,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14404,7 +14553,7 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14464,7 +14613,7 @@ url = "https://example.test/mcp"
             "https://puter.com/dashboard#account"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14525,7 +14674,7 @@ url = "https://example.test/mcp"
             "https://console.ucloud.cn/modelverse/experience/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14577,7 +14726,7 @@ url = "https://example.test/mcp"
             "https://platform.mosi.cn/app/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14623,7 +14772,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://minekuai.cn/api-docs");
         assert_eq!(serialized["portal"]["url"], "https://minekuai.cn/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14669,7 +14818,7 @@ url = "https://example.test/mcp"
             "https://deploy.radium.cloud/keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14715,7 +14864,7 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://logfare.ai/docs");
         assert_eq!(serialized["portal"]["url"], "https://logfare.ai/register");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14758,7 +14907,7 @@ url = "https://example.test/mcp"
             "https://synap402.com/account.html#keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14801,7 +14950,7 @@ url = "https://example.test/mcp"
             "https://www.flonno.com/dashboard/keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14870,7 +15019,297 @@ url = "https://example.test/mcp"
             "https://fumolab.ai/en/dashboard/api-keys/"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 225);
+        assert_eq!(list_providers().len(), 230);
+    }
+
+    #[test]
+    fn plamo_template_matches_reviewed_connection() {
+        use ModelProtocol::OpenaiCompletions;
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "plamo")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "PLaMo");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://api.platform.preferredai.jp/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.platform.preferredai.jp/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["openai-completions"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://api.platform.preferredai.jp/v1/chat/completions"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(provider_additional_endpoints("plamo").is_empty());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(serialized["docs_url"], "https://docs.plamo.preferredai.jp/ja/api");
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://console.platform.preferredai.jp"
+        );
+        assert_eq!(serialized["portal"]["kind"], "console");
+        assert_eq!(list_providers().len(), 230);
+    }
+
+    #[test]
+    fn amd_token_lab_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "amd-token-lab")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "AMD Token Lab");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://api.tokenlab.amd.com/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.tokenlab.amd.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["openai-completions"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://api.tokenlab.amd.com/v1/chat/completions"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["anthropic-messages"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://api.tokenlab.amd.com/v1/messages"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        let extras = provider_additional_endpoints("amd-token-lab");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![(AnthropicMessages, "https://api.tokenlab.amd.com")]
+        );
+        let factory = list_providers()
+            .iter()
+            .find(|provider| provider.id == "amd-token-factory")
+            .unwrap();
+        assert_ne!(provider.default_base_url, factory.default_base_url);
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://developer.amd.com/ai-developer-program/"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://notebooks.amd.com/tokenlab");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 230);
+    }
+
+    #[test]
+    fn telnyx_template_matches_reviewed_connection() {
+        use ModelProtocol::OpenaiCompletions;
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "telnyx")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "Telnyx Inference");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://api.telnyx.com/v2/ai/openai")
+        );
+        assert_eq!(serialized["base_url"], "https://api.telnyx.com/v2/ai/openai");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["openai-completions"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://api.telnyx.com/v2/ai/openai/chat/completions"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(provider_additional_endpoints("telnyx").is_empty());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://developers.telnyx.com/docs/inference/getting-started"
+        );
+        assert_eq!(
+            serialized["portal"]["url"],
+            "https://portal.telnyx.com/#/app/api-keys"
+        );
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 230);
+    }
+
+    #[test]
+    fn ecloud_moma_template_matches_reviewed_connection() {
+        use ModelProtocol::OpenaiCompletions;
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "ecloud-moma")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "移动云 MoMA");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "official");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://moma.cmecloud.cn/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://moma.cmecloud.cn/v1");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/chat/completions"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["openai-completions"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://moma.cmecloud.cn/v1/chat/completions"
+        );
+        assert!(serialized["protocols"].get("openai-responses").is_none());
+        assert!(serialized["protocols"].get("anthropic-messages").is_none());
+        assert!(provider_additional_endpoints("ecloud-moma").is_empty());
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://ecloud.10086.cn/op-help-center/doc/article/92837"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://ecloud.10086.cn/");
+        assert_eq!(serialized["portal"]["kind"], "console");
+        assert_eq!(list_providers().len(), 230);
+    }
+
+    #[test]
+    fn mara_template_matches_reviewed_connection() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        let provider = list_providers()
+            .iter()
+            .find(|provider| provider.id == "mara")
+            .unwrap();
+        let serialized = serde_json::to_value(provider).unwrap();
+        assert_eq!(provider.name, "MARA Cloud");
+        assert_eq!(provider.default_protocol, OpenaiCompletions);
+        assert_eq!(provider.category, "gateway");
+        assert_eq!(
+            provider.default_base_url,
+            Some("https://api.cloud.mara.com/v1")
+        );
+        assert_eq!(serialized["base_url"], "https://api.cloud.mara.com");
+        assert_eq!(
+            serialized["protocols"]["openai-completions"]["endpoint_path"],
+            "/v1/chat/completions"
+        );
+        assert_eq!(
+            serialized["protocols"]["openai-responses"]["endpoint_path"],
+            "/v1/responses"
+        );
+        assert_eq!(
+            serialized["protocols"]["anthropic-messages"]["endpoint_path"],
+            "/v1/messages"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["openai-completions"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://api.cloud.mara.com/v1/chat/completions"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["openai-responses"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://api.cloud.mara.com/v1/responses"
+        );
+        assert_eq!(
+            full_request_url(
+                serialized["base_url"].as_str().unwrap(),
+                serialized["protocols"]["anthropic-messages"]["endpoint_path"]
+                    .as_str()
+                    .unwrap(),
+            )
+            .unwrap(),
+            "https://api.cloud.mara.com/v1/messages"
+        );
+        let extras = provider_additional_endpoints("mara");
+        assert_eq!(
+            extras
+                .iter()
+                .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url))
+                .collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://api.cloud.mara.com/v1"),
+                (AnthropicMessages, "https://api.cloud.mara.com"),
+            ]
+        );
+        let sambanova = list_providers()
+            .iter()
+            .find(|provider| provider.id == "sambanova")
+            .unwrap();
+        assert_ne!(provider.id, sambanova.id);
+        assert_ne!(provider.default_base_url, sambanova.default_base_url);
+        assert_eq!(serialized["model_discovery_supported"], true);
+        assert_eq!(
+            serialized["docs_url"],
+            "https://mara-cloud-docs-qa.vercel.app/get-started/api-keys-and-urls"
+        );
+        assert_eq!(serialized["portal"]["url"], "https://cloud.mara.com/apis");
+        assert_eq!(serialized["portal"]["kind"], "api-key");
+        assert_eq!(list_providers().len(), 230);
     }
 
 }
