@@ -369,6 +369,43 @@ const FUMOLAB_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("fusion-code-1.0", None, None),
 ];
 
+/// Documented PLaMo chat ids. Anonymous `GET /v1/models` is not a catalog.
+/// A saved key uses the OpenAI decoder. `plamo-3.1-prime-deep-research` is
+/// the async Responses model and is not seeded.
+const PLAMO_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("plamo-3.1-prime", None, None),
+    ("plamo-3.0-prime", None, None),
+    ("plamo-3.0-fin-beta", None, None),
+];
+
+/// Documented Telnyx Inference chat ids. Anonymous `GET /v2/ai/openai/models`
+/// is not a catalog. A saved key uses the OpenAI decoder. Embedding ids and
+/// the other chat ids on the models page are not seeded.
+const TELNYX_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("zai-org/GLM-5.3-Flash", None, None),
+    ("zai-org/GLM-5.3", None, None),
+    ("moonshotai/Kimi-K3", None, None),
+];
+
+/// Public chat ids from anonymous `GET https://moma.cmecloud.cn/v1/models`
+/// on 2026-11-15. That body had 175 rows. `owned_by` was an empty string on
+/// every row. The seed stores three chat ids. Image, video, speech, embedding,
+/// and other partner ids are not seeded.
+const ECLOUD_MOMA_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("zhipu/glm-5.3-flash", None, None),
+    ("jiutian-35b-256k-chat", None, None),
+    ("deepseek-v3.2", None, None),
+];
+
+/// Public chat ids from anonymous `GET https://api.cloud.mara.com/v1/models`
+/// on 2026-11-15. That body was these three rows. `owned_by` was
+/// `no-reply@sambanova.ai`. The seed stores ids only.
+const MARA_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("MiniMax-M3", None, None),
+    ("gemma-4-31B-it", None, None),
+    ("gpt-oss-120b", None, None),
+];
+
 /// Documented model ids used when anonymous GET /v1/models is not a catalog.
 /// Ids and names are the current models page. Context values are the decimal
 /// token counts of the labels that page publishes (1M, 256K, 262K, 16K).
@@ -421,6 +458,10 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "synap" => SYNAP_STATIC_MODELS,
         "flonno" => FLONNO_STATIC_MODELS,
         "fumolab" => FUMOLAB_STATIC_MODELS,
+        "plamo" => PLAMO_STATIC_MODELS,
+        "telnyx" => TELNYX_STATIC_MODELS,
+        "ecloud-moma" => ECLOUD_MOMA_STATIC_MODELS,
+        "mara" => MARA_STATIC_MODELS,
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -788,6 +829,11 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "synap"
         | "flonno"
         | "fumolab"
+        | "plamo"
+        | "amd-token-lab"
+        | "telnyx"
+        | "ecloud-moma"
+        | "mara"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -903,6 +949,8 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "radium"
             | "logfare"
             | "synap"
+            | "ecloud-moma"
+            | "mara"
     ) {
         CredentialPolicy::Optional
     } else {
@@ -2606,6 +2654,8 @@ mod tests {
         "radium",
         "logfare",
         "synap",
+        "ecloud-moma",
+        "mara",
     ];
 
     fn provider(
@@ -2759,6 +2809,8 @@ mod tests {
             "radium",
             "logfare",
             "synap",
+            "ecloud-moma",
+            "mara",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -2766,7 +2818,7 @@ mod tests {
                 "{provider_type}",
             );
         }
-        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi", "hyperbolic", "flonno", "fumolab"] {
+        for provider_type in ["openai", "gmi-cloud", "clean-apis", "dolphin", "river", "unisound", "yeta", "scnet", "oxion-ai", "larprouter", "mango-inference", "darkbloom", "scaledown", "amd-token-factory", "swarms", "helmholtz-blablador", "zro", "nararouter", "nodecode", "exaone", "sailresearch", "fortytwo-engine", "anyapi", "itzi", "hyperbolic", "flonno", "fumolab", "plamo", "amd-token-lab", "telnyx"] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
                 Some(CredentialPolicy::Required),
@@ -4234,5 +4286,301 @@ mod tests {
         assert_eq!(seeded.len(), 2);
         assert_eq!(seeded[0].id, "fusion-max-2.0");
         assert_eq!(seeded[1].id, "fusion-code-1.0");
+    }
+
+    #[test]
+    fn plamo_seeds_documented_chat_models_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("plamo").expect("plamo seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["plamo-3.1-prime", "plamo-3.0-prime", "plamo-3.0-fin-beta"]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "plamo-3.1-prime-deep-research",
+            "plamo-3.0",
+            "plamo-2",
+            "gpt-5.4",
+            "claude-sonnet-5",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("plamo").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"plamo"));
+        let config = provider(
+            "plamo",
+            "https://api.platform.preferredai.jp/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.platform.preferredai.jp/v1/models"
+        );
+        let _home = TestHome::new("plamo-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "plamo-instance".into(),
+                name: "PLaMo".into(),
+                provider: "plamo".into(),
+                base_url: "https://api.platform.preferredai.jp/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 3);
+        assert_eq!(seeded[0].id, "plamo-3.1-prime");
+        assert_eq!(seeded[2].id, "plamo-3.0-fin-beta");
+    }
+
+    #[test]
+    fn amd_token_lab_has_no_seed_and_requires_a_key_to_discover() {
+        assert!(reviewed_static_catalog("amd-token-lab").is_none());
+        assert!(static_seed_models("amd-token-lab").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"amd-token-lab"));
+        let mut config = provider(
+            "amd-token-lab",
+            "https://api.tokenlab.amd.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        config.protocols.insert(
+            ModelProtocol::AnthropicMessages,
+            crate::domain::types::ModelProviderProtocolConfig {
+                endpoint_path: "/v1/messages".into(),
+            },
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.tokenlab.amd.com/v1/models"
+        );
+        let _home = TestHome::new("amd-token-lab-no-seed");
+        config.auth_requirement = AuthRequirement::Required;
+        config.id = "amd-token-lab-instance".into();
+        config.name = "AMD Token Lab".into();
+        let error = execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap_err();
+        assert!(
+            error.contains("model_provider_credential_missing"),
+            "{error}"
+        );
+    }
+
+    #[test]
+    fn telnyx_seeds_documented_chat_models_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("telnyx").expect("telnyx seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            [
+                "zai-org/GLM-5.3-Flash",
+                "zai-org/GLM-5.3",
+                "moonshotai/Kimi-K3",
+            ]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "moonshotai/Kimi-K2.6",
+            "moonshotai/Kimi-K3.1-Pro",
+            "zai-org/GLM-5.2",
+            "openai/gpt-oss-120b",
+            "Qwen/Qwen3-Embedding-8B",
+            "thenlper/gte-large",
+            "intfloat/multilingual-e5-large",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("telnyx").is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"telnyx"));
+        let config = provider(
+            "telnyx",
+            "https://api.telnyx.com/v2/ai/openai",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.telnyx.com/v2/ai/openai/models"
+        );
+        let _home = TestHome::new("telnyx-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "telnyx-instance".into(),
+                name: "Telnyx Inference".into(),
+                provider: "telnyx".into(),
+                base_url: "https://api.telnyx.com/v2/ai/openai".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 3);
+        assert_eq!(seeded[0].id, "zai-org/GLM-5.3-Flash");
+        assert_eq!(seeded[2].id, "moonshotai/Kimi-K3");
+    }
+
+    #[test]
+    fn ecloud_moma_seeds_public_chat_and_accepts_an_empty_owned_by() {
+        let models = reviewed_static_catalog("ecloud-moma").expect("ecloud-moma seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            [
+                "zhipu/glm-5.3-flash",
+                "jiutian-35b-256k-chat",
+                "deepseek-v3.2",
+            ]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in [
+            "CosyVoice",
+            "SenseVoice",
+            "Flux.1-dev",
+            "qwen/text-embedding-v4",
+            "bge-m3",
+            "qwen/happyhorse-1.1-t2v",
+            "jiutian-vl-chat-image",
+            "glm-5.3-flash",
+            "hncm/glm-5.3-flash",
+        ] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("ecloud-moma").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"ecloud-moma"));
+        let page = decode_page(
+            DiscoveryAdapter::OpenAi,
+            serde_json::json!({
+                "object": "list",
+                "data": [
+                    {"id": "zhipu/glm-5.3-flash", "object": "model", "created": 1, "owned_by": ""},
+                    {"id": "CosyVoice", "object": "model", "created": 1, "owned_by": ""},
+                    {"id": "", "object": "model", "created": 1, "owned_by": ""}
+                ]
+            }),
+        )
+        .unwrap();
+        assert_eq!(
+            page.models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["zhipu/glm-5.3-flash", "CosyVoice"]
+        );
+        assert!(page.models.iter().all(|model| model.name.is_none()));
+        let config = provider(
+            "ecloud-moma",
+            "https://moma.cmecloud.cn/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://moma.cmecloud.cn/v1/models"
+        );
+        let _home = TestHome::new("ecloud-moma-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput {
+            provider: ModelProviderConfig {
+                id: "ecloud-moma-instance".into(),
+                name: "移动云 MoMA".into(),
+                provider: "ecloud-moma".into(),
+                base_url: "https://moma.cmecloud.cn/v1".into(),
+                model_catalog_url: None,
+                portal_url: None,
+                protocols: BTreeMap::from([(
+                    ModelProtocol::OpenaiCompletions,
+                    crate::domain::types::ModelProviderProtocolConfig {
+                        endpoint_path: "/chat/completions".into(),
+                    },
+                )]),
+                auth_requirement: AuthRequirement::Required,
+                api_key_source: None,
+                env_key: None,
+            },
+        })
+        .unwrap();
+        assert_eq!(seeded.len(), 3);
+        assert_eq!(seeded[0].id, "zhipu/glm-5.3-flash");
+        assert_eq!(seeded[2].id, "deepseek-v3.2");
+    }
+
+    #[test]
+    fn mara_seeds_the_public_catalog_without_a_key_and_discovers_with_one() {
+        let models = reviewed_static_catalog("mara").expect("mara seed");
+        assert_eq!(
+            models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["MiniMax-M3", "gemma-4-31B-it", "gpt-oss-120b"]
+        );
+        assert!(models
+            .iter()
+            .all(|model| model.name.is_none() && model.context_length.is_none()));
+        for omitted in ["MiniMax-M2", "whisper-large", "text-embedding-3-large"] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(static_seed_models("mara").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"mara"));
+        let mut config = provider(
+            "mara",
+            "https://api.cloud.mara.com",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        config.protocols.insert(
+            ModelProtocol::OpenaiResponses,
+            crate::domain::types::ModelProviderProtocolConfig {
+                endpoint_path: "/v1/responses".into(),
+            },
+        );
+        config.protocols.insert(
+            ModelProtocol::AnthropicMessages,
+            crate::domain::types::ModelProviderProtocolConfig {
+                endpoint_path: "/v1/messages".into(),
+            },
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.cloud.mara.com/v1/models"
+        );
+        let _home = TestHome::new("mara-static-catalog");
+        config.auth_requirement = AuthRequirement::Required;
+        config.id = "mara-instance".into();
+        config.name = "MARA Cloud".into();
+        let seeded = execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
+        assert_eq!(seeded.len(), 3);
+        assert_eq!(seeded[0].id, "MiniMax-M3");
+        assert_eq!(seeded[2].id, "gpt-oss-120b");
     }
 }
