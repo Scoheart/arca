@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/Scoheart/arca/compare/v3.0.0...v3.1.0) (2026-11-16)
+
+### Changes
+
+* feat(models): add PLaMo, AMD Token Lab, Telnyx, China Mobile MoMA and MARA providers (#314) ([88e1036](https://github.com/Scoheart/arca/commit/88e103669224996fce103c7679b00d81d335a118))
+* feat(models): add a local browser playground ([0fedf33](https://github.com/Scoheart/arca/commit/0fedf33e923c5a8dc4748039b8b1aafb57e64016))
+
 ## [3.0.0](https://github.com/Scoheart/arca/compare/v2.76.2...v3.0.0) (2026-11-13)
 
 ### Changes
