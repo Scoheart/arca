@@ -22,6 +22,8 @@ async function invoke<T>(command: string, args?: Parameters<typeof tauriInvoke>[
   }
 }
 
+export const openModelPlayground = () => invoke<void>("open_model_playground");
+
 export const unlockModelCredentials = (retry = false) => invoke<{
   unlocked: boolean;
   expires_in_seconds: number;

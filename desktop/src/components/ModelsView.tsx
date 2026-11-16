@@ -8,6 +8,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   copyToClipboard,
   exportModelCurl,
+  openModelPlayground,
   revealModelProviderCredential,
 } from "../lib/api";
 import type { ConsumptionState } from "../hooks/useConsumptionState";
@@ -564,6 +565,17 @@ export function ModelsView({
               }}>
                 <PlusIcon className="w-4 h-4" />
                 <span>{t("models.addProvider")}</span>
+              </button>
+            }
+            footer={
+              <button className="btn-secondary" type="button" onClick={() => {
+                void openModelPlayground().catch((error) => toast.show({
+                  kind: "error",
+                  msg: t("models.playgroundFailed", { error: formatError(error) }),
+                }));
+              }}>
+                <ExternalLinkIcon className="w-4 h-4" />
+                <span>{t("models.playground")}</span>
               </button>
             }
           >

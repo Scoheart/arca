@@ -273,6 +273,12 @@ pub enum ModelCommand {
         #[arg(value_parser = parse_identity)]
         profile_id: String,
     },
+    /// Open a local browser panel for comparing saved models.
+    Playground {
+        /// Print the local address without opening the browser.
+        #[arg(long)]
+        no_open: bool,
+    },
     /// Show desired, observed, enabled, and current state for Model relationships.
     Status {
         #[arg(long)]
@@ -573,6 +579,7 @@ fn dispatch_model(cli: &Cli, command: &ModelCommand) -> Result<CommandOutput, Cl
     let palette = Palette::new(cli.no_color || cli.json);
     match command {
         ModelCommand::Manage(command) => crate::model_management::dispatch(cli, command),
+        ModelCommand::Playground { no_open } => crate::playground::run(cli, *no_open),
         ModelCommand::List => {
             cli.reject_mutation_options()?;
             model_list(palette)

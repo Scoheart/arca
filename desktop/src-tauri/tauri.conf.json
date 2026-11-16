@@ -4,7 +4,7 @@
   "version": "3.0.0",
   "identifier": "com.scoheart.arca",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run dev:arca",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "bash scripts/prepare-release.sh",
     "frontendDist": "../dist"

@@ -45,7 +45,7 @@ fn request_template(provider_type: &str, protocol: &ModelProtocol, model: &str) 
 
 fn quote(value: &str) -> String { format!("'{}'", value.replace('\'', "'\\''")) }
 
-fn url_component(value: &str) -> String {
+pub(super) fn url_component(value: &str) -> String {
     value.bytes().map(|byte| {
         if byte.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&byte) {
             (byte as char).to_string()

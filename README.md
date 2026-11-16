@@ -310,10 +310,12 @@ Build from source:
 ```bash
 cd desktop
 npm ci
-npm run tauri build      # or: npm run tauri dev
+npm run tauri build
 ```
 
-`npm run tauri dev` starts **Arca Dev** with its own application identifier and
+For development, first run `npm --prefix ../playground ci` from `desktop/`.
+`npm run tauri dev` builds the [Model playground](playground/README.md) and
+starts **Arca Dev** with its own application identifier and
 purple DEV icon. It shares your Arca data, while the installed **Arca** keeps its
 existing Dock entry. The Run script stops only this checkout's development
 processes and leaves the installed application running.
@@ -329,6 +331,9 @@ cargo build --release -p arca-cli   # → target/release/arca
 ```
 
 Everything runs against `~/.arca/`, shared with the desktop app.
+
+To include `arca model playground` in a CLI built from source, build the
+[playground frontend](playground/README.md) before compiling the CLI.
 
 ### Teach an Agent to use the CLI
 

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:arca": "npm --prefix ../playground run build && npm run dev",
     "build": "tsc && vite build",
     "check:agent-icons": "node ../scripts/check-agent-icons.mjs",
     "test": "vitest run",

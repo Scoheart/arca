@@ -21,6 +21,7 @@ pub mod mcp;
 pub mod models;
 pub mod network;
 pub mod operations;
+pub mod playground;
 pub mod skills;
 pub mod ui;
 pub mod update;

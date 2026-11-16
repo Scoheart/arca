@@ -5,10 +5,14 @@ cd "$(dirname "$0")/.."
 started=$SECONDS
 npm run build &
 frontend_pid=$!
-bash scripts/prepare-sidecar.sh &
+(
+  npm --prefix ../playground ci --no-audit --no-fund
+  npm --prefix ../playground run build
+  bash scripts/prepare-sidecar.sh
+) &
 cli_pid=$!
 status=0
 wait "$frontend_pid" || status=1
 wait "$cli_pid" || status=1
-printf 'Frontend and CLI preparation: %s seconds\n' "$((SECONDS - started))"
+printf 'Frontend, playground and CLI preparation: %s seconds\n' "$((SECONDS - started))"
 exit "$status"

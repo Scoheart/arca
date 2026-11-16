@@ -13,6 +13,7 @@ mod model_management;
 mod mcp_preferences;
 mod network_management;
 mod preferences;
+mod playground;
 mod output;
 mod operation_session;
 mod projection;

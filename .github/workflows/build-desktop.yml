@@ -81,7 +81,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: desktop/package-lock.json
+          cache-dependency-path: |
+            desktop/package-lock.json
+            playground/package-lock.json
 
       - name: Setup Rust
         # dtolnay/rust-toolchain stable at implementation time

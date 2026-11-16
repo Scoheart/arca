@@ -14,6 +14,7 @@ mod credential_session;
 #[cfg(target_os = "macos")]
 mod credential_session_native;
 mod discovery;
+pub(crate) mod inference;
 mod open_code_auth;
 
 pub use discovery::{discover_provider_models, ProviderModelSummary};
