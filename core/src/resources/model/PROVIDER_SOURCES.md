@@ -1,5 +1,23 @@
 # Provider Catalog sources
 
+## packet.ai Token Factory — 2026-11-19
+
+`packetai` / `packet.ai Token Factory` is a gateway Provider for Token Factory, operated by Hosted AI Inc, a Delaware corporation. The [terms](https://packet.ai/terms) say Packet.ai is a product of Hosted AI Inc, a Delaware corporation. This operator is not Equinix Packet and is not AMD. It is distinct from `amd-token-lab` and `amd-token-factory`.
+
+The [quickstart](https://dash.packet.ai/docs/token-factory-quickstart) sets the OpenAI SDK `base_url` to `https://api.packet.ai/v1` and curls `POST https://api.packet.ai/v1/chat/completions` with `Authorization: Bearer`. Keys start with `hai_tf-`. A Packet GPU key (`pk_live_…`) is a different API and is refused here. Arca stores Chat Completions as the default on `https://api.packet.ai/v1`, without a trailing slash. The stored path is `/chat/completions`. Joining them yields `https://api.packet.ai/v1/chat/completions`.
+
+The same quickstart says Token Factory serves `GET /models`, `GET /models/{id}`, and `POST /chat/completions` only, so there are no embeddings. The [agent reference](https://dash.packet.ai/llms-token-factory.txt), fetched on 2026-11-19 with `Last-Modified: Wed, 18 Nov 2026 20:51:42 GMT`, repeats those three routes and says nothing else is served. It says `n` other than 1 is refused with `400 invalid_request`. No Responses, Anthropic Messages, or Gemini contract is documented, so none is stored. Arca does not filter request fields, so a caller that sends `n` other than 1 can still receive that 400.
+
+The [models page](https://dash.packet.ai/docs/token-factory-models), checked on 13 Nov 2026, lists the request ids `nvidia-deepseek-v4-1-flash-nvfp4` (context 131,072), `minimaxai-minimax-m3-1-flash` (context 131,072), and `qwen-qwen2-5-1-5b-instruct` (context 32,768). The seed is those three ids, in that order. It stores ids only. The [product page](https://packet.ai/token-factory) labels the same three models `nvidia/DeepSeek-V4.1-Flash-NVFP4`, `MiniMaxAI/MiniMax-M3.1-Flash`, and `Qwen/Qwen2.5-1.5B-Instruct`, and its sample uses `meta-llama/Llama-3.3-70B-Instruct`. The agent reference says ids on the packet.ai website are not served (`404 model_not_found`). Those four strings are not seeded. The published list has no GPT, Claude, Gemini, or Grok ids.
+
+`GET /v1/models` requires a Token Factory key. This id is not in `EXPECTED_OPENAI_COMPATIBLE`. No reviewed HTTP discovery spec is registered. With or without a credential, Arca does not call the network and uses the seed. An explicit Models list URL on a connection still uses the OpenAI catalog decoder. This environment did not call `api.packet.ai`. The docs say a call with no `hai_tf-` key can be answered by Cloudflare with `403` `Request blocked by security policy` or an HTML challenge. That response is not a catalog and is not a reason to add endpoints.
+
+The quickstart says Token Factory is free until 15 Dec 2026 and that from 16 Dec 2026 usage is charged to the wallet. The catalog does not encode that window or a price.
+
+The template docs URL is the quickstart. The template portal is <https://dash.packet.ai> with kind `console`. The quickstart says to open Serverless → Overview and click Generate API key. The agent reference also names Account → API keys → Token Factory keys. No separate key-page URL is stored.
+
+Host inference maps `api.packet.ai` for every path, including `/v1`, `/v1/chat/completions`, `/v1/models`, `/v1/models/{id}`, `/v1/responses`, `/v1/messages`, and the origin. `dash.packet.ai` is the console and the docs host. `packet.ai` is the product page and the terms. Those hosts stay `custom`, as do `www.packet.ai`, `www.api.packet.ai`, `api.packet.com`, and `api.packet.ai.evil.test`.
+
 ## PLaMo — 2026-11-15
 
 `plamo` / `PLaMo` is an official Provider for the PLaMo API, operated by Preferred Networks, Inc. The [English API reference](https://docs.plamo.preferredai.jp/en/api) footer is `© 2024 Preferred Networks, Inc.` A sample answer on that page places the head office in the Otemachi Building, 1-6-1 Otemachi, Chiyoda-ku, Tokyo, and cites the company page. The Japanese reference is [API リファレンス](https://docs.plamo.preferredai.jp/ja/api). The product page is <https://plamo.preferredai.jp/api>. The template portal is <https://console.platform.preferredai.jp> with kind `console`. Unsigned GET of the console returned HTTP 200 with title `PLaMo API`. The page body is a client shell.
@@ -1362,7 +1380,7 @@ Model discovery uses the documented authenticated `GET /v1/models`, with the exi
 
 ## Official credential portals — 2026-10-04
 
-`data/provider-links.json` is the default link catalog for all 229 built-in Provider templates (230 templates including Custom). Each entry retains `docs_url` and adds a typed `portal` containing a credential-free HTTPS URL and one of `api-key`, `console`, or `setup`. Core validates coverage, known Provider IDs, URL schemes, and absence of embedded credentials before serializing it. Custom and unknown connections have no default vendor link; no website is inferred from the user's Base URL.
+`data/provider-links.json` is the default link catalog for all 230 built-in Provider templates (231 templates including Custom). Each entry retains `docs_url` and adds a typed `portal` containing a credential-free HTTPS URL and one of `api-key`, `console`, or `setup`. Core validates coverage, known Provider IDs, URL schemes, and absence of embedded credentials before serializing it. Custom and unknown connections have no default vendor link; no website is inferred from the user's Base URL.
 
 The desktop's selected Provider banner, picker selection footer, and editor form use a core-provided portal: **Get API Key**, **Open console**, or **Setup guide**. Key-page entries include API Tokens and Access Tokens; account/region/subscription consoles are explicitly labeled as consoles, not promised as direct key pages. Ollama, LM Studio, and vLLM are local connection templates and retain setup guides rather than unrelated cloud account keys. The editor shows the effective address next to a browser-open action and can restore the template default. URLs open with the native system-browser opener without selecting a template, submitting a form, generating a key, or modifying a saved connection. Opener failures use the existing toast UI.
 

@@ -1601,5 +1601,12 @@
       "url": "https://cloud.mara.com/apis",
       "kind": "api-key"
     }
+  },
+  "packetai": {
+    "docs_url": "https://dash.packet.ai/docs/token-factory-quickstart",
+    "portal": {
+      "url": "https://dash.packet.ai",
+      "kind": "console"
+    }
   }
 }

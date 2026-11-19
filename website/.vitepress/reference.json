@@ -4589,6 +4589,20 @@
       }
     },
     {
+      "id": "packetai",
+      "name": "packet.ai Token Factory",
+      "category": "gateway",
+      "baseUrl": "https://api.packet.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://dash.packet.ai/docs/token-factory-quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://dash.packet.ai"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

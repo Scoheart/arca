@@ -722,6 +722,13 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // GET /v1/models requires a key. Unauthenticated returns HTTP 401, not an OpenAI list.
         // The public price-table id deepseek-v4.1-flash-1017 is not this seed.
         "minekuai" => &["deepseek-flash", "deepseek-v4-pro"],
+        // https://dash.packet.ai/docs/token-factory-models
+        // GET /v1/models requires a Token Factory key. The product-page strings are not request ids.
+        "packetai" => &[
+            "nvidia-deepseek-v4-1-flash-nvfp4",
+            "minimaxai-minimax-m3-1-flash",
+            "qwen-qwen2-5-1-5b-instruct",
+        ],
         _ => return None,
     };
     Some(
@@ -3787,6 +3794,27 @@ mod tests {
             &["deepseek-v4.1-flash-1017"],
         );
         assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"minekuai"));
+    }
+
+    #[test]
+    fn packetai_seeds_only_the_documented_request_ids() {
+        assert_static_chat_seed(
+            "packetai",
+            "https://api.packet.ai/v1",
+            "/chat/completions",
+            &[
+                "nvidia-deepseek-v4-1-flash-nvfp4",
+                "minimaxai-minimax-m3-1-flash",
+                "qwen-qwen2-5-1-5b-instruct",
+            ],
+            &[
+                "nvidia/DeepSeek-V4.1-Flash-NVFP4",
+                "MiniMaxAI/MiniMax-M3.1-Flash",
+                "Qwen/Qwen2.5-1.5B-Instruct",
+                "meta-llama/Llama-3.3-70B-Instruct",
+            ],
+        );
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"packetai"));
     }
 
     #[test]
