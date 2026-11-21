@@ -1,5 +1,6 @@
+import { Menu } from "@base-ui/react/menu";
 import { readLocalSetting, writeLocalSetting } from "../lib/localSettings";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { homeDir } from "@tauri-apps/api/path";
@@ -7,7 +8,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { formatError } from "../lib/format";
 import { useToast } from "./Toast";
-import { claimLayerKeyboardEvent } from "./ui";
+import { useModalPopupContainer } from "./ui";
 
 import { AgentGlyph } from "./brandIcons";
 import { ChevronDownIcon, EditIcon, FolderIcon, PlusIcon } from "./icons";
@@ -126,39 +127,36 @@ export function FileEditorSelect({ showLabel = false }: { showLabel?: boolean })
   const [editor, setEditor] = useState(() => preferredFileEditor() ?? "");
   const [installed, setInstalled] = useState<Array<{name: string; path: string}>>([]);
   const [choosing, setChoosing] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const popupContainer = useModalPopupContainer();
   useEffect(() => {
-    if (!expanded) return;
+    if (!menuOpen) return;
+    let current = true;
     void invoke<Array<{name: string; path: string}>>("list_file_editors")
-      .then(setInstalled).catch(() => {});
-    root.current?.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')?.focus();
-    const dismiss = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setExpanded(false);
+      .then((editors) => {
+        if (current) setInstalled(editors);
+      })
+      .catch(() => {});
+    return () => {
+      current = false;
     };
-    document.addEventListener("pointerdown", dismiss);
-    return () => document.removeEventListener("pointerdown", dismiss);
-  }, [expanded]);
+  }, [menuOpen]);
   const { show: showToast } = useToast();
 
-  async function change(value: string) {
-    setExpanded(false);
-    trigger.current?.focus();
+  async function change(value: string | null) {
     if (value === editor) return;
     setChoosing(true);
     try {
       let selected = value;
-      if (value === "__choose__") {
-        const path = await open({
+      if (selected === null) {
+        selected = await open({
           title: t("fileEditor.choose"),
           defaultPath: "/Applications",
           filters: [{ name: t("fileEditor.applications"), extensions: ["app"] }],
           multiple: false,
           directory: false,
         });
-        if (!path) return;
-        selected = path;
+        if (!selected) return;
       }
       if (selected === editor) return;
       if (selected) writeLocalSetting(STORAGE_KEY, selected);
@@ -178,47 +176,45 @@ export function FileEditorSelect({ showLabel = false }: { showLabel?: boolean })
   const options = ["", ...available, ...(editor && !available.includes(editor) ? [editor] : [])];
   const selectedLabel = editor ? editorDisplayName(editor) : t("fileEditor.systemDefault");
   return (
-    <div className="arca-editor-menu-wrap" ref={root}
-      onBlur={(event) => {
-        // Safari can report null when clicking a button. Do not unmount it before click.
-        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setExpanded(false);
-      }}
-      onKeyDown={(event) => {
-        if (expanded && event.key === "Escape") {
-          claimLayerKeyboardEvent(event.nativeEvent);
-          event.preventDefault(); setExpanded(false); trigger.current?.focus();
-        }
-        if (expanded && ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
-          event.preventDefault();
-          const items = Array.from(root.current?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]') ?? []);
-          const index = items.indexOf(document.activeElement as HTMLButtonElement);
-          const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
-          items[next]?.focus();
-        }
-      }}>
-      <button type="button" ref={trigger} className="arca-model-field arca-form-select-trigger arca-editor-trigger"
-        data-open={expanded ? "true" : undefined}
-        aria-label={t("fileEditor.selected", { editor: selectedLabel })}
-        title={t("fileEditor.choose")} aria-haspopup="menu" aria-expanded={expanded}
-        disabled={choosing} onClick={() => setExpanded((value) => !value)}
-        onKeyDown={(event) => { if (!expanded && event.key === "ArrowDown") { event.preventDefault(); setExpanded(true); } }}>
-        <span className="arca-form-select-value"><span className="arca-editor-selection">
-          <span className="arca-editor-glyph"><EditorIcon editor={editor} /></span>{showLabel && <span className="arca-editor-selected-label">{selectedLabel}</span>}
-        </span></span><ChevronDownIcon className="arca-form-select-chevron" />
-      </button>
-      {expanded && <div className="arca-editor-menu" role="menu" aria-label={t("fileEditor.label")}>
-        {options.map((value) => <button type="button" role="menuitemradio" aria-checked={value === editor}
-          onMouseDown={(event) => event.preventDefault()}
-          key={value || "default"} onClick={() => { void change(value); }}>
-          <span className="arca-editor-glyph"><EditorIcon editor={value} /></span>
-          <span>{value ? editorDisplayName(value) : t("fileEditor.systemDefault")}</span>
-          {value === editor && <span className="arca-editor-check" aria-hidden="true">✓</span>}
-        </button>)}
-        <div role="separator" className="arca-editor-separator" />
-        <button type="button" role="menuitem" onMouseDown={(event) => event.preventDefault()} onClick={() => { void change("__choose__"); }}>
-          <PlusIcon className="w-4 h-4" /><span>{t("fileEditor.otherApplication")}</span>
-        </button>
-      </div>}
+    <div className="arca-editor-menu-wrap">
+      <Menu.Root modal={false} disabled={choosing} onOpenChange={setMenuOpen}>
+        <Menu.Trigger
+          className="arca-model-field arca-form-select-trigger arca-editor-trigger"
+          aria-label={t("fileEditor.selected", { editor: selectedLabel })}
+          title={t("fileEditor.choose")}
+        >
+          <span className="arca-form-select-value"><span className="arca-editor-selection">
+            <span className="arca-editor-glyph"><EditorIcon editor={editor} /></span>
+            {showLabel && <span className="arca-editor-selected-label">{selectedLabel}</span>}
+          </span></span>
+          <ChevronDownIcon className="arca-form-select-chevron" aria-hidden="true" />
+        </Menu.Trigger>
+        <Menu.Portal container={popupContainer}>
+          <Menu.Positioner
+            align="end"
+            positionMethod="fixed"
+            sideOffset={9}
+            className="arca-editor-menu-positioner"
+            data-labeled={showLabel || undefined}
+          >
+            <Menu.Popup className="arca-editor-menu" aria-label={t("fileEditor.label")}>
+              <Menu.RadioGroup value={editor} onValueChange={(value: string) => { void change(value); }}>
+                {options.map((value) => (
+                  <Menu.RadioItem key={value} value={value} closeOnClick className="arca-editor-menu-item">
+                    <span className="arca-editor-glyph"><EditorIcon editor={value} /></span>
+                    <span>{value ? editorDisplayName(value) : t("fileEditor.systemDefault")}</span>
+                    <Menu.RadioItemIndicator className="arca-editor-check" aria-hidden="true">✓</Menu.RadioItemIndicator>
+                  </Menu.RadioItem>
+                ))}
+              </Menu.RadioGroup>
+              <Menu.Separator className="arca-editor-separator" />
+              <Menu.Item className="arca-editor-menu-item" onClick={() => { void change(null); }}>
+                <PlusIcon className="w-4 h-4" aria-hidden="true" /><span>{t("fileEditor.otherApplication")}</span>
+              </Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
     </div>
   );
 }

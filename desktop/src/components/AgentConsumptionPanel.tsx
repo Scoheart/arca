@@ -1,5 +1,6 @@
+import { Menu } from "@base-ui/react/menu";
 import { ResourceIcon } from "./resourcePresentation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { AssetRef, ConfiguredMcpObservation, ConsumptionView, ConvergenceAction, HostMcpObservation, NativeFileSkillObservation, NativeSkillObservation } from "../lib/types";
 import { ConfiguredMcpCard, HostMcpCard, NativeFileSkillCard, NativeSkillCard } from "./NativePluginsPanel";
 import { assetIdentity } from "../lib/consumption";
@@ -12,7 +13,7 @@ import {
   TrashIcon,
 } from "./icons";
 import { ConsumptionStatus } from "./ConsumptionStatus";
-import { SearchBar, Switch } from "./ui";
+import { SearchBar, Switch, useModalPopupContainer } from "./ui";
 import { useTranslation } from "react-i18next";
 import { AgentResourceActions } from "./AgentResourcePanel";
 
@@ -47,8 +48,7 @@ function ConvergenceActions({
   onAction(action: ConvergenceAction): void;
 }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLSpanElement>(null);
+  const popupContainer = useModalPopupContainer();
   const label = (action: ConvergenceAction) => action === "adopt-observed"
     ? t("observations.actions.adopt")
     : action === "restore-desired"
@@ -61,25 +61,9 @@ function ConvergenceActions({
       : actions[0];
   const secondary = actions.filter((action) => action !== primary);
 
-  useEffect(() => {
-    if (!open) return;
-    const closeOutside = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", closeOutside);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", closeOutside);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [open]);
-
   if (!primary) return null;
   return (
-    <span className="arca-convergence-controls" ref={rootRef}>
+    <span className="arca-convergence-controls">
       <button
         type="button"
         className="arca-convergence-action"
@@ -93,40 +77,27 @@ function ConvergenceActions({
         <ConvergenceActionIcon action={primary} />
       </button>
       {secondary.length > 0 && (
-        <span className="arca-convergence-more">
-          <button
-            type="button"
+        <Menu.Root modal={false} disabled={disabled}>
+          <Menu.Trigger
             className="arca-convergence-action"
             aria-label={`${t("observations.actions.more")}：${name}`}
             title={t("observations.actions.more")}
-            aria-haspopup="menu"
-            aria-expanded={open}
-            disabled={disabled}
-            onClick={() => setOpen((current) => !current)}
           >
-            <MoreHorizontalIcon className="w-4 h-4" />
-          </button>
-          {open && (
-            <span className="arca-convergence-menu" role="menu">
-              {secondary.map((action) => (
-                <button
-                  key={action}
-                  type="button"
-                  role="menuitem"
-                  data-action={action}
-                  aria-label={`${label(action)}：${name}`}
-                  onClick={() => {
-                    setOpen(false);
-                    onAction(action);
-                  }}
-                >
-                  <ConvergenceActionIcon action={action} />
-                  <span>{label(action)}</span>
-                </button>
-              ))}
-            </span>
-          )}
-        </span>
+            <MoreHorizontalIcon className="w-4 h-4" aria-hidden="true" />
+          </Menu.Trigger>
+          <Menu.Portal container={popupContainer}>
+            <Menu.Positioner className="arca-convergence-positioner" positionMethod="fixed" side="top" align="end" sideOffset={5}>
+              <Menu.Popup className="arca-convergence-menu" aria-label={`${t("observations.actions.more")}：${name}`}>
+                {secondary.map((action) => (
+                  <Menu.Item key={action} data-action={action} aria-label={`${label(action)}：${name}`} onClick={() => onAction(action)}>
+                    <ConvergenceActionIcon action={action} />
+                    <span>{label(action)}</span>
+                  </Menu.Item>
+                ))}
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
       )}
     </span>
   );

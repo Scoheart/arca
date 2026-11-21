@@ -40,6 +40,11 @@ use crate::safe_write::{
     write_private_live_if_unchanged, SettingsLock,
 };
 use crate::settings::{load_settings, mutate_settings};
+use base64::{
+    alphabet,
+    engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig},
+    Engine as _,
+};
 use jsonc_parser::cst::{CstInputValue, CstNode, CstObject, CstRootNode};
 use jsonc_parser::ParseOptions;
 use serde::ser::SerializeStruct;
@@ -4593,78 +4598,18 @@ pub(crate) fn private_file_snapshot_subject(operation_id: &str, path: &Path) -> 
     )
 }
 
+// Keep accepting the unused trailing bits that the original decoder ignored.
+const CREDENTIAL_BASE64: GeneralPurpose = GeneralPurpose::new(
+    &alphabet::STANDARD,
+    GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true),
+);
+
 fn encode_base64(bytes: &[u8]) -> String {
-    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut encoded = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let first = chunk[0];
-        let second = chunk.get(1).copied().unwrap_or_default();
-        let third = chunk.get(2).copied().unwrap_or_default();
-        encoded.push(ALPHABET[(first >> 2) as usize] as char);
-        encoded.push(ALPHABET[(((first & 0x03) << 4) | (second >> 4)) as usize] as char);
-        if chunk.len() > 1 {
-            encoded.push(ALPHABET[(((second & 0x0f) << 2) | (third >> 6)) as usize] as char);
-        } else {
-            encoded.push('=');
-        }
-        if chunk.len() > 2 {
-            encoded.push(ALPHABET[(third & 0x3f) as usize] as char);
-        } else {
-            encoded.push('=');
-        }
-    }
-    encoded
+    CREDENTIAL_BASE64.encode(bytes)
 }
 
 fn decode_base64(encoded: &str) -> Result<Vec<u8>, ()> {
-    fn value(byte: u8) -> Option<u8> {
-        match byte {
-            b'A'..=b'Z' => Some(byte - b'A'),
-            b'a'..=b'z' => Some(byte - b'a' + 26),
-            b'0'..=b'9' => Some(byte - b'0' + 52),
-            b'+' => Some(62),
-            b'/' => Some(63),
-            _ => None,
-        }
-    }
-
-    let bytes = encoded.as_bytes();
-    if bytes.len() % 4 != 0 {
-        return Err(());
-    }
-    let mut decoded = Vec::with_capacity(bytes.len() / 4 * 3);
-    for (index, chunk) in bytes.chunks_exact(4).enumerate() {
-        let last = index + 1 == bytes.len() / 4;
-        let first = value(chunk[0]).ok_or(())?;
-        let second = value(chunk[1]).ok_or(())?;
-        let third = if chunk[2] == b'=' {
-            if !last || chunk[3] != b'=' {
-                return Err(());
-            }
-            None
-        } else {
-            Some(value(chunk[2]).ok_or(())?)
-        };
-        let fourth = if chunk[3] == b'=' {
-            if !last {
-                return Err(());
-            }
-            None
-        } else {
-            Some(value(chunk[3]).ok_or(())?)
-        };
-        if third.is_none() && fourth.is_some() {
-            return Err(());
-        }
-        decoded.push((first << 2) | (second >> 4));
-        if let Some(third) = third {
-            decoded.push((second << 4) | (third >> 2));
-            if let Some(fourth) = fourth {
-                decoded.push((third << 6) | fourth);
-            }
-        }
-    }
-    Ok(decoded)
+    CREDENTIAL_BASE64.decode(encoded).map_err(|_| ())
 }
 
 pub(crate) fn persist_private_file_snapshot(

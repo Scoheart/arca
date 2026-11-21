@@ -122,6 +122,7 @@ dependencies = [
 name = "arca-core"
 version = "4.0.0"
 dependencies = [
+ "base64 0.22.1",
  "blake2",
  "chrono",
  "chunked_transfer",

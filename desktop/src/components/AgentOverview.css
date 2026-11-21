@@ -44,7 +44,6 @@
 .arca-agent-overview-actions .arca-form-select-value > span { font-size: 11px; line-height: 1; }
 .arca-agent-overview-actions .arca-form-select-value > svg { flex-shrink: 0; color: var(--text-secondary); }
 .arca-agent-overview-actions .arca-form-select-chevron { width: 12px; height: 12px; flex-basis: 12px; }
-.arca-agent-overview-actions .arca-form-select-menu { left: auto; min-width: 172px; }
 .arca-agent-overview-actions button:disabled { opacity: .5; cursor: default; }
 .arca-agent-context .arca-agent-config-locations { margin-top: 16px; }
 .arca-agent-context .arca-agent-file-map { align-items: start; }
@@ -170,13 +169,13 @@
 .arca-agent-workbench .arca-agent-resource-tabs button:hover { background: color-mix(in srgb, var(--text-primary) 5.5%, transparent); }
 .arca-agent-resource-tab-label { flex: 1; min-width: 0; text-align: left; }
 .arca-agent-workbench .arca-agent-resource-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--surface-section); color: var(--text-secondary); font-size: 10.5px; font-weight: 600; }
-.arca-agent-workbench .arca-agent-resource-tabs button[data-active="true"] {
+.arca-agent-workbench .arca-agent-resource-tabs button[data-active] {
   color: var(--color-blue); font-weight: 650; background: var(--surface-selected);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-blue) 18%, transparent);
 }
-.arca-agent-workbench .arca-agent-resource-tabs button[data-active="true"] .arca-agent-resource-tab-count { color: var(--color-blue); background: color-mix(in srgb, var(--color-blue) 14%, transparent); }
+.arca-agent-workbench .arca-agent-resource-tabs button[data-active] .arca-agent-resource-tab-count { color: var(--color-blue); background: color-mix(in srgb, var(--color-blue) 14%, transparent); }
 .arca-agent-resource-tab-icon { display: inline-flex; flex-shrink: 0; color: var(--text-secondary); }
-.arca-agent-workbench .arca-agent-resource-tabs button[data-active="true"] .arca-agent-resource-tab-icon { color: var(--color-blue); }
+.arca-agent-workbench .arca-agent-resource-tabs button[data-active] .arca-agent-resource-tab-icon { color: var(--color-blue); }
 .arca-agent-toolbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 .arca-agent-toolbar-target, .arca-agent-toolbar-target > .arca-agent-section-actions { display: contents; }
 .arca-agent-toolbar-actions > .arca-agent-config-toggle { order: 3; }
@@ -229,7 +228,6 @@
   box-shadow: var(--shadow-hover);
   transform: translateY(-1px);
 }
-.arca-agent-workbench .arca-consumption-list > li:has(.arca-convergence-menu) { z-index: 5; }
 .arca-agent-workbench .arca-consumption-icon { grid-column: 1; grid-row: 1; min-width: 0; }
 .arca-agent-workbench .arca-consumption-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
 .arca-agent-workbench .arca-consumption-copy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 660; }

@@ -1,5 +1,5 @@
 import { ImeInput, isImeKey } from "./ImeInput";
-import { CSSProperties, ReactNode, type KeyboardEvent as ReactKeyboardEvent, useLayoutEffect, useRef, useState } from "react";
+import { createContext, CSSProperties, ReactNode, type KeyboardEvent as ReactKeyboardEvent, type RefObject, useContext, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { SearchIcon, XIcon } from "./icons";
 import { transportLabel, transportOf } from "../lib/mcp";
@@ -227,6 +227,12 @@ export function SearchBar({
 
 export const MODAL_DIALOG_SELECTOR = '[role="dialog"][aria-modal="true"]';
 
+const ModalPopupContainer = createContext<RefObject<HTMLDivElement | null> | undefined>(undefined);
+
+export function useModalPopupContainer() {
+  return useContext(ModalPopupContainer);
+}
+
 const handledLayerKeyboardEvents = new WeakSet<KeyboardEvent>();
 const inertRootStates = new WeakMap<
   HTMLElement,
@@ -416,7 +422,9 @@ export function Modal({
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isImeKey(event) || handledLayerKeyboardEvents.has(event) || topmostModal() !== dialog) return;
+      if (isImeKey(event) || event.defaultPrevented || handledLayerKeyboardEvents.has(event) || topmostModal() !== dialog) return;
+      // An open floating control manages Escape and Tab within its focus scope.
+      if ((event.key === "Escape" || event.key === "Tab") && dialog.querySelector("[data-popup-open][aria-haspopup]")) return;
 
       if (event.key === "Escape") {
         claimLayerKeyboardEvent(event);
@@ -509,7 +517,9 @@ export function Modal({
         style={presentation === "panel" ? { width } : undefined}
         onClick={(event) => event.stopPropagation()}
       >
-        {children}
+        <ModalPopupContainer.Provider value={dialogRef}>
+          {children}
+        </ModalPopupContainer.Provider>
       </div>
     </div>,
     document.body,

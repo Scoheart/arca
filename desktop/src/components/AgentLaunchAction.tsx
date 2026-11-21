@@ -1,3 +1,4 @@
+import { Menu } from "@base-ui/react/menu";
 import i18n from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -6,6 +7,7 @@ import { formatError } from "../lib/format";
 import { ChevronDownIcon, DownloadIcon, ExternalLinkIcon, FolderIcon, EditIcon, PlayIcon, RefreshIcon } from "./icons";
 import { useAgentLauncher } from "../lib/agentLauncherContext";
 import { useToast } from "./Toast";
+import { useModalPopupContainer } from "./ui";
 import installLinks from "../../../data/agent-install-links.json";
 import agentDocsHome from "../../../data/agent-docs-home.json";
 import { useTranslation } from "react-i18next";
@@ -15,10 +17,8 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
   const { t } = useTranslation();
   const [info, setInfo] = useState<AgentLaunchInfo | null>(null);
   const [version, setVersion] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
+  const popupContainer = useModalPopupContainer();
   const versionTarget = useRef<string | null>(null);
   const { show } = useToast();
   useEffect(() => {
@@ -42,13 +42,6 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
     refresh(); window.addEventListener("focus", refresh);
     return () => { active = false; window.removeEventListener("focus", refresh); };
   }, [agentId, contextMenu, launcher.revision]);
-  useEffect(() => {
-    if (!expanded || contextMenu) return;
-    const outside = (event: PointerEvent) => { if (!root.current?.contains(event.target as Node)) setExpanded(false); };
-    document.addEventListener("pointerdown", outside);
-    root.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
-    return () => document.removeEventListener("pointerdown", outside);
-  }, [expanded, contextMenu]);
   const busy = launcher.busyId !== null;
   const missing = info && !info.available && info.kind && info.install_url && !info.configured_target;
   const label = !info ? error ? i18n.t("desktop.agentLaunchAction.retry") : i18n.t("desktop.agentLaunchAction.detecting") : !info.supported ? i18n.t("desktop.agentLaunchAction.notSupportedYet") : missing ? i18n.t("desktop.agentLaunchAction.downloadAndInstall")
@@ -66,7 +59,7 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
     : info?.resolved_target?.kind === "cli" ? info.resolved_target.command : null;
   const hasMenu = Boolean(info?.kind);
   const shortLabel = pending ? i18n.t("desktop.agentLaunchAction.wait") : !info && error ? i18n.t("desktop.agentLaunchAction.retry") : info?.supported === false ? i18n.t("desktop.agentLaunchAction.unsupported") : ready ? info?.host_name ?? i18n.t("desktop.agentLaunchAction.run") : missing ? i18n.t("desktop.agentLaunchAction.install") : i18n.t("desktop.agentLaunchAction.settings");
-  const choose = (action: () => void) => { setExpanded(false); onChosen?.(); action(); };
+  const choose = (action: () => void) => { onChosen?.(); action(); };
   const configure = () => { void launcher.configure(agentId); };
   const launch = () => choose(() => { void launcher.launch(agentId); });
   const openInstallation = () => {
@@ -82,15 +75,18 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
         void openUrl(docsUrl).catch((failure) => show({ kind: "error", msg: formatError(failure) }));
       })}><ExternalLinkIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.setupGuide")}</button>;
   }
+  const LaunchMenuItem = contextMenu ? "button" : Menu.Item;
+  const contextItemProps = contextMenu ? { type: "button", role: "menuitem" } as const : {};
+  const menuLabel = i18n.t("desktop.agentLaunchAction.agentLaunchOptions");
   const menu = <>
     {contextMenu && <button type="button" role="menuitem" disabled={busy || (!info && !error) || info?.supported === false} onClick={launch}>
       {missing ? <DownloadIcon className="w-4 h-4" /> : <ExternalLinkIcon className="w-4 h-4" />}{label}</button>}
-    {canChooseDirectory && <button type="button" role="menuitem" disabled={busy} title={info?.directory ?? undefined}
-      onClick={() => choose(() => { void launcher.launch(agentId, true); })}><FolderIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.openInAnotherFolder")}</button>}
+    {canChooseDirectory && <LaunchMenuItem {...contextItemProps} disabled={busy} title={info?.directory ?? undefined}
+      onClick={() => choose(() => { void launcher.launch(agentId, true); })}><FolderIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.openInAnotherFolder")}</LaunchMenuItem>}
     {contextMenu && installUrl && !missing && <button type="button" role="menuitem" disabled={busy} onClick={() => choose(openInstallation)}>
       <DownloadIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.installationDocumentation")}</button>}
-    <button type="button" role="menuitem" disabled={busy} onClick={() => choose(configure)}>
-      <EditIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.launchSettings")}</button>
+    <LaunchMenuItem {...contextItemProps} disabled={busy} onClick={() => choose(configure)}>
+      <EditIcon className="w-4 h-4" />{i18n.t("desktop.agentLaunchAction.launchSettings")}</LaunchMenuItem>
     {info?.startup_agents && info.startup_agents.length > 0 && (
       <>
         <div className="arca-launch-menu-divider" />
@@ -98,10 +94,9 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
           启动 Agent
         </div>
         {info.startup_agents.map((option) => (
-          <button
+          <LaunchMenuItem
+            {...contextItemProps}
             key={option.id}
-            type="button"
-            role="menuitem"
             disabled={busy}
             className="flex items-center justify-between text-xs w-full text-left"
             onClick={() => choose(() => { void launcher.launchWithStartupAgent(agentId, option.id); })}
@@ -113,7 +108,7 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
               </span>
             </span>
             {option.is_default && <span className="text-[10px] text-muted ml-2 shrink-0">(默认)</span>}
-          </button>
+          </LaunchMenuItem>
         ))}
       </>
     )}
@@ -129,18 +124,8 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
       title={i18n.t("desktop.agentLaunchAction.installationDocumentation2", { value0: installationStatus })} aria-label={i18n.t("desktop.agentLaunchAction.installationDocumentation3", { value0: info?.name ?? agentId, value1: installationStatus })}>
       <DownloadIcon className="w-3.5 h-3.5" /><span>{i18n.t("desktop.agentLaunchAction.installationDocumentation")}</span><span className="arca-launch-install-status" data-ready={ready || undefined} aria-hidden="true" />
     </button>}
-    <div ref={root} className={contextMenu ? "arca-launch-menu-content" : "arca-launch-action"}
-    data-ready={ready || undefined} data-labeled={showLabel || undefined} data-split={hasMenu} aria-busy={pending} onKeyDown={(event) => {
-    if (contextMenu) return; // The portal menu owns focus, Escape and Tab.
-    if (event.key === "Escape") { event.stopPropagation(); setExpanded(false); trigger.current?.focus(); }
-    if ((expanded || contextMenu) && ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
-      event.preventDefault();
-      const items = Array.from(root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? []);
-      const current = items.indexOf(document.activeElement as HTMLButtonElement);
-      const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (current + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
-      items[next]?.focus();
-    }
-  }}>
+    <div className={contextMenu ? "arca-launch-menu-content" : "arca-launch-action"}
+      data-ready={ready || undefined} data-labeled={showLabel || undefined} data-split={hasMenu} aria-busy={pending}>
     {contextMenu ? menu : <>
       <button type="button" className="arca-launch-primary" disabled={busy || (!info && !error) || info?.supported === false} onClick={launch}
         aria-label={actionLabel}
@@ -151,9 +136,18 @@ export function AgentLaunchAction({ agentId, contextMenu = false, showLabel = fa
         {showLabel && <span className="arca-launch-caption" aria-hidden="true">{shortLabel}</span>}
         {ready && !pending && !showLabel && <i className="arca-launch-ready-dot" aria-hidden="true" />}
       </button>
-      {hasMenu && <button ref={trigger} type="button" className="arca-launch-more" aria-label={i18n.t("desktop.agentLaunchAction.agentLaunchOptions")} aria-haspopup="menu" aria-expanded={expanded}
-        disabled={busy} onClick={() => setExpanded((value) => !value)}><ChevronDownIcon className="w-3.5 h-3.5" /></button>}
-      {hasMenu && expanded && <div className="arca-launch-menu" role="menu" aria-label={i18n.t("desktop.agentLaunchAction.agentLaunchOptions")}>{menu}</div>}
+      {hasMenu && (
+        <Menu.Root modal={false} disabled={busy}>
+          <Menu.Trigger className="arca-launch-more" aria-label={menuLabel}>
+            <ChevronDownIcon className="w-3.5 h-3.5" aria-hidden="true" />
+          </Menu.Trigger>
+          <Menu.Portal container={popupContainer}>
+            <Menu.Positioner className="arca-launch-menu-positioner" positionMethod="fixed" align="end" sideOffset={7}>
+              <Menu.Popup className="arca-launch-menu" aria-label={menuLabel}>{menu}</Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      )}
     </>}
     </div>
   </>;

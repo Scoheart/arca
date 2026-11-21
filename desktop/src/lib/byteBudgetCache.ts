@@ -1,57 +1,41 @@
-// Presentation data only. Budgets bound retained values, not an OS heap metric.
-export class ByteBudgetCache<K, V> {
-  private entries = new Map<K, { value: V; bytes: number; expiresAt: number }>();
-  private retained = 0;
-  private timer: ReturnType<typeof setTimeout> | null = null;
+import { LRUCache } from "lru-cache";
 
-  constructor(private maxEntries: number, private maxBytes: number) {}
+// Presentation data only. Budgets bound retained values, not an OS heap metric.
+export class ByteBudgetCache<K extends string, V extends object> {
+  private readonly entries: LRUCache<K, V>;
+
+  constructor(maxEntries: number, maxBytes: number) {
+    this.entries = new LRUCache({
+      max: maxEntries,
+      maxSize: maxBytes,
+      ttlAutopurge: true,
+      ttlResolution: 0,
+    });
+  }
 
   get size() { return this.entries.size; }
-  get bytes() { return this.retained; }
+  get bytes() { return this.entries.calculatedSize; }
 
   get(key: K): V | undefined {
-    const entry = this.entries.get(key);
-    if (!entry) return undefined;
-    if (entry.expiresAt <= Date.now()) { this.delete(key); return undefined; }
-    this.entries.delete(key);
-    this.entries.set(key, entry);
-    return entry.value;
+    return this.entries.get(key);
   }
 
   set(key: K, value: V, bytes: number, ttl = Infinity) {
+    // A resolved catalog can update the weight of the same cached object.
     this.delete(key);
-    if (!Number.isFinite(bytes) || bytes < 0 || bytes > this.maxBytes || ttl <= 0) return;
-    while (this.entries.size >= this.maxEntries || this.retained + bytes > this.maxBytes) {
-      const oldest = this.entries.keys().next();
-      if (oldest.done) return;
-      this.delete(oldest.value);
-    }
-    this.entries.set(key, { value, bytes, expiresAt: Date.now() + ttl });
-    this.retained += bytes;
-    this.scheduleExpiry();
+    if (!Number.isFinite(bytes) || bytes < 0 || ttl <= 0) return;
+    this.entries.set(key, value, {
+      size: Math.max(1, Math.ceil(bytes)),
+      ttl: Number.isFinite(ttl) ? ttl : 0,
+    });
   }
 
   delete(key: K) {
-    const entry = this.entries.get(key);
-    if (entry) { this.retained -= entry.bytes; this.entries.delete(key); }
-    if (!this.entries.size && this.timer) { clearTimeout(this.timer); this.timer = null; }
+    this.entries.delete(key);
   }
 
   clear() {
-    this.entries.clear(); this.retained = 0;
-    if (this.timer) { clearTimeout(this.timer); this.timer = null; }
-  }
-
-  private scheduleExpiry() {
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = null;
-    const next = Math.min(...[...this.entries.values()].map(entry => entry.expiresAt));
-    if (!Number.isFinite(next)) return;
-    this.timer = setTimeout(() => {
-      this.timer = null;
-      for (const [key, entry] of this.entries) if (entry.expiresAt <= Date.now()) this.delete(key);
-      this.scheduleExpiry();
-    }, Math.max(0, next - Date.now()));
+    this.entries.clear();
   }
 }
 

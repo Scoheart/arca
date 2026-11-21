@@ -8,10 +8,11 @@ import { MAX_PINNED_AGENTS, movePinnedAgentBy, previewPinnedAgentOrder } from ".
 import { AgentGlyph } from "./brandIcons";
 import { PlusIcon } from "./icons";
 
-export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, disabled,
+export function PinnedAgentDock({ agents, agentLabels, ids, selectedId, expanded = false, disabled,
   replacementName, onReplace, onSelect, onEmpty, onReorder,
 }: {
   agents: AgentInfo[];
+  agentLabels: ReadonlyMap<string, string>;
   ids: string[];
   selectedId?: string | null;
   expanded?: boolean;
@@ -70,12 +71,16 @@ export function PinnedAgentDock({ agents, ids, selectedId, expanded = false, dis
     {Array.from({ length: expanded ? MAX_PINNED_AGENTS : order.length }, (_, index) => {
       const id = order[index];
       const agent = agents.find((agent) => agent.id === id);
-      const label = replacementName ? i18n.t("desktop.pinnedAgentDock.replaceWith", { value0: replacementName, value1: agent?.name ?? i18n.t("desktop.pinnedAgentDock.emptySlot") }) : agent?.name ?? i18n.t("desktop.pinnedAgentDock.emptyPinSlot");
+      const agentLabel = agent ? agentLabels.get(id) ?? agent.name : undefined;
+      const label = replacementName
+        ? i18n.t("desktop.pinnedAgentDock.replaceWith", { value0: replacementName, value1: agentLabel ?? i18n.t("desktop.pinnedAgentDock.emptySlot") })
+        : agentLabel ?? i18n.t("desktop.pinnedAgentDock.emptyPinSlot");
       return <button key={id ?? `empty-${index}`} type="button" className="arca-pinned-agent"
         data-agent-id={id} data-pin-slot={index} data-empty={!agent || undefined}
         data-active={selectedId === id ? "true" : undefined}
         aria-current={selectedId === id ? "page" : undefined}
-        aria-label={label} title={replacementName ? label : agent ? i18n.t("desktop.pinnedAgentDock.dragToReorderOrUseOptionLeftRight", { value0: agent.name }) : label}
+        aria-label={label}
+        title={agentLabel && !replacementName ? i18n.t("desktop.pinnedAgentDock.dragToReorderOrUseOptionLeftRight", { value0: agentLabel }) : label}
         aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight" disabled={disabled}
         draggable={Boolean(agent) && !disabled && !replacementName}
         onContextMenu={(event) => {

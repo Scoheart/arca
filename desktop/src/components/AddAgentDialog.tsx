@@ -1,9 +1,6 @@
+import { Tabs } from "@base-ui/react/tabs";
 import { ResourceIcon, RESOURCE_PRESENTATION } from "./resourcePresentation";
-import {
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { addAgent } from "../lib/api";
 import type { AgentDefinitionInput } from "../lib/types";
@@ -68,8 +65,6 @@ export function AddAgentDialog({
   const [skillsDir, setSkillsDir] = useState("");
   const [skillsDocs, setSkillsDocs] = useState("");
   const [busy, setBusy] = useState(false);
-  const mcpTabRef = useRef<HTMLButtonElement>(null);
-  const skillsTabRef = useRef<HTMLButtonElement>(null);
   const toast = useToast();
 
   const trimmedName = name.trim();
@@ -108,16 +103,6 @@ export function AddAgentDialog({
     skillsConfigured ? "Skills" : null,
   ].filter(Boolean).join(" + ");
   const displayName = trimmedName || trimmedId || t("agents.newAgent");
-  const handleCapabilityTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    let nextTab: CapabilityTab | null = null;
-    if (event.key === "ArrowRight" || event.key === "End") nextTab = "skills";
-    if (event.key === "ArrowLeft" || event.key === "Home") nextTab = "mcp";
-    if (!nextTab) return;
-    event.preventDefault();
-    setActiveCapability(nextTab);
-    (nextTab === "mcp" ? mcpTabRef : skillsTabRef).current?.focus();
-  };
-
   const submit = async () => {
     if (!canSubmit) return;
     setBusy(true);
@@ -259,29 +244,28 @@ export function AddAgentDialog({
           </div>
         </section>
 
-        <section className="arca-agent-create-section" aria-labelledby="agent-capabilities-title">
+        <Tabs.Root
+          className="arca-agent-create-section"
+          render={<section aria-labelledby="agent-capabilities-title" />}
+          value={activeCapability}
+          onValueChange={(value) => {
+            if (value === "mcp" || value === "skills") setActiveCapability(value);
+          }}
+        >
           <div className="arca-agent-create-section-head">
             <h3 id="agent-capabilities-title">{t("agents.capabilitiesTitle")}</h3>
           </div>
 
-          <div
+          <Tabs.List
             className="arca-agent-capability-tabs"
-            role="tablist"
             aria-label={t("agents.capabilitiesTitle")}
-            onKeyDown={handleCapabilityTabKeyDown}
+            activateOnFocus
+            loopFocus={false}
           >
-            <button
-              ref={mcpTabRef}
-              type="button"
-              role="tab"
-              id="agent-capability-tab-mcp"
-              aria-selected={activeCapability === "mcp"}
-              aria-controls="agent-capability-panel-mcp"
-              tabIndex={activeCapability === "mcp" ? 0 : -1}
+            <Tabs.Tab
+              value="mcp"
               className="arca-agent-capability-tab"
-              data-active={activeCapability === "mcp" || undefined}
               data-state={mcpState}
-              onClick={() => setActiveCapability("mcp")}
             >
               <span className="arca-agent-capability-tab-icon">
                 <ResourceIcon domain="mcp" />
@@ -291,19 +275,11 @@ export function AddAgentDialog({
                 <small>{t(`agents.capabilityState.${mcpState}`)}</small>
               </span>
               <i aria-hidden="true" />
-            </button>
-            <button
-              ref={skillsTabRef}
-              type="button"
-              role="tab"
-              id="agent-capability-tab-skills"
-              aria-selected={activeCapability === "skills"}
-              aria-controls="agent-capability-panel-skills"
-              tabIndex={activeCapability === "skills" ? 0 : -1}
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="skills"
               className="arca-agent-capability-tab"
-              data-active={activeCapability === "skills" || undefined}
               data-state={skillsState}
-              onClick={() => setActiveCapability("skills")}
             >
               <span className="arca-agent-capability-tab-icon">
                 <ResourceIcon domain="skill" />
@@ -313,14 +289,13 @@ export function AddAgentDialog({
                 <small>{t(`agents.capabilityState.${skillsState}`)}</small>
               </span>
               <i aria-hidden="true" />
-            </button>
-          </div>
+            </Tabs.Tab>
+          </Tabs.List>
 
-          {activeCapability === "mcp" ? (
-            <section
-              id="agent-capability-panel-mcp"
-              role="tabpanel"
-              aria-labelledby="agent-capability-tab-mcp"
+            <Tabs.Panel
+              value="mcp"
+              tabIndex={-1}
+              render={<section />}
               className="arca-agent-capability-detail"
             >
               <div className="arca-agent-detail-fields">
@@ -364,12 +339,11 @@ export function AddAgentDialog({
                 </label>
                 </DialogDisclosure>
               </div>
-            </section>
-          ) : (
-            <section
-              id="agent-capability-panel-skills"
-              role="tabpanel"
-              aria-labelledby="agent-capability-tab-skills"
+            </Tabs.Panel>
+            <Tabs.Panel
+              value="skills"
+              tabIndex={-1}
+              render={<section />}
               className="arca-agent-capability-detail"
             >
               <div className="arca-agent-detail-fields">
@@ -405,9 +379,8 @@ export function AddAgentDialog({
                   )}
                 </label>
               </div>
-            </section>
-          )}
-        </section>
+            </Tabs.Panel>
+        </Tabs.Root>
       </div>
     </DialogShell>
   );

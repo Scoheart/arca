@@ -934,20 +934,6 @@ body {
 .arca-resource-overview-credential { display: inline-flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 11px; }
 .arca-resource-overview-credential[data-saved] { color: var(--color-green); }
 .arca-workspace-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.arca-workspace-filters {
-  display: flex; align-items: center; height: 42px; min-height: 42px; padding: 4px 6px;
-  overflow-x: auto; border: 0; border-radius: var(--radius-row); background: var(--surface-section);
-}
-.arca-resource-tabs { display: flex; align-items: center; align-self: stretch; gap: 4px; }
-.arca-resource-tab {
-  display: inline-flex; height: 32px; align-items: center; gap: 6px; min-width: 0; padding: 0 11px;
-  border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text-secondary);
-  font: 600 11px/1 var(--font-sans); cursor: pointer;
-}
-.arca-resource-tab:hover { color: var(--text-primary); background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
-.arca-resource-tab[data-active="true"] { background: var(--surface-control); color: var(--color-blue); box-shadow: var(--shadow-card); }
-.arca-resource-tab:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: -2px; }
-.arca-resource-tab-count { min-width: 2ch; color: currentColor; font-variant-numeric: tabular-nums; text-align: right; }
 .arca-workspace-content {
   position: relative; display: flex; flex: 1; min-width: 0; min-height: 0;
   container: resource-stage / inline-size;
@@ -2398,9 +2384,6 @@ body {
 }
 
 @media (max-width: 920px) {
-  .arca-workspace-filters { padding-right: 10px; padding-left: 10px; overflow-x: auto; }
-  .arca-resource-tabs { min-width: max-content; }
-  .arca-resource-tab { padding-right: 7px; padding-left: 7px; }
   .arca-workspace-actions { flex: 0 0 auto; }
   .arca-skill-dialog-header,
   .arca-skill-review-header { padding: 12px 14px 11px; }
@@ -2578,7 +2561,7 @@ body {
   background: transparent; color: var(--text-secondary); font: 620 10px/1 var(--font-sans); cursor: pointer;
 }
 .arca-agent-resource-tab-count { min-width: 15px; color: inherit; font-variant-numeric: tabular-nums; text-align: right; }
-.arca-agent-resource-tabs button[data-active="true"] { background: var(--surface-selected); color: var(--color-blue); }
+.arca-agent-resource-tabs button[data-active] { background: var(--surface-selected); color: var(--color-blue); }
 .arca-agent-resource-tabs button:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: 1px; }
 .arca-agent-resource-panel-body { min-height: 0; padding: 0 16px 16px; }
 .arca-agent-operation-progress {
@@ -2773,18 +2756,19 @@ body {
 .arca-convergence-action[data-action="detach"] { color: var(--color-red); }
 .arca-convergence-action:disabled { opacity: .42; cursor: not-allowed; }
 .arca-convergence-action:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: 1px; }
-.arca-convergence-more { position: relative; display: inline-flex; }
+.arca-convergence-positioner { z-index: 620; width: max-content; min-width: 132px; max-width: var(--available-width); }
+.arca-convergence-positioner[data-closed] { display: none; }
 .arca-convergence-menu {
-  position: absolute; z-index: 24; right: 0; bottom: calc(100% + 5px); display: grid; width: max-content; min-width: 132px;
-  padding: 4px; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-overlay); box-shadow: var(--shadow-sheet);
+  display: grid; max-height: var(--available-height); overflow-y: auto; padding: 4px; border: 1px solid var(--border-hairline);
+  border-radius: 9px; background: var(--surface-overlay); box-shadow: var(--shadow-sheet); outline: none;
 }
-.arca-convergence-menu > button {
+.arca-convergence-menu > [role="menuitem"] {
   display: grid; min-height: 30px; grid-template-columns: 16px minmax(0, 1fr); align-items: center; gap: 7px; padding: 5px 8px;
   border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); font: 600 10px/1.2 var(--font-sans); text-align: left; cursor: pointer;
 }
-.arca-convergence-menu > button:hover { background: var(--surface-control); }
-.arca-convergence-menu > button[data-action="detach"] { color: var(--color-red); }
-.arca-convergence-menu > button:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: -1px; }
+.arca-convergence-menu > [data-highlighted] { background: var(--surface-control); }
+.arca-convergence-menu > [data-action="detach"] { color: var(--color-red); }
+.arca-convergence-menu > [role="menuitem"]:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: -1px; }
 .arca-switch:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-blue) 52%, transparent); outline-offset: 2px; }
 .arca-consumption-status { display: inline-flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 9px; white-space: nowrap; }
 .arca-consumption-status > span { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--color-gray-400); }
@@ -2873,7 +2857,7 @@ body {
 .arca-agent-capability-tab:hover:not(:disabled) {
   background: color-mix(in srgb, var(--surface-raised) 62%, transparent);
 }
-.arca-agent-capability-tab[data-active="true"] {
+.arca-agent-capability-tab[data-active] {
   background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-card);
 }
 .arca-agent-capability-tab-icon {
@@ -2881,7 +2865,7 @@ body {
   border-radius: 7px; background: color-mix(in srgb, var(--text-secondary) 7%, transparent);
   color: var(--text-secondary);
 }
-.arca-agent-capability-tab[data-active="true"] .arca-agent-capability-tab-icon {
+.arca-agent-capability-tab[data-active] .arca-agent-capability-tab-icon {
   background: color-mix(in srgb, var(--color-blue) 10%, transparent); color: var(--color-blue);
 }
 .arca-agent-capability-tab-copy,
@@ -2897,7 +2881,7 @@ body {
 }
 .arca-agent-capability-tab[data-state="configured"] > i { background: var(--color-green); }
 .arca-agent-capability-tab[data-state="incomplete"] > i { background: var(--color-brand-gold); }
-.arca-agent-capability-tab[data-active="true"]::after {
+.arca-agent-capability-tab[data-active]::after {
   position: absolute; right: 12px; bottom: -3px; left: 12px; height: 2px;
   border-radius: 2px; background: var(--color-blue); content: "";
 }
@@ -3037,20 +3021,24 @@ body {
 .arca-model-field:focus { border-color: color-mix(in srgb, var(--color-blue) 62%, var(--border-hairline)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 10%, transparent); }
 .arca-model-field:disabled { opacity: .55; cursor: not-allowed; }
 .arca-form-select { position: relative; width: 100%; }
-.arca-form-select[data-open="true"] { z-index: 621; }
 .arca-form-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; cursor: pointer; }
-.arca-form-select-trigger[data-open="true"] { border-color: color-mix(in srgb, var(--color-blue) 62%, var(--border-hairline)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 10%, transparent); }
+.arca-form-select-trigger[aria-expanded="true"] { border-color: color-mix(in srgb, var(--color-blue) 62%, var(--border-hairline)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 10%, transparent); }
 .arca-form-select-value { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .arca-form-select-chevron { width: 14px; height: 14px; flex: 0 0 14px; color: var(--text-secondary); transition: transform .14s ease, color .14s ease; }
-.arca-form-select-trigger[data-open="true"] .arca-form-select-chevron { color: var(--color-blue); transform: rotate(180deg); }
-.arca-form-select-menu { position: absolute; z-index: 620; top: calc(100% + 5px); right: 0; left: 0; max-height: 220px; padding: 4px; overflow-y: auto; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-popover); box-shadow: var(--shadow-sheet); animation: arca-form-select-in .12s ease-out; }
+.arca-form-select-trigger[aria-expanded="true"] .arca-form-select-chevron { color: var(--color-blue); transform: rotate(180deg); }
+.arca-form-select-positioner { z-index: 620; width: min(var(--anchor-width), var(--available-width)); }
+.arca-form-select-positioner[data-closed],
+.arca-editor-menu-positioner[data-closed] { display: none; }
+.arca-form-select-menu { max-height: min(220px, var(--available-height)); padding: 4px; overflow-y: auto; border: 1px solid var(--border-hairline); border-radius: 9px; background: var(--surface-popover); box-shadow: var(--shadow-sheet); outline: none; }
+.arca-form-select-menu[data-open] { animation: arca-form-select-in .12s ease-out; }
 @keyframes arca-form-select-in { from { opacity: 0; transform: translateY(-3px) scale(.995); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.arca-form-select-option { display: flex; width: 100%; min-height: 32px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); font: 12px/1.25 var(--font-sans); text-align: left; cursor: pointer; }
-.arca-form-select-option[data-active="true"] { background: var(--surface-selected); }
-.arca-form-select-option[data-selected="true"] { color: var(--color-blue); font-weight: 650; }
+.arca-form-select-option { display: flex; width: 100%; min-height: 32px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; border-radius: 6px; outline: none; color: var(--text-primary); font: 12px/1.25 var(--font-sans); cursor: pointer; }
+.arca-form-select-option[data-highlighted] { background: var(--surface-selected); }
+.arca-form-select-option[data-selected] { color: var(--color-blue); font-weight: 650; }
+.arca-form-select-option-content { display: flex; align-items: center; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
 .arca-form-select-option-mark { width: 14px; flex: 0 0 14px; text-align: center; }
 @media (prefers-reduced-motion: reduce) {
-  .arca-form-select-menu { animation: none; }
+  .arca-form-select-menu[data-open] { animation: none; }
   .arca-form-select-chevron { transition: none; }
 }
 .arca-model-check { display: inline-flex; align-items: center; gap: 7px; color: var(--text-secondary); font-size: 11px; }
@@ -3277,15 +3265,19 @@ body {
 }
 
 .arca-editor-menu-wrap { position: relative; flex-shrink: 0; }
-.arca-editor-menu { position: absolute; top: calc(100% + 9px); right: 0; z-index: 620; width: 218px; max-height: min(480px, calc(100vh - 100px)); overflow-y: auto; padding: 7px; border: 1px solid var(--border-hairline); border-radius: 15px; background: var(--surface-popover); box-shadow: 0 16px 40px rgba(0,0,0,.22); animation: arca-editor-enter 130ms ease-out; }
-.arca-editor-menu button { display: flex; align-items: center; gap: 11px; width: 100%; min-height: 38px; border: 0; border-radius: 8px; padding: 8px 10px; background: transparent; color: var(--text-primary); text-align: left; font: 500 13px/1.3 var(--font-sans); cursor: pointer; }
-.arca-editor-menu button:hover, .arca-editor-menu button:focus-visible { background: var(--surface-section); outline: none; }
-.arca-editor-menu button > svg { flex: 0 0 20px; }
+.arca-editor-menu-positioner { z-index: 620; width: min(218px, var(--available-width)); }
+.arca-editor-menu-positioner[data-labeled="true"] { width: min(260px, 75vw, var(--available-width)); }
+.arca-editor-menu-positioner[data-labeled="true"] .arca-editor-menu { max-height: min(240px, var(--available-height)); }
+.arca-editor-menu { max-height: min(480px, var(--available-height)); overflow-y: auto; padding: 7px; border: 1px solid var(--border-hairline); border-radius: 15px; background: var(--surface-popover); box-shadow: 0 16px 40px rgba(0,0,0,.22); outline: none; }
+.arca-editor-menu[data-open] { animation: arca-editor-enter 130ms ease-out; }
+.arca-editor-menu-item { display: flex; align-items: center; gap: 11px; width: 100%; min-height: 38px; border-radius: 8px; padding: 8px 10px; outline: none; color: var(--text-primary); text-align: left; font: 500 13px/1.3 var(--font-sans); cursor: pointer; }
+.arca-editor-menu-item[data-highlighted] { background: var(--surface-section); }
+.arca-editor-menu-item > svg { flex: 0 0 20px; }
 .arca-editor-check { margin-left: auto; color: var(--color-blue); }
 .arca-editor-sublime { display: inline-flex; width: 20px; height: 20px; align-items: center; justify-content: center; border-radius: 4px; background: #363636; color: #ffa62b; font-size: 17px; font-weight: 800; }
 .arca-editor-separator { height: 1px; margin: 6px 10px; background: var(--border-hairline); }
 @keyframes arca-editor-enter { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { .arca-editor-menu { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .arca-editor-menu[data-open] { animation: none; } }
 
 .arca-provider-update-summary { display: grid; gap: 12px; font-size: 13px; }
 .arca-provider-update-summary p { margin: 0; }

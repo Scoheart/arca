@@ -9,7 +9,7 @@ import { usePinnedAgents } from "../hooks/usePinnedAgents";
 import { AgentGlyph, isAgentVisible, isAgentEntryVisible } from "./brandIcons";
 import { AgentIcon, ChevronDownIcon } from "./icons";
 import { PinnedAgentDock } from "./PinnedAgentDock";
-import { MODAL_DIALOG_SELECTOR } from "./ui";
+import { MODAL_DIALOG_SELECTOR, pickerOptionLabels } from "./ui";
 import { AgentHandPicker } from "./AgentHandPicker";
 
 export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddAgent }: {
@@ -29,6 +29,7 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
   const sections = useMemo(() => buildAgentPickerSections(agents, pinned.agentIds, ""), [agents, pinned.agentIds]);
   const pinnedIds = useMemo(() => sections.pinned.map(({ id }) => id), [sections]);
   const available = useMemo(() => [...sections.pinned, ...sections.available], [sections]);
+  const agentLabels = useMemo(() => pickerOptionLabels(agents), [agents]);
   const selected = available.find(({ id }) => id === selectedAgentId);
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -72,6 +73,7 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
         <>
           <PinnedAgentDock
             agents={agents}
+            agentLabels={agentLabels}
             ids={pinnedIds}
             selectedId={selectedAgentId}
             disabled={!pinned.ready || pinned.saving}
@@ -84,7 +86,10 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
       <div className="arca-agent-picker-anchor">
         <button ref={triggerRef} type="button" className="arca-agent-picker-trigger" data-active={selected ? "true" : undefined}
           data-open={open ? "true" : undefined} aria-haspopup="dialog" aria-expanded={open}
-          aria-label={selected ? i18n.t("desktop.agentNavigation.chooseAgentCurrent", { value0: selected.name }) : i18n.t("desktop.agentNavigation.chooseAgent")} aria-keyshortcuts="Meta+K Control+K" title={i18n.t("desktop.agentNavigation.chooseAgentKCtrlK")} onClick={() => setOpen(true)}>
+          aria-label={selected
+            ? i18n.t("desktop.agentNavigation.chooseAgentCurrent", { value0: agentLabels.get(selected.id) ?? selected.name })
+            : i18n.t("desktop.agentNavigation.chooseAgent")}
+          aria-keyshortcuts="Meta+K Control+K" title={i18n.t("desktop.agentNavigation.chooseAgentKCtrlK")} onClick={() => setOpen(true)}>
           {selected ? <AgentGlyph id={selected.id} name={selected.name} size={22} hideSurfaceBadge={true} /> : <AgentIcon className="w-4 h-4 flex-shrink-0" />}
           <span className="arca-agent-picker-trigger-name">{selected?.name ?? i18n.t("desktop.agentNavigation.chooseAgent")}</span>
           <kbd className="arca-kbd" aria-hidden="true">⌘K</kbd>
@@ -92,7 +97,7 @@ export function AgentNavigation({ agents, selectedAgentId, onSelectAgent, onAddA
         </button>
       </div>
     </div>
-    {open && <AgentHandPicker agents={available} pinnedIds={pinnedIds} selectedAgentId={selectedAgentId} ready={pinned.ready} saving={pinned.saving}
+    {open && <AgentHandPicker agents={available} agentLabels={agentLabels} pinnedIds={pinnedIds} selectedAgentId={selectedAgentId} ready={pinned.ready} saving={pinned.saving}
       anchorRef={anchorRef} triggerRef={triggerRef} onSavePins={saveVisiblePins}
       onClose={() => setOpen(false)} onSelect={onSelectAgent}
       onAdd={onAddAgent ? () => { setOpen(false); onAddAgent(); } : undefined} />}

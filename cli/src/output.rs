@@ -1,5 +1,6 @@
 use std::io::{self, IsTerminal};
 
+use clap::builder::styling::{AnsiColor, Style};
 use serde_json::{json, Map, Value};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -232,32 +233,32 @@ impl Palette {
         }
     }
 
-    fn paint(self, code: &str, value: &str) -> String {
+    fn paint(self, style: Style, value: &str) -> String {
         if self.enabled {
-            format!("\x1b[{code}m{value}\x1b[0m")
+            format!("{style}{value}{style:#}")
         } else {
             value.to_string()
         }
     }
 
     pub fn bold(self, value: &str) -> String {
-        self.paint("1", value)
+        self.paint(Style::new().bold(), value)
     }
 
     pub fn dim(self, value: &str) -> String {
-        self.paint("2", value)
+        self.paint(Style::new().dimmed(), value)
     }
 
     pub fn green(self, value: &str) -> String {
-        self.paint("32", value)
+        self.paint(AnsiColor::Green.on_default(), value)
     }
 
     pub fn yellow(self, value: &str) -> String {
-        self.paint("33", value)
+        self.paint(AnsiColor::Yellow.on_default(), value)
     }
 
     pub fn red(self, value: &str) -> String {
-        self.paint("31", value)
+        self.paint(AnsiColor::Red.on_default(), value)
     }
 }
 

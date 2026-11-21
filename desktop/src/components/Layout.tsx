@@ -30,7 +30,7 @@ import { TerminalSelect } from "./TerminalSelect";
 import "./WorkspaceSettings.css";
 import { FileEditorSelect } from "./FileEditorSelect";
 import { ProxySettingsDialog } from "./ProxySettingsDialog";
-import { MODAL_DIALOG_SELECTOR } from "./ui";
+import { MODAL_DIALOG_SELECTOR, pickerOptionLabels } from "./ui";
 import { StartupSyncBar } from "./StartupSyncBar";
 import type { StartupSyncState } from "../hooks/useStartupSync";
 
@@ -81,6 +81,14 @@ export function Layout({
   const toast = useToast();
   const { t } = useTranslation();
   const localeState = useLocale();
+  const activeResource = RESOURCE_CATEGORIES.find((resource) => resource.view === view.kind);
+  const workspaceLabel = activeResource
+    ? t("desktop.layout.library", { value0: activeResource.label })
+    : view.kind === "agent"
+      ? t("desktop.layout.workspace", { value0: pickerOptionLabels(agents).get(view.id) ?? view.id })
+      : view.kind === "capture"
+        ? t("desktop.layout.agentCaptureWorkspace")
+        : view.kind === "traces" ? t("trace.title") : undefined;
 
   useEffect(() => {
     getVersion().then(setVersion).catch(() => {});
@@ -155,7 +163,7 @@ export function Layout({
         </span>
 
         {/* Top-level resources (also the way back from an Agent view) */}
-        <div className="arca-seg arca-skill-seg flex-shrink-0" role="navigation" aria-label="中央资源">
+        <div className="arca-seg arca-skill-seg flex-shrink-0" role="navigation" aria-label={t("desktop.layout.centralResources")}>
           {RESOURCE_CATEGORIES.map((resource) => <button
             key={resource.id}
             className="arca-seg-item"
@@ -192,7 +200,7 @@ export function Layout({
 
       {/* Content — transparent so the body's tinted backdrop shows through the
           glass surfaces. min-h-0 is critical for overflow to work. */}
-      <main aria-label={view.kind === "traces" ? t("trace.title") : view.kind === "capture" ? "Agent 抓包工作区" : view.kind === "agent" ? `${agents.find((agent) => agent.id === view.id)?.name ?? view.id} 工作区` : `${view.kind === "registry" ? "MCPs" : view.kind === "models" ? "Models" : "Skills"} 资源库`} className="flex-1 min-h-0 overflow-hidden" style={{ background: "transparent" }}>
+      <main aria-label={workspaceLabel} className="flex-1 min-h-0 overflow-hidden" style={{ background: "transparent" }}>
         {children}
       </main>
 

@@ -34,8 +34,9 @@ const reducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const pose = (x: number, y: number, angle = 0, scale = 1) => `translate3d(${x}px,${y}px,0) rotate(${angle}deg) scale(${scale})`;
 
-export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId, ready, saving, anchorRef, triggerRef, onSavePins, onSelect, onAdd, onClose }: {
+export function AgentHandPicker({ agents: allAgents, agentLabels, pinnedIds, selectedAgentId, ready, saving, anchorRef, triggerRef, onSavePins, onSelect, onAdd, onClose }: {
   agents: AgentInfo[];
+  agentLabels: ReadonlyMap<string, string>;
   pinnedIds: string[];
   selectedAgentId: string | null;
   ready: boolean;
@@ -218,10 +219,22 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
   }, [anchorRef]);
 
   const animate = (element: HTMLElement, frames: Keyframe[], duration: number, delay = 0, easing = "cubic-bezier(.22,.7,.25,1)") => {
-    if (reducedMotion() || typeof element.animate !== "function") return Promise.resolve();
+    if (document.hidden || reducedMotion() || typeof element.animate !== "function") return Promise.resolve();
     const motion = element.animate(frames, { duration, delay, easing, fill: "both" });
     motions.current.add(motion);
-    return motion.finished.catch(() => undefined).then(() => { motions.current.delete(motion); });
+    return new Promise<void>((resolve) => {
+      const settle = () => {
+        window.clearTimeout(deadline);
+        motions.current.delete(motion);
+        resolve();
+      };
+      // WebKit may pause decorative animations while the window is in the background.
+      const deadline = window.setTimeout(() => {
+        motion.cancel();
+        settle();
+      }, duration + delay + 100);
+      void motion.finished.then(settle, settle);
+    });
   };
 
   useLayoutEffect(() => {
@@ -422,8 +435,8 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
   </div>;
   const footerEnd = (
     <div ref={dockRef} className="arca-agent-hand-pinned">
-      <PinnedAgentDock expanded agents={agents} ids={pinnedIds} selectedId={selectedAgentId} disabled={!ready || saving || busy}
-        replacementName={replacement?.name} onReplace={(index) => {
+      <PinnedAgentDock expanded agents={agents} agentLabels={agentLabels} ids={pinnedIds} selectedId={selectedAgentId} disabled={!ready || saving || busy}
+        replacementName={replacement ? agentLabels.get(replacement.id) ?? replacement.name : undefined} onReplace={(index) => {
           if (!replacement) return;
           const next = [...pinnedIds]; next[index] = replacement.id;
           void savePins(next, replacement, index);
@@ -452,7 +465,8 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
         </div>
         <label className="arca-agent-hand-search" data-active={selectedAgent ? "true" : undefined}>
           <SearchIcon className="w-3.5 h-3.5 flex-shrink-0" />
-          <ImeInput ref={searchRef} data-modal-initial-focus type="search" autoComplete="off" spellCheck={false} placeholder="搜索名称或 ID" aria-label="搜索 Agent" aria-describedby={searchHintId}
+          <ImeInput ref={searchRef} data-modal-initial-focus type="search" autoComplete="off" autoCorrect="off"
+            autoCapitalize="none" spellCheck={false} placeholder="搜索名称或 ID" aria-label="搜索 Agent" aria-describedby={searchHintId}
             onKeyDown={(event) => {
               if (event.altKey || event.metaKey || event.ctrlKey) return;
               if (event.key === "ArrowDown" && visible.length) {
@@ -470,7 +484,7 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
             }}
             value={query} disabled={busy || saving} onChange={(event) => { setQuery(event.target.value); setPage(0); setReplacement(null); setAnnouncement(""); }} />
           {query.trim() ? (
-            <button type="button" className="arca-agent-hand-search-clear" onClick={() => { setQuery(""); searchRef.current?.focus(); }} title="清除搜索">
+            <button type="button" className="arca-agent-hand-search-clear" onClick={() => { setQuery(""); searchRef.current?.focus(); }} title="清除搜索" aria-label="清除搜索">
               <XIcon className="w-3 h-3" />
             </button>
           ) : (
@@ -531,7 +545,8 @@ export function AgentHandPicker({ agents: allAgents, pinnedIds, selectedAgentId,
                 </button>
                 {agent && (
                   <button type="button" className="arca-agent-hand-pin" title={pinnedIds.includes(id) ? "取消置顶" : "置顶"}
-                    aria-label={`${pinnedIds.includes(id) ? "取消置顶" : "置顶"} ${agent.name}`} aria-pressed={pinnedIds.includes(id)} disabled={!ready || busy || saving || Boolean(replacement)}
+                    aria-label={`${i18n.t(pinnedIds.includes(id) ? "desktop.agentHandPicker.unpin" : "desktop.agentHandPicker.pin")} ${agentLabels.get(id) ?? agent.name}`}
+                    aria-pressed={pinnedIds.includes(id)} disabled={!ready || busy || saving || Boolean(replacement)}
                     onFocus={(event) => { if (event.currentTarget.matches(":focus-visible")) { keyboard.current = true; setHighlighted(id); } }} onBlur={() => { if (keyboard.current) setHighlighted(null); }}
                     onClick={() => togglePin(agent)}>
                     {pinnedIds.includes(id) ? <PinOffIcon className="w-3.5 h-3.5" /> : <PinIcon className="w-3.5 h-3.5" />}
