@@ -187,7 +187,10 @@ function App() {
     foregroundConcurrency: 2,
   });
   // Update checks are optional network activity, separate from local asset reads.
-  const updater = useUpdater(networkSettings.settings.proxy_url, { autoCheck: startupSync.settled });
+  const updatesEnabled = !import.meta.env.DEV;
+  const updater = useUpdater(networkSettings.settings.proxy_url, {
+    autoCheck: updatesEnabled && startupSync.settled,
+  });
   // CLI link repair is useful but irrelevant to the first interaction. Run it
   // only after all fresh read-only startup work has settled.
   useCliTool({ start: startupSync.settled });
@@ -303,7 +306,7 @@ function App() {
 
   return (
     <Layout
-      updater={updater}
+      updater={updatesEnabled ? updater : undefined}
       proxyUrl={networkSettings.settings.proxy_url}
       proxySettingsLoading={networkSettings.loading}
       onSaveProxy={networkSettings.save}
@@ -427,7 +430,7 @@ function App() {
             : t("observations.capabilityFallback"),
         }))} />
 
-      <UpdateBanner updater={updater} />
+      {updatesEnabled && <UpdateBanner updater={updater} />}
     </Layout>
   );
 }

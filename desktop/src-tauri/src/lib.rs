@@ -28,13 +28,19 @@ pub fn run() {
         eprintln!("Arca startup warning: {warning:?}");
     }
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // Register the stable updater only for packaged builds. The updater installs
+    // the release at the running bundle's location.
+    let builder = if tauri::is_dev() {
+        builder
+    } else {
+        builder.plugin(tauri_plugin_updater::Builder::new().build())
+    };
+
+    builder
         .manage(playground::PlaygroundState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        // Self-update: checks the stable-release channel (latest.json on the
-        // newest vX.Y.Z GitHub Release); the frontend drives the UX.
-        .plugin(tauri_plugin_updater::Builder::new().build())
         // Needed to relaunch the app after an update is installed.
         .plugin(tauri_plugin_process::init())
         .on_window_event(|window, event| {
@@ -255,7 +261,8 @@ pub fn run() {
             commands::launch_agent_with_startup_agent,
             cli_tool::cli_status,
             cli_tool::install_cli,
-            updater_guard::update_environment
+            updater_guard::update_environment,
+            updater_guard::restart_after_update
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { check } from "@tauri-apps/plugin-updater";
 import type { Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { updateEnvironment } from "../lib/api";
+import { restartAfterUpdate, updateEnvironment } from "../lib/api";
 import { formatErrorDetails } from "../lib/format";
 
 // Remember the version the user clicked "稍后" on, so the startup check stops
@@ -134,7 +134,7 @@ export function useUpdater(
 
   const restart = useCallback(async () => {
     try {
-      await relaunch();
+      if (!(await restartAfterUpdate())) await relaunch();
     } catch (e) {
       setPhase({ kind: "error", operation: "restart", message: formatErrorDetails(e) });
     }

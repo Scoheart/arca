@@ -181,3 +181,88 @@ Provider slot, not a third-party brand.
 ## Fortytwo Engine — 2026-11-10
 
 - `fortytwo-engine.svg`: official site icon served from <https://engine.fortytwo.network/icon.svg> (the `rel="icon"` linked by <https://engine.fortytwo.network/>). The same SVG is also served at <https://fortytwo.network/icon.svg> and <https://platform.fortytwo.network/icon.svg>.
+
+## Provider catalog icon additions — 2026-11-21
+
+These official Provider and platform marks are bundled as PNGs for the desktop
+and iOS apps. The Minekuai and AstraFlow symbols were cropped from the
+official wordmarks.
+
+| Asset | Official source |
+|---|---|
+| `aion-labs.png` | <https://www.aionlabs.ai/static/images/logos/aion-logo.f40cfec9b77a.png> |
+| `amazon-bedrock.png` | <https://aws.amazon.com/architecture/icons/> (official icon package, `Arch_Amazon-Bedrock_64.svg`) |
+| `amd-token-factory.png` | <https://developer.amd.com.cn/radeon/static/brand/favicon.svg?v=r20261120-batch24-tf549> (Radeon Cloud platform mark) |
+| `amd-token-lab.png` | <https://developer.amd.com/favicon.svg> (AMD platform mark) |
+| `anyapi.png` | <https://cdn.prod.website-files.com/68512c600b9f5b4525766f6e/699d9d5280721f3a70f8f372_Logo256.png> |
+| `anyrouter.png` | <https://anyrouter.dev/brand/anyrouter-logo-black.svg> |
+| `asi-cloud.png` | <https://asicloud.cudos.org/favicon.ico> |
+| `bazaarlink.png` | <https://bazaarlink.ai/favicon.svg> |
+| `blockrun.png` | <https://blockrun.ai/apple-touch-icon.png> |
+| `botscanner.png` | <https://botscanner.ai/static/img/favicon.svg> |
+| `bytez.png` | <https://bytez.com/favicon.png> |
+| `cheapllm-shop.png` | <https://cheapllm.shop/img/favicon.svg> |
+| `coarena.png` | <https://coarena.ai/icon.svg?icon.0lfastlo0uy2w.svg> |
+| `crowllm.png` | <https://crowllm.com/favicon.ico> |
+| `cucloud.png` | <https://www.cucloud.cn/templets/1/default/images/logo_menu.ico> (CUCloud platform mark) |
+| `dahl-inference.png` | <https://inference.dahl.global/favicon.svg> |
+| `darkbloom.png` | <https://console.darkbloom.dev/favicon.svg> |
+| `decuff.png` | <https://decuff.ai/assets/brand/favicon/favicon.svg> |
+| `ecloud-moma.png` | <https://ecloud.eos-guangzhou-1.cmecloud.cn/fe/favicon.ico> (China Mobile Cloud platform mark) |
+| `edgeone-makers.png` | <https://pages.edgeone.ai/128.png?123> |
+| `empero.png` | <https://empero.org/assets/favicon.svg> |
+| `esa-eve.png` | <https://eve.philab.esa.int/wp-content/themes/eve-theme/assets/img/favicon.png> |
+| `flonno.png` | <https://www.flonno.com/icon.png?icon.11fv6jib_nkqp.png> |
+| `free-ai.png` | <https://free.ai/static/favicon.svg> |
+| `fumolab.png` | <https://fumolab.ai/fumo-favicon.png> |
+| `gonka-broker.png` | <https://gonkabroker.com/img/favicon/favicon.png> |
+| `google-vertex-express.png` | <https://cloud.google.com/icons> (core product icon package, `Unique Icons/Vertex AI/SVG/VertexAI-512-color.svg`) |
+| `helmholtz-blablador.png` | <https://blablador.fz-juelich.de/assets/maskable-icon.png> |
+| `helyx-ai.png` | <https://helyxai.space/logo.jpeg> |
+| `hetzner-experiments.png` | <https://experiments.hetzner.com/apple-touch-icon.png> (Hetzner platform mark) |
+| `hiapi.png` | <https://hiapi.ai/favicon.svg> |
+| `hyperbolic.png` | <https://app.hyperbolic.ai/favicon.svg> |
+| `inferbase.png` | <https://inferbase.ai/favicon.svg> |
+| `infomaniak-ai-services.png` | <https://www.infomaniak.com/ico/favicon-192x192.png> (Infomaniak platform mark) |
+| `intern-inkstone.png` | <https://static.intern-ai.org.cn/platform-config-upload/discoverypublic/tab_logo_1789096347416.svg> |
+| `inworld.png` | <https://inworld.ai/icon.png?icon.41lwedso2_34h.png> |
+| `itzi.png` | <https://itzi.app/icon.svg?icon.0bt_3fmb5r8ho.svg> |
+| `kiosapi.png` | <https://kiosapi.id/favicon.png> |
+| `llm7.png` | <https://llm7.io/favicon.svg> |
+| `llmkiwi.png` | <https://llm.kiwi/logo-mark.svg> |
+| `logfare.png` | <https://logfare.ai/static/img/favicon.png> |
+| `mango-inference.png` | <https://inference.mangoboost.io/mangoboost-icon.png> |
+| `mara.png` | <https://cdn.prod.website-files.com/6a84154653a6abda25b9d90c/6a9fdd132cbbe0a617138fd8_mara_logo_badge.png> (MARA platform mark) |
+| `maritaca.png` | <https://www.maritaca.ai/favicon.svg> |
+| `meganova.png` | <https://docs.meganova.ai/api-reference/inference-models> (the declared `apple-touch-icon`, `MegaNova_Logo_Blue_NoText.png`) |
+| `minekuai.png` | <https://minekuai.cn/assets/logo-2W1ZlhF9.png> (symbol from the official wordmark at <https://minekuai.cn/>) |
+| `moark.png` | <https://moark.com/web-app-manifest-512x512.png> |
+| `moss.png` | <https://platform.moss.cn/favicon.svg?v=1> |
+| `novai.png` | <https://aiapi-pro.com/apple-touch-icon.png> |
+| `onysoft.png` | <https://api.onysoft.com/assets/images/favicon-logo.png> |
+| `opentyphoon.png` | <https://opentyphoon.ai/images/logo.svg> |
+| `plamo.png` | <https://plamo.preferredai.jp/plm_b_full_rgb.png> |
+| `pojiaai.png` | <https://pojia.ai/brand-assets/panda.png> |
+| `powertokens.png` | <https://powertokens.ai/logo.svg> |
+| `publicai.png` | <https://publicai.co/logo-mark.png> |
+| `puter.png` | <https://assets.puter.site/puter-logo.png> |
+| `qianwen-ai.png` | <https://img.alicdn.com/imgextra/i4/O1CN01W9GrLX1GOnvqd6zGw_!!6000000000613-55-tps-28-28.svg> |
+| `radium.png` | <https://deploy.radium.cloud/apple-icon.png?apple-icon.31dhlh1q-ima9.png> |
+| `regolo.png` | <https://regolo.ai/wp-content/uploads/2025/11/regolo-icon.png> |
+| `respan.png` | <https://www.respan.ai/icon-512.png> |
+| `runcrate.png` | <https://www.runcrate.ai/apple-touch-icon.png> |
+| `sakana-ai.png` | <https://console.sakana.ai/icon.svg?icon.2a-tdgq7or-8y.svg> |
+| `sarvam.png` | <https://www.sarvam.ai/favicon.svg> |
+| `scaledown.png` | <https://scaledown.ai/logo_actual.png> |
+| `sea-lion.png` | <https://sea-lion.ai/wp-content/uploads/2025/08/cropped-sealion-image-purple-1024-1.webp> |
+| `simplellm.png` | <https://app.simplellm.eu/favicon.svg> |
+| `suanli-maas.png` | <https://www.suanli.cn/favicon.svg> |
+| `subq.png` | <https://subq.ai/favicon.svg> |
+| `swarms.png` | <https://swarms.world/swarms-logo.svg> |
+| `synap.png` | <https://synap402.com/synap-x402-icon.svg> |
+| `telnyx.png` | <https://telnyx.com/favicon.ico> |
+| `token360.png` | <https://www.token360.ai/icon/logo-mark-dark.png> |
+| `twigpine-opengateway.png` | <https://twigpine.com/favicon.svg> |
+| `ucloud-modelverse.png` | <https://astraflow.ucloud.cn/static/logo-lg-zh.png> (symbol from the official AstraFlow wordmark) |
+| `vectoree.png` | <https://vectoree.ai/favicon.svg> |
+| `vllm-semantic-router.png` | <https://vllm-sr.ai/img/vllm-sr-mark.svg> |

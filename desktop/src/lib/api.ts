@@ -275,6 +275,8 @@ export type UpdateEnvironment = {
 };
 export const updateEnvironment = () =>
   invoke<UpdateEnvironment>("update_environment");
+export const restartAfterUpdate = () =>
+  invoke<boolean>("restart_after_update");
 export const listCustomRegistryKeys = () =>
   invoke<string[]>("list_custom_registry_keys");
 export const listAgents = () => invoke<AgentInfo[]>("list_agents");

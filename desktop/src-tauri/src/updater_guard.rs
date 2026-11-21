@@ -1,6 +1,21 @@
 use serde::Serialize;
 use std::path::Path;
 
+#[cfg(target_os = "macos")]
+const OPEN_AFTER_EXIT: &str = r#"
+pid=$1
+shift
+attempt=0
+while /bin/kill -0 "$pid" 2>/dev/null; do
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge 600 ]; then
+        exit 1
+    fi
+    /bin/sleep 0.1
+done
+exec /usr/bin/open "$@"
+"#;
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateEnvironment {
@@ -18,6 +33,49 @@ pub fn update_environment() -> UpdateEnvironment {
     };
 
     environment_for_path(&executable, filesystem_is_read_only(&executable))
+}
+
+#[tauri::command]
+pub fn restart_after_update(app: tauri::AppHandle) -> Result<bool, String> {
+    #[cfg(target_os = "macos")]
+    {
+        use std::os::unix::process::CommandExt;
+        use std::process::{Command, Stdio};
+        use tauri::Manager;
+
+        let env = app.env();
+        let executable = tauri::process::current_binary(&env).map_err(|error| error.to_string())?;
+        let bundle = executable
+            .ancestors()
+            .nth(3)
+            .filter(|bundle| {
+                bundle.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("app"))
+                    && executable.parent() == Some(bundle.join("Contents/MacOS").as_path())
+            })
+            .ok_or("Cannot locate the installed Arca application bundle.")?;
+
+        // Let LaunchServices open the updated bundle normally once the old process exits.
+        // A forced new instance can be registered on a second Dock tile during the handoff.
+        Command::new("/bin/sh")
+            .args(["-c", OPEN_AFTER_EXIT, "arca-update-restart"])
+            .arg(std::process::id().to_string())
+            .arg(bundle)
+            .arg("--args")
+            .args(env.args_os.iter().skip(1))
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .process_group(0)
+            .spawn()
+            .map_err(|error| error.to_string())?;
+        app.exit(0);
+        Ok(true)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = app;
+        Ok(false)
+    }
 }
 
 fn environment_for_path(path: &Path, read_only: bool) -> UpdateEnvironment {
