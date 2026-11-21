@@ -473,10 +473,14 @@ fn project_models(
                 let observed_profile =
                     observe_profile_consumption(agent_id, profile, observed_is_active);
                 let state = match (record.enabled, observed_profile) {
-                    (_, Err(_)) => (
+                    (_, Err(error)) => (
                         true,
                         ConsumptionStatus::Unparseable,
-                        Some("model_target_unparseable".into()),
+                        Some(error.split_once(':')
+                            .map(|(code, _)| code)
+                            .filter(|code| code.starts_with("credential_"))
+                            .unwrap_or("model_target_unparseable")
+                            .into()),
                     ),
                     (true, Ok(ModelObservedState::Synced)) => {
                         (true, ConsumptionStatus::Synced, None)

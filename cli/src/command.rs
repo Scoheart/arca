@@ -544,6 +544,29 @@ pub(crate) fn parse_identity(raw: &str) -> Result<String, String> {
     }
 }
 
+/// Internal arguments for the Agent credential helper.
+#[derive(Parser)]
+#[command(disable_help_flag = true)]
+pub(crate) struct CredentialResolveArgs {
+    #[arg(long, value_parser = parse_identity)]
+    pub agent: String,
+    #[arg(long, value_parser = parse_identity)]
+    pub profile: String,
+}
+
+#[derive(Parser)]
+#[command(disable_help_flag = true)]
+pub(crate) struct CredentialExecArgs {
+    #[arg(long, value_parser = parse_identity)]
+    pub agent: String,
+    #[arg(long)]
+    pub program: PathBuf,
+    #[arg(long)]
+    pub profiles_revision: String,
+    #[arg(long)]
+    pub startup_agent: Option<String>,
+}
+
 pub fn dispatch(cli: &Cli) -> Result<CommandOutput, CliError> {
     let command = cli.command.as_ref().ok_or_else(|| {
         CliError::new(

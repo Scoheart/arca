@@ -102,7 +102,11 @@ pub fn mcp_catalog_file() -> PathBuf {
 }
 
 pub fn model_catalog_file() -> PathBuf {
-    model_assets_dir().join("catalog.json")
+    model_assets_dir().join("registry.json")
+}
+
+pub fn model_delivery_file() -> PathBuf {
+    model_assets_dir().join("deliveries.json")
 }
 
 pub fn skill_catalog_file() -> PathBuf {

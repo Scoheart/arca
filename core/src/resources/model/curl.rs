@@ -1,11 +1,10 @@
 //! One cURL pipeline for Desktop copy and explicit CLI export.
-use super::{credential, normalize_endpoint_path, normalize_provider_base_url};
-use crate::domain::types::{ApiKeySource, AuthRequirement, ModelProtocol};
+use super::{normalize_endpoint_path, normalize_provider_base_url};
+use crate::domain::types::{AuthRequirement, ModelProtocol};
 use crate::settings::load_settings_strict;
 use serde_json::json;
 use serde::Deserialize;
 use std::{collections::BTreeMap, sync::LazyLock};
-use zeroize::Zeroizing;
 
 #[derive(Deserialize)]
 struct CurlTemplates {
@@ -209,25 +208,18 @@ pub fn for_profile(profile_id: &str, include_api_key: bool) -> Result<String, St
     if *auth_requirement == AuthRequirement::None {
         return render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None, proxy_url.as_deref());
     }
-    let configured_source = if let Some(provider) = provider { provider.api_key_source.clone() }
-        else { profile.env_key.as_ref().map(|name| ApiKeySource::Env { name: name.clone() }) };
+    let provider = provider.ok_or("model_provider_not_found: this Profile has no registered Provider")?;
+    let has_key = provider.credential.is_some();
     if !include_api_key {
-        let auth = if *auth_requirement == AuthRequirement::Optional && configured_source.is_none() {
+        let auth = if *auth_requirement == AuthRequirement::Optional && !has_key {
             CurlAuth::None
         } else { CurlAuth::Placeholder };
         return render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, auth, proxy_url.as_deref());
     }
-    let stored = if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore)) {
-        if let Some(provider) = provider {
-            super::read_credential_service_checked(&super::provider_keychain_service(&provider.id))?
-        } else { super::read_credential_checked(profile_id)? }
-    } else { None };
-    if configured_source.as_ref().is_none_or(|source| matches!(source, ApiKeySource::ArcaStore))
-        && stored.is_none() && *auth_requirement == AuthRequirement::Optional {
-        return render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::None, proxy_url.as_deref());
-    }
-    let resolved = credential::resolve_source(&configured_source.unwrap_or(ApiKeySource::ArcaStore), stored)?;
-    let key = Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
-        .map_err(|_| "credential_invalid: API Key must be UTF-8")?);
-    render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, CurlAuth::Key(&key), proxy_url.as_deref())
+    let key = super::credential_service::read_provider(&settings, provider)?;
+    let auth = match key.as_deref() {
+        Some(key) => CurlAuth::Key(std::str::from_utf8(key).map_err(|_| "credential_invalid: API Key must be UTF-8")?),
+        None => CurlAuth::None,
+    };
+    render_with_proxy(provider_type, &profile.protocol, &url, &profile.model, auth, proxy_url.as_deref())
 }

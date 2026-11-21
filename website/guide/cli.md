@@ -37,8 +37,9 @@ arca agent skill status --agent codex --json
 ```text
 arca mcp {list,show,add,save,delete,export,source,icon}
 arca mcp source {list,subscribe,add-local,add-builtin,refresh,enable,disable,remove}
-arca model {list,show,save,delete,import,provider,curl}
+arca model {list,show,save,delete,import,provider,store,curl}
 arca model provider {list,show,templates,catalog,save,delete,docs}
+arca model store {list,save,check,delete,revisions,retire}
 arca skill {list,show,inspect-source,install,import,update,remove,repair,check-updates}
 
 arca agent {list,status,save,configure,enable,disable,run,launch,mcp,model,skill}
@@ -243,7 +244,7 @@ arca agent model use work --agent pi
 
 多模型 Agent 可保留多个已分配 Profile，但最多一个 current；单模型 Agent 由 capability 在计划阶段约束。重复 `assign`、`enable` 或 `use` 是 desired-state 幂等操作，不会借机覆盖外部漂移；需要收敛时使用准确的 `converge`。
 
-外部 Model 按 candidate identity 分别显示。无法安全搬入 Keychain、需要环境变量改造或存在身份歧义的候选会显示 `unsupported` / `ambiguous`，不会猜测接管。
+外部 Model 按 candidate identity 分别显示。凭据无法安全接管或身份存在歧义的候选会显示 `unsupported` / `ambiguous`。
 
 创建 Provider 后再创建引用它的 Model Profile：
 
@@ -253,8 +254,7 @@ arca agent model use work --agent pi
   "provider": "custom",
   "base_url": "https://api.example.com/v1",
   "protocols": {"openai-completions": {"endpoint_path": "/chat/completions"}},
-  "auth_requirement": "required",
-  "api_key_source": {"kind": "env", "name": "WORK_API_KEY"}
+  "auth_requirement": "required"
 }
 ```
 
@@ -271,8 +271,9 @@ arca agent model use work --agent pi
 
 ```bash
 arca model provider templates
-arca model provider save --file provider.json --dry-run
-arca model provider save --file provider.json --yes
+# Bash 或 Zsh，WORK_API_KEY 已由当前 shell 的运行环境提供。
+builtin printf '%s' "$WORK_API_KEY" |
+  arca model provider save --file provider.json --store keychain --credential-stdin --yes
 arca model provider list
 arca model provider catalog work-provider
 arca model save --file model.json --yes
@@ -288,9 +289,45 @@ arca model import <candidate-id> --dry-run
 
 `arca model provider catalog <provider-id>` 查询该连接可用的模型。`arca model list` 查看已经保存到 Arca 的 Model Profile。旧写法 `arca model provider models <provider-id>` 仍可使用，两种写法的 JSON 输出保持一致。
 
-如果使用 Keychain，将 Provider 的 `api_key_source` 设置为 `{"kind":"arca-store"}`，通过 `--credential-stdin` 从管道接收凭据。该选项不能与 `--file -` 共用 stdin；没有凭据选项时保留原密钥，只有 `--clear-credential` 才请求清除。不要把密钥放进命令参数。`delivery plaintext` 仅对 Core 支持的 Agent 生效，并且额外要求 `--confirm-plaintext`。
+`--store` 指定新 Key 的存储 ID，与 `--credential-stdin` 一起使用。JSON 从文件读取，Key 从管道读取。编辑时省略这两个参数即可保留原凭据。要更换存储，请向新存储提供新 Key。允许无鉴权访问的 Provider 可通过 `--clear-credential` 显式移除 Key。`delivery plaintext` 仅用于 Core 支持的 Agent，还需 `--confirm-plaintext`。
 
 `arca agent list --json` 现在包含 `storage_authority` 和 `supports_global_selection`。例如 Qoder Desktop 在会话里选模型，Qoder CLI 可全局选模型；多模型能力不等于全局 current 能力。
+
+### 凭据存储
+
+`keychain` 是内置的 macOS Keychain 存储 ID。要注册 1Password，请给服务账号授予目标 Vault 的读取和写入权限，把 token 注入运行 CLI 的环境，并将以下连接配置保存为 `store.json`。填写实际的 `op` 路径和 26 字符 Vault ID。[1Password 服务账号设置](/guide/models#凭据存储)
+
+```json
+{
+  "id": "work-vault",
+  "name": "Work Vault",
+  "backend": {
+    "kind": "one-password",
+    "command": "/opt/homebrew/bin/op",
+    "vault_id": "REPLACE_WITH_VAULT_ID",
+    "token_env": "OP_SERVICE_ACCOUNT_TOKEN"
+  }
+}
+```
+
+```bash
+arca model store list
+arca model store save --file store.json --yes
+arca model store check work-vault
+arca model store delete work-vault --dry-run
+```
+
+`check` 验证当前进程能访问目标 Vault。注册后，保存 Provider 时可用 `--store work-vault`。给已有连接改名时用原 ID 和原 backend 配置再次保存。仍被 Provider 引用的连接需先解除引用，之后才能移除。
+
+Bitwarden 和 Vaultwarden 共用 `backend.kind = "bitwarden"`。将 `bw` 路径填入 `command`，并提供 `server_url`、`appdata_dir`、`user_id`、`folder_id` 和 `session_env`。准备好会话后，同样使用 `model store save` 和 `model store check`。[Bitwarden 和 Vaultwarden 接入](/guide/models#bitwarden-和-vaultwarden)
+
+其他连接也用相同的保存和检查命令。JSON 文件仅填写连接配置和认证环境变量名。[各密钥库接入](/guide/models#凭据存储)
+
+| `backend.kind` | 必填字段 | 可选字段 |
+| --- | --- | --- |
+| `keepassxc` | `command`、`database_path`、`password_env` | `key_file` |
+| `passbolt` | `command`、`server_url`、`user_id`、`private_key_path`、`server_fingerprint`、`password_env` | `folder_id` |
+| `openbao` | `server_url`、`mount`、`prefix`、`token_env` | |
 
 ## Skill
 

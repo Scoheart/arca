@@ -41,7 +41,7 @@ use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
-const OPERATION_SCHEMA_VERSION: u32 = 3;
+pub(super) const OPERATION_SCHEMA_VERSION: u32 = 4;
 const LEGACY_OPERATION_SCHEMA_VERSION: u32 = 2;
 
 pub(crate) type SkillTargetChanges = BTreeMap<String, BTreeMap<String, bool>>;
@@ -161,6 +161,8 @@ pub(crate) enum LifecycleBinding {
         profile_ids: BTreeSet<String>,
         draft_hash: String,
         credential_action: CredentialAction,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        store: Option<crate::domain::credentials::CredentialStoreConfig>,
     },
     ModelProviderDelete {
         provider_id: String,
@@ -3250,6 +3252,9 @@ fn target_files(
                 if agent_id == "pi"
                     && left != right
                     && left.active_profile_id == right.active_profile_id
+                    && !right.active_profile_id.as_ref().is_some_and(|active| {
+                        left.delivery_for(active) != right.delivery_for(active)
+                    })
                 {
                     paths.truncate(1);
                 }
@@ -3443,7 +3448,7 @@ pub(crate) fn load_operation(operation_id: &str) -> Result<PersistedAssetOperati
         .map_err(|_| "asset operation plan is invalid".to_string())?;
     if !matches!(
         operation.schema_version,
-        LEGACY_OPERATION_SCHEMA_VERSION | OPERATION_SCHEMA_VERSION
+        LEGACY_OPERATION_SCHEMA_VERSION | 3 | OPERATION_SCHEMA_VERSION
     ) || operation.plan.operation_id != operation_id
         || canonical != bytes
         || candidate_hash(&operation)? != operation.plan.candidate_hash
@@ -4970,7 +4975,7 @@ mod tests {
             None,
         )
         .unwrap();
-        crate::resources::model::apply_credential_update("work", Some("secret")).unwrap();
+        crate::resources::model::test_set_profile_credential("work", "secret").unwrap();
 
         let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
             agent_id: "opencode".into(),

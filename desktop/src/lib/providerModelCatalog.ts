@@ -14,7 +14,7 @@ const catalogs = new ByteBudgetCache<string, {
 export function providerCatalogKey(provider: ModelProviderInstanceView, revision: number): string {
   return JSON.stringify([
     provider.id, provider.provider, provider.base_url, provider.model_catalog_url,
-    provider.protocols, provider.auth_requirement, provider.api_key_source,
+    provider.protocols, provider.auth_requirement, provider.credential,
     provider.credential_saved, revision,
   ]);
 }

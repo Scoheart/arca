@@ -24,9 +24,12 @@ extern "C" {
 /// The service is a durable lookup key also embedded in existing Agent commands.
 /// Branding belongs in the label and ACL prompt description, not that identifier.
 fn display_name(service: &str) -> Option<String> {
-    service.strip_prefix("com.scoheart.mux.model-provider.")
+    service.strip_prefix("com.scoheart.arca.provider-credential.")
         .filter(|id| !id.is_empty())
-        .map(|id| format!("Arca · Model Provider · {id}"))
+        .map(|id| format!("Arca · Provider Credential · {id}"))
+        .or_else(|| service.strip_prefix("com.scoheart.mux.model-provider.")
+            .filter(|id| !id.is_empty())
+            .map(|id| format!("Arca · Model Provider · {id}")))
         .or_else(|| service.strip_prefix("com.scoheart.mux.model-profile.")
             .filter(|id| !id.is_empty())
             .map(|id| format!("Arca · Model Profile · {id}")))
@@ -171,6 +174,13 @@ pub(super) fn set_password(service: &str, account: &str, password: &[u8]) -> Res
     write_password(service, account, password, false, true)
 }
 
+/// Create an immutable revision without updating any existing item.
+pub(super) fn create_password(service: &str, account: &str, password: &[u8]) -> Result<(), String> {
+    checked(add_password(
+        query(service, account), service, CFData::from_buffer(password), false,
+    )?)
+}
+
 pub(super) fn set_vault_password(service: &str, account: &str, password: &[u8]) -> Result<(), String> {
     write_password(service, account, password, true, false)
 }
@@ -199,27 +209,36 @@ fn write_password(service: &str, account: &str, password: &[u8], vault: bool, in
             return Ok(());
         }
 
-        // Preserve the existing product contract: Agent credential commands can
-        // read through /usr/bin/security. Do not grant access to all applications.
-        let current = trusted_application(std::ptr::null())?;
-        let mut applications = vec![current];
-        if !vault { applications.push(trusted_application(c"/usr/bin/security".as_ptr())?); }
-        let trusted = CFArray::from_CFTypes(&applications);
-        let description = CFString::new(&if vault { "Arca · Credentials".into() }
-            else { display_name(service).unwrap_or_else(|| service.into()) });
-        let mut access = std::ptr::null();
-        checked(SecAccessCreate(description.as_concrete_TypeRef(), trusted.as_concrete_TypeRef(), &mut access))?;
-        if access.is_null() { return Err("macOS Keychain returned no access policy".into()); }
-        let access = CFType::wrap_under_create_rule(access);
-        attributes.push((key(kSecAttrLabel), description.into_CFType()));
-        attributes.push((key(kSecAttrAccess), access));
-        attributes.push((key(kSecValueData), data.into_CFType()));
-        let add = CFDictionary::from_CFType_pairs(&attributes);
-        let status = SecItemAdd(add.as_concrete_TypeRef(), std::ptr::null_mut());
+        let status = add_password(attributes, service, data, vault)?;
         if status == DUPLICATE {
             checked(SecItemUpdate(query.as_concrete_TypeRef(), update.as_concrete_TypeRef()))?;
             let _ = refresh_display_name(service, account);
             Ok(())
         } else { checked(status) }
+    }
+}
+
+fn add_password(
+    mut attributes: Vec<(CFString, CFType)>, service: &str, data: CFData, vault: bool,
+) -> Result<OSStatus, String> {
+    // Preserve the existing product contract: Agent credential commands can
+    // read through /usr/bin/security. Do not grant access to all applications.
+    let current = trusted_application(std::ptr::null())?;
+    let mut applications = vec![current];
+    if !vault { applications.push(trusted_application(c"/usr/bin/security".as_ptr())?); }
+    let trusted = CFArray::from_CFTypes(&applications);
+    let description = CFString::new(&if vault { "Arca · Credentials".into() }
+        else { display_name(service).unwrap_or_else(|| service.into()) });
+    let mut access = std::ptr::null();
+    unsafe {
+        checked(SecAccessCreate(description.as_concrete_TypeRef(), trusted.as_concrete_TypeRef(), &mut access))?;
+        if access.is_null() { return Err("macOS Keychain returned no access policy".into()); }
+        let access = CFType::wrap_under_create_rule(access);
+        let key = |value| CFString::wrap_under_get_rule(value);
+        attributes.push((key(kSecAttrLabel), description.into_CFType()));
+        attributes.push((key(kSecAttrAccess), access));
+        attributes.push((key(kSecValueData), data.into_CFType()));
+        let add = CFDictionary::from_CFType_pairs(&attributes);
+        Ok(SecItemAdd(add.as_concrete_TypeRef(), std::ptr::null_mut()))
     }
 }

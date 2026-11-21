@@ -286,18 +286,25 @@ pub fn commit_asset_operation(request: AssetCommitRequest) -> Result<Consumption
     let operation_id = request.operation_id.clone();
     crate::logging::with_operation_scope(&operation_id, None, || {
         let capability = operation_capability(&request.operation_id)?;
+        let prepared = if capability == Some(CapabilityDomain::Model) {
+            super::gate::prepare_for(CapabilityDomain::Model, "credential_prepare", || {
+                crate::assets::transaction::pending_provider_credential(&request)
+            })?.map(|write| write.create()).transpose()?
+        } else {
+            None
+        };
         let result = match capability {
             Some(capability) => super::gate::mutate_for(capability, "asset_commit", || {
                 if operation_capability(&request.operation_id)? != Some(capability) {
                     return Err("asset_operation_stale: operation capability changed".into());
                 }
-                crate::assets::commit_asset_operation(request)
+                crate::assets::transaction::commit_asset_operation_prepared(request, prepared)
             }),
             None => super::gate::mutate("asset_commit", || {
                 if operation_capability(&request.operation_id)?.is_some() {
                     return Err("asset_operation_stale: operation capability changed".into());
                 }
-                crate::assets::commit_asset_operation(request)
+                crate::assets::transaction::commit_asset_operation_prepared(request, prepared)
             }),
         };
         if let Ok(ref inventory) = result {
@@ -365,14 +372,6 @@ pub fn recover_pending_asset_operations() -> Result<Vec<String>, String> {
     super::gate::mutate(
         "asset_recovery",
         crate::assets::recover_pending_asset_operations,
-    )
-}
-
-pub fn migrate_model_profiles_v2_if_needed() -> Result<bool, String> {
-    super::gate::mutate_for(
-        CapabilityDomain::Model,
-        "model_profile_migration",
-        crate::assets::migrate_model_profiles_v2_if_needed,
     )
 }
 

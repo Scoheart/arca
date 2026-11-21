@@ -8,12 +8,14 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   copyToClipboard,
   exportModelCurl,
+  listCredentialStores,
   openModelPlayground,
   revealModelProviderCredential,
 } from "../lib/api";
 import type { ConsumptionState } from "../hooks/useConsumptionState";
 import type {
   CentralAssetDraft,
+  CredentialStoreConfig,
   ModelProfile,
   ModelProfileView,
   ModelProviderConfig,
@@ -36,6 +38,7 @@ import { Avatar, Badge } from "./ui";
 import { ResourceState } from "./ResourceState";
 import { DialogShell } from "./DialogShell";
 import { AssetOperationReviewDialog } from "./AssetOperationReviewDialog";
+import { CredentialStoresDialog } from "./CredentialStoresDialog";
 import { FormSelect } from "./FormSelect";
 import { ProviderGlyph } from "./providerIcons";
 import {
@@ -76,6 +79,7 @@ const DEFAULT_ENDPOINT_PATHS = Object.fromEntries(
   PROTOCOLS.map(({ id, endpoint_path }) => [id, endpoint_path]),
 ) as Record<ModelProtocol, string>;
 
+const KEYCHAIN_STORE_ID = "keychain";
 
 const emptyProfile = (): ModelProfile => ({
   provider_id: "",
@@ -355,6 +359,8 @@ export function ModelsView({
   const [providerInstances, setProviderInstances] = useState<ModelProviderInstanceView[]>(initialLibrary?.instances ?? []);
   const [providerFilter, setProviderFilter] = useState<string | null>(null);
   const [providerCatalogOpen, setProviderCatalogOpen] = useState(false);
+  const [credentialStores, setCredentialStores] = useState<CredentialStoreConfig[]>([]);
+  const [credentialStoresOpen, setCredentialStoresOpen] = useState(false);
   const [creatingForProviderId, setCreatingForProviderId] = useState<string | null>(null);
   const [creatingProviderTemplate, setCreatingProviderTemplate] = useState<ModelProviderView | null>(null);
   const [editingProvider, setEditingProvider] = useState<ModelProviderInstanceView | null | undefined>(undefined);
@@ -372,6 +378,17 @@ export function ModelsView({
   const lastConsumedIntentId = useRef<number | null>(null);
 
   const modelRevision = useModelObservationRevision();
+  const storeQueryGeneration = useRef(0);
+  const refreshCredentialStores = useCallback(async () => {
+    const generation = ++storeQueryGeneration.current;
+    const stores = await listCredentialStores();
+    if (generation === storeQueryGeneration.current) setCredentialStores(stores);
+  }, []);
+  useEffect(() => {
+    void refreshCredentialStores().catch(() => {});
+    return () => { storeQueryGeneration.current += 1; };
+  }, [refreshCredentialStores, modelRevision]);
+
   const queryGeneration = useRef(0);
   const refresh = useCallback(async (force = false) => {
     const generation = ++queryGeneration.current;
@@ -532,6 +549,7 @@ export function ModelsView({
           <ProviderOverview
             provider={selectedProvider}
             portal={selectedProvider.portal}
+            credentialStores={credentialStores}
             onEdit={consumptionState ? () => setEditingProvider(selectedProvider) : undefined}
             onDelete={consumptionState ? async () => {
               try {
@@ -567,15 +585,21 @@ export function ModelsView({
               </button>
             }
             footer={
-              <button className="btn-secondary" type="button" onClick={() => {
-                void openModelPlayground().catch((error) => toast.show({
-                  kind: "error",
-                  msg: t("models.playgroundFailed", { error: formatError(error) }),
-                }));
-              }}>
-                <ExternalLinkIcon className="w-4 h-4" />
-                <span>{t("models.playground")}</span>
-              </button>
+              <>
+                <button className="btn-secondary" type="button" onClick={() => setCredentialStoresOpen(true)}>
+                  <KeyIcon className="w-4 h-4" />
+                  <span>{t("credentialStores.title")}</span>
+                </button>
+                <button className="btn-secondary mt-1.5" type="button" onClick={() => {
+                  void openModelPlayground().catch((error) => toast.show({
+                    kind: "error",
+                    msg: t("models.playgroundFailed", { error: formatError(error) }),
+                  }));
+                }}>
+                  <ExternalLinkIcon className="w-4 h-4" />
+                  <span>{t("models.playground")}</span>
+                </button>
+              </>
             }
           >
             <SidebarSection title={t("models.library")}>
@@ -726,6 +750,11 @@ export function ModelsView({
         )}
       </ResourceWorkspace>
 
+      {credentialStoresOpen && (
+        <CredentialStoresDialog stores={credentialStores} onRefresh={refreshCredentialStores}
+          onClose={() => setCredentialStoresOpen(false)} />
+      )}
+
       {providerCatalogOpen && (
         <ProviderCatalogDialog
           providers={providers}
@@ -767,17 +796,19 @@ export function ModelsView({
           initial={editingProvider}
           providerTemplate={creatingProviderTemplate}
           providers={providers}
+          credentialStores={credentialStores}
           onClose={() => {
             setEditingProvider(undefined);
             setCreatingProviderTemplate(null);
           }}
-          onReview={async (provider, credential) => {
+          onReview={async (provider, credential, storeId) => {
             if (!consumptionState) throw new Error(t("models.saveUnavailable"));
             await saveDraft({
               domain: "model-provider",
               existing_id: editingProvider?.id,
               provider,
               credential,
+              ...(storeId ? { store_id: storeId } : {}),
             });
             setEditingProvider(undefined);
             setCreatingProviderTemplate(null);
@@ -813,15 +844,20 @@ function ProviderPortalButton({ portal }: { portal?: ModelProviderView["portal"]
 function ProviderOverview({
   provider,
   portal,
+  credentialStores,
   onEdit,
   onDelete,
 }: {
   provider: ModelProviderInstanceView;
   portal?: ModelProviderView["portal"];
+  credentialStores: CredentialStoreConfig[];
   onEdit?: () => void;
   onDelete?: () => void;
 }) {
   const { t } = useTranslation();
+  const storeId = provider.credential?.store_id;
+  const store = credentialStores.find((candidate) => candidate.id === storeId);
+  const storeName = store?.name ?? (storeId === KEYCHAIN_STORE_ID ? t("credentialStores.keychain") : storeId);
   return (
     <ResourceOverview
       eyebrow={`Provider · ${t("models.providerModelCount", { count: provider.model_count })}`}
@@ -853,10 +889,12 @@ function ProviderOverview({
         </div>
       </dl>
       <div className="arca-resource-overview-links">
-        <span className="arca-resource-overview-credential" data-saved={provider.credential_saved || undefined}>
-          <KeyIcon className="w-3.5 h-3.5" />
-          {provider.credential_saved ? t("models.keychainSaved") : `Keychain · ${t("models.keychainNotSaved")}`}
-        </span>
+        {provider.auth_requirement !== "none" && (
+          <span className="arca-resource-overview-credential" data-saved={Boolean(storeName) || undefined}>
+            <KeyIcon className="w-3.5 h-3.5" />
+            {storeName ? t("models.credentialSavedIn", { store: storeName }) : t("models.credentialNotSaved")}
+          </span>
+        )}
         <ProviderPortalButton portal={portal} />
       </div>
     </ResourceOverview>
@@ -1264,7 +1302,6 @@ function ModelProfileDialog({
     protocol: defaultProtocol(preferredProvider?.protocols,
       providerTemplates.find((template) => template.id === preferredProvider?.provider)?.default_protocol),
     base_url: preferredProvider?.base_url ?? "",
-    env_key: preferredProvider?.api_key_source?.kind === "env" ? preferredProvider.api_key_source.name : undefined,
   });
   const [busy, setBusy] = useState(false);
   const [protocolChosen, setProtocolChosen] = useState(Boolean(initial));
@@ -1291,7 +1328,7 @@ function ModelProfileDialog({
         : defaultProtocol(provider.protocols,
             providerTemplates.find((template) => template.id === provider.provider)?.default_protocol),
       base_url: provider.base_url,
-      env_key: provider.api_key_source?.kind === "env" ? provider.api_key_source.name : undefined,
+      env_key: undefined,
     }));
   };
   const save = async () => {
@@ -1423,14 +1460,16 @@ function ModelProviderDialog({
   initial,
   providerTemplate,
   providers,
+  credentialStores,
   onClose,
   onReview,
 }: {
   initial: ModelProviderInstanceView | null;
   providerTemplate: ModelProviderView | null;
   providers: ModelProviderView[];
+  credentialStores: CredentialStoreConfig[];
   onClose: () => void;
-  onReview: (provider: ModelProviderConfig, credential?: string) => Promise<void>;
+  onReview: (provider: ModelProviderConfig, credential?: string, storeId?: string) => Promise<void>;
 }) {
   const { t } = useTranslation();
   const toast = useToast();
@@ -1445,11 +1484,9 @@ function ModelProviderDialog({
           .map(([protocol, config]) => [protocol, { ...config! }]),
       ) as ModelProviderConfig["protocols"]
     : templateConnection.protocols;
-  const initialSource = initial?.api_key_source;
-  const authWithoutCredential = template?.default_auth_requirement
-    ?? (initial?.auth_requirement === "none" ? "none" : initialProviderType === "custom" ? "optional" : "required");
-  const initialAuthRequirement: ModelProviderConfig["auth_requirement"] = initial?.auth_requirement
-    ?? authWithoutCredential;
+  const savedCredential = initial?.credential;
+  const authRequirement = initial?.auth_requirement ?? template?.default_auth_requirement
+    ?? (initialProviderType === "custom" ? "optional" : "required");
   const [draft, setDraft] = useState<ModelProviderConfig>({
     id: initial?.id ?? "",
     name: initial?.name ?? providerTemplate?.name ?? "",
@@ -1457,8 +1494,7 @@ function ModelProviderDialog({
     base_url: initial?.base_url ?? templateConnection.base_url,
     model_catalog_url: initial?.model_catalog_url,
     protocols: initialProtocols,
-    auth_requirement: initialAuthRequirement,
-    api_key_source: initialSource,
+    auth_requirement: authRequirement,
   });
   const defaultPortal = template?.portal;
   const [portalUrl, setPortalUrl] = useState(initial?.portal_url ?? defaultPortal?.url ?? "");
@@ -1475,21 +1511,15 @@ function ModelProviderDialog({
     defaultProtocol(initialProtocols, template?.default_protocol),
   );
   const [credential, setCredential] = useState("");
-  const [credentialDirty, setCredentialDirty] = useState(false);
+  const [storeId, setStoreId] = useState(savedCredential?.store_id ?? KEYCHAIN_STORE_ID);
+  const [clearCredential, setClearCredential] = useState(false);
+  const [revealedCredential, setRevealedCredential] = useState("");
   const [credentialLoading, setCredentialLoading] = useState(false);
   const [credentialReadError, setCredentialReadError] = useState<string | null>(null);
   const credentialReadGeneration = useRef(0);
   const [credentialVisible, setCredentialVisible] = useState(false);
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    credentialReadGeneration.current += 1;
-    setCredential("");
-    setCredentialDirty(false);
-    setCredentialVisible(false);
-    setCredentialReadError(null);
-    setCredentialLoading(false);
-    return () => { credentialReadGeneration.current += 1; };
-  }, [initial?.id, initial?.credential_saved]);
+  useEffect(() => () => { credentialReadGeneration.current += 1; }, []);
   const enabledProtocols = PROTOCOLS.filter(({ id }) => Boolean(draft.protocols[id]));
   const selectedProtocolInfo = PROTOCOLS.find(({ id }) => id === selectedProtocol) ?? PROTOCOLS[0];
   const selectedProtocolPath = protocolPaths[selectedProtocol];
@@ -1501,7 +1531,7 @@ function ModelProviderDialog({
     : undefined;
   const normalizedPortalUrl = portalUrl.trim() ? normalizeProviderPortalUrl(portalUrl) : null;
   const portal = normalizedPortalUrl
-    ? { url: normalizedPortalUrl, kind: defaultPortal?.kind ?? (initialAuthRequirement === "none" ? "setup" : "api-key") }
+    ? { url: normalizedPortalUrl, kind: defaultPortal?.kind ?? (authRequirement === "none" ? "setup" : "api-key") }
     : undefined;
   const portalCustomized = portalUrl.trim() !== (defaultPortal?.url ?? "");
   const protocolsValid = enabledProtocols.length > 0
@@ -1509,17 +1539,19 @@ function ModelProviderDialog({
       const path = draft.protocols[id]?.endpoint_path ?? "";
       return Boolean(normalizeEndpointPath(path) && fullRequestUrl(draft.base_url, path));
     });
+  const storeOptions = credentialStores.map((store) => ({ value: store.id, label: store.name }));
+  if (!storeOptions.some(({ value }) => value === KEYCHAIN_STORE_ID)) {
+    storeOptions.unshift({ value: KEYCHAIN_STORE_ID, label: t("credentialStores.keychain") });
+  }
+  const changingStore = Boolean(savedCredential && savedCredential.store_id !== storeId);
   const enteredCredential = Boolean(credential.trim());
-  const clearCredential = credentialDirty && !enteredCredential;
-  const preservedCredential = Boolean(initial?.credential_saved && !credentialDirty);
-  // Empty, untouched drafts preserve the existing Keychain item without reading it.
-  const showSavedCredentialMask = preservedCredential && !credential;
-  const preservesLegacySource = Boolean(initialSource && initialSource.kind !== "arca-store");
-  const sourceValid = authWithoutCredential !== "required"
-    || enteredCredential
-    || preservedCredential
-    || preservesLegacySource
-    || Boolean(initial && clearCredential);
+  const preserveCredential = Boolean(savedCredential && !enteredCredential && !clearCredential && !changingStore);
+  const credentialHint = clearCredential ? t("models.credentialClearPending")
+    : changingStore && !enteredCredential ? t("models.credentialMoveRequiresKey")
+      : preserveCredential ? t("models.savedCredentialPreserved") : null;
+  const sourceValid = enteredCredential
+    ? storeOptions.some(({ value }) => value === storeId)
+    : !changingStore && (authRequirement !== "required" || preserveCredential);
   const valid = Boolean(
     draft.name.trim()
       && draft.provider.trim()
@@ -1535,11 +1567,10 @@ function ModelProviderDialog({
   const toggleCredentialVisibility = async () => {
     if (credentialVisible) {
       setCredentialVisible(false);
-      // Revealed saved values need not remain in the WebView after hiding them.
-      if (!credentialDirty) setCredential("");
+      setRevealedCredential("");
       return;
     }
-    if (!preservedCredential || credential) {
+    if (!preserveCredential || !initial) {
       setCredentialVisible(true);
       return;
     }
@@ -1547,15 +1578,21 @@ function ModelProviderDialog({
     setCredentialLoading(true);
     setCredentialReadError(null);
     try {
-      const value = await revealModelProviderCredential(initial!.id);
+      const value = await revealModelProviderCredential(initial.id);
       if (credentialReadGeneration.current !== generation) return;
-      setCredential(value);
+      setRevealedCredential(value);
       setCredentialVisible(true);
     } catch (error) {
       if (credentialReadGeneration.current === generation) setCredentialReadError(formatError(error));
     } finally {
       if (credentialReadGeneration.current === generation) setCredentialLoading(false);
     }
+  };
+
+  const hideRevealedCredential = () => {
+    setRevealedCredential("");
+    setCredentialVisible(false);
+    setCredentialReadError(null);
   };
 
   const save = async () => {
@@ -1570,19 +1607,6 @@ function ModelProviderDialog({
             { endpoint_path: normalizeEndpointPath(config!.endpoint_path)! },
           ]),
       ) as ModelProviderConfig["protocols"];
-      const hasNewCredential = credentialDirty && enteredCredential;
-      const apiKeySource = hasNewCredential
-        ? { kind: "arca-store" as const }
-        : clearCredential
-          ? undefined
-          : initialSource;
-      const authRequirement = hasNewCredential
-        ? "required"
-        : clearCredential
-          ? authWithoutCredential
-          : initialSource || preservedCredential
-            ? initialAuthRequirement
-            : authWithoutCredential;
       await onReview({
         ...draft,
         name: draft.name.trim(),
@@ -1592,11 +1616,8 @@ function ModelProviderDialog({
         portal_url: normalizedPortalUrl && normalizedPortalUrl !== defaultPortal?.url
           ? normalizedPortalUrl : undefined,
         protocols,
-        auth_requirement: authRequirement,
-        api_key_source: authRequirement === "none" ? undefined : apiKeySource,
-      }, authRequirement === "none"
-        ? initial?.credential_saved ? "" : undefined
-        : hasNewCredential ? credential : clearCredential ? "" : undefined);
+        credential: preserveCredential ? savedCredential : undefined,
+      }, enteredCredential ? credential : clearCredential ? "" : undefined, enteredCredential ? storeId : undefined);
     } catch (error) {
       toast.show({ kind: "error", msg: t("models.saveFailed"), details: error });
     } finally {
@@ -1654,31 +1675,42 @@ function ModelProviderDialog({
 
         </div>
 
-        {initialAuthRequirement !== "none" && (
+        {authRequirement !== "none" && (
         <section className="arca-provider-form-section arca-provider-credential" aria-label={t("models.apiKey")}>
           <div className="arca-provider-section-head">
-            <strong>{t("models.apiKey")}</strong>
-            <small>{t(preservedCredential ? "models.savedCredentialPreserved" : "models.credentialHelp")}</small>
+            <strong>{t("models.authentication")}</strong>
+            {credentialHint && <small>{credentialHint}</small>}
           </div>
 
-          <div className="arca-model-form-field arca-provider-credential-field">
-            <div className="arca-provider-credential-input" data-mode="arca-store">
+          <div className="arca-provider-basic-grid">
+            <div className="arca-model-form-field">
+              <span>{t("credentialStores.title")}</span>
+              <FormSelect ariaLabel={t("credentialStores.title")} value={storeId} options={storeOptions}
+                disabled={busy || credentialLoading || clearCredential} placeholder={storeId}
+                onChange={(value) => {
+                  setStoreId(value);
+                  hideRevealedCredential();
+                }} />
+            </div>
+            <div className="arca-model-form-field arca-provider-credential-field">
+              <span>{t("models.apiKey")}</span>
+              <div className="arca-provider-credential-input">
                 <input
                   type={!credentialVisible ? "password" : "text"}
                   autoComplete="new-password"
                   aria-label={t("models.apiKey")}
-                  value={credential}
+                  value={revealedCredential || credential}
                   disabled={busy || credentialLoading}
                   onChange={(event) => {
-                    setCredential(event.target.value);
-                    setCredentialDirty(true);
+                    const value = event.target.value;
+                    setRevealedCredential("");
+                    setCredential(value);
+                    if (value.trim()) setClearCredential(false);
                     setCredentialReadError(null);
                   }}
-                  placeholder={showSavedCredentialMask
+                  placeholder={preserveCredential
                     ? "••••••••"
-                    : preservesLegacySource && !clearCredential
-                        ? t("models.externalCredentialPreserved")
-                        : initial ? t("models.emptyCredentialDeletes") : t("models.optionalCredential")}
+                    : authRequirement === "required" || changingStore ? t("models.enterCredential") : t("models.optionalCredential")}
                 />
                   <button
                     type="button"
@@ -1693,20 +1725,20 @@ function ModelProviderDialog({
                       ? <EyeOffIcon className="w-4 h-4" />
                       : <EyeIcon className="w-4 h-4" />}
                   </button>
-                  {initial?.credential_saved && !clearCredential && <button
+                  {authRequirement === "optional" && savedCredential && <button
                     type="button"
                     className="arca-provider-icon-button"
-                    aria-label={t("models.deleteSavedApiKey")}
-                    title={t("models.deleteSavedApiKey")}
+                    aria-label={t(clearCredential ? "models.keepSavedApiKey" : "models.deleteSavedApiKey")}
+                    title={t(clearCredential ? "models.keepSavedApiKey" : "models.deleteSavedApiKey")}
                     disabled={busy || credentialLoading}
                     onClick={() => {
-                      credentialReadGeneration.current += 1;
                       setCredential("");
-                      setCredentialDirty(true);
-                      setCredentialVisible(false);
-                      setCredentialReadError(null);
+                      setClearCredential((clear) => !clear);
+                      setStoreId(savedCredential.store_id);
+                      hideRevealedCredential();
                     }}
-                  ><TrashIcon className="w-4 h-4" /></button>}
+                  >{clearCredential ? <RefreshIcon className="w-4 h-4" /> : <TrashIcon className="w-4 h-4" />}</button>}
+              </div>
             </div>
           </div>
 

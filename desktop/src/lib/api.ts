@@ -1,8 +1,5 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 
-export const CREDENTIAL_SESSION_REQUIRED = "arca:credential-session-required";
-export const CREDENTIAL_SESSION_CHANGED = "arca:credential-session-changed";
-
 export interface LogStatusView {
   session_id: string;
   logs_dir: string;
@@ -28,11 +25,7 @@ export const reportFrontendLog = (entry: FrontendLogInput): Promise<void> =>
 
 async function invoke<T>(command: string, args?: Parameters<typeof tauriInvoke>[1]): Promise<T> {
   try {
-    const result = await tauriInvoke<T>(command, args);
-    if (command === "commit_operation" || command === "set_model_credential_delivery" || command === "set_agent_credential_delivery") {
-      window.dispatchEvent(new Event(CREDENTIAL_SESSION_CHANGED));
-    }
-    return result;
+    return await tauriInvoke<T>(command, args);
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error && typeof error.code === "string"
       ? error.code
@@ -42,11 +35,6 @@ async function invoke<T>(command: string, args?: Parameters<typeof tauriInvoke>[
       : error && typeof error === "object" && "message" in error && typeof error.message === "string"
         ? error.message
         : String(error);
-    const description = `${code ?? ""} ${message}`;
-    if (/credential_(?:session_|vault_)/.test(description)) {
-      // Notify application scope without copying credentials or error details.
-      window.dispatchEvent(new Event(CREDENTIAL_SESSION_REQUIRED));
-    }
     if (command !== "report_frontend_log") {
       const argKeys = args && typeof args === "object" ? Object.keys(args as Record<string, unknown>) : [];
       void reportFrontendLog({
@@ -66,17 +54,6 @@ async function invoke<T>(command: string, args?: Parameters<typeof tauriInvoke>[
 
 export const openModelPlayground = () => invoke<void>("open_model_playground");
 
-export const unlockModelCredentials = (retry = false) => invoke<{
-  unlocked: boolean;
-  expires_in_seconds: number;
-  sync_deferred: boolean;
-}>("unlock_model_credentials", { retry });
-
-export const getModelCredentialSessionStatus = () => invoke<{
-  unlocked: boolean;
-  expires_in_seconds: number;
-  sync_deferred: boolean;
-}>("get_model_credential_session_status");
 import type {
   AgentDefinitionInput,
   BackendStatus,
@@ -96,7 +73,7 @@ import type {
   HookDefinition,
   StartupAgentDefinition,
   AgentStartupAgentsStateView,
-  CredentialValidationView,
+  CredentialStoreConfig,
   CancelOperationRequest,
   InstalledMcp,
   ModelAdoptionCandidate,
@@ -248,6 +225,14 @@ export const listModelProviders = () =>
   invoke<ModelProviderView[]>("list_model_providers");
 export const listModelProviderInstances = () =>
   invoke<ModelProviderInstanceView[]>("list_model_provider_instances");
+export const listCredentialStores = () =>
+  invoke<CredentialStoreConfig[]>("list_credential_stores");
+export const saveCredentialStore = (store: CredentialStoreConfig) =>
+  invoke<void>("save_credential_store", { store });
+export const checkCredentialStore = (storeId: string) =>
+  invoke<void>("check_credential_store", { storeId });
+export const deleteCredentialStore = (storeId: string) =>
+  invoke<void>("delete_credential_store", { storeId });
 export const copyToClipboard = (text: string) =>
   invoke<void>("copy_to_clipboard", { text });
 export const discoverProviderModels = (providerId: string) =>
@@ -256,8 +241,6 @@ export const revealModelProviderCredential = (providerId: string) =>
   invoke<string>("reveal_model_provider_credential", { providerId });
 export const inferModelProvider = (baseUrl: string) =>
   invoke<string>("infer_model_provider", { baseUrl });
-export const validateModelCredentialSource = (source: import("./types").ApiKeySource) =>
-  invoke<CredentialValidationView>("validate_model_credential_source", { source });
 export const listModelAgents = () =>
   invoke<ModelAgentView[]>("list_model_agents");
 export const setModelCredentialDelivery = (

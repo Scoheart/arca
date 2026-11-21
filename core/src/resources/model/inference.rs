@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 use zeroize::Zeroizing;
 
 use crate::{
-    domain::types::{ApiKeySource, AuthRequirement, ModelProfile, ModelProtocol, ModelProviderConfig},
+    domain::types::{AuthRequirement, ModelProfile, ModelProtocol, ModelProviderConfig},
     settings::{load_settings_strict, Settings},
 };
 
@@ -105,9 +105,7 @@ pub(crate) struct Prepared {
     target: Target,
     url: url::Url,
     format: stream::Format,
-    authorization: AuthRequirement,
-    source: Option<ApiKeySource>,
-    provider_id: Option<String>,
+    provider: ModelProviderConfig,
     body: Value,
 }
 
@@ -122,7 +120,7 @@ pub(crate) struct Preview<'a> {
 
 struct Route<'a> {
     profile: &'a ModelProfile,
-    provider: Option<&'a ModelProviderConfig>,
+    provider: &'a ModelProviderConfig,
     url: String,
 }
 
@@ -140,20 +138,13 @@ impl<'a> Route<'a> {
 
     fn from_profile(settings: &'a Settings, profile: &'a ModelProfile) -> Result<Self, Failure> {
         let config_error = || Failure::new(409, "model_route_invalid", "请在 Arca 中检查这个模型的连接和协议。");
-        let provider = profile.provider_id.as_ref().map(|id| {
-            settings.model_providers.as_ref().and_then(|providers| providers.get(id)).ok_or_else(config_error)
-        }).transpose()?;
-        let (base, endpoint) = if let Some(provider) = provider {
-            (&*provider.base_url, &*provider.protocols.get(&profile.protocol).ok_or_else(config_error)?.endpoint_path)
-        } else {
-            let endpoint = if profile.endpoint_path.is_empty() { profile.protocol.default_endpoint_path() }
-                else { &profile.endpoint_path };
-            (&*profile.base_url, endpoint)
-        };
+        let provider = super::credential_service::provider_for_profile(settings, profile)
+            .ok_or_else(config_error)?;
+        let protocol = provider.protocols.get(&profile.protocol).ok_or_else(config_error)?;
         if matches!(profile.model.trim(), "" | "." | "..") {
             return Err(config_error());
         }
-        let url = super::full_request_url(base, endpoint)
+        let url = super::full_request_url(&provider.base_url, &protocol.endpoint_path)
             .map_err(|_| config_error())?
             .replace("{model}", &super::curl::url_component(&profile.model));
         Ok(Self { profile, provider, url })
@@ -167,8 +158,7 @@ impl<'a> Route<'a> {
             name: self.profile.name.clone(),
             model: self.profile.model.clone(),
             protocol: self.profile.protocol.clone(),
-            provider: self.provider.map(|provider| provider.name.clone())
-                .unwrap_or_else(|| self.profile.provider.clone()),
+            provider: self.provider.name.clone(),
             origin: url.origin().ascii_serialization(),
             revision: hex::encode(Sha256::digest(bytes)),
             streaming_available: stream::Format::route(&self.profile.protocol, &url).is_some(),
@@ -196,7 +186,6 @@ pub(crate) fn prepare(request: Request) -> Result<Prepared, Failure> {
     let settings = load_settings_strict().map_err(|_| invalid_catalog())?;
     let (route, target) = Route::at_revision(&settings, &request.profile_id, &request.revision)?;
     let profile = route.profile;
-    let provider_type = route.provider.map(|provider| provider.provider.as_str()).unwrap_or(&profile.provider);
     let url = url::Url::parse(&route.url).map_err(|_| invalid_catalog())?;
     let (format, url) = if request.streaming {
         stream::Format::route(&profile.protocol, &url).ok_or_else(|| {
@@ -205,13 +194,8 @@ pub(crate) fn prepare(request: Request) -> Result<Prepared, Failure> {
     } else {
         (stream::Format::Json, url)
     };
-    let body = wire::encode(profile, provider_type, request)?;
-    let authorization = route.provider.map(|provider| provider.auth_requirement.clone())
-        .unwrap_or(AuthRequirement::Required);
-    let source = route.provider.and_then(|provider| provider.api_key_source.clone()).or_else(|| {
-        profile.env_key.clone().map(|name| ApiKeySource::Env { name })
-    });
-    Ok(Prepared { target, body, url, format, authorization, source, provider_id: profile.provider_id.clone() })
+    let body = wire::encode(profile, &route.provider.provider, request)?;
+    Ok(Prepared { target, body, url, format, provider: route.provider.clone() })
 }
 
 impl Prepared {
@@ -220,7 +204,7 @@ impl Prepared {
             method: "POST",
             url: self.url.as_str(),
             accept: self.format.accept(),
-            authentication_header: (self.authorization != AuthRequirement::None).then(|| match self.target.protocol {
+            authentication_header: (self.provider.auth_requirement != AuthRequirement::None).then(|| match self.target.protocol {
                 ModelProtocol::AnthropicMessages => "x-api-key",
                 ModelProtocol::GeminiGenerateContent | ModelProtocol::GeminiInteractions => "x-goog-api-key",
                 _ => "Authorization",
@@ -232,32 +216,19 @@ impl Prepared {
     fn credential(&self) -> Result<Option<Zeroizing<String>>, Failure> {
         let bad_credential = |message: String| {
             let (code, display) = match message.split(':').next() {
-                Some("credential_session_locked" | "credential_session_denied" | "credential_vault_locked") =>
-                    ("credential_locked", "请在系统提示中授权 Arca 访问凭据，再重试。"),
+                Some("credential_store_bw_locked") =>
+                    ("credential_locked", "请解锁 Bitwarden CLI 并检查 Arca 的凭据存储连接。"),
                 Some("credential_missing") =>
                     ("credential_missing", "此连接的凭据缺失。请在 Arca 的 Provider 设置中检查凭据来源。"),
                 _ => ("credential_unavailable", "无法读取连接凭据，请检查 Arca 的 Provider 设置。"),
             };
             Failure::new(409, code, display)
         };
-        if self.authorization == AuthRequirement::None {
+        let settings = load_settings_strict().map_err(|_| invalid_catalog())?;
+        let Some(key) = super::credential_service::read_provider(&settings, &self.provider).map_err(bad_credential)? else {
             return Ok(None);
-        }
-        let source = self.source.as_ref().unwrap_or(&ApiKeySource::ArcaStore);
-        let stored = if matches!(source, ApiKeySource::ArcaStore) {
-            if let Some(provider_id) = &self.provider_id {
-                super::read_runtime_provider_credential(provider_id)
-            } else {
-                super::read_credential_checked(&self.target.id)
-            }.map_err(bad_credential)?
-        } else {
-            None
         };
-        if matches!(source, ApiKeySource::ArcaStore) && stored.is_none() && self.authorization == AuthRequirement::Optional {
-            return Ok(None);
-        }
-        let credential = super::credential::resolve_source(source, stored).map_err(bad_credential)?;
-        let token = std::str::from_utf8(credential.expose_for_delivery())
+        let token = std::str::from_utf8(&key)
             .map_err(|_| Failure::bad("API Key 必须是单行文本。"))?;
         if token.is_empty() || token.contains(['\r', '\n', '\0']) {
             return Err(Failure::bad("API Key 必须是单行文本。"));

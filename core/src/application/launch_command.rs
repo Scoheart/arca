@@ -100,8 +100,20 @@ pub(super) fn cli_command(
     directory: &Path,
 ) -> Result<String, String> {
     let bin = Path::new(program).parent().ok_or("无效的可执行程序路径")?;
+    Ok(cli_command_exact(program, &normalize_args(args), env, directory, Some(bin)))
+}
+
+pub(super) fn cli_command_exact(
+    program: &str,
+    args: &[String],
+    env: &BTreeMap<String, String>,
+    directory: &Path,
+    path_prefix: Option<&Path>,
+) -> String {
     let mut command = format!("cd -- {} &&\n", quoted_word(&directory.to_string_lossy()));
-    command.push_str(&format!("  PATH={}:\"$PATH\" \\\n", assignment_value(&bin.to_string_lossy())));
+    if let Some(bin) = path_prefix {
+        command.push_str(&format!("  PATH={}:\"$PATH\" \\\n", assignment_value(&bin.to_string_lossy())));
+    }
     for (name, value) in env {
         command.push_str(&format!("  {name}={} \\\n", assignment_value(value)));
     }
@@ -113,8 +125,7 @@ pub(super) fn cli_command(
     command.push_str("  ");
     command.push_str(&program);
     let mut width = 2 + program.chars().count();
-    let normalized = normalize_args(args);
-    for argument in &normalized {
+    for argument in args {
         let word = quoted_word(argument);
         let length = word.chars().count();
         if width + 1 + length > LINE_WIDTH {
@@ -127,7 +138,7 @@ pub(super) fn cli_command(
         command.push_str(&word);
         width += length;
     }
-    Ok(command)
+    command
 }
 
 #[cfg(test)]

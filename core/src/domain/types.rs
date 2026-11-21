@@ -1,6 +1,6 @@
 //! Persisted and wire-safe value objects shared by all resource domains.
 
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::OnceLock;
 
@@ -75,26 +75,7 @@ pub enum AuthRequirement {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(tag = "kind", rename_all = "kebab-case")]
-pub enum ApiKeySource {
-    #[serde(alias = "mux-store")]
-    ArcaStore,
-    Env {
-        name: String,
-    },
-    File {
-        path: String,
-    },
-    Helper {
-        command: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        args: Vec<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        ttl_ms: Option<u64>,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct ModelProviderConfig {
     /// Stable Arca identity for one account/endpoint configuration. The
     /// provider kind (for example `openrouter`) is intentionally not unique.
@@ -116,108 +97,7 @@ pub struct ModelProviderConfig {
     pub protocols: BTreeMap<ModelProtocol, ModelProviderProtocolConfig>,
     pub auth_requirement: AuthRequirement,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub api_key_source: Option<ApiKeySource>,
-    /// Hydrated compatibility field for adapters that have not yet moved to a
-    /// prepared credential route. New persistence uses `api_key_source` only.
-    #[serde(skip)]
-    pub env_key: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct ModelProviderConfigWire {
-    id: String,
-    name: String,
-    provider: String,
-    #[serde(default)]
-    base_url: String,
-    #[serde(default)]
-    model_catalog_url: Option<String>,
-    #[serde(default)]
-    portal_url: Option<String>,
-    #[serde(default)]
-    protocols: BTreeMap<ModelProtocol, ModelProviderProtocolConfig>,
-    /// Settings v3/v4 stored one protocol-client base URL per protocol.
-    #[serde(default)]
-    endpoints: BTreeMap<ModelProtocol, String>,
-    #[serde(default)]
-    env_key: Option<String>,
-    #[serde(default)]
-    auth_requirement: Option<AuthRequirement>,
-    #[serde(default)]
-    api_key_source: Option<ApiKeySource>,
-}
-
-impl<'de> Deserialize<'de> for ModelProviderConfig {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let wire = ModelProviderConfigWire::deserialize(deserializer)?;
-        if !wire.endpoints.is_empty()
-            && (!wire.base_url.trim().is_empty() || !wire.protocols.is_empty())
-        {
-            return Err(serde::de::Error::custom(format!(
-                "model_provider_schema_conflict: Provider '{}' mixes legacy endpoints with Base URL / Endpoint Path fields",
-                wire.name
-            )));
-        }
-        let (base_url, protocols) = if wire.endpoints.is_empty() {
-            (wire.base_url, wire.protocols)
-        } else {
-            migrate_legacy_provider_endpoints(&wire.name, &wire.endpoints)
-                .map_err(serde::de::Error::custom)?
-        };
-        let api_key_source = wire.api_key_source.or_else(|| {
-            wire.env_key
-                .clone()
-                .map(|name| ApiKeySource::Env { name })
-        });
-        let auth_requirement = wire.auth_requirement.unwrap_or_else(|| {
-            infer_auth_requirement(&wire.provider, &base_url, api_key_source.is_some())
-        });
-        let env_key = match &api_key_source {
-            Some(ApiKeySource::Env { name }) => Some(name.clone()),
-            _ => None,
-        };
-        Ok(Self {
-            id: wire.id,
-            name: wire.name,
-            provider: wire.provider,
-            base_url,
-            model_catalog_url: wire.model_catalog_url,
-            portal_url: wire.portal_url,
-            protocols,
-            auth_requirement,
-            api_key_source,
-            env_key,
-        })
-    }
-}
-
-fn infer_auth_requirement(
-    provider: &str,
-    base_url: &str,
-    has_source: bool,
-) -> AuthRequirement {
-    let provider = provider.trim().to_ascii_lowercase();
-    let keyless_provider = matches!(
-        provider.as_str(),
-        "ollama" | "lm-studio" | "vllm" | "bilibili-index-translate"
-    ) || url::Url::parse(base_url).ok().is_some_and(|url| {
-        matches!(
-            url.host_str(),
-            Some("localhost" | "127.0.0.1" | "::1")
-        )
-    });
-    if keyless_provider {
-        AuthRequirement::None
-    } else if provider.is_empty() || provider == "custom" {
-        AuthRequirement::Optional
-    } else if has_source {
-        AuthRequirement::Required
-    } else {
-        AuthRequirement::Required
-    }
+    pub credential: Option<super::credentials::CredentialReference>,
 }
 
 pub(crate) fn migrate_legacy_provider_endpoints(
@@ -713,32 +593,11 @@ mod tests {
         );
     }
 
-    #[test]
-    fn api_key_source_roundtrips_all_non_secret_forms() {
-        let cases = [
-            ApiKeySource::ArcaStore,
-            ApiKeySource::Env {
-                name: "MAX_AI_API_KEY".into(),
-            },
-            ApiKeySource::File {
-                path: "/private/maxai.key".into(),
-            },
-            ApiKeySource::Helper {
-                command: "/usr/local/bin/maxai-key".into(),
-                args: vec!["--profile".into(), "coding".into()],
-                ttl_ms: Some(300_000),
-            },
-        ];
 
-        for source in cases {
-            let json = serde_json::to_value(&source).unwrap();
-            assert_eq!(serde_json::from_value::<ApiKeySource>(json).unwrap(), source);
-        }
-    }
 
     #[test]
-    fn legacy_provider_env_key_migrates_to_an_environment_source() {
-        let provider: ModelProviderConfig = serde_json::from_value(serde_json::json!({
+    fn provider_roundtrips_a_credential_reference_and_rejects_legacy_sources() {
+        let wire = serde_json::json!({
             "id": "max-ai",
             "name": "Max AI",
             "provider": "custom",
@@ -746,24 +605,30 @@ mod tests {
             "protocols": {
                 "openai-completions": { "endpoint_path": "/chat/completions" }
             },
-            "env_key": "MAX_AI_API_KEY"
-        }))
-        .unwrap();
+            "auth_requirement": "optional",
+            "credential": {
+                "store_id": "keychain",
+                "locator": "3c9407b8-ab15-462b-89d2-48895a78a5b1",
+                "revision": "3c9407b8-ab15-462b-89d2-48895a78a5b1"
+            }
+        });
+        let provider: ModelProviderConfig = serde_json::from_value(wire.clone()).unwrap();
 
         assert_eq!(provider.auth_requirement, AuthRequirement::Optional);
-        assert_eq!(
-            provider.api_key_source,
-            Some(ApiKeySource::Env {
-                name: "MAX_AI_API_KEY".into()
-            })
-        );
-        let persisted = serde_json::to_value(provider).unwrap();
-        assert!(persisted.get("env_key").is_none());
-        assert_eq!(persisted["api_key_source"]["kind"], "env");
+        assert_eq!(serde_json::to_value(provider).unwrap(), wire);
+        for (field, source) in [
+            ("env_key", serde_json::json!("MAX_AI_API_KEY")),
+            ("api_key_source", serde_json::json!({"kind": "arca-store"})),
+        ] {
+            let mut legacy = wire.clone();
+            legacy[field] = source;
+            let error = serde_json::from_value::<ModelProviderConfig>(legacy).unwrap_err();
+            assert!(error.to_string().contains(&format!("unknown field `{field}`")));
+        }
     }
 
     #[test]
-    fn public_keyless_provider_infers_no_auth_requirement() {
+    fn public_keyless_provider_records_explicit_no_auth_requirement() {
         let provider: ModelProviderConfig = serde_json::from_value(serde_json::json!({
             "id": "index-translate",
             "name": "Bilibili Index-Translate",
@@ -771,10 +636,12 @@ mod tests {
             "base_url": "https://index-translate.bilibili.com/v1",
             "protocols": {
                 "openai-completions": { "endpoint_path": "/chat/completions" }
-            }
+            },
+            "auth_requirement": "none"
         }))
         .unwrap();
 
         assert_eq!(provider.auth_requirement, AuthRequirement::None);
+        assert!(provider.credential.is_none());
     }
 }

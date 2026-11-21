@@ -15,6 +15,7 @@
 //! mutation is read-whole → modify one section → write-whole (atomically).
 
 use crate::domain::assets::{McpConsumptionRecord, ModelConsumptionRecord, TargetIncident};
+use crate::domain::credentials::CredentialStoreConfig;
 use crate::domain::mcp::DisabledEntry;
 use crate::domain::skill::ManagedSkillRecord;
 use crate::domain::types::{
@@ -133,27 +134,20 @@ pub struct Settings {
     /// Disable snapshots, keyed by agent id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub disabled: Option<BTreeMap<String, Vec<DisabledEntry>>>,
-    /// Reusable Models that reference shared Provider connection records.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    // Model fields are hydrated only from the model registry.
+    #[serde(skip)]
     pub model_profiles: Option<BTreeMap<String, ModelProfile>>,
-    /// Shared Provider connection/configuration instances referenced by Model
-    /// Profiles. Credentials remain outside settings.json in Keychain.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip)]
     pub model_providers: Option<BTreeMap<String, ModelProviderConfig>>,
-    /// Current/active managed Model Profile per Agent. This legacy-compatible
-    /// pointer is retained so older Arca builds do not lose the current model.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip)]
+    pub credential_stores: Option<BTreeMap<String, CredentialStoreConfig>>,
+    #[serde(skip)]
     pub model_assignments: Option<BTreeMap<String, String>>,
-    /// Installed Model Profiles per Agent, including disabled relationships.
-    /// Older settings are projected into this collection from
-    /// `model_assignments` and persisted on the next Model mutation.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip)]
     pub model_consumptions: Option<BTreeMap<String, BTreeMap<String, ModelConsumptionRecord>>>,
-    /// Per-Agent default API Key delivery. Missing entries mean plaintext.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip)]
     pub model_delivery_defaults: Option<BTreeMap<String, crate::domain::assets::ApiKeyDelivery>>,
-    /// Per-Agent runtime state needed to restore externally owned model state.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip)]
     pub model_agent_runtime: Option<BTreeMap<String, ModelAgentRuntimeState>>,
     /// Desired MCP consumption, keyed by canonical Agent id and then by the
     /// stable central Registry asset key (`name::transport`).
@@ -205,12 +199,21 @@ struct McpAssetCatalog {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 struct ModelAssetCatalog {
-    #[serde(default)]
     version: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     providers: Option<BTreeMap<String, ModelProviderConfig>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     profiles: Option<BTreeMap<String, ModelProfile>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    credential_stores: Option<BTreeMap<String, CredentialStoreConfig>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    assignments: Option<BTreeMap<String, String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    consumptions: Option<BTreeMap<String, BTreeMap<String, ModelConsumptionRecord>>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    delivery_defaults: Option<BTreeMap<String, crate::domain::assets::ApiKeyDelivery>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    agent_runtime: Option<BTreeMap<String, ModelAgentRuntimeState>>,
     #[serde(flatten)]
     extra: BTreeMap<String, Value>,
 }
@@ -299,12 +302,10 @@ impl Settings {
                 .get(&profile.protocol)
                 .map(|protocol| protocol.endpoint_path.clone())
                 .unwrap_or_default();
-            profile.env_key = provider.env_key.clone();
         }
     }
 
-    /// Return the canonical Model state while transparently projecting legacy
-    /// `model_assignments` into an enabled installed relationship.
+    /// Build the current selection from registry assignments and consumptions.
     pub fn model_selection(&self, agent_id: &str) -> crate::domain::assets::ModelAgentSelection {
         use crate::domain::assets::{ModelAgentSelection, ModelConsumptionRecord};
 
@@ -341,8 +342,7 @@ impl Settings {
         selection
     }
 
-    /// Persist one canonical Model state in both the multi-profile collection
-    /// and the legacy-compatible active pointer.
+    /// Persist installed Profiles and the active pointer in the model registry.
     pub fn set_model_selection(
         &mut self,
         agent_id: &str,
@@ -468,24 +468,6 @@ fn require_matching_legacy<T: PartialEq>(
     Ok(())
 }
 
-fn canonicalize_persisted_profiles(
-    profiles: &Option<BTreeMap<String, ModelProfile>>,
-) -> Option<BTreeMap<String, ModelProfile>> {
-    let mut profiles = profiles.clone();
-    for profile in profiles
-        .iter_mut()
-        .flatten()
-        .map(|(_, profile)| profile)
-        .filter(|profile| profile.provider_id.is_some())
-    {
-        profile.provider.clear();
-        profile.base_url.clear();
-        profile.endpoint_path.clear();
-        profile.env_key = None;
-    }
-    profiles
-}
-
 fn parse_for_update(path: &Path) -> std::io::Result<(Settings, PersistedDocuments)> {
     let settings_original = read_optional(path)?;
     let mut settings = match settings_original.as_deref() {
@@ -532,21 +514,16 @@ fn parse_for_update(path: &Path) -> std::io::Result<(Settings, PersistedDocument
         settings.sources = catalog.sources;
     }
     if let Some(catalog) = model {
-        validate_catalog_version(&model_path, catalog.version)?;
-        require_matching_legacy(
-            &model_path,
-            "Model providers",
-            &settings.model_providers,
-            &catalog.providers,
-        )?;
-        require_matching_legacy(
-            &model_path,
-            "Model profiles",
-            &canonicalize_persisted_profiles(&settings.model_profiles),
-            &canonicalize_persisted_profiles(&catalog.profiles),
-        )?;
+        if catalog.version != ASSET_CATALOG_VERSION {
+            return Err(invalid_document(&model_path, "unsupported model registry version"));
+        }
         settings.model_providers = catalog.providers;
         settings.model_profiles = catalog.profiles;
+        settings.credential_stores = catalog.credential_stores;
+        settings.model_assignments = catalog.assignments;
+        settings.model_consumptions = catalog.consumptions;
+        settings.model_delivery_defaults = catalog.delivery_defaults;
+        settings.model_agent_runtime = catalog.agent_runtime;
     }
     if let Some(catalog) = skill {
         validate_catalog_version(&skill_path, catalog.version)?;
@@ -591,7 +568,6 @@ fn save_with_expected(
             profile.provider.clear();
             profile.base_url.clear();
             profile.endpoint_path.clear();
-            profile.env_key = None;
         }
     }
 
@@ -610,6 +586,11 @@ fn save_with_expected(
         version: ASSET_CATALOG_VERSION,
         providers: runtime.model_providers.take(),
         profiles: runtime.model_profiles.take(),
+        credential_stores: runtime.credential_stores.take(),
+        assignments: runtime.model_assignments.take(),
+        consumptions: runtime.model_consumptions.take(),
+        delivery_defaults: runtime.model_delivery_defaults.take(),
+        agent_runtime: runtime.model_agent_runtime.take(),
         extra: original
             .model
             .as_deref()
@@ -637,7 +618,15 @@ fn save_with_expected(
                 .map_err(|error| Error::new(ErrorKind::InvalidData, error))?,
         ));
     }
-    if original.model.is_some() || model.providers.is_some() || model.profiles.is_some() {
+    if original.model.is_some()
+        || model.providers.is_some()
+        || model.profiles.is_some()
+        || model.credential_stores.is_some()
+        || model.assignments.is_some()
+        || model.consumptions.is_some()
+        || model.delivery_defaults.is_some()
+        || model.agent_runtime.is_some()
+    {
         writes.push((
             model_catalog_file(),
             original.model.as_deref(),
@@ -754,8 +743,6 @@ pub fn migrate_asset_layout_if_needed() -> std::io::Result<bool> {
             [
                 "registry",
                 "sources",
-                "model_profiles",
-                "model_providers",
                 "managed_skills",
             ]
             .iter()
@@ -884,6 +871,7 @@ pub fn migrate_if_needed() -> std::io::Result<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::credentials::{CredentialReference, CredentialStoreBackend, CredentialStoreConfig};
     use crate::domain::types::{
         ModelProfile, ModelProtocol, ModelProviderConfig, ModelProviderProtocolConfig,
         RegistryConfig, StdioConfig,
@@ -936,16 +924,24 @@ mod tests {
 
     #[test]
     fn claude_desktop_model_agent_runtime_state_roundtrips_and_helpers_prune_empty_map() {
-        let json = r#"{
-            "model_agent_runtime": {
+        let _home = TestHome::new("settings-model-agent-runtime");
+        let registry = model_catalog_file();
+        fs::create_dir_all(registry.parent().unwrap()).unwrap();
+        let json = serde_json::json!({
+            "version": ASSET_CATALOG_VERSION,
+            "agent_runtime": {
                 "claude-desktop": {
                     "previous_applied_profile_id": "cc-switch-id",
                     "futureRuntimeField": {"keep": true}
                 }
             },
             "futureThing": {"keep": true}
-        }"#;
-        let mut settings: Settings = serde_json::from_str(json).unwrap();
+        });
+        fs::write(&registry, serde_json::to_vec(&json).unwrap()).unwrap();
+        let read_registry = || {
+            serde_json::from_str::<Value>(&fs::read_to_string(&registry).unwrap()).unwrap()
+        };
+        let mut settings = load_settings_strict().unwrap();
 
         assert_eq!(
             settings
@@ -967,28 +963,30 @@ mod tests {
                 ..Default::default()
             },
         );
-        let encoded = serde_json::to_value(&settings).unwrap();
+        save_settings(&settings).unwrap();
+        let encoded = read_registry();
         assert_eq!(
-            encoded["model_agent_runtime"]["claude-desktop"]["previous_applied_profile_id"],
+            encoded["agent_runtime"]["claude-desktop"]["previous_applied_profile_id"],
             "updated-id"
         );
         assert_eq!(
-            encoded["model_agent_runtime"]["claude-desktop"]["futureRuntimeField"]["keep"],
+            encoded["agent_runtime"]["claude-desktop"]["futureRuntimeField"]["keep"],
             true
         );
         assert_eq!(
-            encoded["model_agent_runtime"]["another-agent"]["previous_applied_profile_id"],
+            encoded["agent_runtime"]["another-agent"]["previous_applied_profile_id"],
             "external-id"
         );
         assert_eq!(encoded["futureThing"]["keep"], true);
 
         settings.remove_model_agent_runtime_state("claude-desktop");
-        let encoded = serde_json::to_value(&settings).unwrap();
-        assert!(encoded["model_agent_runtime"]["claude-desktop"]
+        save_settings(&settings).unwrap();
+        let encoded = read_registry();
+        assert!(encoded["agent_runtime"]["claude-desktop"]
             .get("previous_applied_profile_id")
             .is_none());
         assert_eq!(
-            encoded["model_agent_runtime"]["claude-desktop"]["futureRuntimeField"]["keep"],
+            encoded["agent_runtime"]["claude-desktop"]["futureRuntimeField"]["keep"],
             true
         );
         settings.remove_model_agent_runtime_state("another-agent");
@@ -1005,15 +1003,22 @@ mod tests {
             .clear();
         settings.remove_model_agent_runtime_state("claude-desktop");
         assert!(settings.model_agent_runtime.is_none());
-        assert!(serde_json::to_value(settings)
-            .unwrap()
-            .get("model_agent_runtime")
-            .is_none());
+        save_settings(&settings).unwrap();
+        assert!(read_registry().get("agent_runtime").is_none());
     }
 
     #[test]
-    fn v6_persists_provider_connection_only_once_and_hydrates_models_on_read() {
-        let _home = TestHome::new("settings-model-provider-v6");
+    fn model_registry_persists_provider_connection_once_and_hydrates_models_on_read() {
+        let _home = TestHome::new("settings-model-registry");
+        let store = CredentialStoreConfig {
+            id: "team-vault".into(),
+            name: "Team Vault".into(),
+            backend: CredentialStoreBackend::OnePassword {
+                command: "/fixture/bin/op".into(),
+                vault_id: "abcdefghijklmnopqrstuvwxyz".into(),
+                token_env: "OP_SERVICE_ACCOUNT_TOKEN".into(),
+            },
+        };
         let provider = ModelProviderConfig {
             id: "team-provider".into(),
             name: "Team Provider".into(),
@@ -1028,8 +1033,11 @@ mod tests {
                 },
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: Some(crate::domain::types::ApiKeySource::Env { name: "TEAM_API_KEY".into() }),
-            env_key: Some("TEAM_API_KEY".into()),
+            credential: Some(CredentialReference {
+                store_id: store.id.clone(),
+                locator: "bcdefghijklmnopqrstuvwxyza".into(),
+                revision: "4a048a72-c4da-446d-9370-fdc4c3be4360".into(),
+            }),
         };
         let profile = ModelProfile {
             id: "team-model".into(),
@@ -1044,7 +1052,7 @@ mod tests {
                 .endpoint_path
                 .clone(),
             model: "model-id".into(),
-            env_key: provider.env_key.clone(),
+            env_key: Some("TEAM_API_KEY".into()),
             context_window: None,
             max_output_tokens: None,
             reasoning: None,
@@ -1053,29 +1061,41 @@ mod tests {
             version: Some(SETTINGS_VERSION),
             model_providers: Some(BTreeMap::from([(provider.id.clone(), provider.clone())])),
             model_profiles: Some(BTreeMap::from([(profile.id.clone(), profile)])),
+            credential_stores: Some(BTreeMap::from([(store.id.clone(), store.clone())])),
             ..Default::default()
         })
         .unwrap();
 
         let raw: Value = serde_json::from_str(
-            &fs::read_to_string(model_catalog_file()).expect("Model catalog should exist"),
+            &fs::read_to_string(model_catalog_file()).expect("Model registry should exist"),
         )
         .unwrap();
         let persisted = &raw["profiles"]["team-model"];
         assert!(persisted.get("provider").is_none());
         assert!(persisted.get("base_url").is_none());
         assert!(persisted.get("endpoint_path").is_none());
-        assert!(persisted.get("env_key").is_none());
+        assert_eq!(persisted["env_key"], "TEAM_API_KEY");
         assert_eq!(persisted["provider_id"], provider.id);
+        assert_eq!(
+            raw["providers"]["team-provider"]["credential"],
+            serde_json::to_value(&provider.credential).unwrap()
+        );
+        assert_eq!(
+            raw["credential_stores"]["team-vault"],
+            serde_json::to_value(&store).unwrap()
+        );
 
-        let hydrated = load_settings_strict().unwrap().model_profiles.unwrap();
+        let loaded = load_settings_strict().unwrap();
+        assert_eq!(loaded.model_providers.unwrap()["team-provider"], provider);
+        assert_eq!(loaded.credential_stores.unwrap()["team-vault"], store);
+        let hydrated = loaded.model_profiles.unwrap();
         assert_eq!(hydrated["team-model"].provider, provider.provider);
         assert_eq!(hydrated["team-model"].base_url, provider.base_url);
         assert_eq!(
             hydrated["team-model"].endpoint_path,
             provider.protocols[&ModelProtocol::OpenaiResponses].endpoint_path
         );
-        assert_eq!(hydrated["team-model"].env_key, provider.env_key);
+        assert_eq!(hydrated["team-model"].env_key.as_deref(), Some("TEAM_API_KEY"));
     }
 
     #[test]
@@ -1139,6 +1159,7 @@ mod tests {
         }"#;
 
         let settings: Settings = serde_json::from_str(json).unwrap();
+        assert!(settings.model_assignments.is_none());
         let record = &settings.mcp_consumptions.as_ref().unwrap()["claude-code"]["github::stdio"];
         assert_eq!(record.asset_key, "github::stdio");
         assert_eq!(
@@ -1158,9 +1179,13 @@ mod tests {
     }
 
     #[test]
-    fn legacy_model_assignment_projects_and_persists_as_multi_profile_selection() {
-        let mut settings: Settings =
-            serde_json::from_str(r#"{"model_assignments":{"grok-build":"work"}}"#).unwrap();
+    fn registry_assignment_projects_and_persists_as_multi_profile_selection() {
+        let _home = TestHome::new("settings-model-registry-selection");
+        save_settings(&Settings {
+            model_assignments: Some(BTreeMap::from([("grok-build".into(), "work".into())])),
+            ..Default::default()
+        }).unwrap();
+        let mut settings = load_settings_strict().unwrap();
 
         let mut selection = settings.model_selection("grok-build");
         assert_eq!(selection.active_profile_id.as_deref(), Some("work"));
@@ -1177,6 +1202,8 @@ mod tests {
             },
         );
         settings.set_model_selection("grok-build", selection);
+        save_settings(&settings).unwrap();
+        let settings = load_settings_strict().unwrap();
         assert!(settings.model_consumptions.as_ref().unwrap()["grok-build"].contains_key("work"));
         assert!(
             settings.model_consumptions.as_ref().unwrap()["grok-build"].contains_key("personal")

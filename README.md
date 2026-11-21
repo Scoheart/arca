@@ -17,9 +17,9 @@ Postman and MCPJam also offer native macOS launch entries. CopilotKit, AG-UI,
 and mcp-use are labeled as development frameworks. These reference entries do
 not imply local asset assignment or MCP Apps rendering inside Arca.
 
-Model credentials managed by Arca stay in macOS Keychain. Agents without a safe
-Keychain command receive only a non-secret environment-variable reference; Arca
-never edits shell startup files. Primary model selection is managed independently
+Model credentials managed by Arca stay in the Provider's selected store, either
+macOS Keychain, 1Password, Bitwarden, Vaultwarden, KeePassXC, Passbolt, or OpenBao. Core selects delivery based on
+each Agent's verified native capabilities. Primary model selection is managed independently
 from fork, small, auxiliary, and other secondary model slots. Skills are downloaded
 from GitHub or imported from local folders and archives directly into one managed copy. Arca
 still validates paths, archive structure, hashes, and concurrent changes in the
@@ -146,41 +146,6 @@ refuses to merge them; set `ARCA_HOME` to the intended real directory. An explic
 `ARCA_HOME` takes priority; the former `MUX_HOME` override remains accepted and
 its chosen directory is not moved automatically.
 
-Keychain service identifiers and native Agent ownership IDs remain stable.
-The rename does not copy secrets, rewrite Agent documents, or claim their
-external settings. Legacy `mux-store` metadata is accepted, while new API
-responses use `arca-store`.
-
-Keychain labels and permission prompts use `Arca · Model Provider · <id>` (or
-`Model Profile` for legacy items). Existing items keep their service lookup key
-so Agent credential commands continue working. After a successful save,
-Core attempts a metadata-only name update without another authorization
-dialog; trusted apps and access rules are preserved. An already-open prompt
-still shows its original name, and a denied metadata update leaves it unchanged.
-
-Desktop opens one application credential session at startup, shared by all
-Arca-managed Providers. Its Keychain-only aggregate is labelled
-`Arca · Credentials`; unlike the individual compatibility items, this vault
-trusts only the creating application, not `/usr/bin/security`. After the first
-additive import (which may require authorizing the existing items), ordinary
-Provider reads share the unlocked vault until Arca completely quits or eight
-hours elapse. Closing the macOS window merely hides Arca and keeps this session.
-Sleep time counts toward the limit; both wall-clock and process timers are checked.
-No API keys are written to files or browser storage. Transaction rollback items
-remain separate and are not retained in the application session.
-
-Each read checks the original item's metadata revision without a password
-dialog. External replacement requires the global **Unlock credentials** action;
-external deletion immediately invalidates that cached key. Cancelling an unlock
-is shared across pages until explicit retry. Existing Agent helper commands
-continue to read their original items and follow those items' access controls.
-Completing an old source item's write-permission migration can still require a
-system confirmation when explicitly saving or deleting that key; reopening the
-aggregate cannot grant a different item's write permissions. Ordinary navigation
-never triggers this source-item recovery path.
-If an aggregate refresh cannot be saved, the source key remains authoritative
-and the app reports that the next startup may need authorization again.
-
 Existing desktop updaters keep the same signature trust key and follow the
 canonical [Scoheart/arca](https://github.com/Scoheart/arca) repository. GitHub
 redirects former repository URLs so older clients can still reach releases.
@@ -192,6 +157,39 @@ Do not run the old and new applications side by side against the same assets.
 
 The documentation continues at the existing hostname until a separate domain
 change is deployed. Old guide routes redirect to the Arca guide.
+
+## Model credential stores
+
+The central Model library starts fresh in `~/.arca/assets/models/registry.json`.
+The prior Model catalog and Keychain items are preserved for manual recovery.
+Recreate the Providers and Models you need, save their API keys to the selected
+stores, and review the Agent assignments. Existing Agent files remain available
+as observations for explicit adoption.
+
+Open **Models → Credential stores → Add connection** to manage reusable
+connections. macOS Keychain is built in. To add 1Password, install the official `op` CLI, give a
+service account read and write access to the chosen vault, and supply its token
+through `OP_SERVICE_ACCOUNT_TOKEN` in the environment that runs Arca or its
+credential helper. Register the absolute `op` path, Vault ID, and token variable
+name, then use **Check connection** to verify vault access. For setup details,
+see the [1Password service account guide](https://www.1password.dev/service-accounts/get-started).
+
+Choose **Bitwarden / Vaultwarden** to use a personal folder on either server.
+Set up a dedicated `bw` CLI profile for that account, unlock it, and supply the
+session through the configured environment variable. Arca checks the server,
+account, and folder before writing a protected field into a secure note.
+[Bitwarden connection setup](website/en/guide/models.md#bitwarden-and-vaultwarden)
+
+KeePassXC uses a local KDBX database and the official `keepassxc-cli`.
+Passbolt uses Arca's helper built on the official SDK and an account's
+OpenPGP key. OpenBao uses the KV v2 API over HTTPS with a scoped token.
+[Setup for each credential store](website/en/guide/models.md#credential-stores)
+
+Choose the store and enter the API Key in the Provider editor. A blank edit
+keeps the current credential reference. Switching stores requires a new key.
+Use the explicit remove action when the Provider allows unauthenticated use.
+The store registry contains connection metadata and references. Key material
+is read from the selected backend when needed.
 
 ## Central sources and external observations
 
@@ -266,13 +264,10 @@ API keys in its own device secure storage; Arca does not project central Model
 assets into that store. See [Warp model setup and audit](docs/warp-models.md).
 
 Models use a shared Provider architecture: one Provider owns its name, type,
-single Base URL, enabled protocol Endpoint Paths, environment reference, and
-single Keychain credential, while any number of Models reference it by stable
-`providerId`. Editing a Provider reapplies every affected Agent transactionally.
-Arca refuses to disable a protocol while a named Model still uses it. Existing
-same-origin protocol endpoints migrate to Base URL + Endpoint Path without
-changing request targets; a legacy Provider with multiple origins is left
-untouched and must be split explicitly. If an Agent's native schema can only
+single Base URL, enabled protocol Endpoint Paths, and optional credential
+reference. Any number of Models can reference it by stable `provider_id`. After
+a central edit, Core converges the affected Agent targets independently.
+Arca refuses to disable a protocol while a named Model still uses it. If an Agent's native schema can only
 represent a client Base URL, Arca also blocks custom paths it cannot preserve
 exactly instead of silently ignoring them.
 
@@ -380,8 +375,9 @@ that Agent uses.
 arca mcp {list,show,add,save,delete,export,source,icon}
 arca mcp icon {list,set,import,reset}
 arca mcp source {list,subscribe,add-local,add-builtin,refresh,enable,disable,remove}
-arca model {list,show,save,delete,import,provider,curl}
+arca model {list,show,save,delete,import,provider,store,curl}
 arca model provider {list,show,templates,catalog,save,delete,docs}
+arca model store {list,save,check,delete,revisions,retire}
 arca skill {list,show,inspect-source,install,import,update,remove,repair,check-updates}
 
 arca agent {list,status,save,configure,enable,disable,run,launch,mcp,model,skill}
@@ -433,16 +429,12 @@ converged commit exits with `pending_convergence`, retaining the operation ID,
 `changed: true` and the affected target incidents for recovery.
 
 Central Model, Provider, MCP and Agent edits accept typed JSON documents via
-`--file` (or `--file -` for stdin). Provider credentials can be supplied through
-`--credential-stdin` and are stored by Core in Keychain; they never enter argv
-or ordinary JSON output. Skill source inspection and installation support the
-same GitHub, local directory and archive resolver as Desktop.
-
-Model schema upgrades migrate central Arca data and credentials without rewriting
-the Agent's current files. Those files are scanned afterward as ordinary observed
-state. A capability-local migration or parser failure isolates that capability;
-only damaged shared settings or an incomplete transaction that cannot be safely
-recovered make the whole workspace read-only.
+`--file` (or `--file -` for stdin). Use `arca model store list` to obtain the
+destination ID for `arca model provider save --file provider.json --store <id>
+--credential-stdin`. With this input, the JSON comes from a file and the key
+comes from a pipe. The CLI redacts keys in ordinary JSON output.
+Skill source inspection and installation support the same GitHub, local
+directory and archive resolver as Desktop.
 
 Skill registration and assignment retire only their own operation records. The
 shared journal directory stays in place, so an empty directory or old cleanup
@@ -462,12 +454,12 @@ Everything lives under `~/.arca/`:
 
 ```
 ~/.arca/
-├── settings.json           # agents · consumption relationships · UI/network state
+├── settings.json           # agents · MCP/Skill relationships · UI/network state
 ├── assets/
 │   ├── mcps/
 │   │   ├── catalog.json    # MCP registry and source definitions
 │   │   └── sources/{remote,local}/  # cached and managed source payloads
-│   ├── models/catalog.json # Provider and Model Profile assets
+│   ├── models/registry.json # Providers, Model Profiles, relationships, and credential references
 │   └── skills/
 │       ├── catalog.json    # managed Skill metadata
 │       └── items/<name>/   # one managed central copy per Skill
@@ -488,7 +480,8 @@ Skills-specific runtime paths:
 ~/.arca/journals/skills/         crash recovery journals
 ```
 
-Model API keys are not stored under `~/.arca/`; they remain in macOS Keychain.
+The Model registry stores credential connection metadata and each Provider's
+store ID, locator, and revision. The selected backend holds the API Key.
 
 The three resource types share one typed state contract in Core and one central
 asset root, while retaining domain-specific catalogs and payload formats. Asset
@@ -496,8 +489,7 @@ operations persist semantic revisions only for
 the exact central assets, their reverse consumer sets, Agent relationships,
 target graph, and credential presence they reviewed. Unrelated UI, network,
 Agent, or other state outside those semantic subjects does not invalidate that
-review. MCP source precedence, the single managed Skill tree, and Keychain
-credentials remain in macOS Keychain.
+review.
 
 ## How it works
 
@@ -508,7 +500,7 @@ credentials remain in macOS Keychain.
 5. **Converge external state explicitly, one item at a time** — Arca detects unmanaged and externally changed MCPs, Model Profiles, and user-level Skills without changing ownership. Adopt, restore, or detach one exact revision-bound observation through a recoverable transaction.
 6. **Propagate central lifecycle changes** — updates reach every desired consumer; deletion clears all managed targets and relationships instead of leaving implicit orphan copies.
 
-Skills in this version are user-level only. Project-level Skills, private repositories, and Skill editing are not supported. The CLI can query and manage Agent consumption for MCPs, Models, and Skills, and explicitly converge one detected change at a time. CLI commands also cover central Model/Provider/MCP authoring, Skill lifecycle, MCP sources, Agent configuration and proxy settings. Desktop retains file dialogs, icon/locale/pinning preferences, launch integration and credential reveal/validation UI; the no-argument TUI is MCP-focused. See the [source-backed parity audit](analysis/11-cli-desktop-parity-and-bug-audit-2026-09-12.md) for remaining differences.
+Skills in this version are user-level only. Project-level Skills, private repositories, and Skill editing are not supported. The CLI can query and manage Agent consumption for MCPs, Models, and Skills, and explicitly converge one detected change at a time. CLI commands also cover central Model/Provider/MCP authoring, credential store management, Skill lifecycle, MCP sources, Agent configuration and proxy settings. Desktop retains file dialogs, icon/locale/pinning preferences, launch integration and explicit credential reveal. The no-argument TUI is MCP-focused. See the [source-backed parity audit](analysis/11-cli-desktop-parity-and-bug-audit-2026-09-12.md) for remaining differences.
 
 ## Development
 

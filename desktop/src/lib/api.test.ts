@@ -1,12 +1,16 @@
 import { invoke } from "@tauri-apps/api/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  checkCredentialStore,
+  deleteCredentialStore,
+  listCredentialStores,
   listModelProfiles,
   revealModelProviderCredential,
+  saveCredentialStore,
   setAgentCredentialDelivery,
   setModelCredentialDelivery,
-  validateModelCredentialSource,
 } from "./api";
+import type { CredentialStoreConfig } from "./types";
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
 
@@ -51,16 +55,28 @@ describe("Model Profile wire contract", () => {
     );
   });
 
-  it("validates source metadata without putting a secret in the request", async () => {
-    invokeMock.mockResolvedValueOnce({
-      source_kind: "file",
-      source_identity: "/private/provider.key",
-      message: "valid",
-    });
-    await validateModelCredentialSource({ kind: "file", path: "/private/provider.key" });
-    expect(invokeMock).toHaveBeenCalledWith("validate_model_credential_source", {
-      source: { kind: "file", path: "/private/provider.key" },
-    });
+  it("manages a credential store using connection metadata", async () => {
+    const store: CredentialStoreConfig = {
+      id: "team",
+      name: "Team Vault",
+      backend: {
+        kind: "one-password",
+        command: "/opt/homebrew/bin/op",
+        vault_id: "abcdefghijklmnopqrstuvwxyz",
+        token_env: "OP_SERVICE_ACCOUNT_TOKEN",
+      },
+    };
+    invokeMock.mockResolvedValueOnce([store]);
+    await expect(listCredentialStores()).resolves.toEqual([store]);
+    await saveCredentialStore(store);
+    await checkCredentialStore("team");
+    await deleteCredentialStore("team");
+    expect(invokeMock.mock.calls).toEqual([
+      ["list_credential_stores", undefined],
+      ["save_credential_store", { store }],
+      ["check_credential_store", { storeId: "team" }],
+      ["delete_credential_store", { storeId: "team" }],
+    ]);
   });
 
   it("updates one Agent-specific credential delivery policy", async () => {

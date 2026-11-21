@@ -46,12 +46,13 @@ pub fn provider_credential(
         if io::stdin().is_terminal() {
             return Err(CliError::new("credential_input_required", "pipe the credential to stdin; terminal echo is not supported"));
         }
-        let input = read_bounded(io::stdin().lock(), 64 * 1024)?;
-        let credential = input.trim_end_matches(['\r', '\n']);
-        if credential.is_empty() {
+        let mut credential = read_bounded(io::stdin().lock(), 64 * 1024)?;
+        let length = credential.trim_end_matches(['\r', '\n']).len();
+        if length == 0 {
             return Err(CliError::new("empty_credential", "empty stdin does not clear a credential; use --clear-credential"));
         }
-        return Ok(Some(credential.to_string()));
+        credential.truncate(length);
+        return Ok(Some(credential));
     }
     Ok(clear.then(String::new))
 }

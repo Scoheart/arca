@@ -29,7 +29,6 @@ use std::str::FromStr;
 use toml_edit::{ArrayOfTables, Document, Item, Table};
 use yaml_edit::{Document as YamlDocument, Mapping as YamlMapping, YamlFile, YamlNode};
 
-const CREDENTIAL_FILE_NATIVE_ID: &str = "__mux_credential_file";
 
 #[derive(Debug, Clone)]
 pub struct PreparedModelFile {
@@ -604,8 +603,6 @@ fn open_code_provider(
     options.insert("baseURL".into(), Value::String(profile.base_url.clone()));
     if let Some(credential) = literal_api_key {
         options.insert("apiKey".into(), Value::String(credential.into()));
-    } else if let Some(path) = profile.native_ids.get(CREDENTIAL_FILE_NATIVE_ID) {
-        options.insert("apiKey".into(), Value::String(format!("{{file:{path}}}")));
     } else if let Some(value) = env_ref(profile, "{env:", "}") {
         options.insert("apiKey".into(), Value::String(value));
     } else {

@@ -2,7 +2,6 @@
 
 pub use crate::domain::assets::ApiKeyDelivery;
 pub use crate::domain::types::{ModelProfile, ModelProtocol};
-pub use crate::resources::model::credential::CredentialValidationView;
 pub use crate::resources::model::{
     ModelApplyResult, ModelAgentView, ModelProfileView, ModelProviderInstanceView, ModelProviderView, ModelProviderPortalView,
     ProviderModelSummary,
@@ -72,35 +71,45 @@ pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
     result
 }
 
-/// Explicit startup/user retry; metadata-only queries never call this.
-pub fn unlock_credential_session(retry: bool) -> Result<serde_json::Value, String> {
-    let result = crate::resources::model::unlock_credential_session(retry);
-    if let Err(ref error) = result {
-        let mapped = super::error::from_legacy(error.clone());
-        crate::logging::LogEvent::warn("models.unlock_credential_session", &mapped.message)
-            .code(&mapped.code)
-            .field("retry", retry)
-            .emit();
-    }
-    result
+pub use crate::domain::credentials::{CredentialStoreBackend, CredentialStoreConfig};
+pub use crate::resources::model::credential_service::CredentialRevisionView;
+
+pub fn list_credential_revisions() -> Result<Vec<CredentialRevisionView>, String> {
+    super::gate::read(crate::resources::model::credential_service::list_revisions)
 }
 
-pub fn clear_credential_session() {
-    crate::resources::model::clear_credential_session();
+pub fn retire_credential_revision(revision: &str) -> Result<(), String> {
+    super::gate::write_for(super::gate::CapabilityDomain::Model, || {
+        crate::resources::model::credential_service::retire_revision(revision)
+    })
 }
 
-pub fn credential_session_status() -> serde_json::Value {
-    crate::resources::model::credential_session_status()
+pub fn list_credential_stores() -> Result<Vec<CredentialStoreConfig>, String> {
+    super::gate::read(crate::resources::model::credential_service::list_stores)
+}
+
+pub fn save_credential_store(store: CredentialStoreConfig) -> Result<(), String> {
+    super::gate::write_for(super::gate::CapabilityDomain::Model, || {
+        crate::resources::model::credential_service::save_store(store)
+    })
+}
+
+pub fn check_credential_store(store_id: &str) -> Result<(), String> {
+    crate::resources::model::credential_service::check_store(store_id)
+}
+
+pub fn delete_credential_store(store_id: &str) -> Result<(), String> {
+    super::gate::write_for(super::gate::CapabilityDomain::Model, || {
+        crate::resources::model::credential_service::delete_store(store_id)
+    })
+}
+
+pub fn resolve_agent_credential(agent_id: &str, profile_id: &str) -> Result<zeroize::Zeroizing<Vec<u8>>, String> {
+    crate::resources::model::resolve_agent_credential(agent_id, profile_id)
 }
 
 pub fn infer_provider(base_url: &str) -> String {
     crate::resources::model::infer_provider(base_url)
-}
-
-pub fn validate_credential_source(
-    source: &crate::domain::types::ApiKeySource,
-) -> Result<CredentialValidationView, String> {
-    super::gate::read(|| crate::resources::model::credential::validate_for_ui(source))
 }
 
 /// Return Model target capabilities for frontend presentation.

@@ -6,6 +6,7 @@ use arca_core::application::assets::{
 use arca_core::application::mcp::catalog::{
     read_registry, read_registry_all, user_override_keys, CatalogItem,
 };
+use arca_core::application::models::CredentialStoreConfig;
 use arca_core::application::operations::{
     CancelOperationRequest, CommitOperationRequest, OperationCommitResult,
     OperationPlan as UnifiedOperationPlan, PlanOperationRequest,
@@ -236,18 +237,6 @@ pub async fn open_log_file(
         Ok(target_str)
     })
     .await?
-}
-
-#[tauri::command]
-pub async fn unlock_model_credentials(retry: bool) -> Result<serde_json::Value, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        arca_core::application::models::unlock_credential_session(retry)
-    }).await.map_err(|_| "credential_session_unavailable: Credential session worker failed".to_string())?
-}
-
-#[tauri::command]
-pub fn get_model_credential_session_status() -> serde_json::Value {
-    arca_core::application::models::credential_session_status()
 }
 
 /// Write user-requested text to the native clipboard. macOS WebViews can
@@ -703,8 +692,7 @@ pub async fn export_model_curl(profile_id: String, include_api_key: bool) -> Res
 
 #[tauri::command]
 pub async fn list_model_profiles() -> Result<Vec<arca_core::application::models::ModelProfileView>, String> {
-    // Profile enumeration checks Keychain and may wait for the workspace gate.
-    // Never perform that work on the WebView event thread.
+    // Profile enumeration may wait for the workspace gate.
     tauri::async_runtime::spawn_blocking(arca_core::application::models::list_profiles)
         .await
         .map_err(|_| "model_profiles_worker_failed: Background profile query failed".to_owned())
@@ -747,14 +735,23 @@ pub fn infer_model_provider(base_url: String) -> String {
 }
 
 #[tauri::command]
-pub async fn validate_model_credential_source(
-    source: arca_core::domain::types::ApiKeySource,
-) -> Result<arca_core::application::models::CredentialValidationView, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        arca_core::application::models::validate_credential_source(&source)
-    })
-    .await
-    .map_err(|_| "credential_validation_worker_failed: credential validation worker failed".to_owned())?
+pub async fn list_credential_stores() -> Result<Vec<CredentialStoreConfig>, String> {
+    blocking_command(arca_core::application::models::list_credential_stores).await?
+}
+
+#[tauri::command]
+pub async fn save_credential_store(store: CredentialStoreConfig) -> Result<(), String> {
+    blocking_command(move || arca_core::application::models::save_credential_store(store)).await?
+}
+
+#[tauri::command]
+pub async fn check_credential_store(store_id: String) -> Result<(), String> {
+    blocking_command(move || arca_core::application::models::check_credential_store(&store_id)).await?
+}
+
+#[tauri::command]
+pub async fn delete_credential_store(store_id: String) -> Result<(), String> {
+    blocking_command(move || arca_core::application::models::delete_credential_store(&store_id)).await?
 }
 
 #[tauri::command]

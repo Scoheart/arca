@@ -22,7 +22,7 @@ pub mod types {
 pub use compatibility::{compatibility_for, CompatibilityReason, CompatibilityView};
 pub use inventory::{list_consumption_inventory, list_consumption_inventory_with_skills};
 pub use lifecycle::{
-    migrate_model_profiles_v2_if_needed, plan_delete_central_asset, plan_update_central_asset,
+    plan_delete_central_asset, plan_update_central_asset,
 };
 pub use migration::{
     list_mcp_adoption_candidates, plan_mcp_adoption, McpAdoptionCandidate, McpAdoptionStatus,

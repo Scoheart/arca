@@ -123,18 +123,53 @@ export type ModelProtocol =
 
 export type AuthRequirement = "required" | "optional" | "none";
 
-export type ApiKeySource =
-  | { kind: "arca-store" }
-  | { kind: "env"; name: string }
-  | { kind: "file"; path: string }
-  | { kind: "helper"; command: string; args: string[]; ttl_ms?: number };
-
 export type ApiKeyDelivery = "auto" | "env" | "command" | "agent-store" | "plaintext";
 
-export interface CredentialValidationView {
-  source_kind: ApiKeySource["kind"];
-  source_identity: string;
-  message: string;
+export interface CredentialStoreConfig {
+  id: string;
+  name: string;
+  backend:
+    | { kind: "keychain" }
+    | { kind: "one-password"; command: string; vault_id: string; token_env: string }
+    | {
+        kind: "bitwarden";
+        command: string;
+        server_url: string;
+        appdata_dir: string;
+        user_id: string;
+        folder_id: string;
+        session_env: string;
+      }
+    | {
+        kind: "keepassxc";
+        command: string;
+        database_path: string;
+        password_env: string;
+        key_file?: string;
+      }
+    | {
+        kind: "passbolt";
+        command: string;
+        server_url: string;
+        user_id: string;
+        private_key_path: string;
+        password_env: string;
+        server_fingerprint: string;
+        folder_id?: string;
+      }
+    | {
+        kind: "openbao";
+        server_url: string;
+        mount: string;
+        prefix: string;
+        token_env: string;
+      };
+}
+
+export interface CredentialReference {
+  store_id: string;
+  locator: string;
+  revision: string;
 }
 
 export interface ModelProfile {
@@ -172,9 +207,7 @@ export interface ModelProviderConfig {
     endpoint_path: string;
   }>>;
   auth_requirement?: AuthRequirement;
-  api_key_source?: ApiKeySource;
-  /** Hydrated legacy compatibility field; new writes use api_key_source. */
-  env_key?: string;
+  credential?: CredentialReference;
 }
 
 export interface ModelProviderInstanceView extends ModelProviderConfig {
@@ -245,14 +278,13 @@ export interface ModelAgentView {
   supports_global_selection?: boolean;
   credential_mode: "keychain-command" | "environment-reference" | "guided" | string;
   credential_capabilities?: {
-    native_sources: Array<ApiKeySource["kind"]>;
-    arca_keychain_helper: boolean;
+    native_sources: Array<"env" | "file" | "helper">;
+    credential_command: boolean;
     agent_store: boolean;
     plaintext: boolean;
     note?: string;
   };
   credential_policies?: Record<string, {
-    source_override?: ApiKeySource | null;
     delivery: ApiKeyDelivery;
   }>;
   default_delivery?: ApiKeyDelivery;
@@ -774,6 +806,8 @@ export type CentralAssetDraft =
       provider: ModelProviderConfig;
       /** undefined keeps, empty string clears, non-empty replaces. */
       credential?: string;
+      /** Destination when saving a new credential. */
+      store_id?: string;
     };
 
 export interface RelationshipChange {
@@ -810,7 +844,6 @@ export interface ModelConsumptionRecord {
   profile_id: string;
   enabled: boolean;
   credential?: {
-    source_override?: ApiKeySource | null;
     delivery: ApiKeyDelivery;
   };
   last_selected_at?: string | null;

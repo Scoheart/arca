@@ -404,36 +404,10 @@ mod tests {
     }
 
     #[test]
-    fn grok_build_rejects_a_keychain_only_credential() {
+    fn grok_build_accepts_a_managed_credential_for_environment_delivery() {
         let _home = TestHome::new("compat-model-grok-keychain");
         add_profile(ModelProtocol::OpenaiCompletions);
-        crate::resources::model::apply_credential_update("work", Some("secret")).unwrap();
-
-        let unsupported = compatibility_for(
-            "grok-build",
-            &AssetRef::Model {
-                profile_id: "work".into(),
-            },
-        )
-        .unwrap();
-        assert_eq!(
-            unsupported.reason.unwrap().code,
-            "grok_build_env_key_required"
-        );
-
-        mutate_settings(|settings| {
-            let provider = settings
-                .model_providers
-                .as_mut()
-                .unwrap()
-                .get_mut("custom-provider")
-                .unwrap();
-            provider.api_key_source = Some(crate::domain::types::ApiKeySource::Env {
-                name: "OPENROUTER_API_KEY".into(),
-            });
-            provider.env_key = Some("OPENROUTER_API_KEY".into());
-        })
-        .unwrap();
+        crate::resources::model::test_set_profile_credential("work", "secret").unwrap();
         assert!(
             compatibility_for(
                 "grok-build",
@@ -450,7 +424,7 @@ mod tests {
     fn opencode_accepts_a_keychain_only_credential_with_default_plaintext() {
         let _home = TestHome::new("compat-model-opencode-keychain");
         add_profile(ModelProtocol::OpenaiCompletions);
-        crate::resources::model::apply_credential_update("work", Some("secret")).unwrap();
+        crate::resources::model::test_set_profile_credential("work", "secret").unwrap();
 
         assert!(
             compatibility_for(

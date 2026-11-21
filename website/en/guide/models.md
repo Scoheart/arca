@@ -5,7 +5,7 @@ A Provider defines an API connection. A Model references it with a protocol and 
 ## Add a connection and Model
 
 1. In **Models → Add Provider**, choose a template or a custom connection.
-2. Set a name, one Base URL, and the credential source. Unauthenticated local services can leave credentials empty.
+2. Set a name and Base URL. For authenticated endpoints, choose a credential store and enter the API Key.
 3. Edit the **Provider portal URL** when needed; the adjacent button opens its key page, console, or setup guide. Use the correct region and Coding Plan portal.
 4. Optionally set the **Models list URL**, enable protocols, and edit **Endpoint Paths**. These fields are visible directly and update the full request URL preview.
 5. Save the Provider, then add a Model with the Provider, protocol, and exact Model ID. Set token limits according to the actual model.
@@ -50,13 +50,82 @@ This table comes from the released Core capability output. Agent names and ident
 - **Qoder IDE, Desktop, and CLI** have distinct identities. IDE Models use official guidance; Desktop 0.1.8+ and CLI 1.1.50+ support managed custom endpoints.
 - **Qoder Desktop** selects Models per conversation; **Qoder CLI** supports global selection. Their settings file is shared, with separate Arca Provider identities. Other consumers in a shared store prevent clearing the entire registry.
 
-## Credentials
+## Credential stores
 
-Central key material lives in the system Keychain. Native Agent capabilities determine delivery: retrieval commands, environment references, or explicitly reviewed export to a client's private configuration. Claude desktop, ZCode, and supported Qoder native delivery have individual constraints; the UI shows available options.
+Open **Models → Credential stores** to manage connections shared by Providers. macOS Keychain is built in. To use 1Password, install the official `op` CLI and grant a service account read and write access to the chosen vault. [1Password service account setup](https://www.1password.dev/service-accounts/get-started)
 
-When an environment reference is used, that variable must be available to the Agent's launch environment. A key saved in Arca Keychain does not automatically become an environment variable for every client. Keep real keys out of command arguments, example files, and shared screenshots.
+Select **Add connection → 1Password** and enter the connection name, absolute path to `op`, Vault ID, and token environment variable name. The default is `OP_SERVICE_ACCOUNT_TOKEN`. Supply its value in the environment of each process that reads the vault, such as Arca Desktop, the CLI, or the Agent's credential helper. After saving, use **Check connection** to verify access to the vault. You can rename a connection and remove it once all Providers that reference it have been updated. [Using service accounts with 1Password CLI](https://www.1password.dev/service-accounts/use-with-1password-cli)
 
-Keychain read failures stop the affected operation instead of being treated as missing credentials. Provider edits include affected consumers; unrelated MCP and Skill operations remain available.
+### Bitwarden and Vaultwarden
+
+Choose **Add connection → Bitwarden / Vaultwarden** to use an existing personal folder. Create an Arca folder in the vault, then configure a dedicated data directory for the official `bw` CLI and sign in to the chosen server. Unlock that profile and look up the account and folder IDs.
+
+```bash
+export BITWARDENCLI_APPDATA_DIR="$HOME/.config/arca-bitwarden-cli"
+mkdir -p -m 700 "$BITWARDENCLI_APPDATA_DIR"
+bw config server https://vault.example.com
+bw login
+export BW_SESSION="$(bw unlock --raw)"
+bw status | jq -r '.userId'
+bw get folder Arca | jq -r '.id'
+```
+
+Register the absolute CLI path, server URL, profile directory, account ID, and folder ID. Supply the unlocked session through the environment variable configured in Arca, which defaults to `BW_SESSION`. Use **Check connection** after saving. Arca stores each revision in a hidden field of a secure note and moves retired revisions to the trash. [Bitwarden CLI documentation](https://bitwarden.com/help/cli/)
+
+### KeePassXC
+
+Choose **Add connection → KeePassXC**. Enter the absolute path to the official `keepassxc-cli` and an existing KDBX database of up to 64 MiB. Enter the key file path when the database uses one. Supply the database password in the environment of Arca or its credential helper. The default variable is `ARCA_KEEPASSXC_PASSWORD`.
+
+Arca writes a separate entry for each credential revision, checks for concurrent database changes, and saves an encrypted KDBX rollback copy. Retirement removes the active entry. Databases with the recycle bin enabled can recover it from there. [KeePassXC CLI manual](https://github.com/keepassxreboot/keepassxc/blob/develop/docs/man/keepassxc-cli.1.adoc)
+
+### Passbolt
+
+Choose **Add connection → Passbolt**. Enter the HTTPS server URL, account ID, account OpenPGP private key file, server OpenPGP fingerprint, and optional personal folder ID. The default passphrase variable is `ARCA_PASSBOLT_PASSPHRASE`. Use an owner-only regular key file, such as mode `0600` or `0400`.
+
+Build Arca's helper from the Arca checkout and enter its absolute path. See the helper's `go.mod` for its Go version requirement.
+
+```bash
+mkdir -p "$HOME/.local/bin"
+cd integrations/passbolt-helper
+go build -mod=readonly -trimpath -o "$HOME/.local/bin/arca-passbolt" .
+```
+
+Arca creates private credential resources for the account. API keys can be up to 4,096 characters. Rotation creates a new resource. Retirement verifies that Arca owns the resource. [Official Passbolt SDK](https://github.com/passbolt/go-passbolt)
+
+### OpenBao
+
+Choose **Add connection → OpenBao**. Enter the HTTPS server origin, an existing KV v2 mount, and a prefix reserved for Arca. Supply the token in the environment of Arca or its credential helper. The default variable is `BAO_TOKEN`. Use **Check connection** after saving.
+
+This policy uses the `secret` mount and the `arca/providers` prefix. Substitute the mount and prefix entered in Arca.
+
+```hcl
+path "secret/config" {
+  capabilities = ["read"]
+}
+path "secret/data/arca/providers/*" {
+  capabilities = ["create", "read"]
+}
+path "secret/delete/arca/providers/*" {
+  capabilities = ["update"]
+}
+path "sys/capabilities-self" {
+  capabilities = ["update"]
+}
+```
+
+Arca creates a separate record using the credential revision ID. Retirement soft-deletes the corresponding version. [OpenBao KV v2](https://openbao.org/docs/secrets/kv/kv-v2/)
+
+### Choose a store for a Provider
+
+Choose a store and enter the API Key in the Provider editor. Leave the key field blank to keep the existing credential. To switch stores, enter a new key. Providers that allow unauthenticated access can explicitly remove a saved key.
+
+This update starts a fresh Model library in `~/.arca/assets/models/registry.json`. The previous central Model catalog and Keychain items remain available for manual recovery. Recreate the Providers and Models you need, then review Agent assignments. Existing Agent configuration is still observed and supported candidates can be adopted explicitly.
+
+## Agent credential delivery
+
+Available delivery options depend on each Agent's native capabilities. Agents that support a credential command can resolve an enabled Model's credential through the Arca CLI. An environment reference records the variable name. With a supported CLI Agent launched through Arca, the launcher reads the selected store and sets the variable for that process. When launching the Agent yourself, supply it in that launch environment.
+
+For Agents that support private configuration delivery, Core writes to verified targets with protected rollback. The explicit plaintext option also requires review, with `0600` permissions and checks against concurrent file changes. Credential read failures stop the affected operation. After a Provider edit, Core converges affected Agent targets independently.
 
 ## External configuration and deletion
 

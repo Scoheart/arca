@@ -5,6 +5,7 @@ import type { ConsumptionState } from "../hooks/useConsumptionState";
 import * as api from "../lib/api";
 import * as modelsDev from "../lib/modelsDev";
 import { invalidateModelObservation } from "../lib/modelObservation";
+import type { AuthRequirement, CredentialStoreConfig } from "../lib/types";
 import { ModelsView } from "./ModelsView";
 import { ToastProvider } from "./Toast";
 
@@ -15,6 +16,10 @@ vi.mock("../lib/api", async () => {
     listModelProfiles: vi.fn(),
     listModelProviders: vi.fn(),
     listModelProviderInstances: vi.fn(),
+    listCredentialStores: vi.fn(),
+    saveCredentialStore: vi.fn(),
+    checkCredentialStore: vi.fn(),
+    deleteCredentialStore: vi.fn(),
     discoverProviderModels: vi.fn(),
     revealModelProviderCredential: vi.fn(),
     inferModelProvider: vi.fn(),
@@ -30,6 +35,17 @@ vi.mock("../lib/modelsDev", async () => {
   };
 });
 
+const keychainStore: CredentialStoreConfig = {
+  id: "keychain", name: "macOS Keychain", backend: { kind: "keychain" },
+};
+const teamStore: CredentialStoreConfig = {
+  id: "team", name: "Team Vault",
+  backend: {
+    kind: "one-password", command: "/opt/homebrew/bin/op",
+    vault_id: "abcdefghijklmnopqrstuvwxyz", token_env: "OP_SERVICE_ACCOUNT_TOKEN",
+  },
+};
+const keychainReference = { store_id: "keychain", locator: "fixture-locator", revision: "fixture-revision" };
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -108,6 +124,7 @@ beforeEach(() => {
     },
   ]);
   vi.mocked(api.listModelProviderInstances).mockResolvedValue([]);
+  vi.mocked(api.listCredentialStores).mockResolvedValue([keychainStore, teamStore]);
   vi.mocked(api.discoverProviderModels).mockResolvedValue([]);
   vi.mocked(api.revealModelProviderCredential).mockResolvedValue("");
   vi.mocked(api.inferModelProvider).mockImplementation(async (baseUrl) => {
@@ -276,7 +293,7 @@ it("enriches an OpenRouter list row without overriding user token limits", async
   expect(within(card).queryByText(/models\.dev/)).not.toBeInTheDocument();
 });
 
-it("keeps the sidebar limited to the model library and configured Providers", async () => {
+it("keeps credential store management separate from the Provider filters", async () => {
   vi.mocked(api.listModelProviderInstances).mockResolvedValue([
     {
       id: "openai-personal",
@@ -344,6 +361,8 @@ it("keeps the sidebar limited to the model library and configured Providers", as
   expect(sidebar.getByText("全部 Models")).toBeVisible();
   expect(sidebar.queryByText("协议")).not.toBeInTheDocument();
   expect(sidebar.queryByText("全部协议")).not.toBeInTheDocument();
+  expect(within(sidebarElement!.querySelector(".arca-workspace-sidebar-footer") as HTMLElement)
+    .getByRole("button", { name: "凭据存储" })).toBeVisible();
 
   const openAiProvider = sidebar.getByRole("button", { name: /OpenAI Personal/ });
   expect(openAiProvider.querySelector('[data-provider-icon="openai"]')).toBeInTheDocument();
@@ -357,6 +376,47 @@ it("keeps the sidebar limited to the model library and configured Providers", as
   await user.click(sidebar.getByRole("button", { name: /全部 Models/ }));
   expect(screen.getByRole("button", { name: "打开模型 Responses Model 详情" })).toBeVisible();
   expect(screen.getByRole("button", { name: "打开模型 Completions Model 详情" })).toBeVisible();
+});
+
+it("registers a reusable 1Password connection and checks it from the store manager", async () => {
+  let stores = [keychainStore];
+  vi.mocked(api.listCredentialStores).mockImplementation(async () => stores);
+  vi.mocked(api.saveCredentialStore).mockImplementation(async (store) => { stores = [...stores, store]; });
+  vi.mocked(api.checkCredentialStore).mockRejectedValueOnce(new Error("Configured environment variable is missing"));
+
+  const user = userEvent.setup();
+  render(<ToastProvider><ModelsView /></ToastProvider>);
+  await user.click(screen.getByRole("button", { name: "凭据存储" }));
+  const manager = screen.getByRole("dialog", { name: "凭据存储" });
+  await waitFor(() => expect(within(manager).getByRole("button", { name: "添加连接" })).toBeEnabled());
+  expect(within(manager).getByText("macOS Keychain")).toBeVisible();
+
+  await user.click(within(manager).getByRole("button", { name: "添加连接" }));
+  const editor = within(screen.getByRole("dialog", { name: "添加连接" }));
+  const type = editor.getByLabelText("密钥库类型");
+  await user.selectOptions(type, "keepassxc");
+  expect(editor.getByLabelText("KDBX 数据库绝对路径")).toBeVisible();
+  expect(editor.getByLabelText("数据库密码环境变量名")).toHaveValue("ARCA_KEEPASSXC_PASSWORD");
+  await user.selectOptions(type, "passbolt");
+  expect(editor.getByLabelText("服务端 OpenPGP 指纹")).toBeVisible();
+  expect(editor.getByLabelText("私钥口令环境变量名")).toHaveValue("ARCA_PASSBOLT_PASSPHRASE");
+  await user.selectOptions(type, "openbao");
+  expect(editor.getByLabelText("KV v2 挂载路径")).toHaveValue("secret");
+  expect(editor.getByLabelText("OpenBao token 环境变量名")).toHaveValue("BAO_TOKEN");
+  expect(editor.getByRole("button", { name: "保存" })).toBeDisabled();
+  await user.selectOptions(type, "one-password");
+  await user.type(editor.getByLabelText("连接名称"), "Team Vault");
+  await user.type(editor.getByLabelText("1Password CLI 绝对路径"), "/opt/homebrew/bin/op");
+  await user.type(editor.getByLabelText("Vault ID"), "abcdefghijklmnopqrstuvwxyz");
+  expect(editor.getByLabelText("服务账号 token 环境变量名")).toHaveValue("OP_SERVICE_ACCOUNT_TOKEN");
+  await user.click(editor.getByRole("button", { name: "保存" }));
+
+  const check = await within(manager).findByRole("button", { name: "检查 Team Vault 的连接" });
+  const [{ id }] = stores.slice(1);
+  expect(api.saveCredentialStore).toHaveBeenCalledWith({ ...teamStore, id });
+  await user.click(check);
+  expect(api.checkCredentialStore).toHaveBeenCalledWith(id);
+  expect(await screen.findByRole("alert")).toHaveTextContent("Team Vault 连接检查失败");
 });
 
 it("splits configured Providers into custom then official sidebar groups", async () => {
@@ -605,7 +665,7 @@ it("renders model details as one continuous field list without section cards", a
     expect(within(fields).getByText(label)).toBeVisible();
   }
   expect(within(fields).queryByText("API Key")).not.toBeInTheDocument();
-  expect(within(fields).queryByText("已保存到 Keychain")).not.toBeInTheDocument();
+  expect(within(fields).queryByText(/已保存到/)).not.toBeInTheDocument();
   for (const removed of ["模型开发商", "目录来源", "Profile ID", "Catalog Key"]) {
     expect(within(fields).queryByText(removed)).not.toBeInTheDocument();
   }
@@ -672,7 +732,8 @@ it("fills a standalone Provider form from the selected catalog template", async 
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
     domain: "model-provider",
     credential: "fixture-openrouter-key",
-    provider: expect.objectContaining({ api_key_source: { kind: "arca-store" }, auth_requirement: "required" }),
+    store_id: "keychain",
+    provider: expect.objectContaining({ credential: undefined, auth_requirement: "required" }),
   }), { reviewOnlyWhenNeeded: true }));
   expect(consumptionState.commit).toHaveBeenCalledWith({ background: true });
 });
@@ -848,6 +909,7 @@ it("reads a saved Provider API key only on explicit reveal and preserves it when
     provider: "openrouter",
     base_url: "https://openrouter.ai/api/v1",
     protocols: { "openai-responses": { endpoint_path: "/responses" } },
+    credential: keychainReference,
     credential_saved: true,
     model_count: 0,
     model_discovery_supported: true,
@@ -887,15 +949,16 @@ it("reads a saved Provider API key only on explicit reveal and preserves it when
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
     domain: "model-provider",
     credential: undefined,
+    provider: expect.objectContaining({ credential: keychainReference }),
   }), { reviewOnlyWhenNeeded: true }));
 });
 
-async function openSavedProviderEditor(user: ReturnType<typeof userEvent.setup>) {
+async function openSavedProviderEditor(user: ReturnType<typeof userEvent.setup>, auth: AuthRequirement = "required") {
   vi.mocked(api.listModelProviderInstances).mockResolvedValue([{
     id: "saved-provider", name: "Saved Provider", provider: "openrouter",
     base_url: "https://openrouter.ai/api/v1",
     protocols: { "openai-responses": { endpoint_path: "/responses" } },
-    auth_requirement: "required", api_key_source: { kind: "arca-store" },
+    auth_requirement: auth, credential: keychainReference,
     credential_saved: true, model_count: 0, model_discovery_supported: true,
   }]);
   const planUpdate = vi.fn().mockResolvedValue({ operation_id: "credential-plan", can_commit: true,
@@ -911,27 +974,54 @@ async function openSavedProviderEditor(user: ReturnType<typeof userEvent.setup>)
   return { planUpdate, commit, input: within(credentialSection).getByLabelText("API Key") };
 }
 
-it.each(["", "   ", "replacement-test-key"])("replaces or explicitly deletes a saved API key without revealing it: %j", async (value) => {
+it.each([
+  { value: "   ", remove: false, submitted: undefined },
+  { value: "", remove: true, submitted: "" },
+  { value: "replacement-test-key", remove: false, submitted: "replacement-test-key" },
+])("keeps, clears, or replaces an optional API Key without revealing it: %j", async ({ value, remove, submitted }) => {
   vi.mocked(api.revealModelProviderCredential).mockResolvedValue("saved-test-key");
   const user = userEvent.setup();
-  const { input, planUpdate, commit } = await openSavedProviderEditor(user);
+  const { input, planUpdate, commit } = await openSavedProviderEditor(user, "optional");
   expect(input).toHaveValue("");
   expect(api.revealModelProviderCredential).not.toHaveBeenCalled();
-  expect(screen.queryByRole("checkbox", { name: "清除已存密钥" })).not.toBeInTheDocument();
-  if (!value.trim()) await user.click(screen.getByRole("button", { name: "删除已保存的 API Key" }));
+  if (remove) await user.click(screen.getByRole("button", { name: "删除已保存的 API Key" }));
   if (value) await user.type(input, value);
   expect(input).toHaveValue(value);
   expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
   await user.click(screen.getByRole("button", { name: "保存" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
     domain: "model-provider", existing_id: "saved-provider",
-    credential: value.trim() ? value : "",
+    credential: submitted,
+    ...(submitted ? { store_id: "keychain" } : {}),
     provider: expect.objectContaining({
-      auth_requirement: "required",
-      api_key_source: value.trim() ? { kind: "arca-store" } : undefined,
+      auth_requirement: "optional",
+      credential: submitted === undefined ? keychainReference : undefined,
     }),
   }), { reviewOnlyWhenNeeded: true }));
   await waitFor(() => expect(commit).toHaveBeenCalled());
+});
+
+it("requires a new API Key to change a required Provider's credential store", async () => {
+  vi.mocked(api.revealModelProviderCredential).mockResolvedValue("original-test-key");
+  const user = userEvent.setup();
+  const { input, planUpdate } = await openSavedProviderEditor(user);
+  expect(screen.queryByRole("button", { name: "删除已保存的 API Key" })).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "显示 API Key" }));
+  await waitFor(() => expect(input).toHaveValue("original-test-key"));
+  await chooseFormSelect(user, "凭据存储", "Team Vault");
+  expect(input).toHaveValue("");
+  expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
+
+  await user.type(input, "replacement-test-key");
+  await user.click(screen.getByRole("button", { name: "保存" }));
+  await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
+    domain: "model-provider",
+    existing_id: "saved-provider",
+    credential: "replacement-test-key",
+    store_id: "team",
+    provider: expect.objectContaining({ credential: undefined, auth_requirement: "required" }),
+  }), { reviewOnlyWhenNeeded: true }));
 });
 
 it("allows preserving a saved key after a denied explicit read and supports manual retry", async () => {
@@ -950,7 +1040,7 @@ it("allows preserving a saved key after a denied explicit read and supports manu
   await user.click(screen.getByRole("button", { name: "保存" }));
   await waitFor(() => expect(planUpdate).toHaveBeenCalledWith(expect.objectContaining({
     credential: undefined,
-    provider: expect.objectContaining({ api_key_source: { kind: "arca-store" } }),
+    provider: expect.objectContaining({ credential: keychainReference }),
   }), { reviewOnlyWhenNeeded: true }));
 });
 
@@ -1494,8 +1584,7 @@ it("edits one Provider configuration through a single central asset plan", async
       "openai-completions": { endpoint_path: "/api/v1/chat/completions" },
       "anthropic-messages": { endpoint_path: "/api/v1/messages" },
     },
-    env_key: "OPENROUTER_API_KEY",
-    api_key_source: { kind: "env", name: "OPENROUTER_API_KEY" },
+    credential: { ...keychainReference, store_id: "team" },
     credential_saved: true,
     model_count: 3,
     model_discovery_supported: true,
@@ -1511,7 +1600,9 @@ it("edits one Provider configuration through a single central asset plan", async
   );
   const sidebar = within(view.container.querySelector(".arca-workspace-sidebar") as HTMLElement);
   await user.click(await sidebar.findByTitle("OpenRouter Team"));
+  expect(screen.getByText("已保存到 Team Vault")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "编辑 Provider" }));
+  expect(screen.getByRole("combobox", { name: "凭据存储" })).toHaveTextContent("Team Vault");
 
   expect(screen.getByRole("switch", { name: /Anthropic Messages/ })).toBeChecked();
   expect(screen.getByRole("switch", { name: /OpenAI Chat Completions/ })).toBeChecked();
@@ -1537,7 +1628,7 @@ it("edits one Provider configuration through a single central asset plan", async
         "openai-completions": { endpoint_path: "/api/v1/chat/completions" },
         "anthropic-messages": { endpoint_path: "/anthropic/v1/messages" },
       }),
-      api_key_source: { kind: "env", name: "OPENROUTER_API_KEY" },
+      credential: { ...keychainReference, store_id: "team" },
     }),
     credential: undefined,
   }, { reviewOnlyWhenNeeded: true }));

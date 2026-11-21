@@ -264,8 +264,6 @@ fn is_plaintext_delivery(value: &ApiKeyDelivery) -> bool {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModelCredentialPolicy {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub source_override: Option<crate::domain::types::ApiKeySource>,
     #[serde(default)]
     pub delivery: ApiKeyDelivery,
 }
@@ -324,7 +322,6 @@ impl ModelAgentSelection {
 
     pub fn inherited_credential(&self) -> ModelCredentialPolicy {
         ModelCredentialPolicy {
-            source_override: None,
             delivery: self.default_delivery.clone(),
         }
     }
@@ -553,6 +550,8 @@ pub enum CentralAssetDraft {
         /// Profile credential, and a non-empty value replaces all of them.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         credential: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        store_id: Option<String>,
     },
 }
 
@@ -928,7 +927,6 @@ mod tests {
         }))
         .unwrap();
 
-        assert_eq!(record.credential.source_override, None);
         assert_eq!(record.credential.delivery, ApiKeyDelivery::Auto);
         assert_eq!(
             serde_json::to_value(record).unwrap()["credential"]["delivery"],

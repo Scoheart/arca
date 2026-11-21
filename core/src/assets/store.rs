@@ -587,7 +587,6 @@ mod tests {
                     profile_id: "work".into(),
                     enabled: true,
                     credential: crate::domain::assets::ModelCredentialPolicy {
-                        source_override: None,
                         delivery: crate::domain::assets::ApiKeyDelivery::Plaintext,
                     },
                     last_selected_at: None,

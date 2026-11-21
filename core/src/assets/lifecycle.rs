@@ -3,16 +3,16 @@
 use super::planner::{finalize_plan_with, CredentialAction, LifecycleBinding};
 use super::types::{
     AssetOperationKind, AssetOperationPlan, AssetRef, CentralAssetAction, CentralAssetChange,
-    CentralAssetDraft, DomainPlan, ModelAgentSelection, ModelConsumptionRecord,
+    CentralAssetDraft, DomainPlan, ModelConsumptionRecord,
     PlanDeleteCentralAssetRequest, PlanUpdateCentralAssetRequest,
 };
 use crate::domain::types::{ModelProfile, ModelProviderConfig, RegistryEntry};
 use crate::paths::local_sources_dir;
 use crate::resources::mcp::registry::{read_registry, read_registry_all};
 use crate::resources::model::{
-    credential_snapshot, migrated_profiles_v2, model_agent_capability, prepare_profile_draft,
+    model_agent_capability, prepare_profile_draft,
     prepare_provider_draft, profile_credential_issue, profile_endpoint_compatibility_issue,
-    provider_credential_present, provider_profiles, restore_credential_snapshot,
+    provider_credential_present, provider_profiles,
 };
 use crate::settings::{load_settings_strict, Settings};
 use std::collections::{BTreeMap, BTreeSet};
@@ -95,103 +95,6 @@ pub(crate) fn store_pending_model_profile_secret(
         );
 }
 
-fn remap_model_selection(
-    selection: ModelAgentSelection,
-    id_map: &BTreeMap<String, String>,
-) -> Result<ModelAgentSelection, String> {
-    let profiles = selection
-        .profiles
-        .into_iter()
-        .map(|(old_id, record)| {
-            let new_id = id_map
-                .get(&old_id)
-                .ok_or_else(|| format!("model_schema_migration_missing_profile: {old_id}"))?
-                .clone();
-            Ok((
-                new_id.clone(),
-                ModelConsumptionRecord {
-                    profile_id: new_id,
-                    enabled: record.enabled,
-                    credential: record.credential,
-                    last_selected_at: record.last_selected_at,
-                },
-            ))
-        })
-        .collect::<Result<BTreeMap<_, _>, String>>()?;
-    let active_profile_id = selection
-        .active_profile_id
-        .map(|old_id| {
-            id_map
-                .get(&old_id)
-                .cloned()
-                .ok_or_else(|| format!("model_schema_migration_missing_profile: {old_id}"))
-        })
-        .transpose()?;
-    Ok(ModelAgentSelection {
-        profiles,
-        active_profile_id,
-        default_delivery: selection.default_delivery,
-    })
-}
-
-pub fn migrate_model_profiles_v2_if_needed() -> Result<bool, String> {
-    let settings = load_settings_strict().map_err(|error| error.to_string())?;
-    if settings.version.unwrap_or_default() >= 2 {
-        return Ok(false);
-    }
-    let (id_map, profiles) = migrated_profiles_v2(&settings)?;
-    let agent_ids = settings
-        .model_consumptions
-        .iter()
-        .flatten()
-        .map(|(agent_id, _)| agent_id.clone())
-        .chain(
-            settings
-                .model_assignments
-                .iter()
-                .flatten()
-                .map(|(agent_id, _)| agent_id.clone()),
-        )
-        .collect::<BTreeSet<_>>();
-    let selections = agent_ids
-        .into_iter()
-        .map(|agent_id| {
-            remap_model_selection(settings.model_selection(&agent_id), &id_map)
-                .map(|selection| (agent_id, selection))
-        })
-        .collect::<Result<BTreeMap<_, _>, String>>()?;
-
-    // Copy credentials before publishing the new central identities. Legacy
-    // subjects are intentionally retained: an Agent file that still references
-    // one is observed external state, not migration damage.
-    for (old_id, new_id) in &id_map {
-        if let Some(credential) = credential_snapshot(old_id)? {
-            restore_credential_snapshot(new_id, Some(&credential))?;
-        }
-    }
-    crate::settings::mutate_settings_checked(|current| {
-        if current.version != settings.version
-            || current.model_profiles != settings.model_profiles
-            || current.model_consumptions != settings.model_consumptions
-            || current.model_assignments != settings.model_assignments
-        {
-            return Err(std::io::Error::other(
-                "asset_operation_stale: Model settings changed during schema migration",
-            ));
-        }
-        current.model_profiles = (!profiles.is_empty()).then_some(profiles.clone());
-        current.model_consumptions = None;
-        current.model_assignments = None;
-        for (agent_id, selection) in &selections {
-            current.set_model_selection(agent_id, selection.clone());
-        }
-        current.version = Some(2);
-        Ok(())
-    })
-    .map_err(|error| error.to_string())?;
-    Ok(true)
-}
-
 pub fn plan_update_central_asset(
     request: PlanUpdateCentralAssetRequest,
 ) -> Result<AssetOperationPlan, String> {
@@ -209,7 +112,8 @@ pub fn plan_update_central_asset(
             existing_id,
             provider,
             credential,
-        } => plan_model_provider_upsert(existing_id, *provider, credential),
+            store_id,
+        } => plan_model_provider_upsert(existing_id, *provider, credential, store_id),
     }
 }
 
@@ -456,9 +360,10 @@ fn plan_model_provider_upsert(
     existing_id: Option<String>,
     provider: ModelProviderConfig,
     credential: Option<String>,
+    store_id: Option<String>,
 ) -> Result<AssetOperationPlan, String> {
     let settings = load_settings_strict().map_err(|error| error.to_string())?;
-    let provider = prepare_provider_draft(&settings, existing_id.as_deref(), provider)?;
+    let mut provider = prepare_provider_draft(&settings, existing_id.as_deref(), provider)?;
     let action = if existing_id.is_some() {
         CentralAssetAction::Update
     } else {
@@ -466,16 +371,41 @@ fn plan_model_provider_upsert(
     };
     let profiles = provider_profiles(&settings, &provider)?;
     let profile_ids = profiles.keys().cloned().collect::<BTreeSet<_>>();
+    let original_ref = existing_id.as_ref()
+        .and_then(|id| settings.model_providers.as_ref()?.get(id)?.credential.as_ref());
+    let credential = if provider.auth_requirement == crate::domain::types::AuthRequirement::None
+        && credential.is_none() && original_ref.is_some()
+    {
+        Some(String::new())
+    } else {
+        credential
+    };
     let credential_action = match credential.as_deref() {
         None => CredentialAction::Keep,
         Some("") => CredentialAction::Clear,
         Some(_) => CredentialAction::Set,
     };
-    let desired_credential_present = match credential_action {
-        CredentialAction::Keep => provider_credential_present(&provider.id),
-        CredentialAction::Set => true,
-        CredentialAction::Clear => false,
+    let store = if credential_action == CredentialAction::Set {
+        if provider.auth_requirement == crate::domain::types::AuthRequirement::None {
+            return Err("credential_not_required: unauthenticated Providers do not use an API Key".into());
+        }
+        let id = store_id.as_deref().or_else(|| original_ref.map(|reference| reference.store_id.as_str())).unwrap_or("keychain");
+        Some(crate::resources::model::credential_service::store(&settings, id)?)
+    } else {
+        if store_id.is_some() {
+            return Err("credential_missing: enter an API Key to switch stores".into());
+        }
+        None
     };
+    if credential_action == CredentialAction::Clear {
+        provider.credential = None;
+    }
+    let desired_credential_present = store.is_some() || provider.credential.is_some();
+    if provider.auth_requirement == crate::domain::types::AuthRequirement::Required
+        && !desired_credential_present
+    {
+        return Err("credential_missing: save an API Key for this Provider".into());
+    }
     let domain_plan =
         model_bundle_unchanged_consumers(&settings, &profiles, desired_credential_present)?;
     let consumer_count = domain_agent_count(&domain_plan);
@@ -485,9 +415,12 @@ fn plan_model_provider_upsert(
         profile_ids: profile_ids.clone(),
         draft_hash,
         credential_action: credential_action.clone(),
+        store: store.clone(),
     };
-    let summary =
-        model_provider_upsert_summary(profile_ids.len(), &credential_action, consumer_count);
+    let mut summary = model_provider_upsert_summary(profile_ids.len(), &credential_action, consumer_count);
+    if let Some(store) = store {
+        summary.push(format!("密钥库 · {}", store.name));
+    }
     let mut central_changes = vec![CentralAssetChange {
         asset: AssetRef::ModelProvider {
             provider_id: provider.id.clone(),
@@ -1051,7 +984,6 @@ mod tests {
     use crate::resources::mcp::registry::write_manual_entry;
     use crate::settings::mutate_settings;
     use crate::testenv::TestHome;
-    use std::fs;
 
     fn mcp(command: &str) -> RegistryEntry {
         RegistryEntry {
@@ -1095,8 +1027,7 @@ mod tests {
                 ),
             ]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
+            credential: None,
         };
         let mut first = ModelProfile {
             id: "team-openai".into(),
@@ -1234,6 +1165,7 @@ mod tests {
                 existing_id: Some(edited.id.clone()),
                 provider: Box::new(edited),
                 credential: None,
+                store_id: None,
             },
         })
         .unwrap();
@@ -1307,6 +1239,7 @@ mod tests {
                 existing_id: Some(edited.id.clone()),
                 provider: Box::new(edited),
                 credential: None,
+                store_id: None,
             },
         })
         .unwrap_err();
@@ -1337,13 +1270,14 @@ mod tests {
             ]));
         })
         .unwrap();
-        crate::resources::model::apply_credential_update(&first.id, Some("shared-secret")).unwrap();
+        crate::resources::model::test_set_profile_credential(&first.id, "shared-secret").unwrap();
 
         let keep = plan_update_central_asset(PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::ModelProvider {
                 existing_id: Some(provider.id.clone()),
                 provider: Box::new(provider.clone()),
                 credential: None,
+                store_id: None,
             },
         })
         .unwrap();
@@ -1354,6 +1288,7 @@ mod tests {
                 existing_id: Some(provider.id.clone()),
                 provider: Box::new(provider),
                 credential: Some("new-shared-secret".into()),
+                store_id: None,
             },
         })
         .unwrap();
@@ -1380,10 +1315,10 @@ mod tests {
                         },
                     )]),
                     auth_requirement: crate::domain::types::AuthRequirement::Optional,
-                    api_key_source: None,
-                    env_key: Some("TEAM_GATEWAY_KEY".into()),
+                    credential: None,
                 }),
                 credential: Some("provider-secret".into()),
+                store_id: None,
             },
         })
         .unwrap();
@@ -1465,7 +1400,7 @@ mod tests {
         third.id.clear();
         third.name = "Third Model".into();
         third.model = "gpt-third".into();
-        crate::resources::model::apply_credential_update(&first.id, Some("shared-secret")).unwrap();
+        crate::resources::model::test_set_profile_credential(&first.id, "shared-secret").unwrap();
 
         let inherited = plan_update_central_asset(PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::Model {
@@ -1627,109 +1562,4 @@ mod tests {
         assert_eq!(plan.kind, AssetOperationKind::DeleteAsset);
     }
 
-    #[test]
-    fn model_schema_v2_migrates_identity_metadata_and_keychain_atomically() {
-        let _home = TestHome::new("model-schema-v2-central");
-        let legacy = ModelProfile {
-            id: "openrouter-free".into(),
-            provider_id: None,
-            name: "OpenRouter Free".into(),
-            provider: String::new(),
-            model_vendor: None,
-            native_ids: Default::default(),
-            protocol: ModelProtocol::OpenaiCompletions,
-            base_url: "https://openrouter.ai/api/v1".into(),
-            endpoint_path: String::new(),
-            model: "openrouter/free".into(),
-            env_key: None,
-            context_window: None,
-            max_output_tokens: None,
-            reasoning: Some(false),
-        };
-        mutate_settings(|settings| {
-            settings.version = Some(1);
-            settings
-                .extra
-                .insert("future".into(), serde_json::json!({"keep": true}));
-            settings
-                .model_profiles
-                .get_or_insert_default()
-                .insert(legacy.id.clone(), legacy.clone());
-        })
-        .unwrap();
-        crate::resources::model::apply_credential_update(&legacy.id, Some("test-secret")).unwrap();
-
-        assert!(migrate_model_profiles_v2_if_needed().unwrap());
-
-        let settings = load_settings_strict().unwrap();
-        assert_eq!(settings.version, Some(2));
-        assert_eq!(settings.extra["future"]["keep"], true);
-        let profiles = settings.model_profiles.unwrap();
-        assert_eq!(profiles.len(), 1);
-        let profile = profiles.values().next().unwrap();
-        assert_ne!(profile.id, legacy.id);
-        assert!(profile.id.starts_with("openrouter-openrouter-free-"));
-        assert_eq!(profile.provider, "openrouter");
-        assert_eq!(profile.model_vendor.as_deref(), Some("openrouter"));
-        // The migration copies central authority first and deliberately keeps
-        // the live legacy credential available to the untouched Agent config.
-        assert!(crate::resources::model::credential_present(&legacy.id));
-        assert!(crate::resources::model::credential_present(&profile.id));
-    }
-
-    #[test]
-    fn model_schema_v2_preserves_a_managed_agent_provider_identity() {
-        let _home = TestHome::new("model-schema-v2-consumer");
-        let legacy = ModelProfile {
-            id: "legacy-router".into(),
-            provider_id: None,
-            name: "Legacy Router".into(),
-            provider: String::new(),
-            model_vendor: None,
-            native_ids: Default::default(),
-            protocol: ModelProtocol::OpenaiCompletions,
-            base_url: "https://openrouter.ai/api/v1".into(),
-            endpoint_path: String::new(),
-            model: "openrouter/free".into(),
-            env_key: Some("OPENROUTER_API_KEY".into()),
-            context_window: None,
-            max_output_tokens: None,
-            reasoning: Some(false),
-        };
-        mutate_settings(|settings| {
-            settings.version = Some(1);
-            settings
-                .model_profiles
-                .get_or_insert_default()
-                .insert(legacy.id.clone(), legacy.clone());
-        })
-        .unwrap();
-        crate::resources::model::apply_profile("grok-build", &legacy.id).unwrap();
-        let target = _home.home.join(".grok/config.toml");
-        let before = fs::read(&target).unwrap();
-
-        assert!(migrate_model_profiles_v2_if_needed().unwrap());
-        assert_eq!(fs::read(&target).unwrap(), before);
-
-        let settings = load_settings_strict().unwrap();
-        let profile = settings
-            .model_profiles
-            .as_ref()
-            .unwrap()
-            .values()
-            .next()
-            .unwrap();
-        assert_ne!(profile.id, legacy.id);
-        assert_eq!(
-            settings
-                .model_selection("grok-build")
-                .active_profile_id
-                .as_deref(),
-            Some(profile.id.as_str())
-        );
-        assert_eq!(
-            crate::resources::model::observe_profile("grok-build", profile).unwrap(),
-            crate::resources::model::ModelObservedState::Drifted
-        );
-    }
 }

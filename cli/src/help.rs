@@ -36,12 +36,13 @@ pub(crate) fn command() -> Command {
             hide_legacy_agent_paths::<ModelRelationshipCommand>(command),
             &[
                 ("Saved Model Profiles", &["list", "show", "save", "import", "delete"]),
-                ("Provider connections", &["provider"]),
+                ("Providers and credential stores", &["provider", "store"]),
                 ("API requests", &["playground", "curl"]),
             ],
             &[
                 "arca model provider list",
                 "arca model provider catalog PROVIDER_ID",
+                "arca model store list",
                 "arca model playground",
                 "arca agent model --help",
             ],

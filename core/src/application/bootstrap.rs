@@ -185,30 +185,6 @@ fn bootstrap_unlocked() -> Result<BootstrapProgress, BootstrapError> {
         }),
     )])?;
 
-    for (stage, operation) in [
-        (
-            BootstrapStage::ModelProfileMigration,
-            crate::assets::migrate_model_profiles_v2_if_needed as fn() -> Result<bool, String>,
-        ),
-        (
-            BootstrapStage::ModelProviderMigration,
-            crate::resources::model::migrate_model_providers_v3_if_needed,
-        ),
-    ] {
-        if let Err(message) = operation() {
-            let error = BootstrapError { stage, message };
-            return if model_failure_requires_global_recovery(&error.message) {
-                Err(error)
-            } else {
-                Ok(BootstrapProgress::ModelCentralStateUnavailable {
-                    error,
-                    warnings,
-                    skill_updates_allowed,
-                })
-            };
-        }
-    }
-
     run_steps(vec![
         (
             BootstrapStage::AssetLayoutMigration,

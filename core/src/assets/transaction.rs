@@ -24,15 +24,14 @@ use crate::resources::mcp::registry::{
 };
 #[cfg(test)]
 use crate::resources::model::private_file_snapshot_exists;
+use crate::domain::credentials::{CredentialReference, CredentialStoreConfig};
 use crate::resources::model::{
-    agent_has_configured_models, apply_credential_update, apply_profile_consumption_target,
+    apply_profile_consumption_target,
     apply_profile_consumption_with_credential_presence_target, apply_profile_target,
-    clear_all_configured_models_for_targets, clear_credential_rollback,
-    clear_private_file_snapshot, clear_profile_consumption_target, credential_present,
-    credential_rollback_snapshot, credential_snapshot, delete_profile, delete_provider,
-    load_private_file_snapshot, persist_credential_rollback, persist_private_file_snapshot,
-    private_file_snapshot_subject, provider_credential_present, provider_credential_subject,
-    restore_credential_snapshot, save_profile, save_provider_bundle, ModelTargetError,
+    clear_all_configured_models_for_targets, clear_private_file_snapshot, clear_profile_consumption_target,
+    credential_present, delete_profile, delete_provider, load_private_file_snapshot,
+    persist_private_file_snapshot, private_file_snapshot_subject, provider_credential_present,
+    save_profile, save_provider_bundle, ModelTargetError,
 };
 use crate::resources::skill::{
     acquire_skills_lock, canonical_skill_assignments, declared_targets_for_agents, normalize_agent_selection,
@@ -74,6 +73,7 @@ const CENTRAL_COMMITTED_MARKER: &str = "central-committed";
 
 fn central_snapshot_path(path: &Path) -> bool {
     path == settings_file() || path == model_catalog_file() || path == skill_catalog_file()
+        || path == crate::paths::model_delivery_file()
         || path.starts_with(crate::paths::mcp_assets_dir())
         || path.starts_with(crate::paths::legacy_sources_dir())
 }
@@ -484,15 +484,10 @@ fn cleanup_resolved_incident_operations(operation_ids: &BTreeSet<String>, curren
                 let Some(manifest) = manifest.as_ref() else {
                     continue;
                 };
-                let Ok(operation) = load_operation(operation_id) else {
+                if load_operation(operation_id).is_err() {
                     continue;
-                };
-                if finalize_completed_operation_cleanup(
-                    operation_id,
-                    &root,
-                    manifest,
-                    &lifecycle_profile_ids(operation.lifecycle.as_ref()),
-                )
+                }
+                if finalize_completed_operation_cleanup(operation_id, &root, manifest)
                 .is_err()
                 {
                     continue;
@@ -522,18 +517,24 @@ fn private_transaction_paths(
     zcode_paths.push("~/.zcode/v2/config.json".into());
     let zcode_paths = zcode_paths.iter().map(|path| crate::resources::mcp::scanner::expand_tilde(path)).collect::<BTreeSet<_>>();
     private.extend(plan.target_files.iter().map(|path| crate::resources::mcp::scanner::expand_tilde(path)).filter(|path| zcode_paths.contains(path)));
-    // Desktop providers may already contain credentials written by Kilo.
-    // Protect the complete file for MCP edits as well as Model edits.
-    let mut kilo_paths = crate::resources::model::default_config_paths("kilo-desktop").unwrap_or_default();
-    kilo_paths.extend(settings.agent_config_paths.as_ref()
-        .and_then(|paths| paths.get("kilo-desktop"))
-        .and_then(|entry| entry.model_paths.clone()).unwrap_or_default());
-    if let Some(path) = settings.agents.as_ref().and_then(|agents| agents.get("kilo-desktop"))
-        .and_then(|agent| agent.global.as_ref()) {
-        kilo_paths.push(path.clone());
+    // Secret-bearing Agent files can also be edited through MCP and clear
+    // operations. Classify by the physical path, regardless of delivery mode.
+    let mut credential_paths = BTreeSet::new();
+    for agent in ["pi", "opencode", "opencode-desktop", "kilo-code", "kilo-desktop"] {
+        let mut paths = crate::resources::model::default_config_paths(agent).unwrap_or_default();
+        paths.extend(settings.agent_config_paths.as_ref()
+            .and_then(|entries| entries.get(agent))
+            .and_then(|entry| entry.model_paths.clone()).unwrap_or_default());
+        if let Some(path) = settings.agents.as_ref().and_then(|agents| agents.get(agent))
+            .and_then(|agent| agent.global.as_ref())
+        {
+            paths.push(path.clone());
+        }
+        credential_paths.extend(paths.iter().map(|path| crate::resources::mcp::scanner::expand_tilde(path)));
     }
-    let kilo_paths = kilo_paths.iter().map(|path| crate::resources::mcp::scanner::expand_tilde(path)).collect::<BTreeSet<_>>();
-    private.extend(plan.target_files.iter().map(|path| crate::resources::mcp::scanner::expand_tilde(path)).filter(|path| kilo_paths.contains(path)));
+    credential_paths.insert(crate::resources::mcp::scanner::expand_tilde("~/.local/share/opencode/auth.json"));
+    private.extend(plan.target_files.iter().map(|path| crate::resources::mcp::scanner::expand_tilde(path))
+        .filter(|path| credential_paths.contains(path)));
     Ok(private)
 }
 
@@ -573,10 +574,69 @@ fn claude_desktop_private_transaction_paths(
         .collect())
 }
 
-pub fn commit_asset_operation(request: AssetCommitRequest) -> Result<ConsumptionInventory, String> {
-    commit_asset_operation_with_hook(request, || Ok(()))
+pub(crate) struct PendingProviderCredential {
+    store: CredentialStoreConfig,
+    operation_id: String,
+    provider_id: String,
+    key: Zeroizing<String>,
 }
 
+pub(crate) struct PreparedProviderCredential {
+    operation_id: String,
+    reference: CredentialReference,
+}
+
+impl PendingProviderCredential {
+    pub(crate) fn create(self) -> Result<PreparedProviderCredential, String> {
+        let reference = crate::resources::model::credential_service::create_revision(
+            &self.store, &self.operation_id, &self.provider_id, self.key.as_bytes(),
+        )?;
+        Ok(PreparedProviderCredential { operation_id: self.operation_id, reference })
+    }
+}
+
+pub(crate) fn pending_provider_credential(request: &AssetCommitRequest) -> Result<Option<PendingProviderCredential>, String> {
+    let persisted = load_operation(&request.operation_id)?;
+    if obsolete_model_operation(&persisted) {
+        return Err("asset_operation_stale: reopen the Model editor for a current operation".into());
+    }
+    let Some(LifecycleBinding::ModelProviderUpsert {
+        provider_id, draft_hash, credential_action, store: Some(store), ..
+    }) = &persisted.lifecycle else { return Ok(None) };
+    verify_request(&persisted, request)?;
+    if !persisted.plan.can_commit || *credential_action != CredentialAction::Set {
+        return Err("asset_operation_blocked: credential write was not approved".into());
+    }
+    verify_preconditions(&persisted)?;
+    let settings = load_settings_strict().map_err(|error| error.to_string())?;
+    if crate::resources::model::credential_service::store(&settings, &store.id)? != *store {
+        return Err("asset_operation_stale: credential store changed after review".into());
+    }
+    let PendingAssetPayload::ModelProvider { provider, profiles, credential } =
+        require_pending_payload(&request.operation_id)? else {
+            return Err("asset_operation_expired: reopen the Provider editor".into());
+        };
+    verify_payload_hash(&(provider.as_ref(), &profiles), draft_hash)?;
+    let key = credential.filter(|credential| !credential.is_empty())
+        .ok_or("credential_missing: API Key input expired")?;
+    Ok(Some(PendingProviderCredential {
+        store: store.clone(), operation_id: request.operation_id.clone(), provider_id: provider_id.clone(), key,
+    }))
+}
+
+pub fn commit_asset_operation(request: AssetCommitRequest) -> Result<ConsumptionInventory, String> {
+    let prepared = pending_provider_credential(&request)?.map(PendingProviderCredential::create).transpose()?;
+    commit_asset_operation_prepared(request, prepared)
+}
+
+pub(crate) fn commit_asset_operation_prepared(
+    request: AssetCommitRequest,
+    prepared: Option<PreparedProviderCredential>,
+) -> Result<ConsumptionInventory, String> {
+    commit_asset_operation_inner(request, || Ok(()), true, prepared)
+}
+
+#[cfg(test)]
 fn commit_asset_operation_with_hook<F>(
     request: AssetCommitRequest,
     after_preconditions: F,
@@ -584,18 +644,21 @@ fn commit_asset_operation_with_hook<F>(
 where
     F: FnOnce() -> Result<(), String>,
 {
-    commit_asset_operation_inner(request, after_preconditions, true)
+    let prepared = pending_provider_credential(&request)?.map(PendingProviderCredential::create).transpose()?;
+    commit_asset_operation_inner(request, after_preconditions, true, prepared)
 }
 
 /// Imports need a durable receipt, not an unused full workspace projection.
 pub(crate) fn commit_asset_operation_without_inventory(request: AssetCommitRequest) -> Result<(), String> {
-    commit_asset_operation_inner(request, || Ok(()), false).map(|_| ())
+    let prepared = pending_provider_credential(&request)?.map(PendingProviderCredential::create).transpose()?;
+    commit_asset_operation_inner(request, || Ok(()), false, prepared).map(|_| ())
 }
 
 fn commit_asset_operation_inner<F>(
     request: AssetCommitRequest,
     after_preconditions: F,
     include_inventory: bool,
+    prepared: Option<PreparedProviderCredential>,
 ) -> Result<ConsumptionInventory, String>
 where
     F: FnOnce() -> Result<(), String>,
@@ -614,6 +677,9 @@ where
     let _filesystem_guard = acquire_settings_lock(&settings_file())?;
     recover_global_mutation_intents()?;
     let persisted = load_operation(&request.operation_id)?;
+    if obsolete_model_operation(&persisted) {
+        return Err("asset_operation_stale: reopen the Model editor for a current operation".into());
+    }
     verify_request(&persisted, &request)?;
     if !persisted.plan.can_commit {
         return Err("asset_operation_blocked: resolve drift or conflict before commit".into());
@@ -635,6 +701,7 @@ where
         mcp_catalog_file(),
         model_catalog_file(),
         skill_catalog_file(),
+        crate::paths::model_delivery_file(),
     ];
     let mut snapshots = vec![PathSnapshot::capture(&settings_path)?];
     for path in &catalog_paths {
@@ -687,30 +754,7 @@ where
                 .map(|state| (snapshot.path.clone(), state))
         })
         .collect::<Result<BTreeMap<_, _>, String>>()?;
-    let credential_backups = lifecycle_profile_ids(persisted.lifecycle.as_ref())
-        .into_iter()
-        .map(|profile_id| {
-            let credential = credential_snapshot(&profile_id)?.map(Zeroizing::new);
-            Ok((profile_id, credential))
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    for (profile_id, credential) in &credential_backups {
-        persist_credential_rollback(
-            &request.operation_id,
-            profile_id,
-            credential.as_ref().map(|value| value.as_slice()),
-        )?;
-    }
-    if let Err(error) = persist_rollback_snapshots(&request.operation_id, &snapshots) {
-        for (profile_id, _) in &credential_backups {
-            clear_credential_rollback(&request.operation_id, profile_id).map_err(|cleanup| {
-                format!(
-                    "failed to persist rollback snapshots ({error}); Keychain rollback cleanup failed: {cleanup}"
-                )
-            })?;
-        }
-        return Err(error);
-    }
+    persist_rollback_snapshots(&request.operation_id, &snapshots)?;
 
     let write_tracker = begin_transaction_write_tracking_with_private_states(
         &transaction_write_evidence_dir(&request.operation_id),
@@ -723,8 +767,8 @@ where
     // Every new operation gets one real convergence attempt for its own target;
     // failures remain scoped incidents instead of silently skipping Agent I/O.
     let blocked_agents = BTreeSet::new();
-    let applied = apply_operation(&persisted, &skills_guard, &blocked_agents)
-        .and_then(|_| verify_operation(&persisted).map_err(ModelTargetError::from))
+    let applied = apply_operation(&persisted, &skills_guard, &blocked_agents, prepared.as_ref())
+        .and_then(|_| verify_operation(&persisted, prepared.as_ref()).map_err(ModelTargetError::from))
         .and_then(|_| settle_live_checkpoints(&persisted.plan).map_err(ModelTargetError::from))
         .and_then(|_| {
             mark_operation_committed(&request.operation_id).map_err(ModelTargetError::from)
@@ -784,19 +828,6 @@ where
             rollback_errors.push(recovery);
         }
         drop(write_tracker);
-        // Keep the file/settings and credential rollback domains together. If
-        // file ownership cannot be proven, leave the current credential and its
-        // durable backup untouched for startup recovery/manual resolution.
-        if rollback_errors.is_empty() {
-            for (profile_id, credential) in &credential_backups {
-                if let Err(rollback) = restore_credential_snapshot(
-                    profile_id,
-                    credential.as_ref().map(|value| value.as_slice()),
-                ) {
-                    rollback_errors.push(format!("failed to restore Model credential: {rollback}"));
-                }
-            }
-        }
         if rollback_errors.is_empty() {
             if let Err(marker) = mark_operation_state(
                 &request.operation_id,
@@ -815,10 +846,6 @@ where
                         &request.operation_id,
                         &operation_root(&request.operation_id),
                         &manifest,
-                        &credential_backups
-                            .iter()
-                            .map(|(profile_id, _)| profile_id.clone())
-                            .collect::<Vec<_>>(),
                     ) {
                         rollback_errors
                             .push(format!("failed to clean completed rollback: {cleanup}"));
@@ -858,10 +885,6 @@ where
         &request.operation_id,
         &operation_root(&request.operation_id),
         &manifest,
-        &credential_backups
-            .iter()
-            .map(|(profile_id, _)| profile_id.clone())
-            .collect::<Vec<_>>(),
     )
     .map_err(|error| format!("asset operation committed but cleanup failed: {error}"))?;
     cleanup_resolved_incident_operations(&incident_operation_ids, &request.operation_id);
@@ -914,6 +937,9 @@ pub fn recover_pending_asset_operations() -> Result<Vec<String>, String> {
         };
         let persisted =
             load_operation(&operation_id).map_err(|error| format!("recovery_required: {error}"))?;
+        if obsolete_model_operation(&persisted) {
+            continue;
+        }
         if operation_should_pause_for_target_incident(&operation_id)? {
             // Incidents are persisted before this marker. A later operation may
             // already have repaired some targets while peers remain pending.
@@ -952,19 +978,19 @@ pub fn recover_pending_asset_operations() -> Result<Vec<String>, String> {
     Ok(recovered)
 }
 
+fn obsolete_model_operation(persisted: &PersistedAssetOperation) -> bool {
+    persisted.schema_version < super::planner::OPERATION_SCHEMA_VERSION
+        && matches!(persisted.plan.domain_plan, DomainPlan::Model { .. })
+}
+
 fn recover_pending_asset_operation(
     persisted: &PersistedAssetOperation,
     operation_path: &Path,
 ) -> Result<(), String> {
     let operation_id = &persisted.plan.operation_id;
-    let profile_ids = lifecycle_profile_ids(persisted.lifecycle.as_ref());
     let private_ledger = load_private_target_ledger(operation_id)?;
     let Some(manifest) = load_rollback_manifest(operation_id)? else {
         ensure_no_transaction_mutation_intents(&transaction_mutation_intent_dir(operation_id))?;
-        for profile_id in &profile_ids {
-            clear_credential_rollback(operation_id, profile_id)
-                .map_err(|error| format!("recovery_required: {error}"))?;
-        }
         if let Some(ledger) = private_ledger.as_ref() {
             clear_private_target_ledger_items(operation_id, ledger)
                 .map_err(|error| format!("recovery_required: {error}"))?;
@@ -1028,7 +1054,7 @@ fn recover_pending_asset_operation(
         || operation_state_marker_exists(operation_id, ROLLBACK_COMPLETE_MARKER)?
         || operation_state_marker_exists(operation_id, CLEANUP_AUTHORIZED_MARKER)?
     {
-        finalize_completed_operation_cleanup(operation_id, operation_path, &manifest, &profile_ids)
+        finalize_completed_operation_cleanup(operation_id, operation_path, &manifest)
             .map_err(|error| format!("recovery_required: {error}"))?;
         return Ok(());
     }
@@ -1044,18 +1070,6 @@ fn recover_pending_asset_operation(
     };
     let written_states =
         load_transaction_write_states_with_private_paths(&evidence_dir, &private_paths)?;
-    let mut credential_backups = Vec::new();
-    for profile_id in &profile_ids {
-        let snapshot = credential_rollback_snapshot(operation_id, profile_id)
-            .map_err(|error| format!("recovery_required: {error}"))?
-            .ok_or_else(|| {
-                "recovery_required: Model credential rollback item is missing".to_string()
-            })?;
-        credential_backups.push((profile_id.clone(), snapshot.map(Zeroizing::new)));
-    }
-    // The commit marker is the only durable completion boundary. Desired-state
-    // verification alone cannot prove that every physical target was written,
-    // so every unmarked operation is rolled back when ownership still matches.
     let tracked_paths = snapshots
         .iter()
         .filter(|snapshot| snapshot.is_mutable())
@@ -1092,7 +1106,7 @@ fn recover_pending_asset_operation(
         ensure_no_transaction_mutation_intents(&transaction_mutation_intent_dir(operation_id))?;
         mark_operation_committed(operation_id)?;
         drop(write_tracker);
-        return finalize_completed_operation_cleanup(operation_id, operation_path, &manifest, &profile_ids);
+        return finalize_completed_operation_cleanup(operation_id, operation_path, &manifest);
     }
     let mut rollback_errors = restore_snapshots_if_unchanged(&snapshots, &written_states);
     if let Err(error) =
@@ -1107,20 +1121,9 @@ fn recover_pending_asset_operation(
             rollback_errors.join("; ")
         ));
     }
-    for (profile_id, credential) in &credential_backups {
-        restore_credential_snapshot(
-            profile_id,
-            credential.as_ref().map(|value| value.as_slice()),
-        )
-        .map_err(|error| format!("target_recovery_required: {error}"))?;
-    }
     mark_operation_state(operation_id, ROLLBACK_COMPLETE_MARKER, b"rolled-back\n")
         .map_err(|error| format!("target_recovery_required: {error}"))?;
     ensure_no_transaction_mutation_intents(&transaction_mutation_intent_dir(operation_id))?;
-    for profile_id in &profile_ids {
-        clear_credential_rollback(operation_id, profile_id)
-            .map_err(|error| format!("target_recovery_required: {error}"))?;
-    }
     clear_private_snapshot_items(operation_id, &snapshots)
         .map_err(|error| format!("target_recovery_required: {error}"))?;
     fs::remove_dir_all(operation_path)
@@ -1252,7 +1255,7 @@ pub fn cancel_asset_operation(operation_id: &str) -> Result<(), String> {
 
 fn operation_has_recovery_evidence(
     operation_id: &str,
-    operation: &PersistedAssetOperation,
+    _operation: &PersistedAssetOperation,
 ) -> Result<bool, String> {
     for path in [
         operation_root(operation_id).join("rollback"),
@@ -1266,18 +1269,6 @@ fn operation_has_recovery_evidence(
             }
         }
     }
-    for profile_id in lifecycle_profile_ids(operation.lifecycle.as_ref()) {
-        match credential_rollback_snapshot(operation_id, &profile_id) {
-            Ok(Some(_)) => return Ok(true),
-            Ok(None) => {}
-            Err(_) => {
-                return Err(
-                    "recovery_required: failed to inspect Model credential rollback evidence"
-                        .into(),
-                );
-            }
-        }
-    }
     if load_private_target_ledger(operation_id)?.is_some() {
         // The durable ledger itself is recovery evidence. Do not downgrade a
         // locked/denied Keychain lookup to "no evidence" and retire the only
@@ -1285,19 +1276,6 @@ fn operation_has_recovery_evidence(
         return Ok(true);
     }
     Ok(false)
-}
-
-fn lifecycle_profile_ids(lifecycle: Option<&LifecycleBinding>) -> Vec<String> {
-    match lifecycle {
-        Some(LifecycleBinding::ModelUpsert { profile_id, .. })
-        | Some(LifecycleBinding::ModelAdopt { profile_id, .. })
-        | Some(LifecycleBinding::ModelDelete { profile_id }) => vec![profile_id.clone()],
-        Some(LifecycleBinding::ModelProviderUpsert { provider_id, .. })
-        | Some(LifecycleBinding::ModelProviderDelete { provider_id }) => {
-            vec![provider_credential_subject(provider_id)]
-        }
-        _ => Vec::new(),
-    }
 }
 
 fn operation_commit_marker(operation_id: &str) -> PathBuf {
@@ -1385,6 +1363,7 @@ fn apply_operation(
     persisted: &PersistedAssetOperation,
     skills_lock: &SkillsOperationLock,
     blocked_agents: &BTreeSet<String>,
+    prepared: Option<&PreparedProviderCredential>,
 ) -> Result<(), ModelTargetError> {
     let Some(lifecycle) = &persisted.lifecycle else {
         return apply_domain_plan(
@@ -1454,16 +1433,6 @@ fn apply_operation(
             let result: Result<(), ModelTargetError> = match storage_authority {
                 ModelStorageAuthority::NativeRegistry => {
                     clear_all_configured_models_for_targets(agent_id, &persisted.plan.target_files)
-                        .and_then(|_| {
-                            if agent_has_configured_models(agent_id)? {
-                                Err(
-                            "target_convergence_failed: Model entries reappeared after clear"
-                                .into(),
-                        )
-                            } else {
-                                Ok(())
-                            }
-                        })
                         .map_err(ModelTargetError::from)
                 }
                 ModelStorageAuthority::ArcaMapping => {
@@ -1720,8 +1689,7 @@ fn apply_operation(
                 CredentialAction::Set => true,
                 CredentialAction::Clear => false,
             };
-            save_profile(*profile, None)?;
-            apply_credential_update(profile_id, credential.as_deref().map(String::as_str))?;
+            save_profile(*profile, credential.as_deref().map(|key| key.to_owned()))?;
             mark_central_committed(&persisted.plan)?;
             reapply_model_consumers(
                 &persisted.plan,
@@ -1736,9 +1704,10 @@ fn apply_operation(
             profile_ids,
             draft_hash,
             credential_action,
+            store,
         } => {
             let PendingAssetPayload::ModelProvider {
-                provider,
+                mut provider,
                 profiles,
                 credential,
             } = require_pending_payload(&persisted.plan.operation_id)?
@@ -1755,14 +1724,21 @@ fn apply_operation(
                         .into(),
                 );
             }
-            let desired_credential_present = match credential_action {
-                CredentialAction::Keep => provider_credential_present(provider_id),
-                CredentialAction::Set => true,
-                CredentialAction::Clear => false,
-            };
+            if *credential_action == CredentialAction::Set {
+                let store = store.as_ref().ok_or("asset_operation_stale: credential store is missing")?;
+                let prepared = prepared.ok_or("credential_missing: store write has not completed")?;
+                let settings = load_settings_strict().map_err(|error| error.to_string())?;
+                if crate::resources::model::credential_service::store(&settings, &store.id)? != *store
+                    || prepared.reference.store_id != store.id
+                    || prepared.operation_id != persisted.plan.operation_id
+                {
+                    return Err("asset_operation_stale: prepared credential does not match the reviewed store".into());
+                }
+                crate::resources::model::credential_store::verify_publishable(provider_id, &prepared.reference)?;
+                provider.credential = Some(prepared.reference.clone());
+            }
+            let desired_credential_present = provider.credential.is_some();
             save_provider_bundle(*provider, profiles)?;
-            apply_credential_update(&provider_credential_subject(provider_id),
-                credential.as_deref().map(String::as_str))?;
             mark_central_committed(&persisted.plan)?;
             reapply_model_consumer_bundle(&persisted.plan, profile_ids,
                 desired_credential_present, blocked_agents)
@@ -1787,7 +1763,7 @@ fn apply_operation(
             {
                 return Err("asset_operation_stale: Model adoption payload changed".into());
             }
-            save_profile(*profile, None)?;
+            save_profile(*profile, credential.as_deref().map(|key| key.to_owned()))?;
             // Adoption changes Arca authority to match the reviewed Agent state.
             // It must never normalize or rewrite that state; doing so can erase
             // unrelated external models from a shared Agent configuration.
@@ -1800,7 +1776,6 @@ fn apply_operation(
                 }
             })
             .map_err(|error| error.to_string())?;
-            apply_credential_update(profile_id, credential.as_deref().map(String::as_str))?;
             for agent_id in &persisted.plan.affected_agent_ids {
                 clear_target_incidents(&persisted.plan, agent_id)?;
             }
@@ -1836,7 +1811,10 @@ fn apply_operation(
     }
 }
 
-fn verify_operation(persisted: &PersistedAssetOperation) -> Result<(), String> {
+fn verify_operation(
+    persisted: &PersistedAssetOperation,
+    prepared: Option<&PreparedProviderCredential>,
+) -> Result<(), String> {
     verify_postcondition(&persisted.plan, persisted.lifecycle.as_ref())?;
     let Some(lifecycle) = &persisted.lifecycle else {
         return Ok(());
@@ -2165,6 +2143,7 @@ fn verify_operation(persisted: &PersistedAssetOperation) -> Result<(), String> {
             profile_ids,
             draft_hash,
             credential_action,
+            ..
         } => {
             let settings = load_settings_strict().map_err(|error| error.to_string())?;
             let provider = settings
@@ -2184,16 +2163,20 @@ fn verify_operation(persisted: &PersistedAssetOperation) -> Result<(), String> {
                         .ok_or_else(|| "Provider child Model missing after commit".to_string())
                 })
                 .collect::<Result<BTreeMap<_, _>, String>>()?;
-            verify_payload_hash(&(provider, &profiles), draft_hash)?;
-            match credential_action {
-                CredentialAction::Keep => {}
-                CredentialAction::Set if !provider_credential_present(provider_id) => {
-                    return Err("Provider credential was not saved after commit".into())
-                }
-                CredentialAction::Clear if provider_credential_present(provider_id) => {
-                    return Err("Provider credential was not cleared after commit".into())
-                }
-                CredentialAction::Set | CredentialAction::Clear => {}
+            let PendingAssetPayload::ModelProvider { provider: draft, .. } =
+                require_pending_payload(&persisted.plan.operation_id)? else {
+                    return Err("asset_operation_expired: Provider draft disappeared".into());
+                };
+            let mut verification = provider.clone();
+            verification.credential = draft.credential.clone();
+            verify_payload_hash(&(&verification, &profiles), draft_hash)?;
+            let expected = match credential_action {
+                CredentialAction::Set => prepared.map(|prepared| &prepared.reference),
+                CredentialAction::Keep => draft.credential.as_ref(),
+                CredentialAction::Clear => None,
+            };
+            if provider.credential.as_ref() != expected {
+                return Err("asset_operation_failed: Provider credential reference differs from approved value".into());
             }
             Ok(())
         }
@@ -4459,11 +4442,7 @@ fn finalize_completed_operation_cleanup(
     operation_id: &str,
     operation_path: &Path,
     manifest: &DurableSnapshotManifest,
-    profile_ids: &[String],
 ) -> Result<(), String> {
-    for profile_id in profile_ids {
-        clear_credential_rollback(operation_id, profile_id)?;
-    }
     clear_private_snapshot_manifest_items(operation_id, manifest)?;
     fs::remove_dir_all(operation_path).map_err(|error| error.to_string())?;
     clear_pending_payload(operation_id);
@@ -4518,19 +4497,27 @@ mod tests {
     };
     use crate::resources::mcp::registry::{read_registry_all, write_manual_entry};
     use crate::resources::mcp::sources::cached_path;
-    use crate::resources::model::save_profile;
+    use crate::resources::model::{
+        credential_store, save_profile, test_read_profile_credential, test_set_profile_credential,
+    };
     use crate::testenv::TestHome;
     use serde_json::Value;
 
     #[test]
-    fn credential_read_failure_cannot_create_an_absent_rollback_snapshot() {
+    fn credential_readback_failure_preserves_the_active_provider_reference() {
         let _home = TestHome::new("credential-read-fail-closed");
         save_profile(model("before"), Some("fixture-original-key".into())).unwrap();
+        let settings = load_settings_strict().unwrap();
+        let profiles = settings.model_profiles.unwrap();
+        let provider_id = profiles["work"].provider_id.as_deref().unwrap();
+        let provider = settings.model_providers.unwrap()[provider_id].clone();
+        let old_reference = provider.credential.clone();
         let plan = plan_update_central_asset(PlanUpdateCentralAssetRequest {
-            draft: CentralAssetDraft::Model {
-                existing_id: Some("work".into()),
-                profile: Box::new(model("after")),
-                credential: None,
+            draft: CentralAssetDraft::ModelProvider {
+                existing_id: Some(provider_id.into()),
+                provider: Box::new(provider),
+                credential: Some("fixture-new-key".into()),
+                store_id: None,
             },
         }).unwrap();
         let before = fs::read(model_catalog_file()).unwrap();
@@ -4542,8 +4529,9 @@ mod tests {
         assert_eq!(fs::read(model_catalog_file()).unwrap(), before);
         assert!(load_rollback_manifest(&plan.operation_id).unwrap().is_none());
         drop(failure);
-        assert_eq!(credential_snapshot("work").unwrap().unwrap(), b"fixture-original-key");
-        assert!(credential_rollback_snapshot(&plan.operation_id, "work").unwrap().is_none());
+        assert_eq!(test_read_profile_credential("work").unwrap().unwrap(), b"fixture-original-key");
+        assert_eq!(load_settings_strict().unwrap().model_providers.unwrap()[provider_id].credential, old_reference);
+        assert!(credential_store::owned_revision(&plan.operation_id).unwrap().is_none());
         cancel_asset_operation(&plan.operation_id).unwrap();
     }
 
@@ -4786,27 +4774,18 @@ mod tests {
     #[test]
     fn credential_delivery_preserves_current_and_rolls_back_all_profile_writes() {
         use crate::domain::assets::ApiKeyDelivery;
-        use crate::domain::types::{ApiKeySource, AuthRequirement};
+        use crate::domain::types::AuthRequirement;
         let home = TestHome::new("credential-policy-atomic");
-        let mut key_paths = Vec::new();
         for id in ["a", "b"] {
-            let key_path = home.home.join(format!("key-{id}"));
-            fs::write(&key_path, format!("fixture-key-{id}")).unwrap();
-            #[cfg(unix)] {
-                use std::os::unix::fs::PermissionsExt;
-                fs::set_permissions(&key_path, fs::Permissions::from_mode(0o600)).unwrap();
-            }
             let mut profile = model(id);
             profile.id = id.into();
             profile.provider_id = Some(format!("provider-{id}"));
-            save_profile(profile.clone(), None).unwrap();
+            save_profile(profile.clone(), Some(format!("fixture-key-{id}"))).unwrap();
             mutate_settings(|settings| {
                 let provider = settings.model_providers.as_mut().unwrap()
                     .get_mut(profile.provider_id.as_ref().unwrap()).unwrap();
-                provider.api_key_source = Some(ApiKeySource::File { path: key_path.to_string_lossy().into_owned() });
                 provider.auth_requirement = AuthRequirement::Required;
             }).unwrap();
-            key_paths.push(key_path);
         }
         mutate_settings(|settings| {
             let mut selection = settings.model_selection("opencode");
@@ -4836,9 +4815,12 @@ mod tests {
             let bytes = fs::read(&path).ok();
             (path, bytes)
         }).collect::<Vec<_>>();
+        let unavailable_reference = load_settings_strict().unwrap().model_providers.unwrap()["provider-b"]
+            .credential.clone().unwrap();
         let error = commit_asset_operation_with_hook(AssetCommitRequest {
             operation_id: plan.operation_id, candidate_hash: plan.candidate_hash,
-        }, || { fs::remove_file(&key_paths[1]).map_err(|error| error.to_string()) }).unwrap_err();
+        }, || credential_store::retire(&credential_store::keychain_store(), &unavailable_reference))
+            .unwrap_err();
         assert!(!error.is_empty());
         assert_eq!(load_settings_strict().unwrap().model_selection("opencode"), before);
         for (path, bytes) in &files { assert_eq!(fs::read(path).ok(), *bytes); }
@@ -4848,11 +4830,7 @@ mod tests {
             assert_eq!(metadata.permissions().mode() & 0o777, 0o644);
             assert_eq!(metadata.ino(), native_inode);
         }
-        fs::write(&key_paths[1], b"fixture-key-b").unwrap();
-        #[cfg(unix)] {
-            use std::os::unix::fs::PermissionsExt;
-            fs::set_permissions(&key_paths[1], fs::Permissions::from_mode(0o600)).unwrap();
-        }
+        test_set_profile_credential("b", "fixture-key-b").unwrap();
         crate::resources::model::set_agent_credential_delivery("opencode", ApiKeyDelivery::Plaintext, true).unwrap();
         let after = load_settings_strict().unwrap().model_selection("opencode");
         assert_eq!(after.active_profile_id, before.active_profile_id);
@@ -4989,8 +4967,7 @@ mod tests {
                 ),
             ]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
+            credential: None,
         };
         let first = ModelProfile {
             id: "shared-openai".into(),
@@ -5027,9 +5004,11 @@ mod tests {
 
     fn install_shared_provider_models() -> (ModelProviderConfig, ModelProfile, ModelProfile) {
         let (provider, first, second) = shared_provider_models();
-        save_profile(first.clone(), Some("old-secret".into())).unwrap();
-        save_profile(second.clone(), Some("old-secret".into())).unwrap();
-        (provider, first, second)
+        let profiles = BTreeMap::from([(first.id.clone(), first.clone()), (second.id.clone(), second.clone())]);
+        save_provider_bundle(provider.clone(), profiles).unwrap();
+        test_set_profile_credential(&first.id, "old-secret").unwrap();
+        let installed = load_settings_strict().unwrap().model_providers.unwrap()[&provider.id].clone();
+        (installed, first, second)
     }
 
     fn parent_snapshots_for_paths(paths: &[PathBuf]) -> BTreeMap<PathBuf, ParentDirectorySnapshot> {
@@ -5181,9 +5160,6 @@ mod tests {
             .exists());
         assert!(!private_target_ledger_path(&operation_id).exists());
         assert!(!operation_commit_marker(&operation_id).exists());
-        assert!(credential_rollback_snapshot(&operation_id, &profile.id)
-            .unwrap()
-            .is_none());
         assert!(!private_file_snapshot_exists(&operation_id, &private));
         assert!(!evidence_contains(
             &home.home.join(".arca"),
@@ -5531,7 +5507,6 @@ mod tests {
             operation_id,
             &operation_root(operation_id),
             &manifest,
-            &[],
         )
         .unwrap();
 
@@ -5555,7 +5530,6 @@ mod tests {
             operation_id,
             &operation_root(operation_id),
             &manifest,
-            &[],
         )
         .unwrap_err();
 
@@ -5673,8 +5647,8 @@ mod tests {
         .unwrap();
         let skills_guard = acquire_asset_skills_lock().unwrap();
 
-        apply_operation(&persisted, &skills_guard, &BTreeSet::new()).unwrap();
-        verify_operation(&persisted).unwrap();
+        apply_operation(&persisted, &skills_guard, &BTreeSet::new(), None).unwrap();
+        verify_operation(&persisted, None).unwrap();
         mark_operation_committed(&plan.operation_id).unwrap();
         assert!(!evidence_contains(
             &operation_root(&plan.operation_id),
@@ -6706,8 +6680,8 @@ mod tests {
         ];
         persist_rollback_snapshots(&plan.operation_id, &snapshots).unwrap();
         let skills_guard = acquire_asset_skills_lock().unwrap();
-        apply_operation(&persisted, &skills_guard, &BTreeSet::new()).unwrap();
-        verify_operation(&persisted).unwrap();
+        apply_operation(&persisted, &skills_guard, &BTreeSet::new(), None).unwrap();
+        verify_operation(&persisted, None).unwrap();
         mark_operation_committed(&plan.operation_id).unwrap();
         drop(skills_guard);
 
@@ -6721,7 +6695,7 @@ mod tests {
     }
 
     #[test]
-    fn model_recovery_preserves_the_provider_keychain_value_before_commit_marker() {
+    fn model_recovery_preserves_the_provider_credential_before_commit_marker() {
         let _home = TestHome::new("consume-model-keychain-rollback");
         save_profile(model("old-model"), Some("old-secret".into())).unwrap();
         let settings_before = fs::read(settings_file()).unwrap();
@@ -6735,8 +6709,6 @@ mod tests {
         .unwrap();
         let persisted = load_operation(&plan.operation_id).unwrap();
         let snapshots = central_snapshots();
-        let old_credential = credential_snapshot("work").unwrap();
-        persist_credential_rollback(&plan.operation_id, "work", old_credential.as_deref()).unwrap();
         persist_rollback_snapshots(&plan.operation_id, &snapshots).unwrap();
         let tracked_paths = snapshots
             .iter()
@@ -6749,17 +6721,17 @@ mod tests {
         )
         .unwrap();
         let skills_guard = acquire_asset_skills_lock().unwrap();
-        apply_operation(&persisted, &skills_guard, &BTreeSet::new()).unwrap();
+        apply_operation(&persisted, &skills_guard, &BTreeSet::new(), None).unwrap();
         assert!(operation_state_marker_exists(&plan.operation_id, CENTRAL_COMMITTED_MARKER).unwrap());
         assert!(!operation_commit_marker_exists(&plan.operation_id).unwrap());
         drop(tracker);
         drop(skills_guard);
-        assert_eq!(credential_snapshot("work").unwrap().unwrap(), b"old-secret");
+        assert_eq!(test_read_profile_credential("work").unwrap().unwrap(), b"old-secret");
 
         recover_pending_asset_operations().unwrap();
         assert_eq!(fs::read(settings_file()).unwrap(), settings_before);
         assert_eq!(load_settings_strict().unwrap().model_profiles.unwrap()["work"].model, "new-model");
-        assert_eq!(credential_snapshot("work").unwrap().unwrap(), b"old-secret");
+        assert_eq!(test_read_profile_credential("work").unwrap().unwrap(), b"old-secret");
         assert!(!operation_root(&plan.operation_id).exists());
     }
 
@@ -6767,12 +6739,14 @@ mod tests {
     fn provider_commit_updates_every_child_model_and_credential() {
         let _home = TestHome::new("consume-provider-commit");
         let (mut provider, first, second) = install_shared_provider_models();
+        let original_reference = provider.credential.clone().unwrap();
         provider.base_url = "https://new.example.test/".into();
         let plan = plan_update_central_asset(PlanUpdateCentralAssetRequest {
             draft: CentralAssetDraft::ModelProvider {
                 existing_id: Some(provider.id.clone()),
                 provider: Box::new(provider.clone()),
                 credential: Some("new-secret".into()),
+                store_id: None,
             },
         })
         .unwrap();
@@ -6789,30 +6763,16 @@ mod tests {
         assert_eq!(profiles[&first.id].endpoint_path, "/v1/responses");
         assert_eq!(profiles[&second.id].base_url, "https://new.example.test");
         assert_eq!(profiles[&second.id].endpoint_path, "/anthropic/v1/messages");
-        assert_eq!(credential_snapshot(&first.id).unwrap().unwrap(), b"new-secret");
-        assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"new-secret");
+        assert_eq!(test_read_profile_credential(&first.id).unwrap().unwrap(), b"new-secret");
+        assert_eq!(test_read_profile_credential(&second.id).unwrap().unwrap(), b"new-secret");
+        let retained = credential_store::read(&credential_store::keychain_store(), &original_reference).unwrap();
+        assert_eq!(retained.as_slice(), b"old-secret");
     }
 
     #[test]
     fn provider_update_repairs_only_its_reviewed_child_profiles() {
         let home = TestHome::new("consume-provider-scoped-children");
-        let (mut provider, mut first, mut second) = install_shared_provider_models();
-        provider.api_key_source = Some(crate::domain::types::ApiKeySource::Env {
-            name: "SHARED_PROVIDER_API_KEY".into(),
-        });
-        provider.env_key = Some("SHARED_PROVIDER_API_KEY".into());
-        first.env_key = provider.env_key.clone();
-        second.env_key = provider.env_key.clone();
-        mutate_settings(|settings| {
-            settings
-                .model_providers
-                .get_or_insert_default()
-                .insert(provider.id.clone(), provider.clone());
-            let profiles = settings.model_profiles.get_or_insert_default();
-            profiles.insert(first.id.clone(), first.clone());
-            profiles.insert(second.id.clone(), second.clone());
-        })
-        .unwrap();
+        let (mut provider, first, second) = install_shared_provider_models();
         let mut third = model("third-model");
         third.id = "third-profile".into();
         third.provider_id = Some("other-provider".into());
@@ -6845,6 +6805,7 @@ mod tests {
                 existing_id: Some(provider.id.clone()),
                 provider: Box::new(provider),
                 credential: None,
+                store_id: None,
             },
         })
         .unwrap();
@@ -6886,23 +6847,7 @@ mod tests {
     #[test]
     fn provider_update_skips_a_disabled_child_consumer_and_preserves_its_payload() {
         let home = TestHome::new("consume-provider-disabled-child");
-        let (mut provider, mut first, mut second) = install_shared_provider_models();
-        provider.api_key_source = Some(crate::domain::types::ApiKeySource::Env {
-            name: "SHARED_PROVIDER_API_KEY".into(),
-        });
-        provider.env_key = Some("SHARED_PROVIDER_API_KEY".into());
-        first.env_key = provider.env_key.clone();
-        second.env_key = provider.env_key.clone();
-        mutate_settings(|settings| {
-            settings
-                .model_providers
-                .get_or_insert_default()
-                .insert(provider.id.clone(), provider.clone());
-            let profiles = settings.model_profiles.get_or_insert_default();
-            profiles.insert(first.id.clone(), first.clone());
-            profiles.insert(second.id.clone(), second.clone());
-        })
-        .unwrap();
+        let (mut provider, first, second) = install_shared_provider_models();
 
         let assignment = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
             agent_id: "grok-build".into(),
@@ -6950,6 +6895,7 @@ mod tests {
                 existing_id: Some(provider.id.clone()),
                 provider: Box::new(provider),
                 credential: None,
+                store_id: None,
             },
         })
         .unwrap();
@@ -6993,6 +6939,7 @@ mod tests {
     fn assert_provider_recovery(central_checkpoint: bool) {
         let _home = TestHome::new("consume-provider-keychain-rollback");
         let (mut provider, first, second) = install_shared_provider_models();
+        let before_reference = provider.credential.clone().unwrap();
         let settings_before = fs::read(settings_file()).unwrap();
         let catalog_before = fs::read(model_catalog_file()).unwrap();
         provider.base_url = "https://new.example.test".into();
@@ -7001,15 +6948,17 @@ mod tests {
                 existing_id: Some(provider.id.clone()),
                 provider: Box::new(provider.clone()),
                 credential: Some("new-secret".into()),
+                store_id: None,
             },
         })
         .unwrap();
+        let request = AssetCommitRequest {
+            operation_id: plan.operation_id.clone(),
+            candidate_hash: plan.candidate_hash.clone(),
+        };
+        let prepared = pending_provider_credential(&request).unwrap().unwrap().create().unwrap();
         let persisted = load_operation(&plan.operation_id).unwrap();
         let snapshots = central_snapshots();
-        let subject = provider_credential_subject(&provider.id);
-        let old_credential = credential_snapshot(&subject).unwrap();
-        persist_credential_rollback(&plan.operation_id, &subject, old_credential.as_deref())
-            .unwrap();
         persist_rollback_snapshots(&plan.operation_id, &snapshots).unwrap();
         let tracked_paths = snapshots.iter().map(|snapshot| snapshot.path.clone()).collect::<Vec<_>>();
         let tracker = begin_transaction_write_tracking(
@@ -7020,36 +6969,38 @@ mod tests {
         .unwrap();
         let skills_guard = acquire_asset_skills_lock().unwrap();
         if central_checkpoint {
-            apply_operation(&persisted, &skills_guard, &BTreeSet::new()).unwrap();
+            apply_operation(&persisted, &skills_guard, &BTreeSet::new(), Some(&prepared)).unwrap();
         } else {
-            // Crash between central writes and the checkpoint. Use exactly the
-            // reviewed in-memory bundle, without publishing the checkpoint.
-            let PendingAssetPayload::ModelProvider { provider, profiles, credential } =
+            // Crash after saving the reviewed catalog and before the checkpoint.
+            let PendingAssetPayload::ModelProvider { mut provider, profiles, .. } =
                 require_pending_payload(&plan.operation_id).unwrap() else { panic!("Provider payload"); };
+            provider.credential = Some(prepared.reference.clone());
             save_provider_bundle(*provider, profiles).unwrap();
-            apply_credential_update(&subject, credential.as_deref().map(String::as_str)).unwrap();
         }
         assert_eq!(operation_state_marker_exists(&plan.operation_id, CENTRAL_COMMITTED_MARKER).unwrap(), central_checkpoint);
         assert!(!operation_commit_marker_exists(&plan.operation_id).unwrap());
         drop(tracker);
         drop(skills_guard);
-        assert_eq!(credential_snapshot(&first.id).unwrap().unwrap(), b"new-secret");
-        assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"new-secret");
+        assert_eq!(test_read_profile_credential(&first.id).unwrap().unwrap(), b"new-secret");
+        assert_eq!(test_read_profile_credential(&second.id).unwrap().unwrap(), b"new-secret");
         assert_ne!(fs::read(model_catalog_file()).unwrap(), catalog_before);
 
         recover_pending_asset_operations().unwrap();
         assert_eq!(fs::read(settings_file()).unwrap(), settings_before);
+        let settings = load_settings_strict().unwrap();
+        let active = settings.model_providers.unwrap()[&provider.id].credential.clone().unwrap();
         if central_checkpoint {
-            let profiles = load_settings_strict().unwrap().model_profiles.unwrap();
+            let profiles = settings.model_profiles.unwrap();
             assert_eq!(profiles[&first.id].base_url, "https://new.example.test");
             assert_eq!(profiles[&second.id].base_url, "https://new.example.test");
-            assert_eq!(credential_snapshot(&first.id).unwrap().unwrap(), b"new-secret");
-            assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"new-secret");
+            assert_eq!(active, prepared.reference);
         } else {
             assert_eq!(fs::read(model_catalog_file()).unwrap(), catalog_before);
-            assert_eq!(credential_snapshot(&first.id).unwrap().unwrap(), b"old-secret");
-            assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"old-secret");
+            assert_eq!(active, before_reference);
         }
+        let store = credential_store::keychain_store();
+        assert_eq!(credential_store::read(&store, &before_reference).unwrap().as_slice(), b"old-secret");
+        assert_eq!(credential_store::read(&store, &prepared.reference).unwrap().as_slice(), b"new-secret");
         assert!(!operation_root(&plan.operation_id).exists());
     }
 
@@ -7067,24 +7018,19 @@ mod tests {
         .unwrap();
         let persisted = load_operation(&plan.operation_id).unwrap();
         let snapshots = vec![PathSnapshot::capture(&settings_file()).unwrap()];
-        let old_credential = credential_snapshot("work").unwrap();
-        persist_credential_rollback(&plan.operation_id, "work", old_credential.as_deref()).unwrap();
         persist_rollback_snapshots(&plan.operation_id, &snapshots).unwrap();
         let skills_guard = acquire_asset_skills_lock().unwrap();
-        apply_operation(&persisted, &skills_guard, &BTreeSet::new()).unwrap();
-        verify_operation(&persisted).unwrap();
+        apply_operation(&persisted, &skills_guard, &BTreeSet::new(), None).unwrap();
+        verify_operation(&persisted, None).unwrap();
         mark_operation_committed(&plan.operation_id).unwrap();
         drop(skills_guard);
 
         recover_pending_asset_operations().unwrap();
-        assert_eq!(credential_snapshot("work").unwrap().unwrap(), b"old-secret");
+        assert_eq!(test_read_profile_credential("work").unwrap().unwrap(), b"old-secret");
         assert_eq!(
             load_settings_strict().unwrap().model_profiles.unwrap()["work"].model,
             "new-model"
         );
         assert!(!operation_root(&plan.operation_id).exists());
-        assert!(credential_rollback_snapshot(&plan.operation_id, "work")
-            .unwrap()
-            .is_none());
     }
 }

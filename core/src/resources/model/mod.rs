@@ -10,9 +10,9 @@ pub(crate) mod adapters;
 mod claude_desktop;
 pub(crate) mod credential;
 #[cfg(any(target_os = "macos", test))]
-mod credential_session;
-#[cfg(target_os = "macos")]
-mod credential_session_native;
+pub(crate) mod credential_service;
+pub(crate) mod credential_store;
+mod delivery_state;
 mod discovery;
 pub(crate) mod inference;
 mod open_code_auth;
@@ -29,7 +29,7 @@ mod keychain;
 
 use crate::domain::agents::ModelStorageAuthority;
 use crate::domain::types::{
-    migrate_legacy_provider_endpoints, ApiKeySource, AuthRequirement, ModelProfile, ModelProtocol,
+    migrate_legacy_provider_endpoints, AuthRequirement, ModelProfile, ModelProtocol,
     ModelProviderConfig, ModelProviderProtocolConfig,
 };
 use crate::paths::{backup_timestamp, backups_dir, settings_file};
@@ -62,7 +62,6 @@ use zeroize::{Zeroize, Zeroizing};
 // Persisted credential and native ownership identifiers intentionally remain stable.
 // See analysis/18-arca-brand-transition.md; these strings must not be brand-replaced.
 const KEYCHAIN_ACCOUNT: &str = "api-key";
-const CREDENTIAL_ROLLBACK_PREFIX: &str = "__asset-operation-rollback__";
 const PRIVATE_FILE_SNAPSHOT_SERVICE_PREFIX: &str = "com.scoheart.mux.private-file-snapshot";
 const PRIVATE_FILE_SNAPSHOT_VERSION: &str = "v1";
 const QODER_DOCS: &str = "https://docs.qoder.com/user-guide/chat/custom-models";
@@ -71,9 +70,6 @@ const QODER_DESKTOP_DOCS: &str = "https://docs.qoder.com/qoder/custom-models";
 const GROK_BUILD_MODEL_DOCS: &str = "https://docs.x.ai/build/settings#model-id";
 const MINIMAX_CODE_DOCS: &str = "https://agent.minimax.io/download";
 const WARP_MODEL_DOCS: &str = "https://docs.warp.dev/agents/inference/custom-inference-endpoint/";
-const CREDENTIAL_FILE_NATIVE_ID: &str = "__mux_credential_file";
-const CREDENTIAL_COMMAND_NATIVE_ID: &str = "__mux_credential_command";
-const CREDENTIAL_ARGS_NATIVE_ID: &str = "__mux_credential_args";
 
 fn mutation_lock() -> Result<SettingsLock, String> {
     acquire_settings_lock(&settings_file())
@@ -3461,31 +3457,6 @@ fn generated_profile_id(provider: &str, model: &str, existing: &BTreeSet<String>
     }
 }
 
-fn migrated_profile_id(
-    old_id: &str,
-    provider: &str,
-    model: &str,
-    existing: &BTreeSet<String>,
-) -> String {
-    let prefix = normalize_slug(&format!("{provider}-{model}"));
-    let prefix = if prefix.is_empty() { "model" } else { &prefix };
-    for discriminator in 0u32.. {
-        let material =
-            format!("mux-model-schema-v2\0{old_id}\0{provider}\0{model}\0{discriminator}");
-        let digest = hex::encode(Sha256::digest(material.as_bytes()));
-        let suffix = &digest[..8];
-        let max_prefix = 64usize.saturating_sub(suffix.len() + 1);
-        let mut compact = prefix.chars().take(max_prefix).collect::<String>();
-        while compact.ends_with('-') {
-            compact.pop();
-        }
-        let id = format!("{compact}-{suffix}");
-        if !existing.contains(&id) {
-            return id;
-        }
-    }
-    unreachable!()
-}
 
 fn generated_provider_id(provider: &str, existing: &BTreeSet<String>) -> String {
     let prefix = normalize_slug(provider);
@@ -3503,19 +3474,6 @@ fn generated_provider_id(provider: &str, existing: &BTreeSet<String>) -> String 
     }
 }
 
-fn normalized_endpoint_origin(base_url: &str) -> String {
-    url::Url::parse(base_url)
-        .ok()
-        .and_then(|url| {
-            let host = url.host_str()?;
-            let port = url
-                .port()
-                .map(|port| format!(":{port}"))
-                .unwrap_or_default();
-            Some(format!("{}://{host}{port}", url.scheme()))
-        })
-        .unwrap_or_else(|| base_url.trim_end_matches('/').to_ascii_lowercase())
-}
 
 pub fn normalize_provider_base_url(base_url: &str) -> Result<String, String> {
     let base_url = base_url.trim().trim_end_matches('/');
@@ -3680,29 +3638,11 @@ fn materialize_profile_for_agent(
 ) -> Result<ModelProfile, String> {
     let mut materialized = profile.clone();
     let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
-    let source = profile.provider_id.as_deref().and_then(|provider_id| {
-        settings
-            .model_providers
-            .as_ref()
-            .and_then(|providers| providers.get(provider_id))
-            .and_then(|provider| provider.api_key_source.clone())
-    });
-    match source {
-        Some(ApiKeySource::File { path }) => {
-            materialized
-                .native_ids
-                .insert(CREDENTIAL_FILE_NATIVE_ID.into(), path);
-        }
-        Some(ApiKeySource::Helper { command, args, .. }) => {
-            materialized
-                .native_ids
-                .insert(CREDENTIAL_COMMAND_NATIVE_ID.into(), command);
-            materialized.native_ids.insert(
-                CREDENTIAL_ARGS_NATIVE_ID.into(),
-                serde_json::to_string(&args).map_err(|error| error.to_string())?,
-            );
-        }
-        _ => {}
+    if profile_credential_ref(&settings, &profile.id).is_some()
+        && model_credential_route(&settings, agent_id, profile, true)?
+            == Some(credential::PreparedCredentialRoute::NativeEnvReference)
+    {
+        materialized.env_key = Some(managed_env_name(profile));
     }
     if agent_id == "pi" && !materialized.native_ids.contains_key("pi") {
         materialized
@@ -3750,244 +3690,6 @@ fn materialize_profile_for_agent(
         materialized.endpoint_path.clear();
     }
     Ok(materialized)
-}
-
-fn credential_fingerprint(profile_id: &str) -> Result<Option<String>, String> {
-    Ok(read_credential_checked(profile_id)?.map(|credential| {
-        Sha256::digest(credential)
-            .iter()
-            .map(|byte| format!("{byte:02x}"))
-            .collect()
-    }))
-}
-
-/// Upgrade v2 Profile-local connection metadata into shared Provider
-/// instances. This migration only adds central metadata and references; Agent
-/// files and existing per-Profile Keychain items remain byte-for-byte stable.
-pub fn migrate_model_providers_v3_if_needed() -> Result<bool, String> {
-    let _settings_guard = mutation_lock()?;
-    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
-    let version = settings.version.unwrap_or_default();
-    if version >= 3 {
-        let repaired = repair_missing_provider_references(&settings)?;
-        let consolidated = consolidate_provider_credentials()?;
-        let upgraded = version < crate::settings::SETTINGS_VERSION;
-        if upgraded {
-            crate::settings::mutate_settings(|settings| {
-                settings.version = Some(crate::settings::SETTINGS_VERSION);
-            })
-            .map_err(|error| error.to_string())?;
-        }
-        return Ok(repaired || consolidated || upgraded);
-    }
-    if version < 2 {
-        return Err("model_schema_v2_required: migrate Model Profiles before Providers".into());
-    }
-
-    #[derive(Clone, PartialEq, Eq)]
-    struct GroupIdentity {
-        provider: String,
-        origin: String,
-        env_key: Option<String>,
-        credential: Option<String>,
-    }
-
-    let mut profiles = settings.model_profiles.clone().unwrap_or_default();
-    let mut providers = BTreeMap::<String, ModelProviderConfig>::new();
-    let mut legacy_endpoints = BTreeMap::<String, BTreeMap<ModelProtocol, String>>::new();
-    let mut groups = Vec::<(GroupIdentity, String)>::new();
-    let mut used_ids = BTreeSet::new();
-    let mut used_names = BTreeSet::new();
-
-    for profile in profiles.values_mut() {
-        let identity = GroupIdentity {
-            provider: profile.provider.clone(),
-            origin: normalized_endpoint_origin(&profile.base_url),
-            env_key: profile.env_key.clone(),
-            credential: credential_fingerprint(&profile.id)?,
-        };
-        let existing_provider_id = groups.iter().find_map(|(candidate, provider_id)| {
-            if candidate != &identity {
-                return None;
-            }
-            legacy_endpoints
-                .get(provider_id)
-                .and_then(|endpoints| endpoints.get(&profile.protocol))
-                .is_none_or(|endpoint| {
-                    endpoint.trim_end_matches('/') == profile.base_url.trim_end_matches('/')
-                })
-                .then_some(provider_id.clone())
-        });
-        let provider_id = match existing_provider_id {
-            Some(provider_id) => provider_id,
-            None => {
-                let provider_id = generated_provider_id(&profile.provider, &used_ids);
-                used_ids.insert(provider_id.clone());
-                let base_name = provider_display_name(&profile.provider);
-                let mut name = base_name.clone();
-                for suffix in 2.. {
-                    if !used_names.contains(&name.to_lowercase()) {
-                        break;
-                    }
-                    name = format!("{base_name} {suffix}");
-                }
-                used_names.insert(name.to_lowercase());
-                providers.insert(
-                    provider_id.clone(),
-                    ModelProviderConfig {
-                        id: provider_id.clone(),
-                        name,
-                        provider: profile.provider.clone(),
-                        base_url: String::new(),
-                        model_catalog_url: None,
-                        portal_url: None,
-                        protocols: BTreeMap::new(),
-                        auth_requirement: if profile.env_key.is_some() {
-                            AuthRequirement::Required
-                        } else {
-                            AuthRequirement::Optional
-                        },
-                        api_key_source: profile
-                            .env_key
-                            .clone()
-                            .map(|name| ApiKeySource::Env { name }),
-                        env_key: profile.env_key.clone(),
-                    },
-                );
-                groups.push((identity, provider_id.clone()));
-                provider_id
-            }
-        };
-        legacy_endpoints
-            .entry(provider_id.clone())
-            .or_default()
-            .insert(profile.protocol.clone(), profile.base_url.clone());
-        profile.provider_id = Some(provider_id);
-    }
-    for (provider_id, endpoints) in legacy_endpoints {
-        let provider = providers
-            .get_mut(&provider_id)
-            .expect("grouped Provider is present");
-        let (base_url, protocols) = migrate_legacy_provider_endpoints(&provider.name, &endpoints)?;
-        provider.base_url = base_url;
-        provider.protocols = protocols;
-    }
-
-    crate::settings::mutate_settings_checked(|current| {
-        if current.version != settings.version || current.model_profiles != settings.model_profiles
-        {
-            return Err(std::io::Error::other(
-                "asset_operation_stale: Model settings changed during Provider migration",
-            ));
-        }
-        current.model_profiles = (!profiles.is_empty()).then_some(profiles.clone());
-        current.model_providers = (!providers.is_empty()).then_some(providers.clone());
-        current.version = Some(crate::settings::SETTINGS_VERSION);
-        Ok(())
-    })
-    .map_err(|error| error.to_string())?;
-    consolidate_provider_credentials()?;
-    Ok(true)
-}
-
-fn repair_missing_provider_references(
-    settings: &crate::settings::Settings,
-) -> Result<bool, String> {
-    let providers = settings.model_providers.clone().unwrap_or_default();
-    let profiles = settings.model_profiles.clone().unwrap_or_default();
-    let repairs = profiles
-        .iter()
-        .filter(|(_, profile)| {
-            profile
-                .provider_id
-                .as_deref()
-                .is_none_or(|provider_id| !providers.contains_key(provider_id))
-        })
-        .filter_map(|(profile_id, profile)| {
-            let candidates = providers
-                .values()
-                .filter(|provider| {
-                    provider.provider == profile.provider
-                        && provider.env_key == profile.env_key
-                        && provider
-                            .protocols
-                            .get(&profile.protocol)
-                            .is_some_and(|protocol| {
-                                protocol_client_base_url(
-                                    &provider.base_url,
-                                    &profile.protocol,
-                                    &protocol.endpoint_path,
-                                )
-                                .is_ok_and(|endpoint| {
-                                    endpoint.trim_end_matches('/')
-                                        == profile.base_url.trim_end_matches('/')
-                                })
-                            })
-                })
-                .map(|provider| provider.id.clone())
-                .collect::<Vec<_>>();
-            (candidates.len() == 1).then(|| (profile_id.clone(), candidates[0].clone()))
-        })
-        .collect::<BTreeMap<_, _>>();
-    if repairs.is_empty() {
-        return Ok(false);
-    }
-
-    crate::settings::mutate_settings_checked(|current| {
-        if current.model_profiles != settings.model_profiles
-            || current.model_providers != settings.model_providers
-        {
-            return Err(std::io::Error::other(
-                "asset_operation_stale: Model settings changed during Provider repair",
-            ));
-        }
-        let current_profiles = current.model_profiles.get_or_insert_default();
-        for (profile_id, provider_id) in &repairs {
-            let profile = current_profiles.get_mut(profile_id).ok_or_else(|| {
-                std::io::Error::other(
-                    "asset_operation_stale: Model Profile disappeared during Provider repair",
-                )
-            })?;
-            profile.provider_id = Some(provider_id.clone());
-        }
-        Ok(())
-    })
-    .map_err(|error| error.to_string())?;
-    Ok(true)
-}
-
-fn consolidate_provider_credentials() -> Result<bool, String> {
-    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
-    let profiles = settings.model_profiles.unwrap_or_default();
-    let mut changed = false;
-    for provider in settings.model_providers.unwrap_or_default().into_values() {
-        let profile_ids = profiles
-            .iter()
-            .filter(|(_, profile)| profile.provider_id.as_deref() == Some(provider.id.as_str()))
-            .map(|(profile_id, _)| profile_id)
-            .collect::<Vec<_>>();
-        let provider_service = provider_keychain_service(&provider.id);
-        if !credential_service_exists_checked(&provider_service)? {
-            let legacy_credentials = profile_ids
-                .iter()
-                .map(|profile_id| read_credential_service_checked(&legacy_keychain_service(profile_id)))
-                .collect::<Result<Vec<_>, _>>()?
-                .into_iter().flatten().collect::<BTreeSet<_>>();
-            if legacy_credentials.len() > 1 {
-                return Err(format!(
-                    "model_provider_credential_drift: Provider '{}' has conflicting legacy API Keys",
-                    provider.name
-                ));
-            }
-            if let Some(credential) = legacy_credentials.iter().next() {
-                set_credential_service(&provider_service, credential)?;
-                changed = true;
-            }
-        }
-        // Keep per-Profile credentials. Existing Agent helpers may still
-        // reference them until the user explicitly restores Arca desired state.
-    }
-    Ok(changed)
 }
 
 fn default_profile_name(model: &str) -> String {
@@ -4074,7 +3776,6 @@ pub(crate) fn prepare_profile_draft(
             .and_then(|providers| providers.get(provider_id))
             .ok_or_else(|| "asset_operation_stale: Model Provider no longer exists".to_string())?;
         profile.provider = provider.provider.clone();
-        profile.env_key = provider.env_key.clone();
         profile.base_url = provider.base_url.clone();
         profile.endpoint_path = provider
             .protocols
@@ -4166,47 +3867,7 @@ pub(crate) fn prepare_profile_draft(
     Ok(profile)
 }
 
-type MigratedProfiles = (BTreeMap<String, String>, BTreeMap<String, ModelProfile>);
 
-pub(crate) fn migrated_profiles_v2(
-    settings: &crate::settings::Settings,
-) -> Result<MigratedProfiles, String> {
-    let old_profiles = settings.model_profiles.clone().unwrap_or_default();
-    let mut used_ids = old_profiles.keys().cloned().collect::<BTreeSet<_>>();
-    let mut id_map = BTreeMap::new();
-    let mut profiles = BTreeMap::new();
-    let mut naming = crate::settings::Settings::default();
-    for (old_id, mut profile) in old_profiles {
-        profile.provider = if profile.provider.trim().is_empty() {
-            infer_provider(&profile.base_url)
-        } else {
-            normalize_slug(&profile.provider)
-        };
-        if profile.provider.is_empty() {
-            profile.provider = "custom".into();
-        }
-        profile.model_vendor = profile
-            .model_vendor
-            .as_deref()
-            .map(normalize_slug)
-            .filter(|vendor| !vendor.is_empty())
-            .or_else(|| infer_model_vendor(&profile.provider, &profile.model));
-        let new_id = migrated_profile_id(&old_id, &profile.provider, &profile.model, &used_ids);
-        used_ids.insert(new_id.clone());
-        profile.id = new_id.clone();
-        let requested_name = if profile.name.trim().is_empty() {
-            default_profile_name(&profile.model)
-        } else {
-            profile.name.trim().to_string()
-        };
-        profile.name = unique_profile_name(&naming, &profile.provider, &requested_name, None);
-        validate_profile(&profile)?;
-        id_map.insert(old_id, new_id.clone());
-        profiles.insert(new_id.clone(), profile);
-        naming.model_profiles = Some(profiles.clone());
-    }
-    Ok((id_map, profiles))
-}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ModelAgentView {
@@ -4425,63 +4086,26 @@ fn path_view(settings: &crate::settings::Settings, agent_id: &str) -> (String, V
     (paths.join(" + "), paths)
 }
 
-fn legacy_keychain_service(profile_id: &str) -> String {
-    format!("com.scoheart.mux.model-profile.{profile_id}")
-}
-
-fn provider_keychain_service(provider_id: &str) -> String {
-    format!("com.scoheart.mux.model-provider.{provider_id}")
-}
-
-const PROVIDER_CREDENTIAL_SUBJECT_PREFIX: &str = "__model-provider__:";
-
-pub(crate) fn provider_credential_subject(provider_id: &str) -> String {
-    format!("{PROVIDER_CREDENTIAL_SUBJECT_PREFIX}{provider_id}")
-}
-
-fn keychain_service(subject_id: &str) -> String {
-    if let Some(provider_id) = subject_id.strip_prefix(PROVIDER_CREDENTIAL_SUBJECT_PREFIX) {
-        return provider_keychain_service(provider_id);
-    }
-    load_settings()
-        .model_profiles
-        .as_ref()
-        .and_then(|profiles| profiles.get(subject_id))
-        .and_then(|profile| profile.provider_id.as_deref())
-        .map(provider_keychain_service)
-        .unwrap_or_else(|| legacy_keychain_service(subject_id))
-}
-
-fn security_command(profile_id: &str) -> Vec<String> {
+fn profile_credential_command(agent_id: &str, profile: &ModelProfile) -> Vec<String> {
+    let executable = crate::application::agent_launch::credential_cli_path()
+        .unwrap_or_else(|_| PathBuf::from("/Applications/Arca.app/Contents/MacOS/arca"));
     vec![
-        "/usr/bin/security".into(),
-        "find-generic-password".into(),
-        "-w".into(),
-        "-s".into(),
-        keychain_service(profile_id),
-        "-a".into(),
-        KEYCHAIN_ACCOUNT.into(),
+        executable.to_string_lossy().into_owned(),
+        "credential".into(),
+        "resolve".into(),
+        "--agent".into(),
+        agent_id.into(),
+        "--profile".into(),
+        profile.id.clone(),
     ]
-}
-
-fn profile_credential_command(profile: &ModelProfile) -> Vec<String> {
-    let Some(command) = profile.native_ids.get(CREDENTIAL_COMMAND_NATIVE_ID) else {
-        return security_command(&profile.id);
-    };
-    let args = profile
-        .native_ids
-        .get(CREDENTIAL_ARGS_NATIVE_ID)
-        .and_then(|value| serde_json::from_str::<Vec<String>>(value).ok())
-        .unwrap_or_default();
-    std::iter::once(command.clone()).chain(args).collect()
 }
 
 fn shell_quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\\''"))
 }
 
-fn profile_credential_shell_command(profile: &ModelProfile) -> String {
-    profile_credential_command(profile)
+fn profile_credential_shell_command(agent_id: &str, profile: &ModelProfile) -> String {
+    profile_credential_command(agent_id, profile)
         .iter()
         .map(|value| shell_quote(value))
         .collect::<Vec<_>>()
@@ -4509,12 +4133,7 @@ fn read_credential_service_with_authorization(service: &str, authorize: bool) ->
                 .cloned());
         }
     }
-    if credential_session::managed(service) {
-        if authorize { credential_session_native::password(service) }
-        else { credential_session_native::observe_password(service) }
-    } else {
-        keychain::password_with_ui(service, KEYCHAIN_ACCOUNT, authorize)
-    }
+    keychain::password_with_ui(service, KEYCHAIN_ACCOUNT, authorize)
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -4579,11 +4198,7 @@ fn set_credential_service(service: &str, credential: &[u8]) -> Result<(), String
     if credential.contains(&b'\n') || credential.contains(&b'\r') {
         return Err("API key cannot contain a newline".into());
     }
-    if credential_session::managed(service) {
-        credential_session_native::set_password(service, credential)
-    } else {
-        keychain::set_password(service, KEYCHAIN_ACCOUNT, credential)
-    }
+    keychain::set_password(service, KEYCHAIN_ACCOUNT, credential)
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -4631,9 +4246,7 @@ fn delete_credential_service_authoritative(
             });
         }
     }
-    if credential_session::managed(service) {
-        credential_session_native::remove(service, || delete_native_credential_service(service))
-    } else { delete_native_credential_service(service) }
+    delete_native_credential_service(service)
 }
 
 #[cfg(target_os = "macos")]
@@ -4695,83 +4308,50 @@ fn delete_credential_service(service: &str) -> Result<(), String> {
     delete_credential_service_authoritative(service).map(|_| ())
 }
 
-fn read_credential_checked(profile_id: &str) -> Result<Option<Vec<u8>>, String> {
-    let service = keychain_service(profile_id);
-    if let Some(value) = read_credential_service_checked(&service)? {
-        return Ok(Some(value));
-    }
-    let legacy = legacy_keychain_service(profile_id);
-    if legacy != service { read_credential_service_checked(&legacy) } else { Ok(None) }
-}
-
-/// Runtime and transaction reads share the application authorization session;
-/// each lookup still verifies the authoritative source item's metadata revision.
-fn read_runtime_credential_service(service: &str) -> Result<Option<Vec<u8>>, String> {
-    read_credential_service_checked(service)
-}
-
-pub(crate) fn unlock_credential_session(retry: bool) -> Result<serde_json::Value, String> {
+fn create_credential_service(service: &str, credential: &[u8]) -> Result<(), String> {
     #[cfg(any(test, debug_assertions))]
     if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
-        return Ok(serde_json::json!({"unlocked": true, "expires_in_seconds": 28800, "sync_deferred": false}));
+        let mut values = TEST_CREDENTIALS.lock().unwrap_or_else(|error| error.into_inner());
+        let entry = values.entry(test_credential_key(service));
+        match entry {
+            std::collections::btree_map::Entry::Vacant(entry) => {
+                entry.insert(credential.to_vec());
+                return Ok(());
+            }
+            std::collections::btree_map::Entry::Occupied(_) => {
+                return Err("credential_store_conflict: Keychain entry already exists".into());
+            }
+        }
     }
     #[cfg(target_os = "macos")]
-    { serde_json::to_value(credential_session_native::unlock(retry)?).map_err(|_| "credential_session_unavailable".into()) }
+    { keychain::create_password(service, KEYCHAIN_ACCOUNT, credential) }
     #[cfg(not(target_os = "macos"))]
-    { let _ = retry; Ok(serde_json::json!({"unlocked": true, "expires_in_seconds": 0, "sync_deferred": false})) }
+    { let _ = (service, credential); Err("credential_store_unavailable: Keychain requires macOS".into()) }
 }
 
-pub(crate) fn clear_credential_session() {
-    #[cfg(target_os = "macos")]
-    credential_session_native::clear();
+fn profile_credential_ref<'a>(settings: &'a crate::settings::Settings, profile_id: &str)
+    -> Option<&'a crate::domain::credentials::CredentialReference>
+{
+    let profile = settings.model_profiles.as_ref()?.get(profile_id)?;
+    credential_service::provider_for_profile(settings, profile)?.credential.as_ref()
 }
 
-pub(crate) fn credential_session_status() -> serde_json::Value {
-    #[cfg(target_os = "macos")]
-    { serde_json::to_value(credential_session_native::status()).unwrap_or(serde_json::Value::Null) }
-    #[cfg(not(target_os = "macos"))]
-    { serde_json::json!({"unlocked": true, "expires_in_seconds": 0, "sync_deferred": false}) }
+fn read_credential_checked(profile_id: &str) -> Result<Option<Vec<u8>>, String> {
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    profile_credential_ref(&settings, profile_id)
+        .map(|reference| credential_service::read_reference(&settings, reference).map(|value| value.to_vec()))
+        .transpose()
 }
 
 fn read_runtime_provider_credential(provider_id: &str) -> Result<Option<Vec<u8>>, String> {
-    read_runtime_credential_service(&provider_keychain_service(provider_id))
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    let provider = settings.model_providers.as_ref().and_then(|providers| providers.get(provider_id))
+        .ok_or_else(|| "model_provider_not_found: Provider no longer exists".to_string())?;
+    credential_service::read_provider(&settings, provider).map(|value| value.map(|key| key.to_vec()))
 }
 
 fn credential_exists(profile_id: &str) -> bool {
-    let service = keychain_service(profile_id);
-    credential_exists_for_service(profile_id, &service, credential_service_exists)
-}
-
-fn credential_exists_for_service(
-    profile_id: &str,
-    service: &str,
-    mut exists: impl FnMut(&str) -> bool,
-) -> bool {
-    let legacy = legacy_keychain_service(profile_id);
-    let keychain_exists = exists(service) || (service != legacy && exists(&legacy));
-    #[cfg(any(test, debug_assertions))]
-    {
-        keychain_exists
-            || crate::brand::env("ARCA_TEST_MODEL_CREDENTIAL_PROFILES")
-                .ok()
-                .is_some_and(|profiles| profiles.split(',').any(|item| item == profile_id))
-    }
-    #[cfg(not(any(test, debug_assertions)))]
-    keychain_exists
-}
-
-fn set_credential(profile_id: &str, credential: &[u8]) -> Result<(), String> {
-    set_credential_service(&keychain_service(profile_id), credential)
-}
-
-fn delete_credential(profile_id: &str) -> Result<(), String> {
-    let service = keychain_service(profile_id);
-    delete_credential_service(&service)?;
-    let legacy = legacy_keychain_service(profile_id);
-    if legacy != service {
-        delete_credential_service(&legacy)?;
-    }
-    Ok(())
+    profile_credential_ref(&load_settings(), profile_id).is_some()
 }
 
 fn validate_profile(profile: &ModelProfile) -> Result<(), String> {
@@ -4847,11 +4427,8 @@ pub(crate) fn validate_provider_config(provider: &ModelProviderConfig) -> Result
     for protocol in provider.protocols.values() {
         full_request_url(&provider.base_url, &protocol.endpoint_path)?;
     }
-    if let Some(source) = provider.api_key_source.as_ref() {
-        credential::validate_source(source)?;
-    }
-    if provider.auth_requirement == AuthRequirement::None && provider.api_key_source.is_some() {
-        return Err("credential_not_required: an unauthenticated Provider cannot retain a credential source".into());
+    if provider.auth_requirement == AuthRequirement::None && provider.credential.is_some() {
+        return Err("credential_not_required: unauthenticated Providers do not use an API Key".into());
     }
     if provider.provider == "blockrun" && provider.auth_requirement != AuthRequirement::None {
         return Err("credential_not_required: BlockRun Free uses the anonymous API".into());
@@ -4892,10 +4469,6 @@ pub(crate) fn provider_profiles(
             profile.provider = provider.provider.clone();
             profile.base_url = provider.base_url.clone();
             profile.endpoint_path = protocol.endpoint_path.clone();
-            profile.env_key = match provider.api_key_source.as_ref() {
-                Some(ApiKeySource::Env { name }) => Some(name.clone()),
-                _ => None,
-            };
             validate_profile(&profile)?;
             Ok((id.clone(), profile))
         })
@@ -4926,44 +4499,9 @@ pub(crate) fn prepare_provider_draft(
                 .map(|endpoint_path| (protocol, ModelProviderProtocolConfig { endpoint_path }))
         })
         .collect::<Result<_, _>>()?;
-    if provider.api_key_source.is_none() {
-        provider.api_key_source = provider
-            .env_key
-            .take()
-            .map(|value| value.trim().to_string())
-            .filter(|value| !value.is_empty())
-            .map(|name| ApiKeySource::Env { name });
-    }
-    provider.api_key_source = match provider.api_key_source {
-        Some(ApiKeySource::ArcaStore) => Some(ApiKeySource::ArcaStore),
-        Some(ApiKeySource::Env { name }) => Some(ApiKeySource::Env {
-            name: name.trim().to_string(),
-        }),
-        Some(ApiKeySource::File { path }) => Some(ApiKeySource::File {
-            path: path.trim().to_string(),
-        }),
-        Some(ApiKeySource::Helper {
-            command,
-            args,
-            ttl_ms,
-        }) => Some(ApiKeySource::Helper {
-            command: command.trim().to_string(),
-            args: args
-                .into_iter()
-                .map(|argument| argument.trim().to_string())
-                .filter(|argument| !argument.is_empty())
-                .collect(),
-            ttl_ms,
-        }),
-        None => None,
-    };
-    if provider.auth_requirement == AuthRequirement::None {
-        provider.api_key_source = None;
-    }
-    provider.env_key = match provider.api_key_source.as_ref() {
-        Some(ApiKeySource::Env { name }) => Some(name.clone()),
-        _ => None,
-    };
+    // A draft can never bind a caller-supplied locator. Keep the current
+    // reference from the authoritative registry until a write succeeds.
+    provider.credential = None;
     match existing_id {
         Some(existing_id) => {
             if provider.id.is_empty() {
@@ -4982,18 +4520,21 @@ pub(crate) fn prepare_provider_draft(
             if existing.provider != provider.provider {
                 return Err("asset_identity_change: Model Provider type cannot change".into());
             }
+            if provider.auth_requirement != AuthRequirement::None {
+                provider.credential = existing.credential.clone();
+            }
         }
         None => {
             if !provider.id.is_empty() {
                 return Err("invalid_asset: Model Provider id is generated by Arca".into());
             }
-            let existing_ids = settings
-                .model_providers
-                .iter()
-                .flatten()
-                .map(|(id, _)| id.clone())
-                .collect();
-            provider.id = generated_provider_id(&provider.provider, &existing_ids);
+            // The name is unique in the registry. Keep the same identity
+            // when a first save is retried in a fresh process.
+            let identity = Sha256::digest(provider.name.to_ascii_lowercase().as_bytes());
+            provider.id = format!("{}-{}", provider.provider, hex::encode(&identity[..12]));
+            if settings.model_providers.as_ref().is_some_and(|providers| providers.contains_key(&provider.id)) {
+                return Err("asset_identity_conflict: Model Provider already exists".into());
+            }
         }
     }
     if settings
@@ -5028,76 +4569,13 @@ pub(crate) fn save_provider_bundle(
     .map_err(|error| error.to_string())
 }
 
-pub(crate) fn credential_snapshot(profile_id: &str) -> Result<Option<Vec<u8>>, String> {
-    read_credential_checked(profile_id)
-}
-
-/// Inventory comparisons may use cached credentials, but cannot acquire an
-/// authorization session or wait for its interactive owner.
 pub(crate) fn credential_snapshot_for_observation(profile_id: &str) -> Result<Option<Vec<u8>>, String> {
-    #[cfg(target_os = "macos")]
-    {
-        let service = keychain_service(profile_id);
-        if let Some(value) = read_credential_service_with_authorization(&service, false)? { return Ok(Some(value)); }
-        let legacy = legacy_keychain_service(profile_id);
-        if legacy != service { read_credential_service_with_authorization(&legacy, false) } else { Ok(None) }
-    }
-    #[cfg(not(target_os = "macos"))]
-    read_credential_checked(profile_id)
-}
-
-fn credential_rollback_profile_id(operation_id: &str, profile_id: &str) -> String {
-    format!("{CREDENTIAL_ROLLBACK_PREFIX}.{operation_id}.{profile_id}")
-}
-
-/// Persist the pre-transaction credential in Keychain, never in the operation
-/// journal. The first byte distinguishes a missing credential from an empty
-/// lookup result; user credentials themselves cannot contain newlines because
-/// the normal Keychain writer rejects them.
-pub(crate) fn persist_credential_rollback(
-    operation_id: &str,
-    profile_id: &str,
-    credential: Option<&[u8]>,
-) -> Result<(), String> {
-    let mut payload = Zeroizing::new(Vec::with_capacity(1 + credential.map_or(0, |value| value.len())));
-    match credential {
-        Some(value) => {
-            payload.push(1);
-            payload.extend_from_slice(value);
-        }
-        None => payload.push(0),
-    }
-    set_credential(
-        &credential_rollback_profile_id(operation_id, profile_id),
-        &payload,
-    )
-}
-
-/// Returns `None` when no durable rollback item exists, `Some(None)` when the
-/// original Profile had no credential, and `Some(Some(bytes))` otherwise.
-pub(crate) fn credential_rollback_snapshot(
-    operation_id: &str,
-    profile_id: &str,
-) -> Result<Option<Option<Vec<u8>>>, String> {
-    let Some(payload) = read_credential_checked(&credential_rollback_profile_id(operation_id, profile_id))?
-    else {
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    let Some(reference) = profile_credential_ref(&settings, profile_id) else {
         return Ok(None);
     };
-    let Some((&tag, value)) = payload.split_first() else {
-        return Err("credential rollback item is invalid".into());
-    };
-    match tag {
-        0 if value.is_empty() => Ok(Some(None)),
-        1 => Ok(Some(Some(value.to_vec()))),
-        _ => Err("credential rollback item is invalid".into()),
-    }
-}
-
-pub(crate) fn clear_credential_rollback(
-    operation_id: &str,
-    profile_id: &str,
-) -> Result<(), String> {
-    delete_credential(&credential_rollback_profile_id(operation_id, profile_id))
+    let store = credential_service::store(&settings, &reference.store_id)?;
+    credential_store::read_for_observation(&store, reference)
 }
 
 fn private_file_path_hash(path: &Path) -> String {
@@ -5262,136 +4740,76 @@ pub(crate) fn clear_private_file_snapshot(operation_id: &str, path: &Path) -> Re
     delete_credential_service(&private_file_snapshot_subject(operation_id, path))
 }
 
-pub(crate) fn restore_credential_snapshot(
-    profile_id: &str,
-    credential: Option<&[u8]>,
-) -> Result<(), String> {
-    match credential {
-        Some(value) => set_credential(profile_id, value),
-        None => delete_credential(profile_id),
-    }
-}
-
 pub fn list_profiles() -> Vec<ModelProfileView> {
-    let profiles = load_settings().model_profiles.unwrap_or_default();
-    // Presence only, scoped to this read. Shared Providers need one Keychain
-    // probe, while each legacy profile service is still checked independently.
-    // Mutation-time credential and snapshot validation remain uncached.
-    let mut presence = BTreeMap::<String, bool>::new();
-    profiles.values()
-        .map(|profile| {
-            let service = profile.id.strip_prefix(PROVIDER_CREDENTIAL_SUBJECT_PREFIX)
-                .map(provider_keychain_service)
-                .or_else(|| profiles.get(&profile.id)
-                    .and_then(|stored| stored.provider_id.as_deref())
-                    .map(provider_keychain_service))
-                .unwrap_or_else(|| legacy_keychain_service(&profile.id));
-            let credential_saved = credential_exists_for_service(&profile.id, &service, |service| {
-                *presence.entry(service.to_owned())
-                    .or_insert_with(|| credential_service_exists(service))
-            });
-            ModelProfileView {
-                catalog_key: catalog_key(profile),
-                credential_saved,
-                profile: profile.clone(),
-            }
+    let settings = load_settings();
+    settings.model_profiles.iter().flat_map(|profiles| profiles.values())
+        .map(|profile| ModelProfileView {
+            catalog_key: catalog_key(profile),
+            credential_saved: credential_service::provider_for_profile(&settings, profile)
+                .is_some_and(|provider| provider.credential.is_some()),
+            profile: profile.clone(),
         })
         .collect()
 }
 
-/// Save metadata and optionally update its Keychain credential. `None` keeps
-/// the existing credential; an empty string explicitly removes it.
-pub fn save_profile(profile: ModelProfile, credential: Option<String>) -> Result<(), String> {
+/// Save a model and, for explicit adoption, initialize its Provider.
+pub fn save_profile(mut profile: ModelProfile, credential: Option<String>) -> Result<(), String> {
     let _settings_guard = mutation_lock()?;
     validate_profile(&profile)?;
     let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
     validate_provider_model_identity(&settings, &profile, Some(profile.id.as_str()))?;
-    let credential_service = profile
-        .provider_id
-        .as_deref()
-        .map(provider_keychain_service)
-        .unwrap_or_else(|| legacy_keychain_service(&profile.id));
-    let provider_name = unique_provider_name(&settings, &profile.provider);
-    let previous_credential = credential
-        .as_ref()
-        .map(|_| read_credential_service_checked(&credential_service)).transpose()?;
-    if let Some(value) = credential.as_deref() {
-        if value.is_empty() {
-            delete_credential_service(&credential_service)?;
+    let provider_id = profile.provider_id.clone().unwrap_or_else(|| {
+        let used = settings.model_providers.iter().flat_map(|providers| providers.keys().cloned()).collect();
+        generated_provider_id(&profile.provider, &used)
+    });
+    profile.provider_id = Some(provider_id.clone());
+    let mut provider = settings.model_providers.as_ref().and_then(|providers| providers.get(&provider_id)).cloned()
+        .unwrap_or_else(|| ModelProviderConfig {
+            id: provider_id.clone(),
+            name: unique_provider_name(&settings, &profile.provider),
+            provider: profile.provider.clone(),
+            base_url: profile.base_url.clone(),
+            model_catalog_url: None,
+            portal_url: None,
+            protocols: BTreeMap::new(),
+            auth_requirement: AuthRequirement::Optional,
+            credential: None,
+        });
+    provider.protocols.entry(profile.protocol.clone())
+        .or_insert_with(|| ModelProviderProtocolConfig {
+            endpoint_path: if profile.endpoint_path.is_empty() {
+                profile.protocol.default_endpoint_path().into()
+            } else {
+                profile.endpoint_path.clone()
+            },
+        });
+    if let Some(key) = credential {
+        let key = Zeroizing::new(key);
+        let version = Uuid::new_v4().to_string();
+        if key.is_empty() {
+            provider.credential = None;
         } else {
-            set_credential_service(&credential_service, value.as_bytes())?;
+            provider.credential = Some(credential_service::create_revision(
+                &credential_store::keychain_store(), &version, &provider_id, key.as_bytes(),
+            )?);
         }
     }
+    save_provider_bundle(provider, BTreeMap::from([(profile.id.clone(), profile)]))
+}
 
-    let profile_id = profile.id.clone();
-    if let Err(error) = mutate_settings(|settings| {
-        if let Some(provider_id) = profile.provider_id.as_deref() {
-            let providers = settings.model_providers.get_or_insert_default();
-            let provider =
-                providers
-                    .entry(provider_id.to_string())
-                    .or_insert_with(|| ModelProviderConfig {
-                        id: provider_id.to_string(),
-                        name: provider_name.clone(),
-                        provider: profile.provider.clone(),
-                        base_url: profile.base_url.clone(),
-                        model_catalog_url: None,
-                        portal_url: None,
-                        protocols: BTreeMap::new(),
-                        auth_requirement: if profile.env_key.is_some() {
-                            AuthRequirement::Required
-                        } else {
-                            AuthRequirement::Optional
-                        },
-                        api_key_source: profile
-                            .env_key
-                            .clone()
-                            .map(|name| ApiKeySource::Env { name }),
-                        env_key: profile.env_key.clone(),
-                    });
-            provider
-                .protocols
-                .entry(profile.protocol.clone())
-                .or_insert_with(|| ModelProviderProtocolConfig {
-                    endpoint_path: if profile.endpoint_path.is_empty() {
-                        profile.protocol.default_endpoint_path().into()
-                    } else {
-                        profile.endpoint_path.clone()
-                    },
-                });
-        }
-        settings
-            .model_profiles
-            .get_or_insert_with(BTreeMap::new)
-            .insert(profile_id.clone(), profile);
-    }) {
-        if let Some(previous) = previous_credential {
-            match previous {
-                Some(value) => {
-                    let _ = set_credential_service(&credential_service, &value);
-                }
-                None => {
-                    let _ = delete_credential_service(&credential_service);
-                }
-            }
-        }
-        return Err(error.to_string());
-    }
-    Ok(())
+#[cfg(test)]
+pub(crate) fn test_set_profile_credential(profile_id: &str, key: &str) -> Result<(), String> {
+    save_profile(profile_for_apply(profile_id)?, Some(key.to_owned()))
+}
+
+#[cfg(test)]
+pub(crate) fn test_read_profile_credential(profile_id: &str) -> Result<Option<Vec<u8>>, String> {
+    read_credential_checked(profile_id)
 }
 
 pub fn delete_profile(profile_id: &str) -> Result<(), String> {
     let _settings_guard = mutation_lock()?;
-    validate_profile_id(profile_id)?;
-    let previous_credential = read_credential_service_checked(&legacy_keychain_service(profile_id))?;
-    delete_credential_service(&legacy_keychain_service(profile_id))?;
-    if let Err(error) = delete_profile_metadata(profile_id) {
-        if let Some(credential) = previous_credential {
-            let _ = set_credential_service(&legacy_keychain_service(profile_id), &credential);
-        }
-        return Err(error);
-    }
-    Ok(())
+    delete_profile_metadata(profile_id)
 }
 
 pub(crate) fn delete_profile_metadata(profile_id: &str) -> Result<(), String> {
@@ -5441,8 +4859,7 @@ pub(crate) fn delete_provider(provider_id: &str) -> Result<(), String> {
             providers.remove(provider_id);
         }
     })
-    .map_err(|error| error.to_string())?;
-    delete_credential_service(&provider_keychain_service(provider_id))
+    .map_err(|error| error.to_string())
 }
 
 pub(crate) fn credential_present(profile_id: &str) -> bool {
@@ -5450,7 +4867,8 @@ pub(crate) fn credential_present(profile_id: &str) -> bool {
 }
 
 pub(crate) fn provider_credential_present(provider_id: &str) -> bool {
-    credential_exists(&provider_credential_subject(provider_id))
+    load_settings().model_providers.as_ref().and_then(|providers| providers.get(provider_id))
+        .is_some_and(|provider| provider.credential.is_some())
 }
 
 /// Read a configured Provider's Keychain value for an explicit reveal action.
@@ -5477,12 +4895,10 @@ pub(crate) fn prepare_provider_credential_reveal(provider_id: &str) -> Result<St
 }
 
 pub(crate) fn execute_provider_credential_reveal(provider_id: &str) -> Result<String, String> {
-    // Revealing another Provider reuses the same application authorization.
-    unlock_credential_session(false)?;
     let credential = read_runtime_provider_credential(provider_id)?
         .ok_or_else(|| {
             format!(
-                "model_provider_credential_missing: Provider '{provider_id}' has no API Key in Keychain"
+                "model_provider_credential_missing: Provider '{provider_id}' has no API Key"
             )
         })?;
     String::from_utf8(credential).map_err(|_| {
@@ -5493,80 +4909,21 @@ pub(crate) fn execute_provider_credential_reveal(provider_id: &str) -> Result<St
 }
 
 /// Return the credential contract that prevents an Agent from consuming a
-/// Profile safely. The Agent's current delivery strategy decides whether a
-/// Keychain-only Provider is enough, or whether an environment variable name
-/// is still required.
+/// Profile safely. The Agent declares which delivery methods it can consume.
 pub(crate) fn profile_credential_issue(
     agent_id: &str,
-    profile: &ModelProfile,
+    _profile: &ModelProfile,
     has_credential: bool,
     delivery: &crate::domain::assets::ApiKeyDelivery,
 ) -> Option<(&'static str, &'static str)> {
-    let source = profile
-        .env_key
-        .clone()
-        .map(|name| ApiKeySource::Env { name })
-        .or_else(|| has_credential.then_some(ApiKeySource::ArcaStore));
-    let Some(source) = source else {
+    if !has_credential {
         return None;
-    };
+    }
     let resolved = credential::resolve_delivery(agent_id, delivery);
-    match credential::select_delivery(agent_id, &source, &resolved) {
-        Ok(credential::PreparedCredentialRoute::NativeEnvReference)
-            if profile.env_key.is_none() && !matches!(source, ApiKeySource::Env { .. }) =>
-        {
-            Some(env_key_required_issue(agent_id).unwrap_or((
-                "credential_delivery_unsupported",
-                "This Agent cannot deliver the stored API Key using the current credential strategy.",
-            )))
-        }
-        Ok(_) => None,
-        Err(_) => Some(env_key_required_issue(agent_id).unwrap_or((
-            "credential_delivery_unsupported",
-            "This Agent cannot deliver the stored API Key using the current credential strategy.",
-        ))),
-    }
-}
-
-fn env_key_required_issue(agent_id: &str) -> Option<(&'static str, &'static str)> {
-    if !matches!(
-        agent_id,
-        "qoder-cli"
-            | "grok-build"
-            | "opencode"
-            | "opencode-desktop"
-            | "kilo-code"
-            | "kilo-desktop"
-            | "qwen-code"
-            | "crush"
-            | "mistral-vibe"
-            | "hermes"
-            | "factory-droid"
-            | "goose"
-            | "deepseek-harness"
-            | "deepseek-harness-desktop"
-    ) {
-        return None;
-    }
-    Some((
-        if agent_id == "grok-build" {
-            "grok_build_env_key_required"
-        } else {
-            "model_env_key_required"
-        },
-        "This Agent cannot read the API Key stored in Arca Keychain; set an external environment variable name on this Profile before switching.",
+    credential::select_delivery(agent_id, &resolved).err().map(|_| (
+        "credential_delivery_unsupported",
+        "This Agent cannot use the selected credential delivery method.",
     ))
-}
-
-pub(crate) fn apply_credential_update(
-    profile_id: &str,
-    credential: Option<&str>,
-) -> Result<(), String> {
-    match credential {
-        None => Ok(()),
-        Some("") => delete_credential(profile_id),
-        Some(value) => set_credential(profile_id, value.as_bytes()),
-    }
 }
 
 fn validate_profile_id(profile_id: &str) -> Result<(), String> {
@@ -6258,9 +5615,14 @@ pub fn observe_profile(
     profile: &ModelProfile,
 ) -> Result<ModelObservedState, String> {
     let profile = materialize_profile_for_agent(agent_id, profile)?;
-    let has_credential = credential_exists(&profile.id);
+    let state = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    let reference = profile_credential_ref(&state, &profile.id);
     let paths =
         configured_paths(agent_id).ok_or_else(|| format!("unsupported model Agent: {agent_id}"))?;
+    if reference.is_some_and(|reference| delivery_state::matches(agent_id, &profile.id, reference, &paths)) {
+        return Ok(ModelObservedState::Synced);
+    }
+    let has_credential = reference.is_some();
     let observed = match agent_id {
         "claude-code" => observe_prepared(prepare_claude(&paths[0], &profile, has_credential)),
         claude_desktop::AGENT_ID => claude_desktop::observe(&paths, &profile),
@@ -6299,9 +5661,14 @@ pub fn observe_profile_consumption(
         return observe_profile(agent_id, profile);
     }
     let profile = materialize_profile_for_agent(agent_id, profile)?;
-    let has_credential = credential_exists(&profile.id);
+    let state = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    let reference = profile_credential_ref(&state, &profile.id);
     let paths =
         configured_paths(agent_id).ok_or_else(|| format!("unsupported model Agent: {agent_id}"))?;
+    if reference.is_some_and(|reference| delivery_state::matches(agent_id, &profile.id, reference, if agent_id == "pi" { &paths[..1] } else { &paths })) {
+        return Ok(ModelObservedState::Synced);
+    }
+    let has_credential = reference.is_some();
     let absent = match agent_id {
         "grok-build" => cleared_toml_profile_absent(prepare_clear_grok_build(&paths[0], &profile)),
         "pi" => cleared_toml_profile_absent(prepare_clear_pi_models(&paths[0], &profile)),
@@ -6669,23 +6036,11 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
     let profile = profile_for_apply(profile_id)?;
     ensure_supported(agent_id, &profile.protocol)?;
     let credential_route = credential_route_for(agent_id, &profile, has_credential)?;
-    if let Some((source, credential::PreparedCredentialRoute::NativeFileReference)) =
-        credential_route.as_ref()
-    {
-        let _validated = credential::resolve_source(source, None)?;
+    if credential_route == Some(credential::PreparedCredentialRoute::ArcaCommand) {
+        crate::application::agent_launch::credential_cli_path()?;
     }
     let route_has_credential = credential_route.is_some();
     let profile = materialize_profile_for_agent(agent_id, &profile)?;
-    if credential_route.is_none() {
-        let delivery = crate::settings::load_settings()
-            .model_selection(agent_id)
-            .delivery_for(&profile.id);
-        if let Some((code, message)) =
-            profile_credential_issue(agent_id, &profile, has_credential, &delivery)
-        {
-            return Err(format!("{code}: {message}").into());
-        }
-    }
     let paths =
         configured_paths(agent_id).ok_or_else(|| format!("unsupported model Agent: {agent_id}"))?;
     let result = match agent_id {
@@ -6693,26 +6048,7 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
             apply_claude(&paths[0], &profile, route_has_credential).map_err(Into::into)
         }
         claude_desktop::AGENT_ID => {
-            let source = credential_route
-                .as_ref()
-                .map(|(source, _)| source)
-                .ok_or_else(|| {
-                    ModelTargetError::ConvergenceFailed(
-                        "credential_missing: Claude requires a configured API Key source"
-                            .to_string(),
-                    )
-                })?;
-            let credential = credential::resolve_source(
-                source,
-                matches!(source, ApiKeySource::ArcaStore)
-                    .then(|| read_credential_checked(&profile.id))
-                    .transpose()?.flatten(),
-            )?;
-            claude_desktop::apply(
-                &paths,
-                &profile,
-                Zeroizing::new(credential.expose_for_delivery().to_vec()),
-            )
+            claude_desktop::apply(&paths, &profile, require_profile_credential(&profile.id)?)
         }
         "codex" => apply_codex(&paths[0], &profile, route_has_credential).map_err(Into::into),
         "grok-build" if active => apply_grok_build(&paths[0], &profile).map_err(Into::into),
@@ -6728,40 +6064,30 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
         "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop" => {
             let prepared = adapters::prepare_apply(agent_id, &paths, &profile, active)?;
             match credential_route.as_ref() {
-                Some((source, credential::PreparedCredentialRoute::OpenCodeAuthStore))
+                Some(credential::PreparedCredentialRoute::OpenCodeAuthStore)
                     if matches!(agent_id, "opencode" | "opencode-desktop") =>
                 {
-                    let resolved = credential::resolve_source(
-                        source,
-                        matches!(source, ApiKeySource::ArcaStore)
-                            .then(|| read_credential_checked(&profile.id))
-                            .transpose()?.flatten(),
-                    )?;
+                    let resolved = require_profile_credential(&profile.id)?;
                     let auth_path = home().join(".local/share/opencode/auth.json");
                     let auth = open_code_auth::prepare_auth(
                         &auth_path,
                         &adapters::native_provider_id(agent_id, &profile),
-                        resolved.expose_for_delivery(),
+                        resolved.as_slice(),
                     )?;
                     apply_native_multi_model_with_private_auth(
                         agent_id, &profile, prepared, auth, active,
                     )
                     .map_err(Into::into)
                 }
-                Some((source, credential::PreparedCredentialRoute::Plaintext)) => {
-                    let resolved = credential::resolve_source(
-                        source,
-                        matches!(source, ApiKeySource::ArcaStore)
-                            .then(|| read_credential_checked(&profile.id))
-                            .transpose()?.flatten(),
-                    )?;
+                Some(credential::PreparedCredentialRoute::Plaintext) => {
+                    let resolved = require_profile_credential(&profile.id)?;
                     let private_model = open_code_auth::PreparedAuthFile::from_model_file(
                         adapters::prepare_apply_plaintext(
                             agent_id,
                             &paths,
                             &profile,
                             active,
-                            resolved.expose_for_delivery(),
+                            resolved.as_slice(),
                         )?,
                     );
                     let files = if matches!(agent_id, "opencode" | "opencode-desktop") {
@@ -6793,6 +6119,9 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
         _ => unreachable!("ensure_supported filtered unknown agents"),
     }?;
 
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    delivery_state::save(agent_id, profile_id, profile_credential_ref(&settings, profile_id), &result.files)?;
+
     if active {
         mutate_settings(|settings| {
             settings
@@ -6817,55 +6146,100 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
 fn credential_route_for(
     agent_id: &str,
     profile: &ModelProfile,
-    has_arca_credential: bool,
-) -> Result<Option<(ApiKeySource, credential::PreparedCredentialRoute)>, String> {
-    let settings = load_settings();
+    has_credential: bool,
+) -> Result<Option<credential::PreparedCredentialRoute>, String> {
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    model_credential_route(&settings, agent_id, profile, has_credential)
+}
+
+fn model_credential_route(
+    settings: &crate::settings::Settings,
+    agent_id: &str,
+    profile: &ModelProfile,
+    has_credential: bool,
+) -> Result<Option<credential::PreparedCredentialRoute>, String> {
+    let provider = credential_service::provider_for_profile(settings, profile);
+    if !has_credential {
+        if provider.is_some_and(|provider| provider.auth_requirement == AuthRequirement::Required) {
+            return Err("credential_missing: save an API Key for this Provider".into());
+        }
+        return Ok(None);
+    }
     let requested = settings.model_selection(agent_id).delivery_for(&profile.id);
     let delivery = credential::resolve_delivery(agent_id, &requested);
-    let provider = profile.provider_id.as_deref().and_then(|provider_id| {
-        settings
-            .model_providers
-            .as_ref()
-            .and_then(|providers| providers.get(provider_id))
-    });
-    let requirement = provider
-        .map(|provider| provider.auth_requirement.clone())
-        .unwrap_or(AuthRequirement::Optional);
-    let source = provider
-        .and_then(|provider| provider.api_key_source.clone())
-        .or_else(|| {
-            profile
-                .env_key
-                .clone()
-                .map(|name| ApiKeySource::Env { name })
-        })
-        .or_else(|| has_arca_credential.then_some(ApiKeySource::ArcaStore));
-    let Some(source) = source else {
-        return if requirement == AuthRequirement::Required {
-            Err("credential_missing: this Provider requires an API Key before it can be added to the Agent".into())
-        } else {
-            Ok(None)
-        };
-    };
-    if matches!(source, ApiKeySource::ArcaStore) && !has_arca_credential {
-        return if requirement == AuthRequirement::Required {
-            Err("credential_missing: Arca secure storage has no API Key for this Provider".into())
-        } else {
-            Ok(None)
-        };
+    credential::select_delivery(agent_id, &delivery).map(Some)
+}
+
+fn require_profile_credential(profile_id: &str) -> Result<Zeroizing<Vec<u8>>, String> {
+    read_credential_checked(profile_id)?.map(Zeroizing::new)
+        .ok_or_else(|| "credential_missing: save an API Key for this Provider".into())
+}
+
+fn managed_env_name(profile: &ModelProfile) -> String {
+    profile.env_key.clone().unwrap_or_else(|| {
+        let identifier = profile.provider_id.as_deref().unwrap_or(&profile.id);
+        let identifier: String = identifier.chars().map(|character| {
+            if character.is_ascii_alphanumeric() { character.to_ascii_uppercase() } else { '_' }
+        }).collect();
+        format!("ARCA_{identifier}_API_KEY")
+    })
+}
+
+pub(crate) fn resolve_agent_credential(agent_id: &str, profile_id: &str) -> Result<Zeroizing<Vec<u8>>, String> {
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    let selection = settings.model_selection(agent_id);
+    let profile = settings.model_profiles.as_ref().and_then(|profiles| profiles.get(profile_id))
+        .filter(|_| selection.profiles.get(profile_id).is_some_and(|record| record.enabled))
+        .ok_or("credential_assignment_missing: this Model is not enabled for the Agent")?;
+    let has_credential = profile_credential_ref(&settings, profile_id).is_some();
+    if model_credential_route(&settings, agent_id, profile, has_credential)?
+        != Some(credential::PreparedCredentialRoute::ArcaCommand)
+    {
+        return Err("credential_delivery_unsupported: this assignment does not use a credential command".into());
     }
-    match credential::select_delivery(agent_id, &source, &delivery) {
-        Ok(route) => Ok(Some((source, route))),
-        Err(error) => {
-            if let Some((code, message)) =
-                profile_credential_issue(agent_id, profile, has_arca_credential, &delivery)
-            {
-                Err(format!("{code}: {message}"))
-            } else {
-                Err(error)
-            }
+    credential_service::read_profile(&settings, profile)?
+        .ok_or_else(|| "credential_missing: this Provider has no API Key".into())
+}
+
+fn launch_credential_profiles<'a>(
+    settings: &'a crate::settings::Settings,
+    agent_id: &str,
+) -> Result<Vec<&'a ModelProfile>, String> {
+    let selection = settings.model_selection(agent_id);
+    let mut result = Vec::new();
+    for record in selection.profiles.values().filter(|record| record.enabled) {
+        let Some(profile) = settings.model_profiles.as_ref().and_then(|profiles| profiles.get(&record.profile_id))
+        else { continue };
+        let has_credential = profile_credential_ref(settings, &profile.id).is_some();
+        if model_credential_route(settings, agent_id, profile, has_credential)?
+            == Some(credential::PreparedCredentialRoute::NativeEnvReference)
+        {
+            result.push(profile);
         }
     }
+    Ok(result)
+}
+
+pub(crate) fn agent_has_launch_credentials(agent_id: &str) -> Result<bool, String> {
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    Ok(!launch_credential_profiles(&settings, agent_id)?.is_empty())
+}
+
+pub(crate) fn resolve_agent_launch_credentials(agent_id: &str) -> Result<BTreeMap<String, Zeroizing<String>>, String> {
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    let mut env = BTreeMap::<String, Zeroizing<String>>::new();
+    for profile in launch_credential_profiles(&settings, agent_id)? {
+        let key = credential_service::read_profile(&settings, profile)?
+            .ok_or("credential_missing: this Provider has no API Key")?;
+        let key = Zeroizing::new(std::str::from_utf8(&key)
+            .map_err(|_| "credential_invalid: API Key must be UTF-8")?.to_owned());
+        let name = managed_env_name(profile);
+        if env.get(&name).is_some_and(|existing| existing.as_str() != key.as_str()) {
+            return Err("credential_env_conflict: selected Models need different values for the same variable".into());
+        }
+        env.insert(name, key);
+    }
+    Ok(env)
 }
 
 /// Remove only the fields owned by a previously assigned Arca Profile, then
@@ -6914,7 +6288,11 @@ pub(crate) fn clear_all_configured_models_for_targets(
         _ => Err(format!(
             "unsupported native Model registry Agent: {agent_id}"
         )),
+    }?;
+    if agent_has_configured_models(agent_id)? {
+        return Err("target_convergence_failed: Model entries reappeared after clear".into());
     }
+    delivery_state::clear_agent(agent_id)
 }
 
 pub(crate) fn agent_has_configured_models(agent_id: &str) -> Result<bool, String> {
@@ -7068,6 +6446,7 @@ pub(crate) fn clear_profile_consumption_target(
         }
         _ => unreachable!("ensure_supported filtered unsupported model Agent"),
     }
+    delivery_state::save(agent_id, profile_id, None, &[])?;
     mutate_settings(|settings| {
         if let Some(assignments) = settings.model_assignments.as_mut() {
             if assignments.get(agent_id).is_some_and(|id| id == profile_id) {
@@ -7254,7 +6633,7 @@ fn commit_native_model_files(
     agent_id: &str,
     files: Vec<adapters::PreparedModelFile>,
 ) -> Result<(), String> {
-    if matches!(agent_id, "qoder-desktop" | "qoder-cli" | "zcode" | "opencode" | "opencode-desktop" | "kilo-desktop") {
+    if matches!(agent_id, "qoder-desktop" | "qoder-cli" | "zcode" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
         return commit_private_model_files(
             &files.into_iter().map(open_code_auth::PreparedAuthFile::from_model_file).collect::<Vec<_>>()
         );
@@ -7468,7 +6847,7 @@ fn prepare_claude(
     set_json_property(
         &object,
         "apiKeyHelper",
-        has_credential.then(|| Value::String(profile_credential_shell_command(profile))),
+        has_credential.then(|| Value::String(profile_credential_shell_command("claude-code", profile))),
         path,
         "$root",
     )?;
@@ -7558,7 +6937,7 @@ fn prepare_codex(
 
     if has_credential {
         let mut auth = Table::new();
-        let command = profile_credential_command(profile);
+        let command = profile_credential_command("codex", profile);
         auth.insert("command", toml_edit::value(&command[0]));
         let mut args = Array::new();
         for argument in &command[1..] {
@@ -8180,7 +7559,7 @@ fn prepare_pi_models(
     prepare_pi_models_with_api_key(
         path,
         profile,
-        has_credential.then(|| format!("!{}", profile_credential_shell_command(profile))),
+        has_credential.then(|| format!("!{}", profile_credential_shell_command("pi", profile))),
     )
 }
 
@@ -8218,20 +7597,15 @@ fn pi_api_key_value_with_credential(
     read: fn(&str) -> Result<Option<Vec<u8>>, String>,
 ) -> Result<Option<String>, String> {
     match credential_route_for("pi", profile, has_credential)? {
-        Some((source, credential::PreparedCredentialRoute::Plaintext)) => {
-            let resolved = credential::resolve_source(
-                &source,
-                matches!(source, ApiKeySource::ArcaStore)
-                    .then(|| read(&profile.id))
-                    .transpose()?.flatten(),
-            )?;
-            String::from_utf8(resolved.expose_for_delivery().to_vec())
-                .map(Some)
+        Some(credential::PreparedCredentialRoute::Plaintext) => {
+            let key = Zeroizing::new(read(&profile.id)?
+                .ok_or("credential_verification_pending: the API Key is not available for observation")?);
+            String::from_utf8(key.to_vec()).map(Some)
                 .map_err(|_| "plaintext_target_insecure: API Key must be UTF-8".to_string())
         }
-        _ if has_credential => Ok(Some(format!(
+        Some(credential::PreparedCredentialRoute::ArcaCommand) => Ok(Some(format!(
             "!{}",
-            profile_credential_shell_command(profile)
+            profile_credential_shell_command("pi", profile)
         ))),
         _ => Ok(None),
     }
@@ -8245,21 +7619,17 @@ fn prepare_observed_native_files(
     has_credential: bool,
 ) -> Result<Vec<adapters::PreparedModelFile>, String> {
     if matches!(agent_id, "zcode" | "qoder-desktop" | "qoder-cli" | "opencode" | "opencode-desktop" | "kilo-code" | "kilo-desktop") {
-        if let Some((source, credential::PreparedCredentialRoute::Plaintext)) =
-            credential_route_for(agent_id, profile, has_credential)?
+        if credential_route_for(agent_id, profile, has_credential)?
+            == Some(credential::PreparedCredentialRoute::Plaintext)
         {
-            let resolved = credential::resolve_source(
-                &source,
-                matches!(source, ApiKeySource::ArcaStore)
-                    .then(|| credential_snapshot_for_observation(&profile.id))
-                    .transpose()?.flatten(),
-            )?;
+            let resolved = Zeroizing::new(credential_snapshot_for_observation(&profile.id)?
+                .ok_or("credential_verification_pending: the API Key is not available for observation")?);
             return Ok(vec![adapters::prepare_apply_plaintext(
                 agent_id,
                 paths,
                 profile,
                 active,
-                resolved.expose_for_delivery(),
+                resolved.as_slice(),
             )?]);
         }
     }
@@ -8446,7 +7816,7 @@ fn clear_one_model_file_with_profile(
 
 fn rollback(path: &Path, original: Option<&str>, written: &str) -> Result<(), String> {
     match original {
-        Some(original) => write_if_unchanged(path, Some(written), original),
+        Some(original) => write_private_live_if_unchanged(path, Some(written), original),
         None => remove_if_unchanged(path, written),
     }
 }
@@ -8459,8 +7829,8 @@ fn write_pi_transaction(
     settings_original: Option<&str>,
     settings_content: &str,
 ) -> Result<(), String> {
-    write_if_unchanged(models_path, models_original, models_content)?;
-    if let Err(error) = write_if_unchanged(settings_path, settings_original, settings_content) {
+    write_private_live_if_unchanged(models_path, models_original, models_content)?;
+    if let Err(error) = write_private_live_if_unchanged(settings_path, settings_original, settings_content) {
         return match rollback(models_path, models_original, models_content) {
             Ok(()) => Err(format!(
                 "Pi settings update failed and models.json was rolled back: {error}"
@@ -8483,8 +7853,7 @@ fn apply_pi(
     let (models_original, models_content) =
         prepare_pi_models_with_api_key(models_path, profile, api_key)?;
     if !active {
-        backup_config(models_path, "pi-models", &backup_timestamp())?;
-        write_if_unchanged(models_path, models_original.as_deref(), &models_content)?;
+        write_private_live_if_unchanged(models_path, models_original.as_deref(), &models_content)?;
         return Ok(ModelApplyResult {
             agent: "pi".into(),
             profile: profile.id.clone(),
@@ -8494,9 +7863,6 @@ fn apply_pi(
         });
     }
     let (settings_original, settings_content) = prepare_pi_settings(settings_path, profile)?;
-    let stamp = backup_timestamp();
-    backup_config(models_path, "pi-models", &stamp)?;
-    backup_config(settings_path, "pi-settings", &stamp)?;
 
     write_pi_transaction(
         models_path,
@@ -8530,16 +7896,12 @@ fn clear_pi(
         let Some(models_before) = models_original.as_deref() else {
             return Ok(());
         };
-        backup_config(models_path, "pi-models", &backup_timestamp())?;
-        return write_if_unchanged(models_path, Some(models_before), &models_content);
+        return write_private_live_if_unchanged(models_path, Some(models_before), &models_content);
     }
     let (settings_original, settings_content) = prepare_clear_pi_settings(settings_path)?;
     if models_original.is_none() && settings_original.is_none() {
         return Ok(());
     }
-    let stamp = backup_timestamp();
-    backup_config(models_path, "pi-models", &stamp)?;
-    backup_config(settings_path, "pi-settings", &stamp)?;
     match (models_original.as_deref(), settings_original.as_deref()) {
         (Some(models_before), Some(settings_before)) => write_pi_transaction(
             models_path,
@@ -8550,10 +7912,10 @@ fn clear_pi(
             &settings_content,
         ),
         (Some(models_before), None) => {
-            write_if_unchanged(models_path, Some(models_before), &models_content)
+            write_private_live_if_unchanged(models_path, Some(models_before), &models_content)
         }
         (None, Some(settings_before)) => {
-            write_if_unchanged(settings_path, Some(settings_before), &settings_content)
+            write_private_live_if_unchanged(settings_path, Some(settings_before), &settings_content)
         }
         (None, None) => Ok(()),
     }
@@ -8565,13 +7927,6 @@ fn clear_all_pi(models_path: &Path, settings_path: &Path) -> Result<(), String> 
     if models_original.is_none() && settings_original.is_none() {
         return Ok(());
     }
-    let stamp = backup_timestamp();
-    if models_original.is_some() {
-        backup_config(models_path, "pi-models", &stamp)?;
-    }
-    if settings_original.is_some() {
-        backup_config(settings_path, "pi-settings", &stamp)?;
-    }
     match (models_original.as_deref(), settings_original.as_deref()) {
         (Some(models_before), Some(settings_before)) => write_pi_transaction(
             models_path,
@@ -8582,10 +7937,10 @@ fn clear_all_pi(models_path: &Path, settings_path: &Path) -> Result<(), String> 
             &settings_content,
         ),
         (Some(models_before), None) => {
-            write_if_unchanged(models_path, Some(models_before), &models_content)
+            write_private_live_if_unchanged(models_path, Some(models_before), &models_content)
         }
         (None, Some(settings_before)) => {
-            write_if_unchanged(settings_path, Some(settings_before), &settings_content)
+            write_private_live_if_unchanged(settings_path, Some(settings_before), &settings_content)
         }
         (None, None) => Ok(()),
     }
@@ -8765,8 +8120,7 @@ mod tests {
                 protocol("/v1/responses"),
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
+            credential: None,
         };
         let mut profile = anthropic_profile();
         profile.provider_id = Some(provider.id.clone());
@@ -8799,8 +8153,7 @@ mod tests {
                 (ModelProtocol::OpenaiResponses, protocol("/unified/invoke")),
             ]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
+            credential: None,
         };
 
         validate_provider_config(&provider).unwrap();
@@ -10396,10 +9749,9 @@ mod tests {
         provider.provider = "blockrun".into();
         provider.base_url = "https://blockrun.ai/api/v1".into();
         provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::ArcaStore);
         assert!(validate_provider_config(&provider).unwrap_err().contains("anonymous API"));
         provider.auth_requirement = AuthRequirement::None;
-        provider.api_key_source = None;
+        provider.credential = None;
         assert!(validate_provider_config(&provider).is_ok());
     }
 
@@ -11798,18 +11150,25 @@ mod tests {
     }
 
     #[test]
-    fn existing_provider_migration_never_reads_the_secret_value() {
+    fn provider_metadata_reports_a_saved_revision_without_reading_its_secret() {
         let _home = TestHome::new("provider-presence-only");
         let mut profile = responses_profile();
         profile.provider_id = Some("presence-provider".into());
-        save_profile(profile, Some("fixture-provider-key".into())).unwrap();
-        let service = provider_keychain_service("presence-provider");
-        let value_read_failure = set_test_credential_read_error();
-        assert!(read_credential_service_checked(&service).is_err());
-        assert!(credential_service_exists_checked(&service).unwrap());
-        assert!(!consolidate_provider_credentials().unwrap());
-        drop(value_read_failure);
-        assert_eq!(read_credential_service_checked(&service).unwrap().unwrap(), b"fixture-provider-key");
+        save_profile(profile.clone(), Some("fixture-provider-key".into())).unwrap();
+
+        let read_failure = set_test_credential_read_error();
+        assert!(read_credential_checked(&profile.id).is_err());
+        assert!(list_provider_instances().iter().any(|view| {
+            view.provider.id == "presence-provider" && view.credential_saved
+        }));
+        assert!(list_profiles().iter().any(|view| {
+            view.profile.id == profile.id && view.credential_saved
+        }));
+        drop(read_failure);
+        assert_eq!(
+            read_credential_checked(&profile.id).unwrap().as_deref(),
+            Some(b"fixture-provider-key".as_slice())
+        );
     }
 
     fn pi_profile(id: &str, model: &str, name: &str) -> ModelProfile {
@@ -11832,20 +11191,18 @@ mod tests {
             portal_url: None,
             protocols: BTreeMap::from([(ModelProtocol::OpenaiResponses, protocol("/responses"))]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
+            credential: None,
         }
     }
 
     #[cfg(unix)]
     #[test]
-    fn opencode_arca_store_delivery_updates_model_and_private_agent_store() {
+    fn opencode_agent_store_delivery_updates_model_and_private_agent_store() {
         use std::os::unix::fs::PermissionsExt;
 
         let _home = TestHome::new("opencode-agent-store");
         let mut provider = openrouter_provider("max-ai", "Max AI");
         provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::ArcaStore);
         let mut profile = responses_profile();
         profile.id = "max-ai-model".into();
         profile.provider_id = Some(provider.id.clone());
@@ -11857,11 +11214,7 @@ mod tests {
             BTreeMap::from([(profile.id.clone(), profile.clone())]),
         )
         .unwrap();
-        set_credential(
-            &provider_credential_subject(&provider.id),
-            b"opencode-private-secret",
-        )
-        .unwrap();
+        test_set_profile_credential(&profile.id, "opencode-private-secret").unwrap();
         mutate_settings(|settings| {
             let mut selection = settings.model_selection("opencode");
             selection.default_delivery = ApiKeyDelivery::Auto;
@@ -11899,7 +11252,7 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
-    fn provider_owned_credential_ignores_legacy_source_override_but_honors_agent_delivery() {
+    fn opencode_plaintext_delivery_uses_the_provider_revision() {
         use crate::domain::assets::{
             ApiKeyDelivery, ModelAgentSelection, ModelConsumptionRecord, ModelCredentialPolicy,
         };
@@ -11908,7 +11261,6 @@ mod tests {
         let _home = TestHome::new("provider-owned-credential");
         let mut provider = openrouter_provider("provider-owned", "Provider Owned");
         provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::ArcaStore);
         let mut profile = responses_profile();
         profile.id = "provider-owned-model".into();
         profile.provider_id = Some(provider.id.clone());
@@ -11920,11 +11272,7 @@ mod tests {
             BTreeMap::from([(profile.id.clone(), profile.clone())]),
         )
         .unwrap();
-        set_credential(
-            &provider_credential_subject(&provider.id),
-            b"provider-owned-secret",
-        )
-        .unwrap();
+        test_set_profile_credential(&profile.id, "provider-owned-secret").unwrap();
         mutate_settings(|settings| {
             settings.set_model_selection(
                 "opencode",
@@ -11935,10 +11283,8 @@ mod tests {
                             profile_id: profile.id.clone(),
                             enabled: true,
                             credential: ModelCredentialPolicy {
-                                source_override: Some(ApiKeySource::Env {
-                                    name: "SHOULD_NOT_BE_READ".into(),
-                                }),
                                 delivery: ApiKeyDelivery::Plaintext,
+                                ..Default::default()
                             },
                             last_selected_at: None,
                         },
@@ -11955,7 +11301,6 @@ mod tests {
         let model_path = home().join(".config/opencode/opencode.json");
         let model_config = fs::read_to_string(&model_path).unwrap();
         assert!(model_config.contains("provider-owned-secret"));
-        assert!(!model_config.contains("SHOULD_NOT_BE_READ"));
         assert_eq!(
             fs::metadata(model_path).unwrap().permissions().mode() & 0o777,
             0o600
@@ -11964,167 +11309,10 @@ mod tests {
     }
 
     #[test]
-    fn provider_owned_materialization_ignores_legacy_file_override() {
-        use crate::domain::assets::{
-            ApiKeyDelivery, ModelAgentSelection, ModelConsumptionRecord, ModelCredentialPolicy,
-        };
-
-        let _home = TestHome::new("provider-owned-materialization");
-        let mut provider = openrouter_provider("provider-materialized", "Provider Materialized");
-        provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::ArcaStore);
-        let mut profile = responses_profile();
-        profile.id = "provider-materialized-model".into();
-        profile.provider_id = Some(provider.id.clone());
-        profile.provider = provider.provider.clone();
-        profile.base_url = provider.base_url.clone();
-        profile.endpoint_path = "/responses".into();
-        save_provider_bundle(
-            provider.clone(),
-            BTreeMap::from([(profile.id.clone(), profile.clone())]),
-        )
-        .unwrap();
-        set_credential(
-            &provider_credential_subject(&provider.id),
-            b"provider-materialized-secret",
-        )
-        .unwrap();
-        mutate_settings(|settings| {
-            settings.set_model_selection(
-                "opencode",
-                ModelAgentSelection {
-                    profiles: BTreeMap::from([(
-                        profile.id.clone(),
-                        ModelConsumptionRecord {
-                            profile_id: profile.id.clone(),
-                            enabled: true,
-                            credential: ModelCredentialPolicy {
-                                source_override: Some(ApiKeySource::File {
-                                    path: "/legacy/provider.key".into(),
-                                }),
-                                delivery: ApiKeyDelivery::Auto,
-                            },
-                            last_selected_at: None,
-                        },
-                    )]),
-                    active_profile_id: Some(profile.id.clone()),
-                    ..Default::default()
-                },
-            );
-        })
-        .unwrap();
-
-        apply_profile("opencode", &profile.id).unwrap();
-
-        let model_config =
-            fs::read_to_string(home().join(".config/opencode/opencode.json")).unwrap();
-        assert!(!model_config.contains("/legacy/provider.key"));
-        assert!(!model_config.contains("provider-materialized-secret"));
-        let auth: Value = serde_json::from_str(
-            &fs::read_to_string(home().join(".local/share/opencode/auth.json")).unwrap(),
-        )
-        .unwrap();
-        assert_eq!(
-            auth[adapters::native_provider_id("opencode", &profile)]["key"],
-            "provider-materialized-secret"
-        );
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn opencode_file_source_is_validated_before_writing_a_native_reference() {
-        use std::os::unix::fs::PermissionsExt;
-
-        let _home = TestHome::new("opencode-file-source");
-        let key_path = home().join("provider.key");
-        fs::write(&key_path, "file-secret").unwrap();
-        fs::set_permissions(&key_path, fs::Permissions::from_mode(0o644)).unwrap();
-        let mut provider = openrouter_provider("file-provider", "File Provider");
-        provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::File {
-            path: key_path.display().to_string(),
-        });
-        let mut profile = responses_profile();
-        profile.id = "file-model".into();
-        profile.provider_id = Some(provider.id.clone());
-        profile.provider = provider.provider.clone();
-        profile.base_url = provider.base_url.clone();
-        profile.endpoint_path = "/responses".into();
-        save_provider_bundle(
-            provider,
-            BTreeMap::from([(profile.id.clone(), profile.clone())]),
-        )
-        .unwrap();
-        mutate_settings(|settings| {
-            let mut selection = settings.model_selection("opencode");
-            selection.default_delivery = ApiKeyDelivery::Auto;
-            settings.set_model_selection("opencode", selection);
-        })
-        .unwrap();
-
-        let error = apply_profile("opencode", &profile.id).unwrap_err();
-        assert!(error.starts_with("credential_file_insecure:"));
-        assert!(!home().join(".config/opencode/opencode.json").exists());
-
-        fs::set_permissions(&key_path, fs::Permissions::from_mode(0o600)).unwrap();
-        apply_profile("opencode", &profile.id).unwrap();
-        let model_config =
-            fs::read_to_string(home().join(".config/opencode/opencode.json")).unwrap();
-        assert!(model_config.contains(&format!("{{file:{}}}", key_path.display())));
-        assert!(!model_config.contains("file-secret"));
-    }
-
-    #[test]
-    fn codex_helper_source_preserves_structured_command_and_arguments() {
-        let _home = TestHome::new("codex-helper-source");
-        let mut provider = openrouter_provider("helper-provider", "Helper Provider");
-        provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::Helper {
-            command: "/usr/local/bin/read-provider-key".into(),
-            args: vec!["--profile".into(), "coding team".into()],
-            ttl_ms: Some(300_000),
-        });
-        let mut profile = responses_profile();
-        profile.id = "helper-model".into();
-        profile.provider_id = Some(provider.id.clone());
-        profile.provider = provider.provider.clone();
-        profile.base_url = provider.base_url.clone();
-        profile.endpoint_path = "/responses".into();
-        save_provider_bundle(
-            provider,
-            BTreeMap::from([(profile.id.clone(), profile.clone())]),
-        )
-        .unwrap();
-
-        apply_profile("codex", &profile.id).unwrap();
-
-        let config = fs::read_to_string(home().join(".codex/config.toml")).unwrap();
-        let document = config.parse::<Document>().unwrap();
-        let provider = document["model_providers"][codex_provider_id(&profile)]
-            .as_table()
-            .unwrap();
-        let auth = provider["auth"].as_table().unwrap();
-        assert_eq!(
-            auth["command"].as_str(),
-            Some("/usr/local/bin/read-provider-key")
-        );
-        assert_eq!(
-            auth["args"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .filter_map(|value| value.as_str())
-                .collect::<Vec<_>>(),
-            vec!["--profile", "coding team"]
-        );
-    }
-
-    #[test]
-    fn required_arca_store_without_a_key_blocks_agent_configuration() {
+    fn required_provider_without_a_credential_blocks_agent_configuration() {
         let _home = TestHome::new("required-missing-key");
         let mut provider = openrouter_provider("missing-provider", "Missing Provider");
         provider.auth_requirement = AuthRequirement::Required;
-        provider.api_key_source = Some(ApiKeySource::ArcaStore);
         let mut profile = responses_profile();
         profile.id = "missing-key-model".into();
         profile.provider_id = Some(provider.id.clone());
@@ -12143,403 +11331,76 @@ mod tests {
     }
 
     #[test]
-    fn provider_migration_groups_matching_credentials_and_preserves_request_targets() {
-        let _home = TestHome::new("model-provider-v3-migration");
-        let anthropic = anthropic_profile();
-        let responses = responses_profile();
-        set_credential(&anthropic.id, b"shared-secret").unwrap();
-        set_credential(&responses.id, b"shared-secret").unwrap();
-        crate::settings::save_settings(&crate::settings::Settings {
-            version: Some(2),
-            model_profiles: Some(BTreeMap::from([
-                (anthropic.id.clone(), anthropic.clone()),
-                (responses.id.clone(), responses.clone()),
-            ])),
-            ..Default::default()
-        })
-        .unwrap();
-
-        assert!(migrate_model_providers_v3_if_needed().unwrap());
-        assert!(!migrate_model_providers_v3_if_needed().unwrap());
-        let settings = crate::settings::load_settings_strict().unwrap();
-        assert_eq!(settings.version, Some(crate::settings::SETTINGS_VERSION));
-        let providers = settings.model_providers.unwrap();
-        assert_eq!(providers.len(), 1);
-        let provider = providers.values().next().unwrap();
-        assert_eq!(provider.base_url, "https://gateway.example.test");
-        assert_eq!(provider.protocols.len(), 2);
-        assert_eq!(
-            protocol_client_base_url(
-                &provider.base_url,
-                &ModelProtocol::AnthropicMessages,
-                &provider.protocols[&ModelProtocol::AnthropicMessages].endpoint_path,
-            )
-            .unwrap(),
-            anthropic.base_url,
-        );
-        assert_eq!(
-            protocol_client_base_url(
-                &provider.base_url,
-                &ModelProtocol::OpenaiResponses,
-                &provider.protocols[&ModelProtocol::OpenaiResponses].endpoint_path,
-            )
-            .unwrap(),
-            responses.base_url,
-        );
-        let profiles = settings.model_profiles.unwrap();
-        assert_eq!(
-            profiles[&anthropic.id].provider_id,
-            profiles[&responses.id].provider_id
-        );
-        let instances = list_provider_instances();
-        assert_eq!(instances.len(), 1);
-        assert_eq!(instances[0].model_count, 2);
-        assert!(instances[0].credential_saved);
-        assert_eq!(
-            read_credential_service_checked(&provider_keychain_service(&provider.id)).unwrap().unwrap(),
-            b"shared-secret"
-        );
-        assert_eq!(
-            read_credential_service_checked(&legacy_keychain_service(&anthropic.id)).unwrap().unwrap(),
-            b"shared-secret"
-        );
-        assert_eq!(
-            read_credential_service_checked(&legacy_keychain_service(&responses.id)).unwrap().unwrap(),
-            b"shared-secret"
-        );
-    }
-
-    #[test]
-    fn v4_provider_endpoints_migrate_idempotently_without_changing_request_targets() {
-        let _home = TestHome::new("settings-provider-v4-migration");
-        let path = settings_file();
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        fs::write(
-            &path,
-            r#"{
-              "version": 4,
-              "model_providers": {
-                "team-provider": {
-                  "id": "team-provider",
-                  "name": "Team Provider",
-                  "provider": "custom",
-                  "endpoints": {
-                    "openai-responses": "https://gateway.example.test/api/v2",
-                    "anthropic-messages": "https://gateway.example.test/anthropic"
-                  }
-                },
-                "shared-provider": {
-                  "id": "shared-provider",
-                  "name": "Shared Provider",
-                  "provider": "custom",
-                  "endpoints": {
-                    "openai-responses": "https://shared.example.test/api/v2",
-                    "anthropic-messages": "https://shared.example.test/api/v2"
-                  }
-                }
-              }
-            }"#,
-        )
-        .unwrap();
-
-        assert!(migrate_model_providers_v3_if_needed().unwrap());
-        assert!(!migrate_model_providers_v3_if_needed().unwrap());
-
-        let raw_settings: Value =
-            serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
-        assert_eq!(raw_settings["version"], crate::settings::SETTINGS_VERSION);
-        let raw: Value =
-            serde_json::from_str(&fs::read_to_string(crate::paths::model_catalog_file()).unwrap())
-                .unwrap();
-        let provider = &raw["providers"]["team-provider"];
-        assert!(provider.get("endpoints").is_none());
-        assert_eq!(provider["base_url"], "https://gateway.example.test");
-        assert_eq!(
-            provider["protocols"]["openai-responses"]["endpoint_path"],
-            "/api/v2/responses"
-        );
-        assert_eq!(
-            provider["protocols"]["anthropic-messages"]["endpoint_path"],
-            "/anthropic/v1/messages"
-        );
-        let shared = &raw["providers"]["shared-provider"];
-        assert_eq!(shared["base_url"], "https://shared.example.test/api/v2");
-        assert_eq!(
-            shared["protocols"]["openai-responses"]["endpoint_path"],
-            "/responses"
-        );
-        assert_eq!(
-            shared["protocols"]["anthropic-messages"]["endpoint_path"],
-            "/v1/messages"
-        );
-    }
-
-    #[test]
-    fn v4_multi_origin_provider_migration_is_blocked_without_rewriting_settings() {
-        let _home = TestHome::new("settings-provider-v4-blocked");
-        let path = settings_file();
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        let original = r#"{
-          "version": 4,
-          "model_providers": {
-            "mixed-provider": {
-              "id": "mixed-provider",
-              "name": "Mixed Provider",
-              "provider": "custom",
-              "endpoints": {
-                "openai-responses": "https://first.example.test/v1",
-                "anthropic-messages": "https://second.example.test/anthropic"
-              }
-            }
-          }
-        }"#;
-        fs::write(&path, original).unwrap();
-
-        let error = crate::settings::load_settings_strict()
-            .unwrap_err()
-            .to_string();
-        assert!(
-            error.contains("model_provider_endpoint_migration_blocked")
-                && error.contains("split it into separate Providers"),
-            "{error}"
-        );
-        assert_eq!(fs::read_to_string(path).unwrap(), original);
-    }
-
-    #[test]
-    fn v3_repair_restores_only_unique_provider_references() {
-        let _home = TestHome::new("model-provider-v3-reference-repair");
-        let primary = ModelProviderConfig {
-            id: "primary-provider".into(),
-            name: "Primary".into(),
-            provider: "custom".into(),
-            base_url: "https://gateway.example.test".into(),
-            model_catalog_url: None,
-            portal_url: None,
-            protocols: BTreeMap::from([
-                (ModelProtocol::OpenaiResponses, protocol("/v1/responses")),
-                (
-                    ModelProtocol::AnthropicMessages,
-                    protocol("/anthropic/v1/messages"),
-                ),
-            ]),
-            auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
-        };
-        let secure = ModelProviderConfig {
-            id: "secure-provider".into(),
-            name: "Secure".into(),
-            provider: "custom".into(),
-            base_url: "https://gateway.example.test".into(),
-            model_catalog_url: None,
-            portal_url: None,
-            protocols: BTreeMap::from([(
-                ModelProtocol::AnthropicMessages,
-                protocol("/anthropic/v1/messages"),
-            )]),
-            auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
-        };
-        let responses = responses_profile();
-        let anthropic = anthropic_profile();
-        crate::settings::save_settings(&crate::settings::Settings {
-            version: Some(3),
-            model_providers: Some(BTreeMap::from([
-                (primary.id.clone(), primary),
-                (secure.id.clone(), secure),
-            ])),
-            model_profiles: Some(BTreeMap::from([
-                (responses.id.clone(), responses.clone()),
-                (anthropic.id.clone(), anthropic.clone()),
-            ])),
-            ..Default::default()
-        })
-        .unwrap();
-
-        assert!(migrate_model_providers_v3_if_needed().unwrap());
-        let settings = crate::settings::load_settings_strict().unwrap();
-        let profiles = settings.model_profiles.unwrap();
-        assert_eq!(
-            profiles[&responses.id].provider_id.as_deref(),
-            Some("primary-provider")
-        );
-        assert_eq!(profiles[&anthropic.id].provider_id, None);
-        assert!(!migrate_model_providers_v3_if_needed().unwrap());
-    }
-
-    #[test]
-    fn v3_migration_does_not_merge_distinct_provider_credentials() {
-        let _home = TestHome::new("model-provider-v3-distinct-credentials");
-        let anthropic = anthropic_profile();
-        let responses = responses_profile();
-        set_credential(&anthropic.id, b"personal-secret").unwrap();
-        set_credential(&responses.id, b"team-secret").unwrap();
-        crate::settings::save_settings(&crate::settings::Settings {
-            version: Some(2),
-            model_profiles: Some(BTreeMap::from([
-                (anthropic.id.clone(), anthropic),
-                (responses.id.clone(), responses),
-            ])),
-            ..Default::default()
-        })
-        .unwrap();
-
-        migrate_model_providers_v3_if_needed().unwrap();
-        let settings = crate::settings::load_settings_strict().unwrap();
-        assert_eq!(settings.model_providers.unwrap().len(), 2);
-    }
-
-    #[test]
-    fn v3_credential_consolidation_rejects_conflicting_legacy_keys() {
-        let _home = TestHome::new("model-provider-v3-legacy-credential-drift");
-        let provider = ModelProviderConfig {
-            id: "team-provider".into(),
-            name: "Team Provider".into(),
-            provider: "custom".into(),
-            base_url: "https://gateway.example.test".into(),
-            model_catalog_url: None,
-            portal_url: None,
-            protocols: BTreeMap::from([
-                (ModelProtocol::OpenaiResponses, protocol("/v1/responses")),
-                (
-                    ModelProtocol::AnthropicMessages,
-                    protocol("/anthropic/v1/messages"),
-                ),
-            ]),
-            auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
-        };
+    fn provider_models_share_a_credential_revision_and_deletion_preserves_it() {
+        let _home = TestHome::new("model-provider-shared-revision");
+        let provider_id = "team-provider";
         let mut first = responses_profile();
-        first.provider_id = Some(provider.id.clone());
+        first.provider_id = Some(provider_id.into());
         let mut second = anthropic_profile();
-        second.provider_id = Some(provider.id.clone());
-        crate::settings::save_settings(&crate::settings::Settings {
-            version: Some(3),
-            model_providers: Some(BTreeMap::from([(provider.id.clone(), provider)])),
-            model_profiles: Some(BTreeMap::from([
-                (first.id.clone(), first.clone()),
-                (second.id.clone(), second.clone()),
-            ])),
-            ..Default::default()
-        })
-        .unwrap();
-        set_credential_service(&legacy_keychain_service(&first.id), b"first-secret").unwrap();
-        set_credential_service(&legacy_keychain_service(&second.id), b"second-secret").unwrap();
-
-        let error = migrate_model_providers_v3_if_needed().unwrap_err();
-        assert!(
-            error.starts_with("model_provider_credential_drift:"),
-            "{error}"
-        );
-        assert!(read_credential_service_checked(&provider_keychain_service("team-provider")).unwrap().is_none());
-    }
-
-    #[test]
-    fn provider_models_share_one_permanent_keychain_item() {
-        let _home = TestHome::new("model-provider-one-keychain-item");
-        let provider = ModelProviderConfig {
-            id: "team-provider".into(),
-            name: "Team Provider".into(),
-            provider: "custom".into(),
-            base_url: "https://gateway.example.test".into(),
-            model_catalog_url: None,
-            portal_url: None,
-            protocols: BTreeMap::from([
-                (ModelProtocol::OpenaiResponses, protocol("/v1/responses")),
-                (
-                    ModelProtocol::AnthropicMessages,
-                    protocol("/anthropic/v1/messages"),
-                ),
-            ]),
-            auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
-        };
-        let mut first = responses_profile();
-        first.provider_id = Some(provider.id.clone());
-        let mut second = anthropic_profile();
-        second.provider_id = Some(provider.id.clone());
+        second.provider_id = Some(provider_id.into());
 
         save_profile(first.clone(), Some("shared-secret".into())).unwrap();
         save_profile(second.clone(), None).unwrap();
-        let provider_service = provider_keychain_service(&provider.id);
+        let settings = load_settings();
+        let reference = profile_credential_ref(&settings, &first.id).unwrap().clone();
         assert_eq!(
-            read_credential_service_checked(&provider_service).unwrap().unwrap(),
-            b"shared-secret"
+            profile_credential_ref(&settings, &second.id),
+            Some(&reference)
         );
-        assert!(read_credential_service_checked(&legacy_keychain_service(&first.id)).unwrap().is_none());
-        assert!(read_credential_service_checked(&legacy_keychain_service(&second.id)).unwrap().is_none());
-        assert_eq!(security_command(&first.id), security_command(&second.id));
+        assert_eq!(reference.store_id, "keychain");
 
         delete_profile(&first.id).unwrap();
-        assert_eq!(credential_snapshot(&second.id).unwrap().unwrap(), b"shared-secret");
-        delete_profile(&second.id).unwrap();
         assert_eq!(
-            read_credential_service_checked(&provider_service).unwrap().unwrap(),
+            read_credential_checked(&second.id).unwrap().as_deref(),
+            Some(b"shared-secret".as_slice())
+        );
+        delete_profile(&second.id).unwrap();
+        delete_provider(provider_id).unwrap();
+        let settings = load_settings();
+        assert!(!settings.model_providers.unwrap_or_default().contains_key(provider_id));
+        assert_eq!(
+            credential_store::read(&credential_store::keychain_store(), &reference)
+                .unwrap()
+                .as_slice(),
             b"shared-secret"
         );
-        assert!(load_settings()
-            .model_providers
-            .unwrap()
-            .contains_key(&provider.id));
-        delete_provider(&provider.id).unwrap();
-        assert!(read_credential_service_checked(&provider_service).unwrap().is_none());
     }
 
     #[test]
     fn provider_credential_reveal_is_scoped_to_configured_providers() {
         let _home = TestHome::new("model-provider-credential-reveal");
-        let provider = ModelProviderConfig {
-            id: "team-provider".into(),
-            name: "Team Provider".into(),
-            provider: "custom".into(),
-            base_url: "https://gateway.example.test".into(),
-            model_catalog_url: None,
-            portal_url: None,
-            protocols: BTreeMap::from([(
-                ModelProtocol::OpenaiResponses,
-                protocol("/v1/responses"),
-            )]),
-            auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
-        };
-        crate::settings::save_settings(&crate::settings::Settings {
-            model_providers: Some(BTreeMap::from([(provider.id.clone(), provider.clone())])),
-            ..Default::default()
-        })
-        .unwrap();
-        set_credential_service(
-            &provider_keychain_service(&provider.id),
+        let mut provider = openrouter_provider("team-provider", "Team Provider");
+        let store = credential_store::keychain_store();
+        provider.credential = Some(credential_service::create_revision(
+            &store,
+            &Uuid::new_v4().to_string(),
+            &provider.id,
             b"saved-test-value",
-        )
-        .unwrap();
-        set_credential_service(
-            &provider_keychain_service("unmanaged-provider"),
+        ).unwrap());
+        let unmanaged = credential_service::create_revision(
+            &store,
+            &Uuid::new_v4().to_string(),
+            "unmanaged-provider",
             b"unmanaged-test-value",
-        )
-        .unwrap();
+        ).unwrap();
+        save_provider_bundle(provider.clone(), BTreeMap::new()).unwrap();
 
         assert_eq!(
             reveal_provider_credential(&provider.id).unwrap(),
             "saved-test-value"
         );
-        let unmanaged = reveal_provider_credential("unmanaged-provider").unwrap_err();
-        assert!(
-            unmanaged.starts_with("model_provider_not_found:"),
-            "{unmanaged}"
+        assert_eq!(
+            credential_store::read(&store, &unmanaged).unwrap().as_slice(),
+            b"unmanaged-test-value"
         );
+        let error = reveal_provider_credential("unmanaged-provider").unwrap_err();
+        assert!(error.starts_with("model_provider_not_found:"), "{error}");
 
-        delete_credential_service(&provider_keychain_service(&provider.id)).unwrap();
-        let missing = reveal_provider_credential(&provider.id).unwrap_err();
-        assert!(
-            missing.starts_with("model_provider_credential_missing:"),
-            "{missing}"
-        );
-        delete_credential_service(&provider_keychain_service("unmanaged-provider")).unwrap();
+        let provider_id = provider.id.clone();
+        provider.credential = None;
+        save_provider_bundle(provider, BTreeMap::new()).unwrap();
+        let missing = reveal_provider_credential(&provider_id).unwrap_err();
+        assert!(missing.starts_with("model_provider_credential_missing:"), "{missing}");
     }
 
     #[test]
@@ -12556,8 +11417,7 @@ mod tests {
                 protocol("/v1/responses"),
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
+            credential: None,
         };
         let mut existing = responses_profile();
         existing.provider_id = Some(provider.id.clone());
@@ -12590,8 +11450,7 @@ mod tests {
                 protocol("/v1/responses"),
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: Some(ApiKeySource::Env { name: "FIRST_KEY".into() }),
-            env_key: Some("FIRST_KEY".into()),
+            credential: None,
         };
         let second_provider = ModelProviderConfig {
             id: "second-provider".into(),
@@ -12605,8 +11464,7 @@ mod tests {
                 protocol("/v1/responses"),
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: Some(ApiKeySource::Env { name: "SECOND_KEY".into() }),
-            env_key: Some("SECOND_KEY".into()),
+            credential: None,
         };
         save_provider_bundle(first_provider.clone(), BTreeMap::new()).unwrap();
         save_provider_bundle(second_provider.clone(), BTreeMap::new()).unwrap();
@@ -12627,7 +11485,7 @@ mod tests {
             switched.endpoint_path,
             second_provider.protocols[&ModelProtocol::OpenaiResponses].endpoint_path
         );
-        assert_eq!(switched.env_key, second_provider.env_key);
+        assert!(switched.env_key.is_none());
     }
 
     #[test]
@@ -12922,7 +11780,15 @@ wire_api = "responses"
         assert!(content.contains("mcp_servers.github"));
         assert!(content.contains("model_providers.existing"));
         assert!(content.contains("model_providers.arca_7465616d2d6f70656e6169"));
-        assert!(content.contains("find-generic-password"));
+        let document = content.parse::<Document>().unwrap();
+        let auth = &document["model_providers"]["arca_7465616d2d6f70656e6169"]["auth"];
+        let command = auth["command"].as_str().unwrap();
+        assert!(Path::new(command).is_absolute());
+        assert_eq!(Path::new(command).file_name().unwrap(), "arca");
+        let args: Vec<_> = auth["args"].as_array().unwrap().iter()
+            .map(|argument| argument.as_str().unwrap())
+            .collect();
+        assert_eq!(args, ["credential", "resolve", "--agent", "codex", "--profile", "team-openai"]);
     }
 
     #[test]
@@ -12946,7 +11812,7 @@ wire_api = "responses"
         assert!(content.contains("user provider"));
         assert!(content.contains("\"local\""));
         assert!(content.contains("\"openrouter\""));
-        assert!(content.contains("/usr/bin/security"));
+        assert!(content.contains("'credential' 'resolve' '--agent' 'pi' '--profile' 'team-openai'"));
     }
 
     #[test]
@@ -13117,7 +11983,7 @@ wire_api = "responses"
             &models_path,
             &settings_path,
             &pi_profile("team-openai", "gpt-custom", "Team OpenAI"),
-            Some("!/usr/bin/security".into()),
+            Some(format!("!{}", profile_credential_shell_command("pi", &responses_profile()))),
             false,
         )
         .unwrap();
@@ -13155,8 +12021,11 @@ wire_api = "responses"
         assert!(cli.supports_multiple && cli.supports_global_selection);
         assert_eq!(cli.credential_capabilities.native_sources, vec!["env"]);
         assert!(!cli.credential_capabilities.plaintext);
-        assert!(credential::select_delivery("qoder-cli", &ApiKeySource::ArcaStore, &crate::domain::assets::ApiKeyDelivery::Auto).is_err());
-        assert!(credential::select_delivery("qoder-cli", &ApiKeySource::Env { name: "QODER_FIXTURE_KEY".into() }, &crate::domain::assets::ApiKeyDelivery::Auto).is_ok());
+        assert!(credential::select_delivery("qoder-cli", &ApiKeyDelivery::Command).is_err());
+        assert_eq!(
+            credential::select_delivery("qoder-cli", &ApiKeyDelivery::Auto).unwrap(),
+            credential::PreparedCredentialRoute::NativeEnvReference
+        );
         for protocol in [ModelProtocol::OpenaiCompletions, ModelProtocol::OpenaiResponses, ModelProtocol::AnthropicMessages] {
             assert!(ensure_supported("qoder-cli", &protocol).is_ok());
         }
@@ -13302,19 +12171,22 @@ fork_secondary_model = "private-fork"
     }
 
     #[test]
-    fn grok_build_apply_rejects_a_keychain_only_credential() {
-        let _th = TestHome::new("model-grok-build-keychain-only");
+    fn grok_build_resolves_a_provider_revision_at_launch_from_an_env_reference() {
+        let _home = TestHome::new("model-grok-build-managed-env");
         let profile = responses_profile();
-        save_profile(profile.clone(), Some("secret".into())).unwrap();
+        save_profile(profile.clone(), Some("grok-fixture-secret".into())).unwrap();
 
-        let error = apply_profile("grok-build", &profile.id).unwrap_err();
-
-        assert!(error.starts_with("grok_build_env_key_required:"));
-        assert!(!config_path(".grok/config.toml").exists());
-        assert!(!load_settings()
-            .model_assignments
-            .unwrap_or_default()
-            .contains_key("grok-build"));
+        apply_profile("grok-build", &profile.id).unwrap();
+        let saved = profile_for_apply(&profile.id).unwrap();
+        let env_name = managed_env_name(&saved);
+        let config = fs::read_to_string(config_path(".grok/config.toml")).unwrap();
+        assert!(config.contains(&format!("env_key = \"{env_name}\"")));
+        assert!(!config.contains("grok-fixture-secret"));
+        assert_eq!(
+            resolve_agent_launch_credentials("grok-build").unwrap().get(&env_name)
+                .map(|key| key.as_str()),
+            Some("grok-fixture-secret")
+        );
     }
 
     #[test]
@@ -13353,7 +12225,7 @@ fork_secondary_model = "private-fork"
             assert!(agent.assigned_profiles.is_empty());
             assert!(agent.credential_capabilities.native_sources.is_empty());
             assert!(!agent.credential_capabilities.plaintext);
-            assert!(!agent.credential_capabilities.arca_keychain_helper);
+            assert!(!agent.credential_capabilities.credential_command);
             for protocol in &agent.supported_protocols {
                 assert!(ensure_supported(id, protocol).is_err());
             }
@@ -13387,9 +12259,8 @@ fork_secondary_model = "private-fork"
         assert!(agent.credential_capabilities.native_sources.is_empty());
         assert!(!agent.credential_capabilities.agent_store);
         assert!(!agent.credential_capabilities.plaintext);
-        assert!(!agent.credential_capabilities.arca_keychain_helper);
-        assert!(credential::select_delivery("warp", &ApiKeySource::ArcaStore,
-            &crate::domain::assets::ApiKeyDelivery::Auto).is_err());
+        assert!(!agent.credential_capabilities.credential_command);
+        assert!(credential::select_delivery("warp", &ApiKeyDelivery::Auto).is_err());
         for protocol in [ModelProtocol::OpenaiCompletions, ModelProtocol::OpenaiResponses,
             ModelProtocol::AnthropicMessages, ModelProtocol::GeminiGenerateContent,
             ModelProtocol::GeminiInteractions, ModelProtocol::AwsBedrockConverse] {
@@ -13565,14 +12436,6 @@ url = "https://example.test/mcp"
             !include_str!("../../../Cargo.toml").contains("test-credential-backend"),
             "a production-selectable Cargo feature must not enable the fake credential backend"
         );
-        let presence_override = source
-            .find("ARCA_TEST_MODEL_CREDENTIAL_PROFILES")
-            .expect("test credential-presence override");
-        let cfg_prefix = &source[presence_override.saturating_sub(220)..presence_override];
-        assert!(
-            cfg_prefix.contains("cfg(any(test, debug_assertions))"),
-            "the test credential-presence override must be absent from optimized release artifacts"
-        );
     }
 
     #[test]
@@ -13606,28 +12469,6 @@ url = "https://example.test/mcp"
         clear_private_file_snapshot(operation_id, &second).unwrap();
     }
 
-    #[cfg(target_os = "macos")]
-    #[test]
-    #[ignore = "touches the current user's macOS Keychain"]
-    fn macos_keychain_helper_round_trip() {
-        let profile_id = format!("arca-smoke-{}", std::process::id());
-        let _ = delete_credential(&profile_id);
-        set_credential(&profile_id, b"arca-smoke-value").unwrap();
-        let actual = read_credential_checked(&profile_id).unwrap();
-        let helper = std::process::Command::new("/usr/bin/security")
-            .args(&security_command(&profile_id)[1..])
-            .output()
-            .unwrap();
-        let cleanup = delete_credential(&profile_id);
-        assert_eq!(actual.as_deref(), Some(b"arca-smoke-value".as_slice()));
-        assert!(helper.status.success());
-        assert_eq!(
-            String::from_utf8(helper.stdout).unwrap().trim(),
-            "arca-smoke-value"
-        );
-        cleanup.unwrap();
-        assert!(!credential_exists(&profile_id));
-    }
     #[test]
     fn opencode_desktop_supports_models_and_guards_the_shared_registry() {
         let _home = TestHome::new("opencode-desktop-capability");
@@ -13637,8 +12478,10 @@ url = "https://example.test/mcp"
         assert!(desktop.supports_multiple && desktop.supports_global_selection);
         assert_eq!(desktop.config_paths, vec!["~/.config/opencode/opencode.json"]);
         assert_eq!(desktop.supported_protocols.len(), 5);
-        assert_eq!(credential::select_delivery("opencode-desktop", &ApiKeySource::ArcaStore,
-            &crate::domain::assets::ApiKeyDelivery::Auto).unwrap(), credential::PreparedCredentialRoute::OpenCodeAuthStore);
+        assert_eq!(
+            credential::select_delivery("opencode-desktop", &ApiKeyDelivery::Auto).unwrap(),
+            credential::PreparedCredentialRoute::OpenCodeAuthStore
+        );
         for (agent, sibling) in [("opencode", "opencode-desktop"), ("opencode-desktop", "opencode")] {
             let mut settings = crate::settings::Settings::default();
             settings.model_assignments = Some(BTreeMap::from([(sibling.into(), "fixture".into())]));

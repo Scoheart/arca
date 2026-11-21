@@ -114,8 +114,6 @@ pub fn run() {
             commands::get_log_status,
             commands::open_log_file,
             commands::report_frontend_log,
-            commands::unlock_model_credentials,
-            commands::get_model_credential_session_status,
             commands::copy_to_clipboard,
             commands::get_workspace_snapshot,
             commands::list_agent_capabilities,
@@ -167,7 +165,10 @@ pub fn run() {
             commands::discover_provider_models,
             commands::reveal_model_provider_credential,
             commands::infer_model_provider,
-            commands::validate_model_credential_source,
+            commands::list_credential_stores,
+            commands::save_credential_store,
+            commands::check_credential_store,
+            commands::delete_credential_store,
             commands::list_model_agents,
             commands::set_model_credential_delivery,
             commands::set_agent_credential_delivery,
@@ -260,7 +261,6 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app, event| {
             if matches!(&event, tauri::RunEvent::Exit) {
-                arca_core::application::models::clear_credential_session();
                 arca_core::capture::shutdown();
             }
             #[cfg(target_os = "macos")]

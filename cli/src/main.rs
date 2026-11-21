@@ -1,8 +1,10 @@
 //! Arca CLI — a thin clap/TUI front-end over `arca-core`.
 
 use std::ffi::OsString;
+use std::fs::File;
+use std::io::{self, Write};
 
-use clap::FromArgMatches;
+use clap::{FromArgMatches, Parser};
 use serde_json::json;
 
 mod agent_management;
@@ -23,12 +25,20 @@ mod skill_management;
 mod source_management;
 mod tui;
 
-use command::{dispatch, Cli};
+use command::{dispatch, Cli, CredentialExecArgs, CredentialResolveArgs};
 use output::{render_error, render_success, CliError};
 
 fn main() {
     arca_core::logging::init_session("cli");
     let args = std::env::args_os().collect::<Vec<_>>();
+    if args.get(1).is_some_and(|argument| argument == "credential") {
+        if let Err(message) = run_credential_helper(&args) {
+            let _ = writeln!(io::stderr().lock(), "{message}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
     let json_mode = requested_json_mode(&args);
     let no_color = json_mode || args.iter().any(|argument| argument == "--no-color");
     let cli = match parse(args, json_mode) {
@@ -54,6 +64,68 @@ fn main() {
         render_error(&error, json_mode, no_color);
         std::process::exit(1);
     }
+}
+
+fn run_credential_helper(args: &[OsString]) -> Result<(), &'static str> {
+    match args.get(2).and_then(|argument| argument.to_str()) {
+        Some("resolve") => resolve_credential(&args[2..]),
+        Some("exec") => {
+            let args = CredentialExecArgs::try_parse_from(&args[2..])
+                .map_err(|_| "credential_launch_invalid: Start the Agent from Arca")?;
+            arca_core::application::agent_launch::exec_with_launch_credentials(
+                &args.agent,
+                &args.program,
+                &args.profiles_revision,
+                args.startup_agent.as_deref(),
+            )
+        }
+        _ => Err("usage: arca credential resolve --agent <agent_id> --profile <profile_id>"),
+    }
+}
+
+fn resolve_credential(args: &[OsString]) -> Result<(), &'static str> {
+    const USAGE: &str = "usage: arca credential resolve --agent <agent_id> --profile <profile_id>";
+    let args = CredentialResolveArgs::try_parse_from(args).map_err(|_| USAGE)?;
+    let mut stdout = credential_pipe()?;
+    // The helper is a direct Core read. Standard CLI startup and output
+    // handling would mix diagnostics or machine envelopes into this stream.
+    let credential =
+        arca_core::application::models::resolve_agent_credential(&args.agent, &args.profile)
+            .map_err(|_| "credential_unavailable: Could not resolve the Agent credential")?;
+    stdout
+        .write_all(credential.as_slice())
+        .map_err(|_| "credential_output_failed: Could not write to the output pipe")
+}
+
+fn credential_pipe() -> Result<File, &'static str> {
+    const PIPE_REQUIRED: &str = "credential_pipe_required: Standard output must be a pipe or an anonymous local socket";
+    #[cfg(unix)]
+    {
+        use std::os::{
+            fd::{AsFd, OwnedFd},
+            unix::{fs::FileTypeExt, net::UnixStream},
+        };
+
+        let output = io::stdout()
+            .as_fd()
+            .try_clone_to_owned()
+            .map(File::from)
+            .map_err(|_| PIPE_REQUIRED)?;
+        let kind = output.metadata().map_err(|_| PIPE_REQUIRED)?.file_type();
+        if kind.is_fifo() {
+            return Ok(output);
+        }
+        // Node uses anonymous Unix socket pairs to capture child stdout.
+        if kind.is_socket() {
+            let socket = UnixStream::from(OwnedFd::from(output));
+            if socket.local_addr().is_ok_and(|addr| addr.is_unnamed())
+                && socket.peer_addr().is_ok_and(|addr| addr.is_unnamed())
+            {
+                return Ok(File::from(OwnedFd::from(socket)));
+            }
+        }
+    }
+    Err(PIPE_REQUIRED)
 }
 
 fn runtime_output_modes(cli: &Cli) -> (bool, bool) {

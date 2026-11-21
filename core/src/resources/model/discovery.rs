@@ -1,5 +1,7 @@
 use super::full_request_url;
-use crate::domain::types::{ApiKeySource, AuthRequirement, ModelProtocol, ModelProviderConfig};
+use crate::domain::types::{ModelProtocol, ModelProviderConfig};
+#[cfg(test)]
+use crate::domain::types::AuthRequirement;
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::BTreeSet;
@@ -99,26 +101,19 @@ pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<V
         }
     }
     let spec = discovery_spec_for_provider(provider)?;
-    let stored_credential = if provider.auth_requirement != AuthRequirement::None
-        && matches!(provider.api_key_source, None | Some(ApiKeySource::ArcaStore)) {
-        super::read_runtime_provider_credential(&provider.id)?.map(Zeroizing::new)
-    } else { None };
-    let source = provider.api_key_source.clone().or_else(||
-        stored_credential.is_some().then_some(ApiKeySource::ArcaStore));
-    let credential = if provider.auth_requirement == AuthRequirement::None {
-        None
-    } else if matches!(source, Some(ApiKeySource::ArcaStore))
-        && stored_credential.is_none() && provider.auth_requirement == AuthRequirement::Optional {
-        None
-    } else if let Some(source) = source.as_ref() {
-        let resolved = super::credential::resolve_source(source,
-            stored_credential.as_ref().map(|bytes| bytes.to_vec()))?;
-        Some(Zeroizing::new(String::from_utf8(resolved.expose_for_delivery().to_vec())
-            .map_err(|_| "model_provider_credential_invalid: API Key is not UTF-8".to_string())?))
-    } else if provider.auth_requirement == AuthRequirement::Required
-        && (provider.model_catalog_url.is_some() || reviewed_static_catalog(&provider.provider).is_none()) {
-        return Err("model_provider_credential_missing: Configure a credential source before loading the model catalog".into());
-    } else { None };
+    let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
+    let credential = if provider.credential.is_none() && provider.model_catalog_url.is_none() {
+        if let Some(models) = reviewed_static_catalog(&provider.provider) {
+            return Ok(models);
+        }
+        super::credential_service::read_provider(&settings, provider)?
+    } else {
+        super::credential_service::read_provider(&settings, provider)?
+    };
+    let credential = credential.map(|key| {
+        std::str::from_utf8(&key).map(|key| Zeroizing::new(key.to_owned()))
+            .map_err(|_| "credential_invalid: API Key must be UTF-8".to_string())
+    }).transpose()?;
 
     // Anonymous GET /v1/models is not a public catalog for these providers.
     // A saved credential still uses the reviewed live decoder below.
@@ -1942,8 +1937,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -1990,8 +1984,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -2037,8 +2030,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -2168,8 +2160,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -2216,8 +2207,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -2288,8 +2278,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -2406,8 +2395,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: crate::domain::types::AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -2481,8 +2469,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -2813,8 +2800,7 @@ mod tests {
                 },
             )]),
             auth_requirement: crate::domain::types::AuthRequirement::Optional,
-            api_key_source: None,
-            env_key: None,
+            credential: None,
         }
     }
 
@@ -3020,6 +3006,7 @@ mod tests {
             "provider": "custom",
             "base_url": "https://gateway.example.test",
             "model_catalog_url": "https://catalog.example.test/api/models?scope=available",
+            "auth_requirement": "optional",
             "protocols": {
                 "openai-responses": { "endpoint_path": "/v1/responses" }
             }
@@ -3277,23 +3264,23 @@ mod tests {
     }
 
     #[test]
-    fn discovery_uses_file_source_and_honors_explicit_no_auth() {
-        let home = TestHome::new("discovery-file-source");
-        let path = home.home.join("key");
-        std::fs::write(&path, b"fixture-file-key").unwrap();
-        #[cfg(unix)] {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
-        }
+    fn discovery_resolves_a_stored_revision_and_honors_explicit_no_auth() {
+        let _home = TestHome::new("discovery-credential-store");
+        let store = super::super::credential_store::keychain_store();
         for requirement in [AuthRequirement::Required, AuthRequirement::None] {
             let (url, request, handle) = serve_once("200 OK", &[], r#"{"data": []}"#);
             let mut config = provider("openai", url.as_str(), ModelProtocol::OpenaiResponses, "/responses");
             config.auth_requirement = requirement.clone();
-            config.api_key_source = Some(ApiKeySource::File { path: path.to_string_lossy().into_owned() });
+            config.credential = Some(super::super::credential_service::create_revision(
+                &store,
+                &uuid::Uuid::new_v4().to_string(),
+                &config.id,
+                b"fixture-store-key",
+            ).unwrap());
             execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
             let request = request.recv().unwrap().to_ascii_lowercase();
             handle.join().unwrap();
-            assert_eq!(request.contains("authorization: bearer fixture-file-key"), requirement == AuthRequirement::Required);
+            assert_eq!(request.contains("authorization: bearer fixture-store-key"), requirement == AuthRequirement::Required);
         }
     }
 
@@ -3661,8 +3648,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -3966,8 +3952,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4038,8 +4023,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4108,8 +4092,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4162,8 +4145,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4233,8 +4215,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4300,8 +4281,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4362,8 +4342,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4473,8 +4452,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4513,7 +4491,7 @@ mod tests {
         config.name = "AMD Token Lab".into();
         let error = execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap_err();
         assert!(
-            error.contains("model_provider_credential_missing"),
+            error.starts_with("credential_missing:"),
             "{error}"
         );
     }
@@ -4574,8 +4552,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();
@@ -4659,8 +4636,7 @@ mod tests {
                     },
                 )]),
                 auth_requirement: AuthRequirement::Required,
-                api_key_source: None,
-                env_key: None,
+                credential: None,
             },
         })
         .unwrap();

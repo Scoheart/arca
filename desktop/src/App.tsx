@@ -1,6 +1,5 @@
 import { InstructionDraftGuard } from './components/InstructionDraftGuard';
 import { ToastNotice } from "./components/Toast";
-import { CredentialSession } from "./components/CredentialSession";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invalidateModelObservation } from "./lib/modelObservation";
 import { invalidatePreferences } from "./lib/preferenceObservation";
@@ -429,7 +428,6 @@ function App() {
         }))} />
 
       <UpdateBanner updater={updater} />
-      <CredentialSession />
     </Layout>
   );
 }

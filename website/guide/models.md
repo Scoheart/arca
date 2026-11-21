@@ -5,7 +5,7 @@ Provider 定义一套 API 连接，Model 引用它并指定协议与 Model ID。
 ## 添加连接与模型
 
 1. 在 **Models → 添加 Provider** 中选择模板或自定义连接。
-2. 填写名称、唯一 Base URL 与凭据方式。没有鉴权的本地服务可留空。
+2. 填写名称和 Base URL。需要 API Key 时选好 **凭据存储**，再输入 Key。
 3. **服务商入口 URL** 可修改；右侧按钮打开密钥页、控制台或配置指南。不同地区与 Coding Plan 使用对应入口。
 4. 根据需要填写 **Models 列表 URL**，启用协议并编辑 **Endpoint Path**。这些字段直接展示；完整请求 URL 随输入更新。
 5. 保存 Provider，再点击 **添加 Models**，选 Provider、协议与准确的 Model ID。上下文和最大输出等设置按实际模型填写。
@@ -50,13 +50,82 @@ Provider 使用一个 Base URL。不同协议可以有不同的相对 Endpoint P
 - **Qoder IDE、Qoder Desktop、Qoder CLI**分别保留身份。IDE 的 Models 是官方引导；Desktop 0.1.8+ 与 CLI 1.1.50+ 可以自动配置自定义端点。
 - **Qoder Desktop**在会话里选用模型；**Qoder CLI**支持全局当前模型。它们共用 settings 文件，但有独立的 Arca Provider 身份；共享文件仍有其他消费关系时，不能清空整个库。
 
-## 凭据
+## 凭据存储
 
-中央密钥正文存系统 Keychain。Agent 的原生能力决定交付方式：Keychain 读取命令、环境变量引用，或在明确审阅后导出到客户端的私有配置。Claude 桌面端、ZCode 和可用的 Qoder 原生交付方式有各自限制，界面会展示实际支持的选项。
+在 **Models → 凭据存储** 管理可供多个 Provider 使用的连接。macOS Keychain 是内置选项。添加 1Password 时，先安装官方 `op` CLI，并为服务账号授予所选 Vault 的读取和写入权限。[1Password 服务账号设置](https://www.1password.dev/service-accounts/get-started)
 
-使用环境变量引用时，启动 Agent 的环境必须提供该变量。仅把 Key 保存到 Arca Keychain，并不自动把它变成任意客户端可读取的环境变量。不要把真实密钥放进 CLI 参数、示例文件或共享截图。
+在 **添加连接 → 1Password** 中输入连接名称、`op` 绝对路径、Vault ID 和 token 环境变量名。默认变量为 `OP_SERVICE_ACCOUNT_TOKEN`。将 token 注入实际读取 Vault 的进程环境，包括 Arca Desktop、CLI 或 Agent 的凭据读取进程。保存后点击 **检查连接**，确认该环境可以访问所选 Vault。可重命名已注册的连接，移除连接前需先处理仍引用它的 Provider。[1Password CLI 服务账号用法](https://www.1password.dev/service-accounts/use-with-1password-cli)
 
-Keychain 读取失败会阻止相关操作，不会当成“没有密钥”继续覆盖。编辑 Provider 会包含全部受影响的消费者；不相关的 MCP 和 Skill 操作保持可用。
+### Bitwarden 和 Vaultwarden
+
+在 **添加连接 → Bitwarden / Vaultwarden** 中选择服务器上的个人文件夹。先在客户端创建用于 Arca 的文件夹，再为官方 `bw` CLI 配置独立的数据目录。在该目录对应的 CLI profile 中登录目标服务器，并用 `bw unlock --raw` 获取会话。以下命令初始化配置并查找账号和文件夹的 ID。
+
+```bash
+export BITWARDENCLI_APPDATA_DIR="$HOME/.config/arca-bitwarden-cli"
+mkdir -p -m 700 "$BITWARDENCLI_APPDATA_DIR"
+bw config server https://vault.example.com
+bw login
+export BW_SESSION="$(bw unlock --raw)"
+bw status | jq -r '.userId'
+bw get folder Arca | jq -r '.id'
+```
+
+表单需要 `bw` 绝对路径、服务器 URL、CLI 数据目录、账号 ID 和文件夹 ID。会话变量默认用 `BW_SESSION`。把会话传入实际运行 Arca 或其凭据命令的进程环境，保存后检查连接。Arca 在指定个人文件夹内用安全备注的隐藏字段保存 Key，轮换产生新条目。退役的条目移入回收站。[Bitwarden CLI 文档](https://bitwarden.com/help/cli/)
+
+### KeePassXC
+
+在 **添加连接 → KeePassXC** 中填写官方 `keepassxc-cli` 的绝对路径和现有 KDBX 数据库路径，数据库上限为 64 MiB。数据库使用密钥文件时一并填写。让运行 Arca 或凭据命令的环境提供数据库密码，默认变量名为 `ARCA_KEEPASSXC_PASSWORD`。
+
+Arca 为每个凭据版本写入独立条目，在保存时检查并发改动，并保存一份加密 KDBX 回滚副本。退役移除该条目的活动记录，启用回收站的数据库仍可从中找回条目。[KeePassXC CLI 手册](https://github.com/keepassxreboot/keepassxc/blob/develop/docs/man/keepassxc-cli.1.adoc)
+
+### Passbolt
+
+在 **添加连接 → Passbolt** 中填写 HTTPS 服务器、账号 ID、账号 OpenPGP 私钥文件、服务端 OpenPGP 指纹和可选的个人文件夹 ID。默认口令变量名为 `ARCA_PASSBOLT_PASSPHRASE`。私钥使用仅文件所有者可访问的普通文件，例如 `0600` 或 `0400`。
+
+先从 Arca 源码构建基于 Passbolt 官方 SDK 的助手，再将其绝对路径填入表单。Go 的版本要求见助手目录的 `go.mod`。
+
+```bash
+mkdir -p "$HOME/.local/bin"
+cd integrations/passbolt-helper
+go build -mod=readonly -trimpath -o "$HOME/.local/bin/arca-passbolt" .
+```
+
+Arca 为选定账号创建私有凭据资源，API Key 上限为 4096 个字符。轮换生成新资源，退役只处理经核对的 Arca 条目。[Passbolt 官方 SDK](https://github.com/passbolt/go-passbolt)
+
+### OpenBao
+
+在 **添加连接 → OpenBao** 中填写服务器 HTTPS 地址（域名和可选端口）、现有 KV v2 挂载路径和专供 Arca 使用的前缀。默认 token 环境变量名为 `BAO_TOKEN`。让运行 Arca 或凭据命令的环境提供该 token，并在保存后检查连接。
+
+以下权限以 `secret` 挂载和 `arca/providers` 前缀为例。用所填的挂载路径和前缀替换示例值。
+
+```hcl
+path "secret/config" {
+  capabilities = ["read"]
+}
+path "secret/data/arca/providers/*" {
+  capabilities = ["create", "read"]
+}
+path "secret/delete/arca/providers/*" {
+  capabilities = ["update"]
+}
+path "sys/capabilities-self" {
+  capabilities = ["update"]
+}
+```
+
+Arca 用每个凭据的版本 ID 作为独立条目名，只创建新条目。退役软删除对应的版本。[OpenBao KV v2](https://openbao.org/docs/secrets/kv/kv-v2/)
+
+### 给 Provider 选择存储
+
+在 Provider 表单输入 API Key 并选择存储。留空编辑会保留现有凭据，切换存储需提供新的 Key。允许无鉴权访问的 Provider 可显式移除已保存的 Key。
+
+本次更新使用独立的 `~/.arca/assets/models/registry.json`。以前的中央 Model 目录数据和 Keychain 条目保留供手工处理。按需重新建立 Provider 和 Model，再检查 Agent 关联。已有 Agent 配置仍会作为原生观测呈现，可显式采用支持的候选。
+
+## Agent 凭据交付
+
+实际交付方式取决于 Agent 能力。支持读取命令的 Agent 可通过 Arca CLI 解析已启用的 Model 凭据。环境变量方式在 Agent 配置中保存变量名，通过 Arca 启动受支持的 CLI Agent 时，启动进程从 Provider 所选存储读取 Key 并注入环境。自行启动 Agent 时，由启动环境提供相应的值。
+
+对支持私有配置交付的 Agent，Core 使用已核验的文件路径和受保护的回滚。显式选择 plaintext 交付还需审阅，实际写入受 `0600` 权限与原文件版本检查约束。密钥读取失败会阻止依赖该密钥的操作。编辑 Provider 时，Core 分别收敛受影响的 Agent 目标。
 
 ## 外部配置与删除
 

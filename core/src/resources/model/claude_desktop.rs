@@ -1246,9 +1246,9 @@ mod tests {
     use crate::domain::agents::ModelStorageAuthority;
     use crate::domain::types::{ModelProfile, ModelProtocol};
     use crate::resources::model::{
-        apply_profile, clear_profile, credential_snapshot, list_agents, load_settings,
+        apply_profile, clear_profile, list_agents, load_settings,
         model_agent_capability, observe_active_model_for_settings, observe_external_model,
-        observe_profile, save_profile, set_credential, ExternalModelObservedState,
+        observe_profile, read_credential_checked, save_profile, ExternalModelObservedState,
         ModelObservedState, ObservedActiveModel,
     };
     use crate::safe_write::{begin_transaction_write_tracking, capture_parent_directory};
@@ -2160,7 +2160,7 @@ mod tests {
             .as_ref()
             .is_some_and(|providers| providers.contains_key("claude-desktop-provider")));
         assert_eq!(
-            credential_snapshot(&profile.id).unwrap().as_deref(),
+            read_credential_checked(&profile.id).unwrap().as_deref(),
             Some(FAKE_CREDENTIAL.as_bytes())
         );
         let runtime = settings.model_agent_runtime_state(AGENT_ID).unwrap();
@@ -2225,10 +2225,13 @@ mod tests {
     fn non_utf8_credential_returns_a_stable_secret_free_error() {
         let home = TestHome::new("claude-desktop-invalid-credential");
         let paths = target_paths(&home);
-        let profile = save_provider_backed_profile("qwen3.7-max", None);
-        set_credential(&profile.id, b"invalid-\xff-do-not-echo").unwrap();
+        let profile = provider_backed_profile("qwen3.7-max");
 
-        let error = apply_profile(AGENT_ID, &profile.id).unwrap_err();
+        let error = super::apply(
+            &paths,
+            &profile,
+            zeroize::Zeroizing::new(b"invalid-\xff-do-not-echo".to_vec()),
+        ).unwrap_err().into_message();
 
         assert_eq!(
             error,

@@ -23,8 +23,9 @@ see its MCPs, Models, and Skills together. To manage what an Agent uses, choose
 ```text
 arca mcp {list,show,add,save,delete,export,source,icon}
 arca mcp source {list,subscribe,add-local,add-builtin,refresh,enable,disable,remove}
-arca model {list,show,save,delete,import,provider,curl}
+arca model {list,show,save,delete,import,provider,store,curl}
 arca model provider {list,show,templates,catalog,save,delete,docs}
+arca model store {list,save,check,delete,revisions,retire}
 arca skill {list,show,inspect-source,install,import,update,remove,repair,check-updates}
 
 arca agent {list,status,save,configure,enable,disable,run,launch,mcp,model,skill}
@@ -105,13 +106,14 @@ Save this as `provider.json`. Arca generates the ID when you create the record.
   "provider": "custom",
   "base_url": "https://api.example.com/v1",
   "protocols": {"openai-completions": {"endpoint_path": "/chat/completions"}},
-  "auth_requirement": "required",
-  "api_key_source": {"kind": "env", "name": "WORK_API_KEY"}
+  "auth_requirement": "required"
 }
 ```
 
 ```bash
-arca model provider save --file provider.json --yes
+# Bash or Zsh, with WORK_API_KEY already available in the shell environment.
+builtin printf '%s' "$WORK_API_KEY" |
+  arca model provider save --file provider.json --store keychain --credential-stdin --yes
 arca model provider list --json
 arca model provider catalog PROVIDER_ID
 ```
@@ -134,7 +136,43 @@ arca model list --json
 
 `provider catalog` lists models available from a saved Provider connection. `model list` lists the Model Profiles saved in Arca. The older `provider models` spelling and its JSON output still work.
 
-For edits, pass the existing ID with `--id`. Both create and edit documents can omit the JSON `id` field. Use the redacted `provider show` output as a connection overview. Pass Keychain credentials through `--credential-stdin`. Explicit plaintext delivery also requires `--confirm-plaintext` and a supported Agent.
+For edits, pass the existing ID with `--id`. Both create and edit documents can omit the JSON `id` field. Use the redacted `provider show` output as a connection overview. Pass `--store` and `--credential-stdin` together to save a new key, with the JSON in a file and the key in a pipe. Omit both options to keep the existing credential. Switching stores requires a new key. Providers that allow unauthenticated access can use `--clear-credential` to remove a saved key. Explicit plaintext delivery requires `--confirm-plaintext` and a supported Agent.
+
+## Credential stores
+
+`keychain` is the built-in macOS Keychain store ID. For 1Password, grant a service account read and write access to the chosen vault and supply its token in the environment that runs Arca. Save the connection settings in `store.json` with your installed `op` path and the 26-character Vault ID. [Credential store setup](/en/guide/models#credential-stores)
+
+```json
+{
+  "id": "work-vault",
+  "name": "Work Vault",
+  "backend": {
+    "kind": "one-password",
+    "command": "/opt/homebrew/bin/op",
+    "vault_id": "REPLACE_WITH_VAULT_ID",
+    "token_env": "OP_SERVICE_ACCOUNT_TOKEN"
+  }
+}
+```
+
+```bash
+arca model store list
+arca model store save --file store.json --yes
+arca model store check work-vault
+arca model store delete work-vault --dry-run
+```
+
+`check` verifies that the current process can access the vault. Once registered, choose it with `--store work-vault` when saving a Provider. Save the same ID and backend configuration with a new name to rename a connection. Update any Providers that still reference the connection before removing it.
+
+Bitwarden and Vaultwarden share `backend.kind = "bitwarden"`. Set `command` to the `bw` path and include `server_url`, `appdata_dir`, `user_id`, `folder_id`, and `session_env`. Supply the unlocked session, then use the same `model store save` and `model store check` commands. [Bitwarden and Vaultwarden setup](/en/guide/models#bitwarden-and-vaultwarden)
+
+Use the same save and check commands for the other backends. The JSON file contains connection metadata and environment variable names. [Setup for each store](/en/guide/models#credential-stores)
+
+| `backend.kind` | Required fields | Optional fields |
+| --- | --- | --- |
+| `keepassxc` | `command`, `database_path`, `password_env` | `key_file` |
+| `passbolt` | `command`, `server_url`, `user_id`, `private_key_path`, `server_fingerprint`, `password_env` | `folder_id` |
+| `openbao` | `server_url`, `mount`, `prefix`, `token_env` | |
 
 ## Install and maintain Skills
 

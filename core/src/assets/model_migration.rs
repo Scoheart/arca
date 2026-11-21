@@ -427,7 +427,6 @@ pub fn plan_model_adoption(
                 enabled: true,
                 credential: if candidate.agent_id == "qoder-desktop" && matches!(candidate.credential, ExtractedCredential::Env(_)) {
                     crate::domain::assets::ModelCredentialPolicy {
-                        source_override: None,
                         delivery: crate::domain::assets::ApiKeyDelivery::Env,
                     }
                 } else { Default::default() },

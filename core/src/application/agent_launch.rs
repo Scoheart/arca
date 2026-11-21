@@ -1,7 +1,7 @@
 //! Agent runtime discovery and explicit user-initiated launch requests.
 use crate::settings::{load_settings_strict, mutate_settings_checked};
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, fs, io::Read, path::{Path, PathBuf}, process::{Command, Stdio}, sync::{Arc, LazyLock, Mutex}, time::{Duration, Instant, SystemTime}};
+use std::{collections::{BTreeMap, BTreeSet}, fs, io::Read, path::{Path, PathBuf}, process::{Command, Stdio}, sync::{Arc, LazyLock, Mutex}, time::{Duration, Instant, SystemTime}};
 
 pub use crate::domain::agents::{LaunchPreferences, LaunchProfile, LaunchTarget};
 
@@ -82,6 +82,53 @@ fn executable(path: &Path) -> bool {
     #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; metadata.permissions().mode() & 0o111 != 0 }
     #[cfg(not(unix))] { true }
 }
+
+/// Credential commands use Arca's current CLI or its bundled sidecar.
+/// The source-built development app may use an explicitly selected build.
+pub(crate) fn credential_cli_path() -> Result<PathBuf, String> {
+    const UNAVAILABLE: &str = "credential_cli_unavailable: 找不到 Arca 凭证命令所需的 CLI。";
+    let current = std::env::current_exe().and_then(fs::canonicalize).map_err(|_| UNAVAILABLE)?;
+    if current.file_name().is_some_and(|name| name == "arca") {
+        return Ok(current);
+    }
+    #[cfg(debug_assertions)]
+    if let Some(override_path) = std::env::var_os("ARCA_DEV_CREDENTIAL_CLI") {
+        let path = PathBuf::from(override_path);
+        if path.is_absolute()
+            && path.file_name().is_some_and(|name| name == "arca")
+            && executable(&path)
+        {
+            return fs::canonicalize(path).map_err(|_| UNAVAILABLE.into());
+        }
+        return Err(UNAVAILABLE.into());
+    }
+
+    let macos = current
+        .parent()
+        .filter(|path| path.ends_with("Contents/MacOS"))
+        .ok_or(UNAVAILABLE)?;
+    let bundle = macos
+        .parent()
+        .and_then(Path::parent)
+        .filter(|path| app_exists(path))
+        .ok_or(UNAVAILABLE)?;
+    let info = plist::Value::from_file(bundle.join("Contents/Info.plist")).map_err(|_| UNAVAILABLE)?;
+    let identifier = info
+        .as_dictionary()
+        .and_then(|fields| fields.get("CFBundleIdentifier"))
+        .and_then(plist::Value::as_string);
+    if identifier != Some("com.scoheart.arca")
+        && !(cfg!(debug_assertions) && identifier == Some("com.scoheart.arca.dev"))
+    {
+        return Err(UNAVAILABLE.into());
+    }
+    let cli = macos.join("arca");
+    if !fs::symlink_metadata(&cli).is_ok_and(|metadata| metadata.is_file()) || !executable(&cli) {
+        return Err(UNAVAILABLE.into());
+    }
+    Ok(cli)
+}
+
 fn application_matching(names: &[String], bundle_ids: &[String]) -> Option<PathBuf> {
     let mut roots = vec![crate::paths::system_probe_path("/Applications")];
     if let Ok(home) = home() { roots.push(home.join("Applications")); }
@@ -533,12 +580,17 @@ pub fn configure_with_directory(agent_id: &str, target: Option<LaunchTarget>, de
     info(agent_id)
 }
 
-pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Result<(), String> {
+fn require_supported_launch() -> Result<(), &'static str> {
     #[cfg(any(test, debug_assertions))]
     if crate::brand::env_os("ARCA_TEST_PROBE_ROOT").is_some() {
-        return Err("test_launch_blocked: isolated fixtures cannot start host applications".into());
+        return Err("test_launch_blocked: isolated fixtures cannot start host applications");
     }
-    if !cfg!(target_os = "macos") { return Err("当前平台暂不支持启动 Agent".into()); }
+    if !cfg!(target_os = "macos") { return Err("当前平台暂不支持启动 Agent"); }
+    Ok(())
+}
+
+pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Result<(), String> {
+    require_supported_launch()?;
     validate_target(target)?;
     let mut command;
     match target {
@@ -562,6 +614,142 @@ pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Resul
         }
     }
     dispatch_command(command)
+}
+
+fn dispatch_credential_launch(
+    agent_id: &str,
+    target: &LaunchTarget,
+    directory: Option<&Path>,
+    profiles_revision: &str,
+    startup_agent: Option<&str>,
+) -> Result<(), String> {
+    require_supported_launch()?;
+    let LaunchTarget::Cli { command, .. } = target else {
+        return Err("credential_launch_unsupported: 此启动方式无法安全注入模型凭证，请为该 Agent 选择支持的凭证交付方式。".into());
+    };
+    validate_target(target)?;
+    let directory = directory.ok_or("请先选择工作目录")?;
+    let cli = credential_cli_path()?;
+    let cli = cli.to_str().ok_or("credential_cli_unavailable: Arca CLI 路径不是 UTF-8。")?;
+    let mut args = vec![
+        "credential".into(),
+        "exec".into(),
+        "--agent".into(),
+        agent_id.into(),
+        "--program".into(),
+        command.clone(),
+        "--profiles-revision".into(),
+        profiles_revision.into(),
+    ];
+    if let Some(selection) = startup_agent {
+        args.push(format!("--startup-agent={selection}"));
+    }
+    // The new terminal session can inherit a different ARCA_HOME. Pin the
+    // same private settings root for the helper without carrying any key.
+    let data_root = std::path::absolute(crate::paths::arca_dir())
+        .map_err(|_| "credential_launch_failed: 无法定位 Arca 数据目录。")?;
+    let data_root = data_root
+        .to_str()
+        .ok_or("credential_launch_failed: Arca 数据目录路径不是 UTF-8。")?;
+    let context = BTreeMap::from([("ARCA_HOME".into(), data_root.into())]);
+    let line = super::launch_command::cli_command_exact(cli, &args, &context, directory, None);
+    super::terminals::dispatch(&line)
+}
+
+/// Run inside the terminal started by Arca so the Agent keeps interactive
+/// stdio. Resolve credentials here, directly into the new Agent environment.
+#[doc(hidden)]
+pub fn exec_with_launch_credentials(
+    agent_id: &str,
+    expected_program: &Path,
+    expected_revision: &str,
+    startup_agent: Option<&str>,
+) -> Result<(), &'static str> {
+    require_supported_launch()?;
+    const CHANGED: &str = "credential_launch_changed: 启动配置已变化，请从 Arca 重新启动。";
+    let info = info(agent_id).map_err(|_| CHANGED)?;
+    if expected_revision != info.profiles_revision {
+        return Err(CHANGED);
+    }
+    let Some(mut target @ LaunchTarget::Cli { .. }) = info.resolved_target else {
+        return Err(CHANGED);
+    };
+    if let LaunchTarget::Cli { command, .. } = &mut target {
+        if Path::new(command) != expected_program {
+            // GUI and terminal PATH order may differ; keep the exact program
+            // the user launched when it is still a valid discovery candidate.
+            let is_candidate = |name: &str| {
+                command_candidates(name).iter().any(|path| path == expected_program)
+            };
+            let matches_configuration = match &info.configured_target {
+                Some(LaunchTarget::Cli { command, .. }) => is_candidate(command),
+                None => matches!(LAUNCH_CATALOG.get(agent_id), Some(CatalogTarget::Cli { candidates, .. })
+                    if candidates.iter().any(|name| is_candidate(name))),
+                _ => false,
+            };
+            if !matches_configuration {
+                return Err(CHANGED);
+            }
+            *command = expected_program.to_str().ok_or(CHANGED)?.into();
+        }
+    }
+    validate_target(&target).map_err(|_| CHANGED)?;
+    super::codex_configuration::validate_launch(agent_id, &target).map_err(|_| CHANGED)?;
+    add_startup_agent_argument(agent_id, &mut target, startup_agent);
+
+    let LaunchTarget::Cli { command, args, env } = target else {
+        return Err(CHANGED);
+    };
+    let bin = Path::new(&command).parent().ok_or(CHANGED)?;
+    let path = std::env::var_os("PATH").unwrap_or_default();
+    let path = std::env::join_paths(std::iter::once(bin.to_path_buf()).chain(std::env::split_paths(&path)))
+        .map_err(|_| "credential_launch_failed: Agent 的 PATH 无效。")?;
+    let mut process = Command::new(&command);
+    process.args(cli_launch_args(&command, &args)).env("PATH", path).envs(env);
+
+    // The terminal helper needs the store's service account token to read
+    // records. Only the selected Model credentials belong in the Agent.
+    let mut store_token_names = BTreeSet::from([
+        "OP_SERVICE_ACCOUNT_TOKEN".to_owned(),
+        "BW_SESSION".to_owned(),
+        "ARCA_KEEPASSXC_PASSWORD".to_owned(),
+        "ARCA_PASSBOLT_PASSPHRASE".to_owned(),
+        "BAO_TOKEN".to_owned(),
+    ]);
+    for store in super::models::list_credential_stores().map_err(|_| CHANGED)? {
+        if let Some(name) = store.backend.authentication_env() {
+            store_token_names.insert(name.to_owned());
+        }
+    }
+
+    let credentials = crate::resources::model::resolve_agent_launch_credentials(agent_id)
+        .map_err(|_| "credential_unavailable: 无法读取该 Agent 的模型凭证，请检查凭证存储。")?;
+    if credentials.is_empty() {
+        return Err(CHANGED);
+    }
+    if credentials.keys().any(|name| store_token_names.contains(name)) {
+        return Err("credential_env_conflict: 模型环境变量与凭证存储令牌的变量名冲突。");
+    }
+    for name in store_token_names {
+        process.env_remove(name);
+    }
+    process.envs(credentials.iter().map(|(name, value)| (name, value.as_str())));
+    drop(credentials);
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        let _ = process.exec();
+    }
+    Err("credential_launch_failed: 无法启动 Agent。")
+}
+
+fn cli_launch_args(program: &str, args: &[String]) -> Vec<String> {
+    let args = super::launch_command::normalize_args(args);
+    if args.is_empty() && is_dsh_command(program) {
+        return vec!["web".into()];
+    }
+    args
 }
 
 /// Host launchers can block on automation permissions or an unresponsive app.
@@ -601,7 +789,36 @@ pub fn launch_with_startup_agent(
     super::codex_configuration::validate_launch(agent_id, &target)?;
 
     let selected_startup_agent = startup_agent_override.or_else(|| info.active_startup_agent.clone());
-    if let (Some(agent_name), LaunchTarget::Cli { args, .. }) = (&selected_startup_agent, &mut target) {
+    let chosen = if matches!(target, LaunchTarget::Cli { .. }) {
+        let path = expand(&directory.or(info.directory).ok_or("请先选择工作目录")?);
+        if !path.is_absolute() || !path.is_dir() { return Err("工作目录不存在，请重新选择".into()); }
+        Some(path)
+    } else { None };
+    if crate::resources::model::agent_has_launch_credentials(agent_id)? {
+        dispatch_credential_launch(
+            agent_id,
+            &target,
+            chosen.as_deref(),
+            &info.profiles_revision,
+            selected_startup_agent.as_deref(),
+        )?;
+    } else {
+        add_startup_agent_argument(agent_id, &mut target, selected_startup_agent.as_deref());
+        dispatch(&target, chosen.as_deref())?;
+    }
+    // Failure to remember a preference must not imply that launch failed or
+    // invite a second click that would start a duplicate terminal session.
+    let directory_saved = chosen.map(|path| super::gate::write_independent(|| {
+        mutate_settings_checked(|settings| {
+            settings.agent_launch.get_or_insert_default().entry(agent_id.into()).or_default().directory = Some(path.to_string_lossy().into_owned());
+            Ok(())
+        }).map_err(|e| e.to_string())
+    }).is_ok()).unwrap_or(true);
+    Ok(LaunchReceipt { directory_saved })
+}
+
+fn add_startup_agent_argument(agent_id: &str, target: &mut LaunchTarget, selection: Option<&str>) {
+    if let (Some(agent_name), LaunchTarget::Cli { args, .. }) = (selection, target) {
         let definitions = crate::agents::load_agents();
         if let Some(agent_def) = definitions.get(agent_id) {
             if let Some(startup_cap) = &agent_def.startup_agents {
@@ -624,22 +841,6 @@ pub fn launch_with_startup_agent(
             }
         }
     }
-
-    let chosen = if matches!(target, LaunchTarget::Cli { .. }) {
-        let path = expand(&directory.or(info.directory).ok_or("请先选择工作目录")?);
-        if !path.is_absolute() || !path.is_dir() { return Err("工作目录不存在，请重新选择".into()); }
-        Some(path)
-    } else { None };
-    dispatch(&target, chosen.as_deref())?;
-    // Failure to remember a preference must not imply that launch failed or
-    // invite a second click that would start a duplicate terminal session.
-    let directory_saved = chosen.map(|path| super::gate::write_independent(|| {
-        mutate_settings_checked(|settings| {
-            settings.agent_launch.get_or_insert_default().entry(agent_id.into()).or_default().directory = Some(path.to_string_lossy().into_owned());
-            Ok(())
-        }).map_err(|e| e.to_string())
-    }).is_ok()).unwrap_or(true);
-    Ok(LaunchReceipt { directory_saved })
 }
 
 #[cfg(test)]

@@ -6,6 +6,7 @@
 pub mod agents;
 pub mod instructions;
 pub mod assets;
+pub mod credentials;
 pub mod error;
 pub mod mcp;
 pub mod hook;

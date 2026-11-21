@@ -14,6 +14,9 @@ pub(super) fn launch_with_proxy(agent_id: &str, directory: Option<&str>, proxy: 
     let profile = targets::PROFILES.get(agent_id).ok_or("该 Agent 尚未核验抓包启动方式。")?;
     let info = crate::application::agent_launch::info(agent_id)?;
     let mut target = info.resolved_target.ok_or("请先安装该 Agent 或配置启动方式。")?;
+    if crate::resources::model::agent_has_launch_credentials(agent_id)? {
+        return Err("capture_launch_credential_unsupported: 请先通过 Arca 启动 Agent，再选择这个现有进程抓包。".into());
+    }
     let ca = dirs::home_dir().ok_or("无法找到用户目录。")?.join(".mitmproxy/mitmproxy-ca-cert.pem");
     if !ca.exists() { initialize_ca(&ca)?; }
     if profile.ca_scope == CaptureCaScope::System && !certificate_trusted(&ca) {
