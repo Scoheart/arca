@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.1](https://github.com/Scoheart/arca/compare/v4.0.0...v4.0.1) (2026-11-21)
+
+### Changes
+
+* fix(arca): standardize accessible controls and shared utilities ([0fe8fb7](https://github.com/Scoheart/arca/commit/0fe8fb754cb0646816a55ba853d6316e373bd890))
+
 ## [4.0.0](https://github.com/Scoheart/arca/compare/v3.1.0...v4.0.0) (2026-11-21)
 
 ### Changes
