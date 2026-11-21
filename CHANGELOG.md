@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.2](https://github.com/Scoheart/arca/compare/v4.0.1...v4.0.2) (2026-11-21)
+
+### Changes
+
+* fix(desktop): improve update restarts and refresh provider icons ([8ef57ed](https://github.com/Scoheart/arca/commit/8ef57ed58a8e153491a211ad317dc996b1c50864))
+
 ## [4.0.1](https://github.com/Scoheart/arca/compare/v4.0.0...v4.0.1) (2026-11-21)
 
 ### Changes
