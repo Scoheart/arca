@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.0](https://github.com/Scoheart/arca/compare/v3.1.0...v4.0.0) (2026-11-21)
+
+### Changes
+
+* feat(arca): expand provider workflows and diagnostics ([f770e9c](https://github.com/Scoheart/arca/commit/f770e9c81537b839830c16d39041dc6f1a238e71))
+* feat(models)!: make provider credential storage pluggable ([869bac6](https://github.com/Scoheart/arca/commit/869bac6aa9b15d0dc271183aba34ad6f66fd033e))
+
 ## [3.1.0](https://github.com/Scoheart/arca/compare/v3.0.0...v3.1.0) (2026-11-16)
 
 ### Changes
