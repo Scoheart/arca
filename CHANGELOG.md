@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.3](https://github.com/Scoheart/arca/compare/v4.0.2...v4.0.3) (2026-11-21)
+
+### Changes
+
+* docs(skills): add the Arca usage skill ([5b463a6](https://github.com/Scoheart/arca/commit/5b463a685ce3ce7ad896476c199f9034edcc439f))
+
 ## [4.0.2](https://github.com/Scoheart/arca/compare/v4.0.1...v4.0.2) (2026-11-21)
 
 ### Changes
