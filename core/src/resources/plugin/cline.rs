@@ -301,16 +301,6 @@ pub(super) fn observe(host:&Host,result:&mut PluginScan) {
         Ok(false)=>{},Err(())=>result.unavailable=true,
     }
 }
-fn watch_module_directories(root:&Path,depth:usize,budget:&mut ScanBudget,watches:&mut BTreeSet<PathBuf>) -> Result<(),()> {
-    if depth>16{return Err(());}checked_root(root)?;
-    watches.insert(root.to_path_buf());watches.insert(root.join("plugin.json"));
-    if root.join("plugin.json").try_exists().map_err(|_|())?{return Ok(());}
-    for e in directory_entries(root,budget)? {
-        let name=e.path.file_name().and_then(|s|s.to_str()).ok_or(())?;
-        if e.directory&&!name.starts_with('.')&&name!="node_modules"{watch_module_directories(&e.path,depth+1,budget,watches)?;}
-    }
-    Ok(())
-}
 pub(super) fn watch_paths(host:&Host) -> Vec<PathBuf> {
     let c=contract();let mut watches=BTreeSet::new();
     if host.agent_id==c.desktop.agent_id {
@@ -329,23 +319,9 @@ pub(super) fn watch_paths(host:&Host) -> Vec<PathBuf> {
         }
     }
     if let Ok(paths)=native_paths() {
+        // The host already watches these roots recursively. Artifact proof
+        // belongs to observation, which determines what Arca may display.
         watches.insert(paths.packages.clone());watches.insert(paths.data.clone());watches.extend(paths.modules.clone());
-        if bound(host).is_ok_and(|v|v) {
-            let mut result=PluginScan::default();observe_sources(host,&paths,&mut result);
-            for p in result.plugins {
-                for s in p.source_paths.into_iter().chain(p.components.into_iter().map(|c|c.source_path)){watches.insert(expand_tilde(&s));}
-            }
-            // Parent directory changes must reveal newly added fixed components.
-            let mut budget=ScanBudget::default();
-            if let Ok(entries)=directory_entries(&paths.packages,&mut budget) {
-                for e in entries.into_iter().filter(|e|e.directory){
-                    let skills=e.path.join("skills");
-                    if let Ok(entries)=directory_entries(&skills,&mut budget){for s in entries.into_iter().filter(|e|e.directory){watches.extend([s.path.join("SKILL.md"),s.path]);}}
-                    watches.extend([e.path.join("plugin.json"),e.path.join("mcp.json"),skills,e.path]);
-                }
-            }
-            for root in &paths.modules{let _=watch_module_directories(root,0,&mut budget,&mut watches);}
-        }
     }
     watches.into_iter().collect()
 }

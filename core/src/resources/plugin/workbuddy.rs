@@ -412,7 +412,15 @@ fn bundled(host: &Host, root: &Path, result: &mut PluginScan) -> Result<(), ()> 
 }
 
 pub(super) fn watch_paths(host: &Host) -> Vec<PathBuf> {
-    host.roots.iter().map(source_root).filter(|root| root.is_absolute()).collect()
+    host.roots.iter().filter_map(|source| {
+        let root = source_root(source);
+        if !root.is_absolute() { return None; }
+        match source.layout.as_str() {
+            "workbuddy_installed" => Some(root.join("plugins")),
+            "workbuddy_bundled" => Some(root),
+            _ => None,
+        }
+    }).collect()
 }
 
 pub(super) fn observe(host: &Host, result: &mut PluginScan) {

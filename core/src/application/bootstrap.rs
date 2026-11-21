@@ -81,6 +81,13 @@ enum BootstrapProgress {
 /// External Agent edits are not errors and are deliberately absent from this
 /// path; they become relationship observations after bootstrap.
 pub fn bootstrap() -> BootstrapReport {
+    let started = std::time::Instant::now();
+    let report = bootstrap_inner();
+    crate::logging::record_bootstrap_outcome(&report, started.elapsed().as_millis() as u64);
+    report
+}
+
+fn bootstrap_inner() -> BootstrapReport {
     let permit = super::gate::begin_bootstrap();
     if let Err(reason) = crate::brand::validate_roots() {
         let error = BootstrapError { stage: BootstrapStage::BrandMigration, message: reason.to_string() };

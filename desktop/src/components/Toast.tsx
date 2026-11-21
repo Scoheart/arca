@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useId, use
 import { CheckIcon, XIcon } from "./icons";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { copyToClipboard } from "../lib/api";
+import { copyToClipboard, openLogFile } from "../lib/api";
 import { formatErrorDetails } from "../lib/format";
 
 export type ToastKind = "success" | "error" | "warning" | "info";
@@ -89,6 +89,7 @@ export function ErrorDetails({ summary, text, onExpandedChange }: {
         <pre tabIndex={0} aria-label={t("notifications.details")}>{text}</pre>
         <div className="arca-error-details-copy">
           <button type="button" className="btn-ghost" onClick={() => void copy()}>{t("notifications.copyDetails")}</button>
+          <button type="button" className="btn-ghost" onClick={() => void openLogFile("errors").catch(() => {})}>{t("notifications.openLogFile", { defaultValue: "打开错误日志" })}</button>
           {copyStatus && <span aria-live="polite">{t(copyStatus === "done" ? "notifications.copied" : "notifications.copyFailed")}</span>}
         </div>
       </>}

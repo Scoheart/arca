@@ -1,4 +1,5 @@
 use arca_core::assets::{ObservationDomain, ObservationWatchTarget};
+use notify::event::ModifyKind;
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -24,6 +25,11 @@ pub fn start(app: AppHandle) -> Result<(), String> {
             if event.as_ref().is_ok_and(|event| matches!(event.kind, EventKind::Access(_))) {
                 return;
             }
+            if event.as_ref().is_ok_and(Event::need_rescan)
+                && callback_overflow.swap(true, Ordering::AcqRel)
+            {
+                return;
+            }
             if let Err(mpsc::TrySendError::Full(_)) = sender.try_send(event) {
                 callback_overflow.store(true, Ordering::Release);
             }
@@ -32,10 +38,11 @@ pub fn start(app: AppHandle) -> Result<(), String> {
     )
     .map_err(|error| error.to_string())?;
 
-    let mut roots = desired_roots(&arca_core::assets::observation_watch_targets());
-    // A single inaccessible Agent path must not disable observation for every
-    // other capability. Keep every watch that the host can establish.
-    roots.retain(|root, mode| watcher.watch(root, *mode).is_ok());
+    let mut targets = arca_core::assets::observation_watch_targets();
+    let mut desired = desired_roots(&targets);
+    let mut roots = BTreeMap::new();
+    sync_watches(&mut watcher, &mut roots, &desired)
+        .map_err(|error| error.to_string())?;
 
     std::thread::Builder::new()
         .name("arca-observation-watcher".into())
@@ -43,7 +50,6 @@ pub fn start(app: AppHandle) -> Result<(), String> {
             // Keep the watcher owned by this thread. Coalesce editor temp-file
             // sequences and Arca's own atomic writes into one projection refresh.
             while let Ok(first) = receiver.recv() {
-                let targets = arca_core::assets::observation_watch_targets();
                 let deadline = Instant::now() + Duration::from_secs(1);
                 let mut domains = affected_domains(&[first], &targets);
                 loop {
@@ -68,17 +74,15 @@ pub fn start(app: AppHandle) -> Result<(), String> {
                 // Agent capability paths are themselves mutable central state.
                 // Rebuild targets as well as roots so changing a configured
                 // path takes effect without restarting Arca.
-                let next = desired_roots(&arca_core::assets::observation_watch_targets());
-                if next != roots {
-                    for root in roots.keys() {
-                        let _ = watcher.unwatch(root);
+                // Resolving native plugin sources may verify installed
+                // artifacts. Do that once per relevant batch.
+                targets = arca_core::assets::observation_watch_targets();
+                let next = desired_roots(&targets);
+                if next != desired {
+                    if let Err(error) = sync_watches(&mut watcher, &mut roots, &next) {
+                        eprintln!("Arca observation watcher warning: {error}");
                     }
-                    roots.clear();
-                    for (root, mode) in next {
-                        if watcher.watch(&root, mode).is_ok() {
-                            roots.insert(root, mode);
-                        }
-                    }
+                    desired = next;
                 }
                 if domains.contains(&ObservationDomain::Model)
                     || domains.contains(&ObservationDomain::Central)
@@ -101,6 +105,28 @@ pub fn start(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+fn sync_watches(
+    watcher: &mut RecommendedWatcher,
+    roots: &mut BTreeMap<PathBuf, RecursiveMode>,
+    desired: &BTreeMap<PathBuf, RecursiveMode>,
+) -> notify::Result<()> {
+    if &*roots == desired { return Ok(()); }
+    // macOS restarts one event stream after all path changes in this batch.
+    let mut changes = watcher.paths_mut();
+    roots.retain(|root, mode| {
+        if desired.get(root) == Some(mode) { return true; }
+        let _ = changes.remove(root);
+        false
+    });
+    // Keep every watch the host can establish even if one path is inaccessible.
+    for (root, mode) in desired {
+        if !roots.contains_key(root) && changes.add(root, *mode).is_ok() {
+            roots.insert(root.clone(), *mode);
+        }
+    }
+    changes.commit()
+}
+
 fn affected_domains(
     events: &[notify::Result<Event>],
     targets: &[ObservationWatchTarget],
@@ -108,14 +134,14 @@ fn affected_domains(
     let mut domains = BTreeSet::new();
     for event in events.iter().filter_map(|event| event.as_ref().ok()) {
         // Reads and metadata probes must never create a refresh feedback loop.
-        if matches!(&event.kind, EventKind::Access(_)) {
+        if matches!(&event.kind, EventKind::Access(_)) || event.need_rescan() {
             continue;
         }
         for target in targets {
             if event
                 .paths
                 .iter()
-                .any(|path| path_affects_target(path, target))
+                .any(|path| path_affects_target(path, target, event.kind))
             {
                 domains.insert(target.domain.clone());
             }
@@ -124,17 +150,24 @@ fn affected_domains(
     domains
 }
 
-fn path_affects_target(path: &Path, target: &ObservationWatchTarget) -> bool {
+fn path_affects_target(path: &Path, target: &ObservationWatchTarget, kind: EventKind) -> bool {
     if path == target.path {
         return true;
     }
     if target.recursive && path.starts_with(&target.path) {
         return true;
     }
-    // Only an absent target needs ancestor events to follow directories as
-    // they are created. Once the target exists, a broad parent notification is
-    // not evidence that this specific Agent input changed.
-    !target.path.exists() && target.path.starts_with(path)
+    if !target.path.starts_with(path) {
+        return false;
+    }
+    match kind {
+        // A directory can be moved into place with the target already inside.
+        EventKind::Create(_) | EventKind::Remove(_) | EventKind::Modify(ModifyKind::Name(_)) => true,
+        EventKind::Any | EventKind::Other | EventKind::Modify(ModifyKind::Any) => !target.path.exists(),
+        // A metadata update on a parent directory is not a change to a
+        // missing child. It is common on macOS even with no relevant edits.
+        _ => false,
+    }
 }
 
 fn desired_roots(
@@ -154,6 +187,11 @@ fn desired_roots(
             })
             .or_insert(mode);
     }
+    // A recursive watch already delivers events for its nested roots.
+    let recursive = roots.iter()
+        .filter_map(|(root, mode)| (*mode == RecursiveMode::Recursive).then_some(root.clone()))
+        .collect::<BTreeSet<_>>();
+    roots.retain(|root, _| !root.ancestors().skip(1).any(|ancestor| recursive.contains(ancestor)));
     roots
 }
 
@@ -175,7 +213,7 @@ fn watch_root(path: &Path, recursive: bool) -> Option<(PathBuf, RecursiveMode)> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use notify::event::{AccessKind, CreateKind, DataChange, ModifyKind};
+    use notify::event::{AccessKind, CreateKind, DataChange, MetadataKind, RenameMode};
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -225,6 +263,30 @@ mod tests {
         assert_eq!(
             watch_root(&skills, true),
             Some((skills, RecursiveMode::Recursive))
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn recursive_root_covers_nested_manifest_watch() {
+        let root = temporary_root("recursive-root-coverage");
+        let nested = root.join("nested");
+        fs::create_dir(&nested).unwrap();
+        let targets = [
+            ObservationWatchTarget {
+                domain: ObservationDomain::Skill,
+                path: root.clone(),
+                recursive: true,
+            },
+            ObservationWatchTarget {
+                domain: ObservationDomain::Mcp,
+                path: nested.join("plugin.json"),
+                recursive: false,
+            },
+        ];
+        assert_eq!(
+            desired_roots(&targets),
+            BTreeMap::from([(root.clone(), RecursiveMode::Recursive)]),
         );
         fs::remove_dir_all(root).unwrap();
     }
@@ -283,6 +345,43 @@ mod tests {
             affected_domains(&[event], &[target]),
             BTreeSet::from([ObservationDomain::Mcp])
         );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn renaming_an_ancestor_with_its_target_rebinds_the_watch() {
+        let root = temporary_root("target-moved-together");
+        let agent = root.join("agent");
+        fs::create_dir(&agent).unwrap();
+        let config = agent.join("config.json");
+        fs::write(&config, b"{}").unwrap();
+        let target = ObservationWatchTarget {
+            domain: ObservationDomain::Mcp,
+            path: config,
+            recursive: false,
+        };
+        let renamed = Ok(Event::new(EventKind::Modify(ModifyKind::Name(RenameMode::Any)))
+            .add_path(agent));
+
+        assert_eq!(
+            affected_domains(&[renamed], &[target]),
+            BTreeSet::from([ObservationDomain::Mcp]),
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn ownership_event_for_a_parent_does_not_refresh_a_missing_child() {
+        let root = temporary_root("parent-metadata");
+        let target = ObservationWatchTarget {
+            domain: ObservationDomain::Mcp,
+            path: root.join("missing/config.json"),
+            recursive: false,
+        };
+        let ownership = Ok(Event::new(EventKind::Modify(ModifyKind::Metadata(MetadataKind::Ownership)))
+            .add_path(root.clone()));
+
+        assert!(affected_domains(&[ownership], &[target]).is_empty());
         fs::remove_dir_all(root).unwrap();
     }
 

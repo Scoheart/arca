@@ -27,11 +27,12 @@ interface Props {
   onAdd(): void;
   onSelect(id: number): void;
   onChangeProfile(id: string): void;
-  onChangeParameter(name: keyof Parameters, value: string): void;
+  onChangeParameter<K extends keyof Parameters>(name: K, value: Parameters[K]): void;
   onInstructions(value: string): void;
   onDuplicate(): void;
   onRemove(): void;
   onRun(): void;
+  onPreview(): void;
 }
 
 export function RunSettings(props: Props) {
@@ -40,8 +41,11 @@ export function RunSettings(props: Props) {
     <aside className="settings" id="run-settings" aria-labelledby="settings-title" hidden={!props.open}>
       <header className="settings-bar">
         <h2 id="settings-title">运行设置</h2>
-        <button type="button" className="icon-button" id="close-settings" title="关闭运行设置"
-          aria-label="关闭运行设置" onClick={props.onClose}>×</button>
+        <div className="settings-bar-actions">
+          <button type="button" className="tool-button" disabled={!props.canRun} onClick={props.onPreview}>请求预览</button>
+          <button type="button" className="icon-button" id="close-settings" title="关闭运行设置"
+            aria-label="关闭运行设置" onClick={props.onClose}>×</button>
+        </div>
       </header>
       <div className="settings-body">
         <div className="set-heading">
@@ -67,7 +71,7 @@ export function RunSettings(props: Props) {
                 onChange={(event) => props.onChangeProfile(event.target.value)}>
                 <option value="">选择已保存的模型</option>
                 {models.map((model) => <option key={model.id} value={model.id}>
-                  {[model.name, model.provider, protocols[model.protocol]].filter(Boolean).join(" · ")}
+                  {[model.name, model.provider !== model.name ? model.provider : "", protocols[model.protocol]].filter(Boolean).join(" · ")}
                 </option>)}
               </select>
             </label>
@@ -110,14 +114,25 @@ interface EditorProps {
   profile?: ModelTarget;
   parameters: Parameters;
   disabled: boolean;
-  onChange(name: keyof Parameters, value: string): void;
+  onChange<K extends keyof Parameters>(name: K, value: Parameters[K]): void;
 }
 
 function ParameterEditor({ profile, parameters: p, disabled, onChange }: EditorProps) {
   const sampling = supportsSampling(profile);
   const effort = supportsEffort(profile);
+  const canStream = !!profile?.streaming_available;
   return (
     <div className="parameter-editor">
+      <section className="section response-mode">
+        <label>返回方式
+          <select name="streaming" value={p.streaming && canStream ? "live" : "full"}
+            disabled={disabled || !canStream} onChange={(event) => onChange("streaming", event.target.value === "live")}>
+            <option value="live">逐步显示</option>
+            <option value="full">完整返回</option>
+          </select>
+        </label>
+        {profile && !canStream && <p className="help">这个端点使用完整返回。</p>}
+      </section>
       <section className="section reasoning">
         {effort ? (
           <label>推理强度

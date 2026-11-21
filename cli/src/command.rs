@@ -16,7 +16,7 @@ use arca_core::application::assets::{
 };
 use arca_core::application::mcp::catalog::read_registry;
 use arca_core::application::mcp::operations as mcp_operations;
-use arca_core::application::operations::PlanOperationRequest;
+use arca_core::application::operations::{OperationPlan, PlanOperationRequest};
 use arca_core::application::skills::{InventoryState, SkillLocation};
 use arca_core::application::ArcaCore;
 use arca_core::domain::types::{
@@ -82,49 +82,54 @@ impl Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Inspect local conversation traces through Core's redacted readers.
+    /// Read redacted local conversation traces.
     Trace {
         #[command(subcommand)]
         command: crate::diagnostics::TraceCommand,
     },
-    /// Discover processes, record scoped traffic, or inspect saved redacted records.
+    /// Record scoped network traffic and inspect saved captures.
     Capture {
         #[command(subcommand)]
         command: crate::diagnostics::CaptureCommand,
     },
-    /// Query several Agents/capabilities in one scoped read. An empty scope means all.
+    /// Inspect local diagnostic and error logs.
+    Logs {
+        #[command(subcommand)]
+        command: Option<crate::diagnostics::LogsCommand>,
+    },
+    /// Check resource assignments and observed state across Agents.
     Status {
         #[arg(long = "agent", value_parser = parse_identity)]
         agents: Vec<String>,
         #[arg(long, value_enum)]
         capability: Option<AssetDomain>,
     },
-    /// Use typed operations, including a plan/commit session for automation.
+    /// Review or apply a structured operation for automation.
     Operation {
         #[command(subcommand)]
         command: crate::operation_session::OperationCommand,
     },
-    /// Inspect or change preferences shared with Arca Desktop.
+    /// Manage shared preferences, including terminal and language.
     Settings {
         #[command(subcommand)]
         command: crate::preferences::SettingsCommand,
     },
-    /// Manage central MCP assets and their Agent relationships.
+    /// Manage the central MCP library, sources, and icons.
     Mcp {
         #[command(subcommand)]
         command: McpCommand,
     },
-    /// Manage central Models, Providers, credentials, and Agent relationships.
+    /// Manage saved Model Profiles and Provider connections.
     Model {
         #[command(subcommand)]
         command: ModelCommand,
     },
-    /// Install, update, repair, and assign central Skills.
+    /// Install and maintain Skills in the central library.
     Skill {
         #[command(subcommand)]
         command: SkillCommand,
     },
-    /// Inspect and enable or disable configured Agents.
+    /// Inspect, configure, and launch Agents, and manage their assets.
     Agent {
         #[command(subcommand)]
         command: AgentCommand,
@@ -134,12 +139,12 @@ pub enum Command {
         #[command(subcommand)]
         command: crate::network_management::NetworkCommand,
     },
-    /// Discover external configurations without changing them.
+    /// Find external MCPs, Models, or Skills without importing them.
     Discover {
         #[arg(value_enum)]
         domain: Option<AssetDomain>,
     },
-    /// Show the complete revisioned workspace projection.
+    /// Show a complete workspace snapshot.
     Workspace,
     /// Upgrade a standalone CLI to the latest Stable release.
     Upgrade,
@@ -154,15 +159,13 @@ pub enum AssetDomain {
 
 #[derive(Debug, Subcommand)]
 pub enum McpCommand {
+    #[command(flatten)]
+    Relationships(McpRelationshipCommand),
     /// Customize MCP icons shared with Desktop.
     Icon {
         #[command(subcommand)]
         command: crate::mcp_preferences::IconCommand,
     },
-    /// Enable every assigned MCP for one Agent in one reviewed operation.
-    EnableAll { #[arg(long)] agent: String },
-    /// Disable every assigned MCP for one Agent in one reviewed operation.
-    DisableAll { #[arg(long)] agent: String },
     /// Manage subscribed, local and built-in MCP catalogs.
     Source {
         #[command(subcommand)]
@@ -178,12 +181,12 @@ pub enum McpCommand {
     },
     /// List every MCP asset in the central catalog.
     List,
-    /// Show one central MCP, or inspect its native configuration with --agent.
+    /// Show one central MCP by its exact name::transport key.
     Show {
         #[arg(value_parser = parse_mcp_key)]
         key: String,
         /// Inspect this Agent's configuration without importing or changing it.
-        #[arg(long)]
+        #[arg(long, hide = true)]
         agent: Option<String>,
     },
     /// Show desired, observed, enabled, and drift state for MCP relationships.
@@ -191,6 +194,43 @@ pub enum McpCommand {
         #[arg(long)]
         agent: Option<String>,
     },
+    /// Add one manual MCP. stdio requires --command; http requires --url.
+    Add {
+        #[arg(value_parser = parse_mcp_key)]
+        key: String,
+        #[arg(long, default_value = "")]
+        description: String,
+        #[arg(long = "tag")]
+        tags: Vec<String>,
+        #[arg(long)]
+        command: Option<String>,
+        #[arg(long = "arg", allow_hyphen_values = true)]
+        arguments: Vec<String>,
+        #[arg(long)]
+        cwd: Option<String>,
+        #[arg(long)]
+        url: Option<String>,
+        #[arg(long, default_value = "http")]
+        http_type: String,
+    },
+    /// Delete one central MCP asset and clean up its managed consumers.
+    Delete {
+        #[arg(value_parser = parse_mcp_key)]
+        key: String,
+    },
+    /// Export the effective MCP catalog, including its full configuration values.
+    Export {
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum McpRelationshipCommand {
+    /// Enable every assigned MCP for one Agent in one reviewed operation.
+    EnableAll { #[arg(long)] agent: String },
+    /// Disable every assigned MCP for one Agent in one reviewed operation.
+    DisableAll { #[arg(long)] agent: String },
     /// Add central MCP assets to one Agent without replacing its other assignments.
     Assign {
         #[arg(required = true, num_args = 1.., value_parser = parse_mcp_key)]
@@ -231,34 +271,23 @@ pub enum McpCommand {
         #[arg(value_enum)]
         action: ConvergenceActionArg,
     },
-    /// Add one manual MCP. stdio requires --command; http requires --url.
-    Add {
+}
+
+#[derive(Debug, Subcommand)]
+pub enum AgentMcpCommand {
+    #[command(flatten)]
+    Relationships(McpRelationshipCommand),
+    /// Show MCP assignments and native MCPs for one Agent.
+    Status {
+        #[arg(long, value_parser = parse_identity)]
+        agent: String,
+    },
+    /// Inspect one MCP in an Agent's native configuration without importing it.
+    Show {
         #[arg(value_parser = parse_mcp_key)]
         key: String,
-        #[arg(long, default_value = "")]
-        description: String,
-        #[arg(long = "tag")]
-        tags: Vec<String>,
-        #[arg(long)]
-        command: Option<String>,
-        #[arg(long = "arg", allow_hyphen_values = true)]
-        arguments: Vec<String>,
-        #[arg(long)]
-        cwd: Option<String>,
-        #[arg(long)]
-        url: Option<String>,
-        #[arg(long, default_value = "http")]
-        http_type: String,
-    },
-    /// Delete one central MCP asset and clean up its managed consumers.
-    Delete {
-        #[arg(value_parser = parse_mcp_key)]
-        key: String,
-    },
-    /// Export the effective MCP catalog, including its full configuration values.
-    Export {
-        #[arg(long)]
-        out: Option<PathBuf>,
+        #[arg(long, value_parser = parse_identity)]
+        agent: String,
     },
 }
 
@@ -266,7 +295,9 @@ pub enum McpCommand {
 pub enum ModelCommand {
     #[command(flatten)]
     Manage(crate::model_management::ModelManagementCommand),
-    /// List every central Model Profile.
+    #[command(flatten)]
+    Relationships(ModelRelationshipCommand),
+    /// List Model Profiles already saved in Arca.
     List,
     /// Show one central Model Profile by its exact profile ID.
     Show {
@@ -284,6 +315,10 @@ pub enum ModelCommand {
         #[arg(long)]
         agent: Option<String>,
     },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum ModelRelationshipCommand {
     /// Add Model Profiles to one Agent without replacing other Profiles by default.
     Assign {
         #[arg(required = true, num_args = 1.., value_parser = parse_identity)]
@@ -334,12 +369,38 @@ pub enum ModelCommand {
         #[arg(long, required = true)]
         agent: String,
     },
+    /// Review and change one Agent's credential delivery policy.
+    Delivery {
+        #[arg(value_enum)]
+        delivery: crate::model_management::DeliveryArg,
+        #[arg(long, value_parser = parse_identity)]
+        agent: String,
+        /// Restrict the policy change to one assigned Model Profile.
+        #[arg(long, value_parser = parse_identity)]
+        profile: Option<String>,
+        /// Explicitly allow a private plaintext write, only on supported Agents.
+        #[arg(long)]
+        confirm_plaintext: bool,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum AgentModelCommand {
+    #[command(flatten)]
+    Relationships(ModelRelationshipCommand),
+    /// Show assigned, enabled, observed, and current models for one Agent.
+    Status {
+        #[arg(long, value_parser = parse_identity)]
+        agent: String,
+    },
 }
 
 #[derive(Debug, Subcommand)]
 pub enum SkillCommand {
     #[command(flatten)]
     Manage(crate::skill_management::SkillManagementCommand),
+    #[command(flatten)]
+    Relationships(SkillRelationshipCommand),
     /// List every Skill in the central library.
     List,
     /// Show one central Skill by its exact name.
@@ -352,6 +413,10 @@ pub enum SkillCommand {
         #[arg(long)]
         agent: Option<String>,
     },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum SkillRelationshipCommand {
     /// Add central Skills to one Agent without replacing its other assignments.
     Assign {
         #[arg(required = true, num_args = 1.., value_parser = parse_identity)]
@@ -398,11 +463,42 @@ pub enum SkillCommand {
 }
 
 #[derive(Debug, Subcommand)]
+pub enum AgentSkillCommand {
+    #[command(flatten)]
+    Relationships(SkillRelationshipCommand),
+    /// Show assigned, enabled, and native Skills for one Agent.
+    Status {
+        #[arg(long, value_parser = parse_identity)]
+        agent: String,
+    },
+}
+
+#[derive(Debug, Subcommand)]
 pub enum AgentCommand {
     #[command(flatten)]
     Manage(crate::agent_management::AgentManagementCommand),
     /// List configured Agents and their supported resource capabilities.
     List,
+    /// Check all asset assignments and observed state for one Agent.
+    Status {
+        #[arg(value_parser = parse_identity)]
+        agent: String,
+    },
+    /// Inspect and manage MCPs used by an Agent.
+    Mcp {
+        #[command(subcommand)]
+        command: AgentMcpCommand,
+    },
+    /// Inspect, assign, and select models for an Agent.
+    Model {
+        #[command(subcommand)]
+        command: AgentModelCommand,
+    },
+    /// Inspect and manage Skills used by an Agent.
+    Skill {
+        #[command(subcommand)]
+        command: AgentSkillCommand,
+    },
     /// Enable one configured Agent for Arca operations.
     Enable {
         #[arg(value_parser = parse_identity)]
@@ -455,17 +551,13 @@ pub fn dispatch(cli: &Cli) -> Result<CommandOutput, CliError> {
             "a command is required when global output or mutation flags are present",
         )
     })?;
-    match command {
+    arca_core::logging::with_request_scope(Some("cli"), "cli.dispatch", |_| match command {
         Command::Trace { command } => crate::diagnostics::trace(cli, command),
         Command::Capture { command } => crate::diagnostics::captured(cli, command),
+        Command::Logs { command } => crate::diagnostics::logs(cli, command.as_ref()),
         Command::Status { agents, capability } => {
             cli.reject_mutation_options()?;
-            let inventory = arca_core::application::assets::list_inventory_scoped(
-                arca_core::application::assets::InventoryScope {
-                    capability: capability.map(core_capability),
-                    agent_ids: agents.iter().cloned().collect(),
-                },
-            ).map_err(CliError::from_legacy)?;
+            let inventory = scoped_inventory(agents.iter().map(String::as_str), *capability)?;
             crate::output::query_output("status", safe_consumption_inventory(&inventory))
         }
         Command::Operation { command } => crate::operation_session::dispatch(cli, command),
@@ -484,22 +576,26 @@ pub fn dispatch(cli: &Cli) -> Result<CommandOutput, CliError> {
             workspace(Palette::new(cli.no_color || cli.json))
         }
         Command::Upgrade => upgrade(cli.mutation_options()),
-    }
+    })
+}
+
+fn scoped_inventory<'a>(
+    agents: impl IntoIterator<Item = &'a str>,
+    capability: Option<AssetDomain>,
+) -> Result<arca_core::application::assets::ConsumptionInventory, CliError> {
+    arca_core::application::assets::list_inventory_scoped(
+        arca_core::application::assets::InventoryScope {
+            capability: capability.map(core_capability),
+            agent_ids: agents.into_iter().map(str::to_owned).collect(),
+        },
+    ).map_err(CliError::from_legacy)
 }
 
 fn dispatch_mcp(cli: &Cli, command: &McpCommand) -> Result<CommandOutput, CliError> {
     let palette = Palette::new(cli.no_color || cli.json);
     match command {
         McpCommand::Icon { command } => crate::mcp_preferences::dispatch(cli, command),
-        McpCommand::EnableAll { agent } | McpCommand::DisableAll { agent } => {
-            let enabled = matches!(command, McpCommand::EnableAll { .. });
-            let options = cli.mutation_options();
-            options.validate()?;
-            let plan = ArcaCore::plan(PlanOperationRequest::SetAllMcpEnabled(
-                arca_core::domain::assets::PlanSetAllMcpEnabledRequest { agent_id: agent.clone(), enabled },
-            )).map_err(CliError::from_core)?;
-            execute_operation(if enabled { "mcp.enable-all" } else { "mcp.disable-all" }, plan, options)
-        }
+        McpCommand::Relationships(command) => dispatch_mcp_relationship(cli, command),
         McpCommand::Source { command } => crate::source_management::dispatch(cli, command),
         McpCommand::Save { file, key } => {
             let options = cli.mutation_options();
@@ -515,30 +611,13 @@ fn dispatch_mcp(cli: &Cli, command: &McpCommand) -> Result<CommandOutput, CliErr
             cli.reject_mutation_options()?;
             mcp_list(palette)
         }
-        McpCommand::Show { key, agent } => {
+        McpCommand::Show { key, agent: Some(agent) } => inspect_agent_mcp(cli, key, agent),
+        McpCommand::Show { key, agent: None } => {
             cli.reject_mutation_options()?;
-            if let Some(agent) = agent {
-                let view = arca_core::application::mcp::inspect_configuration(arca_core::application::mcp::McpInspectionRequest {
-                    agent_id: agent.clone(), source: arca_core::application::mcp::McpInspectionSource::Configured { key: key.clone() },
-                }).map_err(CliError::from_core)?;
-                crate::output::query_output("mcp.show", json!(view))
-            } else { mcp_show(key, palette) }
+            mcp_show(key, palette)
         }
         McpCommand::Status { agent } => {
-            cli.reject_mutation_options()?;
-            status(AssetDomain::Mcp, agent.as_deref(), palette)
-        }
-        McpCommand::Assign { keys, agent } => {
-            assign(AssetDomain::Mcp, keys, agent, false, cli.mutation_options())
-        }
-        McpCommand::Unassign { keys, all, agent } => {
-            unassign(AssetDomain::Mcp, keys, *all, agent, cli.mutation_options())
-        }
-        McpCommand::Enable { key, agent } => {
-            set_enabled(AssetDomain::Mcp, key, agent, true, None, cli.mutation_options())
-        }
-        McpCommand::Disable { key, agent } => {
-            set_enabled(AssetDomain::Mcp, key, agent, false, None, cli.mutation_options())
+            relationship_status(cli, AssetDomain::Mcp, agent.as_deref())
         }
         McpCommand::Add {
             key,
@@ -566,11 +645,39 @@ fn dispatch_mcp(cli: &Cli, command: &McpCommand) -> Result<CommandOutput, CliErr
             mcp_export_stdout()
         }
         McpCommand::Export { out: Some(path) } => mcp_export_file(path, cli.mutation_options()),
-        McpCommand::Converge { key, agent, action } => converge(
+    }
+}
+
+fn inspect_agent_mcp(cli: &Cli, key: &str, agent: &str) -> Result<CommandOutput, CliError> {
+    cli.reject_mutation_options()?;
+    use arca_core::application::mcp::{inspect_configuration, McpInspectionRequest, McpInspectionSource};
+    let view = inspect_configuration(McpInspectionRequest {
+        agent_id: agent.to_owned(),
+        source: McpInspectionSource::Configured { key: key.to_owned() },
+    }).map_err(CliError::from_core)?;
+    crate::output::query_output("mcp.show", json!(view))
+}
+
+fn dispatch_mcp_relationship(cli: &Cli, command: &McpRelationshipCommand) -> Result<CommandOutput, CliError> {
+    let options = cli.mutation_options();
+    match command {
+        McpRelationshipCommand::EnableAll { agent } | McpRelationshipCommand::DisableAll { agent } => {
+            let enabled = matches!(command, McpRelationshipCommand::EnableAll { .. });
+            options.validate()?;
+            let plan = ArcaCore::plan(PlanOperationRequest::SetAllMcpEnabled(
+                arca_core::domain::assets::PlanSetAllMcpEnabledRequest { agent_id: agent.clone(), enabled },
+            )).map_err(CliError::from_core)?;
+            execute_operation(if enabled { "mcp.enable-all" } else { "mcp.disable-all" }, plan, options)
+        }
+        McpRelationshipCommand::Assign { keys, agent } => assign(AssetDomain::Mcp, keys, agent, false, options),
+        McpRelationshipCommand::Unassign { keys, all, agent } => unassign(AssetDomain::Mcp, keys, *all, agent, options),
+        McpRelationshipCommand::Enable { key, agent } => set_enabled(AssetDomain::Mcp, key, agent, true, None, options),
+        McpRelationshipCommand::Disable { key, agent } => set_enabled(AssetDomain::Mcp, key, agent, false, None, options),
+        McpRelationshipCommand::Converge { key, agent, action } => converge(
             AssetRef::Mcp { key: key.clone() },
             agent,
             (*action).into(),
-            cli.mutation_options(),
+            options,
         ),
     }
 }
@@ -579,6 +686,7 @@ fn dispatch_model(cli: &Cli, command: &ModelCommand) -> Result<CommandOutput, Cl
     let palette = Palette::new(cli.no_color || cli.json);
     match command {
         ModelCommand::Manage(command) => crate::model_management::dispatch(cli, command),
+        ModelCommand::Relationships(command) => dispatch_model_relationship(cli, command),
         ModelCommand::Playground { no_open } => crate::playground::run(cli, *no_open),
         ModelCommand::List => {
             cli.reject_mutation_options()?;
@@ -589,10 +697,15 @@ fn dispatch_model(cli: &Cli, command: &ModelCommand) -> Result<CommandOutput, Cl
             model_show(profile_id, palette)
         }
         ModelCommand::Status { agent } => {
-            cli.reject_mutation_options()?;
-            status(AssetDomain::Model, agent.as_deref(), palette)
+            relationship_status(cli, AssetDomain::Model, agent.as_deref())
         }
-        ModelCommand::Assign {
+    }
+}
+
+fn dispatch_model_relationship(cli: &Cli, command: &ModelRelationshipCommand) -> Result<CommandOutput, CliError> {
+    let options = cli.mutation_options();
+    match command {
+        ModelRelationshipCommand::Assign {
             profile_ids,
             agent,
             replace,
@@ -601,35 +714,33 @@ fn dispatch_model(cli: &Cli, command: &ModelCommand) -> Result<CommandOutput, Cl
             profile_ids,
             agent,
             *replace,
-            cli.mutation_options(),
+            options,
         ),
-        ModelCommand::Unassign { profile_ids, all, agent } => unassign(
+        ModelRelationshipCommand::Unassign { profile_ids, all, agent } => unassign(
             AssetDomain::Model,
             profile_ids,
             *all,
             agent,
-            cli.mutation_options(),
+            options,
         ),
-        ModelCommand::Enable { profile_id, agent } => set_enabled(
+        ModelRelationshipCommand::Enable { profile_id, agent } => set_enabled(
             AssetDomain::Model,
             profile_id,
             agent,
             true,
             None,
-            cli.mutation_options(),
+            options,
         ),
-        ModelCommand::Disable { profile_id, agent } => set_enabled(
+        ModelRelationshipCommand::Disable { profile_id, agent } => set_enabled(
             AssetDomain::Model,
             profile_id,
             agent,
             false,
             None,
-            cli.mutation_options(),
+            options,
         ),
-        ModelCommand::Use { profile_id, agent } => {
-            model_use(profile_id, agent, cli.mutation_options())
-        }
-        ModelCommand::Converge {
+        ModelRelationshipCommand::Use { profile_id, agent } => model_use(profile_id, agent, options),
+        ModelRelationshipCommand::Converge {
             profile_id,
             agent,
             action,
@@ -639,8 +750,15 @@ fn dispatch_model(cli: &Cli, command: &ModelCommand) -> Result<CommandOutput, Cl
             },
             agent,
             (*action).into(),
-            cli.mutation_options(),
+            options,
         ),
+        ModelRelationshipCommand::Delivery { delivery, agent, profile, confirm_plaintext } => {
+            options.validate()?;
+            let plan = arca_core::application::models::plan_credential_delivery(
+                agent, profile.as_deref(), (*delivery).into(), *confirm_plaintext,
+            ).map_err(CliError::from_legacy)?;
+            execute_operation("model.delivery", OperationPlan::Asset { plan: Box::new(plan) }, options)
+        }
     }
 }
 
@@ -648,6 +766,7 @@ fn dispatch_skill(cli: &Cli, command: &SkillCommand) -> Result<CommandOutput, Cl
     let palette = Palette::new(cli.no_color || cli.json);
     match command {
         SkillCommand::Manage(command) => crate::skill_management::dispatch(cli, command),
+        SkillCommand::Relationships(command) => dispatch_skill_relationship(cli, command),
         SkillCommand::List => {
             cli.reject_mutation_options()?;
             skill_list(palette)
@@ -657,40 +776,45 @@ fn dispatch_skill(cli: &Cli, command: &SkillCommand) -> Result<CommandOutput, Cl
             skill_show(name, palette)
         }
         SkillCommand::Status { agent } => {
-            cli.reject_mutation_options()?;
-            status(AssetDomain::Skill, agent.as_deref(), palette)
+            relationship_status(cli, AssetDomain::Skill, agent.as_deref())
         }
-        SkillCommand::Assign { names, agent } => assign(
+    }
+}
+
+fn dispatch_skill_relationship(cli: &Cli, command: &SkillRelationshipCommand) -> Result<CommandOutput, CliError> {
+    let options = cli.mutation_options();
+    match command {
+        SkillRelationshipCommand::Assign { names, agent } => assign(
             AssetDomain::Skill,
             names,
             agent,
             false,
-            cli.mutation_options(),
+            options,
         ),
-        SkillCommand::Unassign { names, agent } => unassign(
+        SkillRelationshipCommand::Unassign { names, agent } => unassign(
             AssetDomain::Skill,
             names,
             false,
             agent,
-            cli.mutation_options(),
+            options,
         ),
-        SkillCommand::Enable { name, agent, target } => set_enabled(
+        SkillRelationshipCommand::Enable { name, agent, target } => set_enabled(
             AssetDomain::Skill,
             name,
             agent,
             true,
             target.as_deref(),
-            cli.mutation_options(),
+            options,
         ),
-        SkillCommand::Disable { name, agent, target } => set_enabled(
+        SkillRelationshipCommand::Disable { name, agent, target } => set_enabled(
             AssetDomain::Skill,
             name,
             agent,
             false,
             target.as_deref(),
-            cli.mutation_options(),
+            options,
         ),
-        SkillCommand::Converge {
+        SkillRelationshipCommand::Converge {
             name,
             agent,
             action,
@@ -698,7 +822,7 @@ fn dispatch_skill(cli: &Cli, command: &SkillCommand) -> Result<CommandOutput, Cl
             AssetRef::Skill { name: name.clone() },
             agent,
             (*action).into(),
-            cli.mutation_options(),
+            options,
         ),
     }
 }
@@ -710,9 +834,64 @@ fn dispatch_agent(cli: &Cli, command: &AgentCommand) -> Result<CommandOutput, Cl
             cli.reject_mutation_options()?;
             agent_list(Palette::new(cli.no_color || cli.json))
         }
+        AgentCommand::Status { agent } => agent_status(cli, agent),
+        AgentCommand::Mcp { command } => match command {
+            AgentMcpCommand::Relationships(command) => dispatch_mcp_relationship(cli, command),
+            AgentMcpCommand::Status { agent } => relationship_status(cli, AssetDomain::Mcp, Some(agent)),
+            AgentMcpCommand::Show { key, agent } => inspect_agent_mcp(cli, key, agent),
+        },
+        AgentCommand::Model { command } => match command {
+            AgentModelCommand::Relationships(command) => dispatch_model_relationship(cli, command),
+            AgentModelCommand::Status { agent } => relationship_status(cli, AssetDomain::Model, Some(agent)),
+        },
+        AgentCommand::Skill { command } => match command {
+            AgentSkillCommand::Relationships(command) => dispatch_skill_relationship(cli, command),
+            AgentSkillCommand::Status { agent } => relationship_status(cli, AssetDomain::Skill, Some(agent)),
+        },
         AgentCommand::Enable { agent } => agent_set(agent, true, cli.mutation_options()),
         AgentCommand::Disable { agent } => agent_set(agent, false, cli.mutation_options()),
     }
+}
+
+fn agent_status(cli: &Cli, agent: &str) -> Result<CommandOutput, CliError> {
+    cli.reject_mutation_options()?;
+    if !arca_core::application::agents::load_agents().contains_key(agent) {
+        return Err(CliError::new("unknown_agent", format!("unknown Agent: {agent}")));
+    }
+    let inventory = scoped_inventory([agent], None)?;
+    let palette = Palette::new(cli.no_color || cli.json);
+    let mut lines = vec![palette.bold(&format!("Agent: {agent}"))];
+    for (domain, title) in [
+        (AssetDomain::Mcp, "MCPs"),
+        (AssetDomain::Model, "Models"),
+        (AssetDomain::Skill, "Skills"),
+    ] {
+        lines.push(format!("\n{}", palette.bold(title)));
+        let start = lines.len();
+        lines.extend(
+            inventory.consumptions.iter().chain(&inventory.external)
+                .filter(|row| asset_matches_domain(&row.asset, domain))
+                .map(format_status_row),
+        );
+        if lines.len() == start {
+            lines.push(palette.dim("  No matching relationships or external observations."));
+        }
+    }
+    if !inventory.host_mcps.is_empty() || !inventory.native_plugins.is_empty() {
+        lines.push(format!(
+            "\nHost resources (read-only): {} MCPs, {} plugins",
+            inventory.host_mcps.len(), inventory.native_plugins.len(),
+        ));
+    }
+    for diagnostic in &inventory.capability_errors {
+        lines.push(palette.yellow(&format!("warning ({:?}): {}", diagnostic.capability, diagnostic.code)));
+    }
+    for incident in &inventory.target_incidents {
+        lines.push(palette.yellow(&format!("target warning ({}): {}", incident.target_id, incident.code)));
+    }
+    Ok(CommandOutput::new(
+        "agent.status", false, safe_consumption_inventory(&inventory), lines.join("\n"),
+    ))
 }
 
 fn mcp_list(palette: Palette) -> Result<CommandOutput, CliError> {
@@ -854,20 +1033,17 @@ fn skill_show(name: &str, palette: Palette) -> Result<CommandOutput, CliError> {
     ))
 }
 
-fn status(
+fn relationship_status(
+    cli: &Cli,
     domain: AssetDomain,
     agent: Option<&str>,
-    palette: Palette,
 ) -> Result<CommandOutput, CliError> {
+    cli.reject_mutation_options()?;
+    let palette = Palette::new(cli.no_color || cli.json);
     if let Some(agent) = agent {
         require_agent_capability(agent, domain)?;
     }
-    let inventory = arca_core::application::assets::list_inventory_scoped(
-        arca_core::application::assets::InventoryScope {
-            capability: Some(core_capability(domain)),
-            agent_ids: agent.into_iter().map(str::to_owned).collect(),
-        },
-    ).map_err(CliError::from_legacy)?;
+    let inventory = scoped_inventory(agent, Some(domain))?;
     let revision = inventory.revision.clone();
     let observed_at = inventory.observed_at.clone();
     let host_mcps = inventory.host_mcps.clone();
@@ -1932,7 +2108,9 @@ mod tests {
         assert!(Cli::try_parse_from(["arca", "model", "unassign", "--agent", "qoder-cli"]).is_err());
         assert!(Cli::try_parse_from(["arca", "model", "unassign", "work", "--all", "--agent", "qoder-cli"]).is_err());
         let cli = Cli::try_parse_from(["arca", "model", "unassign", "--all", "--agent", "qoder-cli"]).unwrap();
-        assert!(matches!(cli.command, Some(Command::Model { command: ModelCommand::Unassign { all: true, .. } })));
+        assert!(matches!(cli.command, Some(Command::Model {
+            command: ModelCommand::Relationships(ModelRelationshipCommand::Unassign { all: true, .. })
+        })));
     }
 
     #[test]
@@ -2167,7 +2345,7 @@ mod tests {
         assert!(matches!(
             cli.command,
             Some(Command::Model {
-                command: ModelCommand::Assign { replace: true, .. }
+                command: ModelCommand::Relationships(ModelRelationshipCommand::Assign { replace: true, .. })
             })
         ));
     }

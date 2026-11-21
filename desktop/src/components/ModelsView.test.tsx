@@ -88,6 +88,7 @@ beforeEach(() => {
       },
       default_base_url: "http://localhost:11434/v1",
       default_protocol: "openai-completions",
+      default_auth_requirement: "none",
       additional_endpoints: [],
       category: "local",
       model_discovery_supported: true,

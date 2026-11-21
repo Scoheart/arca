@@ -41,18 +41,48 @@ pub fn list_provider_instances() -> Vec<ModelProviderInstanceView> {
 }
 
 pub fn discover_provider_models(provider_id: &str) -> Result<Vec<ProviderModelSummary>, String> {
-    let input = super::gate::read(|| crate::resources::model::prepare_provider_discovery(provider_id))?;
-    crate::resources::model::execute_provider_discovery(input)
+    let started = std::time::Instant::now();
+    let result = (|| {
+        let input = super::gate::read(|| crate::resources::model::prepare_provider_discovery(provider_id))?;
+        crate::resources::model::execute_provider_discovery(input)
+    })();
+    if let Err(ref error) = result {
+        let mapped = super::error::from_legacy(error.clone());
+        crate::logging::LogEvent::error("models.discover_provider_models", &mapped.message)
+            .code(&mapped.code)
+            .duration_ms(started.elapsed().as_millis() as u64)
+            .field("provider_id", provider_id)
+            .emit();
+    }
+    result
 }
 
 pub fn reveal_provider_credential(provider_id: &str) -> Result<String, String> {
-    let provider = super::gate::read(|| crate::resources::model::prepare_provider_credential_reveal(provider_id))?;
-    crate::resources::model::execute_provider_credential_reveal(&provider)
+    let result = (|| {
+        let provider = super::gate::read(|| crate::resources::model::prepare_provider_credential_reveal(provider_id))?;
+        crate::resources::model::execute_provider_credential_reveal(&provider)
+    })();
+    if let Err(ref error) = result {
+        let mapped = super::error::from_legacy(error.clone());
+        crate::logging::LogEvent::warn("models.reveal_provider_credential", &mapped.message)
+            .code(&mapped.code)
+            .field("provider_id", provider_id)
+            .emit();
+    }
+    result
 }
 
 /// Explicit startup/user retry; metadata-only queries never call this.
 pub fn unlock_credential_session(retry: bool) -> Result<serde_json::Value, String> {
-    crate::resources::model::unlock_credential_session(retry)
+    let result = crate::resources::model::unlock_credential_session(retry);
+    if let Err(ref error) = result {
+        let mapped = super::error::from_legacy(error.clone());
+        crate::logging::LogEvent::warn("models.unlock_credential_session", &mapped.message)
+            .code(&mapped.code)
+            .field("retry", retry)
+            .emit();
+    }
+    result
 }
 
 pub fn clear_credential_session() {

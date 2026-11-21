@@ -24,6 +24,26 @@ pub fn backups_dir() -> PathBuf {
     arca_dir().join("backups")
 }
 
+/// `~/.arca/logs` —— 本地全链路运行与错误诊断日志目录。
+pub fn logs_dir() -> PathBuf {
+    arca_dir().join("logs")
+}
+
+/// `~/.arca/logs/arca.log` —— 按时间顺序记录的可读全链路日志。
+pub fn main_log_file() -> PathBuf {
+    logs_dir().join("arca.log")
+}
+
+/// `~/.arca/logs/arca-errors.log` —— 仅包含 WARN / ERROR / PANIC 的独立排障日志。
+pub fn error_log_file() -> PathBuf {
+    logs_dir().join("arca-errors.log")
+}
+
+/// `~/.arca/logs/arca.jsonl` —— 结构化 JSON Lines 全链路日志。
+pub fn structured_log_file() -> PathBuf {
+    logs_dir().join("arca.jsonl")
+}
+
 /// `~/.arca/assets` —— MCP、Model 与 Skill 中央资产的统一物理根目录。
 pub fn assets_dir() -> PathBuf {
     arca_dir().join("assets")

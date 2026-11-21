@@ -2,12 +2,13 @@
 
 use std::ffi::OsString;
 
-use clap::{CommandFactory, Parser};
+use clap::FromArgMatches;
 use serde_json::json;
 
 mod agent_management;
 mod command;
 mod diagnostics;
+mod help;
 mod input;
 mod model_management;
 mod mcp_preferences;
@@ -26,6 +27,7 @@ use command::{dispatch, Cli};
 use output::{render_error, render_success, CliError};
 
 fn main() {
+    arca_core::logging::init_session("cli");
     let args = std::env::args_os().collect::<Vec<_>>();
     let json_mode = requested_json_mode(&args);
     let no_color = json_mode || args.iter().any(|argument| argument == "--no-color");
@@ -45,6 +47,10 @@ fn main() {
     };
     let (json_mode, no_color) = runtime_output_modes(&cli);
     if let Err(error) = run(cli) {
+        arca_core::logging::LogEvent::error("cli.error", &error.message)
+            .code(&error.code)
+            .fields(error.details.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+            .emit();
         render_error(&error, json_mode, no_color);
         std::process::exit(1);
     }
@@ -82,7 +88,10 @@ fn requested_json_mode(args: &[OsString]) -> bool {
 }
 
 fn parse(args: Vec<OsString>, json_mode: bool) -> Result<ParseOutcome, CliError> {
-    match Cli::try_parse_from(args) {
+    let parsed = help::command()
+        .try_get_matches_from(args)
+        .and_then(|mut matches| Cli::from_arg_matches_mut(&mut matches));
+    match parsed {
         Ok(cli) => Ok(ParseOutcome::Run(cli)),
         Err(error) if error.use_stderr() => {
             if json_mode {
@@ -121,12 +130,13 @@ fn run(cli: Cli) -> Result<(), CliError> {
             ));
         }
         if arca_core::brand::env_os("ARCA_NO_TUI").is_some() {
-            Cli::command()
+            help::command()
                 .print_help()
                 .map_err(|error| CliError::private("help_output_failed", error.to_string()))?;
             println!();
             return Ok(());
         }
+        arca_core::logging::init_session("tui");
         bootstrap(false);
         return tui::run().map_err(|error| CliError::private("tui_failed", error.to_string()));
     }

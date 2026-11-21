@@ -57,9 +57,12 @@ pub(super) fn encode(profile: &ModelProfile, provider: &str, request: Request) -
             messages.push(json!({"role": "user", "content": request.prompt}));
             body.insert("messages".into(), json!(messages));
             body.insert("model".into(), json!(model));
-            body.insert("stream".into(), json!(false));
+            body.insert("stream".into(), json!(request.streaming));
             if matches!(provider, "openai" | "azure-openai") {
                 body.insert("store".into(), json!(false));
+                if request.streaming {
+                    body.insert("stream_options".into(), json!({"include_usage": true}));
+                }
             }
             if tokens.is_some() && (body.contains_key("max_tokens") || body.contains_key("max_completion_tokens")) {
                 return Err(duplicate("max_tokens / max_completion_tokens"));
@@ -75,7 +78,7 @@ pub(super) fn encode(profile: &ModelProfile, provider: &str, request: Request) -
         OpenaiResponses => {
             body.insert("model".into(), json!(model));
             body.insert("input".into(), json!(request.prompt));
-            body.insert("stream".into(), json!(false));
+            body.insert("stream".into(), json!(request.streaming));
             body.insert("store".into(), json!(false));
             if has_system { body.insert("instructions".into(), json!(request.instructions)); }
             params(&mut body, &["temperature", "top_p", "max_output_tokens"], request.temperature, request.top_p, tokens)?;
@@ -87,7 +90,7 @@ pub(super) fn encode(profile: &ModelProfile, provider: &str, request: Request) -
             require_native_effort(effort)?;
             body.insert("model".into(), json!(model));
             body.insert("messages".into(), json!([{"role": "user", "content": request.prompt}]));
-            body.insert("stream".into(), json!(false));
+            body.insert("stream".into(), json!(request.streaming));
             if has_system { body.insert("system".into(), json!(request.instructions)); }
             params(&mut body, &["temperature", "top_p", "max_tokens"], request.temperature, request.top_p, tokens)?;
             body.entry("max_tokens").or_insert_with(|| json!(profile.max_output_tokens.unwrap_or(4096)));
@@ -99,7 +102,7 @@ pub(super) fn encode(profile: &ModelProfile, provider: &str, request: Request) -
             }
             body.insert("model".into(), json!(model));
             body.insert("input".into(), json!(request.prompt));
-            body.insert("stream".into(), json!(false));
+            body.insert("stream".into(), json!(request.streaming));
             body.insert("store".into(), json!(false));
             if has_system { body.insert("system_instruction".into(), json!(request.instructions)); }
             if tokens.is_some() {
@@ -174,7 +177,7 @@ fn params(
     field(body, fields[2], tokens)
 }
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 pub(super) struct Usage {
     input_tokens: Option<u64>,
     output_tokens: Option<u64>,
@@ -182,10 +185,28 @@ pub(super) struct Usage {
     reasoning_tokens: Option<u64>,
 }
 
+impl Usage {
+    pub(super) fn observe(&mut self, protocol: &ModelProtocol, counts: &Value) {
+        use ModelProtocol::*;
+        let (input, output, total, reasoning) = match protocol {
+            OpenaiCompletions => ("prompt_tokens", "completion_tokens", "total_tokens", "/completion_tokens_details/reasoning_tokens"),
+            OpenaiResponses => ("input_tokens", "output_tokens", "total_tokens", "/output_tokens_details/reasoning_tokens"),
+            AnthropicMessages => ("input_tokens", "output_tokens", "total_tokens", "/reasoning_tokens"),
+            GeminiInteractions => ("total_input_tokens", "total_output_tokens", "total_tokens", "/total_thought_tokens"),
+            GeminiGenerateContent => ("promptTokenCount", "candidatesTokenCount", "totalTokenCount", "/thoughtsTokenCount"),
+            AwsBedrockConverse => ("inputTokens", "outputTokens", "totalTokens", "/reasoningTokens"),
+        };
+        self.input_tokens = counts[input].as_u64().or(self.input_tokens);
+        self.output_tokens = counts[output].as_u64().or(self.output_tokens);
+        self.total_tokens = counts[total].as_u64().or(self.total_tokens);
+        self.reasoning_tokens = counts.pointer(reasoning).and_then(Value::as_u64).or(self.reasoning_tokens);
+    }
+}
+
 pub(super) fn decode(protocol: &ModelProtocol, value: &Value) -> Result<(String, Usage, Option<&'static str>), Failure> {
     use ModelProtocol::*;
     let mut chunks = Vec::new();
-    let (stop, counts, input, output, total, reasoning) = match protocol {
+    let (stop, counts) = match protocol {
         OpenaiCompletions => {
             let message = &value["choices"][0]["message"];
             if let Some(text) = message.get("content").and_then(Value::as_str).or_else(|| message["refusal"].as_str()) {
@@ -193,8 +214,7 @@ pub(super) fn decode(protocol: &ModelProtocol, value: &Value) -> Result<(String,
             } else {
                 pick_text(&message["content"], &mut chunks);
             }
-            (value["choices"][0]["finish_reason"].as_str(), &value["usage"],
-                "prompt_tokens", "completion_tokens", "total_tokens", "/completion_tokens_details/reasoning_tokens")
+            (value["choices"][0]["finish_reason"].as_str(), &value["usage"])
         }
         OpenaiResponses => {
             for item in items(&value["output"]).filter(|item| item["type"] == "message") {
@@ -203,38 +223,47 @@ pub(super) fn decode(protocol: &ModelProtocol, value: &Value) -> Result<(String,
             if chunks.is_empty() {
                 if let Some(text) = value["output_text"].as_str() { chunks.push(text); }
             }
-            (value["incomplete_details"]["reason"].as_str().or_else(|| value["status"].as_str()), &value["usage"],
-                "input_tokens", "output_tokens", "total_tokens", "/output_tokens_details/reasoning_tokens")
+            (value["incomplete_details"]["reason"].as_str().or_else(|| value["status"].as_str()), &value["usage"])
         }
         AnthropicMessages => {
             pick_text(&value["content"], &mut chunks);
-            (value["stop_reason"].as_str(), &value["usage"], "input_tokens", "output_tokens", "total_tokens", "/reasoning_tokens")
+            (value["stop_reason"].as_str(), &value["usage"])
         }
         GeminiInteractions => {
             for step in items(&value["steps"]).filter(|step| step["type"] == "model_output") {
                 pick_text(&step["content"], &mut chunks);
             }
             if chunks.is_empty() { pick_text(&value["outputs"], &mut chunks); }
-            (value["status"].as_str(), &value["usage"], "total_input_tokens", "total_output_tokens", "total_tokens", "/total_thought_tokens")
+            (value["status"].as_str(), &value["usage"])
         }
         GeminiGenerateContent => {
             let candidate = &value["candidates"][0];
             pick_text(&candidate["content"]["parts"], &mut chunks);
             (candidate["finishReason"].as_str().or_else(|| value["promptFeedback"]["blockReason"].as_str()),
-                &value["usageMetadata"], "promptTokenCount", "candidatesTokenCount", "totalTokenCount", "/thoughtsTokenCount")
+                &value["usageMetadata"])
         }
         AwsBedrockConverse => {
             pick_text(&value["output"]["message"]["content"], &mut chunks);
-            (value["stopReason"].as_str(), &value["usage"], "inputTokens", "outputTokens", "totalTokens", "/reasoningTokens")
+            (value["stopReason"].as_str(), &value["usage"])
         }
     };
-    let finish = match stop {
-        Some("length" | "max_tokens" | "max_output_tokens" | "MAX_TOKENS") => Some("length"),
+    let finish = finish_reason(stop);
+    let text = checked_text(chunks.concat(), finish)?;
+    let mut usage = Usage::default();
+    usage.observe(protocol, counts);
+    Ok((text, usage, finish))
+}
+
+pub(super) fn finish_reason(stop: Option<&str>) -> Option<&'static str> {
+    match stop {
+        Some("length" | "max_tokens" | "max_output_tokens" | "MAX_TOKENS" | "budget_exceeded") => Some("length"),
         Some("content_filter" | "content_filtered" | "SAFETY" | "RECITATION" | "guardrail_intervened") => Some("filtered"),
         Some("incomplete" | "cancelled") => Some("incomplete"),
         _ => None,
-    };
-    let text = chunks.concat();
+    }
+}
+
+pub(super) fn checked_text(text: String, finish: Option<&str>) -> Result<String, Failure> {
     if text.trim().is_empty() {
         let explanation = match finish {
             Some("length") => "模型用完了输出 Token，未生成可见文本。请提高输出上限后重试。",
@@ -243,16 +272,14 @@ pub(super) fn decode(protocol: &ModelProtocol, value: &Value) -> Result<(String,
         };
         return Err(Failure::new(502, "empty_text", explanation));
     }
-    let usage = Usage { input_tokens: counts[input].as_u64(), output_tokens: counts[output].as_u64(),
-        total_tokens: counts[total].as_u64(), reasoning_tokens: counts.pointer(reasoning).and_then(Value::as_u64) };
-    Ok((text, usage, finish))
+    Ok(text)
 }
 
 fn items(value: &Value) -> impl Iterator<Item = &Value> {
     value.as_array().into_iter().flatten()
 }
 
-fn pick_text<'a>(value: &'a Value, chunks: &mut Vec<&'a str>) {
+pub(super) fn pick_text<'a>(value: &'a Value, chunks: &mut Vec<&'a str>) {
     for item in items(value) {
         if item["thought"] == true { continue; }
         match item["type"].as_str() {

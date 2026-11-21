@@ -123,28 +123,76 @@ enum MutationScope {
     Capability(CapabilityDomain),
 }
 
+impl MutationScope {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Independent => "independent",
+            Self::Shared => "shared",
+            Self::Capability(CapabilityDomain::Mcp) => "mcp",
+            Self::Capability(CapabilityDomain::Model) => "model",
+            Self::Capability(CapabilityDomain::Skill) => "skill",
+        }
+    }
+}
+
 fn mutate_scoped<R: GatedResult>(
     scope: MutationScope,
     stage: &'static str,
     operation: impl FnOnce() -> R,
 ) -> R {
+    let started = std::time::Instant::now();
     let _guard = WORKSPACE_GATE
         .write()
         .unwrap_or_else(|error| error.into_inner());
     if let Some(error) = blocker_for_status(&current_status(), scope) {
+        crate::logging::LogEvent::warn("gate.blocked", &error.message)
+            .code(&error.code)
+            .duration_ms(started.elapsed().as_millis() as u64)
+            .field("requested_stage", stage)
+            .field("scope", scope.as_str())
+            .emit();
         return R::blocked(error);
     }
     let _cross_process_guard = match acquire_cross_process_mutation_lock() {
         Ok(guard) => guard,
-        Err(_) => return R::blocked(mutation_coordination_error()),
+        Err(lock_reason) => {
+            let error = mutation_coordination_error();
+            crate::logging::LogEvent::warn("gate.lock_busy", &error.message)
+                .code(&error.code)
+                .duration_ms(started.elapsed().as_millis() as u64)
+                .field("requested_stage", stage)
+                .field("scope", scope.as_str())
+                .field("lock_reason", lock_reason)
+                .emit();
+            return R::blocked(error);
+        }
     };
     if let Some(error) = mutation_blocker(scope) {
+        crate::logging::LogEvent::error("gate.recovery_blocked", &error.message)
+            .code(&error.code)
+            .duration_ms(started.elapsed().as_millis() as u64)
+            .field("requested_stage", stage)
+            .field("scope", scope.as_str())
+            .emit();
         return R::blocked(error);
     }
 
     let result = operation();
+    let elapsed_ms = started.elapsed().as_millis() as u64;
     if let Some(message) = result.recovery_required() {
+        crate::logging::LogEvent::error("gate.read_only_latched", &message)
+            .code("recovery_required")
+            .duration_ms(elapsed_ms)
+            .field("failed_stage", stage)
+            .field("scope", scope.as_str())
+            .emit();
         latch_read_only(stage, message);
+    } else if let Some((code, message)) = result.failure_summary() {
+        crate::logging::LogEvent::error(stage, &message)
+            .code(code)
+            .duration_ms(elapsed_ms)
+            .field("scope", scope.as_str())
+            .emit();
     }
     result
 }
@@ -381,6 +429,7 @@ fn scope_is_blocked(scope: MutationScope, blocked: &[CapabilityDomain]) -> bool 
 pub(crate) trait GatedResult {
     fn blocked(error: CoreError) -> Self;
     fn recovery_required(&self) -> Option<String>;
+    fn failure_summary(&self) -> Option<(String, String)>;
 }
 
 impl<T> GatedResult for CoreResult<T> {
@@ -393,6 +442,12 @@ impl<T> GatedResult for CoreResult<T> {
             .err()
             .filter(|error| error.code == "recovery_required")
             .map(|error| error.message.clone())
+    }
+
+    fn failure_summary(&self) -> Option<(String, String)> {
+        self.as_ref()
+            .err()
+            .map(|error| (error.code.clone(), error.message.clone()))
     }
 }
 
@@ -413,6 +468,12 @@ impl<T> GatedResult for Result<T, String> {
             return Some(message);
         }
         None
+    }
+
+    fn failure_summary(&self) -> Option<(String, String)> {
+        let error = self.as_ref().err()?;
+        let mapped = super::error::from_legacy(error.clone());
+        Some((mapped.code, mapped.message))
     }
 }
 
@@ -435,6 +496,12 @@ impl<T> GatedResult for Result<T, SkillError> {
             Err(SkillError::RecoveryRequired { message }) => Some(message.clone()),
             Err(_) | Ok(_) => None,
         }
+    }
+
+    fn failure_summary(&self) -> Option<(String, String)> {
+        let error = self.as_ref().err()?;
+        let parts = error.clone().into_command_parts();
+        Some((parts.code.into(), parts.message))
     }
 }
 

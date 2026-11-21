@@ -16,6 +16,7 @@ import {
   EditIcon,
 } from "./icons";
 import { applyTheme, getInitialTheme, type Theme } from "../lib/theme";
+import { openLogFile } from "../lib/api";
 import { formatError } from "../lib/format";
 import { useLocale } from "../i18n/LocaleProvider";
 import type { LocalePreference } from "../i18n";
@@ -217,6 +218,9 @@ export function Layout({
             </div>
           </div>
           <div className="arca-settings-section">
+            <button type="button" className="arca-settings-action"
+              onClick={() => void openLogFile("dir").catch((error) => toast.show({ kind: "error", msg: "无法打开日志目录", details: error }))}>
+              <EditIcon className="w-4 h-4" /><span>{t("layout.openLogs", { defaultValue: "打开运行日志" })}</span><small>~/.arca/logs</small></button>
             {onRescan && <button type="button" className="arca-settings-action" disabled={rescanning}
               onClick={() => void handleRescan().catch((error) => toast.show({ kind: "error", msg: t("notifications.rescanFailed"), details: error }))}>
               <RefreshIcon className="w-4 h-4" /><span>{rescanning ? t("layout.scanning") : t("layout.rescan")}</span></button>}

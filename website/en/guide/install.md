@@ -68,11 +68,12 @@ Or use subcommands for scripting (set `ARCA_NO_TUI=1` to print help instead of e
 
 ```bash
 arca mcp list
-arca mcp assign github::stdio --agent claude-code --yes
-arca model use work --agent pi --yes
-arca skill assign review-changes --agent codex --yes
+arca agent mcp assign github::stdio --agent claude-code --yes
+arca agent model use work --agent pi --yes
+arca agent skill assign review-changes --agent codex --yes
 arca mcp export --out mcp.json --yes
 arca agent list
+arca agent status codex
 arca upgrade --yes
 ```
 

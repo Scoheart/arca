@@ -8,6 +8,8 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::Read;
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
@@ -153,26 +155,90 @@ pub(crate) fn text(path: &Path, limit: u64) -> Result<String, ()> {
     Ok(content)
 }
 
+#[cfg(unix)]
+#[derive(PartialEq, Eq)]
+struct ArtifactStamp {
+    device: u64,
+    inode: u64,
+    bytes: u64,
+    mode: u32,
+    links: u64,
+    modified: (i64, i64),
+    changed: (i64, i64),
+}
+
+#[cfg(unix)]
+impl ArtifactStamp {
+    fn read(metadata: &fs::Metadata) -> Self {
+        Self {
+            device: metadata.dev(),
+            inode: metadata.ino(),
+            bytes: metadata.len(),
+            mode: metadata.mode(),
+            links: metadata.nlink(),
+            modified: (metadata.mtime(), metadata.mtime_nsec()),
+            changed: (metadata.ctime(), metadata.ctime_nsec()),
+        }
+    }
+}
+
+#[cfg(unix)]
+struct VerifiedDigest {
+    path: PathBuf,
+    hash: String,
+    stamp: ArtifactStamp,
+}
+
+#[cfg(unix)]
+fn verified_digests() -> &'static std::sync::Mutex<std::collections::VecDeque<VerifiedDigest>> {
+    static DIGESTS: OnceLock<std::sync::Mutex<std::collections::VecDeque<VerifiedDigest>>> = OnceLock::new();
+    DIGESTS.get_or_init(Default::default)
+}
+
 fn verified_artifact(path: &Path, expected_bytes: u64, expected_sha256: &str, budget: &mut ScanBudget) -> Result<fs::File, ()> {
     if !regular_metadata_file(path)? { return Err(()); }
     budget.visit()?;
     if expected_bytes > MAX_VERIFIED_BYTES.saturating_sub(budget.verified_bytes) as u64 { return Err(()); }
     let mut file = open_confined_file(path)?; let before = file.metadata().map_err(|_| ())?;
     if !before.is_file() || before.len() != expected_bytes { return Err(()); }
-    let mut digest = Sha256::new(); let mut bytes = 0u64; let mut buffer = [0u8; 65_536];
-    loop {
-        let count = (&mut file).take(expected_bytes.saturating_sub(bytes)+1).read(&mut buffer).map_err(|_| ())?;
-        if count == 0 { break; }
-        bytes += count as u64; budget.verified_bytes += count;
-        if bytes > expected_bytes { return Err(()); }
-        digest.update(&buffer[..count]);
+    #[cfg(unix)]
+    let stamp = ArtifactStamp::read(&before);
+    // Reuse only the digest of an unchanged, reopened large file. Path and
+    // descriptor identity are checked below on hits as well as on misses.
+    #[cfg(unix)]
+    let cached = expected_bytes >= 1_048_576 && verified_digests().lock().is_ok_and(|digests|
+        digests.iter().any(|item| item.path == path && item.hash == expected_sha256 && item.stamp == stamp));
+    #[cfg(not(unix))]
+    let cached = false;
+    if cached {
+        use std::io::{Seek, SeekFrom};
+        file.seek(SeekFrom::Start(expected_bytes)).map_err(|_| ())?;
+        budget.verified_bytes += expected_bytes as usize;
+    } else {
+        let mut digest = Sha256::new();
+        let mut bytes = 0u64;
+        let mut buffer = [0u8; 65_536];
+        loop {
+            let count = (&mut file).take(expected_bytes.saturating_sub(bytes)+1).read(&mut buffer).map_err(|_| ())?;
+            if count == 0 { break; }
+            bytes += count as u64;
+            budget.verified_bytes += count;
+            if bytes > expected_bytes { return Err(()); }
+            digest.update(&buffer[..count]);
+        }
+        if bytes != expected_bytes || hex::encode(digest.finalize()) != expected_sha256 { return Err(()); }
     }
-    if bytes != expected_bytes || hex::encode(digest.finalize()) != expected_sha256 { return Err(()); }
     let after = file.metadata().map_err(|_| ())?; let bound = fs::symlink_metadata(path).map_err(|_| ())?;
     if !bound.file_type().is_file() || before.len() != after.len() || before.modified().map_err(|_| ())? != after.modified().map_err(|_| ())? { return Err(()); }
     #[cfg(unix)] {
-        use std::os::unix::fs::MetadataExt;
-        if before.dev() != bound.dev() || before.ino() != bound.ino() || before.ctime() != after.ctime() || before.ctime_nsec() != after.ctime_nsec() { return Err(()); }
+        if stamp != ArtifactStamp::read(&after) || stamp != ArtifactStamp::read(&bound) { return Err(()); }
+        if !cached && expected_bytes >= 1_048_576 {
+            if let Ok(mut digests) = verified_digests().lock() {
+                digests.retain(|item| item.path != path || item.hash != expected_sha256);
+                if digests.len() >= 128 { digests.pop_front(); }
+                digests.push_back(VerifiedDigest { path: path.into(), hash: expected_sha256.into(), stamp });
+            }
+        }
     }
     Ok(file)
 }
@@ -858,6 +924,27 @@ mod tests {
         assert!(dirs(&root, &mut budget).is_err());
         let mut exhausted = ScanBudget { bytes: MAX_READ_BYTES, ..ScanBudget::default() };
         assert!(optional_json(&root, "mcp.json", &mut exhausted).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_cached_digest_is_invalidated_by_same_size_rewrite_with_preserved_mtime() {
+        use std::fs::{FileTimes, OpenOptions};
+        use std::io::Write;
+
+        let home = TestHome::new("plugin-artifact-rewrite");
+        let path = home.home.join("artifact.bin");
+        let bytes = vec![0u8; 1_048_576];
+        fs::write(&path, &bytes).unwrap();
+        let digest = hex::encode(Sha256::digest(&bytes));
+        let length = bytes.len() as u64;
+        verify_artifact(&path, length, &digest, &mut ScanBudget::default()).unwrap();
+        let mut writer = OpenOptions::new().write(true).open(&path).unwrap();
+        let modified = writer.metadata().unwrap().modified().unwrap();
+        writer.write_all(&[1]).unwrap();
+        writer.set_times(FileTimes::new().set_modified(modified)).unwrap();
+        drop(writer);
+        assert!(verify_artifact(&path, length, &digest, &mut ScanBudget::default()).is_err());
     }
 
     #[test]

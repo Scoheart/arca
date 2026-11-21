@@ -1,7 +1,7 @@
 //! Browser UI for comparing saved Models. All inference runs in Rust using
 //! Arca's existing Provider and credential settings.
 use std::{
-    io::Read,
+    io::{Read, Write},
     net::{Ipv4Addr, SocketAddrV4},
     sync::{atomic::{AtomicBool, AtomicUsize, Ordering}, Arc},
     thread,
@@ -9,7 +9,7 @@ use std::{
 };
 
 use serde::Serialize;
-use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
+use tiny_http::{Header, HTTPVersion, Method, Request, Response, Server, StatusCode};
 use uuid::Uuid;
 
 use crate::resources::model::inference::{self, Failure};
@@ -119,7 +119,7 @@ fn handle(mut request: Request, state: &State) -> std::io::Result<()> {
             return respond(request, 200, asset.mime, asset.bytes);
         }
     }
-    if !matches!(request.url(), "/api/models" | "/api/run") {
+    if !matches!(request.url(), "/api/models" | "/api/run" | "/api/run/stream" | "/api/preview") {
         return respond_error(request, Failure::new(404, "not_found", "这个入口不存在。"));
     }
     let valid_origin = match header(&request, "Origin") {
@@ -135,16 +135,33 @@ fn handle(mut request: Request, state: &State) -> std::io::Result<()> {
             let targets = super::gate::read(inference::targets);
             respond_result(request, targets)
         }
-        (&Method::Post, "/api/run") => {
-            let result = run(&mut request, state);
-            respond_result(request, result)
+        (&Method::Post, "/api/preview") => {
+            let prepared = prepare(&mut request);
+            match prepared {
+                Ok(prepared) => respond_result(request, Ok(prepared.preview())),
+                Err(error) => respond_error(request, error),
+            }
+        }
+        (&Method::Post, "/api/run" | "/api/run/stream") => {
+            let _slot = match state.claim() {
+                Ok(slot) => slot,
+                Err(error) => return respond_error(request, error),
+            };
+            let prepared = match prepare(&mut request) {
+                Ok(prepared) => prepared,
+                Err(error) => return respond_error(request, error),
+            };
+            if request.url() == "/api/run/stream" && request.http_version() >= &HTTPVersion(1, 1) {
+                respond_stream(request, prepared)
+            } else {
+                respond_result(request, prepared.execute())
+            }
         }
         _ => respond_error(request, Failure::new(405, "invalid_method", "请求方式无效。")),
     }
 }
 
-fn run(request: &mut Request, state: &State) -> Result<inference::Completed, Failure> {
-    let _slot = state.claim()?;
+fn prepare(request: &mut Request) -> Result<inference::Prepared, Failure> {
     if !header(request, "Content-Type").ok().flatten().is_some_and(|mime| {
         mime.split(';').next().is_some_and(|part| part.trim().eq_ignore_ascii_case("application/json"))
     }) {
@@ -161,8 +178,49 @@ fn run(request: &mut Request, state: &State) -> Result<inference::Completed, Fai
     }
     let input = serde_json::from_slice(&body)
         .map_err(|_| Failure::new(400, "invalid_request", "参数格式有误，请检查数字和高级 JSON。"))?;
-    let prepared = super::gate::read(|| inference::prepare(input))?;
-    prepared.execute()
+    super::gate::read(|| inference::prepare(input))
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+enum RunEvent<'a> {
+    Started,
+    Delta { text: &'a str },
+    Complete { response: inference::Completed },
+    Error { error: Failure },
+}
+
+fn respond_stream(request: Request, prepared: inference::Prepared) -> std::io::Result<()> {
+    // tiny_http's normal response writer buffers sub-8 KiB HTTP chunks.
+    // Flush each NDJSON frame so the browser receives short deltas promptly.
+    let mut writer = request.into_writer();
+    writer.write_all(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n")?;
+    for (name, value) in response_headers("application/x-ndjson; charset=utf-8") {
+        write!(writer, "{name}: {value}\r\n")?;
+    }
+    writer.write_all(b"\r\n")?;
+    {
+        let mut encoder = chunked_transfer::Encoder::with_flush_after_write(&mut writer);
+        let mut send = |event: RunEvent<'_>| -> std::io::Result<()> {
+            let mut line = serde_json::to_vec(&event).map_err(std::io::Error::other)?;
+            line.push(b'\n');
+            encoder.write_all(&line)?;
+            encoder.get_mut().flush()
+        };
+        send(RunEvent::Started)?;
+        let result = prepared.execute_with(|text| {
+            send(RunEvent::Delta { text }).map_err(|_| {
+                Failure::new(499, "client_disconnected", "页面已停止等待这条请求。")
+            })
+        });
+        let event = match result {
+            Ok(response) => RunEvent::Complete { response },
+            Err(error) if error.code == "client_disconnected" => return Ok(()),
+            Err(error) => RunEvent::Error { error },
+        };
+        send(event)?;
+    }
+    writer.flush()
 }
 
 fn header<'a>(request: &'a Request, name: &'static str) -> Result<Option<&'a str>, ()> {
@@ -187,16 +245,20 @@ fn respond_error(request: Request, error: Failure) -> std::io::Result<()> {
 
 fn respond(request: Request, status: u16, content_type: &str, body: impl Into<Vec<u8>>) -> std::io::Result<()> {
     let mut response = Response::from_data(body).with_status_code(StatusCode(status));
-    for (name, value) in [
-        ("Content-Type", content_type),
-        ("Cache-Control", "no-store"),
-        ("Referrer-Policy", "no-referrer"),
-        ("X-Content-Type-Options", "nosniff"),
-        ("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"),
-    ] {
+    for (name, value) in response_headers(content_type) {
         if let Ok(header) = Header::from_bytes(name.as_bytes(), value.as_bytes()) {
             response.add_header(header);
         }
     }
     request.respond(response)
+}
+
+fn response_headers(content_type: &str) -> [(&str, &str); 5] {
+    [
+        ("Content-Type", content_type),
+        ("Cache-Control", "no-store"),
+        ("Referrer-Policy", "no-referrer"),
+        ("X-Content-Type-Options", "nosniff"),
+        ("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"),
+    ]
 }

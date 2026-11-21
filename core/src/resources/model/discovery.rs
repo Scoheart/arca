@@ -30,6 +30,9 @@ enum DiscoveryAdapter {
     Cloudflare,
     DeepInfra,
     Vercel,
+    BlockRun,
+    Infomaniak,
+    Sarvam,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -462,6 +465,11 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "telnyx" => TELNYX_STATIC_MODELS,
         "ecloud-moma" => ECLOUD_MOMA_STATIC_MODELS,
         "mara" => MARA_STATIC_MODELS,
+        // https://eve-esa.github.io/eve-guide/backend/docs/api/openai-gateway/
+        "esa-eve" => &[
+            ("jsc/alias-eve", None, None),
+            ("eve/eve-esa/EVE-Instruct", None, None),
+        ],
         _ => return None,
     };
     Some(entries.iter().map(|(id, name, context_length)| ProviderModelSummary {
@@ -476,6 +484,18 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
 /// empty unless the same page states them.
 fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
     let ids: &[&str] = match provider_type {
+        // https://platform.qianwenai.com/docs/developer-guides/getting-started/latest-model
+        "qianwen-ai" => &["qwen4-max"],
+        // https://console.sakana.ai/models?model=sakana-namazu
+        "sakana-ai" => &["sakana-namazu", "sakana-namazu-v1.0"],
+        // https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/start/express-mode/overview
+        "google-vertex-express" => &[
+            "gemini-3-flash-preview",
+            "gemini-3.1-pro-preview",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-pro",
+        ],
         // https://pages.edgeone.ai/document/models-vendors-overview
         "edgeone-makers" => &[
             "@makers/hy3",
@@ -834,6 +854,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "telnyx"
         | "ecloud-moma"
         | "mara"
+        | "esa-eve"
         | "mistral"
         | "deepseek"
         | "groq"
@@ -890,11 +911,16 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         "cloudflare-workers-ai" => DiscoveryAdapter::Cloudflare,
         "deepinfra" => DiscoveryAdapter::DeepInfra,
         "vercel-ai-gateway" => DiscoveryAdapter::Vercel,
+        "blockrun" => DiscoveryAdapter::BlockRun,
+        "infomaniak-ai-services" => DiscoveryAdapter::Infomaniak,
+        "sarvam" => DiscoveryAdapter::Sarvam,
         _ => return None,
     };
     let credential = if matches!(
         provider_type,
         "openrouter"
+            | "blockrun"
+            | "sarvam"
             | "ppio"
             | "aihubmix"
             | "opencode-zen"
@@ -1015,7 +1041,8 @@ fn discovery_url(provider: &ModelProviderConfig, adapter: DiscoveryAdapter) -> R
         });
     }
     match adapter {
-        DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra => [
+        DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
+        | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam => [
             // Prefer the Provider's reviewed OpenAI protocol. An additional
             // generic Responses path must not discard a plan/tenant prefix.
             super::list_providers().iter().find(|template| template.id == provider.provider)
@@ -1125,8 +1152,16 @@ fn decode_page(adapter: DiscoveryAdapter, value: Value) -> Result<DecodedPage, S
         DiscoveryAdapter::Fireworks => optional_token(value.get("nextPageToken"))?,
         _ => None,
     };
-    let entries = match adapter {
-        DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra | DiscoveryAdapter::Cloudflare => {
+    let entries: &[Value] = match adapter {
+        DiscoveryAdapter::Infomaniak
+            if value.pointer("/data/object").and_then(Value::as_str) == Some("model") =>
+        {
+            // The official endpoint example shows a single model in data.
+            std::slice::from_ref(&value["data"])
+        }
+        DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
+        | DiscoveryAdapter::Cloudflare | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak
+        | DiscoveryAdapter::Sarvam => {
             if let Some(entries) = value.as_array() {
                 entries
             } else {
@@ -1153,6 +1188,16 @@ fn decode_page(adapter: DiscoveryAdapter, value: Value) -> Result<DecodedPage, S
 
     let models: Vec<_> = entries
         .iter()
+        .filter(|entry| match adapter {
+            DiscoveryAdapter::BlockRun => {
+                entry.get("billing_mode").and_then(Value::as_str) == Some("free")
+                    && entry.get("available").and_then(Value::as_bool) == Some(true)
+                    && entry.get("categories").and_then(Value::as_array)
+                        .is_some_and(|categories| categories.iter().any(|kind| kind.as_str() == Some("chat")))
+            }
+            DiscoveryAdapter::Sarvam => entry.get("type").and_then(Value::as_str) == Some("chat"),
+            _ => true,
+        })
         .filter(|entry| adapter != DiscoveryAdapter::Vercel
             || entry.get("type").and_then(Value::as_str).is_none_or(|kind| kind == "language"))
         .filter(|entry| {
@@ -1204,7 +1249,8 @@ fn is_non_chat_ifm_catalog_entry(entry: &Value) -> bool {
 fn model_summary(adapter: DiscoveryAdapter, value: &Value) -> Option<ProviderModelSummary> {
     let id = match adapter {
         DiscoveryAdapter::OpenAi | DiscoveryAdapter::Anthropic
-        | DiscoveryAdapter::Cloudflare | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra => string_field(value, &["id"]),
+        | DiscoveryAdapter::Cloudflare | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
+        | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam => string_field(value, &["id"]),
         DiscoveryAdapter::Gemini => string_field(value, &["baseModelId"]).or_else(|| {
             string_field(value, &["name"]).map(|name| {
                 name.strip_prefix("models/")
@@ -1359,6 +1405,7 @@ fn fetch_page(
         adapter,
         DiscoveryAdapter::OpenAi | DiscoveryAdapter::Cohere | DiscoveryAdapter::Fireworks
         | DiscoveryAdapter::Cloudflare | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
+        | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam
     )
     .then(|| credential.map(|credential| Zeroizing::new(format!("Bearer {credential}"))))
     .flatten();
@@ -1401,7 +1448,8 @@ fn next_page_url(mut url: Url, adapter: DiscoveryAdapter, token: &str) -> Result
         DiscoveryAdapter::Gemini | DiscoveryAdapter::Fireworks => "pageToken",
         DiscoveryAdapter::Cohere => "page_token",
         DiscoveryAdapter::Cloudflare => "page",
-        DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra => {
+        DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
+        | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam => {
             return Err(
                 "model_discovery_invalid_response: OpenAI-compatible catalog returned an unsupported continuation token"
                     .into(),
@@ -1446,6 +1494,93 @@ mod tests {
     use std::net::TcpListener;
     use std::sync::mpsc;
     use std::thread;
+
+    #[test]
+    fn blockrun_catalog_only_lists_available_free_chat_models() {
+        let mut config = provider(
+            "blockrun",
+            "https://blockrun.ai/api/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        config.auth_requirement = AuthRequirement::None;
+        let spec = reviewed_discovery_spec(&config.provider).expect("BlockRun discovery");
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://blockrun.ai/api/v1/models"
+        );
+        let page = decode_page(spec.adapter, serde_json::json!({"data": [
+            {"id": "nvidia/nemotron-3.5-lightning", "billing_mode": "free", "available": true, "categories": ["chat"]},
+            {"id": "nvidia/nemotron-3-super-120b", "billing_mode": "free", "available": false, "categories": ["chat"]},
+            {"id": "paid", "billing_mode": "x402", "available": true, "categories": ["chat"]},
+            {"id": "unknown-billing", "available": true, "categories": ["chat"]},
+            {"id": "unknown-availability", "billing_mode": "free", "categories": ["chat"]},
+            {"id": "speech", "billing_mode": "free", "available": true, "categories": ["audio"]}
+        ]})).unwrap();
+        assert_eq!(page.models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+            ["nvidia/nemotron-3.5-lightning"]);
+    }
+
+    #[test]
+    fn infomaniak_discovery_preserves_the_product_scope_and_requires_auth() {
+        let mut config = provider(
+            "infomaniak-ai-services",
+            "https://api.infomaniak.com/2/ai/123/openai/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        config.auth_requirement = AuthRequirement::Required;
+        let spec = reviewed_discovery_spec(&config.provider).expect("Infomaniak discovery");
+        assert_eq!(spec.credential, CredentialPolicy::Required);
+        assert_eq!(discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.infomaniak.com/2/ai/123/openai/v1/models");
+        let model = serde_json::json!({"id": "mistralai/Ministral-3-14B-Instruct-2512", "object": "model"});
+        for data in [model.clone(), serde_json::json!([model])] {
+            let page = decode_page(spec.adapter, serde_json::json!({"data": data})).unwrap();
+            assert_eq!(page.models[0].id, "mistralai/Ministral-3-14B-Instruct-2512");
+        }
+    }
+
+    #[test]
+    fn sarvam_catalog_excludes_decision_and_embedding_models() {
+        let config = provider("sarvam", "https://api.sarvam.ai/v2",
+            ModelProtocol::OpenaiCompletions, "/chat/completions");
+        let spec = reviewed_discovery_spec(&config.provider).expect("Sarvam discovery");
+        assert_eq!(discovery_url(&config, spec.adapter).unwrap().as_str(), "https://api.sarvam.ai/v2/models");
+        let page = decode_page(spec.adapter, serde_json::json!({"data": [
+            {"id": "sarvam-105b", "type": "chat"},
+            {"id": "sarvam-prism", "type": "decision"},
+            {"id": "embeddinggemma-2", "type": "embedding"},
+            {"id": "untyped"},
+        ]})).unwrap();
+        assert_eq!(page.models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(), ["sarvam-105b"]);
+    }
+
+    #[test]
+    fn newly_reviewed_keyed_catalogs_forward_the_bearer_credential() {
+        let _home = TestHome::new("reviewed-keyed-provider-catalogs");
+        for id in ["infomaniak-ai-services", "sarvam", "esa-eve"] {
+            let spec = reviewed_discovery_spec(id).unwrap();
+            let (url, sent, server) = serve_once("200 OK", &[], r#"{"data":[]}"#);
+            fetch_page(&discovery_agent().unwrap(), &url, spec.adapter, Some("fixture-token")).unwrap();
+            let request = sent.recv_timeout(Duration::from_secs(2)).unwrap().to_ascii_lowercase();
+            assert!(request.contains("authorization: bearer fixture-token\r\n"), "{id}");
+            server.join().unwrap();
+        }
+    }
+
+    #[test]
+    fn reviewed_chat_catalogs_use_the_published_model_ids() {
+        for (provider, expected) in [
+            ("qianwen-ai", "qwen4-max"),
+            ("sakana-ai", "sakana-namazu"),
+            ("google-vertex-express", "gemini-2.5-flash-lite"),
+        ] {
+            assert!(static_seed_models(provider).unwrap().iter().any(|model| model.id == expected),
+                "{provider}: {expected}");
+        }
+    }
 
     #[test]
     fn workers_ai_uses_account_catalog_marketplace_ids_and_bearer_auth() {

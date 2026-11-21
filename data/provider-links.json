@@ -1601,5 +1601,54 @@
       "url": "https://cloud.mara.com/apis",
       "kind": "api-key"
     }
+  },
+  "blockrun": {
+    "docs_url": "https://blockrun.ai/docs/api-reference/chat-completions",
+    "portal": {
+      "url": "https://blockrun.ai/free",
+      "kind": "setup"
+    }
+  },
+  "infomaniak-ai-services": {
+    "docs_url": "https://developer.infomaniak.com/docs/api/post/2/ai/%7Bproduct_id%7D/openai/v1/chat/completions",
+    "portal": {
+      "url": "https://manager.infomaniak.com/",
+      "kind": "console"
+    }
+  },
+  "sarvam": {
+    "docs_url": "https://docs.sarvam.ai/api/token-factory/chat-completions",
+    "portal": {
+      "url": "https://indus.sarvam.ai/key-management",
+      "kind": "api-key"
+    }
+  },
+  "qianwen-ai": {
+    "docs_url": "https://platform.qianwenai.com/docs/api-reference/chat/openai-chat",
+    "portal": {
+      "url": "https://platform.qianwenai.com/docs/api-reference/preparation/api-key",
+      "kind": "setup"
+    }
+  },
+  "sakana-ai": {
+    "docs_url": "https://console.sakana.ai/get-started",
+    "portal": {
+      "url": "https://console.sakana.ai/",
+      "kind": "console"
+    }
+  },
+  "google-vertex-express": {
+    "docs_url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/reference/express-mode/api-reference",
+    "portal": {
+      "url": "https://console.cloud.google.com/vertex-ai/studio/express-mode",
+      "kind": "console"
+    }
+  },
+  "esa-eve": {
+    "docs_url": "https://eve-esa.github.io/eve-guide/backend/docs/api/openai-gateway/",
+    "portal": {
+      "url": "https://eve.philab.esa.int/chat/",
+      "kind": "console"
+    }
   }
 }

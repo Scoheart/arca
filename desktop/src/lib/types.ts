@@ -208,6 +208,7 @@ export interface ModelProviderView {
   } | null;
   default_base_url: string | null;
   default_protocol: ModelProtocol;
+  default_auth_requirement?: AuthRequirement;
   additional_endpoints: Array<{
     protocol: ModelProtocol;
     base_url: string;
@@ -222,7 +223,7 @@ export interface ModelProviderView {
   /** Display-only instructions for account/region-specific connections. */
   setup?: {
     base_url_placeholder: string;
-    hint: "azure" | "bedrock" | "bedrock-converse" | "cloudflare" | "tinfoil";
+    hint: "azure" | "bedrock" | "bedrock-converse" | "cloudflare" | "infomaniak" | "tinfoil";
   } | null;
 }
 

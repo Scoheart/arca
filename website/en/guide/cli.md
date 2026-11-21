@@ -7,19 +7,31 @@
 ## Entry points
 
 - `arca` opens the MCP terminal workspace for interactive catalog, source, and Agent relationship management.
-- `arca <domain> <command>` uses the scriptable asset commands.
+- `arca <group> <command>` uses the scriptable asset and Agent commands.
 
 Set `ARCA_NO_TUI=1` in scripts so an argument-free invocation prints help instead of entering the TUI.
 
 ## Unified command model
 
+Use `arca mcp`, `arca model`, or `arca skill` to manage the corresponding
+central library. Provider connections and catalogs live under `arca model provider`.
+
+Use `arca agent list` to find an Agent ID and `arca agent status codex` to
+see its MCPs, Models, and Skills together. To manage what an Agent uses, choose
+`arca agent <mcp|model|skill>` and target it with `--agent`.
+
 ```text
-arca mcp {list,show,status,assign,unassign,enable,disable,enable-all,disable-all,converge,add,save,delete,export,source,icon}
+arca mcp {list,show,add,save,delete,export,source,icon}
 arca mcp source {list,subscribe,add-local,add-builtin,refresh,enable,disable,remove}
-arca model {list,show,status,save,delete,import,assign,unassign,enable,disable,converge,use,delivery,provider,curl}
-arca model provider {list,show,templates,models,save,delete,docs}
-arca skill {list,show,status,inspect-source,install,import,update,remove,repair,check-updates,assign,unassign,enable,disable,converge}
-arca agent {list,save,configure,enable,disable,run,launch}
+arca model {list,show,save,delete,import,provider,curl}
+arca model provider {list,show,templates,catalog,save,delete,docs}
+arca skill {list,show,inspect-source,install,import,update,remove,repair,check-updates}
+
+arca agent {list,status,save,configure,enable,disable,run,launch,mcp,model,skill}
+arca agent status <agent-id>
+arca agent mcp {status,show,assign,unassign,enable,disable,enable-all,disable-all,converge}
+arca agent model {status,assign,unassign,enable,disable,use,delivery,converge}
+arca agent skill {status,assign,unassign,enable,disable,converge}
 arca agent launch {show,configure,reset}
 arca settings {show,terminal,locale,pins}
 arca network proxy {show,set,clear}
@@ -32,7 +44,10 @@ arca workspace
 arca upgrade
 ```
 
-The three asset domains share these relationship semantics:
+Existing scripts can still use the old relationship commands, such as
+`arca model use PROFILE_ID --agent codex`. Both forms keep the same JSON output.
+
+The three asset domains use the same command terminology:
 
 | Command | Meaning |
 |---|---|
@@ -48,6 +63,7 @@ Domain-specific commands preserve real differences: MCP has sources and exports;
 ## Batch reads and diagnosis
 
 ```bash
+arca agent status codex --json
 arca status --agent codex --agent opencode --capability mcp --json
 arca agent launch show codex --json
 arca trace list --agent codex --limit 20 --json
@@ -81,11 +97,10 @@ For an already authorized operation, use `arca operation apply --file request.js
 
 ## Create Providers and Models
 
-Save this as `provider.json`. New asset IDs must be empty; Arca generates them.
+Save this as `provider.json`. Arca generates the ID when you create the record.
 
 ```json
 {
-  "id": "",
   "name": "Work",
   "provider": "custom",
   "base_url": "https://api.example.com/v1",
@@ -98,13 +113,13 @@ Save this as `provider.json`. New asset IDs must be empty; Arca generates them.
 ```bash
 arca model provider save --file provider.json --yes
 arca model provider list --json
+arca model provider catalog PROVIDER_ID
 ```
 
 Copy the generated Provider ID into `provider_id` in `model.json`:
 
 ```json
 {
-  "id": "",
   "name": "Work model",
   "provider_id": "PASTE_PROVIDER_ID",
   "protocol": "openai-completions",
@@ -117,7 +132,9 @@ arca model save --file model.json --yes
 arca model list --json
 ```
 
-Edit an existing asset with `--id` and its exact old ID. A redacted `provider show` is an overview, not a complete edit document. Keychain input uses `--credential-stdin`; keep keys out of arguments. Explicit plaintext delivery additionally requires `--confirm-plaintext` and a supported Agent.
+`provider catalog` lists models available from a saved Provider connection. `model list` lists the Model Profiles saved in Arca. The older `provider models` spelling and its JSON output still work.
+
+For edits, pass the existing ID with `--id`. Both create and edit documents can omit the JSON `id` field. Use the redacted `provider show` output as a connection overview. Pass Keychain credentials through `--credential-stdin`. Explicit plaintext delivery also requires `--confirm-plaintext` and a supported Agent.
 
 ## Install and maintain Skills
 
@@ -140,17 +157,17 @@ Select exact names from source inspection. Installation creates the central copy
 Agent files and user-level Skill directories are legitimate input sources. External additions, deletions, toggles, current-model changes, and field edits do not put Arca into a migration conflict. CLI status queries rescan immediately; Desktop refreshes from file-system events.
 
 ```bash
-arca mcp converge github::stdio --agent claude-code adopt
-arca mcp converge github::stdio --agent claude-code restore
-arca mcp converge github::stdio --agent claude-code detach
+arca agent mcp converge github::stdio --agent claude-code adopt
+arca agent mcp converge github::stdio --agent claude-code restore
+arca agent mcp converge github::stdio --agent claude-code detach
 
-arca model converge external-<candidate-id> --agent codex adopt
-arca model converge work --agent codex restore
-arca model converge work --agent codex detach
+arca agent model converge external-<candidate-id> --agent codex adopt
+arca agent model converge work --agent codex restore
+arca agent model converge work --agent codex detach
 
-arca skill converge review-changes --agent codex adopt
-arca skill converge review-changes --agent codex restore
-arca skill converge review-changes --agent codex detach
+arca agent skill converge review-changes --agent codex adopt
+arca agent skill converge review-changes --agent codex restore
+arca agent skill converge review-changes --agent codex detach
 ```
 
 | Action | Meaning |
@@ -194,11 +211,11 @@ Relationship commands require one explicit `--agent <id>`. `assign` and `unassig
 MCP additionally supports `unassign --all`: after review, it clears every managed, disabled, and external MCP entry from that one Agent while leaving central MCP assets and every other Agent unchanged.
 
 ```bash
-arca mcp assign github::stdio filesystem::stdio --agent claude-code
-arca mcp unassign --all --agent qoder
-arca skill unassign source-explainer --agent codex
-arca model assign work backup --agent pi
-arca model use work --agent pi
+arca agent mcp assign github::stdio filesystem::stdio --agent claude-code
+arca agent mcp unassign --all --agent qoder
+arca agent skill unassign source-explainer --agent codex
+arca agent model assign work backup --agent pi
+arca agent model use work --agent pi
 ```
 
 `github::stdio` and `github::http` are separate assets and must be named separately.
@@ -208,9 +225,9 @@ arca model use work --agent pi
 ```bash
 arca mcp list
 arca mcp show github::stdio
-arca mcp status --agent claude-code
-arca mcp assign github::stdio --agent claude-code
-arca mcp disable github::stdio --agent claude-code
+arca agent mcp status --agent claude-code
+arca agent mcp assign github::stdio --agent claude-code
+arca agent mcp disable github::stdio --agent claude-code
 ```
 
 MCP-specific central operations:
@@ -230,11 +247,11 @@ arca mcp export --out mcp.json --yes
 ```bash
 arca model list
 arca model show work
-arca model status --agent pi
-arca model assign work backup --agent pi
-arca model assign work --agent claude-code --replace
-arca model disable backup --agent pi
-arca model use work --agent pi
+arca agent model status --agent pi
+arca agent model assign work backup --agent pi
+arca agent model assign work --agent claude-code --replace
+arca agent model disable backup --agent pi
+arca agent model use work --agent pi
 ```
 
 A multi-model Agent may retain several assigned Profiles but has at most one current Model. Capability validation keeps single-model Agents within their native constraints. Repeating `assign`, `enable`, or `use` is a desired-state no-op and never overwrites drift as a side effect; use exact `converge` when observed state must change.
@@ -246,9 +263,9 @@ External Models are projected by candidate identity rather than collapsed into â
 ```bash
 arca skill list
 arca skill show review-changes
-arca skill status --agent codex
-arca skill assign review-changes source-explainer --agent codex
-arca skill disable review-changes --agent codex
+arca agent skill status --agent codex
+arca agent skill assign review-changes source-explainer --agent codex
+arca agent skill disable review-changes --agent codex
 ```
 
 A Skill relationship links the central copy under `~/.arca/assets/skills/items/` into a verified user-level target. Several Agents may share one physical directory, so plans include the complete `affected_agent_ids`. `restore` rebuilds only a provably safe managed link; an external directory, regular file, or foreign symlink is never overwritten. `detach` preserves that external content.

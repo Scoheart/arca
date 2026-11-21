@@ -14,9 +14,9 @@
 arca skill inspect-source --path ./skills/arca-cli --json
 arca skill install --path ./skills/arca-cli --name arca-cli --dry-run --json
 arca skill install --path ./skills/arca-cli --name arca-cli --yes --json
-arca skill assign arca-cli --agent codex --dry-run --json
-arca skill assign arca-cli --agent codex --yes --json
-arca skill status --agent codex --json
+arca agent skill assign arca-cli --agent codex --dry-run --json
+arca agent skill assign arca-cli --agent codex --yes --json
+arca agent skill status --agent codex --json
 ```
 
 `codex` 是 Codex CLI；ChatGPT 使用 `codex-desktop`，其他 Agent 的准确 ID 从 `arca agent list --json` 获取。如果安装计划报告风险，先阅读 findings，明确接受后再加 `--accept-risk`。桌面端也可从 **Skills → 添加** 导入 `skills/arca-cli` 文件夹，再分配给 Agent。使用其他支持 Skills 的工具时，需保留 `SKILL.md` 和 `references/` 的相对结构。分配后新建会话，或使用目标 Agent 支持的重新加载方式。
@@ -24,19 +24,28 @@ arca skill status --agent codex --json
 ## 两个入口
 
 - `arca`：进入 MCP 终端工作区；适合交互维护 MCP 目录、来源和 Agent 关系。
-- `arca <domain> <command>`：使用可脚本化的统一资产命令。
+- `arca <命令组> <操作>`：使用可脚本化的资产和 Agent 命令。
 
 脚本中可设置 `ARCA_NO_TUI=1`，让无参数调用打印帮助而不是进入 TUI。
 
 ## 统一命令模型
 
+`arca mcp`、`arca model`、`arca skill` 分别管理自己的中央资产库。Provider 在 `arca model provider` 下，统一提供连接配置和模型目录查询。
+
+`arca agent list` 列出 Agent ID，`arca agent status codex` 查看 Codex 的 MCP、模型和 Skill 状态。管理单个 Agent 用到的资产时，走 `arca agent <mcp|model|skill>`，用 `--agent` 指定目标。
+
 ```text
-arca mcp {list,show,status,assign,unassign,enable,disable,enable-all,disable-all,converge,add,save,delete,export,source,icon}
+arca mcp {list,show,add,save,delete,export,source,icon}
 arca mcp source {list,subscribe,add-local,add-builtin,refresh,enable,disable,remove}
-arca model {list,show,status,save,delete,import,assign,unassign,enable,disable,converge,use,delivery,provider,curl}
-arca model provider {list,show,templates,models,save,delete,docs}
-arca skill {list,show,status,inspect-source,install,import,update,remove,repair,check-updates,assign,unassign,enable,disable,converge}
-arca agent {list,save,configure,enable,disable,run,launch}
+arca model {list,show,save,delete,import,provider,curl}
+arca model provider {list,show,templates,catalog,save,delete,docs}
+arca skill {list,show,inspect-source,install,import,update,remove,repair,check-updates}
+
+arca agent {list,status,save,configure,enable,disable,run,launch,mcp,model,skill}
+arca agent status <agent-id>
+arca agent mcp {status,show,assign,unassign,enable,disable,enable-all,disable-all,converge}
+arca agent model {status,assign,unassign,enable,disable,use,delivery,converge}
+arca agent skill {status,assign,unassign,enable,disable,converge}
 arca agent launch {show,configure,reset}
 arca settings {show,terminal,locale,pins}
 arca mcp icon {list,set,import,reset}
@@ -50,7 +59,9 @@ arca workspace
 arca upgrade
 ```
 
-三个资产域共享以下关系语义：
+既有脚本仍可使用旧命令，例如 `arca model use PROFILE_ID --agent codex`；新旧入口的 JSON 输出一致。
+
+三个资产域使用相同的命令术语：
 
 | 命令 | 语义 |
 |---|---|
@@ -65,9 +76,10 @@ arca upgrade
 
 ## Agent 自动化与诊断
 
-单领域 `status` 在读取前裁剪范围；批量查询可以合并多个 Agent：
+用 `arca agent status` 查询一个 Agent 的全部资产，或用 `arca agent <mcp|model|skill> status --agent <id>` 只查一种。顶层 `arca status` 支持同时查询多个 Agent：
 
 ```bash
+arca agent status codex --json
 arca status --agent codex --agent opencode --capability mcp --json
 arca trace list --agent codex --limit 20 --json
 arca trace show SESSION_ID --json
@@ -116,17 +128,17 @@ stdout 的中间计划与最终结果均为单行 NDJSON；最终结果带 `phas
 Agent 文件和用户级 Skill 目录是合法输入源。用户在外部新增、删除、启停或修改配置不会让 Arca 进入迁移冲突；下一次状态查询会重新扫描，Desktop 也会实时刷新。
 
 ```bash
-arca mcp converge github::stdio --agent claude-code adopt
-arca mcp converge github::stdio --agent claude-code restore
-arca mcp converge github::stdio --agent claude-code detach
+arca agent mcp converge github::stdio --agent claude-code adopt
+arca agent mcp converge github::stdio --agent claude-code restore
+arca agent mcp converge github::stdio --agent claude-code detach
 
-arca model converge external-<candidate-id> --agent codex adopt
-arca model converge work --agent codex restore
-arca model converge work --agent codex detach
+arca agent model converge external-<candidate-id> --agent codex adopt
+arca agent model converge work --agent codex restore
+arca agent model converge work --agent codex detach
 
-arca skill converge review-changes --agent codex adopt
-arca skill converge review-changes --agent codex restore
-arca skill converge review-changes --agent codex detach
+arca agent skill converge review-changes --agent codex adopt
+arca agent skill converge review-changes --agent codex restore
+arca agent skill converge review-changes --agent codex detach
 ```
 
 | 动作 | 含义 |
@@ -171,11 +183,11 @@ JSON 状态中的 `capability_errors` 表示能力域局部不可用；`recovery
 MCP 的 `unassign --all` 审阅后清空该 Agent 的受管项、停用快照和外部项。Model 也支持 `unassign --all`，按 Core 声明的 storage authority 清空；原生注册表 Agent 包括外部模型。中央资产、Provider 和凭据保留；共享物理配置冲突由 Core 拒绝。
 
 ```bash
-arca mcp assign github::stdio filesystem::stdio --agent claude-code
-arca mcp unassign --all --agent qoder
-arca skill unassign source-explainer --agent codex
-arca model assign work backup --agent pi
-arca model use work --agent pi
+arca agent mcp assign github::stdio filesystem::stdio --agent claude-code
+arca agent mcp unassign --all --agent qoder
+arca agent skill unassign source-explainer --agent codex
+arca agent model assign work backup --agent pi
+arca agent model use work --agent pi
 ```
 
 同名 `github::stdio` 与 `github::http` 是两个资产，必须分别指定。
@@ -185,9 +197,9 @@ arca model use work --agent pi
 ```bash
 arca mcp list
 arca mcp show github::stdio
-arca mcp status --agent claude-code
-arca mcp assign github::stdio --agent claude-code
-arca mcp disable github::stdio --agent claude-code
+arca agent mcp status --agent claude-code
+arca agent mcp assign github::stdio --agent claude-code
+arca agent mcp disable github::stdio --agent claude-code
 ```
 
 中央 MCP 专属操作：
@@ -222,11 +234,11 @@ arca mcp source remove <source-id> --yes
 ```bash
 arca model list
 arca model show work
-arca model status --agent pi
-arca model assign work backup --agent pi
-arca model assign work --agent claude-code --replace
-arca model disable backup --agent pi
-arca model use work --agent pi
+arca agent model status --agent pi
+arca agent model assign work backup --agent pi
+arca agent model assign work --agent claude-code --replace
+arca agent model disable backup --agent pi
+arca agent model use work --agent pi
 ```
 
 多模型 Agent 可保留多个已分配 Profile，但最多一个 current；单模型 Agent 由 capability 在计划阶段约束。重复 `assign`、`enable` 或 `use` 是 desired-state 幂等操作，不会借机覆盖外部漂移；需要收敛时使用准确的 `converge`。
@@ -237,7 +249,6 @@ arca model use work --agent pi
 
 ```json
 {
-  "id": "",
   "name": "Work",
   "provider": "custom",
   "base_url": "https://api.example.com/v1",
@@ -247,11 +258,10 @@ arca model use work --agent pi
 }
 ```
 
-将上面的文档保存为 `provider.json`。新建时 `id` 必须是空字符串，由 Arca 生成。先保存 Provider，再运行 `arca model provider list --json`，把返回的准确 ID 填入下面的 `provider_id`。Profile 文档 `model.json`：
+将上面的文档保存为 `provider.json`。Arca 会生成 Provider 的 ID。先保存 Provider，再运行 `arca model provider list --json`，把返回的准确 ID 填入 `model.json` 的 `provider_id`。
 
 ```json
 {
-  "id": "",
   "name": "Work model",
   "provider_id": "PASTE_PROVIDER_ID",
   "protocol": "openai-completions",
@@ -264,17 +274,19 @@ arca model provider templates
 arca model provider save --file provider.json --dry-run
 arca model provider save --file provider.json --yes
 arca model provider list
-arca model provider models work-provider
+arca model provider catalog work-provider
 arca model save --file model.json --yes
 arca model save --file model.json --id work --dry-run
-arca model delivery env --agent qoder-cli --profile work --dry-run
-arca model unassign --all --agent qoder-cli --dry-run
+arca agent model delivery env --agent qoder-cli --profile work --dry-run
+arca agent model unassign --all --agent qoder-cli --dry-run
 arca model delete work --dry-run
 arca model provider delete work-provider --dry-run
 arca model import <candidate-id> --dry-run
 ```
 
-`save` 不带 `--id` 表示创建，正文 `id` 必须留空；编辑必须指定准确旧 ID。以下命令中的 `work`、`backup`、`work-provider` 等是已有资产 ID 的示例，实际 ID 从 `list` / `status` 获取，不能自行指定新 ID。Profile 引用已存在 Provider，连接地址和凭据归 Provider 管理。`provider show` 输出脱敏概览，不能直接充当完整编辑文档。`import` 的 candidate ID 来自 `arca discover model`，Core 会绑定当前 fingerprint。
+`save` 默认创建记录并由 Arca 生成 ID。创建和编辑时都可以省略 JSON 里的 `id`。编辑时用 `--id` 指定已有记录，原 ID 会保留。示例中的 `work`、`backup`、`work-provider` 代表已有资产 ID，可通过 `list` 或 `status` 获取。Profile 引用已存在的 Provider，连接地址和凭据归 Provider 管理。`provider show` 输出脱敏概览，不能直接充当完整编辑文档。`import` 的 candidate ID 来自 `arca discover model`，Core 会绑定当前 fingerprint。
+
+`arca model provider catalog <provider-id>` 查询该连接可用的模型。`arca model list` 查看已经保存到 Arca 的 Model Profile。旧写法 `arca model provider models <provider-id>` 仍可使用，两种写法的 JSON 输出保持一致。
 
 如果使用 Keychain，将 Provider 的 `api_key_source` 设置为 `{"kind":"arca-store"}`，通过 `--credential-stdin` 从管道接收凭据。该选项不能与 `--file -` 共用 stdin；没有凭据选项时保留原密钥，只有 `--clear-credential` 才请求清除。不要把密钥放进命令参数。`delivery plaintext` 仅对 Core 支持的 Agent 生效，并且额外要求 `--confirm-plaintext`。
 
@@ -285,9 +297,9 @@ arca model import <candidate-id> --dry-run
 ```bash
 arca skill list
 arca skill show review-changes
-arca skill status --agent codex
-arca skill assign review-changes source-explainer --agent codex
-arca skill disable review-changes --agent codex
+arca agent skill status --agent codex
+arca agent skill assign review-changes source-explainer --agent codex
+arca agent skill disable review-changes --agent codex
 ```
 
 Skill relationship 把 `~/.arca/assets/skills/items/` 中央副本链接到已核验用户级 target。多个 Agent 可能共用同一物理目录，因此计划会列出完整 `affected_agent_ids`。`restore` 只重建可证明安全的受管链接；外部目录、普通文件或异向链接不会被覆盖。`detach` 会保留这些外部内容。
@@ -434,8 +446,8 @@ cURL 默认使用 `$ARCA_API_KEY` 占位；`--include-api-key` 明确导出配�
 ## 批量开关与图标
 
 ```bash
-arca mcp disable-all --agent opencode --yes
-arca mcp enable-all --agent opencode --yes
+arca agent mcp disable-all --agent opencode --yes
+arca agent mcp enable-all --agent opencode --yes
 arca mcp icon list
 arca mcp icon set 'filesystem::stdio' files --yes
 arca mcp icon import 'filesystem::stdio' --file ./icon.png --yes

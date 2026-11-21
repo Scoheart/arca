@@ -88,9 +88,23 @@ pub struct ResourceObservation {
 pub fn observe_resources() -> ResourceObservation {
     super::gate::read(|| {
         let (skills, relationships) = crate::assets::inventory::list_inventory_with_skills();
+        let skills = skills.map_err(|err| {
+            let core = super::error::from_skill(err);
+            crate::logging::LogEvent::error("assets.observe.skills", &core.message)
+                .code(&core.code)
+                .emit();
+            core
+        });
+        let relationships = relationships.map_err(|err| {
+            let core = super::error::from_legacy(err);
+            crate::logging::LogEvent::error("assets.observe.relationships", &core.message)
+                .code(&core.code)
+                .emit();
+            core
+        });
         ResourceObservation {
-            skills: skills.map_err(super::error::from_skill),
-            relationships: relationships.map_err(super::error::from_legacy),
+            skills,
+            relationships,
         }
     })
 }
@@ -269,21 +283,55 @@ pub fn plan_update_agent_capabilities(
 }
 
 pub fn commit_asset_operation(request: AssetCommitRequest) -> Result<ConsumptionInventory, String> {
-    let capability = operation_capability(&request.operation_id)?;
-    match capability {
-        Some(capability) => super::gate::mutate_for(capability, "asset_commit", || {
-            if operation_capability(&request.operation_id)? != Some(capability) {
-                return Err("asset_operation_stale: operation capability changed".into());
+    let operation_id = request.operation_id.clone();
+    crate::logging::with_operation_scope(&operation_id, None, || {
+        let capability = operation_capability(&request.operation_id)?;
+        let result = match capability {
+            Some(capability) => super::gate::mutate_for(capability, "asset_commit", || {
+                if operation_capability(&request.operation_id)? != Some(capability) {
+                    return Err("asset_operation_stale: operation capability changed".into());
+                }
+                crate::assets::commit_asset_operation(request)
+            }),
+            None => super::gate::mutate("asset_commit", || {
+                if operation_capability(&request.operation_id)?.is_some() {
+                    return Err("asset_operation_stale: operation capability changed".into());
+                }
+                crate::assets::commit_asset_operation(request)
+            }),
+        };
+        if let Ok(ref inventory) = result {
+            for incident in inventory
+                .target_incidents
+                .iter()
+                .filter(|incident| incident.operation_id == operation_id)
+            {
+                crate::logging::LogEvent::error(
+                    "asset_commit.target_incident",
+                    format!(
+                        "target projection incident on {} ({})",
+                        incident.target_id, incident.code
+                    ),
+                )
+                .code(&incident.code)
+                .operation_id(&operation_id)
+                .field("incident_id", incident.id.clone())
+                .field("target_id", incident.target_id.clone())
+                .field("target_path", incident.target_path.clone())
+                .field(
+                    "affected_agent_ids",
+                    serde_json::to_value(&incident.affected_agent_ids).unwrap_or_default(),
+                )
+                .field(
+                    "capability",
+                    serde_json::to_value(&incident.capability).unwrap_or_default(),
+                )
+                .field("retryable", incident.retryable)
+                .emit();
             }
-            crate::assets::commit_asset_operation(request)
-        }),
-        None => super::gate::mutate("asset_commit", || {
-            if operation_capability(&request.operation_id)?.is_some() {
-                return Err("asset_operation_stale: operation capability changed".into());
-            }
-            crate::assets::commit_asset_operation(request)
-        }),
-    }
+        }
+        result
+    })
 }
 
 pub fn cancel_asset_operation(operation_id: &str) -> Result<(), String> {

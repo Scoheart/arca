@@ -76,7 +76,6 @@ const DEFAULT_ENDPOINT_PATHS = Object.fromEntries(
   PROTOCOLS.map(({ id, endpoint_path }) => [id, endpoint_path]),
 ) as Record<ModelProtocol, string>;
 
-const KEYLESS_PROVIDER_TYPES = new Set(["ollama", "lm-studio", "vllm", "bilibili-index-translate"]);
 
 const emptyProfile = (): ModelProfile => ({
   provider_id: "",
@@ -1447,12 +1446,8 @@ function ModelProviderDialog({
       ) as ModelProviderConfig["protocols"]
     : templateConnection.protocols;
   const initialSource = initial?.api_key_source;
-  const authWithoutCredential: ModelProviderConfig["auth_requirement"] =
-    KEYLESS_PROVIDER_TYPES.has(initialProviderType)
-      ? "none"
-      : initialProviderType === "custom"
-        ? "optional"
-        : "required";
+  const authWithoutCredential = template?.default_auth_requirement
+    ?? (initial?.auth_requirement === "none" ? "none" : initialProviderType === "custom" ? "optional" : "required");
   const initialAuthRequirement: ModelProviderConfig["auth_requirement"] = initial?.auth_requirement
     ?? authWithoutCredential;
   const [draft, setDraft] = useState<ModelProviderConfig>({

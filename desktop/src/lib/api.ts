@@ -3,6 +3,29 @@ import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 export const CREDENTIAL_SESSION_REQUIRED = "arca:credential-session-required";
 export const CREDENTIAL_SESSION_CHANGED = "arca:credential-session-changed";
 
+export interface LogStatusView {
+  session_id: string;
+  logs_dir: string;
+  main_log_path: string;
+  error_log_path: string;
+  structured_log_path: string;
+  main_log_bytes: number;
+  error_log_bytes: number;
+  structured_log_bytes: number;
+  recent_error_count: number;
+}
+
+export interface FrontendLogInput {
+  level?: "info" | "warn" | "error";
+  stage: string;
+  code?: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export const reportFrontendLog = (entry: FrontendLogInput): Promise<void> =>
+  tauriInvoke<void>("report_frontend_log", { entry }).catch(() => {});
+
 async function invoke<T>(command: string, args?: Parameters<typeof tauriInvoke>[1]): Promise<T> {
   try {
     const result = await tauriInvoke<T>(command, args);
@@ -11,12 +34,31 @@ async function invoke<T>(command: string, args?: Parameters<typeof tauriInvoke>[
     }
     return result;
   } catch (error) {
-    const description = typeof error === "string" ? error
-      : error && typeof error === "object"
-        ? `${"code" in error ? error.code : ""} ${"message" in error ? error.message : ""}` : "";
+    const code = error && typeof error === "object" && "code" in error && typeof error.code === "string"
+      ? error.code
+      : undefined;
+    const message = typeof error === "string"
+      ? error
+      : error && typeof error === "object" && "message" in error && typeof error.message === "string"
+        ? error.message
+        : String(error);
+    const description = `${code ?? ""} ${message}`;
     if (/credential_(?:session_|vault_)/.test(description)) {
       // Notify application scope without copying credentials or error details.
       window.dispatchEvent(new Event(CREDENTIAL_SESSION_REQUIRED));
+    }
+    if (command !== "report_frontend_log") {
+      const argKeys = args && typeof args === "object" ? Object.keys(args as Record<string, unknown>) : [];
+      void reportFrontendLog({
+        level: "error",
+        stage: `ipc.${command}`,
+        code: code ?? "ipc_invoke_failed",
+        message,
+        details: {
+          command,
+          arg_keys: argKeys,
+        },
+      });
     }
     throw error;
   }
@@ -91,6 +133,11 @@ import type {
 export const getWorkspaceSnapshot = () =>
   invoke<WorkspaceSnapshot>("get_workspace_snapshot");
 export const getBackendStatus = () => invoke<BackendStatus>("get_backend_status");
+export const getLogStatus = () => invoke<LogStatusView>("get_log_status");
+export const openLogFile = (
+  kind?: "errors" | "main" | "dir" | "jsonl",
+  appPath?: string,
+) => invoke<string>("open_log_file", { kind: kind ?? null, appPath: appPath ?? null });
 export const listAgentCapabilities = () =>
   invoke<AgentCapabilityView[]>("list_agent_capabilities");
 export const planOperation = (request: PlanOperationRequest) =>

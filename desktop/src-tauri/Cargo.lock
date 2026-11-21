@@ -62,7 +62,9 @@ version = "3.1.0"
 dependencies = [
  "blake2",
  "chrono",
+ "chunked_transfer",
  "core-foundation 0.10.1",
+ "crc32fast",
  "dirs",
  "flate2",
  "fs2",

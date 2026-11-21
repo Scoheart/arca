@@ -1,7 +1,7 @@
 //! Model lifecycle adapters. Validation, credentials and target writes stay in Core.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::{Subcommand, ValueEnum};
 use arca_core::application::assets::{
@@ -31,6 +31,7 @@ pub enum ModelManagementCommand {
     },
     /// Create a central Model Profile, or edit one with --id, from a ModelProfile JSON file.
     Save {
+        /// Model Profile JSON. The id field can be omitted.
         #[arg(long)]
         file: PathBuf,
         /// Exact existing Profile ID to edit. Omit to create.
@@ -47,20 +48,7 @@ pub enum ModelManagementCommand {
         #[arg(value_parser = parse_identity)]
         candidate_id: String,
     },
-    /// Review and change one Agent's credential delivery policy.
-    Delivery {
-        #[arg(value_enum)]
-        delivery: DeliveryArg,
-        #[arg(long, value_parser = parse_identity)]
-        agent: String,
-        /// Restrict the policy change to one assigned Model Profile.
-        #[arg(long, value_parser = parse_identity)]
-        profile: Option<String>,
-        /// Explicitly allow a private plaintext write, only on supported Agents.
-        #[arg(long)]
-        confirm_plaintext: bool,
-    },
-    /// Manage shared Provider connections and their model catalogs.
+    /// Configure Provider connections and look up available models.
     Provider {
         #[command(subcommand)]
         command: ProviderCommand,
@@ -71,7 +59,7 @@ impl ModelManagementCommand {
     fn is_mutation(&self) -> bool {
         !matches!(self, Self::Curl { .. } | Self::Provider { command: ProviderCommand::List
             | ProviderCommand::Show { .. } | ProviderCommand::Templates
-            | ProviderCommand::Models { .. } | ProviderCommand::Docs { .. } })
+            | ProviderCommand::Catalog { .. } | ProviderCommand::Docs { .. } })
     }
 }
 
@@ -79,7 +67,7 @@ impl ModelManagementCommand {
 pub enum ProviderCommand {
     /// Show the official documentation URL for a template or configured Provider.
     Docs { id: String },
-    /// List configured Provider instances without revealing credentials.
+    /// List Provider connections already saved in Arca.
     List,
     /// Show one configured Provider, with private connection details redacted.
     Show {
@@ -88,13 +76,16 @@ pub enum ProviderCommand {
     },
     /// List built-in Provider templates and supported protocols.
     Templates,
-    /// Fetch the available models from a configured Provider.
-    Models {
+    /// List models available from one saved Provider connection.
+    #[command(alias = "models")]
+    Catalog {
+        /// Provider ID from `arca model provider list`.
         #[arg(value_parser = parse_identity)]
         id: String,
     },
     /// Save a ModelProviderConfig JSON document. Credentials are retained unless explicitly changed.
     Save {
+        /// Provider JSON. The id field can be omitted.
         #[arg(long)]
         file: PathBuf,
         /// Exact existing Provider ID to edit. Omit to create.
@@ -148,7 +139,7 @@ pub fn dispatch(cli: &Cli, command: &ModelManagementCommand) -> Result<CommandOu
             Ok(CommandOutput::new("model.curl", false, json!({"profile_id": profile_id, "curl": command}), command))
         }
         ModelManagementCommand::Save { file, id } => {
-            let profile: ModelProfile = serde_json::from_value(json_file(file)?)
+            let profile: ModelProfile = serde_json::from_value(model_draft_json(file)?)
                 .map_err(|error| CliError::private("invalid_model_profile", error.to_string()))?;
             apply("model.save", PlanOperationRequest::UpdateCentralAsset(PlanUpdateCentralAssetRequest {
                 draft: CentralAssetDraft::Model {
@@ -168,11 +159,6 @@ pub fn dispatch(cli: &Cli, command: &ModelManagementCommand) -> Result<CommandOu
                 candidate_fingerprints: BTreeMap::from([(candidate.candidate_id, candidate.fingerprint)]),
             }).map_err(CliError::from_legacy)?;
             execute_operation("model.import", OperationPlan::Asset { plan: Box::new(plan) }, options)
-        }
-        ModelManagementCommand::Delivery { delivery, agent, profile, confirm_plaintext } => {
-            let plan = models::plan_credential_delivery(agent, profile.as_deref(), (*delivery).into(), *confirm_plaintext)
-                .map_err(CliError::from_legacy)?;
-            execute_operation("model.delivery", OperationPlan::Asset { plan: Box::new(plan) }, options)
         }
         ModelManagementCommand::Provider { command } => provider(command, options),
     }
@@ -206,14 +192,15 @@ fn provider(command: &ProviderCommand, options: MutationOptions) -> Result<Comma
             query_output("model.provider.show", safe_provider(&view))
         }
         ProviderCommand::Templates => query_output("model.provider.templates", json!({"providers": models::list_providers()})),
-        ProviderCommand::Models { id } => {
+        ProviderCommand::Catalog { id } => {
             let models = models::discover_provider_models(id).map_err(CliError::from_legacy)?;
+            // Keep the existing JSON command identifier for scripts.
             query_output("model.provider.models", json!({"provider_id": id, "models": models}))
         }
         ProviderCommand::Save { file, id, credential_stdin, clear_credential } => {
             // Reject competing stdin consumers before opening either input.
             let credential = provider_credential(file, *credential_stdin, *clear_credential)?;
-            let provider: ModelProviderConfig = serde_json::from_value(json_file(file)?)
+            let provider: ModelProviderConfig = serde_json::from_value(model_draft_json(file)?)
                 .map_err(|error| CliError::private("invalid_model_provider", error.to_string()))?;
             apply("model.provider.save", PlanOperationRequest::UpdateCentralAsset(PlanUpdateCentralAssetRequest {
                 draft: CentralAssetDraft::ModelProvider {
@@ -223,6 +210,16 @@ fn provider(command: &ProviderCommand, options: MutationOptions) -> Result<Comma
         }
         ProviderCommand::Delete { id } => delete("model.provider.delete", AssetRef::ModelProvider { provider_id: id.clone() }, options),
     }
+}
+
+fn model_draft_json(file: &Path) -> Result<Value, CliError> {
+    let mut draft = json_file(file)?;
+    // The empty identity is Core's draft convention. Leave explicit IDs for
+    // Core to validate and keep persisted records subject to their own schema.
+    if let Some(fields) = draft.as_object_mut() {
+        fields.entry("id").or_insert_with(|| Value::String(String::new()));
+    }
+    Ok(draft)
 }
 
 fn safe_provider(view: &ModelProviderInstanceView) -> Value {

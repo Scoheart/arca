@@ -2,11 +2,31 @@
 //! and credential redaction; CLI never independently parses Agent logs.
 use std::path::PathBuf;
 use clap::Subcommand;
-use arca_core::application::{capture, traces};
+use arca_core::application::{capture, logs as core_logs, traces};
 use serde_json::{json, Value};
 use crate::command::Cli;
-use crate::output::{query_output, CliError, CommandOutput};
+use crate::output::{query_output, CliError, CommandOutput, Palette};
 use crate::projection::{safe_path, safe_url};
+
+#[derive(Debug, Subcommand)]
+pub enum LogsCommand {
+    /// Show local diagnostic log file paths and sizes.
+    Path,
+    /// Inspect recent redacted local diagnostic log records.
+    Show {
+        /// Only show WARN, ERROR, and PANIC records.
+        #[arg(long)]
+        errors: bool,
+        /// Filter records by stage prefix or substring.
+        #[arg(long)]
+        stage: Option<String>,
+        /// Filter records by exact operation_id.
+        #[arg(long)]
+        operation: Option<String>,
+        #[arg(long, default_value_t = 50, value_parser = clap::value_parser!(u16).range(1..=500))]
+        limit: u16,
+    },
+}
 
 #[derive(Debug, Subcommand)]
 pub enum TraceCommand {
@@ -163,4 +183,114 @@ pub fn captured(cli: &Cli, command: &CaptureCommand) -> Result<CommandOutput, Cl
             }
         }
     }
+}
+
+pub fn logs(cli: &Cli, command: Option<&LogsCommand>) -> Result<CommandOutput, CliError> {
+    cli.reject_mutation_options()?;
+    let palette = Palette::new(cli.no_color || cli.json);
+    match command {
+        Some(LogsCommand::Path) => {
+            let status = core_logs::status();
+            let human = format!(
+                "{}\n  logs dir:       {}\n  main log:       {} ({} B)\n  error log:      {} ({} B)\n  structured log: {} ({} B)",
+                palette.bold("Arca local logs"),
+                safe_path(&status.logs_dir),
+                safe_path(&status.main_log_path),
+                status.main_log_bytes,
+                safe_path(&status.error_log_path),
+                status.error_log_bytes,
+                safe_path(&status.structured_log_path),
+                status.structured_log_bytes,
+            );
+            Ok(CommandOutput::new(
+                "logs.path",
+                false,
+                json!({
+                    "session_id": status.session_id,
+                    "logs_dir": safe_path(&status.logs_dir),
+                    "main_log_path": safe_path(&status.main_log_path),
+                    "error_log_path": safe_path(&status.error_log_path),
+                    "structured_log_path": safe_path(&status.structured_log_path),
+                    "main_log_bytes": status.main_log_bytes,
+                    "error_log_bytes": status.error_log_bytes,
+                    "structured_log_bytes": status.structured_log_bytes,
+                }),
+                human,
+            ))
+        }
+        Some(LogsCommand::Show {
+            errors,
+            stage,
+            operation,
+            limit,
+        }) => render_logs_show(
+            palette,
+            *errors,
+            stage.clone(),
+            operation.clone(),
+            usize::from(*limit),
+        ),
+        None => render_logs_show(palette, false, None, None, 50),
+    }
+}
+
+fn render_logs_show(
+    palette: Palette,
+    errors_only: bool,
+    stage: Option<String>,
+    operation_id: Option<String>,
+    limit: usize,
+) -> Result<CommandOutput, CliError> {
+    let response = core_logs::list(core_logs::LogQuery {
+        errors_only,
+        stage,
+        operation_id,
+        request_id: None,
+        limit: Some(limit),
+    });
+    let mut lines = vec![format!(
+        "{} (error log: {})",
+        palette.bold(&format!("Arca logs ({})", response.records.len())),
+        safe_path(&response.status.error_log_path)
+    )];
+    if response.records.is_empty() {
+        lines.push(format!("  {}", palette.dim("No matching log records.")));
+    } else {
+        for record in &response.records {
+            let level_label = match record.level {
+                core_logs::LogLevel::Info => palette.dim("INFO "),
+                core_logs::LogLevel::Warn => palette.yellow("WARN "),
+                core_logs::LogLevel::Error => palette.red("ERROR"),
+                core_logs::LogLevel::Panic => palette.red("PANIC"),
+            };
+            let code_suffix = record
+                .code
+                .as_deref()
+                .map(|code| format!(" [{code}]"))
+                .unwrap_or_default();
+            lines.push(format!(
+                "  {} {} {}{} — {}",
+                record.timestamp, level_label, record.stage, code_suffix, record.message
+            ));
+        }
+    }
+    Ok(CommandOutput::new(
+        "logs.show",
+        false,
+        json!({
+            "status": {
+                "session_id": response.status.session_id,
+                "logs_dir": safe_path(&response.status.logs_dir),
+                "main_log_path": safe_path(&response.status.main_log_path),
+                "error_log_path": safe_path(&response.status.error_log_path),
+                "structured_log_path": safe_path(&response.status.structured_log_path),
+                "main_log_bytes": response.status.main_log_bytes,
+                "error_log_bytes": response.status.error_log_bytes,
+                "structured_log_bytes": response.status.structured_log_bytes,
+            },
+            "total_matched": response.total_matched,
+            "records": response.records,
+        }),
+        lines.join("\n"),
+    ))
 }

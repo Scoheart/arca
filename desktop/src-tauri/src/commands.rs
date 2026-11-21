@@ -97,14 +97,29 @@ where
     T: Send + 'static,
     F: FnOnce() -> Result<T, String> + Send + 'static,
 {
-    tauri::async_runtime::spawn_blocking(operation)
-        .await
-        .map_err(|_| AssetCommandError {
+    let outcome = tauri::async_runtime::spawn_blocking(move || {
+        arca_core::logging::with_request_scope(Some("desktop"), "ipc.asset", |_| {
+            operation().map_err(AssetCommandError::from)
+        })
+    })
+    .await
+    .map_err(|_| {
+        arca_core::logging::LogEvent::error("ipc.worker_failed", "asset blocking worker panicked or failed")
+            .code("worker_failed")
+            .emit();
+        AssetCommandError {
             code: "worker_failed".into(),
             message: "后台任务失败，请重试。".into(),
             details: BTreeMap::new(),
-        })?
-        .map_err(Into::into)
+        }
+    })?;
+    if let Err(ref error) = outcome {
+        arca_core::logging::LogEvent::error("ipc.asset_error", &error.message)
+            .code(&error.code)
+            .fields(error.details.clone())
+            .emit();
+    }
+    outcome
 }
 
 async fn core_blocking<T, F>(operation: F) -> CoreResult<T>
@@ -112,16 +127,38 @@ where
     T: Send + 'static,
     F: FnOnce() -> CoreResult<T> + Send + 'static,
 {
-    tauri::async_runtime::spawn_blocking(operation)
-        .await
-        .map_err(|_| CoreError::new("worker_failed", "后台任务失败，请重试。"))?
+    let outcome = tauri::async_runtime::spawn_blocking(move || {
+        arca_core::logging::with_request_scope(Some("desktop"), "ipc.core", |_| operation())
+    })
+    .await
+    .map_err(|_| {
+        arca_core::logging::LogEvent::error("ipc.worker_failed", "core blocking worker panicked or failed")
+            .code("worker_failed")
+            .emit();
+        CoreError::new("worker_failed", "后台任务失败，请重试。")
+    })?;
+    if let Err(ref error) = outcome {
+        arca_core::logging::LogEvent::error("ipc.core_error", &error.message)
+            .code(&error.code)
+            .fields(error.details.clone())
+            .emit();
+    }
+    outcome
 }
 
 async fn blocking_command<T: Send + 'static>(
     operation: impl FnOnce() -> T + Send + 'static,
 ) -> Result<T, String> {
-    tauri::async_runtime::spawn_blocking(operation).await
-        .map_err(|_| "worker_failed: Background query failed".to_owned())
+    tauri::async_runtime::spawn_blocking(move || {
+        arca_core::logging::with_request_scope(Some("desktop"), "ipc.blocking", |_| operation())
+    })
+    .await
+    .map_err(|_| {
+        arca_core::logging::LogEvent::error("ipc.worker_failed", "background query worker panicked or failed")
+            .code("worker_failed")
+            .emit();
+        "worker_failed: Background query failed".to_owned()
+    })
 }
 
 #[tauri::command]
@@ -145,6 +182,60 @@ pub async fn get_backend_status() -> Result<BackendStatus, String> {
     blocking_command(move || {
         ArcaCore::backend_status()
     }).await
+}
+
+#[tauri::command]
+pub async fn get_log_status() -> Result<arca_core::logging::LogStatusView, String> {
+    blocking_command(arca_core::application::logs::status).await
+}
+
+#[tauri::command]
+pub async fn report_frontend_log(
+    entry: arca_core::logging::FrontendLogInput,
+) -> Result<(), String> {
+    blocking_command(move || {
+        arca_core::application::logs::record_frontend_event(entry);
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn open_log_file(
+    kind: Option<String>,
+    app_path: Option<String>,
+) -> Result<String, String> {
+    blocking_command(move || {
+        let target = arca_core::application::logs::prepare_log_file_for_open(kind.as_deref())
+            .map_err(|error| format!("{}: {}", error.code, error.message))?;
+        let target_str = target.to_string_lossy().into_owned();
+        #[cfg(target_os = "macos")]
+        {
+            let mut cmd = Command::new("/usr/bin/open");
+            if let Some(app) = app_path.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+                cmd.arg("-a").arg(app).arg(&target);
+            } else if kind.as_deref() == Some("dir") || kind.as_deref() == Some("folder") {
+                cmd.arg(&target);
+            } else {
+                // Open the log file in the default text viewer, or reveal in Finder if it fails.
+                cmd.arg(&target);
+            }
+            let status = cmd
+                .status()
+                .map_err(|error| format!("open_log_failed: {error}"))?;
+            if !status.success() {
+                let _ = Command::new("/usr/bin/open")
+                    .arg("-R")
+                    .arg(&target)
+                    .status();
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = app_path;
+        }
+        Ok(target_str)
+    })
+    .await?
 }
 
 #[tauri::command]
@@ -383,10 +474,28 @@ where
     T: Send + 'static,
     F: FnOnce() -> Result<T, SkillError> + Send + 'static,
 {
-    tauri::async_runtime::spawn_blocking(operation)
-        .await
-        .map_err(worker_error)?
-        .map_err(Into::into)
+    let outcome = tauri::async_runtime::spawn_blocking(move || {
+        arca_core::logging::with_request_scope(Some("desktop"), "ipc.skill", |_| {
+            operation().map_err(SkillCommandError::from)
+        })
+    })
+    .await
+    .map_err(|error| {
+        arca_core::logging::LogEvent::error(
+            "ipc.worker_failed",
+            "skill blocking worker panicked or failed",
+        )
+        .code("worker_failed")
+        .emit();
+        worker_error(error)
+    })?;
+    if let Err(ref error) = outcome {
+        arca_core::logging::LogEvent::error("ipc.skill_error", &error.message)
+            .code(&error.code)
+            .fields(error.details.clone())
+            .emit();
+    }
+    outcome
 }
 
 #[tauri::command]

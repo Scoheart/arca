@@ -22,6 +22,10 @@ Open **Models → Model playground** in Arca Desktop or run `arca model playgrou
 
 Blank parameters use the service's defaults. Use **Advanced JSON** for protocol-specific parameters such as Anthropic's `thinking` or Gemini Interactions' `generation_config`. Each result shows its own reply, latency, provider-reported token usage, or error. Edits apply to the request only. Press Ctrl+C to stop a server started from the terminal.
 
+- **Response mode** streams text as it arrives and measures the time to the first text. Switch to a complete reply for gateways or models without streaming. Each request can be stopped locally or retried on its own.
+- **Request preview** shows the endpoint, authentication header name, and protocol JSON before sending. A preview does not read credentials.
+- **Run history** keeps the parameters and results of recent rounds in the current browser tab. Restore a round's settings to run it again, or download the round as JSON.
+
 ## Protocols
 
 | Protocol | Common default path |

@@ -4589,6 +4589,108 @@
       }
     },
     {
+      "id": "blockrun",
+      "name": "BlockRun Free",
+      "category": "gateway",
+      "baseUrl": "https://blockrun.ai/api/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://blockrun.ai/docs/api-reference/chat-completions",
+      "portal": {
+        "kind": "setup",
+        "url": "https://blockrun.ai/free"
+      }
+    },
+    {
+      "id": "infomaniak-ai-services",
+      "name": "Infomaniak AI Services",
+      "category": "gateway",
+      "baseUrl": null,
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://developer.infomaniak.com/docs/api/post/2/ai/%7Bproduct_id%7D/openai/v1/chat/completions",
+      "portal": {
+        "kind": "console",
+        "url": "https://manager.infomaniak.com/"
+      }
+    },
+    {
+      "id": "sarvam",
+      "name": "Sarvam AI",
+      "category": "official",
+      "baseUrl": "https://api.sarvam.ai/v2",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.sarvam.ai/api/token-factory/chat-completions",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://indus.sarvam.ai/key-management"
+      }
+    },
+    {
+      "id": "qianwen-ai",
+      "name": "千问AI平台",
+      "category": "official",
+      "baseUrl": "https://maas.qianwenaiapi.com/compatible-mode/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://platform.qianwenai.com/docs/api-reference/chat/openai-chat",
+      "portal": {
+        "kind": "setup",
+        "url": "https://platform.qianwenai.com/docs/api-reference/preparation/api-key"
+      }
+    },
+    {
+      "id": "sakana-ai",
+      "name": "Sakana AI",
+      "category": "official",
+      "baseUrl": "https://api.sakana.ai/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://console.sakana.ai/get-started",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.sakana.ai/"
+      }
+    },
+    {
+      "id": "google-vertex-express",
+      "name": "Google Vertex AI Express",
+      "category": "official",
+      "baseUrl": "https://aiplatform.googleapis.com/v1/publishers/google",
+      "protocols": [
+        "gemini-generate-content"
+      ],
+      "docs": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/reference/express-mode/api-reference",
+      "portal": {
+        "kind": "console",
+        "url": "https://console.cloud.google.com/vertex-ai/studio/express-mode"
+      }
+    },
+    {
+      "id": "esa-eve",
+      "name": "ESA EVE",
+      "category": "official",
+      "baseUrl": "https://eve-chat.chat/api/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://eve-esa.github.io/eve-guide/backend/docs/api/openai-gateway/",
+      "portal": {
+        "kind": "console",
+        "url": "https://eve.philab.esa.int/chat/"
+      }
+    },
+    {
       "id": "azure-openai",
       "name": "Azure OpenAI",
       "category": "official",

@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { describeError, loadModels, runModel, type SharedInput } from "./api";
+import { describeError, loadModels } from "./api";
+import { RequestPreview } from "./components/RequestPreview";
 import { RunSettings } from "./components/RunSettings";
 import { Transcript } from "./components/Transcript";
-import { defaultParameters, type ModelTarget, type Parameters, type RunDraft, type RunResult } from "./types";
+import { defaultParameters, letter, type ModelTarget, type Parameters, type RequestSnapshot,
+  type RunDraft, type RunRound, type SharedInput } from "./types";
+import { exportRound, useRounds } from "./useRounds";
 
 const MAX_REQUESTS = 6;
-
-interface Batch extends SharedInput {
-  total: number;
-  finished: number;
-  failed: number;
-}
+const NARROW = "(max-width: 820px)";
 
 export function App({ token }: { token: string | null }) {
   const [models, setModels] = useState<ModelTarget[]>([]);
@@ -18,18 +16,17 @@ export function App({ token }: { token: string | null }) {
   const [selectedId, setSelectedId] = useState<number>();
   const [prompt, setPrompt] = useState("");
   const [instructions, setInstructions] = useState("");
-  const [batch, setBatch] = useState<Batch>();
-  const [open, setOpen] = useState(() => !window.matchMedia?.("(max-width: 820px)").matches);
+  const [narrow, setNarrow] = useState(() => !!window.matchMedia?.(NARROW).matches);
+  const [open, setOpen] = useState(() => !narrow);
+  const [preview, setPreview] = useState<{ request: RequestSnapshot; shared: SharedInput }>();
   const [loading, setLoading] = useState(!!token);
-  const [running, setRunning] = useState(false);
   const [notice, setNotice] = useState<string | null>(token ? null : "请在 Arca 的 Models 页面打开模型试验台。");
   const nextId = useRef(1);
-  const inFlight = useRef(false);
   const loadInFlight = useRef(false);
-  const revisions = useRef(new Map<string, string>());
   const settingsButton = useRef<HTMLButtonElement>(null);
-  const mobile = () => !!window.matchMedia?.("(max-width: 820px)").matches;
+  const { rounds, round, runningRound, select, start, stop, retry } = useRounds(token);
 
+  const running = !!runningRound;
   const selected = drafts.find((draft) => draft.id === selectedId) ?? drafts[0];
   const profileFor = (draft: RunDraft) => models.find((model) => model.id === draft.profileId);
   const selectedProfile = selected ? profileFor(selected) : undefined;
@@ -38,26 +35,20 @@ export function App({ token }: { token: string | null }) {
   const canAdd = !loading && !running && models.length > 0 && drafts.length < MAX_REQUESTS;
 
   const refresh = useCallback(async () => {
-    if (!token || loadInFlight.current || inFlight.current) return;
+    if (!token || loadInFlight.current) return;
     setLoading(true);
     setNotice(null);
     loadInFlight.current = true;
     try {
       const updated = await loadModels(token);
       const defaults: RunDraft[] = updated.slice(0, 2).map((target) => ({
-        id: nextId.current++, profileId: target.id, parameters: defaultParameters(), result: { status: "ready" },
+        id: nextId.current++, profileId: target.id, parameters: defaultParameters(),
       }));
-      const previous = revisions.current;
-      const current = new Map(updated.map((target) => [target.id, target.revision]));
-      revisions.current = current;
+      const current = new Set(updated.map((target) => target.id));
       setModels(updated);
       setDrafts((rows) => {
         if (!rows.length) return defaults;
-        return rows.map((row) => {
-          const revision = current.get(row.profileId);
-          if (revision && revision === previous.get(row.profileId)) return row;
-          return { ...row, profileId: revision ? row.profileId : "", result: { status: "ready" } };
-        });
+        return rows.map((row) => current.has(row.profileId) ? row : { ...row, profileId: "" });
       });
     } catch (error) {
       setNotice(describeError(error).message);
@@ -69,7 +60,14 @@ export function App({ token }: { token: string | null }) {
 
   useEffect(() => { void refresh(); }, [refresh]);
 
-  function updateDraft(id: number, change: Partial<Pick<RunDraft, "profileId" | "parameters" | "result">>) {
+  useEffect(() => {
+    const query = window.matchMedia?.(NARROW);
+    const update = () => setNarrow(!!query?.matches);
+    query?.addEventListener("change", update);
+    return () => query?.removeEventListener("change", update);
+  }, []);
+
+  function updateDraft(id: number, change: Partial<Pick<RunDraft, "profileId" | "parameters">>) {
     setDrafts((list) => list.map((draft) => draft.id === id ? { ...draft, ...change } : draft));
   }
 
@@ -79,7 +77,7 @@ export function App({ token }: { token: string | null }) {
     const id = nextId.current++;
     const draft: RunDraft = {
       id, profileId: copy?.profileId ?? (unselected ?? models[0]).id,
-      parameters: copy ? { ...copy.parameters } : defaultParameters(), result: { status: "ready" },
+      parameters: copy ? { ...copy.parameters } : defaultParameters(),
     };
     setDrafts((list) => [...list, draft]);
     setSelectedId(id);
@@ -93,68 +91,64 @@ export function App({ token }: { token: string | null }) {
     setSelectedId(remaining[Math.min(index, remaining.length - 1)].id);
   }
 
-  function changeParameter(name: keyof Parameters, value: string) {
+  function changeParameter<K extends keyof Parameters>(name: K, value: Parameters[K]) {
     if (!selected || running) return;
-    updateDraft(selected.id, { parameters: { ...selected.parameters, [name]: value }, result: { status: "ready" } });
+    updateDraft(selected.id, { parameters: { ...selected.parameters, [name]: value } });
   }
 
   function closeSettings() {
     setOpen(false);
-    if (mobile()) requestAnimationFrame(() => settingsButton.current?.focus());
+    if (narrow) requestAnimationFrame(() => settingsButton.current?.focus());
   }
 
-  async function run(chosen: RunDraft[]) {
-    if (!token || inFlight.current || loadInFlight.current || !prompt.trim()) return;
-    const runs = chosen.flatMap((draft) => {
-      const model = profileFor(draft);
-      return model ? [{ draft, model }] : [];
-    });
-    if (!runs.length) return;
-    const shared = { prompt, instructions };
-    const isNewInput = !batch || batch.prompt !== prompt || batch.instructions !== instructions;
-    const ids = new Set(runs.map(({ draft }) => draft.id));
-    inFlight.current = true;
-    setRunning(true);
-    setBatch({ ...shared, total: runs.length, finished: 0, failed: 0 });
-    setDrafts((list) => list.map((draft) => {
-      if (ids.has(draft.id)) return { ...draft, result: { status: "running" } };
-      return isNewInput ? { ...draft, result: { status: "ready" } } : draft;
-    }));
-    if (mobile()) setOpen(false);
+  function snapshot(draft: RunDraft, model: ModelTarget): RequestSnapshot {
+    return { id: draft.id, label: letter(drafts.indexOf(draft)), model, parameters: { ...draft.parameters } };
+  }
 
-    try {
-      await Promise.all(runs.map(async ({ draft, model }) => {
-        let result: RunResult;
-        try {
-          result = { status: "done", response: await runModel(token, draft, model, shared) };
-        } catch (error) {
-          result = { status: "error", error: describeError(error) };
-        }
-        updateDraft(draft.id, { result });
-        setBatch((prior) => prior && ({
-          ...prior, finished: prior.finished + 1, failed: prior.failed + (result.status === "error" ? 1 : 0),
-        }));
-      }));
-    } finally {
-      setRunning(false);
-      inFlight.current = false;
+  function run(chosen: RunDraft[]) {
+    if (!canRun || loadInFlight.current) return;
+    const requests = chosen.flatMap((draft) => {
+      const model = profileFor(draft);
+      return model ? [snapshot(draft, model)] : [];
+    });
+    if (start({ prompt, instructions }, requests)) {
+      setNotice(null);
+      if (narrow) closeSettings();
     }
   }
 
-  const status = loading ? "正在连接" : batch
-    ? "已返回 " + batch.finished + " / " + batch.total + (batch.failed ? " · " + batch.failed + " 失败" : "")
+  function restore(round: RunRound) {
+    if (running || loading) return;
+    const drafts = round.requests.map(({ model, parameters }) => {
+      const current = models.find((candidate) => candidate.id === model.id && candidate.revision === model.revision);
+      return { id: nextId.current++, profileId: current?.id ?? "", parameters: { ...parameters } };
+    });
+    setDrafts(drafts);
+    setSelectedId(drafts[0]?.id);
+    setPrompt(round.prompt);
+    setInstructions(round.instructions);
+    setNotice(drafts.some((draft) => !draft.profileId) ? "有模型或连接已更改，请在运行设置中重新选择。" : null);
+    setOpen(true);
+  }
+
+  const results = round?.requests.map(({ result }) => result.status) ?? [];
+  const finished = results.filter((status) => status !== "running").length;
+  const failed = results.filter((status) => status === "error").length;
+  const status = loading ? "正在连接" : round
+    ? "已完成 " + finished + " / " + results.length + (failed ? " · " + failed + " 失败" : "")
     : notice ? "未连接" : "本机连接";
 
   return (
     <main className="studio" data-settings={open ? "open" : "closed"}
       onKeyDown={(event) => {
-        if (mobile() && open && event.key === "Escape") closeSettings();
+        if (preview) return;
+        if (narrow && open && event.key === "Escape") closeSettings();
         if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && canRun && readyCount) {
           event.preventDefault();
-          void run(drafts);
+          run(drafts);
         }
       }}>
-      <section className="workspace" aria-labelledby="workspace-title" inert={open && mobile()}>
+      <section className="workspace" aria-labelledby="workspace-title" inert={open && narrow}>
         <header className="workspace-bar">
           <div className="workspace-title">
             <span className="wordmark" aria-hidden="true">Arca</span>
@@ -167,8 +161,10 @@ export function App({ token }: { token: string | null }) {
             <span className="panel-icon" aria-hidden="true" /><span>运行设置</span>
           </button>
         </header>
-        <Transcript drafts={drafts} models={models} active={selected?.id} prompt={batch?.prompt}
-          loading={loading} notice={notice} onSelect={(id) => { setSelectedId(id); setOpen(true); }} />
+        <Transcript round={round} rounds={rounds} loading={loading} notice={notice}
+          running={running} canRetry={!loading && (!runningRound || runningRound.id === round?.id)}
+          onSelect={select} onRestore={restore} onExport={exportRound}
+          onRetry={retry} onStop={stop} />
         <div className="composer-wrap">
           <div className="composer">
             <label className="sr-only" htmlFor="prompt">共同提示词</label>
@@ -181,7 +177,7 @@ export function App({ token }: { token: string | null }) {
                 <span>{readyCount ? readyCount + " 个对照请求" : "选择模型"}</span>
               </button>
               <button type="button" className="run-button" id="send" disabled={!canRun || !readyCount}
-                title="⌘ Enter / Ctrl Enter" onClick={() => void run(drafts)}>
+                title="⌘ Enter / Ctrl Enter" onClick={() => run(drafts)}>
                 <span>{running ? "运行中…" : readyCount > 1 ? "运行 " + readyCount + " 个" : "运行"}</span>
                 <span className="run-arrow" aria-hidden="true">↑</span>
               </button>
@@ -196,10 +192,16 @@ export function App({ token }: { token: string | null }) {
         onClose={closeSettings} onRefresh={() => void refresh()} onAdd={() => addDraft()}
         onSelect={setSelectedId} onInstructions={setInstructions} onChangeParameter={changeParameter}
         onChangeProfile={(id) => selected && updateDraft(selected.id, {
-          profileId: id, parameters: defaultParameters(), result: { status: "ready" },
+          profileId: id, parameters: selected.profileId ? defaultParameters() : selected.parameters,
         })}
         onDuplicate={() => addDraft(selected)} onRemove={removeSelected}
-        onRun={() => selected && void run([selected])} />
+        onRun={() => selected && run([selected])}
+        onPreview={() => {
+          if (selected && selectedProfile && canRun) {
+            setPreview({ request: snapshot(selected, selectedProfile), shared: { prompt, instructions } });
+          }
+        }} />
+      {token && preview && <RequestPreview token={token} {...preview} onClose={() => setPreview(undefined)} />}
     </main>
   );
 }

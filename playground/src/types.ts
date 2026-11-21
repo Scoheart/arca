@@ -17,6 +17,7 @@ export interface ModelTarget {
   provider: string;
   origin: string;
   revision: string;
+  streaming_available: boolean;
 }
 
 export interface ResponseMetrics {
@@ -32,6 +33,8 @@ export interface ModelResponse {
   finish: "length" | "filtered" | "incomplete" | null;
   upstream_status: number;
   elapsed_ms: number;
+  first_token_ms: number | null;
+  streamed: boolean;
 }
 
 export interface RunError {
@@ -42,9 +45,10 @@ export interface RunError {
 }
 
 export type RunResult =
-  | { status: "ready" | "running" }
+  | { status: "running"; text: string; startedAt: number }
   | { status: "done"; response: ModelResponse }
-  | { status: "error"; error: RunError };
+  | { status: "error"; error: RunError; text: string }
+  | { status: "cancelled"; text: string };
 
 export interface Parameters {
   temperature: string;
@@ -52,13 +56,35 @@ export interface Parameters {
   max_output_tokens: string;
   reasoning_effort: string;
   extra: string;
+  streaming: boolean;
 }
 
 export interface RunDraft {
   id: number;
   profileId: string;
   parameters: Parameters;
+}
+
+export interface SharedInput {
+  prompt: string;
+  instructions: string;
+}
+
+export interface RequestSnapshot {
+  id: number;
+  label: string;
+  model: ModelTarget;
+  parameters: Parameters;
+}
+
+export interface RoundRequest extends RequestSnapshot {
   result: RunResult;
+}
+
+export interface RunRound extends SharedInput {
+  id: number;
+  createdAt: number;
+  requests: RoundRequest[];
 }
 
 export const defaultParameters = (): Parameters => ({
@@ -67,5 +93,6 @@ export const defaultParameters = (): Parameters => ({
   max_output_tokens: "",
   reasoning_effort: "",
   extra: "",
+  streaming: true,
 });
 export const letter = (index: number) => String.fromCharCode(65 + index);

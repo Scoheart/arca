@@ -218,7 +218,7 @@ A one-click **Arca 精选 (curated collection)** subscribes you to a curated sou
 - **Safe, local writes** — Arca reads and edits only fields it owns. Existing files are backed up, prepared, and verified as one recoverable transaction; unrelated keys, comments, formatting, policy fields, permissions, and symlinks are preserved.
 - **Unified Agent consumption center** — each Agent page shows desired central assets under MCPs, Model, and Skills, with a central picker for relationship changes and a separate read-only external section.
 - **Native plugins and bundled MCPs** — Cursor's Plugins tab lists verified bundled providers, local plugin packages and completed marketplace caches, including versions, source paths and MCP/Skill/Rule/Agent/Command/Hook components. Host-provided MCPs also appear as read-only cards in the Agent's MCPs tab. Cached packages retain an explicit cache-only label; Arca does not infer installation, enablement or connection from files. Native observations have no delete, toggle or asset assignment actions. CLI `mcp status --agent cursor` exposes the same metadata in text and JSON.
-- **Inspect native MCP configuration** — open an MCP name or its details on the Agent page to view its parsed configuration and source path. Entries Arca cannot manage, including OAuth or unknown transports, remain available as read-only declarations. Recognized credentials are hidden in Core before display; plugin and built-in entries have no mutation controls. Sources without an independently readable declaration explain that limit. CLI `arca mcp show 'docs::stdio' --agent cursor --json` reads the same Agent configuration without importing it.
+- **Inspect native MCP configuration** — open an MCP name or its details on the Agent page to view its parsed configuration and source path. Entries Arca cannot manage, including OAuth or unknown transports, remain available as read-only declarations. Recognized credentials are hidden in Core before display; plugin and built-in entries have no mutation controls. Sources without an independently readable declaration explain that limit. CLI `arca agent mcp show 'docs::stdio' --agent cursor --json` reads the same Agent configuration without importing it.
 
 Native resource lists use compact rows. Open a row to view its IDs, versions, observed state and component sources; declarations sharing a source are grouped in the details dialog. These observations preserve each host's native plugin format and built-in declarations. They do not certify package or client conformance to the Agent Plugins specification.
 
@@ -349,9 +349,9 @@ an Agent (replace `codex` with the exact ID from `arca agent list --json`):
 arca skill inspect-source --path ./skills/arca-cli --json
 arca skill install --path ./skills/arca-cli --name arca-cli --dry-run --json
 arca skill install --path ./skills/arca-cli --name arca-cli --yes --json
-arca skill assign arca-cli --agent codex --dry-run --json
-arca skill assign arca-cli --agent codex --yes --json
-arca skill status --agent codex --json
+arca agent skill assign arca-cli --agent codex --dry-run --json
+arca agent skill assign arca-cli --agent codex --yes --json
+arca agent skill status --agent codex --json
 ```
 
 Review any reported risk findings before explicitly adding `--accept-risk`; a
@@ -370,16 +370,25 @@ disable, or delete entries, and manage MCP sources and Agent targets. Press `?`
 for the keymap and `q` to quit. Set `ARCA_NO_TUI=1` to print help instead when a
 script invokes `arca` without arguments.
 
-Or drive it non-interactively with subcommands:
+For scripting, use `arca mcp`, `arca model`, and `arca skill` to manage
+resources in the central libraries. Providers live under `arca model provider`.
+Use `arca agent list` to find an Agent ID, `arca agent status <id>` to see
+its assets together, and `arca agent <mcp|model|skill> --help` to manage what
+that Agent uses.
 
 ```text
-arca mcp {list,show,status,assign,unassign,enable,disable,enable-all,disable-all,converge,add,save,delete,export,source,icon}
+arca mcp {list,show,add,save,delete,export,source,icon}
 arca mcp icon {list,set,import,reset}
 arca mcp source {list,subscribe,add-local,add-builtin,refresh,enable,disable,remove}
-arca model {list,show,status,save,delete,import,assign,unassign,enable,disable,converge,use,delivery,provider,curl}
-arca model provider {list,show,templates,models,save,delete,docs}
-arca skill {list,show,status,inspect-source,install,import,update,remove,repair,check-updates,assign,unassign,enable,disable,converge}
-arca agent {list,save,configure,enable,disable,run,launch}
+arca model {list,show,save,delete,import,provider,curl}
+arca model provider {list,show,templates,catalog,save,delete,docs}
+arca skill {list,show,inspect-source,install,import,update,remove,repair,check-updates}
+
+arca agent {list,status,save,configure,enable,disable,run,launch,mcp,model,skill}
+arca agent status <agent-id>
+arca agent mcp {status,show,assign,unassign,enable,disable,enable-all,disable-all,converge}
+arca agent model {status,assign,unassign,enable,disable,use,delivery,converge}
+arca agent skill {status,assign,unassign,enable,disable,converge}
 arca agent launch {show,configure,reset}
 arca settings {show,terminal,locale,pins}
 arca network proxy {show,set,clear}
@@ -392,16 +401,19 @@ arca workspace
 arca upgrade
 ```
 
+Existing scripts can still use the old relationship commands, such as
+`arca model use PROFILE_ID --agent codex`. Both forms keep the same JSON output.
+
 All Agent-relationship writes use exact stable asset IDs and exactly one explicit
 `--agent <id>`. `assign` adds only the named relationships; `unassign` removes
 only those relationships; `enable` and `disable` preserve the relationship.
-`arca mcp unassign --all --agent <id>` performs a reviewed,
+`arca agent mcp unassign --all --agent <id>` performs a reviewed,
 target-scoped clear of managed, disabled, and external MCP entries while
 leaving the central catalog and every other Agent unchanged.
-`arca model unassign --all --agent <id>` uses the same Model clear operation as
+`arca agent model unassign --all --agent <id>` uses the same Model clear operation as
 Desktop, including external Models on native-registry Agents. Core protects
 shared physical stores and retains central Profiles, Providers and credentials.
-`arca model use <profile-id> --agent <id>` selects the current Model independently
+`arca agent model use <profile-id> --agent <id>` selects the current Model independently
 of assignment. `converge <asset-id> --agent <id> <adopt|restore|detach>` is the
 shared explicit reconciliation verb; repeating `assign`, `enable`, or `use`
 never repairs or overwrites external changes as a side effect.

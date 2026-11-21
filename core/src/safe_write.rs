@@ -606,19 +606,32 @@ pub(crate) fn acquire_settings_lock(path: &Path) -> Result<SettingsLock, String>
             }
             Err(error) if error.kind() == ErrorKind::WouldBlock => {
                 if started.elapsed() >= SETTINGS_LOCK_TIMEOUT {
-                    return Err(format!(
+                    let message = format!(
                         "refusing to modify {}: timed out waiting for the settings lock",
                         path.display()
-                    ));
+                    );
+                    crate::logging::LogEvent::error("safe_write.lock_timeout", &message)
+                        .code("lock_timeout")
+                        .duration_ms(started.elapsed().as_millis() as u64)
+                        .field("path", path.display().to_string())
+                        .field("lock_path", lock_path.display().to_string())
+                        .emit();
+                    return Err(message);
                 }
                 thread::sleep(SETTINGS_LOCK_POLL);
             }
             Err(error) => {
-                return Err(format!(
+                let message = format!(
                     "failed to acquire settings lock for {}: {}",
                     path.display(),
                     error
-                ));
+                );
+                crate::logging::LogEvent::error("safe_write.lock_error", &message)
+                    .code("lock_failed")
+                    .field("path", path.display().to_string())
+                    .field("lock_path", lock_path.display().to_string())
+                    .emit();
+                return Err(message);
             }
         }
     }

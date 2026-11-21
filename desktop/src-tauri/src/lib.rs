@@ -17,6 +17,7 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    arca_core::logging::init_session("desktop");
     // Bootstrap before constructing Tauri. A configured WebView can exist
     // before the user setup hook runs, so setup is too late to be the IPC write
     // boundary. Desktop failures publish a read-only backend and still return a
@@ -52,14 +53,27 @@ pub fn run() {
             window_lifecycle::install(app)?;
             // Catch native selections changed while Arca was closed.
             if let Err(error) = arca_core::application::models::reconcile_native_selection() {
+                arca_core::logging::LogEvent::warn("startup.reconcile_native_selection", &error)
+                    .code("reconcile_native_selection_failed")
+                    .emit();
                 eprintln!("Arca native model selection reconciliation: {error}");
             }
             if let Err(error) = observation_watcher::start(app.handle().clone()) {
+                arca_core::logging::LogEvent::warn("startup.observation_watcher", &error)
+                    .code("observation_watcher_failed")
+                    .emit();
                 eprintln!("Arca observation watcher warning: {error}");
             }
             if bootstrap.skill_updates_allowed {
                 std::thread::spawn(|| {
-                    let _ = arca_core::application::skills::check_updates_if_due();
+                    if let Err(error) = arca_core::application::skills::check_updates_if_due() {
+                        arca_core::logging::LogEvent::warn(
+                            "startup.skill_updates",
+                            format!("{error:?}"),
+                        )
+                        .code("skill_update_check_failed")
+                        .emit();
+                    }
                 });
             }
 
@@ -70,6 +84,12 @@ pub fn run() {
                 window.set_title("Arca Dev · 本地开发预览")?;
                 #[cfg(target_os = "macos")]
                 if let Err(error) = trackpad_gestures::install(window.clone()) {
+                    arca_core::logging::LogEvent::warn(
+                        "startup.trackpad_gestures",
+                        error.to_string(),
+                    )
+                    .code("trackpad_gestures_unavailable")
+                    .emit();
                     eprintln!("Arca trackpad phase bridge unavailable: {error}");
                 }
                 window.show()?;
@@ -91,6 +111,9 @@ pub fn run() {
             file_editors::detect_agent_installation,
             file_editors::ensure_file_path,
             commands::get_backend_status,
+            commands::get_log_status,
+            commands::open_log_file,
+            commands::report_frontend_log,
             commands::unlock_model_credentials,
             commands::get_model_credential_session_status,
             commands::copy_to_clipboard,

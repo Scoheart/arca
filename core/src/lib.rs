@@ -9,6 +9,7 @@ pub mod brand;
 pub mod application;
 pub mod assets;
 pub mod domain;
+pub mod logging;
 pub mod network;
 pub mod paths;
 pub mod pinned_agents;

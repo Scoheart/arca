@@ -1,5 +1,5 @@
-//! Single-turn inference using an exact, saved Model Profile. The browser never
-//! chooses a URL or receives a credential.
+//! Text inference using an exact, saved Model Profile.
+mod stream;
 mod wire;
 
 use std::{io::Read, time::{Duration, Instant}};
@@ -23,6 +23,7 @@ pub(crate) struct Target {
     pub provider: String,
     pub origin: String,
     pub revision: String,
+    pub streaming_available: bool,
 }
 
 #[derive(Deserialize)]
@@ -37,6 +38,8 @@ pub(crate) struct Request {
     top_p: Option<f64>,
     max_output_tokens: Option<u32>,
     reasoning_effort: Option<String>,
+    #[serde(default)]
+    streaming: bool,
     #[serde(default)]
     extra: Map<String, Value>,
 }
@@ -93,16 +96,28 @@ pub(crate) struct Completed {
     usage: wire::Usage,
     finish: Option<&'static str>,
     elapsed_ms: u64,
+    first_token_ms: Option<u64>,
+    streamed: bool,
     upstream_status: u16,
 }
 
 pub(crate) struct Prepared {
     target: Target,
-    url: String,
+    url: url::Url,
+    format: stream::Format,
     authorization: AuthRequirement,
     source: Option<ApiKeySource>,
     provider_id: Option<String>,
     body: Value,
+}
+
+#[derive(Serialize)]
+pub(crate) struct Preview<'a> {
+    method: &'static str,
+    url: &'a str,
+    accept: &'static str,
+    authentication_header: Option<&'static str>,
+    body: &'a Value,
 }
 
 struct Route<'a> {
@@ -146,7 +161,7 @@ impl<'a> Route<'a> {
 
     fn target(&self) -> Result<Target, Failure> {
         let bytes = serde_json::to_vec(&(self.profile, self.provider)).map_err(|_| invalid_catalog())?;
-        let origin = url::Url::parse(&self.url).map_err(|_| invalid_catalog())?.origin().ascii_serialization();
+        let url = url::Url::parse(&self.url).map_err(|_| invalid_catalog())?;
         Ok(Target {
             id: self.profile.id.clone(),
             name: self.profile.name.clone(),
@@ -154,8 +169,9 @@ impl<'a> Route<'a> {
             protocol: self.profile.protocol.clone(),
             provider: self.provider.map(|provider| provider.name.clone())
                 .unwrap_or_else(|| self.profile.provider.clone()),
-            origin,
+            origin: url.origin().ascii_serialization(),
             revision: hex::encode(Sha256::digest(bytes)),
+            streaming_available: stream::Format::route(&self.profile.protocol, &url).is_some(),
         })
     }
 }
@@ -181,16 +197,38 @@ pub(crate) fn prepare(request: Request) -> Result<Prepared, Failure> {
     let (route, target) = Route::at_revision(&settings, &request.profile_id, &request.revision)?;
     let profile = route.profile;
     let provider_type = route.provider.map(|provider| provider.provider.as_str()).unwrap_or(&profile.provider);
+    let url = url::Url::parse(&route.url).map_err(|_| invalid_catalog())?;
+    let (format, url) = if request.streaming {
+        stream::Format::route(&profile.protocol, &url).ok_or_else(|| {
+            Failure::bad("这个自定义端点没有对应的流式地址。请选择完整返回。")
+        })?
+    } else {
+        (stream::Format::Json, url)
+    };
     let body = wire::encode(profile, provider_type, request)?;
     let authorization = route.provider.map(|provider| provider.auth_requirement.clone())
         .unwrap_or(AuthRequirement::Required);
     let source = route.provider.and_then(|provider| provider.api_key_source.clone()).or_else(|| {
         profile.env_key.clone().map(|name| ApiKeySource::Env { name })
     });
-    Ok(Prepared { target, body, url: route.url, authorization, source, provider_id: profile.provider_id.clone() })
+    Ok(Prepared { target, body, url, format, authorization, source, provider_id: profile.provider_id.clone() })
 }
 
 impl Prepared {
+    pub(crate) fn preview(&self) -> Preview<'_> {
+        Preview {
+            method: "POST",
+            url: self.url.as_str(),
+            accept: self.format.accept(),
+            authentication_header: (self.authorization != AuthRequirement::None).then(|| match self.target.protocol {
+                ModelProtocol::AnthropicMessages => "x-api-key",
+                ModelProtocol::GeminiGenerateContent | ModelProtocol::GeminiInteractions => "x-goog-api-key",
+                _ => "Authorization",
+            }),
+            body: &self.body,
+        }
+    }
+
     fn credential(&self) -> Result<Option<Zeroizing<String>>, Failure> {
         let bad_credential = |message: String| {
             let (code, display) = match message.split(':').next() {
@@ -228,6 +266,13 @@ impl Prepared {
     }
 
     pub(crate) fn execute(self) -> Result<Completed, Failure> {
+        self.execute_with(|_| Ok(()))
+    }
+
+    pub(crate) fn execute_with(
+        self,
+        mut emit: impl FnMut(&str) -> Result<(), Failure>,
+    ) -> Result<Completed, Failure> {
         let access = self.credential()?;
         // Keychain and credential helpers may wait. Check the selected route
         // again after obtaining the key so a concurrent Provider edit cannot
@@ -239,8 +284,7 @@ impl Prepared {
         let config = ureq::Agent::config_builder().http_status_as_error(false).max_redirects(0)
             .timeout_connect(Some(Duration::from_secs(10))).timeout_global(Some(Duration::from_secs(120)));
         // A local model server should be reachable even with an Arca proxy set.
-        let url = url::Url::parse(&self.url).map_err(|_| invalid_catalog())?;
-        let local = match url.host() {
+        let local = match self.url.host() {
             Some(url::Host::Ipv4(host)) => host.is_loopback(),
             Some(url::Host::Ipv6(host)) => host.is_loopback(),
             Some(url::Host::Domain("localhost")) => true,
@@ -256,8 +300,8 @@ impl Prepared {
             crate::network::build_ureq_agent(config)
                 .map_err(|_| Failure::new(503, "proxy_unavailable", "请检查 Arca 的网络代理。"))?
         };
-        let mut request = agent.post(&self.url)
-            .header("Accept", "application/json")
+        let mut request = agent.post(self.url.as_str())
+            .header("Accept", self.format.accept())
             .header("Content-Type", "application/json");
         if self.target.protocol == ModelProtocol::AnthropicMessages {
             request = request.header("anthropic-version", "2023-06-01");
@@ -283,18 +327,35 @@ impl Prepared {
                 .ok().and_then(|_| serde_json::from_slice(&bytes).ok());
             return Err(Failure::from_upstream(status, body));
         }
-        let body = response.body_mut().with_config().limit(2_097_152).read_to_string()
-            .map_err(network_failure)?;
-        let result: Value = serde_json::from_str(&body)
-            .map_err(|_| Failure::new(502, "invalid_response", "Provider 未返回可读取的 JSON。请检查协议与端点。"))?;
-        if result.get("error").is_some_and(|error| !error.is_null()) {
-            return Err(Failure::from_upstream(status, Some(result)));
-        }
-        let (mut text, usage, finish) = wire::decode(&self.target.protocol, &result)?;
-        if let Some(token) = access.as_deref() {
-            text = text.replace(token.as_str(), "[凭据已隐藏]");
-        }
-        Ok(Completed { text, usage, finish, elapsed_ms: started.elapsed().as_millis() as u64, upstream_status: status })
+        let streamed = self.format.matches(response.headers().get("content-type").and_then(|value| value.to_str().ok()));
+        let mut first_token_ms = None;
+        let (text, usage, finish) = if streamed {
+            let reader = response.body_mut().with_config().limit(stream::MAX_WIRE_BYTES).reader();
+            stream::decode(&self.target.protocol, self.format, reader, access.as_deref().map(String::as_str), status, &mut |delta| {
+                if first_token_ms.is_none() && !delta.trim().is_empty() {
+                    first_token_ms = Some(started.elapsed().as_millis() as u64);
+                }
+                emit(delta)
+            })?
+        } else {
+            let body = response.body_mut().with_config().limit(2_097_152).read_to_string()
+                .map_err(network_failure)?;
+            let result: Value = serde_json::from_str(&body)
+                .map_err(|_| Failure::new(502, "invalid_response", "Provider 未返回可读取的响应。请检查协议与端点。"))?;
+            if result.get("error").is_some_and(|error| !error.is_null()) {
+                return Err(Failure::from_upstream(status, Some(result)));
+            }
+            let (mut text, usage, finish) = wire::decode(&self.target.protocol, &result)?;
+            if let Some(token) = access.as_deref() {
+                text = text.replace(token.as_str(), "[凭据已隐藏]");
+            }
+            (text, usage, finish)
+        };
+        Ok(Completed {
+            text, usage, finish, first_token_ms, streamed,
+            elapsed_ms: started.elapsed().as_millis() as u64,
+            upstream_status: status,
+        })
     }
 }
 

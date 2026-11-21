@@ -187,6 +187,7 @@ fn provider_setup(id: &str) -> Option<ModelProviderSetupView> {
         "amazon-bedrock-mantle" => ("https://bedrock-mantle.<region>.api.aws/v1", "bedrock"),
         "amazon-bedrock" => ("https://bedrock-runtime.<region>.amazonaws.com", "bedrock-converse"),
         "cloudflare-workers-ai" => ("https://api.cloudflare.com/client/v4/accounts/<account-id>/ai/v1", "cloudflare"),
+        "infomaniak-ai-services" => ("https://api.infomaniak.com/2/ai/<product_id>/openai/v1", "infomaniak"),
         "tinfoil-proxy" => ("http://127.0.0.1:3301/v1", "tinfoil"),
         _ => return None,
     };
@@ -270,7 +271,8 @@ impl Serialize for ModelProviderView {
     {
         let (base_url, protocols) =
             provider_template_connection(self).map_err(serde::ser::Error::custom)?;
-        let mut view = serializer.serialize_struct("ModelProviderView", 12)?;
+        let auth = provider_template_auth_override(self.id);
+        let mut view = serializer.serialize_struct("ModelProviderView", 12 + usize::from(auth.is_some()))?;
         view.serialize_field("id", self.id)?;
         view.serialize_field("name", self.name)?;
         view.serialize_field("docs_url", &provider_docs_url(self.id))?;
@@ -283,6 +285,9 @@ impl Serialize for ModelProviderView {
         )?;
         view.serialize_field("base_url", &base_url)?;
         view.serialize_field("protocols", &protocols)?;
+        if let Some(auth) = auth {
+            view.serialize_field("default_auth_requirement", &auth)?;
+        }
         view.serialize_field("category", self.category)?;
         view.serialize_field("setup", &provider_setup(self.id))?;
         view.serialize_field(
@@ -290,6 +295,14 @@ impl Serialize for ModelProviderView {
             &discovery::model_discovery_supported(self.id),
         )?;
         view.end()
+    }
+}
+
+fn provider_template_auth_override(id: &str) -> Option<AuthRequirement> {
+    match id {
+        "ollama" | "lm-studio" | "vllm" | "bilibili-index-translate" | "blockrun" => Some(AuthRequirement::None),
+        "custom" | "ovhcloud" => Some(AuthRequirement::Optional),
+        _ => None,
     }
 }
 
@@ -340,6 +353,24 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
     use ModelProtocol::{AnthropicMessages, GeminiGenerateContent, OpenaiCompletions, OpenaiResponses};
 
     match id {
+        "sarvam" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.sarvam.ai/v2",
+        }],
+        "sakana-ai" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.sakana.ai/v1",
+        }],
+        "qianwen-ai" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://maas.qianwenaiapi.com/compatible-mode/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://maas.qianwenaiapi.com/apps/anthropic",
+            },
+        ],
         "gmi-cloud" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -2407,6 +2438,55 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "blockrun",
+        name: "BlockRun Free",
+        default_base_url: Some("https://blockrun.ai/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "infomaniak-ai-services",
+        name: "Infomaniak AI Services",
+        default_base_url: None,
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "sarvam",
+        name: "Sarvam AI",
+        default_base_url: Some("https://api.sarvam.ai/v2"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "qianwen-ai",
+        name: "千问AI平台",
+        default_base_url: Some("https://maas.qianwenaiapi.com/compatible-mode/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "sakana-ai",
+        name: "Sakana AI",
+        default_base_url: Some("https://api.sakana.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "google-vertex-express",
+        name: "Google Vertex AI Express",
+        default_base_url: Some("https://aiplatform.googleapis.com/v1/publishers/google"),
+        default_protocol: ModelProtocol::GeminiGenerateContent,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "esa-eve",
+        name: "ESA EVE",
+        default_base_url: Some("https://eve-chat.chat/api/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "azure-openai",
         name: "Azure OpenAI",
         default_base_url: None,
@@ -3049,6 +3129,28 @@ pub fn infer_provider(base_url: &str) -> String {
         .unwrap_or_default();
     let path = parsed.as_ref().map(|url| url.path()).unwrap_or("");
     let in_path = |prefix: &str| path == prefix || path.starts_with(&format!("{prefix}/"));
+    if host == "blockrun.ai" && in_path("/api/v1") {
+        return "blockrun".into();
+    }
+    if host == "maas.qianwenaiapi.com"
+        && (in_path("/compatible-mode/v1") || in_path("/apps/anthropic"))
+    {
+        return "qianwen-ai".into();
+    }
+    if host == "aiplatform.googleapis.com" && in_path("/v1/publishers/google") {
+        return "google-vertex-express".into();
+    }
+    if host == "eve-chat.chat" && in_path("/api/v1") {
+        return "esa-eve".into();
+    }
+    if host == "api.infomaniak.com" {
+        let parts: Vec<_> = path.trim_matches('/').split('/').collect();
+        if matches!(parts.as_slice(), ["2", "ai", product, "openai", "v1", ..]
+            if product.parse::<u64>().is_ok_and(|id| id > 0))
+        {
+            return "infomaniak-ai-services".into();
+        }
+    }
     if host.starts_with("bedrock-runtime.")
         && (host.ends_with(".amazonaws.com") || host.ends_with(".amazonaws.com.cn")) {
         return "amazon-bedrock".into();
@@ -3291,6 +3393,8 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.tokenlab.amd.com" => "amd-token-lab",
         // The inference host. ecloud.10086.cn is the portal and stays custom.
         "moma.cmecloud.cn" => "ecloud-moma",
+        "api.sarvam.ai" => "sarvam",
+        "api.sakana.ai" => "sakana-ai",
         // The API host and the plans/keys host. api.sambanova.ai stays sambanova.
         "api.cloud.mara.com" | "cloud.mara.com" => "mara",
         "api.sambanova.ai" => "sambanova",
@@ -4748,6 +4852,9 @@ pub(crate) fn validate_provider_config(provider: &ModelProviderConfig) -> Result
     }
     if provider.auth_requirement == AuthRequirement::None && provider.api_key_source.is_some() {
         return Err("credential_not_required: an unauthenticated Provider cannot retain a credential source".into());
+    }
+    if provider.provider == "blockrun" && provider.auth_requirement != AuthRequirement::None {
+        return Err("credential_not_required: BlockRun Free uses the anonymous API".into());
     }
     Ok(())
 }
@@ -10252,6 +10359,51 @@ mod tests {
     }
 
     #[test]
+    fn audited_hosted_provider_templates_build_chat_connections() {
+        for (id, base, path, protocol, auth) in [
+            ("blockrun", "https://blockrun.ai/api/v1", "/chat/completions", "openai-completions", "none"),
+            ("sarvam", "https://api.sarvam.ai/v2", "/responses", "openai-responses", "required"),
+            ("qianwen-ai", "https://maas.qianwenaiapi.com", "/compatible-mode/v1/chat/completions", "openai-completions", "required"),
+            ("sakana-ai", "https://api.sakana.ai/v1", "/chat/completions", "openai-completions", "required"),
+            ("google-vertex-express", "https://aiplatform.googleapis.com/v1/publishers/google", "/models/{model}:generateContent", "gemini-generate-content", "required"),
+            ("esa-eve", "https://eve-chat.chat/api/v1", "/chat/completions", "openai-completions", "required"),
+        ] {
+            let template = list_providers().iter().find(|template| template.id == id).expect(id);
+            let json = serde_json::to_value(template).unwrap();
+            assert_eq!(json["base_url"], base, "{id}");
+            assert_eq!(json["protocols"][protocol]["endpoint_path"], path, "{id}");
+            assert_eq!(json["default_auth_requirement"].as_str().unwrap_or("required"), auth, "{id}");
+        }
+        let template = list_providers().iter().find(|template| template.id == "infomaniak-ai-services")
+            .expect("Infomaniak template");
+        let json = serde_json::to_value(template).unwrap();
+        assert!(json["base_url"].is_null());
+        assert_eq!(json["setup"]["base_url_placeholder"], "https://api.infomaniak.com/2/ai/<product_id>/openai/v1");
+        assert!(json.get("default_auth_requirement").is_none());
+        assert_eq!(infer_provider("https://api.infomaniak.com/2/ai/123/openai/v1"), template.id);
+        assert_eq!(infer_provider("https://api.infomaniak.com/2/ai/123/openai/v1/chat/completions"), template.id);
+        assert_eq!(infer_provider("https://api.infomaniak.com/2/ai/invalid/openai/v1"), "custom");
+        assert_eq!(infer_provider("https://api.infomaniak.com.evil.test/2/ai/123/openai/v1"), "custom");
+        assert_eq!(infer_provider("https://aiplatform.googleapis.com/v1/projects/demo/locations/us-central1"), "custom");
+        assert_eq!(infer_provider("https://api.blockrun.ai/v1"), "custom");
+        assert_eq!(infer_provider("https://blockrun.ai/api/v1/models"), "blockrun");
+        assert_eq!(infer_provider("https://blockrun.ai.evil.test/api/v1"), "custom");
+
+        let ovhcloud = list_providers().iter().find(|template| template.id == "ovhcloud").unwrap();
+        assert_eq!(serde_json::to_value(ovhcloud).unwrap()["default_auth_requirement"], "optional");
+
+        let mut provider = openrouter_provider("blockrun-free", "BlockRun Free");
+        provider.provider = "blockrun".into();
+        provider.base_url = "https://blockrun.ai/api/v1".into();
+        provider.auth_requirement = AuthRequirement::Required;
+        provider.api_key_source = Some(ApiKeySource::ArcaStore);
+        assert!(validate_provider_config(&provider).unwrap_err().contains("anonymous API"));
+        provider.auth_requirement = AuthRequirement::None;
+        provider.api_key_source = None;
+        assert!(validate_provider_config(&provider).is_ok());
+    }
+
+    #[test]
     fn provider_endpoints_are_valid_and_only_reviewed_plans_share_urls() {
         let mut ids = BTreeSet::new();
         let mut endpoints = BTreeSet::new();
@@ -10322,8 +10474,8 @@ mod tests {
             .filter(|provider| provider.default_base_url.is_none())
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
-            BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "custom"]));
-        assert_eq!(list_providers().len(), 230);
+            BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "infomaniak-ai-services", "custom"]));
+        assert_eq!(list_providers().len(), 237);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -13806,7 +13958,6 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 230);
         let linked = list_providers()
             .iter()
             .filter(|provider| provider_docs_url(provider.id).is_some())
@@ -13935,7 +14086,6 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 230);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -14080,7 +14230,6 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 230);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -14191,7 +14340,6 @@ url = "https://example.test/mcp"
             },
         ];
 
-        assert_eq!(list_providers().len(), 230);
         for expect in cases {
             let provider = list_providers()
                 .iter()
@@ -14289,7 +14437,6 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://www.respan.ai/docs/ai-gateway/quickstart");
         assert_eq!(serialized["portal"]["url"], "https://platform.respan.ai/platform/gateway/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14325,7 +14472,6 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://experiments.hetzner.com/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14371,7 +14517,6 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://cheapllm.shop/docs");
         assert_eq!(serialized["portal"]["url"], "https://cheapllm.shop/signup");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14423,7 +14568,6 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://powertokens.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14453,7 +14597,6 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://free.ai/api/");
         assert_eq!(serialized["portal"]["url"], "https://free.ai/account/?tab=api");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14486,7 +14629,6 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.suanli.cn/models");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14519,7 +14661,6 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://botscanner.ai/faq");
         assert_eq!(serialized["portal"]["url"], "https://botscanner.ai/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14554,7 +14695,6 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://console.cucloud.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14614,7 +14754,6 @@ url = "https://example.test/mcp"
             "https://puter.com/dashboard#account"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14675,7 +14814,6 @@ url = "https://example.test/mcp"
             "https://console.ucloud.cn/modelverse/experience/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14727,7 +14865,6 @@ url = "https://example.test/mcp"
             "https://platform.mosi.cn/app/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14773,7 +14910,6 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://minekuai.cn/api-docs");
         assert_eq!(serialized["portal"]["url"], "https://minekuai.cn/api-keys");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14819,7 +14955,6 @@ url = "https://example.test/mcp"
             "https://deploy.radium.cloud/keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14865,7 +15000,6 @@ url = "https://example.test/mcp"
         assert_eq!(serialized["docs_url"], "https://logfare.ai/docs");
         assert_eq!(serialized["portal"]["url"], "https://logfare.ai/register");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14908,7 +15042,6 @@ url = "https://example.test/mcp"
             "https://synap402.com/account.html#keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -14951,7 +15084,6 @@ url = "https://example.test/mcp"
             "https://www.flonno.com/dashboard/keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -15020,7 +15152,6 @@ url = "https://example.test/mcp"
             "https://fumolab.ai/en/dashboard/api-keys/"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -15064,7 +15195,6 @@ url = "https://example.test/mcp"
             "https://console.platform.preferredai.jp"
         );
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -15133,7 +15263,6 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://notebooks.amd.com/tokenlab");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -15180,7 +15309,6 @@ url = "https://example.test/mcp"
             "https://portal.telnyx.com/#/app/api-keys"
         );
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -15224,7 +15352,6 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://ecloud.10086.cn/");
         assert_eq!(serialized["portal"]["kind"], "console");
-        assert_eq!(list_providers().len(), 230);
     }
 
     #[test]
@@ -15310,7 +15437,6 @@ url = "https://example.test/mcp"
         );
         assert_eq!(serialized["portal"]["url"], "https://cloud.mara.com/apis");
         assert_eq!(serialized["portal"]["kind"], "api-key");
-        assert_eq!(list_providers().len(), 230);
     }
 
 }

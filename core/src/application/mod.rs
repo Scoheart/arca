@@ -18,6 +18,7 @@ pub mod convergence;
 mod error;
 pub(crate) mod gate;
 pub mod mcp;
+pub mod logs;
 pub mod models;
 pub mod network;
 pub mod operations;
