@@ -1,0 +1,4 @@
+interface:
+  display_name: "Arca 使用指南"
+  short_description: "在 Arca 桌面端、CLI 和 MCP TUI 中管理 Agent 与资源"
+  default_prompt: "使用 $arca，按当前任务选择 CLI、MCP TUI 或桌面 GUI，并核对 Arca 中的实际状态。"

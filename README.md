@@ -330,31 +330,30 @@ Everything runs against `~/.arca/`, shared with the desktop app.
 To include `arca model playground` in a CLI built from source, build the
 [playground frontend](playground/README.md) before compiling the CLI.
 
-### Teach an Agent to use the CLI
+### Teach an Agent to use Arca
 
-The portable [arca-cli Skill](skills/arca-cli/SKILL.md) teaches Agents to discover
-the installed CLI, configure launch paths/arguments/environment variables, manage
-MCPs, Models and Skills, and verify changes through structured output. It includes
-command recipes and guidance for shared targets, credentials and partial failures.
+The [arca Skill](skills/arca/SKILL.md) covers the desktop GUI, MCP
+TUI, and CLI. It starts with a task and interface guide, then links to detailed
+steps for resources, Agent setup, diagnostics, and recovery.
 
-From a local checkout, install it into Arca's central library, then assign it to
-an Agent (replace `codex` with the exact ID from `arca agent list --json`):
+From a local checkout, install `arca` into the central library, then assign it to
+an Agent. Replace `codex` with the exact ID from `arca agent list --json`.
 
 ```bash
-arca skill inspect-source --path ./skills/arca-cli --json
-arca skill install --path ./skills/arca-cli --name arca-cli --dry-run --json
-arca skill install --path ./skills/arca-cli --name arca-cli --yes --json
-arca agent skill assign arca-cli --agent codex --dry-run --json
-arca agent skill assign arca-cli --agent codex --yes --json
+arca skill inspect-source --path ./skills/arca --json
+arca skill install --path ./skills/arca --name arca --dry-run --json
+arca skill install --path ./skills/arca --name arca --yes --json
+arca agent skill assign arca --agent codex --dry-run --json
+arca agent skill assign arca --agent codex --yes --json
 arca agent skill status --agent codex --json
 ```
 
-Review any reported risk findings before explicitly adding `--accept-risk`; a
-plain `--yes` does not accept those findings. Desktop users can import the
-`skills/arca-cli` folder through **Skills → Add**, then select it for their Agent.
-The Skill and its `references/` directory must stay together when using another
-Agent's supported Skill installation method. Start a new Agent session or use
-its supported reload mechanism after assignment.
+Review any reported risk findings before explicitly adding `--accept-risk`.
+Desktop users can import the `skills/arca` folder through **Skills → Add**, then
+select it for their Agent. Keep `SKILL.md` and `references/` together when using
+another Agent's installation method. Start a new session or use the Agent's
+supported reload mechanism after assignment. The [arca-cli Skill](skills/arca-cli/SKILL.md)
+is also available for command-line use.
 
 ### Interactive and scripted commands
 

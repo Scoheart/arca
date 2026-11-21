@@ -4,22 +4,22 @@
 
 > 还没安装？看 [安装 · 命令行](/guide/install#命令行-tui-arca)。
 
-## 给 Agent 安装 CLI Skill
+## 给 Agent 安装 Arca Skill
 
-仓库提供可独立安装的 [arca-cli Skill](https://github.com/Scoheart/arca/tree/main/skills/arca-cli)，指导 Agent 使用本机 CLI 配置启动路径、参数和环境变量，管理 MCP、模型与 Skills，并读取 JSON 结果、预览改动和处理部分失败。
+[arca Skill](https://github.com/Scoheart/arca/tree/main/skills/arca) 同时覆盖桌面 GUI、MCP TUI 和 CLI。按任务进入所需的界面、操作手册或技术参考。也可独立安装专注命令行的 [arca-cli Skill](https://github.com/Scoheart/arca/tree/main/skills/arca-cli)。
 
 在本地仓库根目录执行：
 
 ```bash
-arca skill inspect-source --path ./skills/arca-cli --json
-arca skill install --path ./skills/arca-cli --name arca-cli --dry-run --json
-arca skill install --path ./skills/arca-cli --name arca-cli --yes --json
-arca agent skill assign arca-cli --agent codex --dry-run --json
-arca agent skill assign arca-cli --agent codex --yes --json
+arca skill inspect-source --path ./skills/arca --json
+arca skill install --path ./skills/arca --name arca --dry-run --json
+arca skill install --path ./skills/arca --name arca --yes --json
+arca agent skill assign arca --agent codex --dry-run --json
+arca agent skill assign arca --agent codex --yes --json
 arca agent skill status --agent codex --json
 ```
 
-`codex` 是 Codex CLI；ChatGPT 使用 `codex-desktop`，其他 Agent 的准确 ID 从 `arca agent list --json` 获取。如果安装计划报告风险，先阅读 findings，明确接受后再加 `--accept-risk`。桌面端也可从 **Skills → 添加** 导入 `skills/arca-cli` 文件夹，再分配给 Agent。使用其他支持 Skills 的工具时，需保留 `SKILL.md` 和 `references/` 的相对结构。分配后新建会话，或使用目标 Agent 支持的重新加载方式。
+`codex` 是 Codex CLI，ChatGPT 使用 `codex-desktop`，其他 Agent 的准确 ID 从 `arca agent list --json` 获取。如果安装计划报告风险，先阅读 findings，明确接受后再加 `--accept-risk`。桌面端也可从 **Skills → 添加** 导入 `skills/arca` 文件夹，再分配给 Agent。使用其他支持 Skills 的工具时，需保留 `SKILL.md` 和 `references/` 的相对结构。分配后新建会话，或使用目标 Agent 支持的重新加载方式。
 
 ## 两个入口
 
