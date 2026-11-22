@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.1.0](https://github.com/Scoheart/arca/compare/v4.0.3...v4.1.0) (2026-11-22)
+
+### Changes
+
+* feat(credentials): add NordPass, Proton Pass, and Keeper stores ([f45353a](https://github.com/Scoheart/arca/commit/f45353a0afe71ba93011bcf68b24cea002c26cd6))
+
 ## [4.0.3](https://github.com/Scoheart/arca/compare/v4.0.2...v4.0.3) (2026-11-21)
 
 ### Changes
