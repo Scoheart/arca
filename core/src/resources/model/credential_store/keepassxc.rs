@@ -189,7 +189,7 @@ impl Store for KeePassXc<'_> {
         Ok(())
     }
 
-    fn create(&self, revision: &str, provider_id: &str, key: &str) -> Result<String, CreateFailure> {
+    fn create(&self, revision: &str, provider_id: &str, _provider_name: &str, key: &str) -> Result<String, CreateFailure> {
         self.mutate(|session, snapshot, scratch| {
             let entry_path = entry_path(revision);
             if session.entry(scratch, revision, &entry_path).map_err(CreateFailure::NotStarted)?.is_some() {

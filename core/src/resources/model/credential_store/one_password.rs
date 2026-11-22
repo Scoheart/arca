@@ -125,7 +125,7 @@ impl Store for OnePassword<'_> {
         Ok(())
     }
 
-    fn create(&self, revision: &str, provider_id: &str, key: &str) -> Result<String, CreateFailure> {
+    fn create(&self, revision: &str, provider_id: &str, _provider_name: &str, key: &str) -> Result<String, CreateFailure> {
         let template = ItemTemplate {
             category: CATEGORY,
             fields: [FieldTemplate { id: FIELD, label: FIELD, kind: "CONCEALED", value: key }],

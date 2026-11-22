@@ -17,8 +17,9 @@ Postman and MCPJam also offer native macOS launch entries. CopilotKit, AG-UI,
 and mcp-use are labeled as development frameworks. These reference entries do
 not imply local asset assignment or MCP Apps rendering inside Arca.
 
-Model credentials managed by Arca stay in the Provider's selected store, either
-macOS Keychain, 1Password, Bitwarden, Vaultwarden, KeePassXC, Passbolt, or OpenBao. Core selects delivery based on
+Model credentials managed by Arca stay in the Provider's selected store. Arca uses
+macOS Keychain, 1Password, Bitwarden, Vaultwarden, Keeper Secrets Manager, NordPass,
+Proton Pass, KeePassXC, Passbolt, and OpenBao. Core selects delivery based on
 each Agent's verified native capabilities. Primary model selection is managed independently
 from fork, small, auxiliary, and other secondary model slots. Skills are downloaded
 from GitHub or imported from local folders and archives directly into one managed copy. Arca
@@ -177,12 +178,15 @@ see the [1Password service account guide](https://www.1password.dev/service-acco
 Choose **Bitwarden / Vaultwarden** to use a personal folder on either server.
 Set up a dedicated `bw` CLI profile for that account, unlock it, and supply the
 session through the configured environment variable. Arca checks the server,
-account, and folder before writing a protected field into a secure note.
+account, and folder before writing a protected field into a secure note titled
+with the Provider's display name.
 [Bitwarden connection setup](website/en/guide/models.md#bitwarden-and-vaultwarden)
 
 KeePassXC uses a local KDBX database and the official `keepassxc-cli`.
 Passbolt uses Arca's helper built on the official SDK and an account's
 OpenPGP key. OpenBao uses the KV v2 API over HTTPS with a scoped token.
+NordPass and Proton Pass use their official signed-in CLI sessions.
+Keeper uses a registered Secrets Manager client with access to a designated shared folder.
 [Setup for each credential store](website/en/guide/models.md#credential-stores)
 
 Choose the store and enter the API Key in the Provider editor. A blank edit

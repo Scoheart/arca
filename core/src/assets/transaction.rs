@@ -578,6 +578,7 @@ pub(crate) struct PendingProviderCredential {
     store: CredentialStoreConfig,
     operation_id: String,
     provider_id: String,
+    provider_name: String,
     key: Zeroizing<String>,
 }
 
@@ -589,7 +590,7 @@ pub(crate) struct PreparedProviderCredential {
 impl PendingProviderCredential {
     pub(crate) fn create(self) -> Result<PreparedProviderCredential, String> {
         let reference = crate::resources::model::credential_service::create_revision(
-            &self.store, &self.operation_id, &self.provider_id, self.key.as_bytes(),
+            &self.store, &self.operation_id, &self.provider_id, &self.provider_name, self.key.as_bytes(),
         )?;
         Ok(PreparedProviderCredential { operation_id: self.operation_id, reference })
     }
@@ -620,7 +621,8 @@ pub(crate) fn pending_provider_credential(request: &AssetCommitRequest) -> Resul
     let key = credential.filter(|credential| !credential.is_empty())
         .ok_or("credential_missing: API Key input expired")?;
     Ok(Some(PendingProviderCredential {
-        store: store.clone(), operation_id: request.operation_id.clone(), provider_id: provider_id.clone(), key,
+        store: store.clone(), operation_id: request.operation_id.clone(), provider_id: provider_id.clone(),
+        provider_name: provider.name, key,
     }))
 }
 

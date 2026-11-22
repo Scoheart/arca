@@ -1,7 +1,7 @@
 //! Keep enough durable evidence to recover a backend write or retire an owned
 //! revision. Neither the credential payload nor a digest of it is recorded.
 use super::{
-    bitwarden, identifier, is_revision, one_password, openbao, passbolt, CredentialReference, CredentialStoreBackend,
+    bitwarden, identifier, is_revision, keeper, nordpass, one_password, openbao, passbolt, proton_pass, CredentialReference, CredentialStoreBackend,
     CredentialStoreConfig, KEYCHAIN_ID,
 };
 use crate::paths::arca_dir;
@@ -45,6 +45,12 @@ impl Record {
             BackendIdentity::Bitwarden { server_url, user_id, folder_id } => record.store_id != KEYCHAIN_ID
                 && bitwarden::normalize_server(server_url).is_some()
                 && is_revision(user_id) && is_revision(folder_id) && locator.is_none_or(is_revision),
+            BackendIdentity::Keeper { folder_uid, client_id } => record.store_id != KEYCHAIN_ID
+                && keeper::is_uid(folder_uid) && keeper::is_client_id(client_id) && locator.is_none_or(keeper::is_uid),
+            BackendIdentity::NordPass { account_email, folder_id } => record.store_id != KEYCHAIN_ID
+                && nordpass::valid_email(account_email) && nordpass::is_id(folder_id) && locator.is_none_or(nordpass::is_id),
+            BackendIdentity::ProtonPass { user_id, share_id } => record.store_id != KEYCHAIN_ID
+                && proton_pass::is_id(user_id) && proton_pass::is_id(share_id) && locator.is_none_or(proton_pass::is_id),
             BackendIdentity::KeePassXc { database_path_digest } => record.store_id != KEYCHAIN_ID
                 && database_path_digest.len() == 64 && database_path_digest.bytes().all(|byte| byte.is_ascii_hexdigit())
                 && locator.is_none_or(is_revision),
@@ -84,6 +90,10 @@ enum BackendIdentity {
     Keychain,
     OnePassword { vault_id: String },
     Bitwarden { server_url: String, user_id: String, folder_id: String },
+    Keeper { folder_uid: String, client_id: String },
+    #[serde(rename = "nordpass")]
+    NordPass { account_email: String, folder_id: String },
+    ProtonPass { user_id: String, share_id: String },
     #[serde(rename = "keepassxc")]
     KeePassXc { database_path_digest: String },
     Passbolt { server_url: String, user_id: String, server_fingerprint: String, folder_id: Option<String> },
@@ -127,6 +137,18 @@ impl Journal {
                     folder_id: folder_id.clone(),
                 }
             }
+            CredentialStoreBackend::Keeper { folder_uid, client_id, .. } => BackendIdentity::Keeper {
+                folder_uid: folder_uid.clone(),
+                client_id: client_id.clone(),
+            },
+            CredentialStoreBackend::NordPass { account_email, folder_id, .. } => BackendIdentity::NordPass {
+                account_email: account_email.clone(),
+                folder_id: folder_id.clone(),
+            },
+            CredentialStoreBackend::ProtonPass { user_id, share_id, .. } => BackendIdentity::ProtonPass {
+                user_id: user_id.clone(),
+                share_id: share_id.clone(),
+            },
             CredentialStoreBackend::KeePassXc { database_path, .. } => BackendIdentity::KeePassXc {
                 database_path_digest: hex::encode(Sha256::digest(database_path.as_bytes())),
             },

@@ -72,6 +72,32 @@ bw get folder Arca | jq -r '.id'
 
 Register the absolute CLI path, server URL, profile directory, account ID, and folder ID. Supply the unlocked session through the environment variable configured in Arca, which defaults to `BW_SESSION`. Use **Check connection** after saving. Arca stores each revision in a hidden field of a secure note and moves retired revisions to the trash. [Bitwarden CLI documentation](https://bitwarden.com/help/cli/)
 
+### NordPass
+
+Sign in and unlock the official `np` CLI, then create a personal folder for Arca. Use `np whoami --format json` and `np folder list --type personal --format json` to confirm the active account and folder ID. Add a `nordpass` connection with the absolute path to `np`, your sign-in email, and the personal folder ID. The CLI is available on the personal Free plan. [NordPass CLI guide](https://support.nordpass.com/hc/en-us/articles/51095299365137-How-to-use-NordPass-CLI) · [Plan availability](https://nordpass.com/blog/command-line-interface-feature/)
+
+Arca titles the password item with the Provider name and saves the key in the password field.
+
+### Proton Pass
+
+Install official `pass-cli` 2.6.0 or later. Sign in with system keyring storage and a dedicated session directory with mode `0700`. Use the same environment to look up the account ID and the share ID of a writable vault. Proton Pass CLI requires a plan that includes CLI access. [Proton Pass CLI configuration](https://protonpass.github.io/pass-cli/get-started/configuration/) · [Plan availability](https://proton.me/pass/developer-features)
+
+```bash
+proton_session_dir="$HOME/.config/arca-proton-pass"
+mkdir -p -m 700 "$proton_session_dir"
+export PROTON_PASS_SESSION_DIR="$proton_session_dir"
+export PROTON_PASS_KEY_PROVIDER=keyring
+pass-cli login
+pass-cli info --output json
+pass-cli share list --only-vaults true --output json
+```
+
+Add a `proton-pass` connection with the absolute path to `pass-cli`, the session directory, the account ID, and the vault share ID. Arca saves the key in a hidden field on a secure note. The title includes the Provider name and a revision marker so Arca can find the same note after an interrupted save.
+
+### Keeper Secrets Manager
+
+Install the official `ksm` CLI. Use a Keeper Business account with Secrets Manager enabled, give the application edit access to a dedicated shared folder, and enroll a client. Add a `keeper` connection with the absolute path to `ksm`, the shared folder UID, the client ID, and the configuration environment variable name. Supply the registered client's Base64 configuration in the launch environment, using `KSM_CONFIG` by default. Arca titles the record with the Provider name and saves the key in the password field. [Keeper requirements](https://docs.keeper.io/keeperpam/secrets-manager/quick-start-guide) · [Keeper Secrets Manager CLI](https://docs.keeper.io/keeperpam/secrets-manager/secrets-manager-command-line-interface)
+
 ### KeePassXC
 
 Choose **Add connection → KeePassXC**. Enter the absolute path to the official `keepassxc-cli` and an existing KDBX database of up to 64 MiB. Enter the key file path when the database uses one. Supply the database password in the environment of Arca or its credential helper. The default variable is `ARCA_KEEPASSXC_PASSWORD`.

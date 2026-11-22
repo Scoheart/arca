@@ -140,6 +140,9 @@ export interface CredentialStoreConfig {
         folder_id: string;
         session_env: string;
       }
+    | { kind: "keeper"; command: string; folder_uid: string; client_id: string; config_env: string }
+    | { kind: "nordpass"; command: string; account_email: string; folder_id: string }
+    | { kind: "proton-pass"; command: string; session_dir: string; user_id: string; share_id: string }
     | {
         kind: "keepassxc";
         command: string;

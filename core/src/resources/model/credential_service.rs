@@ -97,9 +97,10 @@ pub(crate) fn create_revision(
     config: &CredentialStoreConfig,
     operation_id: &str,
     provider_id: &str,
+    provider_name: &str,
     key: &[u8],
 ) -> Result<CredentialReference, String> {
-    credential_store::create_revision(config, operation_id, provider_id, key)
+    credential_store::create_revision(config, operation_id, provider_id, provider_name, key)
 }
 
 #[derive(serde::Serialize)]

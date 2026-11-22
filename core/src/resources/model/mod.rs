@@ -4735,7 +4735,7 @@ pub fn save_profile(mut profile: ModelProfile, credential: Option<String>) -> Re
             provider.credential = None;
         } else {
             provider.credential = Some(credential_service::create_revision(
-                &credential_store::keychain_store(), &version, &provider_id, key.as_bytes(),
+                &credential_store::keychain_store(), &version, &provider_id, &provider.name, key.as_bytes(),
             )?);
         }
     }
@@ -11320,12 +11320,14 @@ mod tests {
             &store,
             &Uuid::new_v4().to_string(),
             &provider.id,
+            &provider.name,
             b"saved-test-value",
         ).unwrap());
         let unmanaged = credential_service::create_revision(
             &store,
             &Uuid::new_v4().to_string(),
             "unmanaged-provider",
+            "Unmanaged Provider",
             b"unmanaged-test-value",
         ).unwrap();
         save_provider_bundle(provider.clone(), BTreeMap::new()).unwrap();

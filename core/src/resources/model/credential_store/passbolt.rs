@@ -189,7 +189,7 @@ impl Store for Passbolt<'_> {
         self.check_status("check", "", "")
     }
 
-    fn create(&self, revision: &str, _provider_id: &str, key: &str) -> Result<String, CreateFailure> {
+    fn create(&self, revision: &str, _provider_id: &str, _provider_name: &str, key: &str) -> Result<String, CreateFailure> {
         if key.chars().count() > PASSWORD_LIMIT {
             return Err(CreateFailure::NotStarted(
                 "credential_store_invalid_key: Passbolt supports API keys up to 4096 characters.".into(),

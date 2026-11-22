@@ -91,24 +91,28 @@ struct Item<'a> {
 
 impl Item<'_> {
     fn field(&self, name: &str, kind: u8) -> Option<&str> {
-        let mut fields = self.fields.iter().filter(|field| field.name == name);
+        let mut fields = self.fields.iter().filter(|field| field.name.as_deref() == Some(name));
         let field = fields.next()?;
-        (field.kind == kind && fields.next().is_none()).then_some(field.value.as_ref())
+        if field.kind == kind && fields.next().is_none() {
+            field.value.as_deref()
+        } else {
+            None
+        }
     }
 }
 
 #[derive(Deserialize)]
 struct Field<'a> {
-    name: String,
+    name: Option<String>,
     #[serde(rename = "type")]
     kind: u8,
     #[serde(borrow)]
-    value: Cow<'a, str>,
+    value: Option<Cow<'a, str>>,
 }
 
 impl Drop for Field<'_> {
     fn drop(&mut self) {
-        if let Cow::Owned(value) = &mut self.value {
+        if let Some(Cow::Owned(value)) = &mut self.value {
             zeroize::Zeroize::zeroize(value);
         }
     }
@@ -213,31 +217,34 @@ impl Session<'_> {
         Ok(())
     }
 
-    fn owns(&self, item: &Item<'_>, revision: &str, trash: bool) -> bool {
+    fn owns(&self, item: &Item<'_>, revision: &str) -> bool {
         is_revision(&item.id)
             && item.kind == SECURE_NOTE
             && item.folder_id.as_deref() == Some(self.folder_id)
             && item.organization_id.is_none()
-            && item.deleted_date.is_some() == trash
             && item.archived_date.is_none()
-            && item.name == title(revision)
             && item.field(REVISION, TEXT) == Some(revision)
     }
 
-    fn find(&self, revision: &str, trash: bool) -> Result<Option<String>, String> {
-        let mut args = vec!["list", "items", "--folderid", self.folder_id, "--search", revision];
-        if trash {
-            args.push("--trash");
+    fn find(&self, revision: &str, search_by_revision: bool) -> Result<Option<String>, String> {
+        let mut args = vec!["list", "items", "--folderid", self.folder_id];
+        if search_by_revision {
+            args.extend(["--search", revision]);
         }
         let output = self.run(&args, None).map_err(Failure::message)?;
         let items: Vec<Item<'_>> = serde_json::from_slice(&output).map_err(|_| RESPONSE)?;
-        let name = title(revision);
-        let mut matches = items.into_iter().filter(|item| item.name == name);
+        let legacy_name = format!("Arca Provider {revision}");
+        let mut matches = items.into_iter().filter(|item| {
+            item.name == legacy_name
+                || item.fields.iter().any(|field| {
+                    field.name.as_deref() == Some(REVISION) && field.value.as_deref() == Some(revision)
+                })
+        });
         let Some(item) = matches.next() else { return Ok(None) };
         if matches.next().is_some() {
             return Err("credential_store_ambiguous: Multiple Bitwarden items match this revision.".into());
         }
-        if !self.owns(&item, revision, trash) {
+        if item.deleted_date.is_some() || !self.owns(&item, revision) {
             return Err(UNOWNED_REVISION.into());
         }
         Ok(Some(item.id))
@@ -249,17 +256,18 @@ impl Store for Bitwarden<'_> {
         self.connect()?.check_folder()
     }
 
-    fn create(&self, revision: &str, provider_id: &str, key: &str) -> Result<String, CreateFailure> {
+    fn create(&self, revision: &str, provider_id: &str, provider_name: &str, key: &str) -> Result<String, CreateFailure> {
         let session = self.connect().map_err(CreateFailure::NotStarted)?;
         session.check_folder().map_err(CreateFailure::NotStarted)?;
-        if session.find(revision, false).map_err(CreateFailure::NotStarted)?.is_some() {
+        if session.find(revision, true).map_err(CreateFailure::NotStarted)?.is_some() {
             return Err(CreateFailure::NotStarted(
                 "credential_store_revision_exists: This Bitwarden credential revision already exists.".into(),
             ));
         }
         let template = ItemTemplate {
-            name: &title(revision),
-            notes: &format!("Arca Provider: {provider_id}"),
+            name: provider_name,
+            // Search can still find a revision if the item's display name changes.
+            notes: &format!("Arca Provider: {provider_id}\nArca revision: {revision}"),
             kind: SECURE_NOTE,
             folder_id: self.folder_id,
             secure_note: SecureNote { kind: 0 },
@@ -280,21 +288,27 @@ impl Store for Bitwarden<'_> {
             })?;
         let item: Item<'_> = serde_json::from_slice(&output)
             .map_err(|_| CreateFailure::Unconfirmed(RESPONSE.into()))?;
-        if !session.owns(&item, revision, false) {
+        if item.deleted_date.is_some() || !session.owns(&item, revision) {
             return Err(CreateFailure::Unconfirmed(UNOWNED_REVISION.into()));
         }
         Ok(item.id)
     }
 
     fn recover(&self, revision: &str) -> Result<Option<String>, String> {
-        self.connect()?.find(revision, false)
+        let session = self.connect()?;
+        match session.find(revision, true)? {
+            Some(locator) => Ok(Some(locator)),
+            // Earlier CLI versions only search the title. An interrupted
+            // write can still be recovered by inspecting its configured folder.
+            None => session.find(revision, false),
+        }
     }
 
     fn read(&self, reference: &CredentialReference) -> Result<Zeroizing<Vec<u8>>, String> {
         let session = self.connect()?;
         let output = session.run(&["get", "item", &reference.locator], None).map_err(Failure::message)?;
         let item: Item<'_> = serde_json::from_slice(&output).map_err(|_| RESPONSE)?;
-        if item.id != reference.locator || !session.owns(&item, &reference.revision, false) {
+        if item.id != reference.locator || item.deleted_date.is_some() || !session.owns(&item, &reference.revision) {
             return Err(UNOWNED_REVISION.into());
         }
         item.field(SECRET, HIDDEN)
@@ -308,17 +322,15 @@ impl Store for Bitwarden<'_> {
 
     fn retire(&self, reference: &CredentialReference) -> Result<(), String> {
         let session = self.connect()?;
-        match session.find(&reference.revision, false)? {
-            Some(id) if id == reference.locator => {
-                session.run(&["delete", "item", &reference.locator], None).map_err(Failure::message)?;
-                Ok(())
-            }
-            None if session.find(&reference.revision, true)?.as_deref() == Some(reference.locator.as_str()) => Ok(()),
-            _ => Err(UNOWNED_REVISION.into()),
+        // An exact item ID also resolves a note that's already in the trash.
+        let output = session.run(&["get", "item", &reference.locator], None).map_err(Failure::message)?;
+        let item: Item<'_> = serde_json::from_slice(&output).map_err(|_| RESPONSE)?;
+        if item.id != reference.locator || !session.owns(&item, &reference.revision) {
+            return Err(UNOWNED_REVISION.into());
         }
+        if item.deleted_date.is_none() {
+            session.run(&["delete", "item", &reference.locator], None).map_err(Failure::message)?;
+        }
+        Ok(())
     }
-}
-
-fn title(revision: &str) -> String {
-    format!("Arca Provider {revision}")
 }

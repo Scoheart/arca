@@ -72,6 +72,32 @@ bw get folder Arca | jq -r '.id'
 
 表单需要 `bw` 绝对路径、服务器 URL、CLI 数据目录、账号 ID 和文件夹 ID。会话变量默认用 `BW_SESSION`。把会话传入实际运行 Arca 或其凭据命令的进程环境，保存后检查连接。Arca 在指定个人文件夹内用安全备注的隐藏字段保存 Key，轮换产生新条目。退役的条目移入回收站。[Bitwarden CLI 文档](https://bitwarden.com/help/cli/)
 
+### NordPass
+
+通过官方 `np` CLI 登录并解锁账号，创建一个专供 Arca 使用的个人文件夹。用 `np whoami --format json` 和 `np folder list --type personal --format json` 核对当前账号与文件夹 ID。保存 `nordpass` 连接时填写 `np` 的绝对路径、登录邮箱和个人文件夹 ID。CLI 支持个人免费计划。[NordPass CLI 使用说明](https://support.nordpass.com/hc/en-us/articles/51095299365137-How-to-use-NordPass-CLI) · [适用计划](https://nordpass.com/blog/command-line-interface-feature/)
+
+Arca 用提供商名称创建密码条目，并把 Key 写入密码字段。
+
+### Proton Pass
+
+安装官方 `pass-cli` 2.6.0 或更新版本，选择权限为 `0700` 的专用会话目录。用该目录和系统钥匙串登录，在相同环境下查询账号 ID 和保险库的 Share ID。CLI 需要含相应功能的付费计划。[Proton Pass CLI 配置](https://protonpass.github.io/pass-cli/get-started/configuration/) · [计划说明](https://proton.me/pass/developer-features)
+
+```bash
+proton_session_dir="$HOME/.config/arca-proton-pass"
+mkdir -p -m 700 "$proton_session_dir"
+export PROTON_PASS_SESSION_DIR="$proton_session_dir"
+export PROTON_PASS_KEY_PROVIDER=keyring
+pass-cli login
+pass-cli info --output json
+pass-cli share list --only-vaults true --output json
+```
+
+保存 `proton-pass` 连接时填写 `pass-cli` 的绝对路径、该会话目录、账号 ID 和目标 Share ID。目标保险库需允许写入。Arca 把 Key 写入安全笔记的隐藏字段。笔记名称包含提供商名和版本标记，用于在保存中断后找回同一条笔记。
+
+### Keeper Secrets Manager
+
+安装官方 `ksm` CLI。使用启用了 Secrets Manager 的 Keeper Business 账号，给应用授权一个专用共享文件夹的编辑权限，并注册对应客户端。保存 `keeper` 连接时填写 `ksm` 的绝对路径、共享文件夹 UID、客户端 ID 和配置环境变量名。通过启动环境提供已注册客户端的 Base64 配置，默认变量是 `KSM_CONFIG`。Arca 用提供商名称创建记录，并把 Key 写入密码字段。[Keeper 接入条件](https://docs.keeper.io/keeperpam/secrets-manager/quick-start-guide) · [Keeper Secrets Manager CLI](https://docs.keeper.io/keeperpam/secrets-manager/secrets-manager-command-line-interface)
+
 ### KeePassXC
 
 在 **添加连接 → KeePassXC** 中填写官方 `keepassxc-cli` 的绝对路径和现有 KDBX 数据库路径，数据库上限为 64 MiB。数据库使用密钥文件时一并填写。让运行 Arca 或凭据命令的环境提供数据库密码，默认变量名为 `ARCA_KEEPASSXC_PASSWORD`。

@@ -265,7 +265,7 @@ impl Store for OpenBao<'_> {
         Err(EXISTS.into())
     }
 
-    fn create(&self, revision: &str, _provider_id: &str, key: &str) -> Result<String, CreateFailure> {
+    fn create(&self, revision: &str, _provider_id: &str, _provider_name: &str, key: &str) -> Result<String, CreateFailure> {
         let session = self.session().map_err(CreateFailure::NotStarted)?;
         if !is_revision(revision) {
             return Err(CreateFailure::NotStarted(UNOWNED_REVISION.into()));

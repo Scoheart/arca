@@ -1,11 +1,14 @@
 //! Arca-owned, immutable Provider credential revisions.
 mod bitwarden;
 mod journal;
+mod keeper;
 mod keepassxc;
+mod nordpass;
 mod one_password;
 mod openbao;
 mod passbolt;
 mod process;
+mod proton_pass;
 
 pub(crate) use crate::domain::credentials::{
     CredentialReference, CredentialStoreBackend, CredentialStoreConfig,
@@ -27,7 +30,7 @@ trait Store {
     fn preflight_create(&self, _revision: &str) -> Result<(), String> {
         Ok(())
     }
-    fn create(&self, revision: &str, provider_id: &str, key: &str) -> Result<String, CreateFailure>;
+    fn create(&self, revision: &str, provider_id: &str, provider_name: &str, key: &str) -> Result<String, CreateFailure>;
     fn recover(&self, revision: &str) -> Result<Option<String>, String>;
     fn read(&self, reference: &CredentialReference) -> Result<Zeroizing<Vec<u8>>, String>;
     fn read_for_observation(&self, _reference: &CredentialReference) -> Result<Option<Vec<u8>>, String> {
@@ -95,6 +98,33 @@ pub(crate) fn validate(config: &CredentialStoreConfig) -> Result<(), String> {
             }
             Ok(())
         }
+        CredentialStoreBackend::Keeper { command, folder_uid, client_id, config_env } => {
+            if command != "ksm" && !absolute_path(command) {
+                return Err("credential_store_invalid: Enter ksm or the absolute path to Keeper Secrets Manager CLI.".into());
+            }
+            if !keeper::is_uid(folder_uid) || !keeper::is_client_id(client_id) || !env_name(config_env) {
+                return Err("credential_store_invalid: Enter a Keeper folder UID, client ID, and configuration environment variable name.".into());
+            }
+            Ok(())
+        }
+        CredentialStoreBackend::NordPass { command, account_email, folder_id } => {
+            if command != "np" && !absolute_path(command) {
+                return Err("credential_store_invalid: Enter np or the absolute path to NordPass CLI.".into());
+            }
+            if !nordpass::valid_email(account_email) || !nordpass::is_id(folder_id) {
+                return Err("credential_store_invalid: Enter the NordPass sign-in email and personal folder ID.".into());
+            }
+            Ok(())
+        }
+        CredentialStoreBackend::ProtonPass { command, session_dir, user_id, share_id } => {
+            if command != "pass-cli" && !absolute_path(command) {
+                return Err("credential_store_invalid: Enter pass-cli or the absolute path to Proton Pass CLI.".into());
+            }
+            if !absolute_path(session_dir) || !proton_pass::is_id(user_id) || !proton_pass::is_id(share_id) {
+                return Err("credential_store_invalid: Enter a dedicated Proton Pass session directory, account ID, and vault share ID.".into());
+            }
+            Ok(())
+        }
         CredentialStoreBackend::KeePassXc { command, database_path, password_env, key_file } => {
             if command != "keepassxc-cli" && !absolute_path(command) {
                 return Err("credential_store_invalid: Enter keepassxc-cli or its absolute path.".into());
@@ -152,6 +182,7 @@ pub(crate) fn create_revision(
     config: &CredentialStoreConfig,
     operation_id: &str,
     provider_id: &str,
+    provider_name: &str,
     key: &[u8],
 ) -> Result<CredentialReference, String> {
     validate(config)?;
@@ -170,7 +201,7 @@ pub(crate) fn create_revision(
         None | Some(State::Retryable) => {
             backend.preflight_create(revision)?;
             journal.record(State::Attempted)?;
-            match backend.create(revision, provider_id, key_text) {
+            match backend.create(revision, provider_id, provider_name, key_text) {
                 Ok(locator) => locator,
                 Err(CreateFailure::NotStarted(error)) => {
                     journal.record(State::Retryable)?;
@@ -268,6 +299,9 @@ fn validate_reference(config: &CredentialStoreConfig, reference: &CredentialRefe
     let valid_locator = match &config.backend {
         CredentialStoreBackend::Keychain | CredentialStoreBackend::OpenBao { .. } => reference.locator == reference.revision,
         CredentialStoreBackend::OnePassword { .. } => one_password::is_id(&reference.locator),
+        CredentialStoreBackend::Keeper { .. } => keeper::is_uid(&reference.locator),
+        CredentialStoreBackend::NordPass { .. } => nordpass::is_id(&reference.locator),
+        CredentialStoreBackend::ProtonPass { .. } => proton_pass::is_id(&reference.locator),
         CredentialStoreBackend::Bitwarden { .. }
         | CredentialStoreBackend::KeePassXc { .. }
         | CredentialStoreBackend::Passbolt { .. } => is_revision(&reference.locator),
@@ -289,6 +323,15 @@ fn backend(config: &CredentialStoreConfig) -> Box<dyn Store + '_> {
         } => Box::new(bitwarden::Bitwarden {
             command, server_url, appdata_dir, user_id, folder_id, session_env,
         }),
+        CredentialStoreBackend::Keeper { command, folder_uid, client_id, config_env } => Box::new(
+            keeper::Keeper { command, folder_uid, client_id, config_env },
+        ),
+        CredentialStoreBackend::NordPass { command, account_email, folder_id } => Box::new(
+            nordpass::NordPass { command, account_email, folder_id },
+        ),
+        CredentialStoreBackend::ProtonPass { command, session_dir, user_id, share_id } => Box::new(
+            proton_pass::ProtonPass { command, session_dir, user_id, share_id },
+        ),
         CredentialStoreBackend::KeePassXc { command, database_path, password_env, key_file } => Box::new(
             keepassxc::KeePassXc { command, database_path, password_env, key_file: key_file.as_deref() },
         ),
@@ -354,7 +397,7 @@ impl Store for Keychain {
         Ok(())
     }
 
-    fn create(&self, revision: &str, _provider_id: &str, key: &str) -> Result<String, CreateFailure> {
+    fn create(&self, revision: &str, _provider_id: &str, _provider_name: &str, key: &str) -> Result<String, CreateFailure> {
         super::create_credential_service(&keychain_service(revision), key.as_bytes())
             .map_err(CreateFailure::NotStarted)?;
         Ok(revision.into())

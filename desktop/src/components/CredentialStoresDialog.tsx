@@ -44,6 +44,35 @@ const backendForms = {
       { name: "session_env", label: "bwSession", help: "bwSessionHelp" },
     ],
   },
+  keeper: {
+    label: "Keeper Secrets Manager",
+    defaults: { kind: "keeper", command: "", folder_uid: "", client_id: "", config_env: "KSM_CONFIG" },
+    fields: [
+      { name: "command", label: "keeperCommand", placeholder: "/opt/homebrew/bin/ksm", path: true },
+      { name: "folder_uid", label: "keeperFolder", help: "keeperFolderHelp" },
+      { name: "client_id", label: "keeperClient" },
+      { name: "config_env", label: "keeperConfig", help: "keeperConfigHelp" },
+    ],
+  },
+  nordpass: {
+    label: "NordPass",
+    defaults: { kind: "nordpass", command: "", account_email: "", folder_id: "" },
+    fields: [
+      { name: "command", label: "nordPassCommand", placeholder: "/opt/homebrew/bin/np", path: true },
+      { name: "account_email", label: "nordPassAccount", help: "nordPassAccountHelp" },
+      { name: "folder_id", label: "bwFolder" },
+    ],
+  },
+  "proton-pass": {
+    label: "Proton Pass",
+    defaults: { kind: "proton-pass", command: "", session_dir: "", user_id: "", share_id: "" },
+    fields: [
+      { name: "command", label: "protonPassCommand", placeholder: "/opt/homebrew/bin/pass-cli", path: true },
+      { name: "session_dir", label: "protonPassSession", help: "protonPassSessionHelp", path: true },
+      { name: "user_id", label: "bwAccount" },
+      { name: "share_id", label: "protonPassShare" },
+    ],
+  },
   keepassxc: {
     label: "KeePassXC",
     defaults: { kind: "keepassxc", command: "", database_path: "", password_env: "ARCA_KEEPASSXC_PASSWORD" },

@@ -373,6 +373,26 @@ fn safe_credential_store(store: &CredentialStoreConfig) -> Value {
             "folder_id": folder_id,
             "session_env": session_env,
         }),
+        CredentialStoreBackend::Keeper { command, folder_uid, client_id, config_env } => json!({
+            "kind": "keeper",
+            "command": safe_path(command),
+            "folder_uid": folder_uid,
+            "client_id": client_id,
+            "config_env": config_env,
+        }),
+        CredentialStoreBackend::NordPass { command, account_email, folder_id } => json!({
+            "kind": "nordpass",
+            "command": safe_path(command),
+            "account_email": account_email,
+            "folder_id": folder_id,
+        }),
+        CredentialStoreBackend::ProtonPass { command, session_dir, user_id, share_id } => json!({
+            "kind": "proton-pass",
+            "command": safe_path(command),
+            "session_dir": safe_path(session_dir),
+            "user_id": user_id,
+            "share_id": share_id,
+        }),
         CredentialStoreBackend::KeePassXc { command, database_path, password_env, key_file } => json!({
             "kind": "keepassxc",
             "command": safe_path(command),
