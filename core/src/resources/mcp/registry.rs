@@ -649,6 +649,467 @@ mod tests {
     }
 
     #[test]
+    fn curated_verified_mcp_candidates_match_official_templates() {
+        let entries = builtin_registry();
+        assert_eq!(entries.len(), 130, "curated collection entry count drifted");
+        assert_eq!(
+            entries
+                .iter()
+                .map(|entry| entry.name.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+            128,
+            "curated collection name count drifted"
+        );
+
+        let context7 = builtin_entry(&entries, "context7", "http");
+        let context7_http = context7.config.http.as_ref().unwrap();
+        assert_eq!(context7_http.url, "https://mcp.context7.com/mcp");
+        assert_eq!(
+            context7_http
+                .headers
+                .as_ref()
+                .unwrap()
+                .get("Authorization")
+                .map(String::as_str),
+            Some("Bearer ${CONTEXT7_API_KEY}")
+        );
+        assert!(
+            context7_http
+                .headers
+                .as_ref()
+                .unwrap()
+                .keys()
+                .all(|key| key != "CONTEXT7_API_KEY"),
+            "context7 remote auth header is Authorization"
+        );
+        assert!(context7.description.contains("mcp/oauth"));
+
+        let github = builtin_entry(&entries, "github", "http");
+        assert_eq!(
+            github.config.http.as_ref().unwrap().url,
+            "https://api.githubcopilot.com/mcp/"
+        );
+        assert!(github.config.http.as_ref().unwrap().headers.is_none());
+        let slack = builtin_entry(&entries, "slack", "http");
+        assert_eq!(
+            slack.config.http.as_ref().unwrap().url,
+            "https://mcp.slack.com/mcp"
+        );
+        assert!(slack.config.http.as_ref().unwrap().headers.is_none());
+        let chrome = builtin_entry(&entries, "chrome-devtools", "stdio");
+        assert_eq!(
+            chrome
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .args
+                .as_deref()
+                .unwrap(),
+            ["-y", "chrome-devtools-mcp@latest"]
+        );
+        let supabase_stdio = builtin_entry(&entries, "supabase", "stdio");
+        let supabase_local = supabase_stdio.config.stdio.as_ref().unwrap();
+        assert_eq!(
+            supabase_local.args.as_deref().unwrap(),
+            ["-y", "@supabase/mcp-server-supabase@latest", "--read-only"]
+        );
+        assert_eq!(
+            supabase_local
+                .env
+                .as_ref()
+                .unwrap()
+                .get("SUPABASE_ACCESS_TOKEN")
+                .map(String::as_str),
+            Some("")
+        );
+
+        let stdio_cases: [StdioRegistryCase<'_>; 5] = [
+            (
+                "serena",
+                "serena",
+                &["start-mcp-server", "--context=desktop-app"],
+                "",
+                "https://github.com/oraios/serena",
+                &["development", "code", "official"],
+            ),
+            (
+                "playwright",
+                "npx",
+                &["@playwright/mcp@latest"],
+                "",
+                "https://github.com/microsoft/playwright-mcp",
+                &["browser", "automation", "official"],
+            ),
+            (
+                "qdrant",
+                "uvx",
+                &["mcp-server-qdrant"],
+                "",
+                "https://github.com/qdrant/mcp-server-qdrant",
+                &["database", "ai", "official"],
+            ),
+            (
+                "reference-memory",
+                "npx",
+                &["-y", "@modelcontextprotocol/server-memory"],
+                "",
+                "https://github.com/modelcontextprotocol/servers/blob/main/src/memory/README.md",
+                &["memory", "reference"],
+            ),
+            (
+                "dbhub",
+                "npx",
+                &["-y", "@bytebase/dbhub@latest", "--transport", "stdio"],
+                "DSN",
+                "https://github.com/bytebase/dbhub",
+                &["database", "official"],
+            ),
+        ];
+        for (name, command, args, env_key, repo, tags) in stdio_cases {
+            let entry = builtin_entry(&entries, name, "stdio");
+            let stdio = entry.config.stdio.as_ref().unwrap();
+            assert_eq!(stdio.command, command, "{name}: command drifted");
+            assert_eq!(
+                stdio
+                    .args
+                    .as_deref()
+                    .unwrap()
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<Vec<_>>(),
+                args,
+                "{name}: args drifted"
+            );
+            if env_key.is_empty() {
+                if name == "qdrant" {
+                    let env = stdio.env.as_ref().unwrap();
+                    assert_eq!(env.len(), 2, "{name}: unexpected environment fields");
+                    assert_eq!(
+                        env.get("QDRANT_URL").map(String::as_str),
+                        Some("http://localhost:6333")
+                    );
+                    assert_eq!(
+                        env.get("COLLECTION_NAME").map(String::as_str),
+                        Some("my-collection")
+                    );
+                    assert!(
+                        env.get("QDRANT_API_KEY").is_none(),
+                        "{name}: do not send a blank API key"
+                    );
+                } else {
+                    assert!(stdio.env.is_none(), "{name}: unexpected environment");
+                }
+            } else {
+                let env = stdio.env.as_ref().unwrap();
+                assert_eq!(env.len(), 1, "{name}: unexpected environment fields");
+                assert_eq!(
+                    env.get(env_key).map(String::as_str),
+                    Some(""),
+                    "{name}: credential placeholder drifted"
+                );
+            }
+            assert_eq!(entry.repo.as_deref(), Some(repo), "{name}: repo drifted");
+            assert!(
+                tags.iter()
+                    .all(|tag| entry.tags.iter().any(|value| value == tag)),
+                "{name}: required tags drifted"
+            );
+        }
+
+        let http_cases = [
+            (
+                "microsoft-learn",
+                "https://learn.microsoft.com/api/mcp",
+                "https://learn.microsoft.com/en-us/training/support/mcp",
+                &["development", "documentation", "official"][..],
+            ),
+            (
+                "mem0",
+                "https://mcp.mem0.ai/mcp",
+                "https://docs.mem0.ai/platform/mem0-mcp",
+                &["ai", "memory", "official"][..],
+            ),
+            (
+                "notion",
+                "https://mcp.notion.com/mcp",
+                "https://developers.notion.com/guides/mcp/get-started-with-mcp",
+                &["documentation", "productivity", "official"][..],
+            ),
+            (
+                "atlassian-rovo",
+                "https://mcp.atlassian.com/v2/mcp",
+                "https://developer.atlassian.com/cloud/rovo-mcp/",
+                &["productivity", "development", "official"][..],
+            ),
+            (
+                "supabase",
+                "https://mcp.supabase.com/mcp",
+                "https://supabase.com/docs/guides/getting-started/mcp",
+                &["cloud", "database", "official"][..],
+            ),
+        ];
+        for (name, url, repo, tags) in http_cases {
+            let entry = builtin_entry(&entries, name, "http");
+            let http = entry.config.http.as_ref().unwrap();
+            assert_eq!(http.kind, "http", "{name}: HTTP type drifted");
+            assert_eq!(http.url, url, "{name}: endpoint drifted");
+            assert!(
+                http.headers.is_none(),
+                "{name}: OAuth template must not preset a header"
+            );
+            assert_eq!(entry.repo.as_deref(), Some(repo), "{name}: repo drifted");
+            assert!(
+                tags.iter()
+                    .all(|tag| entry.tags.iter().any(|value| value == tag)),
+                "{name}: required tags drifted"
+            );
+        }
+
+        let qdrant = builtin_entry(&entries, "qdrant", "stdio");
+        assert!(qdrant.description.contains("no authentication"));
+        assert!(builtin_entry(&entries, "dbhub", "stdio")
+            .description
+            .contains("DBHUB_AUTH_TOKEN"));
+        let reference_memory = builtin_entry(&entries, "reference-memory", "stdio");
+        assert!(reference_memory
+            .description
+            .contains("Reference implementation"));
+        assert!(reference_memory.tags.iter().all(|tag| tag != "official"));
+        assert!(builtin_entry(&entries, "mem0", "http")
+            .description
+            .contains("OAuth"));
+        assert_eq!(
+            entries
+                .iter()
+                .filter(|entry| entry.name == "supabase")
+                .count(),
+            2
+        );
+    }
+
+    #[test]
+    fn curated_expanded_catalog_has_verified_identities() {
+        let entries = builtin_registry();
+        let cases = [
+        ("linear", "http", "https://mcp.linear.app/mcp"),
+        ("sentry", "http", "https://mcp.sentry.dev/mcp"),
+        ("datadog", "http", "https://mcp.datadoghq.com/v1/mcp"),
+        ("grafana", "stdio", "uvx mcp-grafana"),
+        ("gitlab", "http", "https://gitlab.com/api/v4/mcp"),
+        ("redis", "stdio", "uvx --from redis-mcp-server@latest redis-mcp-server --url redis://localhost:6379/0"),
+        ("terraform", "stdio", "docker run -i --rm hashicorp/terraform-mcp-server"),
+        ("mongodb", "stdio", "npx -y mongodb-mcp-server@latest --readOnly"),
+        ("prisma", "http", "https://mcp.prisma.io/mcp"),
+        ("neon", "http", "https://mcp.neon.tech/mcp"),
+        ("wordpress-com", "http", "https://public-api.wordpress.com/wpcom/v2/mcp/v1"),
+        ("zapier", "http", "https://mcp.zapier.com/api/v1/connect"),
+        ("aws-knowledge", "http", "https://knowledge-mcp.global.api.aws"),
+        ("posthog", "http", "https://mcp.posthog.com/mcp"),
+        ("canva", "stdio", "npx -y @canva/cli@latest mcp"),
+        ("webflow", "http", "https://mcp.webflow.com/mcp"),
+        ("asana", "http", "https://mcp.asana.com/v2/mcp"),
+        ("honeycomb", "http", "https://mcp.honeycomb.io/mcp"),
+        ("pagerduty", "http", "https://mcp.pagerduty.com/mcp"),
+        ("huggingface", "http", "https://huggingface.co/mcp"),
+        ("pulumi", "http", "https://mcp.ai.pulumi.com/mcp"),
+        ("azure", "stdio", "npx -y @azure/mcp@latest server start"),
+        ("shopify-dev", "stdio", "npx -y @shopify/dev-mcp@latest"),
+        ("salesforce", "stdio", "npx -y @salesforce/mcp --orgs DEFAULT_TARGET_ORG --toolsets orgs,metadata,data,users"),
+        ("docker-mcp-gateway", "stdio", "docker mcp gateway run"),
+        ("clickhouse", "stdio", "uv run --with mcp-clickhouse --python 3.12 mcp-clickhouse"),
+        ("amplitude", "http", "https://mcp.amplitude.com/mcp"),
+        ("clickup", "http", "https://mcp.clickup.com/mcp"),
+        ("mixpanel", "http", "https://mcp.mixpanel.com/mcp"),
+        ("newrelic", "http", "https://mcp.newrelic.com/mcp/"),
+        ("descope", "http", "https://mcp.descope.com"),
+        ("shortcut", "http", "https://api.shortcutco.com/mcp"),
+        ("klaviyo", "http", "https://mcp.klaviyo.com/mcp"),
+        ("next-devtools", "stdio", "npx -y next-devtools-mcp@latest"),
+        ("browser-use", "http", "https://api.browser-use.com/v3/mcp"),
+        ("browserbase", "http", "https://mcp.browserbase.com/mcp?browserbaseApiKey=${BROWSERBASE_API_KEY}"),
+        ("apify", "http", "https://mcp.apify.com"),
+        ("deepwiki", "http", "https://mcp.deepwiki.com/mcp"),
+        ("nuxt-ui", "http", "https://ui.nuxt.com/mcp"),
+        ("reference-filesystem", "stdio", "npx -y @modelcontextprotocol/server-filesystem --read-only /path/to/allowed-dir"),
+        ("reference-sequential-thinking", "stdio", "npx -y @modelcontextprotocol/server-sequential-thinking"),
+        ("reference-fetch", "stdio", "uvx mcp-server-fetch"),
+        ("reference-git", "stdio", "uvx mcp-server-git --repository /path/to/git/repo"),
+        ("reference-time", "stdio", "uvx mcp-server-time"),
+        ("google-mcp-toolbox", "stdio", "npx @toolbox-sdk/server --config tools.yaml"),
+        ("kubernetes-community", "stdio", "npx mcp-server-kubernetes"),
+        ("desktop-commander", "stdio", "npx -y @wonderwhy-er/desktop-commander@latest"),
+        ("monday", "http", "https://mcp.monday.com/mcp"),
+        ("squarespace", "http", "https://mcp.squarespace.com/mcp"),
+        ("steel", "http", "https://mcp.steel.dev/mcp"),
+        ("upstash-redis", "stdio", "npx -y @upstash/redis-mcp"),
+        ("intercom", "http", "https://mcp.intercom.com/mcp"),
+        ("semgrep", "http", "https://semgrep.dev/api/mcp"),
+        ("render", "http", "https://mcp.render.com/mcp"),
+        ("twilio-docs", "http", "https://mcp.twilio.com/docs"),
+        ("replicate", "stdio", "npx -y replicate-mcp"),
+        ("sanity", "http", "https://mcp.sanity.io"),
+        ("resend", "http", "https://mcp.resend.com/mcp"),
+        ("draw-io", "http", "https://mcp.draw.io/mcp"),
+        ("together-docs", "http", "https://docs.together.ai/mcp"),
+        ("pinecone", "stdio", "npx -y @pinecone-database/mcp"),
+        ("chroma", "stdio", "uvx chroma-mcp"),
+        ("elevenlabs", "stdio", "uvx elevenlabs-mcp"),
+        ("paypal", "stdio", "npx -y @paypal/mcp --tools=all"),
+        ("xero", "stdio", "npx -y @xeroapi/xero-mcp-server@latest"),
+        ("elasticsearch", "stdio", "docker run -i --rm -e ES_URL -e ES_API_KEY docker.elastic.co/mcp/elasticsearch stdio"),
+        ("netlify", "stdio", "npx -y @netlify/mcp"),
+        ("railway", "http", "https://mcp.railway.com"),
+        ("motherduck", "stdio", "uvx mcp-server-motherduck --db-path /absolute/path/to/your.duckdb"),
+        ("prefect", "stdio", "uvx --from prefect-mcp prefect-mcp-server"),
+        ("deepgram", "stdio", "deepgram-mcp"),
+        ("confluent", "stdio", "npx -y @confluentinc/mcp-confluent --config ./config.yaml"),
+        ("buildkite", "http", "https://mcp.buildkite.com/mcp"),
+        ("contentful", "stdio", "npx -y @contentful/mcp-server"),
+        ("appwrite", "http", "https://mcp.appwrite.io/"),
+        ("langfuse-docs", "http", "https://langfuse.com/api/mcp"),
+        ("convex", "stdio", "npx -y convex@latest mcp start"),
+        ("gitbook", "http", "https://mcp.gitbook.com/mcp"),
+        ("square", "http", "https://mcp.squareup.com/mcp"),
+        ("planetscale", "http", "https://mcp.pscale.dev/mcp/planetscale"),
+        ("hostinger", "http", "https://mcp.hostinger.com"),
+        ("snowflake", "http", "https://YOUR_ACCOUNT.snowflakecomputing.com/api/v2/databases/YOUR_DATABASE/schemas/YOUR_SCHEMA/mcp-servers/YOUR_SERVER"),
+        ("n8n", "http", "https://YOUR_N8N_HOST/mcp-server/http"),
+        ("firebase", "stdio", "npx -y firebase-tools@latest mcp"),
+        ("calendly", "http", "https://mcp.calendly.com"),
+        ("circleci", "http", "https://mcp.circleci.com/v1/mcp"),
+        ("mailgun", "stdio", "npx -y @mailgun/mcp-server"),
+        ("doppler", "stdio", "npx -y @dopplerhq/mcp-server"),
+        ("inngest", "http", "https://api.inngest.com/mcp"),
+        ("braintrust", "http", "https://api.braintrust.dev/mcp"),
+        ("daytona", "stdio", "daytona-v0 mcp start"),
+        ("statsig", "http", "https://api.statsig.com/v3/mcp"),
+        ];
+        assert_eq!(cases.len(), 92);
+        for (name, transport, signature) in cases {
+            let entry = builtin_entry(&entries, name, transport);
+            let actual = if transport == "http" {
+                entry.config.http.as_ref().unwrap().url.clone()
+            } else {
+                let stdio = entry.config.stdio.as_ref().unwrap();
+                let mut parts = vec![stdio.command.clone()];
+                if let Some(args) = &stdio.args {
+                    parts.extend(args.iter().cloned());
+                }
+                parts.join(" ")
+            };
+            assert_eq!(actual, signature, "{name}");
+        }
+        let browser_use = builtin_entry(&entries, "browser-use", "http");
+        assert_eq!(
+            browser_use
+                .config
+                .http
+                .as_ref()
+                .unwrap()
+                .headers
+                .as_ref()
+                .unwrap()
+                .get("Authorization")
+                .map(String::as_str),
+            Some("Bearer ${BROWSER_USE_API_KEY}")
+        );
+        let browserbase = builtin_entry(&entries, "browserbase", "http");
+        assert!(browserbase
+            .config
+            .http
+            .as_ref()
+            .unwrap()
+            .url
+            .contains("browserbaseApiKey=${BROWSERBASE_API_KEY}"));
+        assert!(browserbase.config.http.as_ref().unwrap().headers.is_none());
+        assert!(builtin_entry(&entries, "apify", "http")
+            .config
+            .http
+            .as_ref()
+            .unwrap()
+            .headers
+            .is_none());
+        assert!(builtin_entry(&entries, "apify", "http")
+            .description
+            .contains("no Authorization header"));
+        assert_eq!(
+            builtin_entry(&entries, "monday", "http")
+                .config
+                .http
+                .as_ref()
+                .unwrap()
+                .headers
+                .as_ref()
+                .unwrap()
+                .get("Api-Version")
+                .map(String::as_str),
+            Some("2026-07")
+        );
+        assert_eq!(
+            builtin_entry(&entries, "upstash-redis", "stdio")
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .env
+                .as_ref()
+                .unwrap()
+                .get("UPSTASH_REDIS_REST_TOKEN")
+                .map(String::as_str),
+            Some("")
+        );
+        assert_eq!(
+            builtin_entry(&entries, "paypal", "stdio")
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .env
+                .as_ref()
+                .unwrap()
+                .get("PAYPAL_ENVIRONMENT")
+                .map(String::as_str),
+            Some("SANDBOX")
+        );
+        assert_eq!(
+            builtin_entry(&entries, "grafana", "stdio")
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .env
+                .as_ref()
+                .unwrap()
+                .get("GRAFANA_SERVICE_ACCOUNT_TOKEN")
+                .map(String::as_str),
+            Some("")
+        );
+        assert_eq!(
+            builtin_entry(&entries, "kubernetes-community", "stdio")
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .env
+                .as_ref()
+                .unwrap()
+                .get("ALLOW_ONLY_READONLY_TOOLS")
+                .map(String::as_str),
+            Some("true")
+        );
+        assert!(entries.iter().all(|entry| entry.name != "google-drive"));
+        assert!(builtin_entry(&entries, "reference-filesystem", "stdio")
+            .description
+            .contains("Reference implementation"));
+        assert!(builtin_entry(&entries, "desktop-commander", "stdio")
+            .tags
+            .iter()
+            .any(|tag| tag == "community"));
+    }
+
+    #[test]
     fn managed_def_paths_are_stable() {
         assert!(cached_path(&managed_def(MANUAL_ID, "手动添加"))
             .unwrap()
