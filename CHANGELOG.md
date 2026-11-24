@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.2.1](https://github.com/Scoheart/arca/compare/v4.2.0...v4.2.1) (2026-11-24)
+
+### Changes
+
+* feat(mcp): expand the verified curated MCP catalog ([3c390d8](https://github.com/Scoheart/arca/commit/3c390d84af028c82375a279f8a28b9f730570075))
+
 ## [4.2.0](https://github.com/Scoheart/arca/compare/v4.1.0...v4.2.0) (2026-11-24)
 
 ### Changes
