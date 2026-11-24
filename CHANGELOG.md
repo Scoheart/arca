@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.2.0](https://github.com/Scoheart/arca/compare/v4.1.0...v4.2.0) (2026-11-24)
+
+### Changes
+
+* feat(models): add verified chat providers and Omi CLI ([15ceefa](https://github.com/Scoheart/arca/commit/15ceefad8ef8aa5c5184649fef1f7a7982e8ec5b))
+
 ## [4.1.0](https://github.com/Scoheart/arca/compare/v4.0.3...v4.1.0) (2026-11-22)
 
 ### Changes
