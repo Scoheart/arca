@@ -1472,6 +1472,15 @@
       }
     },
     {
+      "id": "omi-cli",
+      "name": "Omi CLI",
+      "category": "cli",
+      "docs": "https://cli.builditomi.com/docs",
+      "mcp": null,
+      "skills": null,
+      "model": null
+    },
+    {
       "id": "openclaw",
       "name": "OpenClaw",
       "category": "cli",
@@ -4586,6 +4595,136 @@
       "portal": {
         "kind": "api-key",
         "url": "https://cloud.mara.com/apis"
+      }
+    },
+    {
+      "id": "kyrune",
+      "name": "Kyrune",
+      "category": "gateway",
+      "baseUrl": "https://kyrune.com/api/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://kyrune.com/docs",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://kyrune.com/api/"
+      }
+    },
+    {
+      "id": "merkium",
+      "name": "Merkium",
+      "category": "official",
+      "baseUrl": "https://chat.merkium.nl/api/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://www.merkium.nl/docs",
+      "portal": {
+        "kind": "console",
+        "url": "https://chat.merkium.nl/"
+      }
+    },
+    {
+      "id": "packetai",
+      "name": "packet.ai Token Factory",
+      "category": "gateway",
+      "baseUrl": "https://api.packet.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://dash.packet.ai/docs/token-factory-quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://dash.packet.ai"
+      }
+    },
+    {
+      "id": "baichuan",
+      "name": "百川大模型",
+      "category": "official",
+      "baseUrl": "https://api.baichuan-ai.com/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://platform.baichuan-ai.com/docs/api",
+      "portal": {
+        "kind": "console",
+        "url": "https://platform.baichuan-ai.com/"
+      }
+    },
+    {
+      "id": "axforge",
+      "name": "AxForge",
+      "category": "gateway",
+      "baseUrl": "https://api.axforge.ai/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://dev.axforge.ai/docs/quickstart/",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://console.axforge.ai/keys"
+      }
+    },
+    {
+      "id": "openference",
+      "name": "Openference",
+      "category": "gateway",
+      "baseUrl": "https://api.openference.com/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.openference.com/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://openference.com/"
+      }
+    },
+    {
+      "id": "ai-horde",
+      "name": "AI Horde",
+      "category": "gateway",
+      "baseUrl": "https://oai.aihorde.net/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://github.com/Haidra-Org/AI-Horde#openai-compatible-chat-completions",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://aihorde.net/register"
+      }
+    },
+    {
+      "id": "sakura-ai-engine",
+      "name": "さくらのAI Engine",
+      "category": "official",
+      "baseUrl": "https://api.ai.sakura.ad.jp/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://manual.sakura.ad.jp/cloud/ai-engine/02-howto.html",
+      "portal": {
+        "kind": "console",
+        "url": "https://secure.sakura.ad.jp/cloud/?gastep=ai-engine"
+      }
+    },
+    {
+      "id": "arena-api",
+      "name": "Arena API",
+      "category": "gateway",
+      "baseUrl": "https://api.arena.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://platform.arena.ai/docs/api",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.arena.ai/dashboard/keys"
       }
     },
     {

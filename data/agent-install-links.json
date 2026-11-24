@@ -175,6 +175,10 @@
     "url": "https://opencode.ai/docs/#install",
     "label": "安装文档"
   },
+  "omi-cli": {
+    "url": "https://cli.builditomi.com/docs",
+    "label": "安装文档"
+  },
   "openclaw": {
     "url": "https://docs.openclaw.ai/install",
     "label": "安装文档"

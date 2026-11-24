@@ -437,6 +437,201 @@ const SAILRESEARCH_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("Qwen/Qwen3.6-35B-A3B", Some("Qwen3.6 35B A3B"), Some(262_000)),
 ];
 
+/// Public chat ids from anonymous `GET https://kyrune.com/api/v1/models` on
+/// 2026-11-24. That body had 45 rows and `owned_by` was `kammii` on every row.
+/// `unknown-model-disabled` and `kyrune-mini-test` are not seeded.
+const KYRUNE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("euryale-70b-v2.3", None, None),
+    ("magnum-v4-70b-se", None, None),
+    ("hanami-70b-x1", None, None),
+    ("magnum-v4-72b", None, None),
+    ("strawberrylemonade-70b-v1.1", None, None),
+    ("anubis-70b-v1.1", None, None),
+    ("kunou-72b-v1", None, None),
+    ("kyrune-mini-1.0-free", None, None),
+    ("gemma-4-31b-darkidol", None, None),
+    ("gemma-4-31b-gembrain", None, None),
+    ("gemma-4-31b-styletune", None, None),
+    ("gemma-4-31b-meromero-v2", None, None),
+    ("gemma-4-31b-novelist", None, None),
+    ("gemma-4-31b-sdft-heretic-rp", None, None),
+    ("gemma-4-31b-dark-gemistry", None, None),
+    ("gemma-4-31b-artemis-v1.2", None, None),
+    ("gemma-4-31b-animus-v14.1", None, None),
+    ("cydonia-24b-v4.3", None, None),
+    ("gemma-4-31b-isometry-rp", None, None),
+    ("gemma-4-31b-gembrain-x-core", None, None),
+    ("deepseek-v4-flash-0731", None, None),
+    ("deepseek-v3-0324", None, None),
+    ("deepseek-v3.2", None, None),
+    ("kimi-k2.6", None, None),
+    ("glm-5.2", None, None),
+    ("glm-5.3-flash", None, None),
+    ("glm-5.3-flash-uncensored", None, None),
+    ("glm-5.3", None, None),
+    ("glm-4.7", None, None),
+    ("glm-4.6-derestricted", None, None),
+    ("glm-4.6v", None, None),
+    ("qwen-3.5-397b", None, None),
+    ("qwen-3.5-27b", None, None),
+    ("devstral-2-123b", None, None),
+    ("nemotron-3-ultra-550b-a55b", None, None),
+    ("minimax-m3", None, None),
+    ("minimax-m3.1-flash", None, None),
+    ("mimo-v2.6-pro", None, None),
+    ("mimo-v2.5-pro", None, None),
+    ("mimo-v2.5", None, None),
+    ("step-3.7-flash", None, None),
+    ("longcat-2.0", None, None),
+    ("doubao-seed-character", None, None),
+];
+
+/// Documented Merkium API ids from https://www.merkium.nl/docs/models on
+/// 2026-11-24. Unsigned `GET /api/v1/models` returned HTTP 401.
+const MERKIUM_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("ganymede-1.1", None, None),
+    ("pluto-1.2-flash", None, None),
+    ("pluto-1.2-pro", None, None),
+    ("ceres-1.0", None, None),
+    ("ceres-1.0-pro", None, None),
+    ("pluto-1.1-flash", None, None),
+    ("pluto-1.1-pro", None, None),
+];
+
+/// The only request id printed by https://dash.packet.ai/llms-token-factory.txt
+/// on 2026-11-24. The models page was blocked, and the product-page labels are
+/// not request ids.
+const PACKETAI_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen-qwen2-5-1-5b-instruct", None, None),
+];
+
+/// Dialogue model names on https://platform.baichuan-ai.com/prices on
+/// 2026-11-24. The retired `Baichuan2-Turbo-192k` id and the embedding model
+/// are not seeded. Unsigned `GET /v1/models` returned HTTP 401.
+const BAICHUAN_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("Baichuan-M3-Plus", None, None),
+    ("Baichuan-M3", None, None),
+    ("Baichuan-M2-Plus", None, None),
+    ("Baichuan-M2", None, None),
+    ("Baichuan4-Turbo", None, None),
+    ("Baichuan4-Air", None, None),
+    ("Baichuan4", None, None),
+    ("Baichuan3-Turbo", None, None),
+    ("Baichuan3-Turbo-128k", None, None),
+    ("Baichuan2-Turbo", None, None),
+    ("Baichuan2-53B", None, None),
+];
+
+/// Chat ids from https://dev.axforge.ai/docs/models/ and anonymous
+/// `GET https://api.axforge.ai/v1/public/models` on 2026-11-24. Embeddings,
+/// rerank, speech, image, OCR, and the Xev decision id are not seeded.
+/// Unsigned `GET /v1/models` returned HTTP 401.
+const AXFORGE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen3.8-27b", None, None),
+    ("glm-5.3-flash", None, None),
+    ("mimo-v2.6-flash", None, None),
+    ("qwen3.8-flash-next", None, None),
+];
+
+/// Public text models from anonymous `GET https://api.openference.com/v1/models`
+/// on 2026-11-24. Image-output rows are not seeded.
+const OPENFERENCE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("GLM-5.2", None, Some(262144)),
+    ("GLM-5.3", None, Some(1048576)),
+    ("GLM-5.3-Flash", None, Some(1048576)),
+    ("GLM-5.3-Flash-Free", None, Some(1048576)),
+    ("DeepSeek-V4.1-Flash", None, Some(1048576)),
+    ("DeepSeek-V4.1-Flash-1017", None, Some(1048576)),
+    ("DeepSeek-V4-Pro-0813", None, Some(655360)),
+    ("ERNIE-5.5-Flash-Preview", None, Some(1024000)),
+    ("GLM-5.1", None, Some(202752)),
+    ("Kimi K3", None, Some(1048576)),
+    ("DeepSeek-V4.1-Flash-1017-Free", None, Some(1048576)),
+    ("GLM-4.7-Flash", None, Some(131072)),
+    ("Qwen3.8 27b", None, Some(262144)),
+    ("Gemma 4 26B", None, Some(256000)),
+    ("GPT-OSS-120B", None, Some(131072)),
+    ("GPT-OSS-20B", None, Some(131072)),
+    ("Llama 4 Scout", None, Some(131072)),
+    ("MiMo-V2.6-Flash", None, Some(1048576)),
+    ("MiMo-V2.6-Pro", None, Some(1048576)),
+    ("Hy4", None, Some(1048576)),
+    ("Hy4 Flash", None, Some(1024000)),
+    ("Step-5 Preview", None, Some(1024000)),
+    ("Claude Fable 5.2", None, Some(1048576)),
+    ("Claude Fable 5.1", None, Some(1048576)),
+    ("Claude Fable 5", None, Some(1048576)),
+    ("Claude Opus 5.5", None, Some(1048576)),
+    ("Claude Opus 5", None, Some(1048576)),
+    ("Claude Opus 4.8", None, Some(1048576)),
+    ("Claude Opus 4.7", None, Some(1048576)),
+    ("Claude Opus 4.6", None, Some(1048576)),
+    ("Claude Sonnet 5.5", None, Some(1048576)),
+    ("Claude Sonnet 5", None, Some(1048576)),
+    ("Claude Sonnet 4.6", None, Some(1048576)),
+    ("Claude Haiku 5.5", None, Some(1048576)),
+    ("Claude Haiku 4.5", None, Some(200000)),
+    ("Qwen3.8 Flash", None, Some(1000000)),
+    ("GPT-6 Luna", None, Some(1050000)),
+    ("GPT-6.1 Terra", None, Some(1050000)),
+    ("Gemini 3.8 Flash", None, Some(1048576)),
+    ("DeepSeek-V4.1-Flash-1017-Uncensored", None, Some(1048576)),
+    ("MiniMax M3", None, Some(1048576)),
+    ("GPT-6 Sol", None, Some(1050000)),
+    ("GPT-6.2 Sol", None, Some(1050000)),
+    ("GPT-6.1 Sol", None, Some(1050000)),
+    ("GPT-6 Astra", None, Some(1050000)),
+    ("GPT-6.2 Astra", None, Some(1050000)),
+    ("GLM-5.3-Flash-Uncensored", None, Some(1048576)),
+    ("GLM-5.3-Uncensored", None, Some(1000000)),
+    ("Auto", None, Some(1048576)),
+];
+
+/// Public chat models from anonymous `GET https://oai.aihorde.net/v1/models`
+/// on 2026-11-24. The list follows whichever workers are online.
+const AI_HORDE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("koboldcpp/Qwen3-0.6B", None, Some(2048)),
+    ("koboldcpp/Llama-3.2-3B", None, Some(4096)),
+    ("koboldcpp/Cydonia-24B-v4zg-Q4_K_M", None, Some(12288)),
+    ("koboldcpp/Llama-3-Lumimaid-8B-v0.1", None, Some(8192)),
+    ("koboldcpp/debug-gemma-4-E2B-Queen-it-qat-q4_0-unquantized.i1-Q4_K_M", None, Some(16384)),
+    ("llamacpp/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive", None, Some(8192)),
+    ("koboldcpp/Rocinante-X-12B", None, Some(20408)),
+    ("koboldcpp/L3-8B-Stheno-v3.2", None, Some(8192)),
+    ("koboldcpp/Qwen3-14B", None, Some(2048)),
+    ("Qwen3.8-Flash-Next-IQ3_S", None, Some(65280)),
+    ("koboldcpp/Sao10K/L3-8B-Stheno-v3.2", None, Some(8192)),
+    ("koboldcpp/Rocinante-X-12B-v1", None, Some(16384)),
+    ("koboldcpp/Gemma-4-E4B-it-Ultra-Uncensored-Heretic", None, Some(25600)),
+    ("koboldcpp/gemma-4-E4B-it", None, Some(2048)),
+    ("koboldcpp/LFM-3-Coder-Claude-Distill.Q8_0.gguf", None, Some(16384)),
+    ("koboldcpp/Valkyrie-49B-v2.1", None, Some(8192)),
+    ("koboldcpp/Qwen3-1.7B", None, Some(2048)),
+    ("koboldcpp/Wicked-Stuff-26B-A4B-v3.0-Final", None, Some(131072)),
+    ("koboldcpp/G4-MeroMero-26B-A4B-it-uncensored-heretic", None, Some(262144)),
+];
+
+/// Chat request ids from the Sakura chat-model specification updated 2026-11-18.
+/// Context lengths are the token counts on that page.
+const SAKURA_AI_ENGINE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("gpt-oss-120b", None, Some(131_072)),
+    ("preview/gemma-4-31B-it", None, Some(262_144)),
+    ("llm-jp-3.1-8x13b-instruct4", None, Some(4_096)),
+    ("preview/Phi-4-mini-instruct-cpu", None, Some(4_096)),
+    ("preview/Qwen3-0.6B-cpu", None, Some(40_960)),
+    ("preview/Qwen3-VL-30B-A3B-Instruct", None, Some(262_144)),
+    ("preview/Qwen3.6-35B-A3B", None, Some(262_144)),
+    ("preview/Kimi-K2.7-Code", None, Some(262_144)),
+    ("preview/GLM-5.3-Flash", None, Some(1_048_575)),
+    ("preview/DeepSeek-V4.1-Flash-1017", None, Some(1_048_575)),
+];
+
+/// The router id documented on https://platform.arena.ai/docs/api.
+/// Direct model ids come from an authenticated `GET /v1/models`.
+const ARENA_API_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("coding-router-preview", None, None),
+];
+
 fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
     let entries = match provider_type {
         "nodecode" => NODECODE_STATIC_MODELS,
@@ -460,6 +655,15 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "telnyx" => TELNYX_STATIC_MODELS,
         "ecloud-moma" => ECLOUD_MOMA_STATIC_MODELS,
         "mara" => MARA_STATIC_MODELS,
+        "kyrune" => KYRUNE_STATIC_MODELS,
+        "merkium" => MERKIUM_STATIC_MODELS,
+        "packetai" => PACKETAI_STATIC_MODELS,
+        "baichuan" => BAICHUAN_STATIC_MODELS,
+        "axforge" => AXFORGE_STATIC_MODELS,
+        "openference" => OPENFERENCE_STATIC_MODELS,
+        "ai-horde" => AI_HORDE_STATIC_MODELS,
+        "sakura-ai-engine" => SAKURA_AI_ENGINE_STATIC_MODELS,
+        "arena-api" => ARENA_API_STATIC_MODELS,
         // https://eve-esa.github.io/eve-guide/backend/docs/api/openai-gateway/
         "esa-eve" => &[
             ("jsc/alias-eve", None, None),
@@ -849,6 +1053,15 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "telnyx"
         | "ecloud-moma"
         | "mara"
+        | "kyrune"
+        | "merkium"
+        | "packetai"
+        | "baichuan"
+        | "axforge"
+        | "openference"
+        | "ai-horde"
+        | "sakura-ai-engine"
+        | "arena-api"
         | "esa-eve"
         | "mistral"
         | "deepseek"
@@ -972,6 +1185,9 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "synap"
             | "ecloud-moma"
             | "mara"
+            | "kyrune"
+            | "openference"
+            | "ai-horde"
     ) {
         CredentialPolicy::Optional
     } else {
@@ -2778,6 +2994,9 @@ mod tests {
         "synap",
         "ecloud-moma",
         "mara",
+        "kyrune",
+        "openference",
+        "ai-horde",
     ];
 
     fn provider(
@@ -2932,6 +3151,9 @@ mod tests {
             "synap",
             "ecloud-moma",
             "mara",
+            "kyrune",
+            "openference",
+            "ai-horde",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -3275,6 +3497,7 @@ mod tests {
                 &store,
                 &uuid::Uuid::new_v4().to_string(),
                 &config.id,
+                &config.name,
                 b"fixture-store-key",
             ).unwrap());
             execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
@@ -4693,5 +4916,216 @@ mod tests {
         assert_eq!(seeded.len(), 3);
         assert_eq!(seeded[0].id, "MiniMax-M3");
         assert_eq!(seeded[2].id, "gpt-oss-120b");
+    }
+
+    #[test]
+    fn kyrune_seeds_the_public_chat_catalog_without_a_key() {
+        let models = reviewed_static_catalog("kyrune").expect("kyrune seed");
+        assert_eq!(models.len(), 43);
+        assert!(models.iter().any(|model| model.id == "kyrune-mini-1.0-free"));
+        assert!(models.iter().any(|model| model.id == "hanami-70b-x1"));
+        for omitted in ["unknown-model-disabled", "kyrune-mini-test"] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()));
+        assert!(static_seed_models("kyrune").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"kyrune"));
+        let config = provider(
+            "kyrune",
+            "https://kyrune.com/api/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://kyrune.com/api/v1/models"
+        );
+        let _home = TestHome::new("kyrune-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
+        assert_eq!(seeded.len(), 43);
+    }
+
+    #[test]
+    fn keyed_chat_providers_seed_documented_ids() {
+        let cases = [
+            (
+                "merkium",
+                "https://chat.merkium.nl/api/v1",
+                &[
+                    "ganymede-1.1",
+                    "pluto-1.2-flash",
+                    "pluto-1.2-pro",
+                    "ceres-1.0",
+                    "ceres-1.0-pro",
+                    "pluto-1.1-flash",
+                    "pluto-1.1-pro",
+                ][..],
+                &["charon-1.1"][..],
+            ),
+            (
+                "packetai",
+                "https://api.packet.ai/v1",
+                &["qwen-qwen2-5-1-5b-instruct"][..],
+                &[
+                    "nvidia/DeepSeek-V4.1-Flash-NVFP4",
+                    "MiniMaxAI/MiniMax-M3.1-Flash",
+                    "Qwen/Qwen2.5-1.5B-Instruct",
+                    "meta-llama/Llama-3.3-70B-Instruct",
+                ][..],
+            ),
+            (
+                "baichuan",
+                "https://api.baichuan-ai.com/v1",
+                &[
+                    "Baichuan-M3-Plus",
+                    "Baichuan-M3",
+                    "Baichuan-M2-Plus",
+                    "Baichuan-M2",
+                    "Baichuan4-Turbo",
+                    "Baichuan4-Air",
+                    "Baichuan4",
+                    "Baichuan3-Turbo",
+                    "Baichuan3-Turbo-128k",
+                    "Baichuan2-Turbo",
+                    "Baichuan2-53B",
+                ][..],
+                &["Baichuan2-Turbo-192k", "Baichuan-Text-Embedding"][..],
+            ),
+            (
+                "axforge",
+                "https://api.axforge.ai/v1",
+                &[
+                    "qwen3.8-27b",
+                    "glm-5.3-flash",
+                    "mimo-v2.6-flash",
+                    "qwen3.8-flash-next",
+                ][..],
+                &[
+                    "qwen3-embed",
+                    "bge-reranker-v2-m3",
+                    "whisper",
+                    "piper",
+                    "ernie-image-turbo",
+                    "flux2-klein-4b",
+                    "xev-latest",
+                    "ocr-eu",
+                ][..],
+            ),
+        ];
+        for (id, base, expected, omitted) in cases {
+            let models = reviewed_static_catalog(id).unwrap_or_else(|| panic!("{id} seed"));
+            assert_eq!(
+                models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+                expected,
+                "{id}"
+            );
+            assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()), "{id}");
+            for missing in omitted {
+                assert!(!models.iter().any(|model| model.id == *missing), "{id} {missing}");
+            }
+            assert!(static_seed_models(id).is_none(), "{id}");
+            assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&id), "{id}");
+            let config = provider(id, base, ModelProtocol::OpenaiCompletions, "/chat/completions");
+            let spec = discovery_spec_for_provider(&config).unwrap();
+            assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi, "{id}");
+            assert_eq!(spec.credential, CredentialPolicy::Required, "{id}");
+            assert_eq!(
+                discovery_url(&config, spec.adapter).unwrap().as_str(),
+                format!("{base}/models"),
+                "{id}"
+            );
+            let _home = TestHome::new(&format!("{id}-static-catalog"));
+            let seeded = execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
+            assert_eq!(seeded.len(), expected.len(), "{id}");
+        }
+    }
+
+    #[test]
+    fn openference_and_ai_horde_use_the_public_catalog_seed() {
+        let openference = reviewed_static_catalog("openference").expect("openference");
+        assert_eq!(openference.len(), 49);
+        assert_eq!(openference[3].id, "GLM-5.3-Flash-Free");
+        assert_eq!(openference[3].context_length, Some(1_048_576));
+        assert!(openference.iter().any(|model| model.id == "DeepSeek-V4.1-Flash-1017-Free"));
+        for omitted in ["Gemini 3 Pro Image", "Gemini 3.1 Flash Image"] {
+            assert!(!openference.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"openference"));
+        let config = provider(
+            "openference",
+            "https://api.openference.com/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://api.openference.com/v1/models"
+        );
+
+        let horde = reviewed_static_catalog("ai-horde").expect("horde");
+        assert_eq!(horde.len(), 19);
+        assert!(horde.iter().any(|model| model.id == "koboldcpp/Qwen3-0.6B"));
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"ai-horde"));
+        let config = provider(
+            "ai-horde",
+            "https://oai.aihorde.net/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://oai.aihorde.net/v1/models"
+        );
+    }
+
+    #[test]
+    fn sakura_and_arena_seed_only_documented_request_ids() {
+        let sakura = reviewed_static_catalog("sakura-ai-engine").expect("sakura");
+        assert_eq!(
+            sakura.iter().map(|model| (model.id.as_str(), model.context_length)).collect::<Vec<_>>(),
+            vec![
+                ("gpt-oss-120b", Some(131_072)),
+                ("preview/gemma-4-31B-it", Some(262_144)),
+                ("llm-jp-3.1-8x13b-instruct4", Some(4_096)),
+                ("preview/Phi-4-mini-instruct-cpu", Some(4_096)),
+                ("preview/Qwen3-0.6B-cpu", Some(40_960)),
+                ("preview/Qwen3-VL-30B-A3B-Instruct", Some(262_144)),
+                ("preview/Qwen3.6-35B-A3B", Some(262_144)),
+                ("preview/Kimi-K2.7-Code", Some(262_144)),
+                ("preview/GLM-5.3-Flash", Some(1_048_575)),
+                ("preview/DeepSeek-V4.1-Flash-1017", Some(1_048_575)),
+            ]
+        );
+        assert!(!sakura.iter().any(|model| model.id == "preview/Kimi-K2.6"));
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"sakura-ai-engine"));
+        let config = provider(
+            "sakura-ai-engine",
+            "https://api.ai.sakura.ad.jp/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        assert_eq!(discovery_spec_for_provider(&config).unwrap().credential, CredentialPolicy::Required);
+
+        let arena = reviewed_static_catalog("arena-api").expect("arena");
+        assert_eq!(arena.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(), ["coding-router-preview"]);
+        assert!(arena[0].context_length.is_none());
+        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"arena-api"));
+        let config = provider(
+            "arena-api",
+            "https://api.arena.ai",
+            ModelProtocol::OpenaiCompletions,
+            "/v1/chat/completions",
+        );
+        assert_eq!(
+            discovery_url(&config, discovery_spec_for_provider(&config).unwrap().adapter).unwrap().as_str(),
+            "https://api.arena.ai/v1/models"
+        );
     }
 }

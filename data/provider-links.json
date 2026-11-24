@@ -1602,6 +1602,69 @@
       "kind": "api-key"
     }
   },
+  "kyrune": {
+    "docs_url": "https://kyrune.com/docs",
+    "portal": {
+      "url": "https://kyrune.com/api/",
+      "kind": "api-key"
+    }
+  },
+  "merkium": {
+    "docs_url": "https://www.merkium.nl/docs",
+    "portal": {
+      "url": "https://chat.merkium.nl/",
+      "kind": "console"
+    }
+  },
+  "packetai": {
+    "docs_url": "https://dash.packet.ai/docs/token-factory-quickstart",
+    "portal": {
+      "url": "https://dash.packet.ai",
+      "kind": "console"
+    }
+  },
+  "baichuan": {
+    "docs_url": "https://platform.baichuan-ai.com/docs/api",
+    "portal": {
+      "url": "https://platform.baichuan-ai.com/",
+      "kind": "console"
+    }
+  },
+  "axforge": {
+    "docs_url": "https://dev.axforge.ai/docs/quickstart/",
+    "portal": {
+      "url": "https://console.axforge.ai/keys",
+      "kind": "api-key"
+    }
+  },
+  "openference": {
+    "docs_url": "https://docs.openference.com/quickstart",
+    "portal": {
+      "url": "https://openference.com/",
+      "kind": "console"
+    }
+  },
+  "ai-horde": {
+    "docs_url": "https://github.com/Haidra-Org/AI-Horde#openai-compatible-chat-completions",
+    "portal": {
+      "url": "https://aihorde.net/register",
+      "kind": "api-key"
+    }
+  },
+  "sakura-ai-engine": {
+    "docs_url": "https://manual.sakura.ad.jp/cloud/ai-engine/02-howto.html",
+    "portal": {
+      "url": "https://secure.sakura.ad.jp/cloud/?gastep=ai-engine",
+      "kind": "console"
+    }
+  },
+  "arena-api": {
+    "docs_url": "https://platform.arena.ai/docs/api",
+    "portal": {
+      "url": "https://platform.arena.ai/dashboard/keys",
+      "kind": "api-key"
+    }
+  },
   "blockrun": {
     "docs_url": "https://blockrun.ai/docs/api-reference/chat-completions",
     "portal": {

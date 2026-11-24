@@ -266,3 +266,24 @@ official wordmarks.
 | `ucloud-modelverse.png` | <https://astraflow.ucloud.cn/static/logo-lg-zh.png> (symbol from the official AstraFlow wordmark) |
 | `vectoree.png` | <https://vectoree.ai/favicon.svg> |
 | `vllm-semantic-router.png` | <https://vllm-sr.ai/img/vllm-sr-mark.svg> |
+
+## Provider catalog icon additions — 2026-11-24 later
+
+| Asset | Official source |
+|---|---|
+| `ai-horde.ico` | <https://aihorde.net/favicon.ico> |
+| `arena-api.svg` | <https://platform.arena.ai/icon.svg> (the `rel="icon"` linked by the Arena API docs) |
+| `openference.svg` | <https://openference.com/brand/favicon.svg> |
+| `sakura-ai-engine.ico` | <https://ai.sakura.ad.jp/favicon.ico> (SAKURA internet mark) |
+
+## Provider catalog icon additions — 2026-11-24
+
+Official marks retrieved on 2026-11-24. Original bytes are unchanged.
+
+| Asset | Official source |
+|---|---|
+| `axforge.svg` | <https://axforge.ai/assets/favicon.svg> (the `rel="icon"` linked by <https://axforge.ai/>) |
+| `baichuan.ico` | <https://platform.baichuan-ai.com/favicon.ico> |
+| `kyrune.svg` | <https://kyrune.com/favicon.svg> |
+| `merkium.svg` | <https://www.merkium.nl/icon.svg> |
+| `packetai.png` | <https://cdn.prod.website-files.com/6a0ebbf86e014c66a215ddd9/6a109e6a72060a7056aa3528_android-chrome-192x192.png> (the 512px icon linked by <https://packet.ai/token-factory>) |
