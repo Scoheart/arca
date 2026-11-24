@@ -3275,6 +3275,7 @@ mod tests {
                 &store,
                 &uuid::Uuid::new_v4().to_string(),
                 &config.id,
+                &config.name,
                 b"fixture-store-key",
             ).unwrap());
             execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
