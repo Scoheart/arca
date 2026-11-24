@@ -437,6 +437,102 @@ const SAILRESEARCH_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
     ("Qwen/Qwen3.6-35B-A3B", Some("Qwen3.6 35B A3B"), Some(262_000)),
 ];
 
+/// Public chat ids from anonymous `GET https://kyrune.com/api/v1/models` on
+/// 2026-11-24. That body had 45 rows and `owned_by` was `kammii` on every row.
+/// `unknown-model-disabled` and `kyrune-mini-test` are not seeded.
+const KYRUNE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("euryale-70b-v2.3", None, None),
+    ("magnum-v4-70b-se", None, None),
+    ("hanami-70b-x1", None, None),
+    ("magnum-v4-72b", None, None),
+    ("strawberrylemonade-70b-v1.1", None, None),
+    ("anubis-70b-v1.1", None, None),
+    ("kunou-72b-v1", None, None),
+    ("kyrune-mini-1.0-free", None, None),
+    ("gemma-4-31b-darkidol", None, None),
+    ("gemma-4-31b-gembrain", None, None),
+    ("gemma-4-31b-styletune", None, None),
+    ("gemma-4-31b-meromero-v2", None, None),
+    ("gemma-4-31b-novelist", None, None),
+    ("gemma-4-31b-sdft-heretic-rp", None, None),
+    ("gemma-4-31b-dark-gemistry", None, None),
+    ("gemma-4-31b-artemis-v1.2", None, None),
+    ("gemma-4-31b-animus-v14.1", None, None),
+    ("cydonia-24b-v4.3", None, None),
+    ("gemma-4-31b-isometry-rp", None, None),
+    ("gemma-4-31b-gembrain-x-core", None, None),
+    ("deepseek-v4-flash-0731", None, None),
+    ("deepseek-v3-0324", None, None),
+    ("deepseek-v3.2", None, None),
+    ("kimi-k2.6", None, None),
+    ("glm-5.2", None, None),
+    ("glm-5.3-flash", None, None),
+    ("glm-5.3-flash-uncensored", None, None),
+    ("glm-5.3", None, None),
+    ("glm-4.7", None, None),
+    ("glm-4.6-derestricted", None, None),
+    ("glm-4.6v", None, None),
+    ("qwen-3.5-397b", None, None),
+    ("qwen-3.5-27b", None, None),
+    ("devstral-2-123b", None, None),
+    ("nemotron-3-ultra-550b-a55b", None, None),
+    ("minimax-m3", None, None),
+    ("minimax-m3.1-flash", None, None),
+    ("mimo-v2.6-pro", None, None),
+    ("mimo-v2.5-pro", None, None),
+    ("mimo-v2.5", None, None),
+    ("step-3.7-flash", None, None),
+    ("longcat-2.0", None, None),
+    ("doubao-seed-character", None, None),
+];
+
+/// Documented Merkium API ids from https://www.merkium.nl/docs/models on
+/// 2026-11-24. Unsigned `GET /api/v1/models` returned HTTP 401.
+const MERKIUM_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("ganymede-1.1", None, None),
+    ("pluto-1.2-flash", None, None),
+    ("pluto-1.2-pro", None, None),
+    ("ceres-1.0", None, None),
+    ("ceres-1.0-pro", None, None),
+    ("pluto-1.1-flash", None, None),
+    ("pluto-1.1-pro", None, None),
+];
+
+/// The only request id printed by https://dash.packet.ai/llms-token-factory.txt
+/// on 2026-11-24. The models page was blocked, and the product-page labels are
+/// not request ids.
+const PACKETAI_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen-qwen2-5-1-5b-instruct", None, None),
+];
+
+/// Dialogue model names on https://platform.baichuan-ai.com/prices on
+/// 2026-11-24. The retired `Baichuan2-Turbo-192k` id and the embedding model
+/// are not seeded. Unsigned `GET /v1/models` returned HTTP 401.
+const BAICHUAN_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("Baichuan-M3-Plus", None, None),
+    ("Baichuan-M3", None, None),
+    ("Baichuan-M2-Plus", None, None),
+    ("Baichuan-M2", None, None),
+    ("Baichuan4-Turbo", None, None),
+    ("Baichuan4-Air", None, None),
+    ("Baichuan4", None, None),
+    ("Baichuan3-Turbo", None, None),
+    ("Baichuan3-Turbo-128k", None, None),
+    ("Baichuan2-Turbo", None, None),
+    ("Baichuan2-53B", None, None),
+];
+
+/// Chat ids from https://dev.axforge.ai/docs/models/ and anonymous
+/// `GET https://api.axforge.ai/v1/public/models` on 2026-11-24. Embeddings,
+/// rerank, speech, image, OCR, and the Xev decision id are not seeded.
+/// Unsigned `GET /v1/models` returned HTTP 401.
+const AXFORGE_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
+    ("qwen3.8-27b", None, None),
+    ("glm-5.3-flash", None, None),
+    ("mimo-v2.6-flash", None, None),
+    ("qwen3.8-flash-next", None, None),
+];
+
 fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
     let entries = match provider_type {
         "nodecode" => NODECODE_STATIC_MODELS,
@@ -460,6 +556,11 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
         "telnyx" => TELNYX_STATIC_MODELS,
         "ecloud-moma" => ECLOUD_MOMA_STATIC_MODELS,
         "mara" => MARA_STATIC_MODELS,
+        "kyrune" => KYRUNE_STATIC_MODELS,
+        "merkium" => MERKIUM_STATIC_MODELS,
+        "packetai" => PACKETAI_STATIC_MODELS,
+        "baichuan" => BAICHUAN_STATIC_MODELS,
+        "axforge" => AXFORGE_STATIC_MODELS,
         // https://eve-esa.github.io/eve-guide/backend/docs/api/openai-gateway/
         "esa-eve" => &[
             ("jsc/alias-eve", None, None),
@@ -849,6 +950,11 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "telnyx"
         | "ecloud-moma"
         | "mara"
+        | "kyrune"
+        | "merkium"
+        | "packetai"
+        | "baichuan"
+        | "axforge"
         | "esa-eve"
         | "mistral"
         | "deepseek"
@@ -972,6 +1078,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
             | "synap"
             | "ecloud-moma"
             | "mara"
+            | "kyrune"
     ) {
         CredentialPolicy::Optional
     } else {
@@ -2778,6 +2885,7 @@ mod tests {
         "synap",
         "ecloud-moma",
         "mara",
+        "kyrune",
     ];
 
     fn provider(
@@ -2932,6 +3040,7 @@ mod tests {
             "synap",
             "ecloud-moma",
             "mara",
+            "kyrune",
         ] {
             assert_eq!(
                 reviewed_discovery_spec(provider_type).map(|spec| spec.credential),
@@ -3275,6 +3384,7 @@ mod tests {
                 &store,
                 &uuid::Uuid::new_v4().to_string(),
                 &config.id,
+                &config.name,
                 b"fixture-store-key",
             ).unwrap());
             execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
@@ -4693,5 +4803,130 @@ mod tests {
         assert_eq!(seeded.len(), 3);
         assert_eq!(seeded[0].id, "MiniMax-M3");
         assert_eq!(seeded[2].id, "gpt-oss-120b");
+    }
+
+    #[test]
+    fn kyrune_seeds_the_public_chat_catalog_without_a_key() {
+        let models = reviewed_static_catalog("kyrune").expect("kyrune seed");
+        assert_eq!(models.len(), 43);
+        assert!(models.iter().any(|model| model.id == "kyrune-mini-1.0-free"));
+        assert!(models.iter().any(|model| model.id == "hanami-70b-x1"));
+        for omitted in ["unknown-model-disabled", "kyrune-mini-test"] {
+            assert!(!models.iter().any(|model| model.id == omitted), "{omitted}");
+        }
+        assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()));
+        assert!(static_seed_models("kyrune").is_none());
+        assert!(EXPECTED_OPENAI_COMPATIBLE.contains(&"kyrune"));
+        let config = provider(
+            "kyrune",
+            "https://kyrune.com/api/v1",
+            ModelProtocol::OpenaiCompletions,
+            "/chat/completions",
+        );
+        let spec = discovery_spec_for_provider(&config).unwrap();
+        assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi);
+        assert_eq!(spec.credential, CredentialPolicy::Optional);
+        assert_eq!(
+            discovery_url(&config, spec.adapter).unwrap().as_str(),
+            "https://kyrune.com/api/v1/models"
+        );
+        let _home = TestHome::new("kyrune-static-catalog");
+        let seeded = execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
+        assert_eq!(seeded.len(), 43);
+    }
+
+    #[test]
+    fn keyed_chat_providers_seed_documented_ids() {
+        let cases = [
+            (
+                "merkium",
+                "https://chat.merkium.nl/api/v1",
+                &[
+                    "ganymede-1.1",
+                    "pluto-1.2-flash",
+                    "pluto-1.2-pro",
+                    "ceres-1.0",
+                    "ceres-1.0-pro",
+                    "pluto-1.1-flash",
+                    "pluto-1.1-pro",
+                ][..],
+                &["charon-1.1"][..],
+            ),
+            (
+                "packetai",
+                "https://api.packet.ai/v1",
+                &["qwen-qwen2-5-1-5b-instruct"][..],
+                &[
+                    "nvidia/DeepSeek-V4.1-Flash-NVFP4",
+                    "MiniMaxAI/MiniMax-M3.1-Flash",
+                    "Qwen/Qwen2.5-1.5B-Instruct",
+                    "meta-llama/Llama-3.3-70B-Instruct",
+                ][..],
+            ),
+            (
+                "baichuan",
+                "https://api.baichuan-ai.com/v1",
+                &[
+                    "Baichuan-M3-Plus",
+                    "Baichuan-M3",
+                    "Baichuan-M2-Plus",
+                    "Baichuan-M2",
+                    "Baichuan4-Turbo",
+                    "Baichuan4-Air",
+                    "Baichuan4",
+                    "Baichuan3-Turbo",
+                    "Baichuan3-Turbo-128k",
+                    "Baichuan2-Turbo",
+                    "Baichuan2-53B",
+                ][..],
+                &["Baichuan2-Turbo-192k", "Baichuan-Text-Embedding"][..],
+            ),
+            (
+                "axforge",
+                "https://api.axforge.ai/v1",
+                &[
+                    "qwen3.8-27b",
+                    "glm-5.3-flash",
+                    "mimo-v2.6-flash",
+                    "qwen3.8-flash-next",
+                ][..],
+                &[
+                    "qwen3-embed",
+                    "bge-reranker-v2-m3",
+                    "whisper",
+                    "piper",
+                    "ernie-image-turbo",
+                    "flux2-klein-4b",
+                    "xev-latest",
+                    "ocr-eu",
+                ][..],
+            ),
+        ];
+        for (id, base, expected, omitted) in cases {
+            let models = reviewed_static_catalog(id).unwrap_or_else(|| panic!("{id} seed"));
+            assert_eq!(
+                models.iter().map(|model| model.id.as_str()).collect::<Vec<_>>(),
+                expected,
+                "{id}"
+            );
+            assert!(models.iter().all(|model| model.name.is_none() && model.context_length.is_none()), "{id}");
+            for missing in omitted {
+                assert!(!models.iter().any(|model| model.id == *missing), "{id} {missing}");
+            }
+            assert!(static_seed_models(id).is_none(), "{id}");
+            assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&id), "{id}");
+            let config = provider(id, base, ModelProtocol::OpenaiCompletions, "/chat/completions");
+            let spec = discovery_spec_for_provider(&config).unwrap();
+            assert_eq!(spec.adapter, DiscoveryAdapter::OpenAi, "{id}");
+            assert_eq!(spec.credential, CredentialPolicy::Required, "{id}");
+            assert_eq!(
+                discovery_url(&config, spec.adapter).unwrap().as_str(),
+                format!("{base}/models"),
+                "{id}"
+            );
+            let _home = TestHome::new(&format!("{id}-static-catalog"));
+            let seeded = execute_provider_discovery(ModelDiscoveryInput { provider: config }).unwrap();
+            assert_eq!(seeded.len(), expected.len(), "{id}");
+        }
     }
 }

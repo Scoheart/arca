@@ -1,5 +1,9 @@
 # Agent icon sources
 
+## Omi CLI — 2026-11-24
+
+- `omi-cli.png`: the 180px Apple touch icon linked by <https://cli.builditomi.com/>, served from <https://builditomi.com/apple-touch-icon.png?v=omi5>. Omi CLI is a separate product from the BuildItOmi API. The mark is the parent brand icon that the CLI page declares.
+
 ## Capy — 2026-10-02
 
 - `capy.png`: the original 180px Apple touch icon from Capy's official site at <https://capy.ai/_marketing/favicon/apple-touch-icon.png>; its black tile and white mascot are retained unchanged. The official desktop download is <https://capy.ai/download/>.

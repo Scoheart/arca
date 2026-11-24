@@ -296,6 +296,13 @@
     ],
     "args": []
   },
+  "omi-cli": {
+    "kind": "cli",
+    "candidates": [
+      "omi"
+    ],
+    "args": []
+  },
   "openclaw": {
     "kind": "cli",
     "candidates": [
