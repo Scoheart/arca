@@ -1332,6 +1332,24 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 base_url: "https://api.cloud.mara.com",
             },
         ],
+        "openference" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.openference.com/v1",
+        }],
+        "sakura-ai-engine" => &[ModelProviderEndpointView {
+            protocol: OpenaiResponses,
+            base_url: "https://api.ai.sakura.ad.jp/v1",
+        }],
+        "arena-api" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.arena.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.arena.ai",
+            },
+        ],
         _ => &[],
     }
 }
@@ -2474,6 +2492,34 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "openference",
+        name: "Openference",
+        default_base_url: Some("https://api.openference.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "ai-horde",
+        name: "AI Horde",
+        default_base_url: Some("https://oai.aihorde.net/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
+        id: "sakura-ai-engine",
+        name: "さくらのAI Engine",
+        default_base_url: Some("https://api.ai.sakura.ad.jp/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "arena-api",
+        name: "Arena API",
+        default_base_url: Some("https://api.arena.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "blockrun",
         name: "BlockRun Free",
         default_base_url: Some("https://blockrun.ai/api/v1"),
@@ -3446,6 +3492,14 @@ pub fn infer_provider(base_url: &str) -> String {
         "api.baichuan-ai.com" => "baichuan",
         // Serverless inference only. axforge.ai, dev.axforge.ai, and console.axforge.ai stay custom.
         "api.axforge.ai" => "axforge",
+        // Chat and Responses live here. openference.com is the site and stays custom.
+        "api.openference.com" => "openference",
+        // OpenAI-compatible chat only. aihorde.net is the native async API and the site.
+        "oai.aihorde.net" => "ai-horde",
+        // Sakura AI Engine inference. The manual and product hosts stay custom.
+        "api.ai.sakura.ad.jp" => "sakura-ai-engine",
+        // Arena API. platform.arena.ai and arena.ai are the console and chat site.
+        "api.arena.ai" => "arena-api",
         "api.sambanova.ai" => "sambanova",
         "api.gmi-serving.com" => "gmi-cloud",
         "api.perplexity.ai" => "perplexity",
@@ -9752,6 +9806,43 @@ mod tests {
             ("https://console.axforge.ai/keys", "custom"),
             ("https://catalog.axforge.ai/models/", "custom"),
             ("https://api.axforge.ai.evil.test/v1", "custom"),
+            ("https://api.openference.com/v1", "openference"),
+            ("https://api.openference.com/v1/", "openference"),
+            ("https://api.openference.com/v1/chat/completions", "openference"),
+            ("https://api.openference.com/v1/responses", "openference"),
+            ("https://api.openference.com/v1/models", "openference"),
+            ("https://api.openference.com/", "openference"),
+            ("https://openference.com/pricing", "custom"),
+            ("https://docs.openference.com/quickstart", "custom"),
+            ("https://api.openference.com.evil.test/v1", "custom"),
+            ("https://oai.aihorde.net/v1", "ai-horde"),
+            ("https://oai.aihorde.net/v1/", "ai-horde"),
+            ("https://oai.aihorde.net/v1/chat/completions", "ai-horde"),
+            ("https://oai.aihorde.net/v1/models", "ai-horde"),
+            ("https://oai.aihorde.net/", "ai-horde"),
+            ("https://aihorde.net/", "custom"),
+            ("https://aihorde.net/api/", "custom"),
+            ("https://oai.aihorde.net.evil.test/v1", "custom"),
+            ("https://api.ai.sakura.ad.jp/v1", "sakura-ai-engine"),
+            ("https://api.ai.sakura.ad.jp/v1/", "sakura-ai-engine"),
+            ("https://api.ai.sakura.ad.jp/v1/chat/completions", "sakura-ai-engine"),
+            ("https://api.ai.sakura.ad.jp/v1/responses", "sakura-ai-engine"),
+            ("https://api.ai.sakura.ad.jp/v1/models", "sakura-ai-engine"),
+            ("https://api.ai.sakura.ad.jp/", "sakura-ai-engine"),
+            ("https://ai.sakura.ad.jp/sakura-ai/ai-engine/", "custom"),
+            ("https://manual.sakura.ad.jp/cloud/ai-engine/02-howto.html", "custom"),
+            ("https://api.ai.sakura.ad.jp.evil.test/v1", "custom"),
+            ("https://api.arena.ai/v1", "arena-api"),
+            ("https://api.arena.ai/v1/", "arena-api"),
+            ("https://api.arena.ai/v1/chat/completions", "arena-api"),
+            ("https://api.arena.ai/v1/responses", "arena-api"),
+            ("https://api.arena.ai/v1/messages", "arena-api"),
+            ("https://api.arena.ai/v1/models", "arena-api"),
+            ("https://api.arena.ai/", "arena-api"),
+            ("https://platform.arena.ai/docs/api", "custom"),
+            ("https://platform.arena.ai/dashboard/keys", "custom"),
+            ("https://arena.ai/", "custom"),
+            ("https://api.arena.ai.evil.test/v1", "custom"),
         ] {
             assert_eq!(infer_provider(url), expected, "{url}");
         }
@@ -9873,7 +9964,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(endpointless.iter().map(|p| p.id).collect::<BTreeSet<_>>(),
             BTreeSet::from(["azure-openai", "amazon-bedrock", "amazon-bedrock-mantle", "cloudflare-workers-ai", "cucloud", "infomaniak-ai-services", "custom"]));
-        assert_eq!(list_providers().len(), 242);
+        assert_eq!(list_providers().len(), 246);
         assert!(!list_providers().iter().any(|p| p.id == "github-models"));
         let openrouter = list_providers()
             .iter()
@@ -14381,7 +14472,7 @@ url = "https://example.test/mcp"
                 "api-key",
             ),
         ];
-        assert_eq!(list_providers().len(), 242);
+        assert_eq!(list_providers().len(), 246);
         let amd = list_providers()
             .iter()
             .find(|provider| provider.id == "amd-token-factory")
@@ -14418,6 +14509,59 @@ url = "https://example.test/mcp"
             assert_ne!(provider.id, amd.id, "{id}");
             assert_ne!(provider.default_base_url, amd.default_base_url, "{id}");
         }
+    }
+
+    #[test]
+    fn openference_horde_sakura_and_arena_templates_match_reviewed_connections() {
+        use ModelProtocol::{AnthropicMessages, OpenaiCompletions, OpenaiResponses};
+
+        let openference = list_providers().iter().find(|provider| provider.id == "openference").unwrap();
+        let openference_json = serde_json::to_value(openference).unwrap();
+        assert_eq!(openference.name, "Openference");
+        assert_eq!(openference.category, "gateway");
+        assert_eq!(openference.default_protocol, OpenaiCompletions);
+        assert_eq!(openference_json["base_url"], "https://api.openference.com/v1");
+        assert_eq!(openference_json["protocols"]["openai-completions"]["endpoint_path"], "/chat/completions");
+        assert_eq!(openference_json["protocols"]["openai-responses"]["endpoint_path"], "/responses");
+        assert!(openference_json["protocols"].get("anthropic-messages").is_none());
+        assert_eq!(
+            full_request_url("https://api.openference.com/v1", "/responses").unwrap(),
+            "https://api.openference.com/v1/responses"
+        );
+
+        let horde = list_providers().iter().find(|provider| provider.id == "ai-horde").unwrap();
+        let horde_json = serde_json::to_value(horde).unwrap();
+        assert_eq!(horde.name, "AI Horde");
+        assert_eq!(horde.default_base_url, Some("https://oai.aihorde.net/v1"));
+        assert_eq!(horde_json["base_url"], "https://oai.aihorde.net/v1");
+        assert!(horde_json["protocols"].get("openai-responses").is_none());
+        assert!(provider_additional_endpoints("ai-horde").is_empty());
+        assert_ne!(infer_provider("https://aihorde.net/api/v2/generate/text/async"), "ai-horde");
+
+        let sakura = list_providers().iter().find(|provider| provider.id == "sakura-ai-engine").unwrap();
+        let sakura_json = serde_json::to_value(sakura).unwrap();
+        assert_eq!(sakura.name, "さくらのAI Engine");
+        assert_eq!(sakura.category, "official");
+        assert_eq!(sakura_json["base_url"], "https://api.ai.sakura.ad.jp/v1");
+        assert_eq!(sakura_json["protocols"]["openai-responses"]["endpoint_path"], "/responses");
+        assert!(sakura_json["protocols"].get("anthropic-messages").is_none());
+
+        let arena = list_providers().iter().find(|provider| provider.id == "arena-api").unwrap();
+        let arena_json = serde_json::to_value(arena).unwrap();
+        assert_eq!(arena.name, "Arena API");
+        assert_eq!(arena_json["base_url"], "https://api.arena.ai");
+        assert_eq!(arena_json["protocols"]["openai-completions"]["endpoint_path"], "/v1/chat/completions");
+        assert_eq!(arena_json["protocols"]["openai-responses"]["endpoint_path"], "/v1/responses");
+        assert_eq!(arena_json["protocols"]["anthropic-messages"]["endpoint_path"], "/v1/messages");
+        let extras = provider_additional_endpoints("arena-api");
+        assert_eq!(
+            extras.iter().map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url)).collect::<Vec<_>>(),
+            vec![
+                (OpenaiResponses, "https://api.arena.ai/v1"),
+                (AnthropicMessages, "https://api.arena.ai"),
+            ]
+        );
+        assert_eq!(list_providers().len(), 246);
     }
 
 }

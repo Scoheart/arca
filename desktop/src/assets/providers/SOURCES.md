@@ -267,6 +267,15 @@ official wordmarks.
 | `vectoree.png` | <https://vectoree.ai/favicon.svg> |
 | `vllm-semantic-router.png` | <https://vllm-sr.ai/img/vllm-sr-mark.svg> |
 
+## Provider catalog icon additions — 2026-11-24 later
+
+| Asset | Official source |
+|---|---|
+| `ai-horde.ico` | <https://aihorde.net/favicon.ico> |
+| `arena-api.svg` | <https://platform.arena.ai/icon.svg> (the `rel="icon"` linked by the Arena API docs) |
+| `openference.svg` | <https://openference.com/brand/favicon.svg> |
+| `sakura-ai-engine.ico` | <https://ai.sakura.ad.jp/favicon.ico> (SAKURA internet mark) |
+
 ## Provider catalog icon additions — 2026-11-24
 
 Official marks retrieved on 2026-11-24. Original bytes are unchanged.

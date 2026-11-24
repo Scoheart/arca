@@ -4668,6 +4668,66 @@
       }
     },
     {
+      "id": "openference",
+      "name": "Openference",
+      "category": "gateway",
+      "baseUrl": "https://api.openference.com/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://docs.openference.com/quickstart",
+      "portal": {
+        "kind": "console",
+        "url": "https://openference.com/"
+      }
+    },
+    {
+      "id": "ai-horde",
+      "name": "AI Horde",
+      "category": "gateway",
+      "baseUrl": "https://oai.aihorde.net/v1",
+      "protocols": [
+        "openai-completions"
+      ],
+      "docs": "https://github.com/Haidra-Org/AI-Horde#openai-compatible-chat-completions",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://aihorde.net/register"
+      }
+    },
+    {
+      "id": "sakura-ai-engine",
+      "name": "さくらのAI Engine",
+      "category": "official",
+      "baseUrl": "https://api.ai.sakura.ad.jp/v1",
+      "protocols": [
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://manual.sakura.ad.jp/cloud/ai-engine/02-howto.html",
+      "portal": {
+        "kind": "console",
+        "url": "https://secure.sakura.ad.jp/cloud/?gastep=ai-engine"
+      }
+    },
+    {
+      "id": "arena-api",
+      "name": "Arena API",
+      "category": "gateway",
+      "baseUrl": "https://api.arena.ai/v1",
+      "protocols": [
+        "anthropic-messages",
+        "openai-completions",
+        "openai-responses"
+      ],
+      "docs": "https://platform.arena.ai/docs/api",
+      "portal": {
+        "kind": "api-key",
+        "url": "https://platform.arena.ai/dashboard/keys"
+      }
+    },
+    {
       "id": "blockrun",
       "name": "BlockRun Free",
       "category": "gateway",

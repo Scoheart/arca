@@ -1637,6 +1637,34 @@
       "kind": "api-key"
     }
   },
+  "openference": {
+    "docs_url": "https://docs.openference.com/quickstart",
+    "portal": {
+      "url": "https://openference.com/",
+      "kind": "console"
+    }
+  },
+  "ai-horde": {
+    "docs_url": "https://github.com/Haidra-Org/AI-Horde#openai-compatible-chat-completions",
+    "portal": {
+      "url": "https://aihorde.net/register",
+      "kind": "api-key"
+    }
+  },
+  "sakura-ai-engine": {
+    "docs_url": "https://manual.sakura.ad.jp/cloud/ai-engine/02-howto.html",
+    "portal": {
+      "url": "https://secure.sakura.ad.jp/cloud/?gastep=ai-engine",
+      "kind": "console"
+    }
+  },
+  "arena-api": {
+    "docs_url": "https://platform.arena.ai/docs/api",
+    "portal": {
+      "url": "https://platform.arena.ai/dashboard/keys",
+      "kind": "api-key"
+    }
+  },
   "blockrun": {
     "docs_url": "https://blockrun.ai/docs/api-reference/chat-completions",
     "portal": {
