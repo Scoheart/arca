@@ -651,14 +651,14 @@ mod tests {
     #[test]
     fn curated_verified_mcp_candidates_match_official_templates() {
         let entries = builtin_registry();
-        assert_eq!(entries.len(), 38, "curated collection entry count drifted");
+        assert_eq!(entries.len(), 85, "curated collection entry count drifted");
         assert_eq!(
             entries
                 .iter()
                 .map(|entry| entry.name.as_str())
                 .collect::<HashSet<_>>()
                 .len(),
-            36,
+            83,
             "curated collection name count drifted"
         );
 
@@ -887,6 +887,130 @@ mod tests {
                 .count(),
             2
         );
+    }
+
+    #[test]
+    fn curated_expanded_catalog_has_verified_identities() {
+        let entries = builtin_registry();
+        let cases = [
+        ("linear", "http", "https://mcp.linear.app/mcp"),
+        ("sentry", "http", "https://mcp.sentry.dev/mcp"),
+        ("datadog", "http", "https://mcp.datadoghq.com/v1/mcp"),
+        ("grafana", "stdio", "uvx mcp-grafana"),
+        ("gitlab", "http", "https://gitlab.com/api/v4/mcp"),
+        ("redis", "stdio", "uvx --from redis-mcp-server@latest redis-mcp-server --url redis://localhost:6379/0"),
+        ("terraform", "stdio", "docker run -i --rm hashicorp/terraform-mcp-server"),
+        ("mongodb", "stdio", "npx -y mongodb-mcp-server@latest --readOnly"),
+        ("prisma", "http", "https://mcp.prisma.io/mcp"),
+        ("neon", "http", "https://mcp.neon.tech/mcp"),
+        ("wordpress-com", "http", "https://public-api.wordpress.com/wpcom/v2/mcp/v1"),
+        ("zapier", "http", "https://mcp.zapier.com/api/v1/connect"),
+        ("aws-knowledge", "http", "https://knowledge-mcp.global.api.aws"),
+        ("posthog", "http", "https://mcp.posthog.com/mcp"),
+        ("canva", "stdio", "npx -y @canva/cli@latest mcp"),
+        ("webflow", "http", "https://mcp.webflow.com/mcp"),
+        ("asana", "http", "https://mcp.asana.com/v2/mcp"),
+        ("honeycomb", "http", "https://mcp.honeycomb.io/mcp"),
+        ("pagerduty", "http", "https://mcp.pagerduty.com/mcp"),
+        ("huggingface", "http", "https://huggingface.co/mcp"),
+        ("pulumi", "http", "https://mcp.ai.pulumi.com/mcp"),
+        ("azure", "stdio", "npx -y @azure/mcp@latest server start"),
+        ("shopify-dev", "stdio", "npx -y @shopify/dev-mcp@latest"),
+        ("salesforce", "stdio", "npx -y @salesforce/mcp --orgs DEFAULT_TARGET_ORG --toolsets orgs,metadata,data,users"),
+        ("docker-mcp-gateway", "stdio", "docker mcp gateway run"),
+        ("clickhouse", "stdio", "uv run --with mcp-clickhouse --python 3.12 mcp-clickhouse"),
+        ("amplitude", "http", "https://mcp.amplitude.com/mcp"),
+        ("clickup", "http", "https://mcp.clickup.com/mcp"),
+        ("mixpanel", "http", "https://mcp.mixpanel.com/mcp"),
+        ("newrelic", "http", "https://mcp.newrelic.com/mcp/"),
+        ("descope", "http", "https://mcp.descope.com"),
+        ("shortcut", "http", "https://api.shortcutco.com/mcp"),
+        ("klaviyo", "http", "https://mcp.klaviyo.com/mcp"),
+        ("next-devtools", "stdio", "npx -y next-devtools-mcp@latest"),
+        ("browser-use", "http", "https://api.browser-use.com/v3/mcp"),
+        ("browserbase", "http", "https://mcp.browserbase.com/mcp"),
+        ("apify", "http", "https://mcp.apify.com"),
+        ("deepwiki", "http", "https://mcp.deepwiki.com/mcp"),
+        ("nuxt-ui", "http", "https://ui.nuxt.com/mcp"),
+        ("reference-filesystem", "stdio", "npx -y @modelcontextprotocol/server-filesystem --read-only /path/to/allowed-dir"),
+        ("reference-sequential-thinking", "stdio", "npx -y @modelcontextprotocol/server-sequential-thinking"),
+        ("reference-fetch", "stdio", "uvx mcp-server-fetch"),
+        ("reference-git", "stdio", "uvx mcp-server-git --repository /path/to/git/repo"),
+        ("reference-time", "stdio", "uvx mcp-server-time"),
+        ("google-mcp-toolbox", "stdio", "npx @toolbox-sdk/server --config tools.yaml"),
+        ("kubernetes-community", "stdio", "npx mcp-server-kubernetes"),
+        ("desktop-commander", "stdio", "npx -y @wonderwhy-er/desktop-commander@latest"),
+        ];
+        assert_eq!(cases.len(), 47);
+        for (name, transport, signature) in cases {
+            let entry = builtin_entry(&entries, name, transport);
+            let actual = if transport == "http" {
+                entry.config.http.as_ref().unwrap().url.clone()
+            } else {
+                let stdio = entry.config.stdio.as_ref().unwrap();
+                let mut parts = vec![stdio.command.clone()];
+                if let Some(args) = &stdio.args {
+                    parts.extend(args.iter().cloned());
+                }
+                parts.join(" ")
+            };
+            assert_eq!(actual, signature, "{name}");
+        }
+        let browser_use = builtin_entry(&entries, "browser-use", "http");
+        assert_eq!(
+            browser_use
+                .config
+                .http
+                .as_ref()
+                .unwrap()
+                .headers
+                .as_ref()
+                .unwrap()
+                .get("Authorization")
+                .map(String::as_str),
+            Some("Bearer ${BROWSER_USE_API_KEY}")
+        );
+        assert!(!builtin_entry(&entries, "browserbase", "http")
+            .config
+            .http
+            .as_ref()
+            .unwrap()
+            .url
+            .contains("browserbaseApiKey"));
+        assert_eq!(
+            builtin_entry(&entries, "grafana", "stdio")
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .env
+                .as_ref()
+                .unwrap()
+                .get("GRAFANA_SERVICE_ACCOUNT_TOKEN")
+                .map(String::as_str),
+            Some("")
+        );
+        assert_eq!(
+            builtin_entry(&entries, "kubernetes-community", "stdio")
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .env
+                .as_ref()
+                .unwrap()
+                .get("ALLOW_ONLY_READONLY_TOOLS")
+                .map(String::as_str),
+            Some("true")
+        );
+        assert!(entries.iter().all(|entry| entry.name != "google-drive"));
+        assert!(builtin_entry(&entries, "reference-filesystem", "stdio")
+            .description
+            .contains("Reference implementation"));
+        assert!(builtin_entry(&entries, "desktop-commander", "stdio")
+            .tags
+            .iter()
+            .any(|tag| tag == "community"));
     }
 
     #[test]
