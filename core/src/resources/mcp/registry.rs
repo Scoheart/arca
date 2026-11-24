@@ -649,6 +649,247 @@ mod tests {
     }
 
     #[test]
+    fn curated_verified_mcp_candidates_match_official_templates() {
+        let entries = builtin_registry();
+        assert_eq!(entries.len(), 38, "curated collection entry count drifted");
+        assert_eq!(
+            entries
+                .iter()
+                .map(|entry| entry.name.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+            36,
+            "curated collection name count drifted"
+        );
+
+        let context7 = builtin_entry(&entries, "context7", "http");
+        let context7_http = context7.config.http.as_ref().unwrap();
+        assert_eq!(context7_http.url, "https://mcp.context7.com/mcp");
+        assert_eq!(
+            context7_http
+                .headers
+                .as_ref()
+                .unwrap()
+                .get("Authorization")
+                .map(String::as_str),
+            Some("Bearer ${CONTEXT7_API_KEY}")
+        );
+        assert!(
+            context7_http
+                .headers
+                .as_ref()
+                .unwrap()
+                .keys()
+                .all(|key| key != "CONTEXT7_API_KEY"),
+            "context7 remote auth header is Authorization"
+        );
+        assert!(context7.description.contains("mcp/oauth"));
+
+        let github = builtin_entry(&entries, "github", "http");
+        assert_eq!(
+            github.config.http.as_ref().unwrap().url,
+            "https://api.githubcopilot.com/mcp/"
+        );
+        assert!(github.config.http.as_ref().unwrap().headers.is_none());
+        let slack = builtin_entry(&entries, "slack", "http");
+        assert_eq!(
+            slack.config.http.as_ref().unwrap().url,
+            "https://mcp.slack.com/mcp"
+        );
+        assert!(slack.config.http.as_ref().unwrap().headers.is_none());
+        let chrome = builtin_entry(&entries, "chrome-devtools", "stdio");
+        assert_eq!(
+            chrome
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .args
+                .as_deref()
+                .unwrap(),
+            ["-y", "chrome-devtools-mcp@latest"]
+        );
+        let supabase_stdio = builtin_entry(&entries, "supabase", "stdio");
+        let supabase_local = supabase_stdio.config.stdio.as_ref().unwrap();
+        assert_eq!(
+            supabase_local.args.as_deref().unwrap(),
+            ["-y", "@supabase/mcp-server-supabase@latest", "--read-only"]
+        );
+        assert_eq!(
+            supabase_local
+                .env
+                .as_ref()
+                .unwrap()
+                .get("SUPABASE_ACCESS_TOKEN")
+                .map(String::as_str),
+            Some("")
+        );
+
+        let stdio_cases: [StdioRegistryCase<'_>; 5] = [
+            (
+                "serena",
+                "serena",
+                &["start-mcp-server", "--context=desktop-app"],
+                "",
+                "https://github.com/oraios/serena",
+                &["development", "code", "official"],
+            ),
+            (
+                "playwright",
+                "npx",
+                &["@playwright/mcp@latest"],
+                "",
+                "https://github.com/microsoft/playwright-mcp",
+                &["browser", "automation", "official"],
+            ),
+            (
+                "qdrant",
+                "uvx",
+                &["mcp-server-qdrant"],
+                "",
+                "https://github.com/qdrant/mcp-server-qdrant",
+                &["database", "ai", "official"],
+            ),
+            (
+                "reference-memory",
+                "npx",
+                &["-y", "@modelcontextprotocol/server-memory"],
+                "",
+                "https://github.com/modelcontextprotocol/servers/blob/main/src/memory/README.md",
+                &["memory", "reference"],
+            ),
+            (
+                "dbhub",
+                "npx",
+                &["-y", "@bytebase/dbhub@latest", "--transport", "stdio"],
+                "DSN",
+                "https://github.com/bytebase/dbhub",
+                &["database", "official"],
+            ),
+        ];
+        for (name, command, args, env_key, repo, tags) in stdio_cases {
+            let entry = builtin_entry(&entries, name, "stdio");
+            let stdio = entry.config.stdio.as_ref().unwrap();
+            assert_eq!(stdio.command, command, "{name}: command drifted");
+            assert_eq!(
+                stdio
+                    .args
+                    .as_deref()
+                    .unwrap()
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<Vec<_>>(),
+                args,
+                "{name}: args drifted"
+            );
+            if env_key.is_empty() {
+                if name == "qdrant" {
+                    let env = stdio.env.as_ref().unwrap();
+                    assert_eq!(env.len(), 2, "{name}: unexpected environment fields");
+                    assert_eq!(
+                        env.get("QDRANT_URL").map(String::as_str),
+                        Some("http://localhost:6333")
+                    );
+                    assert_eq!(
+                        env.get("COLLECTION_NAME").map(String::as_str),
+                        Some("my-collection")
+                    );
+                    assert!(
+                        env.get("QDRANT_API_KEY").is_none(),
+                        "{name}: do not send a blank API key"
+                    );
+                } else {
+                    assert!(stdio.env.is_none(), "{name}: unexpected environment");
+                }
+            } else {
+                let env = stdio.env.as_ref().unwrap();
+                assert_eq!(env.len(), 1, "{name}: unexpected environment fields");
+                assert_eq!(
+                    env.get(env_key).map(String::as_str),
+                    Some(""),
+                    "{name}: credential placeholder drifted"
+                );
+            }
+            assert_eq!(entry.repo.as_deref(), Some(repo), "{name}: repo drifted");
+            assert!(
+                tags.iter()
+                    .all(|tag| entry.tags.iter().any(|value| value == tag)),
+                "{name}: required tags drifted"
+            );
+        }
+
+        let http_cases = [
+            (
+                "microsoft-learn",
+                "https://learn.microsoft.com/api/mcp",
+                "https://learn.microsoft.com/en-us/training/support/mcp",
+                &["development", "documentation", "official"][..],
+            ),
+            (
+                "mem0",
+                "https://mcp.mem0.ai/mcp",
+                "https://docs.mem0.ai/platform/mem0-mcp",
+                &["ai", "memory", "official"][..],
+            ),
+            (
+                "notion",
+                "https://mcp.notion.com/mcp",
+                "https://developers.notion.com/guides/mcp/get-started-with-mcp",
+                &["documentation", "productivity", "official"][..],
+            ),
+            (
+                "atlassian-rovo",
+                "https://mcp.atlassian.com/v2/mcp",
+                "https://developer.atlassian.com/cloud/rovo-mcp/",
+                &["productivity", "development", "official"][..],
+            ),
+            (
+                "supabase",
+                "https://mcp.supabase.com/mcp",
+                "https://supabase.com/docs/guides/getting-started/mcp",
+                &["cloud", "database", "official"][..],
+            ),
+        ];
+        for (name, url, repo, tags) in http_cases {
+            let entry = builtin_entry(&entries, name, "http");
+            let http = entry.config.http.as_ref().unwrap();
+            assert_eq!(http.kind, "http", "{name}: HTTP type drifted");
+            assert_eq!(http.url, url, "{name}: endpoint drifted");
+            assert!(
+                http.headers.is_none(),
+                "{name}: OAuth template must not preset a header"
+            );
+            assert_eq!(entry.repo.as_deref(), Some(repo), "{name}: repo drifted");
+            assert!(
+                tags.iter()
+                    .all(|tag| entry.tags.iter().any(|value| value == tag)),
+                "{name}: required tags drifted"
+            );
+        }
+
+        let qdrant = builtin_entry(&entries, "qdrant", "stdio");
+        assert!(qdrant.description.contains("no authentication"));
+        assert!(builtin_entry(&entries, "dbhub", "stdio")
+            .description
+            .contains("DBHUB_AUTH_TOKEN"));
+        let reference_memory = builtin_entry(&entries, "reference-memory", "stdio");
+        assert!(reference_memory
+            .description
+            .contains("Reference implementation"));
+        assert!(reference_memory.tags.iter().all(|tag| tag != "official"));
+        assert!(builtin_entry(&entries, "mem0", "http")
+            .description
+            .contains("OAuth"));
+        assert_eq!(
+            entries
+                .iter()
+                .filter(|entry| entry.name == "supabase")
+                .count(),
+            2
+        );
+    }
+
+    #[test]
     fn managed_def_paths_are_stable() {
         assert!(cached_path(&managed_def(MANUAL_ID, "手动添加"))
             .unwrap()
