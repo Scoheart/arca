@@ -651,14 +651,14 @@ mod tests {
     #[test]
     fn curated_verified_mcp_candidates_match_official_templates() {
         let entries = builtin_registry();
-        assert_eq!(entries.len(), 85, "curated collection entry count drifted");
+        assert_eq!(entries.len(), 130, "curated collection entry count drifted");
         assert_eq!(
             entries
                 .iter()
                 .map(|entry| entry.name.as_str())
                 .collect::<HashSet<_>>()
                 .len(),
-            83,
+            128,
             "curated collection name count drifted"
         );
 
@@ -928,7 +928,7 @@ mod tests {
         ("klaviyo", "http", "https://mcp.klaviyo.com/mcp"),
         ("next-devtools", "stdio", "npx -y next-devtools-mcp@latest"),
         ("browser-use", "http", "https://api.browser-use.com/v3/mcp"),
-        ("browserbase", "http", "https://mcp.browserbase.com/mcp"),
+        ("browserbase", "http", "https://mcp.browserbase.com/mcp?browserbaseApiKey=${BROWSERBASE_API_KEY}"),
         ("apify", "http", "https://mcp.apify.com"),
         ("deepwiki", "http", "https://mcp.deepwiki.com/mcp"),
         ("nuxt-ui", "http", "https://ui.nuxt.com/mcp"),
@@ -940,8 +940,53 @@ mod tests {
         ("google-mcp-toolbox", "stdio", "npx @toolbox-sdk/server --config tools.yaml"),
         ("kubernetes-community", "stdio", "npx mcp-server-kubernetes"),
         ("desktop-commander", "stdio", "npx -y @wonderwhy-er/desktop-commander@latest"),
+        ("monday", "http", "https://mcp.monday.com/mcp"),
+        ("squarespace", "http", "https://mcp.squarespace.com/mcp"),
+        ("steel", "http", "https://mcp.steel.dev/mcp"),
+        ("upstash-redis", "stdio", "npx -y @upstash/redis-mcp"),
+        ("intercom", "http", "https://mcp.intercom.com/mcp"),
+        ("semgrep", "http", "https://semgrep.dev/api/mcp"),
+        ("render", "http", "https://mcp.render.com/mcp"),
+        ("twilio-docs", "http", "https://mcp.twilio.com/docs"),
+        ("replicate", "stdio", "npx -y replicate-mcp"),
+        ("sanity", "http", "https://mcp.sanity.io"),
+        ("resend", "http", "https://mcp.resend.com/mcp"),
+        ("draw-io", "http", "https://mcp.draw.io/mcp"),
+        ("together-docs", "http", "https://docs.together.ai/mcp"),
+        ("pinecone", "stdio", "npx -y @pinecone-database/mcp"),
+        ("chroma", "stdio", "uvx chroma-mcp"),
+        ("elevenlabs", "stdio", "uvx elevenlabs-mcp"),
+        ("paypal", "stdio", "npx -y @paypal/mcp --tools=all"),
+        ("xero", "stdio", "npx -y @xeroapi/xero-mcp-server@latest"),
+        ("elasticsearch", "stdio", "docker run -i --rm -e ES_URL -e ES_API_KEY docker.elastic.co/mcp/elasticsearch stdio"),
+        ("netlify", "stdio", "npx -y @netlify/mcp"),
+        ("railway", "http", "https://mcp.railway.com"),
+        ("motherduck", "stdio", "uvx mcp-server-motherduck --db-path /absolute/path/to/your.duckdb"),
+        ("prefect", "stdio", "uvx --from prefect-mcp prefect-mcp-server"),
+        ("deepgram", "stdio", "deepgram-mcp"),
+        ("confluent", "stdio", "npx -y @confluentinc/mcp-confluent --config ./config.yaml"),
+        ("buildkite", "http", "https://mcp.buildkite.com/mcp"),
+        ("contentful", "stdio", "npx -y @contentful/mcp-server"),
+        ("appwrite", "http", "https://mcp.appwrite.io/"),
+        ("langfuse-docs", "http", "https://langfuse.com/api/mcp"),
+        ("convex", "stdio", "npx -y convex@latest mcp start"),
+        ("gitbook", "http", "https://mcp.gitbook.com/mcp"),
+        ("square", "http", "https://mcp.squareup.com/mcp"),
+        ("planetscale", "http", "https://mcp.pscale.dev/mcp/planetscale"),
+        ("hostinger", "http", "https://mcp.hostinger.com"),
+        ("snowflake", "http", "https://YOUR_ACCOUNT.snowflakecomputing.com/api/v2/databases/YOUR_DATABASE/schemas/YOUR_SCHEMA/mcp-servers/YOUR_SERVER"),
+        ("n8n", "http", "https://YOUR_N8N_HOST/mcp-server/http"),
+        ("firebase", "stdio", "npx -y firebase-tools@latest mcp"),
+        ("calendly", "http", "https://mcp.calendly.com"),
+        ("circleci", "http", "https://mcp.circleci.com/v1/mcp"),
+        ("mailgun", "stdio", "npx -y @mailgun/mcp-server"),
+        ("doppler", "stdio", "npx -y @dopplerhq/mcp-server"),
+        ("inngest", "http", "https://api.inngest.com/mcp"),
+        ("braintrust", "http", "https://api.braintrust.dev/mcp"),
+        ("daytona", "stdio", "daytona-v0 mcp start"),
+        ("statsig", "http", "https://api.statsig.com/v3/mcp"),
         ];
-        assert_eq!(cases.len(), 47);
+        assert_eq!(cases.len(), 92);
         for (name, transport, signature) in cases {
             let entry = builtin_entry(&entries, name, transport);
             let actual = if transport == "http" {
@@ -970,13 +1015,64 @@ mod tests {
                 .map(String::as_str),
             Some("Bearer ${BROWSER_USE_API_KEY}")
         );
-        assert!(!builtin_entry(&entries, "browserbase", "http")
+        let browserbase = builtin_entry(&entries, "browserbase", "http");
+        assert!(browserbase
             .config
             .http
             .as_ref()
             .unwrap()
             .url
-            .contains("browserbaseApiKey"));
+            .contains("browserbaseApiKey=${BROWSERBASE_API_KEY}"));
+        assert!(browserbase.config.http.as_ref().unwrap().headers.is_none());
+        assert!(builtin_entry(&entries, "apify", "http")
+            .config
+            .http
+            .as_ref()
+            .unwrap()
+            .headers
+            .is_none());
+        assert!(builtin_entry(&entries, "apify", "http")
+            .description
+            .contains("no Authorization header"));
+        assert_eq!(
+            builtin_entry(&entries, "monday", "http")
+                .config
+                .http
+                .as_ref()
+                .unwrap()
+                .headers
+                .as_ref()
+                .unwrap()
+                .get("Api-Version")
+                .map(String::as_str),
+            Some("2026-07")
+        );
+        assert_eq!(
+            builtin_entry(&entries, "upstash-redis", "stdio")
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .env
+                .as_ref()
+                .unwrap()
+                .get("UPSTASH_REDIS_REST_TOKEN")
+                .map(String::as_str),
+            Some("")
+        );
+        assert_eq!(
+            builtin_entry(&entries, "paypal", "stdio")
+                .config
+                .stdio
+                .as_ref()
+                .unwrap()
+                .env
+                .as_ref()
+                .unwrap()
+                .get("PAYPAL_ENVIRONMENT")
+                .map(String::as_str),
+            Some("SANDBOX")
+        );
         assert_eq!(
             builtin_entry(&entries, "grafana", "stdio")
                 .config
