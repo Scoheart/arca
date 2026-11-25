@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.3.2](https://github.com/Scoheart/arca/compare/v4.3.1...v4.3.2) (2026-11-25)
+
+### Changes
+
+* fix(launch): show safe environment settings in Warp ([7f4fe4a](https://github.com/Scoheart/arca/commit/7f4fe4a8ab8cfc9962ce7b8aec2f25b1f82d9934))
+
 ## [4.3.1](https://github.com/Scoheart/arca/compare/v4.3.0...v4.3.1) (2026-11-25)
 
 ### Changes
