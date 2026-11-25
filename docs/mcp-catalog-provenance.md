@@ -173,9 +173,9 @@ These were in the research recommendation or conditional lists and were not give
 
 Backfill for the previous 128 names uses the first-party URL already stored in `repo`, except where that field is the code repository and the 2026-11-25 directory recorded a distinct documentation page: `context7`, `firecrawl`, `tavily`, `serena`, `terraform`, `mongodb`, `dbhub`, `qdrant`, and `elasticsearch`. Those documentation pages were fetched again on 2026-11-25 and returned HTTP 200. `luma` still has no `source_url` because no first-party URL was recorded, and none was invented. The Salesforce docs URL from the directory returned HTTP 403 from this environment, so `salesforce` keeps the previously verified GitHub source.
 
-This pass adds 50 names whose official pages showed a client config the catalog can store: an HTTPS URL, with headers omitted when OAuth is the documented default, or a stdio command. Secret env and header values are empty or `${...}`. Instance hosts use the documented placeholder, the same way `snowflake` and `n8n` already do.
+This pass adds 57 names whose official pages showed a client config the catalog can store: an HTTPS URL, with headers omitted when OAuth is the documented default, or a stdio command. Secret env and header values are empty or `${...}`. Instance hosts use the documented placeholder, the same way `snowflake` and `n8n` already do.
 
-Counts after this pass: **180 entries, 178 names**. The directory under consideration had 302 products. 128 were already present. 50 are new templates. 124 remain absent. That is not a claim that all 302 were added.
+Counts after this pass: **187 entries, 185 names**. The directory under consideration had 302 products. 128 were already present. 57 are new templates. 117 remain absent. That is not a claim that all 302 were added.
 
 ### Added
 
@@ -231,6 +231,13 @@ Counts after this pass: **180 entries, 178 names**. The directory under consider
 | `obsidian` | `uvx mcp-obsidian` | https://github.com/MarkusPfundstein/mcp-obsidian |
 | `snyk` | `snyk mcp -t stdio` | https://docs.snyk.io/agent-security/agentic-security-with-snyk-studio/getting-started-with-snyk-studio |
 | `zoominfo` | `https://mcp.zoominfo.com/mcp` | https://docs.zoominfo.com/docs/connect-to-zoominfo-mcp |
+| `growthbook` | `https://mcp.growthbook.io/mcp` | https://github.com/growthbook/growthbook-mcp |
+| `lovable` | `https://mcp.lovable.dev` | https://docs.lovable.dev/integrations/lovable-mcp-server |
+| `plane` | `https://mcp.plane.so/http/mcp` | https://github.com/makeplane/plane-mcp-server |
+| `postman` | `https://mcp.postman.com/minimal` | https://github.com/postmanlabs/postman-mcp-server |
+| `tableau` | `https://mcp.tableau.com` | https://github.com/tableau/tableau-mcp |
+| `todoist` | `https://ai.todoist.net/mcp` | https://github.com/Doist/todoist-mcp |
+| `wix` | `https://mcp.wix.com/mcp` | https://github.com/wix/wix-mcp |
 
 ### Not added in this pass
 
@@ -256,10 +263,16 @@ Counts after this pass: **180 entries, 178 names**. The directory under consider
 | DocuSign | No portable HTTPS URL or command. Custom connectors require an allowlisted integration key. |
 | Descript, Dropbox | The fetched pages are Claude connector installs and do not print a portable URL or command. |
 | No first-party URL | Apiiro, Avalara, CloudZero, Framer, Gong, Google Chat, Google Docs, Google Sheets, Knock, Linx, Mastra Docs, Meta Ads, Microsoft OneDrive, Microsoft Outlook, Microsoft SharePoint, Microsoft Teams, Mintlify Admin, Okta as listed with the Cortex qualifier, Outreach, PipeCD Docs, Sigma, Spinach, Telnyx, Torii, Upwind, Wiz, and Agent Device. No URL was invented for these. |
-| Still being checked | The remaining newly found vendor servers, including Postman, Neo4j, Todoist, and Trello, are not in this commit yet. |
+| Neo4j Labs bundle | https://github.com/neo4j-contrib/mcp-neo4j says it is a Labs bundle, not the supported product server, and points at https://github.com/neo4j/mcp. A single portable product command was not copied from the Labs index. |
+| Tinybird repository | The fetched `tinybirdco/mcp-tinybird` README says the repository is deprecated and points at a newer docs page. That page was not turned into a template in this pass. |
+| Make legacy package | https://github.com/integromat/make-mcp-server says it is legacy and recommends https://developers.make.com/mcp-server. The legacy API-key command was not added. |
+| Readwise npm package | The fetched README says `@readwise/readwise-mcp` is deprecated. The replacement page https://readwise.io/mcp was not fetched far enough to copy a client config. |
+| Still being checked | Other newly found vendor servers, including Neo4j's product server, Trello, and the pages that did not show a portable command in this pass, are not templates yet. |
 
 ## Validation
 
-A Python check of `data/registry.json` confirmed 180 entries, 178 names, one transport each, HTTPS for remote URLs, and empty or `${...}` values for env and header fields whose names contain key, token, secret, or password.
+A Python check of `data/registry.json` confirmed 187 entries, 185 names, one transport each, HTTPS for remote URLs, and empty or `${...}` values for env and header fields whose names contain key, token, secret, or password.
+
+`cargo test -p arca-core --lib resources::mcp::registry` passed on Linux with Rust 1.100: 9 tests, including the curated collection checks. `cargo test -p arca-cli` did not compile. `credential_service` is gated with `#[cfg(any(target_os = "macos", test))]`, and the Linux library build fails on that pre-existing model module. That failure is outside this MCP catalog change. Desktop tests were not run because `desktop/node_modules` is not installed in this environment.
 
 The previous clean `cargo test` failure was `create_revision` in `core/src/resources/model/discovery.rs` being called with four arguments. `credential_service::create_revision` requires `provider_name` between the provider id and the key. This change passes `&config.name`, the same value the other model tests pass. It does not change model discovery behavior.

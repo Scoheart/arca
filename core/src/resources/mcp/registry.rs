@@ -663,14 +663,14 @@ mod tests {
     #[test]
     fn curated_verified_mcp_candidates_match_official_templates() {
         let entries = builtin_registry();
-        assert_eq!(entries.len(), 180, "curated collection entry count drifted");
+        assert_eq!(entries.len(), 187, "curated collection entry count drifted");
         assert_eq!(
             entries
                 .iter()
                 .map(|entry| entry.name.as_str())
                 .collect::<HashSet<_>>()
                 .len(),
-            178,
+            185,
             "curated collection name count drifted"
         );
 
@@ -1183,8 +1183,15 @@ mod tests {
         ("obsidian", "stdio", "uvx mcp-obsidian"),
         ("snyk", "stdio", "snyk mcp -t stdio"),
         ("zoominfo", "http", "https://mcp.zoominfo.com/mcp"),
+        ("growthbook", "http", "https://mcp.growthbook.io/mcp"),
+        ("lovable", "http", "https://mcp.lovable.dev"),
+        ("plane", "http", "https://mcp.plane.so/http/mcp"),
+        ("postman", "http", "https://mcp.postman.com/minimal"),
+        ("tableau", "http", "https://mcp.tableau.com"),
+        ("todoist", "http", "https://ai.todoist.net/mcp"),
+        ("wix", "http", "https://mcp.wix.com/mcp"),
         ];
-        assert_eq!(cases.len(), 50);
+        assert_eq!(cases.len(), 57);
         for (name, transport, signature) in cases {
             let entry = builtin_entry(&entries, name, transport);
             let actual = if transport == "http" {
