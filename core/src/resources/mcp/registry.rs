@@ -663,14 +663,14 @@ mod tests {
     #[test]
     fn curated_verified_mcp_candidates_match_official_templates() {
         let entries = builtin_registry();
-        assert_eq!(entries.len(), 187, "curated collection entry count drifted");
+        assert_eq!(entries.len(), 237, "curated collection entry count drifted");
         assert_eq!(
             entries
                 .iter()
                 .map(|entry| entry.name.as_str())
                 .collect::<HashSet<_>>()
                 .len(),
-            185,
+            235,
             "curated collection name count drifted"
         );
 
@@ -1190,8 +1190,58 @@ mod tests {
         ("tableau", "http", "https://mcp.tableau.com"),
         ("todoist", "http", "https://ai.todoist.net/mcp"),
         ("wix", "http", "https://mcp.wix.com/mcp"),
+        ("google-analytics", "stdio", "pipx run analytics-mcp"),
+        ("google-cloud-run", "stdio", "npx -y @google-cloud/cloud-run-mcp"),
+        ("google-compute-engine", "http", "https://compute.googleapis.com/mcp"),
+        ("granola", "http", "https://mcp.granola.ai/mcp"),
+        ("hex", "http", "https://app.hex.tech/mcp"),
+        ("hibp", "http", "https://haveibeenpwned.com/mcp"),
+        ("instana", "stdio", "mcp-instana --transport stdio"),
+        ("jitsu", "http", "https://use.jitsu.com/mcp"),
+        ("kaggle", "http", "https://www.kaggle.com/mcp"),
+        ("laravel-boost", "stdio", "php artisan boost:mcp"),
+        ("make", "http", "https://mcp.make.com/v2"),
+        ("markitdown", "stdio", "markitdown-mcp"),
+        ("mermaid-chart", "http", "https://mcp.mermaid.ai/mcp"),
+        ("metabase", "http", "https://{your-metabase.example.com}/api/metabase-mcp"),
+        ("minimax", "stdio", "uvx minimax-mcp -y"),
+        ("miro", "http", "https://mcp.miro.com/"),
+        ("neo4j", "stdio", "python -m neo4j_mcp_server"),
+        ("onesignal", "http", "https://api.onesignal.com/mcp/oauth"),
+        ("openzeppelin", "http", "https://mcp.openzeppelin.com/contracts/solidity/mcp"),
+        ("parallel-search", "http", "https://search.parallel.ai/mcp"),
+        ("plaid", "http", "https://api.dashboard.plaid.com/mcp/"),
+        ("razorpay", "http", "https://mcp.razorpay.com/mcp"),
+        ("readwise", "http", "https://mcp2.readwise.io/mcp"),
+        ("semrush", "http", "https://mcp.semrush.com/v2/mcp"),
+        ("similarweb", "http", "https://mcp.similarweb.com"),
+        ("singlestore", "stdio", "uvx singlestore-mcp-server start"),
+        ("skyvern", "http", "https://api.skyvern.com/mcp/"),
+        ("sonarqube", "stdio", "docker run --init --pull=always -i --rm -e SONARQUBE_TOKEN -e SONARQUBE_ORG sonarsource/sonarqube-mcp"),
+        ("starrocks", "stdio", "uv run --with mcp-server-starrocks mcp-server-starrocks"),
+        ("stytch", "http", "https://mcp.stytch.dev/mcp"),
+        ("svelte", "http", "https://mcp.svelte.dev/mcp"),
+        ("tencent-cloudbase", "http", "https://tcb-api.cloud.tencent.com/mcp/v1"),
+        ("tencent-cos", "stdio", "npx cos-mcp --Region=${TENCENT_COS_REGION} --Bucket=${TENCENT_COS_BUCKET} --SecretId=${TENCENT_SECRET_ID} --SecretKey=${TENCENT_SECRET_KEY} --DatasetName=${TENCENT_COS_DATASET}"),
+        ("tencent-edgeone", "stdio", "npx @edgeone/makers-mcp@latest"),
+        ("teradata", "stdio", "uvx teradata-mcp-server"),
+        ("timescale-pg-aiguide", "http", "https://mcp.tigerdata.com/docs"),
+        ("tinybird", "http", "https://mcp.tinybird.co?token=${TINYBIRD_TOKEN}"),
+        ("tldraw", "http", "https://tldraw-mcp-app.tldraw.workers.dev/mcp"),
+        ("trello", "http", "https://mcp.trello.com/v1"),
+        ("typeform", "http", "https://api.typeform.com/mcp"),
+        ("unleash", "http", "https://your-instance.getunleash.io/api/admin/mcp"),
+        ("unstructured", "http", "https://mcp.transform.unstructured.io"),
+        ("uptimerobot", "http", "https://mcp.uptimerobot.com/mcp"),
+        ("v0", "http", "https://v0.app/api/mcp"),
+        ("victoriametrics", "http", "https://play-mcp.victoriametrics.com/mcp"),
+        ("vizro", "stdio", "uvx vizro-mcp"),
+        ("whimsical", "http", "https://mcp.whimsical.com/mcp"),
+        ("wolfram", "http", "https://agenttools.wolfram.com/mcp"),
+        ("wordpress", "stdio", "wp --path=/path/to/your/wordpress/site mcp-adapter serve --server=mcp-adapter-default-server --user=admin"),
+        ("zenml", "stdio", "docker run -i --rm -e ZENML_STORE_URL -e ZENML_STORE_API_KEY -e ZENML_ACTIVE_PROJECT_ID -e ZENML_MCP_PROFILE -e ZENML_MCP_WRITE_POLICY zenmldocker/mcp-zenml:latest"),
         ];
-        assert_eq!(cases.len(), 57);
+        assert_eq!(cases.len(), 107);
         for (name, transport, signature) in cases {
             let entry = builtin_entry(&entries, name, transport);
             let actual = if transport == "http" {

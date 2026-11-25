@@ -175,7 +175,9 @@ Backfill for the previous 128 names uses the first-party URL already stored in `
 
 This pass adds 57 names whose official pages showed a client config the catalog can store: an HTTPS URL, with headers omitted when OAuth is the documented default, or a stdio command. Secret env and header values are empty or `${...}`. Instance hosts use the documented placeholder, the same way `snowflake` and `n8n` already do.
 
-Counts after this pass: **187 entries, 185 names**. The directory under consideration had 302 products. 128 were already present. 57 are new templates. 117 remain absent. That is not a claim that all 302 were added.
+Counts after the full pass: **237 entries, 235 names**. The directory under consideration had 302 products. 128 were already present. 107 are new templates. 67 remain absent. That is not a claim that all 302 were added.
+
+The last 50 names, checked against the fetched vendor pages, are `google-analytics`, `google-cloud-run`, `google-compute-engine`, `granola`, `hibp`, `hex`, `instana`, `jitsu`, `kaggle`, `laravel-boost`, `make`, `markitdown`, `mermaid-chart`, `metabase`, `minimax`, `miro`, `neo4j`, `onesignal`, `openzeppelin`, `parallel-search`, `plaid`, `razorpay`, `readwise`, `semrush`, `similarweb`, `singlestore`, `skyvern`, `sonarqube`, `starrocks`, `stytch`, `svelte`, `tencent-cloudbase`, `tencent-cos`, `tencent-edgeone`, `teradata`, `timescale-pg-aiguide`, `tinybird`, `tldraw`, `trello`, `typeform`, `unleash`, `unstructured`, `uptimerobot`, `v0`, `victoriametrics`, `vizro`, `whimsical`, `wolfram`, `wordpress`, and `zenml`. `make`, `readwise`, `tinybird`, and `neo4j` use the current hosted or product server, not the deprecated or Labs repository named in the directory.
 
 ### Added
 
@@ -263,15 +265,25 @@ Counts after this pass: **187 entries, 185 names**. The directory under consider
 | DocuSign | No portable HTTPS URL or command. Custom connectors require an allowlisted integration key. |
 | Descript, Dropbox | The fetched pages are Claude connector installs and do not print a portable URL or command. |
 | No first-party URL | Apiiro, Avalara, CloudZero, Framer, Gong, Google Chat, Google Docs, Google Sheets, Knock, Linx, Mastra Docs, Meta Ads, Microsoft OneDrive, Microsoft Outlook, Microsoft SharePoint, Microsoft Teams, Mintlify Admin, Okta as listed with the Cortex qualifier, Outreach, PipeCD Docs, Sigma, Spinach, Telnyx, Torii, Upwind, Wiz, and Agent Device. No URL was invented for these. |
-| Neo4j Labs bundle | https://github.com/neo4j-contrib/mcp-neo4j says it is a Labs bundle, not the supported product server, and points at https://github.com/neo4j/mcp. A single portable product command was not copied from the Labs index. |
-| Tinybird repository | The fetched `tinybirdco/mcp-tinybird` README says the repository is deprecated and points at a newer docs page. That page was not turned into a template in this pass. |
-| Make legacy package | https://github.com/integromat/make-mcp-server says it is legacy and recommends https://developers.make.com/mcp-server. The legacy API-key command was not added. |
-| Readwise npm package | The fetched README says `@readwise/readwise-mcp` is deprecated. The replacement page https://readwise.io/mcp was not fetched far enough to copy a client config. |
-| Still being checked | Other newly found vendor servers, including Neo4j's product server, Trello, and the pages that did not show a portable command in this pass, are not templates yet. |
+| Neo4j Labs bundle | https://github.com/neo4j-contrib/mcp-neo4j is a Labs bundle. The catalog row `neo4j` is the product server from https://github.com/neo4j/mcp. |
+| MATLAB | The documented client command is an absolute path to a built binary, not a portable command. |
+| Milvus | The published client JSON runs `uv` inside a cloned source directory. |
+| Stack Overflow | The docs call the server beta and pass `mcp.stackoverflow.com` to `mcp-remote` without a scheme. `https://` was not invented. |
+| LINE | The LINE Bot MCP repository says it is a preview. |
+| Netdata | The README calls the current agent integration a dev preview, and the bridge target is `ws://` on the user's host. |
+| QuickBooks | The client config requires an OAuth client id and client secret. |
+| Ramp | The repository is archived and the client config requires an OAuth client id and client secret. |
+| Rive | The only client URL is `http://127.0.0.1:9791/mcp`. |
+| Radar | The only client URL is `http://localhost:9280/mcp-readonly`. |
+| InstantDB, Pipedream | The fetched READMEs do not document an MCP command or URL. |
+| SketchUp, Upwork | The fetched pages do not publish a portable MCP URL or command. |
+| Malwarebytes, Uber | The fetched pages only expose a Claude connector URL. |
+| HexStrike AI, GhidraMCP, IDA Pro MCP | Local offensive-security or reverse-engineering bridges. Not added as curated product templates. |
+| Windows MCP, Mobile MCP | Local desktop and device control bridges. Not added as curated product templates. |
 
 ## Validation
 
-A Python check of `data/registry.json` confirmed 187 entries, 185 names, one transport each, HTTPS for remote URLs, and empty or `${...}` values for env and header fields whose names contain key, token, secret, or password.
+A Python check of `data/registry.json` confirmed 237 entries, 235 names, one transport each, HTTPS for remote URLs, and empty or `${...}` values for env and header fields whose names contain key, token, secret, or password.
 
 `cargo test -p arca-core --lib resources::mcp::registry` passed on Linux with Rust 1.100: 9 tests, including the curated collection checks. `cargo test -p arca-cli` did not compile. `credential_service` is gated with `#[cfg(any(target_os = "macos", test))]`, and the Linux library build fails on that pre-existing model module. That failure is outside this MCP catalog change. Desktop tests were not run because `desktop/node_modules` is not installed in this environment.
 
