@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, path::Path};
 
 const LINE_WIDTH: usize = 96;
 
-fn quoted_word(value: &str) -> String {
+pub(super) fn quoted_word(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\\''"))
 }
 
@@ -93,16 +93,6 @@ pub(crate) fn normalize_args(args: &[String]) -> Vec<String> {
     normalized
 }
 
-pub(super) fn cli_command(
-    program: &str,
-    args: &[String],
-    env: &BTreeMap<String, String>,
-    directory: &Path,
-) -> Result<String, String> {
-    let bin = Path::new(program).parent().ok_or("无效的可执行程序路径")?;
-    Ok(cli_command_exact(program, &normalize_args(args), env, directory, Some(bin)))
-}
-
 pub(super) fn cli_command_exact(
     program: &str,
     args: &[String],
@@ -185,12 +175,13 @@ mod tests {
     fn cli_command_normalizes_composite_arguments_into_separate_shell_words() {
         let mut env = BTreeMap::new();
         env.insert("ALL_PROXY".to_string(), "http://127.0.0.1:8080".to_string());
-        let line = cli_command(
+        let line = cli_command_exact(
             "/Users/scoheart/.local/bin/pi",
-            &["--system-prompt '/Users/scoheart/Code/english/ENGLISH.md'".to_string()],
+            &normalize_args(&["--system-prompt '/Users/scoheart/Code/english/ENGLISH.md'".to_string()]),
             &env,
             Path::new("/Users/scoheart/Code/test"),
-        ).unwrap();
+            Some(Path::new("/Users/scoheart/.local/bin")),
+        );
 
         assert!(line.contains("'/Users/scoheart/.local/bin/pi'"));
         assert!(line.contains("'--system-prompt'"));

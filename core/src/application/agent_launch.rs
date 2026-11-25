@@ -251,13 +251,10 @@ fn resolve(target: &LaunchTarget) -> Option<LaunchTarget> {
     match target {
         LaunchTarget::App { path, args, new_instance, env } => validate_target(target).is_ok().then(|| LaunchTarget::App { path: expand(path).to_string_lossy().into_owned(), args: super::launch_command::normalize_args(args), new_instance: *new_instance, env: env.clone() }),
         LaunchTarget::Cli { command, args, env } => find_command(command).map(|path| {
-            let mut args = super::launch_command::normalize_args(args);
-            if args.is_empty() && is_dsh_command(&path.to_string_lossy()) {
-                args = vec!["web".to_string()];
-            }
+            let command = path.to_string_lossy().into_owned();
             LaunchTarget::Cli {
-                command: path.to_string_lossy().into_owned(),
-                args,
+                args: cli_launch_args(&command, args),
+                command,
                 env: env.clone(),
             }
         }),
@@ -605,12 +602,9 @@ pub(crate) fn dispatch(target: &LaunchTarget, directory: Option<&Path>) -> Resul
         LaunchTarget::Web { url } => { command = Command::new("/usr/bin/open"); command.arg(url); }
         LaunchTarget::Cli { command: program, args, env } => {
             let directory = directory.ok_or("请先选择工作目录")?;
-            let mut resolved_args = super::launch_command::normalize_args(args);
-            if resolved_args.is_empty() && is_dsh_command(program) {
-                resolved_args = vec!["web".to_string()];
-            }
-            let line = super::launch_command::cli_command(program, &resolved_args, env, directory)?;
-            return super::terminals::dispatch(&line);
+            let bin = Path::new(program).parent().ok_or("无效的可执行程序路径")?;
+            // Resolved launch targets and capture wrappers already carry argv.
+            return super::terminals::dispatch(program, args, env, directory, Some(bin));
         }
     }
     dispatch_command(command)
@@ -652,8 +646,7 @@ fn dispatch_credential_launch(
         .to_str()
         .ok_or("credential_launch_failed: Arca 数据目录路径不是 UTF-8。")?;
     let context = BTreeMap::from([("ARCA_HOME".into(), data_root.into())]);
-    let line = super::launch_command::cli_command_exact(cli, &args, &context, directory, None);
-    super::terminals::dispatch(&line)
+    super::terminals::dispatch(cli, &args, &context, directory, None)
 }
 
 /// Run inside the terminal started by Arca so the Agent keeps interactive
@@ -705,7 +698,7 @@ pub fn exec_with_launch_credentials(
     let path = std::env::join_paths(std::iter::once(bin.to_path_buf()).chain(std::env::split_paths(&path)))
         .map_err(|_| "credential_launch_failed: Agent 的 PATH 无效。")?;
     let mut process = Command::new(&command);
-    process.args(cli_launch_args(&command, &args)).env("PATH", path).envs(env);
+    process.args(args).env("PATH", path).envs(env);
 
     // The terminal helper needs the store's service account token to read
     // records. Only the selected Model credentials belong in the Agent.
