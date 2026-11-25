@@ -9,7 +9,6 @@ import {
   copyToClipboard,
   exportModelCurl,
   listCredentialStores,
-  openModelPlayground,
   revealModelProviderCredential,
 } from "../lib/api";
 import type { ConsumptionState } from "../hooks/useConsumptionState";
@@ -80,6 +79,7 @@ const DEFAULT_ENDPOINT_PATHS = Object.fromEntries(
 ) as Record<ModelProtocol, string>;
 
 const KEYCHAIN_STORE_ID = "keychain";
+const ARCA_WEB_URL = "https://arca-web-delta.vercel.app/";
 
 const emptyProfile = (): ModelProfile => ({
   provider_id: "",
@@ -591,13 +591,13 @@ export function ModelsView({
                   <span>{t("credentialStores.title")}</span>
                 </button>
                 <button className="btn-secondary mt-1.5" type="button" onClick={() => {
-                  void openModelPlayground().catch((error) => toast.show({
+                  void openUrl(ARCA_WEB_URL).catch((error) => toast.show({
                     kind: "error",
-                    msg: t("models.playgroundFailed", { error: formatError(error) }),
+                    msg: t("models.openArcaWebFailed", { error: formatError(error) }),
                   }));
                 }}>
                   <ExternalLinkIcon className="w-4 h-4" />
-                  <span>{t("models.playground")}</span>
+                  <span>{t("models.openArcaWeb")}</span>
                 </button>
               </>
             }

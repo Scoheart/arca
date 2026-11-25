@@ -7,7 +7,6 @@ mod codex_configuration;
 mod observation_watcher;
 mod file_editors;
 mod agent_launch;
-mod playground;
 mod trackpad_gestures;
 #[cfg(target_os = "macos")]
 mod window_lifecycle;
@@ -38,7 +37,6 @@ pub fn run() {
     };
 
     builder
-        .manage(playground::PlaygroundState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         // Needed to relaunch the app after an update is installed.
@@ -104,7 +102,6 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            playground::open_model_playground,
             trackpad_gestures::trackpad_gestures_available,
             agent_launch::get_agent_launch_info,
             agent_launch::get_agent_runtime_version,

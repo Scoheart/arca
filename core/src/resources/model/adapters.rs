@@ -13,7 +13,10 @@ pub(crate) use zcode::read_registry as read_zcode_registry;
 pub(crate) use qoder::read_registry as read_qoder_registry;
 pub(crate) use deepseek_harness::read_registry as read_deepseek_harness_registry;
 pub(crate) use deepseek_harness::read_default as read_deepseek_harness_default;
-pub(crate) use deepseek_harness::guard_registry as guard_deepseek_harness_registry;
+pub(crate) use deepseek_harness::{
+    can_replace_profile_default as can_replace_deepseek_harness_default,
+    guard_registry as guard_deepseek_harness_registry,
+};
 
 use crate::domain::types::{ModelProfile, ModelProtocol};
 use crate::resources::mcp::scanner::expand_tilde;

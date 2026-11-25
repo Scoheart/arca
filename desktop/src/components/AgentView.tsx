@@ -429,7 +429,7 @@ export function AgentView({
 
   if (!agent) return <div className="arca-agent-state">未找到该 Agent</div>;
   const modelSelectionHint = modelAgent?.supports_global_selection === false
-    ? agent.native_profiles?.length ? t("nativePlugins.sdkModelSelection") : `重启 ${agent.name} 后在会话中选用`
+    ? agent.native_profiles?.length ? t("nativePlugins.harnessModelSelection") : `重启 ${agent.name} 后在会话中选用`
     : modelAgent?.supports_multiple ? "同一时间使用其中一个" : "";
 
   if (false as boolean) {

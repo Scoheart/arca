@@ -6,19 +6,28 @@
 //! references handled by Harness, never copies of its credential document.
 
 use super::*;
-use crate::resources::deepseek_harness::{agent_profile_at, guard_profile, home_patch_path, model_default_entry, profile_at, PatchFile};
+use crate::resources::deepseek_harness::{
+    agent_profile_at, guard_profile, home_patch_path, model_default_entry, profile_at,
+    profile_model_default_entry, PatchFile,
+};
 use crate::resources::mcp::scanner::collapse_home;
 
 const PROVIDERS: &str = "llm-pi-ai";
 
-pub(crate) fn guard_registry(path: &Path) -> Result<Option<&'static str>, String> {
-    let default = model_default_entry(path)?;
-    if let Some(entry) = default {
-        guard_profile(path, &[PROVIDERS, entry])?;
-    } else {
-        guard_profile(path, &[PROVIDERS])?;
-    }
-    Ok(default)
+pub(crate) fn guard_registry(path: &Path) -> Result<(), String> {
+    guard_profile(path, &[PROVIDERS])
+}
+
+pub(crate) fn can_replace_profile_default(path: &Path) -> bool {
+    let Ok(Some(registry)) = read_registry(path) else { return false; };
+    let Ok(Some(entry)) = profile_model_default_entry(path) else { return false; };
+    // With an empty provider registry this observation is just a native
+    // selection. The new Arca route cannot replace an external route.
+    registry.providers.is_empty()
+        && ["provider", "model"].iter().all(|field| {
+            registry.default.get(field).and_then(Value::as_str).is_some_and(|value| !value.trim().is_empty())
+        })
+        && guard_profile(path, &[PROVIDERS, entry]).is_ok()
 }
 
 fn config_or_empty(patch: &PatchFile, id: &str) -> Result<Value, String> {
@@ -123,7 +132,12 @@ pub(super) fn prepare(
     let route = provider_identity(agent_id, profile)?;
     let env = profile.env_key.as_deref().filter(|key| !key.is_empty())
         .ok_or("deepseek_harness_env_reference_required: configure a Harness credential/environment reference; Arca does not export Keychain secrets to .credentials.yaml")?;
-    let default_entry = guard_registry(path)?;
+    let default_entry = if active { model_default_entry(path)? } else { None };
+    if let Some(entry) = default_entry {
+        guard_profile(path, &[PROVIDERS, entry])?;
+    } else {
+        guard_registry(path)?;
+    }
     let mut patch = PatchFile::read(path)?;
     let config = config_or_empty(&patch, PROVIDERS)?;
     let providers = config.get("providers");
@@ -186,7 +200,7 @@ pub(super) fn prepare(
             patch.set_config_path(PROVIDERS, &keys, &json!({"off": null, "high": "high"}))?;
         }
     }
-    if let Some(default_entry) = default_entry.filter(|_| active) {
+    if let Some(default_entry) = default_entry {
         patch.set_config_path(default_entry, &["provider"], &json!(route))?;
         patch.set_config_path(default_entry, &["model"], &json!(profile.model))?;
         if default_entry == "agent-default-model" {
@@ -197,14 +211,21 @@ pub(super) fn prepare(
 }
 
 fn clear_default_if(
-    patch: &mut PatchFile, default_entry: &str, removed: &BTreeSet<String>, model: Option<&str>,
+    path: &Path, patch: &mut PatchFile, removed: &BTreeSet<String>, model: Option<&str>,
 ) -> Result<(), String> {
-    let Some(config) = patch.config(default_entry)? else { return Ok(()); };
+    let Some(default_entry) = model_default_entry(path)? else { return Ok(()); };
+    let home = PatchFile::read(&home_patch_path())?;
+    let effective_default = match home.config(default_entry)? {
+        Some(config) => Some(config),
+        None => patch.config(default_entry)?,
+    };
+    let Some(config) = effective_default else { return Ok(()); };
     let current = config.get("provider").and_then(Value::as_str);
     if !current.is_some_and(|id| removed.contains(id))
         || model.is_some_and(|model| config.get("model").and_then(Value::as_str) != Some(model)) {
         return Ok(());
     }
+    guard_profile(path, &[default_entry])?;
     if config.as_object().is_none_or(|object| object.keys().any(|key|
         !matches!(key.as_str(), "provider" | "model")
             && !(default_entry == "agent-default-model" && key == "reasoningEffort"))) {
@@ -222,7 +243,7 @@ pub(super) fn clear(
     if PatchFile::read(path)?.original().is_none() {
         return Ok(PreparedModelFile { path: path.into(), original: None, content: None });
     }
-    let default_entry = guard_registry(path)?;
+    guard_registry(path)?;
     let mut patch = PatchFile::read(path)?;
     let route = provider_identity(agent_id, profile)?;
     let config = config_or_empty(&patch, PROVIDERS)?;
@@ -234,9 +255,7 @@ pub(super) fn clear(
         }
         patch.remove_config_path(PROVIDERS, &["providers", &route])?;
     }
-    if let Some(default_entry) = default_entry {
-        clear_default_if(&mut patch, default_entry, &BTreeSet::from([route]), Some(&profile.model))?;
-    }
+    clear_default_if(path, &mut patch, &BTreeSet::from([route]), Some(&profile.model))?;
     prepared(path, patch)
 }
 
@@ -245,7 +264,7 @@ pub(super) fn clear_all(agent_id: &str, path: &Path) -> Result<PreparedModelFile
     if PatchFile::read(path)?.original().is_none() {
         return Ok(PreparedModelFile { path: path.into(), original: None, content: None });
     }
-    let default_entry = guard_registry(path)?;
+    guard_registry(path)?;
     let mut patch = PatchFile::read(path)?;
     let config = config_or_empty(&patch, PROVIDERS)?;
     let Some(providers) = config.get("providers") else { return prepared(path, patch); };
@@ -262,9 +281,7 @@ pub(super) fn clear_all(agent_id: &str, path: &Path) -> Result<PreparedModelFile
     // Keep the complete providers override empty. Removing it could restore
     // a bundle provider which the reviewed operation intended to clear.
     for id in &ids { patch.remove_config_path(PROVIDERS, &["providers", id])?; }
-    if let Some(default_entry) = default_entry {
-        clear_default_if(&mut patch, default_entry, &ids, None)?;
-    }
+    clear_default_if(path, &mut patch, &ids, None)?;
     prepared(path, patch)
 }
 
@@ -349,6 +366,31 @@ mod tests {
         assert!(root.default.get("model").is_none());
         assert!(fs::read_to_string(&path).unwrap().contains("# keep MCP policy"));
         assert!(!home.home.join(".dsh/.credentials.yaml").exists());
+    }
+
+    #[test]
+    fn home_default_allows_profile_routes_and_protects_a_referenced_route() {
+        let home = TestHome::new("dsh-model-home-default");
+        let path = initialized(&home);
+        let profile = profile();
+        let shared = home_patch_path();
+        let shared_default = "- id: agent-default-model\n  config:\n    provider: deepseek\n    model: deepseek-reasoner\n";
+        fs::write(&shared, shared_default).unwrap();
+
+        assert!(prepare("deepseek-harness", &path, &profile, true).is_err());
+        let candidate = prepare("deepseek-harness", &path, &profile, false).unwrap().content.unwrap();
+        fs::write(&path, &candidate).unwrap();
+        assert!(!candidate.contains("agent-default-model"));
+        assert_eq!(fs::read_to_string(&shared).unwrap(), shared_default);
+        let cleared = clear("deepseek-harness", &path, &profile).unwrap().content.unwrap();
+        assert!(!cleared.contains("WORK_MODEL_KEY"));
+
+        let route = provider_identity("deepseek-harness", &profile).unwrap();
+        let selected = format!("- id: agent-default-model\n  config:\n    provider: {route}\n    model: {}\n", profile.model);
+        fs::write(&shared, &selected).unwrap();
+        assert!(clear("deepseek-harness", &path, &profile).is_err());
+        assert_eq!(fs::read_to_string(&path).unwrap(), candidate);
+        assert_eq!(fs::read_to_string(&shared).unwrap(), selected);
     }
 
     #[test]

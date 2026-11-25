@@ -5425,9 +5425,30 @@ pub(crate) fn supports_global_model_selection(agent_id: &str) -> bool {
 fn harness_has_global_model_selection(settings: &crate::settings::Settings, agent_id: &str) -> bool {
     let default_entry = configured_path_strings(settings, agent_id).and_then(|paths| {
         let path = expand_tilde(paths.first()?);
-        crate::resources::deepseek_harness::model_default_entry(&path).ok()
+        crate::resources::deepseek_harness::profile_model_default_entry(&path).ok()
     });
     !matches!(default_entry, Some(None))
+}
+
+pub(crate) fn can_replace_harness_profile_default(agent_id: &str) -> bool {
+    crate::resources::deepseek_harness::default_profile(agent_id).is_some()
+        && configured_paths(agent_id).is_some_and(|paths| {
+            paths.first().is_some_and(|path| adapters::can_replace_deepseek_harness_default(path))
+        })
+}
+
+pub(crate) fn validate_harness_provider_registry(
+    settings: &crate::settings::Settings, agent_id: &str,
+) -> Result<(), String> {
+    if crate::resources::deepseek_harness::default_profile(agent_id).is_none() {
+        return Ok(());
+    }
+    let paths = configured_path_strings_checked(settings, agent_id)?
+        .ok_or("DeepSeek Harness profile path is unavailable")?;
+    let path = expand_tilde(&paths[0]);
+    adapters::guard_deepseek_harness_registry(&path)
+        .and_then(|()| adapters::read_deepseek_harness_registry(&path).map(|_| ()))
+        .map_err(|error| format!("deepseek_harness_model_registry_unavailable: {error}"))
 }
 
 pub(crate) fn normalize_model_selection(agent_id: &str, selection: &mut crate::domain::assets::ModelAgentSelection) {
@@ -6079,7 +6100,10 @@ pub(crate) fn apply_profile_consumption_with_credential_presence_target(
     has_credential: bool,
     active: bool,
 ) -> Result<ModelApplyResult, ModelTargetError> {
-    let active = active && supports_global_model_selection(agent_id);
+    // The Harness writer revalidates a requested default switch against the
+    // native layers before it prepares the target.
+    let active = active && (crate::resources::deepseek_harness::default_profile(agent_id).is_some()
+        || supports_global_model_selection(agent_id));
     let profile = profile_for_apply(profile_id)?;
     ensure_supported(agent_id, &profile.protocol)?;
     let credential_route = credential_route_for(agent_id, &profile, has_credential)?;

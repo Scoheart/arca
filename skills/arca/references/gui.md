@@ -6,7 +6,7 @@
 
 | 界面位置 | 用途 | 详细手册 |
 | --- | --- | --- |
-| 顶栏 **Models** | Provider、Model Profile、凭据存储、模型试验台 | [连接、模型与试验台](workflows/models.md) |
+| 顶栏 **Models** | Provider、Model Profile、凭据存储、打开 Arca Web | [连接、模型与请求](workflows/models.md) |
 | 顶栏 **MCPs** | 查看中央目录、来源和同身份副本，新增或编辑服务 | [MCP 库与来源](workflows/mcp.md) |
 | 顶栏 **Skills** | 浏览来源，导入中央 Skill，查看实际副本和使用方 | [Skills 生命周期](workflows/skills.md) |
 | 顶栏 **Agents / Subagents / Hooks** | 对应的中央定义库。Agents 在这里是启动用定义 | [Agent 原生资源](workflows/agents.md#管理原生资源) |
@@ -30,7 +30,7 @@ Provider 编辑、MCP 目录编辑和中央 Skill 更新可以影响多个消费
 | 要做什么 | 在窗口中找什么 |
 | --- | --- |
 | 新建带 Key 的 Provider | **Models → 添加 Provider**。核对模板、Base URL、模型列表 URL、协议和 Endpoint Path。通过凭据控件输入 Key |
-| 对比不同模型响应 | **Models → 模型试验台**，在浏览器页核对运行设置和请求预览，再按授权发送 |
+| 发起模型请求 | **Models → 打开 Arca Web**，在网页核对 Request Settings 和请求预览，再按授权发送 |
 | 新增一个 HTTP MCP | **MCPs → 添加 MCPs → 手动配置**，核对类型和 URL。粘贴配置及远程订阅各有单独入口 |
 | 只导入一个 Skill | **Skills → 添加**，选择该 Skill 的目录或目录 URL。当前桌面导入提交来源后会处理其全部候选 |
 | 给特定 Agent 选模型 | **选择 Agent → 目标 → Models**。区分添加、启用和设当前。若客户端仅支持会话内选择，在目标会话验证 |

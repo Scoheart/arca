@@ -18,9 +18,7 @@ cargo run --locked -p arca-cli -- model playground
 ```
 
 The Rust build embeds the Vite output. The production panel and its API use the
-same loopback origin; it needs no Node server at runtime. Desktop packaging
-builds the frontend automatically. For desktop development, install the
-playground's dependencies before starting `npm run tauri dev` from `desktop/`.
+same loopback origin; it needs no Node server at runtime. Desktop packaging prepares these assets for the bundled CLI.
 
 `npm --prefix playground run dev` starts Vite for frontend work. To open the
 panel with saved models, use the Arca launch commands above.

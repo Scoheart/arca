@@ -96,6 +96,9 @@ Responses, Anthropic Messages, Gemini Interactions, Gemini generateContent,
 and AWS Bedrock Converse. Provider creation, model profiles and cURL export
 use the same protocol definitions in the CLI and desktop app.
 
+Open **Models → Open Arca Web** to send a request or chat in your browser.
+[Arca Web](https://arca-web-delta.vercel.app/)
+
 **Copy cURL** and `arca model curl <profile-id>` produce one `curl` command with
 headers and an editable JSON body, including the protocol's native system
 instruction example. Line breaks keep the command readable. Arca omits unset
@@ -312,9 +315,7 @@ npm ci
 npm run tauri build
 ```
 
-For development, first run `npm --prefix ../playground ci` from `desktop/`.
-`npm run tauri dev` builds the [Model playground](playground/README.md) and
-starts **Arca Dev** with its own application identifier and
+For development, `npm run tauri dev` starts **Arca Dev** with its own application identifier and
 purple DEV icon. It shares your Arca data, while the installed **Arca** keeps its
 existing Dock entry. The Run script stops only this checkout's development
 processes and leaves the installed application running.

@@ -94,9 +94,13 @@ arca agent launch show codex --json
 
 如果桌面能返回但手动启动的 CLI 收到 401，先明确桌面请求来自 Arca 试验台还是 Codex 桌面端，再确认手动 CLI 的当前 Profile、原生配置路径和 `wire_api`。4.0.2 的 Codex 写入使用 `wire_api = "responses"`；有 Provider 凭据时配置 `auth.command` 与其参数，由 Codex 调用 Arca helper。核对手动启动进程的 Arca 位置、后端访问环境和实际读取的设置。查看脱敏的 `model_provider`、`base_url`、`wire_api` 与 helper 位置即可定位大多数差异，Key 输出留给客户端消费。[交付检查](../technical/model-connections.md#agent-凭据交付) · [Codex adapter 源码](https://github.com/Scoheart/arca/blob/v4.0.2/core/src/resources/model/mod.rs)
 
-## 用试验台比较模型
+## 发起模型请求
 
-1. 打开 **Models → 模型试验台** 或运行 `arca model playground`。仅需本地 URL 时可使用 `--no-open`，浏览器与服务应在能访问同一回环地址的设备上。
+在桌面版选择 **Models → 打开 Arca Web**。在网页配置 Provider 和模型，再检查请求预览。[Arca Web](https://arca-web-delta.vercel.app/)
+
+### 用命令行试验台比较模型
+
+1. 运行 `arca model playground`。仅需本地 URL 时可使用 `--no-open`，浏览器与服务应在能访问同一回环地址的设备上。
 2. 在 **运行设置** 添加已保存的模型请求。一次最多六条，可混用协议或复制一项后调整参数。留空参数使用服务默认值。需要协议专用字段时，在高级 JSON 填入该协议的合法参数。
 3. 在底部填共同提示词。用 **请求预览** 检查 URL、认证头名称和 JSON。预览可以在读取 Key 或发送请求之前完成。
 4. 按本次任务授权发送。选择流式逐步显示或完整返回。比较响应、错误、总耗时、流式首段延迟和服务返回的 Token 用量。区分推理输出、连接问题和服务端参数错误。

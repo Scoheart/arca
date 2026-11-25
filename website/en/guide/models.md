@@ -16,9 +16,13 @@ Protocols share one Base URL but can have different relative paths. Separate ori
 
 Arca refuses to disable a protocol still referenced by a Model. It also refuses a relationship when the client cannot represent a custom request path losslessly.
 
-## Model playground
+## Arca Web
 
-Open **Models → Model playground** in Arca Desktop or run `arca model playground`. Choose a saved Model Profile and its parameters for each request in **Run settings**, then enter one shared prompt at the bottom. You can run up to six requests in parallel. Mix Providers and protocols, or duplicate a request to compare the same model with different settings.
+Select **Models → Open Arca Web** in Arca Desktop. Configure a Provider under **Request Settings** to send requests or chat in your browser. [Arca Web](https://arca-web-delta.vercel.app/)
+
+## Command-line playground
+
+Run `arca model playground`. Choose a saved Model Profile and its parameters for each request in **Run settings**, then enter one shared prompt at the bottom. You can run up to six requests in parallel. Mix Providers and protocols, or duplicate a request to compare the same model with different settings.
 
 Blank parameters use the service's defaults. Use **Advanced JSON** for protocol-specific parameters such as Anthropic's `thinking` or Gemini Interactions' `generation_config`. Each result shows its own reply, latency, provider-reported token usage, or error. Edits apply to the request only. Press Ctrl+C to stop a server started from the terminal.
 

@@ -746,6 +746,17 @@ pub(crate) fn model_default_entry(path: &Path) -> Result<Option<&'static str>, S
     Ok(Some(if bundles.iter().any(|name| name == ACP_BUNDLE) { "acp" } else { "agent-default-model" }))
 }
 
+/// The home layer owns an inherited default whenever it patches this entry.
+pub(crate) fn profile_model_default_entry(path: &Path) -> Result<Option<&'static str>, String> {
+    let Some(entry) = model_default_entry(path)? else { return Ok(None); };
+    let home = PatchFile::read(&home_patch_path())?;
+    if home.has_row(entry)? {
+        home.config(entry)?;
+        return Ok(None);
+    }
+    Ok(Some(entry))
+}
+
 fn guard_bundle_inheritance(path: &Path, needs_defaults: bool) -> Result<(), String> {
     const BASE: &str = "@deepseek-ai/dsh-base";
     const WEB: &str = "@deepseek-ai/dsh-web-app";

@@ -613,7 +613,7 @@ pub fn plan_set_active_model(
 ) -> Result<AssetOperationPlan, String> {
     if !crate::resources::model::supports_global_model_selection(&request.agent_id) {
         if crate::resources::deepseek_harness::default_profile(&request.agent_id).is_some() {
-            return Err("model_selection_per_session: choose the provider and model when initializing the Harness SDK client".into());
+            return Err("model_selection_per_session: choose the provider and model in DeepSeek Harness or its SDK client".into());
         }
         return Err("model_selection_per_conversation: choose the model inside a Qoder Desktop conversation".into());
     }
@@ -1781,6 +1781,9 @@ pub(crate) fn validate_model_selection_contract(
             capability.name
         ));
     }
+    if selection.profiles.values().any(|record| record.enabled) {
+        crate::resources::model::validate_harness_provider_registry(settings, agent_id)?;
+    }
     let mut identities = BTreeMap::<String, String>::new();
     for (profile_id, record) in &selection.profiles {
         if !record.enabled {
@@ -2271,7 +2274,9 @@ fn finalize_plan_with_inventory(
                         }
                         _ => false,
                     }
-            }) {
+            }) && !(external.reason.as_deref() == Some("model_external_unmanaged")
+                && crate::resources::model::can_replace_harness_profile_default(&external.agent_id))
+            {
                 blocked.push(consumption_warning(external));
             }
         }

@@ -52,8 +52,6 @@ async function invoke<T>(command: string, args?: Parameters<typeof tauriInvoke>[
   }
 }
 
-export const openModelPlayground = () => invoke<void>("open_model_playground");
-
 import type {
   AgentDefinitionInput,
   BackendStatus,
