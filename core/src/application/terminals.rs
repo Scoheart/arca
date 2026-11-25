@@ -93,6 +93,29 @@ fn write_private_launch_file(path: &Path, body: &str) -> std::io::Result<()> {
     file.write_all(body.as_bytes())
 }
 
+fn warp_can_show_env(name: &str, value: &str) -> bool {
+    // Warp keeps startup commands in its history. Only display recognized
+    // launch settings whose values have a non-credential form.
+    if value.chars().any(char::is_control) { return false; }
+    match name {
+        "HTTP_PROXY" | "HTTPS_PROXY" | "ALL_PROXY" | "http_proxy" | "https_proxy" | "all_proxy" => {
+            if value.is_empty() { return true; }
+            let Some((scheme, authority)) = value.split_once("://") else { return false; };
+            let authority = authority.strip_suffix('/').unwrap_or(authority);
+            matches!(scheme, "http" | "https" | "socks4" | "socks4a" | "socks5" | "socks5h")
+                && !authority.contains(['/', '\\', '?', '#', '@', '%'])
+                && !authority.chars().any(char::is_whitespace)
+                && url::Url::parse(value).is_ok_and(|url| url.has_host())
+        }
+        "NO_PROXY" | "no_proxy" => value.bytes().all(|byte|
+            byte.is_ascii_alphanumeric() || b" .,:-*/[]_".contains(&byte)),
+        "PATH" => value.is_empty() || std::env::split_paths(value).all(|path| path.is_absolute()),
+        "NODE_EXTRA_CA_CERTS" => value.is_empty() || Path::new(value).is_absolute(),
+        "QODER_ENABLE_CODE_MODE" => matches!(value, "0" | "1" | "false" | "true"),
+        _ => false,
+    }
+}
+
 fn dispatch_warp(
     app: &Path,
     program: &str,
@@ -114,9 +137,18 @@ fn dispatch_warp(
         for path in [&staging, &config, &environment] { let _ = fs::remove_file(path); }
     };
     let result = (|| {
+        let mut visible_env = BTreeMap::new();
+        let mut private_env = Vec::new();
+        for (name, value) in env {
+            if warp_can_show_env(name, value) {
+                visible_env.insert(name.clone(), value.clone());
+            } else {
+                private_env.push((name, value));
+            }
+        }
         let path_prefix = path_prefix.filter(|_| !env.contains_key("PATH"));
-        let line = cli_command_exact(program, args, &BTreeMap::new(), directory, path_prefix);
-        let line = if env.is_empty() {
+        let line = cli_command_exact(program, args, &visible_env, directory, path_prefix);
+        let line = if private_env.is_empty() {
             line
         } else {
             // Source the settings in a subshell so Warp records the invocation
@@ -124,7 +156,7 @@ fn dispatch_warp(
             let path = environment.to_str().ok_or("Warp 启动配置需要使用 UTF-8 路径")?;
             let source = quoted_word(path);
             let mut body = format!("/bin/rm -f -- {source}\n");
-            for (name, value) in env {
+            for (name, value) in private_env {
                 body.push_str(&format!("export {name}={}\n", quoted_word(value)));
             }
             write_private_launch_file(&environment, &body).map_err(|_| "无法写入 Warp 启动环境")?;
