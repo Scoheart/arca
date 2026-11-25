@@ -199,10 +199,10 @@ Counts after this pass: **187 entries, 185 names**. The directory under consider
 | `apollo-io` | `https://mcp.apollo.io/mcp` | https://github.com/apolloio/apollo-mcp-plugin |
 | `ashby` | `https://mcp.ashbyhq.com/mcp/v1` | https://docs.ashbyhq.com/mcp |
 | `auth0` | `npx -y @auth0/auth0-mcp-server run` | https://auth0.com/docs/get-started/auth0-mcp-server/getting-started-with-auth0-mcp-server |
-| `axiom` | `https://mcp.axiom.co/mcp` | https://github.com/axiomhq/mcp-server-axiom |
+| `axiom` | `https://mcp.axiom.co/mcp` | https://axiom.co/docs/console/intelligence/mcp-server |
 | `azure-devops` | `https://mcp.dev.azure.com/{organization}` | https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server |
 | `blender` | `uvx mcp-for-blender` | https://github.com/ahujasid/blender-mcp |
-| `booking` | `https://demandapi-mcp.booking.com/v1/sp/mcp/` | https://developers.booking.com/mcp-server/docs/about |
+| `booking` | `https://demandapi-mcp.booking.com/v1/sp/mcp/` | https://developers.booking.com/mcp-server/docs/get-started |
 | `brex` | `https://api.brex.com/mcp` | https://developer.brex.com/docs/mcp |
 | `bright-data` | `https://mcp.brightdata.com/mcp?token=${BRIGHT_DATA_API_TOKEN}` | https://github.com/brightdata/brightdata-mcp |
 | `buddy` | `https://mcp.buddy.works/mcp` | https://buddy.works/docs/ai-agents/mcp |
@@ -220,7 +220,7 @@ Counts after this pass: **187 entries, 185 names**. The directory under consider
 | `fireflies` | `https://api.fireflies.ai/mcp` | https://docs.fireflies.ai/getting-started/mcp-configuration |
 | `firefox-devtools` | `npx -y @mozilla/firefox-mcp@latest --headless --viewport 1280x720` | https://github.com/mozilla/firefox-devtools-mcp |
 | `gamma` | `https://mcp.gamma.app/mcp` | https://developers.gamma.app/ |
-| `gitkraken` | `gk mcp` | https://github.com/gitkraken/gk-cli |
+| `gitkraken` | `gk mcp` | https://help.gitkraken.com/mcp/mcp-getting-started/ |
 | `gitmcp` | `https://gitmcp.io/{owner}/{repo}` | https://github.com/idosal/git-mcp |
 | `globalping` | `https://mcp.globalping.dev/mcp` | https://github.com/jsdelivr/globalping-mcp-server |
 | `google-bigquery` | `https://bigquery.googleapis.com/mcp` | https://docs.cloud.google.com/bigquery/docs/use-bigquery-mcp |
