@@ -167,8 +167,99 @@ These were in the research recommendation or conditional lists and were not give
 | Archived reference servers | Puppeteer, Postgres, and the old reference GitHub, Drive, and Slack servers stay out. |
 | Conditional rows without a first-party config | Apiiro, Avalara, CloudZero, Wiz, Wrike, Zoom, Lucid, and the other conditional rows without a confirmed config were not added. PayPal and Statsig are no longer in this group. |
 
+## 2026-11-25 source URL and additions
+
+`source_url` records the official documentation or first-party source page. It is optional on `RegistryEntry`, so an older subscription that omits it still parses. Curated templates are not auto-installed.
+
+Backfill for the previous 128 names uses the first-party URL already stored in `repo`, except where that field is the code repository and the 2026-11-25 directory recorded a distinct documentation page: `context7`, `firecrawl`, `tavily`, `serena`, `terraform`, `mongodb`, `dbhub`, `qdrant`, and `elasticsearch`. Those documentation pages were fetched again on 2026-11-25 and returned HTTP 200. `luma` still has no `source_url` because no first-party URL was recorded, and none was invented. The Salesforce docs URL from the directory returned HTTP 403 from this environment, so `salesforce` keeps the previously verified GitHub source.
+
+This pass adds 50 names whose official pages showed a client config the catalog can store: an HTTPS URL, with headers omitted when OAuth is the documented default, or a stdio command. Secret env and header values are empty or `${...}`. Instance hosts use the documented placeholder, the same way `snowflake` and `n8n` already do.
+
+Counts after this pass: **180 entries, 178 names**. The directory under consideration had 302 products. 128 were already present. 50 are new templates. 124 remain absent. That is not a claim that all 302 were added.
+
+### Added
+
+| Name | Config | Source |
+| --- | --- | --- |
+| `1password` | `1password-mcp` | https://www.1password.dev/environments/mcp-server |
+| `21st-dev-magic` | `https://21st.dev/api/mcp` with `x-api-key` placeholder | https://github.com/21st-dev/magic-mcp |
+| `adobe` | `https://adobe-creativity.adobe.io/mcp` | https://claude.com/marketplace/connectors/adobe-creativity |
+| `ahrefs` | `https://api.ahrefs.com/mcp/mcp` | https://docs.ahrefs.com/en/mcp/docs/introduction |
+| `airbyte` | `https://mcp.airbyte.com/mcp` | https://docs.airbyte.com/platform/airbyte-mcp |
+| `airtable` | `https://mcp.airtable.com/mcp` | https://support.airtable.com/articles/9897799762-using-the-airtable-mcp-server |
+| `aiven` | `https://mcp.aiven.live/mcp` | https://github.com/Aiven-Open/mcp-aiven |
+| `alchemy` | `https://mcp.alchemy.com/mcp` | https://github.com/alchemyplatform/alchemy-mcp-server |
+| `algolia` | `https://mcp.algolia.com/mcp` | https://www.algolia.com/doc/guides/model-context-protocol/productivity-mcp |
+| `alibaba-cloud-ops` | `uvx alibaba-cloud-ops-mcp-server@latest` | https://github.com/aliyun/alibaba-cloud-ops-mcp-server |
+| `alibaba-devops` | `https://openapi-rdc.aliyuncs.com/ai/mcp` with bearer placeholder | https://github.com/aliyun/alibabacloud-devops-mcp-server |
+| `alpaca` | `uvx alpaca-mcp-server` | https://github.com/alpacahq/alpaca-mcp-server |
+| `anki` | `npx -y @ankimcp/anki-mcp-server --stdio` | https://github.com/ankimcp/anki-mcp-server |
+| `antv-chart` | `npx -y @antv/mcp-server-chart` | https://github.com/antvis/mcp-server-chart |
+| `apache-doris` | `doris-mcp-server --transport stdio` | https://github.com/apache/doris-mcp-server |
+| `apollo-io` | `https://mcp.apollo.io/mcp` | https://github.com/apolloio/apollo-mcp-plugin |
+| `ashby` | `https://mcp.ashbyhq.com/mcp/v1` | https://docs.ashbyhq.com/mcp |
+| `auth0` | `npx -y @auth0/auth0-mcp-server run` | https://auth0.com/docs/get-started/auth0-mcp-server/getting-started-with-auth0-mcp-server |
+| `axiom` | `https://mcp.axiom.co/mcp` | https://github.com/axiomhq/mcp-server-axiom |
+| `azure-devops` | `https://mcp.dev.azure.com/{organization}` | https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server |
+| `blender` | `uvx mcp-for-blender` | https://github.com/ahujasid/blender-mcp |
+| `booking` | `https://demandapi-mcp.booking.com/v1/sp/mcp/` | https://developers.booking.com/mcp-server/docs/about |
+| `brex` | `https://api.brex.com/mcp` | https://developer.brex.com/docs/mcp |
+| `bright-data` | `https://mcp.brightdata.com/mcp?token=${BRIGHT_DATA_API_TOKEN}` | https://github.com/brightdata/brightdata-mcp |
+| `buddy` | `https://mcp.buddy.works/mcp` | https://buddy.works/docs/ai-agents/mcp |
+| `cal-com` | `npx @calcom/cal-mcp@latest` | https://github.com/calcom/cal-mcp |
+| `clerk` | `https://mcp.clerk.com/mcp` | https://clerk.com/docs/guides/ai/mcp/clerk-mcp-server |
+| `coingecko` | `https://mcp.api.coingecko.com/mcp` | https://docs.coingecko.com/ai-integration/mcp-server |
+| `couchbase` | `uvx couchbase-mcp-server operational` | https://github.com/couchbase/mcp-server-couchbase |
+| `crowdstrike` | `uvx falcon-mcp` | https://github.com/CrowdStrike/falcon-mcp |
+| `dbt` | `https://YOUR_DBT_HOST_URL/api/ai/v1/mcp/` | https://docs.getdbt.com/docs/dbt-ai/mcp-quickstart-remote |
+| `deepl` | `https://mcp.deepl.com/v1/mcp` | https://developers.deepl.com/docs/mcp |
+| `devcycle` | `https://mcp.devcycle.com/mcp` | https://github.com/DevCycleHQ/cli |
+| `docling` | `uvx --from=docling-mcp docling-mcp-server` | https://github.com/docling-project/docling-mcp |
+| `excalidraw` | `https://mcp.excalidraw.com` | https://github.com/excalidraw/excalidraw-mcp |
+| `expo` | `https://mcp.expo.dev/mcp` | https://docs.expo.dev/mcp/ |
+| `fireflies` | `https://api.fireflies.ai/mcp` | https://docs.fireflies.ai/getting-started/mcp-configuration |
+| `firefox-devtools` | `npx -y @mozilla/firefox-mcp@latest --headless --viewport 1280x720` | https://github.com/mozilla/firefox-devtools-mcp |
+| `gamma` | `https://mcp.gamma.app/mcp` | https://developers.gamma.app/ |
+| `gitkraken` | `gk mcp` | https://github.com/gitkraken/gk-cli |
+| `gitmcp` | `https://gitmcp.io/{owner}/{repo}` | https://github.com/idosal/git-mcp |
+| `globalping` | `https://mcp.globalping.dev/mcp` | https://github.com/jsdelivr/globalping-mcp-server |
+| `google-bigquery` | `https://bigquery.googleapis.com/mcp` | https://docs.cloud.google.com/bigquery/docs/use-bigquery-mcp |
+| `incident-io` | `https://mcp.incident.io/mcp` | https://docs.incident.io/ai/remote-mcp |
+| `launchdarkly` | `https://mcp.launchdarkly.com/mcp` | https://launchdarkly.com/docs/home/getting-started/mcp-hosted |
+| `lucid` | `https://mcp.lucid.app/mcp` | https://github.com/lucidsoftware/lucid-mcp-server |
+| `mailchimp` | `https://mandrillapp.com/mcp` with bearer placeholder | https://mailchimp.com/developer/transactional/guides/how-to-use-mailchimps-transactional-messaging-mcp/ |
+| `obsidian` | `uvx mcp-obsidian` | https://github.com/MarkusPfundstein/mcp-obsidian |
+| `snyk` | `snyk mcp -t stdio` | https://docs.snyk.io/agent-security/agentic-security-with-snyk-studio/getting-started-with-snyk-studio |
+| `zoominfo` | `https://mcp.zoominfo.com/mcp` | https://docs.zoominfo.com/docs/connect-to-zoominfo-mcp |
+
+### Not added in this pass
+
+| Candidate | Reason |
+| --- | --- |
+| Google Drive | The published client JSON requires an OAuth client id and client secret beside `https://drivemcp.googleapis.com/mcp/v1`. `HttpConfig` has no fields for those. |
+| Box | Hosted `https://mcp.box.com` still needs an OAuth client id and client secret from Box Integration Credentials. |
+| HubSpot | `https://mcp.hubspot.com/` is documented, and the client must also use a connector client id and client secret. |
+| Wrike | `https://mcp.wrike.com/v2` requires a Wrike OAuth client id and client secret. |
+| Zoom | Zoom MCP servers use manual client registration. Connecting starts by creating a Zoom app. |
+| Apollo GraphQL | The quickstart client URL is `http://127.0.0.1:8000`. Remote catalog URLs must be `https`. |
+| Home Assistant | The documented example is `http://homeassistant.local:8123/api/mcp` on the user's instance. |
+| Storybook | Preview status, and the only client URL is `http://localhost:6006/mcp`. |
+| JetBrains IDE MCP | The IDE generates a per-installation SSE, stdio, or HTTP config. There is no portable command or URL. `JetBrains/mcp-jetbrains` says it is no longer maintained. |
+| Shopify Storefront | Catalog and cart tools on `https://{shop}/api/mcp` were removed. The replacement is still per shop, `https://{shop}/api/ucp/mcp`. |
+| Databricks | The fetched MCP tools page describes workspace-registered servers, not one portable client URL or command. |
+| Cycode | The CLI marks `cycode mcp` as an experiment. |
+| Apache IoTDB | The client JSON runs `uv` against a local clone path. No published stdio package command or HTTPS URL was shown. |
+| Arize Phoenix | No MCP command in the product README. The install link shown is `http://localhost:6006/mcp`. |
+| Chargebee | The in-repo `@chargebee/mcp` package is marked deprecated, and the replacement page did not show a portable client config. |
+| Chrome MCP extension | The recommended URL is `http://127.0.0.1:12306/mcp`. |
+| Docker Hub | Client examples run `node` against a cloned `dist/index.js`. No published npx or HTTPS template was shown. |
+| DocuSign | No portable HTTPS URL or command. Custom connectors require an allowlisted integration key. |
+| Descript, Dropbox | The fetched pages are Claude connector installs and do not print a portable URL or command. |
+| No first-party URL | Apiiro, Avalara, CloudZero, Framer, Gong, Google Chat, Google Docs, Google Sheets, Knock, Linx, Mastra Docs, Meta Ads, Microsoft OneDrive, Microsoft Outlook, Microsoft SharePoint, Microsoft Teams, Mintlify Admin, Okta as listed with the Cortex qualifier, Outreach, PipeCD Docs, Sigma, Spinach, Telnyx, Torii, Upwind, Wiz, and Agent Device. No URL was invented for these. |
+| Still being checked | The remaining newly found vendor servers, including Postman, Neo4j, Todoist, and Trello, are not in this commit yet. |
+
 ## Validation
 
-A Python check of `data/registry.json` confirmed 130 entries, 128 names, one transport each, HTTPS for remote URLs, and empty or `${...}` values for env and header fields whose names contain key, token, secret, or password.
+A Python check of `data/registry.json` confirmed 180 entries, 178 names, one transport each, HTTPS for remote URLs, and empty or `${...}` values for env and header fields whose names contain key, token, secret, or password.
 
 The previous clean `cargo test` failure was `create_revision` in `core/src/resources/model/discovery.rs` being called with four arguments. `credential_service::create_revision` requires `provider_name` between the provider id and the key. This change passes `&config.name`, the same value the other model tests pass. It does not change model discovery behavior.
