@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.0](https://github.com/Scoheart/arca/compare/v4.2.2...v4.3.0) (2026-11-25)
+
+### Changes
+
+* feat(mcp): record official docs and add verified MCP templates (#334) ([9648927](https://github.com/Scoheart/arca/commit/9648927191b1a806644634858ddd478038e603c1))
+* fix(launch): show the actual command in Warp ([a1eba02](https://github.com/Scoheart/arca/commit/a1eba02f1d173a0a48cb99ca1660181d1b020ca0))
+
 ## [4.2.2](https://github.com/Scoheart/arca/compare/v4.2.1...v4.2.2) (2026-11-25)
 
 ### Changes
