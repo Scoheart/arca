@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.3.1](https://github.com/Scoheart/arca/compare/v4.3.0...v4.3.1) (2026-11-25)
+
+### Changes
+
+* fix(i18n): remove duplicate official documentation label ([33e4c2f](https://github.com/Scoheart/arca/commit/33e4c2f00010647a511b5432069859d6ee77da9e))
+
 ## [4.3.0](https://github.com/Scoheart/arca/compare/v4.2.2...v4.3.0) (2026-11-25)
 
 ### Changes
