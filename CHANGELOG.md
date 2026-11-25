@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.2.2](https://github.com/Scoheart/arca/compare/v4.2.1...v4.2.2) (2026-11-25)
+
+### Changes
+
+* fix(models): honor Harness defaults and open Arca Web ([2e2d16b](https://github.com/Scoheart/arca/commit/2e2d16bf42374918af9efd319f770b98a7e08487))
+
 ## [4.2.1](https://github.com/Scoheart/arca/compare/v4.2.0...v4.2.1) (2026-11-24)
 
 ### Changes
