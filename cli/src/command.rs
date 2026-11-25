@@ -1438,6 +1438,7 @@ fn mcp_add(
             source: Some("manual".into()),
         }),
         repo: None,
+        source_url: None,
     };
     let plan = ArcaCore::plan(PlanOperationRequest::UpdateCentralAsset(
         PlanUpdateCentralAssetRequest {
@@ -2066,6 +2067,7 @@ fn redacted_mcp_entry(entry: &RegistryEntry) -> Value {
             "source_configured": origin.source.is_some(),
         })),
         "repo": entry.repo.as_deref().map(safe_url),
+        "source_url": entry.source_url.as_deref().map(safe_url),
     })
 }
 
@@ -2411,6 +2413,9 @@ mod tests {
                 source: Some("SOURCE_SENTINEL".into()),
             }),
             repo: Some("https://user:REPO_SENTINEL@example.com/private?token=x".into()),
+            source_url: Some(
+                "https://user:SOURCE_URL_SENTINEL@example.com/docs?token=x".into(),
+            ),
         };
         let encoded = redacted_mcp_entry(&stdio).to_string();
         assert!(!encoded.contains("ARG_SENTINEL"));
@@ -2419,6 +2424,8 @@ mod tests {
         assert!(!encoded.contains("CWD_SENTINEL"));
         assert!(!encoded.contains("SOURCE_SENTINEL"));
         assert!(!encoded.contains("REPO_SENTINEL"));
+        assert!(!encoded.contains("SOURCE_URL_SENTINEL"));
+        assert!(encoded.contains("\"source_url\""));
         assert!(encoded.contains("API_KEY"));
         assert!(encoded.contains("arg_count"));
         assert!(encoded.contains("command_configured"));
@@ -2441,6 +2448,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         };
         let encoded = redacted_mcp_entry(&http).to_string();
         assert!(!encoded.contains("URL_SENTINEL"));

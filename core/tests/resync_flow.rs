@@ -24,6 +24,7 @@ fn stdio_entry(args: &[&str]) -> RegistryEntry {
         },
         origin: None,
         repo: None,
+        source_url: None,
     }
 }
 

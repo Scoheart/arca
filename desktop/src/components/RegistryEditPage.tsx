@@ -98,6 +98,7 @@ export function RegistryEditPage({
   const [headers, setHeaders] = useState<Record<string, string>>(existing?.config.http?.headers ?? {});
   const [headersValid, setHeadersValid] = useState(true);
   const [repo, setRepo] = useState(existing?.repo ?? "");
+  const [sourceUrl, setSourceUrl] = useState(existing?.source_url ?? "");
   const [tags, setTags] = useState<string[]>(() => normalizeMcpTags(resolvedTags ?? existing?.tags ?? []));
   const [tagsEdited, setTagsEdited] = useState(false);
   const [pendingTagDraft, setPendingTagDraft] = useState("");
@@ -197,6 +198,7 @@ export function RegistryEditPage({
       // entries whose subscription cache remains untouched.
       origin: { kind: "manual", source: "manual" },
       repo: repo.trim() || undefined,
+      source_url: sourceUrl.trim() || undefined,
     };
   };
 
@@ -405,6 +407,12 @@ export function RegistryEditPage({
           </section>
         </div>
       </div>
+      <label className="arca-mcp-field">
+        <span>{t("mcpEditor.sourceUrl")} <small>{t("mcpEditor.optional")}</small></span>
+        <input className="arca-dialog-input arca-dialog-input-mono" value={sourceUrl}
+          onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://example.com/docs/mcp"
+          spellCheck={false} autoCapitalize="off" autoCorrect="off" />
+      </label>
       <label className="arca-mcp-field">
         <span>{t("mcpEditor.repo")} <small>{t("mcpEditor.optional")}</small></span>
         <input className="arca-dialog-input arca-dialog-input-mono" value={repo}

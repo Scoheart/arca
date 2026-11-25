@@ -46,6 +46,7 @@ fn entry_from(name: String, cfg: McpConfig, origin: &RegistryOrigin) -> Registry
         config,
         origin: Some(origin.clone()),
         repo: None,
+        source_url: None,
     }
 }
 

@@ -415,6 +415,18 @@ mod tests {
                     entry.name
                 );
             }
+            match entry.source_url.as_deref() {
+                Some(source_url) => assert!(
+                    source_url.starts_with("https://"),
+                    "{}: official source URL must use HTTPS",
+                    entry.name
+                ),
+                None => assert!(
+                    entry.name == "luma",
+                    "{}: curated templates record an official source URL",
+                    entry.name
+                ),
+            }
         }
     }
 
@@ -684,6 +696,14 @@ mod tests {
             "context7 remote auth header is Authorization"
         );
         assert!(context7.description.contains("mcp/oauth"));
+        assert_eq!(
+            context7.source_url.as_deref(),
+            Some("https://context7.com/docs/resources/all-clients")
+        );
+        assert!(
+            builtin_entry(&entries, "luma", "stdio").source_url.is_none(),
+            "luma has no recorded first-party documentation URL"
+        );
 
         let github = builtin_entry(&entries, "github", "http");
         assert_eq!(
@@ -1141,6 +1161,7 @@ mod tests {
                 source: Some(source.into()),
             }),
             repo: None,
+            source_url: None,
         }
     }
 

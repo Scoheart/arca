@@ -357,13 +357,15 @@ pub struct EditorState {
     pub url: String,
     pub headers: String,
     pub repo: String,
+    pub source_url: String,
     pub field: usize,
     pub editing: bool,
     pub error: Option<String>,
 }
 
-/// Number of fields (field 3 swaps meaning by transport; field 7 = repo, common).
-pub const EDITOR_FIELDS: usize = 8;
+/// Number of fields (field 3 swaps meaning by transport; field 7 = repo;
+/// field 8 = official source URL).
+pub const EDITOR_FIELDS: usize = 9;
 
 impl EditorState {
     /// A blank editor for a new entry.
@@ -383,6 +385,7 @@ impl EditorState {
             url: String::new(),
             headers: String::new(),
             repo: String::new(),
+            source_url: String::new(),
             field: 0,
             editing: false,
             error: None,
@@ -410,6 +413,7 @@ impl EditorState {
             s.headers = kv_to_string(http.headers.as_ref());
         }
         s.repo = entry.repo.clone().unwrap_or_default();
+        s.source_url = entry.source_url.clone().unwrap_or_default();
         s
     }
 
@@ -432,6 +436,7 @@ impl EditorState {
                 "参数（JSON 数组）",
                 "环境（JSON 对象）",
                 "仓库 URL",
+                "官方文档",
             ],
             EditorTransport::Http => [
                 "名称",
@@ -442,6 +447,7 @@ impl EditorState {
                 "URL",
                 "请求头（JSON 对象）",
                 "仓库 URL",
+                "官方文档",
             ],
         }
     }
@@ -461,6 +467,7 @@ impl EditorState {
             (5, EditorTransport::Http) => self.url.clone(),
             (6, EditorTransport::Http) => self.headers.clone(),
             (7, _) => self.repo.clone(),
+            (8, _) => self.source_url.clone(),
             _ => String::new(),
         }
     }
@@ -481,6 +488,7 @@ impl EditorState {
             (5, EditorTransport::Http) => Some(&mut self.url),
             (6, EditorTransport::Http) => Some(&mut self.headers),
             (7, _) => Some(&mut self.repo),
+            (8, _) => Some(&mut self.source_url),
             _ => None,
         }
     }
@@ -531,6 +539,7 @@ impl EditorState {
             }
         };
         let repo = self.repo.trim();
+        let source_url = self.source_url.trim();
         Ok(RegistryEntry {
             name: name.to_string(),
             description: self.description.trim().to_string(),
@@ -541,6 +550,11 @@ impl EditorState {
                 None
             } else {
                 Some(repo.to_string())
+            },
+            source_url: if source_url.is_empty() {
+                None
+            } else {
+                Some(source_url.to_string())
             },
         })
     }

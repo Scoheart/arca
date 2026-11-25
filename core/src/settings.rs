@@ -1249,6 +1249,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         };
         s.registry.get_or_insert_with(Vec::new).push(entry);
         let back = serde_json::to_string(&s).unwrap();

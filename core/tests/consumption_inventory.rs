@@ -36,6 +36,7 @@ fn central_mcp() {
         },
         origin: None,
         repo: None,
+        source_url: None,
     })
     .unwrap();
 }

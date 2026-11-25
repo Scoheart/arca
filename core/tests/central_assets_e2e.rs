@@ -59,6 +59,7 @@ fn named_mcp(name: &str, command: &str) -> RegistryEntry {
         },
         origin: None,
         repo: None,
+        source_url: None,
     }
 }
 
@@ -440,6 +441,7 @@ fn mcp_rename_rejects_empty_names_and_transport_changes() {
                 },
                 origin: None,
                 repo: None,
+                source_url: None,
             }),
         },
     })

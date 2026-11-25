@@ -442,6 +442,7 @@ mod tests {
                 source: None,
             }),
             repo: None,
+            source_url: None,
         };
         let key = entry.key();
         crate::resources::mcp::registry::write_manual_entry(&entry).unwrap();

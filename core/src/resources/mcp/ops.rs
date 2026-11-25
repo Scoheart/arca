@@ -285,6 +285,7 @@ pub fn import_discovered(project_dir: Option<&str>) -> Result<usize, String> {
                 source: None,
             }),
             repo: None,
+            source_url: None,
         };
         write_discovered_entry(&entry).map_err(|e| e.to_string())?;
         imported += 1;
@@ -614,6 +615,7 @@ pub fn parse_pasted_entries(text: &str) -> Result<Vec<RegistryEntry>, String> {
             config: cfg.into(),
             origin: None,
             repo: None,
+            source_url: None,
         };
         entries.push(entry);
     }

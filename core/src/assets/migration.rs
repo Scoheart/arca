@@ -199,7 +199,8 @@ pub fn plan_mcp_adoption(request: PlanMcpAdoptionRequest) -> Result<AssetOperati
             .unwrap_or_default(),
         config: observed.config.into(),
         origin: None,
-        repo: None,
+        repo: central.as_ref().and_then(|entry| entry.repo.clone()),
+        source_url: central.as_ref().and_then(|entry| entry.source_url.clone()),
     };
     let central_changed = central
         .as_ref()
@@ -325,6 +326,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         }
     }
 

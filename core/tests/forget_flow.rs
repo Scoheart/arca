@@ -27,6 +27,7 @@ fn forget_removes_from_catalog_and_uninstalls() {
         },
         origin: None,
         repo: None,
+        source_url: None,
     })
     .unwrap();
     ops::install(

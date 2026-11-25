@@ -3574,6 +3574,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
@@ -3629,6 +3630,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
     }
@@ -3699,6 +3701,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         mutate_settings(|settings| settings.mcp_consumptions = None).unwrap();
@@ -3804,6 +3807,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let agent = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
@@ -3844,6 +3848,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         mutate_settings(|settings| {
@@ -3898,6 +3903,7 @@ mod tests {
                 },
                 origin: None,
                 repo: None,
+                source_url: None,
             })
             .unwrap();
         }
@@ -3988,6 +3994,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let plan = plan_update_agent_capabilities(PlanUpdateAgentCapabilitiesRequest {
@@ -4105,6 +4112,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         write_manual_entry(&RegistryEntry {
@@ -4121,6 +4129,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let error = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
