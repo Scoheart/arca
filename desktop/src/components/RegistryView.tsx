@@ -840,7 +840,15 @@ function RegistryDetail({
         >
           {endpoint.text}
         </InspectorField>
-        {entry.repo && (
+        {entry.source_url && (
+          <InspectorField icon={<LinkIcon className="w-4 h-4" />} label="官方文档">
+            <button onClick={() => openUrl(entry.source_url!)} className="arca-inline-link" title="在浏览器中打开">
+              <LinkIcon className="w-3.5 h-3.5" />
+              {entry.source_url}
+            </button>
+          </InspectorField>
+        )}
+        {entry.repo && entry.repo !== entry.source_url && (
           <InspectorField icon={<LinkIcon className="w-4 h-4" />} label="主页">
             <button onClick={() => openUrl(entry.repo!)} className="arca-inline-link" title="在浏览器中打开">
               <LinkIcon className="w-3.5 h-3.5" />

@@ -265,6 +265,11 @@ pub struct RegistryEntry {
     /// link in the UI; free-form, not part of the entry's identity.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub repo: Option<String>,
+    /// Official documentation or first-party source page for this template.
+    /// Optional so subscribed catalogs and older entries still parse. Not part
+    /// of the entry's identity, and never required to install the server.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_url: Option<String>,
 }
 
 /// Transport bucket of a config: "stdio" (local process) or "http" (remote,

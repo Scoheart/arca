@@ -72,6 +72,8 @@ it("renders effective and shadowed MCP rows and opens the existing Inspector", a
     tags: ["search"],
     config: { http: { type: "http", url: "https://mcp.example.test/search" } },
     origin: { kind: "manual" },
+    source_url: "https://example.com/docs/brave-search",
+    repo: "https://github.com/example/brave-search",
   };
   const shadowed: RegistryEntry = {
     name: "filesystem-old",
@@ -139,6 +141,10 @@ it("renders effective and shadowed MCP rows and opens the existing Inspector", a
   const inspector = await screen.findByRole("complementary", { name: "brave-search 详情" });
   expect(within(inspector).getByText("Web search")).toBeVisible();
   expect(within(inspector).getByText("https://mcp.example.test/search")).toBeVisible();
+  expect(within(inspector).getByText("官方文档")).toBeVisible();
+  expect(within(inspector).getByText("https://example.com/docs/brave-search")).toBeVisible();
+  expect(within(inspector).getByText("主页")).toBeVisible();
+  expect(within(inspector).getByText("https://github.com/example/brave-search")).toBeVisible();
   expect(within(inspector).getByRole("button", { name: "图标" })).toBeVisible();
 
   apiMocks.setMcpBuiltinIcon.mockResolvedValue({

@@ -58,6 +58,7 @@ fn mcp() -> RegistryEntry {
         },
         origin: None,
         repo: None,
+        source_url: None,
     }
 }
 

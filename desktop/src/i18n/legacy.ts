@@ -291,6 +291,7 @@ const english: Record<string, string> = {
   "中风险": "Medium risk",
   "主要 Agent": "Primary Agent",
   "主页": "Homepage",
+  "官方文档": "Official docs",
   "仅供参考": "Reference only",
   "仍然修复": "Repair anyway",
   "仍然安装": "Install anyway",

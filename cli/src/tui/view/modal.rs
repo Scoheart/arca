@@ -384,11 +384,19 @@ fn render_detail(model: &Model, f: &mut Frame, key: &str) {
             Span::styled(entry.tags.join(", "), theme::text()),
         ]));
     }
-    if let Some(repo) = &entry.repo {
+    if let Some(source_url) = &entry.source_url {
         lines.push(Line::from(vec![
-            label("仓库"),
-            Span::styled(repo.clone(), theme::link()),
+            label("文档"),
+            Span::styled(source_url.clone(), theme::link()),
         ]));
+    }
+    if let Some(repo) = &entry.repo {
+        if entry.source_url.as_ref() != Some(repo) {
+            lines.push(Line::from(vec![
+                label("仓库"),
+                Span::styled(repo.clone(), theme::link()),
+            ]));
+        }
     }
     if !entry.description.is_empty() {
         lines.push(Line::from(""));

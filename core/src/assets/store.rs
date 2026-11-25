@@ -632,6 +632,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
 

@@ -856,6 +856,7 @@ mod tests {
                 source: None,
             }),
             repo: None,
+            source_url: None,
         }
     }
 
@@ -1194,10 +1195,13 @@ mod tests {
         use crate::tui::model::EditorState;
         let mut e = entry("git", "manual");
         e.repo = Some("https://github.com/x/y".into());
+        e.source_url = Some("https://example.com/docs/mcp".into());
         let ed = EditorState::from_entry(&e, true);
         assert_eq!(ed.repo, "https://github.com/x/y");
+        assert_eq!(ed.source_url, "https://example.com/docs/mcp");
         let out = ed.to_entry(None).unwrap();
         assert_eq!(out.repo.as_deref(), Some("https://github.com/x/y"));
+        assert_eq!(out.source_url.as_deref(), Some("https://example.com/docs/mcp"));
     }
 
     #[test]

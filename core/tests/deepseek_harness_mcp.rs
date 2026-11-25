@@ -371,6 +371,7 @@ fn e2e_plan_and_commit_deepseek_harness_mcps() {
         },
         origin: None,
         repo: None,
+        source_url: None,
     })
     .unwrap();
 
@@ -389,6 +390,7 @@ fn e2e_plan_and_commit_deepseek_harness_mcps() {
         },
         origin: None,
         repo: None,
+        source_url: None,
     })
     .unwrap();
 

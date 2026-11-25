@@ -17,6 +17,8 @@ export interface RegistryEntry {
   origin?: RegistryOrigin;
   /** Optional homepage / source repo URL (e.g. a GitHub repo), shown as a link. */
   repo?: string;
+  /** Official documentation or first-party source page. Optional on subscribed catalogs. */
+  source_url?: string;
 }
 export interface McpIconPreference {
   kind: "builtin" | "custom";

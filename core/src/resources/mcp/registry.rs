@@ -415,6 +415,18 @@ mod tests {
                     entry.name
                 );
             }
+            match entry.source_url.as_deref() {
+                Some(source_url) => assert!(
+                    source_url.starts_with("https://"),
+                    "{}: official source URL must use HTTPS",
+                    entry.name
+                ),
+                None => assert!(
+                    entry.name == "luma",
+                    "{}: curated templates record an official source URL",
+                    entry.name
+                ),
+            }
         }
     }
 
@@ -651,14 +663,14 @@ mod tests {
     #[test]
     fn curated_verified_mcp_candidates_match_official_templates() {
         let entries = builtin_registry();
-        assert_eq!(entries.len(), 130, "curated collection entry count drifted");
+        assert_eq!(entries.len(), 237, "curated collection entry count drifted");
         assert_eq!(
             entries
                 .iter()
                 .map(|entry| entry.name.as_str())
                 .collect::<HashSet<_>>()
                 .len(),
-            128,
+            235,
             "curated collection name count drifted"
         );
 
@@ -684,6 +696,14 @@ mod tests {
             "context7 remote auth header is Authorization"
         );
         assert!(context7.description.contains("mcp/oauth"));
+        assert_eq!(
+            context7.source_url.as_deref(),
+            Some("https://context7.com/docs/resources/all-clients")
+        );
+        assert!(
+            builtin_entry(&entries, "luma", "stdio").source_url.is_none(),
+            "luma has no recorded first-party documentation URL"
+        );
 
         let github = builtin_entry(&entries, "github", "http");
         assert_eq!(
@@ -1110,6 +1130,164 @@ mod tests {
     }
 
     #[test]
+    fn curated_2026_11_25_additions_match_verified_configs() {
+        let entries = builtin_registry();
+        let cases = [
+        ("1password", "stdio", "1password-mcp"),
+        ("21st-dev-magic", "http", "https://21st.dev/api/mcp"),
+        ("adobe", "http", "https://adobe-creativity.adobe.io/mcp"),
+        ("ahrefs", "http", "https://api.ahrefs.com/mcp/mcp"),
+        ("airbyte", "http", "https://mcp.airbyte.com/mcp"),
+        ("airtable", "http", "https://mcp.airtable.com/mcp"),
+        ("aiven", "http", "https://mcp.aiven.live/mcp"),
+        ("alchemy", "http", "https://mcp.alchemy.com/mcp"),
+        ("algolia", "http", "https://mcp.algolia.com/mcp"),
+        ("alibaba-cloud-ops", "stdio", "uvx alibaba-cloud-ops-mcp-server@latest"),
+        ("alibaba-devops", "http", "https://openapi-rdc.aliyuncs.com/ai/mcp"),
+        ("alpaca", "stdio", "uvx alpaca-mcp-server"),
+        ("anki", "stdio", "npx -y @ankimcp/anki-mcp-server --stdio"),
+        ("antv-chart", "stdio", "npx -y @antv/mcp-server-chart"),
+        ("apache-doris", "stdio", "doris-mcp-server --transport stdio"),
+        ("apollo-io", "http", "https://mcp.apollo.io/mcp"),
+        ("ashby", "http", "https://mcp.ashbyhq.com/mcp/v1"),
+        ("auth0", "stdio", "npx -y @auth0/auth0-mcp-server run"),
+        ("axiom", "http", "https://mcp.axiom.co/mcp"),
+        ("azure-devops", "http", "https://mcp.dev.azure.com/{organization}"),
+        ("blender", "stdio", "uvx mcp-for-blender"),
+        ("booking", "http", "https://demandapi-mcp.booking.com/v1/sp/mcp/"),
+        ("brex", "http", "https://api.brex.com/mcp"),
+        ("bright-data", "http", "https://mcp.brightdata.com/mcp?token=${BRIGHT_DATA_API_TOKEN}"),
+        ("buddy", "http", "https://mcp.buddy.works/mcp"),
+        ("cal-com", "stdio", "npx @calcom/cal-mcp@latest"),
+        ("clerk", "http", "https://mcp.clerk.com/mcp"),
+        ("coingecko", "http", "https://mcp.api.coingecko.com/mcp"),
+        ("couchbase", "stdio", "uvx couchbase-mcp-server operational"),
+        ("crowdstrike", "stdio", "uvx falcon-mcp"),
+        ("dbt", "http", "https://YOUR_DBT_HOST_URL/api/ai/v1/mcp/"),
+        ("deepl", "http", "https://mcp.deepl.com/v1/mcp"),
+        ("devcycle", "http", "https://mcp.devcycle.com/mcp"),
+        ("docling", "stdio", "uvx --from=docling-mcp docling-mcp-server"),
+        ("excalidraw", "http", "https://mcp.excalidraw.com"),
+        ("expo", "http", "https://mcp.expo.dev/mcp"),
+        ("fireflies", "http", "https://api.fireflies.ai/mcp"),
+        ("firefox-devtools", "stdio", "npx -y @mozilla/firefox-mcp@latest --headless --viewport 1280x720"),
+        ("gamma", "http", "https://mcp.gamma.app/mcp"),
+        ("gitkraken", "stdio", "gk mcp"),
+        ("gitmcp", "http", "https://gitmcp.io/{owner}/{repo}"),
+        ("globalping", "http", "https://mcp.globalping.dev/mcp"),
+        ("google-bigquery", "http", "https://bigquery.googleapis.com/mcp"),
+        ("incident-io", "http", "https://mcp.incident.io/mcp"),
+        ("launchdarkly", "http", "https://mcp.launchdarkly.com/mcp"),
+        ("lucid", "http", "https://mcp.lucid.app/mcp"),
+        ("mailchimp", "http", "https://mandrillapp.com/mcp"),
+        ("obsidian", "stdio", "uvx mcp-obsidian"),
+        ("snyk", "stdio", "snyk mcp -t stdio"),
+        ("zoominfo", "http", "https://mcp.zoominfo.com/mcp"),
+        ("growthbook", "http", "https://mcp.growthbook.io/mcp"),
+        ("lovable", "http", "https://mcp.lovable.dev"),
+        ("plane", "http", "https://mcp.plane.so/http/mcp"),
+        ("postman", "http", "https://mcp.postman.com/minimal"),
+        ("tableau", "http", "https://mcp.tableau.com"),
+        ("todoist", "http", "https://ai.todoist.net/mcp"),
+        ("wix", "http", "https://mcp.wix.com/mcp"),
+        ("google-analytics", "stdio", "pipx run analytics-mcp"),
+        ("google-cloud-run", "stdio", "npx -y @google-cloud/cloud-run-mcp"),
+        ("google-compute-engine", "http", "https://compute.googleapis.com/mcp"),
+        ("granola", "http", "https://mcp.granola.ai/mcp"),
+        ("hex", "http", "https://app.hex.tech/mcp"),
+        ("hibp", "http", "https://haveibeenpwned.com/mcp"),
+        ("instana", "stdio", "mcp-instana --transport stdio"),
+        ("jitsu", "http", "https://use.jitsu.com/mcp"),
+        ("kaggle", "http", "https://www.kaggle.com/mcp"),
+        ("laravel-boost", "stdio", "php artisan boost:mcp"),
+        ("make", "http", "https://mcp.make.com/v2"),
+        ("markitdown", "stdio", "markitdown-mcp"),
+        ("mermaid-chart", "http", "https://mcp.mermaid.ai/mcp"),
+        ("metabase", "http", "https://{your-metabase.example.com}/api/metabase-mcp"),
+        ("minimax", "stdio", "uvx minimax-mcp -y"),
+        ("miro", "http", "https://mcp.miro.com/"),
+        ("neo4j", "stdio", "python -m neo4j_mcp_server"),
+        ("onesignal", "http", "https://api.onesignal.com/mcp/oauth"),
+        ("openzeppelin", "http", "https://mcp.openzeppelin.com/contracts/solidity/mcp"),
+        ("parallel-search", "http", "https://search.parallel.ai/mcp"),
+        ("plaid", "http", "https://api.dashboard.plaid.com/mcp/"),
+        ("razorpay", "http", "https://mcp.razorpay.com/mcp"),
+        ("readwise", "http", "https://mcp2.readwise.io/mcp"),
+        ("semrush", "http", "https://mcp.semrush.com/v2/mcp"),
+        ("similarweb", "http", "https://mcp.similarweb.com"),
+        ("singlestore", "stdio", "uvx singlestore-mcp-server start"),
+        ("skyvern", "http", "https://api.skyvern.com/mcp/"),
+        ("sonarqube", "stdio", "docker run --init --pull=always -i --rm -e SONARQUBE_TOKEN -e SONARQUBE_ORG sonarsource/sonarqube-mcp"),
+        ("starrocks", "stdio", "uv run --with mcp-server-starrocks mcp-server-starrocks"),
+        ("stytch", "http", "https://mcp.stytch.dev/mcp"),
+        ("svelte", "http", "https://mcp.svelte.dev/mcp"),
+        ("tencent-cloudbase", "http", "https://tcb-api.cloud.tencent.com/mcp/v1"),
+        ("tencent-cos", "stdio", "npx cos-mcp --Region=${TENCENT_COS_REGION} --Bucket=${TENCENT_COS_BUCKET} --SecretId=${TENCENT_SECRET_ID} --SecretKey=${TENCENT_SECRET_KEY} --DatasetName=${TENCENT_COS_DATASET}"),
+        ("tencent-edgeone", "stdio", "npx @edgeone/makers-mcp@latest"),
+        ("teradata", "stdio", "uvx teradata-mcp-server"),
+        ("timescale-pg-aiguide", "http", "https://mcp.tigerdata.com/docs"),
+        ("tinybird", "http", "https://mcp.tinybird.co?token=${TINYBIRD_TOKEN}"),
+        ("tldraw", "http", "https://tldraw-mcp-app.tldraw.workers.dev/mcp"),
+        ("trello", "http", "https://mcp.trello.com/v1"),
+        ("typeform", "http", "https://api.typeform.com/mcp"),
+        ("unleash", "http", "https://your-instance.getunleash.io/api/admin/mcp"),
+        ("unstructured", "http", "https://mcp.transform.unstructured.io"),
+        ("uptimerobot", "http", "https://mcp.uptimerobot.com/mcp"),
+        ("v0", "http", "https://v0.app/api/mcp"),
+        ("victoriametrics", "http", "https://play-mcp.victoriametrics.com/mcp"),
+        ("vizro", "stdio", "uvx vizro-mcp"),
+        ("whimsical", "http", "https://mcp.whimsical.com/mcp"),
+        ("wolfram", "http", "https://agenttools.wolfram.com/mcp"),
+        ("wordpress", "stdio", "wp --path=/path/to/your/wordpress/site mcp-adapter serve --server=mcp-adapter-default-server --user=admin"),
+        ("zenml", "stdio", "docker run -i --rm -e ZENML_STORE_URL -e ZENML_STORE_API_KEY -e ZENML_ACTIVE_PROJECT_ID -e ZENML_MCP_PROFILE -e ZENML_MCP_WRITE_POLICY zenmldocker/mcp-zenml:latest"),
+        ];
+        assert_eq!(cases.len(), 107);
+        for (name, transport, signature) in cases {
+            let entry = builtin_entry(&entries, name, transport);
+            let actual = if transport == "http" {
+                entry.config.http.as_ref().unwrap().url.clone()
+            } else {
+                let stdio = entry.config.stdio.as_ref().unwrap();
+                let mut parts = vec![stdio.command.clone()];
+                if let Some(args) = &stdio.args {
+                    parts.extend(args.iter().cloned());
+                }
+                parts.join(" ")
+            };
+            assert_eq!(actual, signature, "{name}");
+            assert!(
+                entry.source_url.as_deref().is_some_and(|url| url.starts_with("https://")),
+                "{name}: official source URL is required"
+            );
+        }
+        assert!(builtin_entry(&entries, "apify", "http")
+            .config
+            .http
+            .as_ref()
+            .unwrap()
+            .headers
+            .is_none());
+        assert_eq!(
+            builtin_entry(&entries, "mailchimp", "http")
+                .config
+                .http
+                .as_ref()
+                .unwrap()
+                .headers
+                .as_ref()
+                .unwrap()
+                .get("Authorization")
+                .map(String::as_str),
+            Some("Bearer ${MAILCHIMP_API_KEY}")
+        );
+        assert!(builtin_entry(&entries, "obsidian", "stdio")
+            .tags
+            .iter()
+            .any(|tag| tag == "community"));
+        assert!(entries.iter().all(|entry| entry.name != "google-drive"));
+    }
+
+    #[test]
     fn managed_def_paths_are_stable() {
         assert!(cached_path(&managed_def(MANUAL_ID, "手动添加"))
             .unwrap()
@@ -1141,6 +1319,7 @@ mod tests {
                 source: Some(source.into()),
             }),
             repo: None,
+            source_url: None,
         }
     }
 

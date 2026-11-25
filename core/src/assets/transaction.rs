@@ -6055,6 +6055,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
@@ -6097,6 +6098,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
@@ -6146,6 +6148,7 @@ mod tests {
                     },
                     origin: None,
                     repo: None,
+                    source_url: None,
                 }),
             },
         })
@@ -6250,6 +6253,7 @@ mod tests {
                     },
                     origin: None,
                     repo: None,
+                    source_url: None,
                 }),
             },
         })
@@ -6304,6 +6308,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let added = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
@@ -6363,6 +6368,7 @@ mod tests {
                 },
                 origin: None,
                 repo: None,
+                source_url: None,
             })
             .unwrap();
         }
@@ -6421,6 +6427,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
@@ -6488,6 +6495,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {
@@ -6569,6 +6577,7 @@ mod tests {
                     },
                     origin: None,
                     repo: None,
+                    source_url: None,
                 }),
             },
         })
@@ -6665,6 +6674,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         let plan = plan_set_agent_consumption(PlanSetAgentConsumptionRequest {

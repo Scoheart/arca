@@ -219,6 +219,7 @@ mod tests {
                 source: None,
             }),
             repo: None,
+            source_url: None,
         }
     }
 

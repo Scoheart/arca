@@ -162,6 +162,7 @@ fn lifecycle_command_returns_a_secret_free_review_plan() {
                     },
                     origin: None,
                     repo: None,
+                    source_url: None,
                 }),
             },
         }),

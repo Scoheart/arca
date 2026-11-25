@@ -264,6 +264,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
         write_manual_entry(&RegistryEntry {
@@ -280,6 +281,7 @@ mod tests {
             },
             origin: None,
             repo: None,
+            source_url: None,
         })
         .unwrap();
     }

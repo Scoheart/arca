@@ -181,6 +181,7 @@ fn unavailable_or_unknown_agents_fail_without_losing_snapshots() {
         config: config.clone().into(),
         origin: None,
         repo: None,
+        source_url: None,
     })
     .unwrap();
 
