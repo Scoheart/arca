@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.4.0](https://github.com/Scoheart/arca/compare/v4.3.2...v4.4.0) (2026-11-26)
+
+### Changes
+
+* feat(models): add audited hosted provider catalog ([4d3a72c](https://github.com/Scoheart/arca/commit/4d3a72c599716bf241ea77a18bfb58ab563cde02))
+
 ## [4.3.2](https://github.com/Scoheart/arca/compare/v4.3.1...v4.3.2) (2026-11-25)
 
 ### Changes
