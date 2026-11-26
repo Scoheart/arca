@@ -7,6 +7,7 @@
 //! guidance-only.
 
 pub(crate) mod adapters;
+mod audited_catalog;
 mod claude_desktop;
 pub(crate) mod credential;
 #[cfg(any(target_os = "macos", test))]
@@ -220,11 +221,28 @@ struct ModelProviderLinks {
 }
 
 static PROVIDER_LINKS: LazyLock<BTreeMap<String, ModelProviderLinks>> = LazyLock::new(|| {
-    let links: BTreeMap<String, ModelProviderLinks> =
+    let mut links: BTreeMap<String, ModelProviderLinks> =
         serde_json::from_str(include_str!("../../../../data/provider-links.json"))
             .expect("provider link catalog must be valid");
+    for (id, entry) in audited_catalog::providers() {
+        let previous = links.insert(
+            id.to_string(),
+            ModelProviderLinks {
+                docs_url: entry.docs_url.to_string(),
+                portal: ModelProviderPortalView {
+                    url: entry.portal_url.unwrap_or(entry.docs_url).to_string(),
+                    kind: if entry.portal_url.is_some() {
+                        ModelProviderPortalKind::Console
+                    } else {
+                        ModelProviderPortalKind::Setup
+                    },
+                },
+            },
+        );
+        assert!(previous.is_none(), "duplicate provider link: {id}");
+    }
     for (id, entry) in &links {
-        assert!(MODEL_PROVIDERS.iter().any(|provider| provider.id == id.as_str() && provider.category != "custom"),
+        assert!(list_providers().iter().any(|provider| provider.id == id.as_str() && provider.category != "custom"),
             "unknown provider link: {id}");
         for value in [&entry.docs_url, &entry.portal.url] {
             let url = url::Url::parse(value).expect("provider links must be valid URLs");
@@ -233,7 +251,7 @@ static PROVIDER_LINKS: LazyLock<BTreeMap<String, ModelProviderLinks>> = LazyLock
                 "provider links must be credential-free HTTPS URLs: {id}");
         }
     }
-    assert!(MODEL_PROVIDERS.iter().filter(|provider| provider.category != "custom")
+    assert!(list_providers().iter().filter(|provider| provider.category != "custom")
         .all(|provider| links.contains_key(provider.id)), "provider link catalog must cover every built-in template");
     links
 });
@@ -3086,11 +3104,16 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
 ];
 
 pub fn list_providers() -> &'static [ModelProviderView] {
-    MODEL_PROVIDERS
+    static PROVIDERS: LazyLock<Vec<ModelProviderView>> = LazyLock::new(|| {
+        let mut providers = MODEL_PROVIDERS.to_vec();
+        providers.extend(audited_catalog::providers().values().map(|entry| entry.template()));
+        providers
+    });
+    &PROVIDERS
 }
 
 fn provider_display_name(provider: &str) -> String {
-    MODEL_PROVIDERS
+    list_providers()
         .iter()
         .find(|candidate| candidate.id == provider)
         .map(|candidate| candidate.name.to_string())
@@ -3194,7 +3217,7 @@ pub fn infer_provider(base_url: &str) -> String {
             || format!("{endpoint}{}", protocol.default_endpoint_path())
                 .eq_ignore_ascii_case(normalized)
     };
-    if let Some(provider) = MODEL_PROVIDERS.iter().find(|provider| {
+    if let Some(provider) = list_providers().iter().find(|provider| {
         provider
             .default_base_url
             .is_some_and(|endpoint| matches_endpoint(endpoint, &provider.default_protocol))

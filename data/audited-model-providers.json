@@ -1,0 +1,2695 @@
+[
+  {
+    "id": "01-ai",
+    "name": "01.AI",
+    "category": "official",
+    "base_url": "https://api.lingyiwanwu.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://platform.lingyiwanwu.com/docs/api-reference",
+    "models": [
+      "yi-lightning"
+    ]
+  },
+  {
+    "id": "360ai",
+    "name": "360 AI",
+    "category": "official",
+    "base_url": "https://api.360.cn/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ai.360.com/docs/quick-start",
+    "models": [
+      "360gpt2-pro"
+    ]
+  },
+  {
+    "id": "59api",
+    "name": "59API",
+    "category": "gateway",
+    "base_url": "https://api.59api.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://59api.com/docs?lang=pt",
+    "models": [
+      "gpt-6.1-sol"
+    ]
+  },
+  {
+    "id": "abliteratedllm",
+    "name": "AbliteratedLLM",
+    "category": "gateway",
+    "base_url": "https://api.abliteratedllm.dev/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://abliteratedllm.dev/docs",
+    "models": [
+      "glm-5.3-flash-abliterated"
+    ]
+  },
+  {
+    "id": "abliteration-ai",
+    "name": "abliteration.ai",
+    "category": "gateway",
+    "base_url": "https://api.abliteration.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.abliteration.ai/quickstart"
+  },
+  {
+    "id": "above",
+    "name": "above.dev",
+    "category": "gateway",
+    "base_url": "https://api.above.dev/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://above.dev/docs"
+  },
+  {
+    "id": "acacus",
+    "name": "acacus.ly",
+    "category": "gateway",
+    "base_url": "https://acacus.ly/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://acacus.ly/developers",
+    "models": [
+      "deepseek-v4-flash"
+    ]
+  },
+  {
+    "id": "adzuki",
+    "name": "Adzuki AI",
+    "category": "gateway",
+    "base_url": "https://adzukiai.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://adzukiai.com/docs",
+    "models": [
+      "deepseek-v4.1-flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "afri-nexus",
+    "name": "Afri Nexus AI",
+    "category": "gateway",
+    "base_url": "https://api.afri-nexus.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://afri-nexus.io/docs/",
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "agentrouter",
+    "name": "AgentRouter",
+    "category": "gateway",
+    "base_url": "https://agentrouter.org/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://agentrouter.org/docs/opencode.html",
+    "models": [
+      "AgentRouter-openai-gateway/deepseek-v4-flash"
+    ]
+  },
+  {
+    "id": "aiand",
+    "name": "ai&",
+    "category": "gateway",
+    "base_url": "https://api.aiand.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.aiand.com/",
+    "models": [
+      "google/gemma-4-31b-it"
+    ]
+  },
+  {
+    "id": "aifast-hk",
+    "name": "AI快站 / AIFast HK",
+    "category": "gateway",
+    "base_url": "https://www.aifast.hk/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.aifast.hk/guides/quick-start/"
+  },
+  {
+    "id": "ailoot",
+    "name": "ailoot.ai",
+    "category": "gateway",
+    "base_url": "https://api.ailoot.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ailoot.ai/docs/es-mx/",
+    "models": [
+      "claude-sonnet-5-5"
+    ]
+  },
+  {
+    "id": "aipg",
+    "name": "AI Power Grid",
+    "category": "gateway",
+    "base_url": "https://api.aipowergrid.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://aipowergrid.io/docs/integrations",
+    "models": [
+      "auto"
+    ]
+  },
+  {
+    "id": "aiport",
+    "name": "AIport",
+    "category": "gateway",
+    "base_url": "https://aiport.id/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://aiport.id/docs",
+    "models": [
+      "deepseek-v4-flash"
+    ]
+  },
+  {
+    "id": "airouter-kz",
+    "name": "AI Router Kazakhstan",
+    "category": "gateway",
+    "base_url": "https://api.airouter.kz/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://airouter.kz/docs",
+    "models": [
+      "google/gemini-3-pro"
+    ]
+  },
+  {
+    "id": "aitokenking",
+    "name": "AItokenKing",
+    "category": "gateway",
+    "base_url": "https://api.aitokenking.com.tw/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.aitokenking.com.tw/docs",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "aitunnel",
+    "name": "AITUNNEL",
+    "category": "gateway",
+    "base_url": "https://api.aitunnel.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://aitunnel.ru/docs",
+    "models": [
+      "deepseek-v4-pro"
+    ]
+  },
+  {
+    "id": "aki-io",
+    "name": "AKI.IO",
+    "category": "gateway",
+    "base_url": "https://aki.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://aki.io/docs/getting-started/do-you-first-request/",
+    "models": [
+      "glm5.3-tl5"
+    ]
+  },
+  {
+    "id": "allsmartllm",
+    "name": "allsmartllm.com",
+    "category": "gateway",
+    "base_url": "https://allsmartllm.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://allsmartllm.com",
+    "models": [
+      "top"
+    ]
+  },
+  {
+    "id": "altare",
+    "name": "Altare",
+    "category": "official",
+    "base_url": "https://inference.altare.global/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://altare.gg/",
+    "models": [
+      "glm-5.3"
+    ]
+  },
+  {
+    "id": "ambient",
+    "name": "Ambient",
+    "category": "official",
+    "base_url": "https://api.ambient.xyz/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ambient.xyz/docs/get-started/quickstart.md",
+    "models": [
+      "ambient/large"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "anonrouter",
+    "name": "AnonRouter",
+    "category": "gateway",
+    "base_url": "https://api.anonrouter.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.anonrouter.ai/free-models",
+    "models": [
+      "anonrouter/free"
+    ]
+  },
+  {
+    "id": "api-route-com",
+    "name": "api-route.com",
+    "category": "gateway",
+    "base_url": "https://global.api-route.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.api-route.com/",
+    "models": [
+      "claude-sonnet-4-6"
+    ]
+  },
+  {
+    "id": "api14",
+    "name": "api14",
+    "category": "gateway",
+    "base_url": "https://api14.com/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api14.com/es/docs",
+    "live_models": true
+  },
+  {
+    "id": "apiairforce",
+    "name": "Api.airforce",
+    "category": "gateway",
+    "base_url": "https://api.airforce/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.airforce",
+    "models": [
+      "gpt-4o"
+    ]
+  },
+  {
+    "id": "apiario",
+    "name": "apiario.dev",
+    "category": "gateway",
+    "base_url": "https://api.apiario.dev/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://apiario.dev",
+    "models": [
+      "apiario/gemma-4-12b"
+    ]
+  },
+  {
+    "id": "apigator",
+    "name": "apigator.ai",
+    "category": "gateway",
+    "base_url": "https://api.apigator.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://apigator.ai/es/docs/",
+    "models": [
+      "free/nemotron-nano-30b"
+    ]
+  },
+  {
+    "id": "apimany",
+    "name": "APIMany",
+    "category": "gateway",
+    "base_url": "https://apimany.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://apimany.com/pt/docs",
+    "models": [
+      "claude-sonnet-5-5"
+    ]
+  },
+  {
+    "id": "apivai",
+    "name": "APIVai",
+    "category": "gateway",
+    "base_url": "https://api.apivai.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://apivai.com/pt/docs",
+    "live_models": true
+  },
+  {
+    "id": "apivn",
+    "name": "APIVN",
+    "category": "gateway",
+    "base_url": "https://apivn.vn/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://apivn.vn/",
+    "models": [
+      "claude-sonnet-5"
+    ]
+  },
+  {
+    "id": "arcee",
+    "name": "Arcee",
+    "category": "gateway",
+    "base_url": "https://api.arcee.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.arcee.ai/get-started/quick-start"
+  },
+  {
+    "id": "augure",
+    "name": "Augure",
+    "category": "gateway",
+    "base_url": "https://api.augureai.ca/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://augureai.ca/docs/api",
+    "models": [
+      "ossington"
+    ]
+  },
+  {
+    "id": "awansiber",
+    "name": "AwanSiber",
+    "category": "gateway",
+    "base_url": "https://ai.awansiber.co.id/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ai.awansiber.co.id/docs",
+    "models": [
+      "gpt-5"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "bee",
+    "name": "Bee by HEOSSI",
+    "category": "gateway",
+    "base_url": "https://api.bee.heossi.com/bee",
+    "protocol": "openai-completions",
+    "docs_url": "https://bee.heossi.com/docs/sdks",
+    "models": [
+      "bee-cell"
+    ]
+  },
+  {
+    "id": "bizimzeka",
+    "name": "BizimZeka",
+    "category": "gateway",
+    "base_url": "https://api.bizimzeka.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://bizimzeka.com/yapay-zeka-api",
+    "models": [
+      "gemini-3.8-flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "blackboxai",
+    "name": "Blackbox AI",
+    "category": "gateway",
+    "base_url": "https://enterprise.blackbox.ai",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.blackbox.ai/api-reference/chat",
+    "models": [
+      "blackboxai/openai/gpt-5.5"
+    ]
+  },
+  {
+    "id": "blueclaw",
+    "name": "Blue Claw",
+    "category": "gateway",
+    "base_url": "https://openai.blueclaw.network/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://blueclaw.network/quickstart.html",
+    "models": [
+      "auto"
+    ]
+  },
+  {
+    "id": "boundless",
+    "name": "Boundless",
+    "category": "gateway",
+    "base_url": "https://api.inference.boundless.network/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inference.boundless.network/docs/quickstart",
+    "models": [
+      "deepseek/deepseek-v4.1-flash-1017"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "ccsio",
+    "name": "ccsio.ai",
+    "category": "gateway",
+    "base_url": "https://api.latam.ccsio.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ccsio.ai/latam/es/developers",
+    "models": [
+      "qwen3.8-flash-next"
+    ]
+  },
+  {
+    "id": "cedarllm",
+    "name": "CedarLLM",
+    "category": "gateway",
+    "base_url": "https://api.cedarllm.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://cedarllm.com/docs",
+    "models": [
+      "qwen3.8-27b"
+    ]
+  },
+  {
+    "id": "charm",
+    "name": "Charm / Hyper",
+    "category": "gateway",
+    "base_url": "https://hyper.charm.land/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://hyper.charm.land/docs/",
+    "models": [
+      "deepseek-v4-flash"
+    ]
+  },
+  {
+    "id": "cheapaimodel",
+    "name": "cheapaimodel",
+    "category": "gateway",
+    "base_url": "https://api.cheapaimodel.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://cheapaimodel.ai/docs/quickstart",
+    "models": [
+      "deepseek-v4-1-flash"
+    ]
+  },
+  {
+    "id": "cheaperinference",
+    "name": "Cheaper Inference",
+    "category": "gateway",
+    "base_url": "https://api.cheaperinference.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.cheaperinference.com/",
+    "models": [
+      "gpt-5-mini"
+    ]
+  },
+  {
+    "id": "cloudapi-uz",
+    "name": "CloudAPI Uzbekistan",
+    "category": "gateway",
+    "base_url": "https://cloudapi.uz/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://cloudapi.uz/docs?lang=ru",
+    "models": [
+      "gpt-4o-mini"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "cloudferro-sherlock",
+    "name": "CloudFerro Sherlock",
+    "category": "gateway",
+    "base_url": "https://api-sherlock.cloudferro.com/openai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.cloudferro.com/en/latest/sherlock/Sherlock-chat-completion-endpoint-on-CloudFerro-Cloud.html",
+    "models": [
+      "Bielik-11B-v3.0-Instruct"
+    ]
+  },
+  {
+    "id": "cometapi",
+    "name": "cometapi.com",
+    "category": "gateway",
+    "base_url": "https://api.cometapi.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.cometapi.com/quickstart/",
+    "models": [
+      "gpt-5.5"
+    ]
+  },
+  {
+    "id": "commandcode",
+    "name": "CommandCode",
+    "category": "gateway",
+    "base_url": "https://api.commandcode.ai/provider/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://commandcode.ai/docs/provider",
+    "models": [
+      "deepseek/deepseek-v4-flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "confidential-ai",
+    "name": "Confidential AI",
+    "category": "gateway",
+    "base_url": "https://api.confidential.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://confidential.ai/docs/inference-api/get-started",
+    "models": [
+      "deepseek-ai/DeepSeek-V4.1-Flash-1017"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "crossmodel",
+    "name": "CrossModel",
+    "category": "gateway",
+    "base_url": "https://api.crossmodel.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.crossmodel.ai/docs"
+  },
+  {
+    "id": "dahono",
+    "name": "Dahono AI Router",
+    "category": "gateway",
+    "base_url": "https://gateway.dahono.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://router.dahono.com/models",
+    "models": [
+      "dahono/deepseek-v4-pro"
+    ]
+  },
+  {
+    "id": "dashacompute",
+    "name": "Dasha Compute",
+    "category": "gateway",
+    "base_url": "https://lobby.getdasha.com/compute/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://lobby.getdasha.com/compute",
+    "models": [
+      "qwen3-8b"
+    ]
+  },
+  {
+    "id": "datacanvas",
+    "name": "DataCanvas / Alaya NeW",
+    "category": "gateway",
+    "base_url": "https://token.alayanew.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.alayanew.com/cn/docs",
+    "models": [
+      "glm-5.1"
+    ]
+  },
+  {
+    "id": "deapi",
+    "name": "deAPI",
+    "category": "gateway",
+    "base_url": "https://oai.deapi.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.deapi.ai/introduction"
+  },
+  {
+    "id": "deep",
+    "name": "deep.sa",
+    "category": "official",
+    "base_url": "https://alapi.deep.sa/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://alapi.deep.sa/docs",
+    "models": [
+      "llama-3.3-70b-versatile"
+    ]
+  },
+  {
+    "id": "discountedtokens",
+    "name": "DiscountedTokens",
+    "category": "gateway",
+    "base_url": "https://discountedtokens.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://discountedtokens.com",
+    "models": [
+      "gpt-5.6-terra"
+    ]
+  },
+  {
+    "id": "dxntdxtoken",
+    "name": "DXNT / DX Token",
+    "category": "gateway",
+    "base_url": "https://www.dxnt.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.dxnt.com",
+    "models": [
+      "gpt-4o"
+    ]
+  },
+  {
+    "id": "e2e-networks",
+    "name": "E2E Networks",
+    "category": "gateway",
+    "base_url": "https://blaze.e2enetworks.net/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.e2enetworks.com/blaze",
+    "models": [
+      "auto"
+    ]
+  },
+  {
+    "id": "empiriolabs",
+    "name": "EmpirioLabs AI",
+    "category": "gateway",
+    "base_url": "https://api.empiriolabs.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.empiriolabs.ai/getting-started.md",
+    "models": [
+      "qwen3-7-max"
+    ]
+  },
+  {
+    "id": "entrim",
+    "name": "Entrim",
+    "category": "gateway",
+    "base_url": "https://api.entrim.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.entrim.ai/model-api/",
+    "models": [
+      "zai-org/GLM-5.3-Flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "eurouter",
+    "name": "EURouter",
+    "category": "gateway",
+    "base_url": "https://www.eurouter.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://eurouter.ai",
+    "live_models": true
+  },
+  {
+    "id": "faastic",
+    "name": "Faastic",
+    "category": "gateway",
+    "base_url": "https://ai.faastic.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://faastic.com/fr/ai-api",
+    "models": [
+      "deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "fleece-ai",
+    "name": "FLEECE AI (Frontière AI / Evanesca)",
+    "category": "gateway",
+    "base_url": "https://evanesca.app/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://evanesca.app/fr/docs",
+    "live_models": true
+  },
+  {
+    "id": "freetheai",
+    "name": "FreeTheAi",
+    "category": "gateway",
+    "base_url": "https://api.freetheai.org/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://freetheai.org/",
+    "models": [
+      "glm-5.3"
+    ]
+  },
+  {
+    "id": "frontiere",
+    "name": "Frontière AI",
+    "category": "gateway",
+    "base_url": "https://getfrontiereai.eu/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://getfrontiereai.eu/fr/docs",
+    "models": [
+      "glm-5.3"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "gapgpt",
+    "name": "GapGPT",
+    "category": "gateway",
+    "base_url": "https://api.gapgpt.ir/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://gapgpt.app/llms.txt",
+    "live_models": true
+  },
+  {
+    "id": "gebai",
+    "name": "gebai.ca",
+    "category": "gateway",
+    "base_url": "https://api.gebai.ca/v2",
+    "protocol": "openai-completions",
+    "docs_url": "https://gebai.ca/ar/developers"
+  },
+  {
+    "id": "getvibeapi",
+    "name": "GetVibe API",
+    "category": "gateway",
+    "base_url": "https://getvibeapi.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://getvibeapi.com/",
+    "models": [
+      "gpt-5.6-luna"
+    ]
+  },
+  {
+    "id": "gnani",
+    "name": "Gnani AI",
+    "category": "gateway",
+    "base_url": "https://api.vachana.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.gnani.ai/api/LLM/quickstart.md",
+    "models": [
+      "evon-v3.5"
+    ]
+  },
+  {
+    "id": "go2llm",
+    "name": "go2llm.tech",
+    "category": "gateway",
+    "base_url": "https://go2llm.tech/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://go2llm.tech",
+    "models": [
+      "claude-haiku-4-5"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "gptunnel",
+    "name": "GPTunneL",
+    "category": "gateway",
+    "base_url": "https://gptunnel.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.gptunnel.ru/",
+    "models": [
+      "gpt-4o"
+    ]
+  },
+  {
+    "id": "gpubrasil",
+    "name": "gpubrasil.com.br",
+    "category": "gateway",
+    "base_url": "https://gpubrasil.com.br/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://gpubrasil.com.br/br/llm-api.html",
+    "models": [
+      "gpub-plus"
+    ]
+  },
+  {
+    "id": "graphn",
+    "name": "GraphN",
+    "category": "gateway",
+    "base_url": "https://model.graphn.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://graphn.ai/docs/inference-quickstart",
+    "models": [
+      "qwen3-80b"
+    ]
+  },
+  {
+    "id": "greenpt",
+    "name": "GreenPT",
+    "category": "gateway",
+    "base_url": "https://api.greenpt.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.greenpt.ai/get-started",
+    "models": [
+      "gemma4",
+      "glm-5.3"
+    ]
+  },
+  {
+    "id": "hopper",
+    "name": "Hopper",
+    "category": "gateway",
+    "base_url": "https://api.withhopper.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.withhopper.com/llm",
+    "models": [
+      "gemma-4-31b"
+    ]
+  },
+  {
+    "id": "hpc-ai",
+    "name": "HPC-AI",
+    "category": "gateway",
+    "base_url": "https://api.hpc-ai.com/inference/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.hpc-ai.com/doc/docs/Model-APIs/API-Reference/OpenAI-Compatible-API/Create-Chat-Completions/",
+    "models": [
+      "moonshotai/kimi-k2.7-code"
+    ]
+  },
+  {
+    "id": "huawei",
+    "name": "Huawei / Huawei Cloud",
+    "category": "gateway",
+    "base_url": "https://api.modelarts-maas.com/openai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://support.huaweicloud.com/model-call-maas/model-call-021.html"
+  },
+  {
+    "id": "hubris",
+    "name": "Hubris",
+    "category": "gateway",
+    "base_url": "https://api.hubris.pw/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://hubris.pw/llms.txt",
+    "models": [
+      "anthropic/claude-sonnet-5"
+    ]
+  },
+  {
+    "id": "huru",
+    "name": "Huru",
+    "category": "gateway",
+    "base_url": "https://www.huruai.xyz/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.huruai.xyz/docs",
+    "models": [
+      "huru/chat-1"
+    ]
+  },
+  {
+    "id": "ikhdev",
+    "name": "Ikhdev API",
+    "category": "gateway",
+    "base_url": "https://api.ikhdev.xyz/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ikhdev.xyz/docs",
+    "models": [
+      "glm-5.3"
+    ]
+  },
+  {
+    "id": "ilmu",
+    "name": "ILMU (YTL AI Labs)",
+    "category": "official",
+    "base_url": "https://api.ilmu.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.ilmu.ai/docs/getting-started/overview",
+    "models": [
+      "ilmu-mini-v3.3"
+    ]
+  },
+  {
+    "id": "inco",
+    "name": "Inco",
+    "category": "gateway",
+    "base_url": "https://api.inco.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://platform.inco.ai/docs",
+    "models": [
+      "glm-5.3-flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "inferall",
+    "name": "InferAll",
+    "category": "gateway",
+    "base_url": "https://api.inferall.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inferall.ai/docs",
+    "models": [
+      "openai/gpt-4.1"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "inference-coop",
+    "name": "Inference Cooperative",
+    "category": "gateway",
+    "base_url": "https://gateway.inference.coop/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.inference.coop/guides/api-access/",
+    "models": [
+      "tinfoil/deepseek-v4-1-flash",
+      "deepseek-flash-green"
+    ]
+  },
+  {
+    "id": "inference-eu",
+    "name": "Inference.eu",
+    "category": "gateway",
+    "base_url": "https://api.inference.eu/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inference.eu/",
+    "models": [
+      "mistral-small-4-119b"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "inferenceapis",
+    "name": "Inference APIs",
+    "category": "official",
+    "base_url": "https://api.inferenceapis.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inferenceapis.com/models/openai/gpt-oss-120b",
+    "models": [
+      "openai/gpt-oss-120b"
+    ]
+  },
+  {
+    "id": "infergate",
+    "name": "infergate.ru",
+    "category": "gateway",
+    "base_url": "https://infergate.ru/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://infergate.ru/docs",
+    "models": [
+      "openai/gpt-4o-mini"
+    ]
+  },
+  {
+    "id": "inferio",
+    "name": "Inferio",
+    "category": "gateway",
+    "base_url": "https://api.inferio.net/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inferio.net/",
+    "models": [
+      "gpt-oss-120b:free"
+    ]
+  },
+  {
+    "id": "inferris",
+    "name": "Inferris",
+    "category": "gateway",
+    "base_url": "https://api.inferris.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inferris.ai/developers.md",
+    "models": [
+      "glm-5.3"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "infersia",
+    "name": "Infersia",
+    "category": "official",
+    "base_url": "https://api.infersia.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://infersia.com/docs/quickstart",
+    "models": [
+      "qwen/qwen3-8b"
+    ]
+  },
+  {
+    "id": "infery",
+    "name": "Infery",
+    "category": "gateway",
+    "base_url": "https://api.infery.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.infery.ai/quickstart.md",
+    "models": [
+      "gpt-4o"
+    ]
+  },
+  {
+    "id": "innogpt",
+    "name": "InnoGPT",
+    "category": "gateway",
+    "base_url": "https://api.innogpt.de/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.innogpt.de/at/ki-api",
+    "models": [
+      "gpt-5"
+    ]
+  },
+  {
+    "id": "isoquant",
+    "name": "Isoquant",
+    "category": "gateway",
+    "base_url": "https://api.isoquant.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://isoquant.ai/docs",
+    "models": [
+      "deepseek-v4.1-flash-1017-fast"
+    ]
+  },
+  {
+    "id": "jiekou",
+    "name": "Jiekou.AI",
+    "category": "gateway",
+    "base_url": "https://api.highwayapi.ai/openai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.jiekou.ai/docs/model/llm.md",
+    "models": [
+      "deepseek/deepseek-r1"
+    ]
+  },
+  {
+    "id": "kenari",
+    "name": "Kenari",
+    "category": "gateway",
+    "base_url": "https://kenari.id/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://kenari.id/docs/quickstart",
+    "models": [
+      "step-3-7-flash:free"
+    ]
+  },
+  {
+    "id": "kitani",
+    "name": "Kitani",
+    "category": "gateway",
+    "base_url": "https://api.kitani.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://kitani.ai/docs",
+    "models": [
+      "qwen/qwen3.8-27b"
+    ]
+  },
+  {
+    "id": "klavo",
+    "name": "Klavo AI",
+    "category": "gateway",
+    "base_url": "https://api.klavo.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ai.klavo.ru/docs",
+    "models": [
+      "qwen/qwen3.8-27b"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "klokintegration",
+    "name": "klokintegration.se",
+    "category": "gateway",
+    "base_url": "https://ai.klok.ipaas.se/proxy/kloker-key/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://klokintegration.se/docs/ai-api",
+    "models": [
+      "Kloker"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "korouter",
+    "name": "KoRouter",
+    "category": "gateway",
+    "base_url": "https://korouter.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://korouter.ai/docs",
+    "models": [
+      "claude-fable-5"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "kosmik",
+    "name": "Kosmik Compute",
+    "category": "gateway",
+    "base_url": "https://api.koscompute.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.koscompute.com/docs/",
+    "models": [
+      "qwen/qwen3.8-27b"
+    ]
+  },
+  {
+    "id": "kovapi",
+    "name": "KovAPI",
+    "category": "gateway",
+    "base_url": "https://kovapi.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.kovapi.com/es/",
+    "models": [
+      "deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "libertai",
+    "name": "LibertAI",
+    "category": "gateway",
+    "base_url": "https://api.libertai.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.libertai.io/quickstart.html",
+    "models": [
+      "qwen3.6-35b-a3b"
+    ]
+  },
+  {
+    "id": "literouter",
+    "name": "LiteRouter",
+    "category": "gateway",
+    "base_url": "https://api.literouter.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://literouter.com",
+    "models": [
+      "deepseek-v3.1:free"
+    ]
+  },
+  {
+    "id": "llmlink",
+    "name": "llmlink.ru",
+    "category": "gateway",
+    "base_url": "https://get.llmlink.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://llmlink.ru/products/llm-api",
+    "models": [
+      "anthropic/claude-fable-5"
+    ]
+  },
+  {
+    "id": "llms",
+    "name": "llms.fr",
+    "category": "gateway",
+    "base_url": "https://api.llms.fr/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://llms.fr/api/",
+    "models": [
+      "mistral-small-3"
+    ]
+  },
+  {
+    "id": "logits",
+    "name": "Logits",
+    "category": "gateway",
+    "base_url": "https://api.logits.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://logits.com/docs",
+    "models": [
+      "deepseek/deepseek-v4.1-flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "longday",
+    "name": "LongDay",
+    "category": "gateway",
+    "base_url": "https://api.longday.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://longday.io/en/docs",
+    "models": [
+      "claude-sonnet-4-6"
+    ]
+  },
+  {
+    "id": "lowrouter",
+    "name": "LowRouter",
+    "category": "gateway",
+    "base_url": "https://api.lowrouter.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://lowrouter.ai/docs/getting-started/first-completion",
+    "models": [
+      "auto/mistralai/mistral-large-2512"
+    ]
+  },
+  {
+    "id": "lucidquery",
+    "name": "LucidQuery",
+    "category": "gateway",
+    "base_url": "https://api.lucidquery.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://lucidquery.com/docs",
+    "models": [
+      "lucidquery-agi-01-swift"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "lyceum",
+    "name": "Lyceum",
+    "category": "gateway",
+    "base_url": "https://api.lyceum.technology/openai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.lyceum.technology/docs/inference/serverless",
+    "models": [
+      "z-ai/glm-5.2"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "maiagent",
+    "name": "MaiAgent",
+    "category": "gateway",
+    "base_url": "https://api.maiagent.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.maiagent.ai/api/ja/api-reference/ai-gateway",
+    "models": [
+      "openai/gpt-5.4-mini"
+    ]
+  },
+  {
+    "id": "mancer",
+    "name": "Mancer",
+    "category": "gateway",
+    "base_url": "https://neuro.mancer.tech/oai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://mancer.tech/resources/api-docs-webui.yml",
+    "models": [
+      "mytholite"
+    ]
+  },
+  {
+    "id": "mangaba",
+    "name": "mangaba.ia.br",
+    "category": "gateway",
+    "base_url": "https://router.mangaba.ia.br/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://router.mangaba.ia.br/docs",
+    "models": [
+      "mangaba-mini"
+    ]
+  },
+  {
+    "id": "megaapi",
+    "name": "megaapi.ru",
+    "category": "gateway",
+    "base_url": "https://megaapi.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://megaapi.ru/docs/api",
+    "models": [
+      "gemini-4-neon",
+      "gpt-5"
+    ]
+  },
+  {
+    "id": "melious",
+    "name": "Melious",
+    "category": "gateway",
+    "base_url": "https://api.melious.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://melious.ai/docs/reference/chat-completions",
+    "models": [
+      "qwen3.6-35b-a3b"
+    ]
+  },
+  {
+    "id": "mercuryrouter",
+    "name": "Mercury Router",
+    "category": "gateway",
+    "base_url": "https://api.mercuryrouter.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.mercuryrouter.com/ar",
+    "models": [
+      "bailian/qwen3.5-122b-a10b"
+    ]
+  },
+  {
+    "id": "merge-gateway",
+    "name": "Merge Gateway",
+    "category": "gateway",
+    "base_url": "https://api-gateway.merge.dev/v1",
+    "protocol": "openai-responses",
+    "docs_url": "https://docs.merge.dev/merge-gateway/get-started",
+    "models": [
+      "openai/gpt-5-nano"
+    ]
+  },
+  {
+    "id": "metaconnect",
+    "name": "MetaConnect",
+    "category": "gateway",
+    "base_url": "https://api.metaconnect.vn/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://metaconnect.vn/vi/models",
+    "models": [
+      "llm-balanced"
+    ]
+  },
+  {
+    "id": "miraca",
+    "name": "miraca.fr",
+    "category": "gateway",
+    "base_url": "https://api.miraca.fr/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.miraca.fr/quickstart/",
+    "models": [
+      "mistral-small"
+    ]
+  },
+  {
+    "id": "mixedbread",
+    "name": "Mixedbread",
+    "category": "gateway",
+    "base_url": "https://api.mixedbread.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.mixedbread.com/docs/agent/chat-completions",
+    "models": [
+      "toast-1"
+    ]
+  },
+  {
+    "id": "mixen",
+    "name": "mixen.ai",
+    "category": "gateway",
+    "base_url": "https://api.mixen.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.mixen.ai/docs/reference/operations/chat_completions",
+    "models": [
+      "gpt-5.5"
+    ]
+  },
+  {
+    "id": "mixlayer",
+    "name": "Mixlayer",
+    "category": "gateway",
+    "base_url": "https://mixlayer.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.mixlayer.com/introduction",
+    "models": [
+      "qwen/qwen3.5-4b-free"
+    ]
+  },
+  {
+    "id": "mixroute",
+    "name": "MixRoute",
+    "category": "gateway",
+    "base_url": "https://api.mixroute.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://mixroute.ai/docs/introduction",
+    "models": [
+      "gpt-5.5"
+    ]
+  },
+  {
+    "id": "model-oracle-ai",
+    "name": "Model Oracle AI",
+    "category": "gateway",
+    "base_url": "https://api.modeloracle.com/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.modeloracle.com/setup/",
+    "models": [
+      "gpt-5.6-sol"
+    ]
+  },
+  {
+    "id": "modelrush-ai",
+    "name": "modelrush.ai",
+    "category": "gateway",
+    "base_url": "https://api.modelrush.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://modelrush.ai/",
+    "models": [
+      "modelrush/deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "modular",
+    "name": "Modular",
+    "category": "official",
+    "base_url": "https://api.modular.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.modular.com/api/inference/create-chat-completion",
+    "models": [
+      "minimax/minimax-m3"
+    ]
+  },
+  {
+    "id": "moneo",
+    "name": "Moneo",
+    "category": "gateway",
+    "base_url": "https://api.moneo.one/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://moneo.one/api.html",
+    "models": [
+      "deepseek-v4-flash:web"
+    ]
+  },
+  {
+    "id": "morph",
+    "name": "Morph",
+    "category": "official",
+    "base_url": "https://api.morphllm.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.morphllm.com/llms.txt",
+    "models": [
+      "morph-compactor"
+    ]
+  },
+  {
+    "id": "mtuo",
+    "name": "Mtu API",
+    "category": "gateway",
+    "base_url": "https://api.mtuo.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://doc.mtuo.ai/mtu",
+    "models": [
+      "qwen3-max"
+    ]
+  },
+  {
+    "id": "nagaac",
+    "name": "Naga.ac",
+    "category": "gateway",
+    "base_url": "https://api.naga.ac/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://naga.ac",
+    "models": [
+      "deepseek/deepseek-v4.1-flash-1017"
+    ]
+  },
+  {
+    "id": "nan",
+    "name": "NaN",
+    "category": "gateway",
+    "base_url": "https://api.nan.builders/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://nan.builders/docs/models",
+    "models": [
+      "deepseek-v4-flash",
+      "qwen3.8-flash"
+    ]
+  },
+  {
+    "id": "naver",
+    "name": "NAVER CLOVA Studio",
+    "category": "official",
+    "base_url": "https://clovastudio.stream.ntruss.com/v1/openai",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.ncloud-docs.com/docs/clovastudio-openaicompatibility",
+    "models": [
+      "HCX-005"
+    ]
+  },
+  {
+    "id": "neosantara",
+    "name": "neosantara.xyz",
+    "category": "gateway",
+    "base_url": "https://api.neosantara.xyz/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.neosantara.xyz/id/gateway/chat-completions",
+    "models": [
+      "gemini-3.8-flash"
+    ]
+  },
+  {
+    "id": "neosmith",
+    "name": "NeoSmith",
+    "category": "gateway",
+    "base_url": "https://router.neosmith.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://neosmith.ai/docs",
+    "models": [
+      "neosmith.intelligent-pro"
+    ]
+  },
+  {
+    "id": "neuralgate",
+    "name": "neuralgate.ru",
+    "category": "gateway",
+    "base_url": "https://api.neuralgate.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://neuralgate.ru/api/",
+    "models": [
+      "yandexgpt/latest",
+      "claude-sonnet-4-6"
+    ]
+  },
+  {
+    "id": "neuralwatt",
+    "name": "Neuralwatt",
+    "category": "gateway",
+    "base_url": "https://api.neuralwatt.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.neuralwatt.com/quickstart",
+    "models": [
+      "glm-5.3"
+    ]
+  },
+  {
+    "id": "nextmodel",
+    "name": "NextModel",
+    "category": "gateway",
+    "base_url": "https://api.nextmodel.app/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://nextmodel.app/",
+    "models": [
+      "claude-sonnet-4-5"
+    ]
+  },
+  {
+    "id": "nija",
+    "name": "Nija",
+    "category": "official",
+    "base_url": "https://nija.africa/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://nija.africa/docs",
+    "models": [
+      "openai/gpt-4o-mini"
+    ]
+  },
+  {
+    "id": "nivelva",
+    "name": "nivelva.com",
+    "category": "gateway",
+    "base_url": "https://ai.nivelva.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ai.nivelva.com/",
+    "models": [
+      "anthropic/claude-opus-5.5"
+    ]
+  },
+  {
+    "id": "nls",
+    "name": "NLS Kazakhstan / NLSGPT",
+    "category": "gateway",
+    "base_url": "https://gpt.nls.kz/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://gpt.nls.kz/docs",
+    "models": [
+      "gpt-5.6-luna"
+    ]
+  },
+  {
+    "id": "nodion",
+    "name": "Nodion",
+    "category": "official",
+    "base_url": "https://api.nodion.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.nodion.com/en/ai-inference/",
+    "models": [
+      "deepseek/deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "nokeep",
+    "name": "nokeep",
+    "category": "gateway",
+    "base_url": "https://nokeep.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://nokeep.ai/docs/chat-completions",
+    "models": [
+      "deepseek-v4.1-flash-uncensored"
+    ]
+  },
+  {
+    "id": "numes",
+    "name": "Numes",
+    "category": "gateway",
+    "base_url": "https://api.numes.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://numes.ai/docs/quickstart",
+    "models": [
+      "openai/gpt-6-luna"
+    ]
+  },
+  {
+    "id": "nusagate",
+    "name": "NusaGate",
+    "category": "gateway",
+    "base_url": "https://api.nusagate.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://nusagate.com/docs",
+    "models": [
+      "glm-5.3-flash"
+    ]
+  },
+  {
+    "id": "oatda",
+    "name": "oatda.com",
+    "category": "gateway",
+    "base_url": "https://oatda.com/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://oatda.com/llms.txt",
+    "models": [
+      "gpt-5",
+      "glm-4.7",
+      "deepseek-chat"
+    ]
+  },
+  {
+    "id": "oathbreaker",
+    "name": "Oathbreaker AI",
+    "category": "gateway",
+    "base_url": "https://oathbreaker.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://oathbreaker.ai/docs",
+    "models": [
+      "oathbreaker-glm-5.3"
+    ]
+  },
+  {
+    "id": "obscurify",
+    "name": "Obscurify.ai",
+    "category": "gateway",
+    "base_url": "https://obscurify.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://obscurify.ai/llms.txt",
+    "models": [
+      "anthropic/claude-opus-5.5"
+    ]
+  },
+  {
+    "id": "ofox",
+    "name": "Ofox",
+    "category": "gateway",
+    "base_url": "https://api.ofox.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ofox.ai/docs",
+    "models": [
+      "openai/gpt-6.1-sol"
+    ]
+  },
+  {
+    "id": "oneport",
+    "name": "Oneport",
+    "category": "gateway",
+    "base_url": "https://oneport.kr/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://oneport.kr/docs",
+    "models": [
+      "claude-sonnet-5"
+    ]
+  },
+  {
+    "id": "onveloz",
+    "name": "onveloz.com",
+    "category": "gateway",
+    "base_url": "https://platform.onveloz.com/api/ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://onveloz.com/docs/ia",
+    "models": [
+      "meta-llama-llama-3.1-8b-instruct"
+    ]
+  },
+  {
+    "id": "orq",
+    "name": "Orq.ai",
+    "category": "gateway",
+    "base_url": "https://my.orq.ai/v3/router",
+    "protocol": "openai-responses",
+    "docs_url": "https://docs.orq.ai/ai-gateway/get-started/introduction",
+    "models": [
+      "openai/gpt-5.4"
+    ]
+  },
+  {
+    "id": "paraloncloud",
+    "name": "ParalonCloud",
+    "category": "gateway",
+    "base_url": "https://paraloncloud.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://paraloncloud.com/docs/inference-api",
+    "models": [
+      "qwen3.6-27b"
+    ]
+  },
+  {
+    "id": "paranine",
+    "name": "paranine / P/9",
+    "category": "gateway",
+    "base_url": "https://sovereign.paranine.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.paranine.com/guides/chat-completions",
+    "models": [
+      "paranine/gpt-oss-120b(high)"
+    ]
+  },
+  {
+    "id": "parasail",
+    "name": "Parasail",
+    "category": "gateway",
+    "base_url": "https://api.parasail.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.parasail.io/parasail-docs/quickstart/serverless",
+    "models": [
+      "parasail-deepseek-r1"
+    ]
+  },
+  {
+    "id": "pareto",
+    "name": "Pareto Inference",
+    "category": "gateway",
+    "base_url": "https://api.paretoinference.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.paretoinference.com/sdk-examples",
+    "models": [
+      "z-ai/glm-5.3-flash"
+    ]
+  },
+  {
+    "id": "particle-ai",
+    "name": "Particle AI",
+    "category": "official",
+    "base_url": "https://api.particle.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.particle.ai/quickstart",
+    "models": [
+      "particle-1"
+    ]
+  },
+  {
+    "id": "pearl-research",
+    "name": "Pearl Research",
+    "category": "official",
+    "base_url": "https://inference.pearlresearch.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://platform.pearlresearch.ai/docs/quickstart",
+    "models": [
+      "zai-org/GLM-5.3",
+      "deepseek-ai/DeepSeek-V4-Pro-0813",
+      "zai-org/GLM-5.3-Flash"
+    ]
+  },
+  {
+    "id": "phala",
+    "name": "Phala",
+    "category": "gateway",
+    "base_url": "https://inference.phala.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.phala.com/phala-cloud/confidential-ai/confidential-model/confidential-ai-api",
+    "models": [
+      "z-ai/glm-5.3"
+    ]
+  },
+  {
+    "id": "phaseo",
+    "name": "phaseo.app",
+    "category": "gateway",
+    "base_url": "https://api.phaseo.app/v1",
+    "protocol": "openai-responses",
+    "docs_url": "https://phaseo.app/pt-BR",
+    "models": [
+      "openai/gpt-6-astra"
+    ]
+  },
+  {
+    "id": "pleum",
+    "name": "Pleum AI Router",
+    "category": "gateway",
+    "base_url": "https://apirouter.pleum.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://router.pleum.ai/docs/cookbook/quickstart",
+    "models": [
+      "gpt-5.5"
+    ]
+  },
+  {
+    "id": "polarise",
+    "name": "polarise.eu",
+    "category": "gateway",
+    "base_url": "https://api.model-gateway.polarise.app/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://polarise.eu/de/ai-cloud/token-studio/",
+    "models": [
+      "glm-5.3"
+    ]
+  },
+  {
+    "id": "polza",
+    "name": "polza.ai",
+    "category": "gateway",
+    "base_url": "https://polza.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://polza.ai/",
+    "models": [
+      "openai/gpt-4o"
+    ]
+  },
+  {
+    "id": "powerspring",
+    "name": "Powerspring",
+    "category": "gateway",
+    "base_url": "https://api.powerspring.eu/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://powerspring.eu/llms.txt",
+    "models": [
+      "deepseek-v4.1-flash",
+      "glm-5.3-flash",
+      "gpt-oss-120b"
+    ]
+  },
+  {
+    "id": "primalabs",
+    "name": "PrimaLabs",
+    "category": "official",
+    "base_url": "https://api.primalabs.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.primalabs.ai/inference/quickstart",
+    "models": [
+      "primalabs-ai/DeepSeek-V4.1-Flash-1017",
+      "primalabs-ai/GLM-5.3-Flash"
+    ]
+  },
+  {
+    "id": "prime",
+    "name": "Prime Inference",
+    "category": "gateway",
+    "base_url": "https://api.pinference.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.primeintellect.ai/inference/overview",
+    "models": [
+      "z-ai/glm-5.3"
+    ]
+  },
+  {
+    "id": "proxyapi",
+    "name": "ProxyAPI",
+    "category": "gateway",
+    "base_url": "https://api.proxyapi.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://proxyapi.ru/docs/quickstart",
+    "models": [
+      "openai/gpt-5-mini"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "punica",
+    "name": "Punica",
+    "category": "gateway",
+    "base_url": "https://punica.tn/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://punica.tn/docs",
+    "models": [
+      "hannibal"
+    ]
+  },
+  {
+    "id": "radox",
+    "name": "Radox AI",
+    "category": "gateway",
+    "base_url": "https://radoxai.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://radoxai.com/",
+    "models": [
+      "claude-opus-4.8"
+    ]
+  },
+  {
+    "id": "rayline",
+    "name": "Rayline",
+    "category": "gateway",
+    "base_url": "https://api.rayline.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.rayline.ai/arc/reference/generation",
+    "models": [
+      "arc-swift-1.0",
+      "arc-sage-1.0"
+    ]
+  },
+  {
+    "id": "reeva",
+    "name": "reeva.me",
+    "category": "gateway",
+    "base_url": "https://api.reeva.me/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://reeva.me/ar/ai-api/",
+    "models": [
+      "deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "reflection",
+    "name": "Reflection",
+    "category": "official",
+    "base_url": "https://api.reflection.ai/openai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://developers.reflection.ai/api-overview",
+    "models": [
+      "Beam-1.0-501B-A23B"
+    ]
+  },
+  {
+    "id": "reka",
+    "name": "Reka AI",
+    "category": "gateway",
+    "base_url": "https://api.reka.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.reka.ai/quickstart"
+  },
+  {
+    "id": "resetdata",
+    "name": "ResetData",
+    "category": "gateway",
+    "base_url": "https://api.resetdata.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.resetdata.ai/models/overview/",
+    "models": [
+      "zai/glm-5.3"
+    ]
+  },
+  {
+    "id": "rodium",
+    "name": "Rodium AI",
+    "category": "gateway",
+    "base_url": "https://api.rodiumai.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.rodiumai.io/",
+    "models": [
+      "openai/gpt-4o"
+    ]
+  },
+  {
+    "id": "rota-nacional",
+    "name": "Rota Nacional",
+    "category": "gateway",
+    "base_url": "https://rota-nacional.ia.br/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://rota-nacional.ia.br/pt/docs/",
+    "models": [
+      "rota/resumo"
+    ]
+  },
+  {
+    "id": "router-africa",
+    "name": "router.africa",
+    "category": "gateway",
+    "base_url": "https://api.router.africa/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://router.africa/fr/",
+    "models": [
+      "gpt-5.6-terra"
+    ]
+  },
+  {
+    "id": "sagg",
+    "name": "SAGG",
+    "category": "gateway",
+    "base_url": "https://api.privatedeskai.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.privatedeskai.com/docs",
+    "models": [
+      "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "deepseek-v4-flash-fast"
+    ]
+  },
+  {
+    "id": "sahabatmobile",
+    "name": "sahabatmobile.com",
+    "category": "gateway",
+    "base_url": "https://www.sahabatmobile.com/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.sahabatmobile.com/docs/ai-gateway",
+    "models": [
+      "google/gemini-2.5-flash"
+    ]
+  },
+  {
+    "id": "salad-cloud",
+    "name": "SaladCloud AI Gateway",
+    "category": "gateway",
+    "base_url": "https://ai.salad.cloud/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.salad.com/ai-gateway/explanation/overview",
+    "models": [
+      "qwen3.6-35b-a3b"
+    ]
+  },
+  {
+    "id": "samudra",
+    "name": "Samudra Inference",
+    "category": "gateway",
+    "base_url": "https://inference.samudracorp.web.id/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inference.samudracorp.web.id/docs/",
+    "models": [
+      "deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "scx-ai",
+    "name": "SCX.ai",
+    "category": "gateway",
+    "base_url": "https://api.scx.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://platform.scx.ai/docs",
+    "models": [
+      "MiniMax-M2.7"
+    ]
+  },
+  {
+    "id": "sekaigateway",
+    "name": "SEKAI Gateway",
+    "category": "gateway",
+    "base_url": "https://api.sekaigateway.xyz/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://sekaigateway.xyz/id/docs",
+    "models": [
+      "ds/deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "selamgpt",
+    "name": "SelamGPT",
+    "category": "gateway",
+    "base_url": "https://api.selamgpt.com/v1",
+    "protocol": "openai-responses",
+    "docs_url": "https://platform.selamgpt.com/docs/introduction/overview",
+    "models": [
+      "selam-turbo"
+    ]
+  },
+  {
+    "id": "shisa",
+    "name": "Shisa AI",
+    "category": "official",
+    "base_url": "https://api.shisa.ai/openai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://platform.shisa.ai/ja/solutions/llm/",
+    "models": [
+      "shisa-ai/shisa-v2.1-llama3.3-70b"
+    ]
+  },
+  {
+    "id": "sigmix",
+    "name": "Sigmix",
+    "category": "gateway",
+    "base_url": "https://inference.sigmix.sa/ksa-sovereign-route-only/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://sigmix.ai/ar/inference",
+    "models": [
+      "command-a-03-2025"
+    ]
+  },
+  {
+    "id": "smartoken",
+    "name": "SmarToken",
+    "category": "gateway",
+    "base_url": "https://thesmartoken.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://thesmartoken.com/docs",
+    "models": [
+      "deepseek-chat"
+    ]
+  },
+  {
+    "id": "sokkan",
+    "name": "SOKKAN Router",
+    "category": "gateway",
+    "base_url": "https://router.sokkan.ch/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://router.sokkan.ch/docs",
+    "models": [
+      "qwen/qwen3.8-27b"
+    ]
+  },
+  {
+    "id": "sovereigneg",
+    "name": "sovereigneg.com",
+    "category": "gateway",
+    "base_url": "https://backend.sovereigneg.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://sovereigneg.com/ar",
+    "models": [
+      "gpt-oss-20b"
+    ]
+  },
+  {
+    "id": "sparkthai",
+    "name": "sparkthai.com",
+    "category": "gateway",
+    "base_url": "https://www.sparkthai.com/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.sparkthai.com/en/api-docs",
+    "models": [
+      "qwen3.7-flash"
+    ]
+  },
+  {
+    "id": "sparrowcodes",
+    "name": "SparrowCodes",
+    "category": "gateway",
+    "base_url": "https://api.sparrowcodes.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://sparrowcodes.com/models/sparrow/auto",
+    "models": [
+      "sparrow/auto"
+    ]
+  },
+  {
+    "id": "spekaai",
+    "name": "Speka AI",
+    "category": "gateway",
+    "base_url": "https://speka.me/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://speka.me/",
+    "models": [
+      "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+  },
+  {
+    "id": "standardcompute",
+    "name": "Standard Compute",
+    "category": "gateway",
+    "base_url": "https://api.stdcmpt.com",
+    "protocol": "anthropic-messages",
+    "docs_url": "https://docs.standardcompute.com/api/messages",
+    "models": [
+      "anthropic/claude-standardcompute",
+      "anthropic/claude-sonnet-5.5"
+    ]
+  },
+  {
+    "id": "steadyrouter",
+    "name": "SteadyRouter",
+    "category": "gateway",
+    "base_url": "https://api.steadyrouter.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.steadyrouter.com/site/docs.html?utm_source=models.dev",
+    "models": [
+      "gpt-5"
+    ]
+  },
+  {
+    "id": "steyg",
+    "name": "Steyg",
+    "category": "gateway",
+    "base_url": "https://steyg.one/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://steyg.one/",
+    "models": [
+      "gpt-6-luna"
+    ]
+  },
+  {
+    "id": "subconscious",
+    "name": "Subconscious",
+    "category": "gateway",
+    "base_url": "https://api.subconscious.dev/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.subconscious.dev/overview",
+    "models": [
+      "subconscious/glm-5.3-marathon"
+    ]
+  },
+  {
+    "id": "swiftlink",
+    "name": "swiftlink.web.id",
+    "category": "gateway",
+    "base_url": "https://api.swiftlink.web.id/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://swiftlink.web.id/en/docs",
+    "models": [
+      "deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "synthorai",
+    "name": "Synthorai",
+    "category": "gateway",
+    "base_url": "https://synthorai.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://synthorai.io/docs/quickstart/",
+    "models": [
+      "gpt-5.4-mini"
+    ]
+  },
+  {
+    "id": "tchavi",
+    "name": "Tchavi",
+    "category": "gateway",
+    "base_url": "https://tchavi.com/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://tchavi.com/en",
+    "models": [
+      "gpt-5-mini"
+    ]
+  },
+  {
+    "id": "teai",
+    "name": "teai.io / Chatweb",
+    "category": "gateway",
+    "base_url": "https://api.teai.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.chatweb.ai/",
+    "models": [
+      "auto"
+    ]
+  },
+  {
+    "id": "teamorouter",
+    "name": "TeamoRouter",
+    "category": "gateway",
+    "base_url": "https://api.teamorouter.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://teamorouter.com/docs/api-integration",
+    "models": [
+      "claude-sonnet-5-5"
+    ]
+  },
+  {
+    "id": "teera",
+    "name": "TEEra",
+    "category": "official",
+    "base_url": "https://teera.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://teera.io/docs",
+    "models": [
+      "auto",
+      "Kimi-K2.6-TEE"
+    ]
+  },
+  {
+    "id": "tensorx",
+    "name": "TensorX",
+    "category": "gateway",
+    "base_url": "https://api.tensorx.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.tensorx.ai/quickstart",
+    "models": [
+      "z-ai/glm-5.2"
+    ]
+  },
+  {
+    "id": "therouter",
+    "name": "TheRouter",
+    "category": "gateway",
+    "base_url": "https://api.therouter.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://therouter.ai/docs/quickstart/",
+    "models": [
+      "anthropic/claude-sonnet-4.5"
+    ]
+  },
+  {
+    "id": "theus",
+    "name": "Theus",
+    "category": "gateway",
+    "base_url": "https://api.theus.pe/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.theus.pe/docs/api-v1/",
+    "models": [
+      "titan"
+    ]
+  },
+  {
+    "id": "tinfoil",
+    "name": "Tinfoil",
+    "category": "gateway",
+    "base_url": "https://inference.tinfoil.sh/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.tinfoil.sh/quickstart",
+    "models": [
+      "gpt-oss-120b"
+    ]
+  },
+  {
+    "id": "toapis",
+    "name": "ToAPIs",
+    "category": "gateway",
+    "base_url": "https://toapis.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.toapis.com",
+    "models": [
+      "gpt-5.6-terra"
+    ]
+  },
+  {
+    "id": "tokeneurope",
+    "name": "TokenEurope",
+    "category": "gateway",
+    "base_url": "https://api.tokeneurope.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://tokeneurope.ai"
+  },
+  {
+    "id": "tokengo",
+    "name": "TokenGo",
+    "category": "gateway",
+    "base_url": "https://api.tokengo.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://tokengo.com/docs/api-reference/resources/api-reference",
+    "models": [
+      "gpt-4o"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "tokenhub",
+    "name": "TokenHub",
+    "category": "gateway",
+    "base_url": "https://tokenhub.store/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://tokenhub.store/ru/docs",
+    "models": [
+      "openai/gpt-4.1"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "tokenify",
+    "name": "Tokenify",
+    "category": "gateway",
+    "base_url": "https://api.tokenify.dev/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.tokenify.dev/docs/",
+    "models": [
+      "deepseek/deepseek-v4-flash"
+    ]
+  },
+  {
+    "id": "tokenlab",
+    "name": "TokenLab",
+    "category": "gateway",
+    "base_url": "https://api.tokenlab.sh/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://tokenlab.sh/docs"
+  },
+  {
+    "id": "tokenreply",
+    "name": "TokenReply",
+    "category": "gateway",
+    "base_url": "https://api.tokenreply.com/v1",
+    "protocol": "openai-responses",
+    "docs_url": "https://www.tokenreply.com/docs"
+  },
+  {
+    "id": "tokens-bangladesh",
+    "name": "Tokens Bangladesh",
+    "category": "gateway",
+    "base_url": "https://tokens.bd/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://tokens.bd/",
+    "models": [
+      "anthropic/claude-sonnet-5.5"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "tokenwatt",
+    "name": "TokenWatt",
+    "category": "gateway",
+    "base_url": "https://api.tokenwatt.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.tokenwatt.io/api.html",
+    "models": [
+      "qwen/qwen3.6-35b-a3b"
+    ]
+  },
+  {
+    "id": "trooper",
+    "name": "trooper.ai",
+    "category": "gateway",
+    "base_url": "https://router.trooper.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.trooper.ai/fr/docs/apiblibs",
+    "models": [
+      "clara"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "trustedtokens",
+    "name": "TrustedTokens",
+    "category": "official",
+    "base_url": "https://api.trustedtokens.eu/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://trustedtokens.eu/docs",
+    "models": [
+      "zai-org/GLM-5.3"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "umans-ai",
+    "name": "Umans AI",
+    "category": "gateway",
+    "base_url": "https://api.code.umans.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://app.umans.ai/offers/code/docs",
+    "models": [
+      "umans-coder",
+      "umans-kimi-k3.1-pro"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "unbiased-pareto",
+    "name": "Pareto by Unbiased",
+    "category": "gateway",
+    "base_url": "https://api.unbiased.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://unbiased.ai/developers/",
+    "models": [
+      "pareto"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "uncensuredai",
+    "name": "UncensuredAI",
+    "category": "gateway",
+    "base_url": "https://uncensuredai.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://uncensuredai.com/en/api/reference",
+    "models": [
+      "glm-5.3-flash-abliterated"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "unrestricted",
+    "name": "Unrestricted",
+    "category": "gateway",
+    "base_url": "https://api.unrestricted.sh/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://unrestricted.sh/reference",
+    "models": [
+      "qwen3.8-27b-uncensored"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "uplinkswitch",
+    "name": "UplinkSwitch",
+    "category": "gateway",
+    "base_url": "https://api.uplinkswitch.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://uplinkswitch.ai/guides/sdks",
+    "models": [
+      "gpt-6.1-sol"
+    ]
+  },
+  {
+    "id": "vancine",
+    "name": "Vancine",
+    "category": "gateway",
+    "base_url": "https://vancine.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://vancine.com/docs/auth",
+    "models": [
+      "deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "verda",
+    "name": "Verda",
+    "category": "official",
+    "base_url": "https://inference.verda.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.verda.com/inference/quickstart/",
+    "models": [
+      "kimi-k3-1-pro"
+    ]
+  },
+  {
+    "id": "vikey",
+    "name": "Vikey",
+    "category": "gateway",
+    "base_url": "https://api.vikey.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.vikey.ai/",
+    "live_models": true
+  },
+  {
+    "id": "vivgrid",
+    "name": "Vivgrid",
+    "category": "gateway",
+    "base_url": "https://api.vivgrid.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.vivgrid.com/models"
+  },
+  {
+    "id": "vsegpt",
+    "name": "VseGPT",
+    "category": "gateway",
+    "base_url": "https://api.vsegpt.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.vsegpt.ru/Docs/API",
+    "models": [
+      "openai/gpt-4o-mini"
+    ]
+  },
+  {
+    "id": "vultr",
+    "name": "Vultr",
+    "category": "gateway",
+    "base_url": "https://api.vultrinference.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.vultrinference.com/",
+    "models": [
+      "deepseek-v4.1-flash-1017"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "wafer",
+    "name": "Wafer",
+    "category": "official",
+    "base_url": "https://pass.wafer.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.wafer.ai/serverless/models",
+    "models": [
+      "GLM-5.3"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "wallaby",
+    "name": "Wallaby",
+    "category": "gateway",
+    "base_url": "https://api.wallabytoken.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://wallabytoken.com/docs",
+    "models": [
+      "kimi-k3.1-pro"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "watt",
+    "name": "Watt Cloud",
+    "category": "gateway",
+    "base_url": "https://api.watt-cloud.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.watt-cloud.com/docs/"
+  },
+  {
+    "id": "wayscloud",
+    "name": "WAYSCloud",
+    "category": "gateway",
+    "base_url": "https://api.wayscloud.services/v1/llm",
+    "protocol": "openai-completions",
+    "docs_url": "https://wayscloud.eu/docs/services/llm",
+    "models": [
+      "glm-5.3",
+      "llama-3.3-70b"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "wiozen",
+    "name": "Wiozen",
+    "category": "gateway",
+    "base_url": "https://api.wiozen.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.wiozen.com/?lang=en",
+    "models": [
+      "wiozen-coder"
+    ]
+  },
+  {
+    "id": "workai",
+    "name": "WorkAI",
+    "category": "gateway",
+    "base_url": "https://api.workai.su/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://workai.su/docs/api",
+    "live_models": true
+  },
+  {
+    "id": "xhuoapi",
+    "name": "XHuoAPI",
+    "category": "gateway",
+    "base_url": "https://api.xhuoapi.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://xhuoapi.ai",
+    "models": [
+      "gpt-4o"
+    ]
+  },
+  {
+    "id": "xiurouter",
+    "name": "XiuRouter",
+    "category": "gateway",
+    "base_url": "https://router-api.xiu.ai/v1",
+    "protocol": "openai-responses",
+    "docs_url": "https://router.xiu.ai/"
+  },
+  {
+    "id": "xpersona",
+    "name": "Xpersona",
+    "category": "gateway",
+    "base_url": "https://www.xpersona.co/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.xpersona.co/docs",
+    "models": [
+      "muse-spark-1.3-contributor"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "yeap",
+    "name": "YEAP Cloud",
+    "category": "gateway",
+    "base_url": "https://llm.yeap.cloud/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://yeap.cloud/products/llm",
+    "live_models": true
+  },
+  {
+    "id": "yenisei",
+    "name": "yenisei.ru",
+    "category": "official",
+    "base_url": "https://api.yenisei.ru/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://yenisei.ru/docs/api/chat-completions",
+    "models": [
+      "yenisei-100"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "yepapi",
+    "name": "YepAPI",
+    "category": "gateway",
+    "base_url": "https://api.yepapi.com/v1/ai",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.yepapi.com/ai-models/chat-completions",
+    "models": [
+      "anthropic/claude-sonnet-4.6"
+    ]
+  },
+  {
+    "id": "yoloauto",
+    "name": "Yolo-Auto",
+    "category": "gateway",
+    "base_url": "https://yolo-auto.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://yolo-auto.com/docs#agent-llms.txt",
+    "models": [
+      "qwen3.8-27b"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "youdao-llm",
+    "name": "Youdao LLM Gateway",
+    "category": "official",
+    "base_url": "https://openapi.youdao.com/llmgateway/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ai.youdao.com/DOCSIRMA/html/token/api/guide/",
+    "models": [
+      "deepseek-chat"
+    ]
+  },
+  {
+    "id": "zenifra",
+    "name": "Zenifra",
+    "category": "gateway",
+    "base_url": "https://ai.zenifra.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.zenifra.com/pt/docs/ai/get-started",
+    "models": [
+      "zenifra/qwen3.8-flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "zowy",
+    "name": "ZOWY",
+    "category": "gateway",
+    "base_url": "https://zowy.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://zowy.ai/",
+    "models": [
+      "zowy-2"
+    ]
+  },
+  {
+    "id": "zyloapi",
+    "name": "Zylo API",
+    "category": "gateway",
+    "base_url": "https://api.zyloai.net/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://zyloai.net",
+    "models": [
+      "gpt-5.5"
+    ]
+  },
+  {
+    "id": "zyphra-cloud",
+    "name": "Zyphra",
+    "category": "gateway",
+    "base_url": "https://api.zyphracloud.com/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.zyphra.com/models/zaya1-8b?from=%2Four-work%2Fzaya1-8b",
+    "models": [
+      "zyphra/ZAYA1-8B"
+    ]
+  }
+]

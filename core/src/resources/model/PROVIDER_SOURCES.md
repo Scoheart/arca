@@ -1,5 +1,9 @@
 # Provider Catalog sources
 
+## Provider list audit — 2026-11-26
+
+The [audited provider catalog](../../../../data/audited-model-providers.json) records the official documentation, inference base URL, and default protocol for each newly added hosted text service. A `models` list contains documented model IDs. `live_models` marks a provider whose documentation identifies an OpenAI-compatible Models endpoint. Other entries use the documented IDs or manual model entry. Public documentation was used for this review. Account access and inference were not exercised.
+
 ## Openference, AI Horde, さくらのAI Engine, and Arena API — 2026-11-24
 
 Checked against public pages on 2026-11-24. No account, card, or chat completion was sent. Probes were unauthenticated GET requests. Free wording is not stored as a credited balance.

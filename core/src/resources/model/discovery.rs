@@ -56,6 +56,9 @@ struct DecodedPage {
 }
 
 pub(super) fn model_discovery_supported(provider_type: &str) -> bool {
+    if let Some(entry) = super::audited_catalog::get(provider_type) {
+        return entry.live_models || !entry.models.is_empty();
+    }
     // Chat API compatibility does not imply a Models API. Azure model names
     // are deployment aliases, not entries in the public model catalog.
     !matches!(provider_type,
@@ -633,6 +636,9 @@ const ARENA_API_STATIC_MODELS: &[(&str, Option<&str>, Option<u64>)] = &[
 ];
 
 fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
+    if let Some(entry) = super::audited_catalog::get(provider_type) {
+        return audited_seed_models(entry);
+    }
     let entries = match provider_type {
         "nodecode" => NODECODE_STATIC_MODELS,
         "zro" => ZRO_STATIC_MODELS,
@@ -682,6 +688,9 @@ fn reviewed_static_catalog(provider_type: &str) -> Option<Vec<ProviderModelSumma
 /// provider does not publish a Models API. Names and context lengths stay
 /// empty unless the same page states them.
 fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> {
+    if let Some(entry) = super::audited_catalog::get(provider_type) {
+        return if entry.live_models { None } else { audited_seed_models(entry) };
+    }
     let ids: &[&str] = match provider_type {
         // https://platform.qianwenai.com/docs/developer-guides/getting-started/latest-model
         "qianwen-ai" => &["qwen4-max"],
@@ -952,6 +961,14 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
             })
             .collect(),
     )
+}
+
+fn audited_seed_models(entry: &super::audited_catalog::AuditedProvider) -> Option<Vec<ProviderModelSummary>> {
+    (!entry.models.is_empty()).then(|| entry.models.iter().map(|id| ProviderModelSummary {
+        id: id.to_string(),
+        name: None,
+        context_length: None,
+    }).collect())
 }
 
 fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
