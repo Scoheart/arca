@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.4.2](https://github.com/Scoheart/arca/compare/v4.4.1...v4.4.2) (2026-11-28)
+
+### Changes
+
+* fix(desktop): refine models provider overview and catalog layout ([d6d2304](https://github.com/Scoheart/arca/commit/d6d2304c2558125d89708608a9d4795dbd2a4749))
+
 ## [4.4.1](https://github.com/Scoheart/arca/compare/v4.4.0...v4.4.1) (2026-11-28)
 
 ### Changes
