@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.5.0](https://github.com/Scoheart/arca/compare/v4.4.2...v4.5.0) (2026-11-28)
+
+### Changes
+
+* feat(models): expand provider catalog and workflows ([1459d0b](https://github.com/Scoheart/arca/commit/1459d0bfdfe96487f1d84777c547a2df27478010))
+
 ## [4.4.2](https://github.com/Scoheart/arca/compare/v4.4.1...v4.4.2) (2026-11-28)
 
 ### Changes
