@@ -1168,8 +1168,105 @@ body {
 }
 .arca-mcp-card-dot { flex: 0 0 auto; color: var(--text-tertiary); font-size: 10px; }
 .arca-mcp-card-agents { display: inline-flex; flex: 0 0 auto; align-items: center; }
+.arca-models-workspace .arca-workspace-toolbar:not(:has(.arca-workspace-list-heading)) {
+  padding: 12px 24px;
+}
+.arca-models-workspace .arca-workspace-toolbar:not(:has(.arca-workspace-list-heading)) > .arca-search {
+  margin-left: 0; flex: 1 1 240px; max-width: 380px;
+}
+.arca-models-workspace .arca-workspace-toolbar:not(:has(.arca-workspace-list-heading)) > .arca-workspace-actions {
+  margin-left: auto;
+}
+.arca-models-workspace .arca-resource-overview-icon:has(.arca-provider-glyph) {
+  width: auto; height: auto; border: 0; background: transparent; box-shadow: none;
+}
+.arca-models-workspace .arca-resource-overview-icon .arca-provider-glyph {
+  box-shadow: var(--shadow-card);
+}
+.arca-models-workspace .arca-resource-overview-identity h1:first-child {
+  margin-top: 0;
+}
+.arca-models-workspace .arca-resource-overview-details:has(.arca-provider-spec-strip) {
+  margin-top: 12px; padding-top: 0; border-top: 0;
+}
+.arca-models-workspace .arca-resource-overview-actions .btn-ghost {
+  min-height: 30px; padding: 4px 8px; font-size: 11.5px;
+}
+.arca-provider-spec-strip {
+  display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.15fr) minmax(0, 1fr);
+  border: 1px solid var(--border-hairline); border-radius: 10px;
+  background: var(--surface-hover); overflow: hidden;
+}
+.arca-provider-spec-strip:not(:has(.arca-provider-spec-credential)) {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+.dark .arca-provider-spec-strip { background: var(--surface-section); }
+.arca-provider-spec-cell {
+  display: flex; min-width: 0; flex-direction: column; justify-content: center; gap: 4px;
+  padding: 9px 13px;
+}
+.arca-provider-spec-cell + .arca-provider-spec-cell { border-left: 1px solid var(--border-subtle); }
+.arca-provider-spec-url { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+.arca-provider-spec-copy-wrap { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 4px; }
+.arca-provider-spec-label {
+  color: var(--text-tertiary); font-size: 10px; font-weight: 640; letter-spacing: .03em; text-transform: uppercase;
+}
+.arca-provider-spec-url code {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-primary); font: 11.5px/1.35 var(--font-mono); user-select: text;
+}
+.arca-provider-spec-copy {
+  display: inline-flex; width: 26px; height: 26px; flex: 0 0 26px; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 7px; background: transparent;
+  color: var(--text-tertiary); cursor: pointer;
+  transition: color .12s ease, background-color .12s ease, border-color .12s ease;
+}
+.arca-provider-spec-copy:hover {
+  color: var(--text-primary); background: var(--surface-asset); border-color: var(--border-hairline);
+}
+.arca-provider-spec-copy:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 1px; }
+.arca-provider-spec-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.arca-provider-spec-protocol {
+  display: inline-flex; align-items: center; gap: 5px; min-width: 0;
+  color: var(--text-primary); font-size: 11.5px; font-weight: 540;
+}
+.arca-provider-spec-protocol .arca-model-protocol-dot { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; }
+.arca-provider-credential-pill {
+  display: inline-flex; width: fit-content; max-width: 100%; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 560;
+  background: var(--surface-attention); color: var(--badge-warning-fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.arca-provider-credential-pill[data-saved] {
+  background: var(--surface-success); color: var(--badge-success-fg);
+}
+.arca-provider-credential-pill > span { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 960px) {
+  .arca-provider-spec-strip,
+  .arca-provider-spec-strip:not(:has(.arca-provider-spec-credential)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arca-provider-spec-cell + .arca-provider-spec-cell {
+    border-left: 0; border-top: 1px solid var(--border-subtle);
+  }
+}
+
+.arca-model-manual-trigger {
+  display: inline-flex; height: 32px; align-items: center; gap: 6px; padding: 0 12px;
+  border: 1px solid #111827; border-radius: 8px; background: #111827; color: #FFFFFF;
+  font: 560 12px/1 var(--font-sans); white-space: nowrap; cursor: pointer;
+  transition: background-color .14s ease, border-color .14s ease, opacity .14s ease;
+}
+.arca-model-manual-trigger:hover:not(:disabled) { background: #1F2937; border-color: #1F2937; }
+.arca-model-manual-trigger:disabled { opacity: .45; cursor: default; }
+.arca-model-manual-trigger:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+.dark .arca-model-manual-trigger {
+  background: #EDEDF0; border-color: #EDEDF0; color: #0A0B0E;
+}
+.dark .arca-model-manual-trigger:hover:not(:disabled) { background: #FFFFFF; border-color: #FFFFFF; }
+
 .arca-models-workspace :is(.arca-model-list-header, .arca-model-list-row) {
-  min-height: 118px;
+  min-height: 86px;
   transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 .arca-models-workspace .arca-model-list-row:hover {
@@ -1181,79 +1278,81 @@ body {
 .arca-model-card { position: relative; }
 .arca-models-workspace .arca-model-card .arca-model-list-row {
   display: flex; flex-direction: column; align-items: stretch; justify-content: space-between;
-  width: 100%; min-height: 118px; padding: 13px 14px 11px; text-align: left;
+  width: 100%; min-height: 86px; gap: 10px; padding: 12px 14px 10px; text-align: left;
 }
 .arca-model-list-row .arca-model-list-identity {
   display: flex; width: 100%; min-width: 0; align-items: center; gap: 10px; padding-right: 64px; text-align: left;
 }
-.arca-model-card-facts {
-  display: flex; width: 100%; min-width: 0; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 6px 8px; margin: 8px 0 6px; text-align: left;
-}
-.arca-model-status-pill {
-  display: inline-flex; height: 20px; align-items: center; padding: 0 7px;
-  border-radius: 5px; font: 600 10px/1.2 var(--font-sans);
-}
-.arca-model-status-added {
-  background: color-mix(in srgb, var(--color-blue) 12%, transparent);
-  color: var(--color-blue);
-}
 .arca-model-card-footer {
   display: flex; width: 100%; min-width: 0; align-items: center; justify-content: space-between; gap: 8px;
-  margin-top: auto; padding-top: 6px; border-top: 1px solid var(--border-subtle); text-align: left;
+  margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-subtle); text-align: left;
 }
-.arca-model-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; padding-inline: 2px; margin-bottom: 8px; }
-.arca-model-section-heading h2 { display: flex; align-items: baseline; gap: 7px; margin: 0; color: var(--text-primary); font-size: 13px; font-weight: 660; }
-.arca-model-section-heading h2 > span { color: var(--text-secondary); font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.arca-model-section-heading .btn-ghost { min-height: 28px; padding: 4px 8px; font-size: 11px; }
-.arca-model-catalog-section { margin-top: 22px; }
+.arca-model-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; padding-inline: 2px; margin-bottom: 8px; }
+.arca-model-section-heading h2 { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--text-primary); font-size: 13px; font-weight: 660; }
+.arca-model-section-heading h2 > span {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 18px; padding: 0 6px; border-radius: 5px;
+  background: var(--surface-section); color: var(--text-secondary);
+  font-size: 10.5px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.arca-model-section-heading .btn-ghost { min-height: 28px; padding: 4px 8px; font-size: 11.5px; }
+.arca-model-empty-notice {
+  margin: 0; padding: 14px 16px; border: 1px dashed var(--border-hairline); border-radius: 10px;
+  background: var(--surface-hover); color: var(--text-secondary); font-size: 12px; line-height: 1.5;
+}
+.arca-model-catalog-section { margin-top: 20px; }
 
-.arca-model-manual-card {
-  display: flex; flex-direction: column; justify-content: space-between;
-  width: 100%; min-height: 118px; padding: 13px 14px 11px;
-  border: 1px dashed color-mix(in srgb, var(--color-blue) 45%, var(--border-hairline)); border-radius: 12px;
-  background: color-mix(in srgb, var(--surface-selected) 20%, transparent); text-align: left; cursor: pointer;
-  transition: border-color .14s ease, background .14s ease, transform .16s ease;
+.arca-model-catalog-list {
+  border: 1px solid var(--border-hairline); border-radius: 11px;
+  background: var(--surface-asset); overflow: hidden;
 }
-.arca-model-manual-card:hover:not(:disabled) {
-  border-color: var(--color-blue); background: var(--surface-selected); transform: translateY(-1px);
+.arca-model-catalog-row {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
+  min-height: 46px; padding: 8px 12px 8px 14px;
+  transition: background-color .12s ease;
 }
-.arca-model-manual-card:disabled { opacity: .45; cursor: default; }
-.arca-model-manual-card:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
-.arca-model-manual-header { display: flex; align-items: center; gap: 10px; }
-.arca-model-manual-icon {
-  display: flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; flex: 0 0 32px; border-radius: 8px;
-  background: var(--surface-selected); color: var(--color-blue);
+.arca-model-catalog-row + .arca-model-catalog-row { border-top: 1px solid var(--border-subtle); }
+.arca-model-catalog-row:hover { background: var(--surface-hover); }
+.arca-model-catalog-row:focus-within { position: relative; z-index: 2; }
+.arca-model-catalog-row-main {
+  display: flex; min-width: 0; flex: 1 1 220px; align-items: center; gap: 8px;
 }
-.arca-model-manual-copy strong { display: block; font-size: 13px; font-weight: 660; color: var(--color-blue); }
-.arca-model-manual-copy code { display: block; margin-top: 2px; color: var(--text-secondary); font: 10.5px/1.3 var(--font-mono); }
-.arca-model-manual-facts { display: flex; align-items: center; margin: 8px 0 6px; }
-.arca-model-manual-tag {
-  display: inline-flex; height: 19px; align-items: center; padding: 0 7px;
-  border-radius: 4px; font: 560 10px/1.2 var(--font-sans); color: var(--color-blue);
-  background: color-mix(in srgb, var(--color-blue) 10%, transparent);
+.arca-model-catalog-row-identity {
+  display: flex; min-width: 0; align-items: baseline; gap: 8px; flex-wrap: wrap;
 }
-.arca-model-manual-footer {
-  display: flex; align-items: center; justify-content: flex-end;
-  margin-top: auto; padding-top: 6px; border-top: 1px dashed color-mix(in srgb, var(--color-blue) 25%, var(--border-subtle)); width: 100%;
+.arca-model-catalog-row-identity strong {
+  color: var(--text-primary); font-size: 13px; font-weight: 630;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
-.arca-model-manual-action { font-size: 10.5px; font-weight: 600; color: var(--color-blue); }
-
-.arca-model-candidate-card { min-width: 0; padding: 14px; border: 1px solid var(--border-hairline); border-radius: 12px; background: var(--surface-asset); }
-.arca-model-candidate-facts { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 9px; color: var(--text-secondary); font-size: 10.5px; }
-.arca-model-candidate-facts > span:first-child { color: var(--color-blue); }
-.arca-model-candidate-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
-.arca-model-candidate-controls > span { min-width: 0; color: var(--text-secondary); font-size: 10.5px; }
-.arca-model-candidate-controls .arca-form-select { flex: 1; min-width: 0; max-width: 230px; }
-.arca-model-candidate-controls .arca-model-field { min-height: 30px; height: 30px; padding: 4px 8px; font-size: 11px; }
-.arca-model-candidate-controls .btn-secondary { flex-shrink: 0; min-height: 30px; padding: 5px 10px; font-size: 11.5px; }
-.arca-model-candidate-list > [role="listitem"]:focus-within { position: relative; z-index: 2; }
+.arca-model-catalog-row-id {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-secondary); font: 11.5px/1.3 var(--font-mono);
+}
+.arca-model-catalog-row-id-only { color: var(--text-primary); font-size: 12.5px; font-weight: 560; }
+.arca-model-catalog-context {
+  display: inline-flex; flex: 0 0 auto; align-items: center; height: 20px; padding: 0 6px;
+  border-radius: 5px; background: var(--surface-section); color: var(--text-secondary);
+  font: 600 10px/1 var(--font-mono);
+}
+.arca-model-catalog-row-controls {
+  display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0;
+}
+.arca-model-catalog-protocol {
+  color: var(--text-secondary); font-size: 11px; white-space: nowrap;
+}
+.arca-model-catalog-row-controls .arca-form-select { min-width: 170px; max-width: 220px; }
+.arca-model-catalog-row-controls .arca-model-field { min-height: 28px; height: 28px; padding: 4px 8px; font-size: 11px; }
+.arca-model-catalog-add { min-height: 28px; padding: 4px 10px; font-size: 11.5px; }
 .arca-model-catalog-notice { margin: 8px 4px; color: var(--text-secondary); font-size: 11.5px; line-height: 1.6; overflow-wrap: anywhere; }
-.arca-model-candidate-error { margin: 9px 0 0; color: var(--color-red); font-size: 10.5px; line-height: 1.5; overflow-wrap: anywhere; }
 .arca-model-catalog-more { display: flex; margin: 12px auto 0; font-size: 11.5px; }
 
 .arca-model-card-actions {
   position: absolute; top: 11px; right: 11px; display: flex; gap: 4px; z-index: 2;
+  opacity: .74; transition: opacity .14s ease;
+}
+.arca-model-card:is(:hover, :focus-within) .arca-model-card-actions,
+.arca-model-card:has(.arca-model-list-row[data-selected="true"]) .arca-model-card-actions {
+  opacity: 1;
 }
 .arca-model-card-action {
   display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;

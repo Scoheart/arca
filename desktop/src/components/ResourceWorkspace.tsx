@@ -275,7 +275,7 @@ export function ResourceOverview({
   actions,
   children,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description?: string;
   icon: ReactNode;
@@ -287,7 +287,7 @@ export function ResourceOverview({
       <div className="arca-resource-overview-heading">
         <span className="arca-resource-overview-icon">{icon}</span>
         <div className="arca-resource-overview-identity">
-          <span className="arca-resource-overview-eyebrow">{eyebrow}</span>
+          {eyebrow && <span className="arca-resource-overview-eyebrow">{eyebrow}</span>}
           <h1 title={title}>{title}</h1>
           {description && <p>{description}</p>}
         </div>

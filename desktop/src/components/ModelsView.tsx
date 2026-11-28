@@ -1,6 +1,6 @@
 import { ResourceIcon } from "./resourcePresentation";
 import protocolDefinitions from "../../../data/model-protocols.json";
-import { memo, type ReactNode, useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useModelObservationRevision } from "../lib/modelObservation";
 import { cachedModelLibrary, loadModelLibrary } from "../lib/modelLibrary";
 import { useTranslation } from "react-i18next";
@@ -27,7 +27,7 @@ import type {
 import { formatError, formatErrorDetails } from "../lib/format";
 import { readLocalSetting, writeLocalSetting } from "../lib/localSettings";
 import { requiresAgentReview } from "../lib/agentOperation";
-import { ManualModelCard, ProviderModelCatalog } from "./ProviderModelCatalog";
+import { ProviderModelCatalog } from "./ProviderModelCatalog";
 import {
   getCachedModelsDevMetadata,
   loadModelsDevMetadata,
@@ -628,8 +628,19 @@ export function ModelsView({
         query={query}
         onQueryChange={(value) => { clearSelection(); setQuery(value); }}
         searchPlaceholder={t("models.search")}
-        listLabel="Models"
+        listLabel={selectedProvider ? undefined : "Models"}
         resultCount={selectedProvider ? undefined : filteredProfiles.length}
+        toolbarActions={selectedProvider ? (
+          <button
+            type="button"
+            className="arca-model-manual-trigger"
+            disabled={creationDisabled}
+            onClick={createManualModel}
+          >
+            <PlusIcon className="w-3.5 h-3.5" />
+            <span>{t("models.manualAdd")}</span>
+          </button>
+        ) : undefined}
         inspector={selectedProfile && editing?.id === selectedProfile.id ? (
           <ModelProfileDialog
             initial={editing}
@@ -709,11 +720,22 @@ export function ModelsView({
               <div className="arca-model-section-heading">
                 <h2>{t("models.addedModels")} <span>{filteredProfiles.length}</span></h2>
               </div>
-              <ModelList profiles={filteredProfiles} providerInstances={providerInstances} providers={providers}
-                metadata={modelsDevByProfileId} selectedProfileId={selectedProfileId}
-                leading={<ManualModelCard disabled={creationDisabled} onAdd={createManualModel} />}
-                onDelete={consumptionState && !creationDisabled ? planProfileDelete : undefined}
-                onOpen={(profileId) => { setEditing(undefined); setSelectedProfileId(profileId); }} />
+              {filteredProfiles.length === 0 ? (
+                <p className="arca-model-empty-notice">
+                  {query.trim() ? t("models.noMatches") : t("models.emptyDetail")}
+                </p>
+              ) : (
+                <ModelList
+                  profiles={filteredProfiles}
+                  providerInstances={providerInstances}
+                  providers={providers}
+                  metadata={modelsDevByProfileId}
+                  selectedProfileId={selectedProfileId}
+                  hideProviderIcon
+                  onDelete={consumptionState && !creationDisabled ? planProfileDelete : undefined}
+                  onOpen={(profileId) => { setEditing(undefined); setSelectedProfileId(profileId); }}
+                />
+              )}
             </section>
             {selectedProvider.model_discovery_supported ? (
               <ProviderModelCatalog key={selectedProvider.id} provider={selectedProvider} revision={modelRevision}
@@ -855,15 +877,24 @@ function ProviderOverview({
   onDelete?: () => void;
 }) {
   const { t } = useTranslation();
+  const toast = useToast();
   const storeId = provider.credential?.store_id;
   const store = credentialStores.find((candidate) => candidate.id === storeId);
   const storeName = store?.name ?? (storeId === KEYCHAIN_STORE_ID ? t("credentialStores.keychain") : storeId);
+  const copyBaseUrl = async () => {
+    try {
+      await copyToClipboard(provider.base_url);
+      toast.show({ kind: "success", msg: t("models.copiedValue", { label: t("models.baseUrl") }) });
+    } catch (error) {
+      toast.show({ kind: "error", msg: t("models.copyValueFailed", { error: formatError(error) }) });
+    }
+  };
   return (
     <ResourceOverview
-      eyebrow={`Provider · ${t("models.providerModelCount", { count: provider.model_count })}`}
       title={provider.name}
-      icon={<ProviderGlyph id={provider.provider} name={provider.name} size={34} />}
+      icon={<ProviderGlyph id={provider.provider} name={provider.name} size={38} />}
       actions={<>
+        <ProviderPortalButton portal={portal} />
         <button className="btn-secondary" type="button" disabled={!onEdit} onClick={onEdit}>
           <EditIcon className="w-4 h-4" />
           {t("models.editProvider")}
@@ -874,28 +905,42 @@ function ProviderOverview({
         </button>
       </>}
     >
-      <dl className="arca-resource-overview-facts">
-        <div>
-          <dt>Base URL</dt>
-          <dd><code title={provider.base_url}>{provider.base_url}</code></dd>
+      <div className="arca-provider-spec-strip">
+        <div className="arca-provider-spec-cell arca-provider-spec-url">
+          <div className="arca-provider-spec-copy-wrap">
+            <span className="arca-provider-spec-label">Base URL</span>
+            <code title={provider.base_url}>{provider.base_url}</code>
+          </div>
+          <button
+            type="button"
+            className="arca-provider-spec-copy"
+            aria-label={t("models.copyValue", { label: t("models.baseUrl") })}
+            title={t("models.copyValue", { label: t("models.baseUrl") })}
+            onClick={() => void copyBaseUrl()}
+          >
+            <CopyIcon className="w-3.5 h-3.5" />
+          </button>
         </div>
-        <div>
-          <dt>{t("models.protocolsShort")}</dt>
-          <dd className="arca-resource-overview-tags">
+        <div className="arca-provider-spec-cell arca-provider-spec-protocols">
+          <span className="arca-provider-spec-label">{t("models.protocolsShort")}</span>
+          <div className="arca-provider-spec-tags">
             {PROTOCOLS.filter(({ id }) => provider.protocols[id]).map(({ id, label }) => (
-              <span key={id} title={provider.protocols[id]?.endpoint_path}>{label}</span>
+              <span className="arca-provider-spec-protocol" key={id} title={provider.protocols[id]?.endpoint_path}>
+                <span className="arca-model-protocol-dot" data-protocol={id} />
+                <span>{label}</span>
+              </span>
             ))}
-          </dd>
+          </div>
         </div>
-      </dl>
-      <div className="arca-resource-overview-links">
         {provider.auth_requirement !== "none" && (
-          <span className="arca-resource-overview-credential" data-saved={Boolean(storeName) || undefined}>
-            <KeyIcon className="w-3.5 h-3.5" />
-            {storeName ? t("models.credentialSavedIn", { store: storeName }) : t("models.credentialNotSaved")}
-          </span>
+          <div className="arca-provider-spec-cell arca-provider-spec-credential">
+            <span className="arca-provider-spec-label">{t("models.authentication")}</span>
+            <span className="arca-provider-credential-pill" data-saved={Boolean(storeName) || undefined}>
+              <KeyIcon className="w-3 h-3" />
+              <span>{storeName ? t("models.credentialSavedIn", { store: storeName }) : t("models.credentialNotSaved")}</span>
+            </span>
+          </div>
         )}
-        <ProviderPortalButton portal={portal} />
       </div>
     </ResourceOverview>
   );
@@ -907,18 +952,18 @@ const ModelList = memo(function ModelList({
   providers,
   metadata,
   selectedProfileId,
+  hideProviderIcon = false,
   onOpen,
   onDelete,
-  leading,
 }: {
   profiles: ModelProfileView[];
   providerInstances: ModelProviderInstanceView[];
   providers: ModelProviderView[];
   metadata: Record<string, ModelsDevMetadata>;
   selectedProfileId: string | null;
+  hideProviderIcon?: boolean;
   onOpen: (profileId: string) => void;
   onDelete?: (profile: ModelProfileView) => Promise<void>;
-  leading?: ReactNode;
 }) {
   const { t } = useTranslation();
   const toast = useToast();
@@ -942,7 +987,6 @@ const ModelList = memo(function ModelList({
   };
   return (
     <div className="arca-asset-list arca-model-list" role="list" aria-label={t("models.asset")}>
-      {leading}
       {profiles.map((profile) => {
         const provider = instanceIndex.get(profile.provider_id ?? "");
         const providerName = provider?.name ?? templateIndex.get(profile.provider) ?? profile.provider;
@@ -961,14 +1005,19 @@ const ModelList = memo(function ModelList({
               onClick={() => onOpen(profile.id)}
             >
               <div className="arca-asset-list-identity arca-model-list-identity">
-                <ProviderGlyph id={profile.provider || "custom"} name={providerName} size={30} />
+                {!hideProviderIcon && (
+                  <ProviderGlyph id={profile.provider || "custom"} name={providerName} size={30} />
+                )}
                 <span className="arca-asset-list-copy">
                   <strong title={displayName}>{displayName}</strong>
                   <code title={profile.model}>{profile.model}</code>
                 </span>
               </div>
-              <div className="arca-model-card-facts">
-                <span className="arca-model-status-pill arca-model-status-added">{t("models.addedStatus", "已添加")}</span>
+              <div className="arca-model-card-footer">
+                <span className="arca-model-protocol-pill" title={protocolLabel(profile.protocol)}>
+                  <span className="arca-model-protocol-dot" data-protocol={profile.protocol} />
+                  <span>{protocolLabel(profile.protocol)}</span>
+                </span>
                 {contextWindow && (
                   <span
                     className="arca-model-list-context"
@@ -979,12 +1028,6 @@ const ModelList = memo(function ModelList({
                     <strong>{formatTokens(contextWindow)}</strong>
                   </span>
                 )}
-              </div>
-              <div className="arca-model-card-footer">
-                <span className="arca-model-protocol-pill" title={protocolLabel(profile.protocol)}>
-                  <span className="arca-model-protocol-dot" data-protocol={profile.protocol} />
-                  <span>{protocolLabel(profile.protocol)}</span>
-                </span>
               </div>
             </button>
             <div className="arca-model-card-actions">

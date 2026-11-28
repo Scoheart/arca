@@ -6,32 +6,8 @@ import { loadProviderModelCatalog, providerCatalogKey } from "../lib/providerMod
 import type { ModelProfileView, ModelProtocol, ModelProviderInstanceView, ProviderModelSummary } from "../lib/types";
 import { FormSelect, type FormSelectOption } from "./FormSelect";
 import { PlusIcon, RefreshIcon } from "./icons";
-import { ProviderGlyph } from "./providerIcons";
 
 const PAGE_SIZE = 8;
-
-export function ManualModelCard({ disabled, onAdd }: { disabled: boolean; onAdd(): void }) {
-  const { t } = useTranslation();
-  return (
-    <div role="listitem" className="arca-model-card arca-model-manual-item">
-      <button type="button" className="arca-model-manual-card" onClick={onAdd} disabled={disabled}>
-        <div className="arca-model-manual-header">
-          <span className="arca-model-manual-icon"><PlusIcon className="w-5 h-5" /></span>
-          <div className="arca-model-manual-copy">
-            <strong>{t("models.manualAdd")}</strong>
-            <code>{t("models.manualAddHint")}</code>
-          </div>
-        </div>
-        <div className="arca-model-manual-facts">
-          <span className="arca-model-manual-tag">{t("models.manualConfigTag", "+ 自定义参数")}</span>
-        </div>
-        <div className="arca-model-manual-footer">
-          <span className="arca-model-manual-action">{t("models.manualAddAction", "立即添加模型 →")}</span>
-        </div>
-      </button>
-    </div>
-  );
-}
 
 export function ProviderModelCatalog({
   provider, revision, profiles, query, protocols, disabled, addingId, onAdd,
@@ -106,9 +82,9 @@ export function ProviderModelCatalog({
         {query.trim() ? t("models.noModelCatalogMatches") : models.length > 0
           ? t("models.catalogAllAdded") : t("models.catalogEmpty")}
       </p>}
-      {available.length > 0 && <div className="arca-asset-list arca-model-candidate-list" role="list" aria-label={t("models.availableModels")}>
+      {available.length > 0 && <div className="arca-model-catalog-list" role="list" aria-label={t("models.availableModels")}>
         {available.slice(0, limit).map((model) => <CandidateModelCard key={model.id}
-          model={model} provider={provider} protocols={protocols}
+          model={model} protocols={protocols}
           disabled={disabled || addingId !== null || loading}
           busy={addingId === model.id}
           onAdd={async (protocol) => { await onAdd(model, protocol); }} />)}
@@ -121,9 +97,8 @@ export function ProviderModelCatalog({
   );
 }
 
-function CandidateModelCard({ model, provider, protocols, disabled, busy, onAdd }: {
+function CandidateModelCard({ model, protocols, disabled, busy, onAdd }: {
   model: ProviderModelSummary;
-  provider: ModelProviderInstanceView;
   protocols: FormSelectOption[];
   disabled: boolean;
   busy: boolean;
@@ -134,6 +109,8 @@ function CandidateModelCard({ model, provider, protocols, disabled, busy, onAdd 
   const [error, setError] = useState<string | null>(null);
   const protocol = protocols.length === 1 ? protocols[0].value : chosenProtocol;
   const validProtocol = protocols.some((option) => option.value === protocol);
+  const title = (model.name || "").trim();
+  const hasDistinctName = Boolean(title && title !== model.id);
   const add = async () => {
     if (!validProtocol || disabled) return;
     setError(null);
@@ -141,26 +118,28 @@ function CandidateModelCard({ model, provider, protocols, disabled, busy, onAdd 
     catch (cause) { setError(formatError(cause)); }
   };
   return (
-    <article className="arca-model-candidate-card" role="listitem" aria-label={t("models.catalogCandidate", { name: model.name || model.id })}>
-      <div className="arca-asset-list-identity">
-        <ProviderGlyph id={provider.provider} name={provider.name} size={30} />
-        <span className="arca-asset-list-copy">
-          <strong title={model.name || model.id}>{model.name || model.id}</strong>
-          <code title={model.id}>{model.id}</code>
-        </span>
+    <article className="arca-model-catalog-row" role="listitem" aria-label={t("models.catalogCandidate", { name: model.name || model.id })}>
+      <div className="arca-model-catalog-row-main">
+        {hasDistinctName ? (
+          <div className="arca-model-catalog-row-identity">
+            <strong title={title}>{title}</strong>
+            <code className="arca-model-catalog-row-id" title={model.id}>{model.id}</code>
+          </div>
+        ) : (
+          <code className="arca-model-catalog-row-id arca-model-catalog-row-id-only" title={model.id}>{model.id}</code>
+        )}
+        {model.context_length != null && model.context_length > 0 && (
+          <span className="arca-model-catalog-context">
+            {new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(model.context_length)}
+          </span>
+        )}
       </div>
-      <div className="arca-model-candidate-facts">
-        <span>{t("models.catalogCandidateLabel")}</span>
-        {model.context_length != null && model.context_length > 0 && <span>
-          {t("models.context")} {new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(model.context_length)}
-        </span>}
-      </div>
-      <div className="arca-model-candidate-controls">
+      <div className="arca-model-catalog-row-controls">
         {protocols.length > 1 ? <FormSelect ariaLabel={`${t("models.protocol")} · ${model.id}`}
           value={validProtocol ? protocol : ""} options={protocols} placeholder={t("models.chooseProtocol")}
           disabled={disabled} onChange={setChosenProtocol} />
-          : <span>{protocols[0]?.label ?? t("models.protocolRequired")}</span>}
-        <button type="button" className="btn-secondary" disabled={disabled || !validProtocol} aria-busy={busy}
+          : <span className="arca-model-catalog-protocol">{protocols[0]?.label ?? t("models.protocolRequired")}</span>}
+        <button type="button" className="btn-secondary arca-model-catalog-add" disabled={disabled || !validProtocol} aria-busy={busy}
           aria-label={t("models.addCatalogModel", { name: model.name || model.id })} onClick={() => void add()}>
           <PlusIcon className="w-3.5 h-3.5" />
           {busy ? t("models.addingAction") : t("models.addAction")}
