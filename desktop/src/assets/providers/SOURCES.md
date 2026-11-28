@@ -536,3 +536,106 @@ These local PNGs use artwork linked by the provider’s site, developer document
 | `zowy.png` | <https://zowy.ai/favicon.svg> | <https://zowy.ai/> |
 | `zyloapi.png` | <https://zyloai.net/assets/images/logo.png> | <https://zyloai.net/> |
 | `zyphra-cloud.png` | <https://zyphra.com/brand/logo/zyphra-mark-black.svg> | <https://zyphra.com/brand> (Black icon from the official Zyphra brand kit.) |
+
+## Provider coverage expansion — 2026-11-28
+
+These PNGs use first-party brand artwork. Regional and specialized templates reuse their service brand.
+
+| Asset | Artwork | Official page |
+| --- | --- | --- |
+| `88api.png` | <https://88api.ai/assets/logo.png> | <https://88api.ai/> |
+| `abacus.png` | <https://api.abacus.ai/static/h23c4bfa0/icon2/favicon-192.png> | <https://api.abacus.ai/> |
+| `aicodewith.png` | <https://aicodewith.ai/favicon.svg> | <https://aicodewith.ai/> |
+| `aigrow.png` | <https://aigrow.gg/assets/brand/apple-touch-icon.png> | <https://aigrow.gg/> |
+| `aimlapi.png` | <https://cdn.prod.website-files.com/65b8f36fa600366bc7cf9a67/6882319cfc66d25ec955be54_123.png> | <https://aimlapi.com/> |
+| `aistupidlevel.png` | <https://aistupidlevel.info/favicon.png?v=2> | <https://aistupidlevel.info/> |
+| `aiwave.png` | <https://aiwave.live/site-assets/aiwave-wave-20261116.svg> | <https://aiwave.live/> |
+| `aixy.png` | <https://docs.aixy-gateway.com/mintlify-assets/_mintlify/favicons/aixy/HMM0GAGKL7j_--v1/_generated/favicon/android-chrome-192x192.png> | <https://docs.aixy-gateway.com/> |
+| `apiko.png` | <https://apiko.app/favicon.svg> | <https://apiko.app/> |
+| `apimart-ai.png` | <https://apimart.ai/icon.png> | <https://apimart.ai/> |
+| `apiyi-com.png` | <https://static.apiyi.com/apiyi-logo.png> | <https://www.apiyi.com/> |
+| `apiz.png` | <https://api.apiz.vn/logo.png> | <https://apiz.vn/> |
+| `arouter.png` | <https://docs.arouter.ai/mintlify-assets/_mintlify/favicons/abc-d136fe87/JZAfAflSmlkrnO4a/_generated/favicon/android-chrome-192x192.png> | <https://docs.arouter.ai/> |
+| `asale.png` | <https://asale.ai/icon.svg?74c1e483cf92a588> | <https://asale.ai/> |
+| `atlascloud-ai.png` | <https://www.atlascloud.ai/favicon.ico?favicon.3tuhsz7wre5om.ico> | <https://www.atlascloud.ai/> |
+| `auriko.png` | <https://www.auriko.ai/icon.svg?v=2> | <https://auriko.ai/> |
+| `autarcho.png` | <https://autarcho.com/favicon.svg> | <https://autarcho.com/> |
+| `avian.png` | <https://avian.io/static/images/favicons/icon-192.png> | <https://avian.io/> |
+| `baseurl.png` | <https://baseurl.dev/favicon.svg> | <https://baseurl.dev/> |
+| `berget.png` | <https://docs.berget.ai/berget-icon-black.svg> | <https://docs.berget.ai/> |
+| `brioi.png` | <https://brioi.com/favicon.svg> | <https://brioi.com/> |
+| `bumo.png` | <https://router.bumo.ai/favicon.ico> | <https://api.bumo.ai/> |
+| `burncloud.png` | <https://www.burncloud.com/favicon.png> | <https://burncloud.com/> |
+| `cheapest-token.png` | <https://cheapest-token.com/icon.png?837de8696ead9f02> | <https://cheapest-token.com/> |
+| `clarifai.png` | <https://github.com/Clarifai.png> | <https://github.com/Clarifai> (Logo from the official Clarifai GitHub organization.) |
+| `claudinio.png` | <https://claudin.io/static/img/logo-mark.svg> | <https://claudin.io/> |
+| `cloudcode.png` | <https://cloudcode.one/favicon.svg> | <https://cloudcode.one/> |
+| `cloudgpu.png` | <https://cloudgpu.app/icon.svg?8f3cc8ce1bdb4127> | <https://cloudgpu.app/> |
+| `cloudrift.png` | <https://www.cloudrift.ai/logos/cloudrift.svg> | <https://www.cloudrift.ai/> (CloudRift site symbol.) |
+| `concentrate.png` | <https://concentrate.ai/og-image.png> | <https://concentrate.ai/> (Dot-grid mark from the official site preview.) |
+| `core-today.png` | <https://console.core.today/favicon.svg> | <https://console.core.today/> |
+| `crusoe.png` | <https://docs.crusoe.ai/img/favicon.ico> | <https://docs.crusoe.ai/quickstart/getting-started-with-serverless-inference/index.html> |
+| `daoxe.png` | <https://pub-c7d601dad0a34aa5a4c2120181c189f9.r2.dev/logo.png> | <https://daoxe.com/docs/en/api/openai-chat> |
+| `databyte.png` | <https://ai.databyte.co.id/icon.png?22ae7e36636101b2> | <https://ai.databyte.co.id/> |
+| `dinference.png` | <https://dinference.com/favicon.png> | <https://dinference.com/> |
+| `ditai.png` | <https://dit.ai/dit-logo.svg> | <https://dit.ai/> |
+| `dothoosh.png` | <https://gateway.dothoosh.com/icon.svg?a21e0b058578162d> | <https://gateway.dothoosh.com/> |
+| `doubleword.png` | <https://docs.doubleword.ai/icon.png?icon.1eq74zqqq2j04.png> | <https://docs.doubleword.ai/> |
+| `dreamvision.png` | <https://dreamvision.com.br/favicon.ico> | <https://dreamvision.com.br/> |
+| `dztokens.png` | <https://dztokens.com/site/favicon.svg> | <https://dztokens.com/> |
+| `ebcloud.png` | <https://assets.ebtech.com/cloud-document/20260909104822975/favicon.ico> | <https://docs.ebtech.com/> |
+| `echo.png` | <https://tracerml.ai/assets/favicon.svg> | <https://tracerml.ai/> |
+| `epithre.png` | <https://www.epithre.com/favicon.svg> | <https://epithre.com/> |
+| `evroc.png` | <https://docs.evroc.com/favicon.svg> | <https://docs.evroc.com/> |
+| `fastrouter.png` | <https://fastrouter.ai/favicon.ico> | <https://fastrouter.ai/> |
+| `felo.png` | <https://openapi.felo.ai/brand/logo.svg> | <https://openapi.felo.ai/> |
+| `freeaiapikey.png` | <https://freeaiapikey.com/static/images/mark.svg> | <https://freeaiapikey.com/> |
+| `haoai.png` | <https://hao.ai/favicon.svg> | <https://hao.ai/> |
+| `hasa.png` | <https://open.hasa.re.kr/assets/gitc-logo.png?v=20260726d> | <https://open.hasa.re.kr/> |
+| `hostinger-router.png` | <https://imagedelivery.net/LqiWLm-3MGbYHtFuUbcBtA/wp-content/uploads/sites/55/2025/08/cropped-cropped-hostinger-fav-1.png/w=192,h=192,fit=scale-down> | <https://www.hostinger.com/support/what-is-hostinger-ai-router-and-how-to-get-started/> |
+| `inceptron.png` | <https://framerusercontent.com/images/GlFn3XVnJw57e2ab8cjgbZs04s.svg> | <https://inceptron.io/> |
+| `indorouter.png` | <https://indorouter.ai/images/mascot.svg> | <https://indorouter.ai/> |
+| `infer.png` | <https://infer.flow7.org/assets/favicon.svg?v=20260908brand1> | <https://infer.flow7.org/> |
+| `infermatic.png` | <https://ui.infermatic.ai/favicon.ico> | <https://ui.infermatic.ai/docs> |
+| `inferray.png` | <https://inferray.com/icon?3f1340ff20dff909> | <https://inferray.com/> |
+| `ionosaimodelhub.png` | <https://www.ionos.com/favicon.svg> | <https://ionos.com/> |
+| `jalapeno.png` | <https://www.jalapeno-cloud.ai/favicon-magik.ico> | <https://www.jalapeno-cloud.ai/> |
+| `joingonka.png` | <https://gate.joingonka.ai/favicon.svg> | <https://gate.joingonka.ai/> |
+| `kantro.png` | <https://kantro.dev/brand/kantro-mark.svg> | <https://kantro.dev/> |
+| `keln.png` | <https://keln.ai/assets/favicon.svg> | <https://keln.ai/> |
+| `kunavo.png` | <https://kunavo.com/favicon.ico> | <https://kunavo.com/> |
+| `kyma.png` | <https://docs.kymaapi.com/mintlify-assets/_mintlify/favicons/kyma/VCp6_M63dEPrRkxq/_generated/favicon/android-chrome-192x192.png> | <https://docs.kymaapi.com/> |
+| `laozhang-ai.png` | <https://www.laozhang.ai/icon.svg?icon.2don4fiwaddf5.svg?dpl=dpl_8ui8H6i5EnCVx2vbe1LNWuXAsyWT> | <https://www.laozhang.ai/> |
+| `lightningai.png` | <https://platform.lightning.ai/favicon/apple-touch-icon.png> | <https://platform.lightning.ai/ai-hub> |
+| `linkagi.png` | <https://docs.linktoagi.com/favicon.svg> | <https://docs.linktoagi.com/> |
+| `lithosai.png` | <https://docs.lithosai.com/mintlify-assets/_mintlify/favicons/lithos-ai/yO49JQ2ksWF5fX6Y/_generated/favicon/android-chrome-192x192.png> | <https://docs.lithosai.com/> |
+| `llmgateway.png` | <https://llmgateway.io/provider-logos/google-ai-studio.svg> | <https://llmgateway.io/> |
+| `llmtech.png` | <https://llmtech.eu/favicon.png> | <https://llmtech.eu/> |
+| `macloudai.png` | <https://macloudai.com/favicon.ico> | <https://macloudai.com/> |
+| `mallard.png` | <https://mallardai.co.uk/mallard-favicon.svg> | <https://mallardai.co.uk/> |
+| `nbk.png` | <https://nbk.in.th/favicon.svg> | <https://nbk.in.th/> |
+| `nearai.png` | <https://near.ai/favicon.svg> | <https://near.ai/> |
+| `neuroapi.png` | <https://neuroapi.host/favicon.ico> | <https://neuroapi.host/> |
+| `nextbit.png` | <https://www.nextbit256.com/icon.svg> | <https://www.nextbit256.com/inference/models-api> |
+| `northern-inference.png` | <https://northerninference.ca/assets/brand/maple-leaf.png> | <https://northerninference.ca/> (Northern Inference maple leaf from the published brand assets.) |
+| `nosana.png` | <https://nosana.com/favicon.svg> | <https://nosana.com/> |
+| `openadapter.png` | <https://openadapter.dev/icon.svg> | <https://openadapter.dev/> |
+| `opper.png` | <https://opper-oauth-app-icons.s3.eu-north-1.amazonaws.com/provider-logos/site/providers/deepinfra.jpg> | <https://opper.ai/> |
+| `pendra.png` | <https://pendra.ai/favicon.png> | <https://pendra.ai/> |
+| `pinstripes.png` | <https://pinstripes.io/apple-icon.png> | <https://pinstripes.io/> |
+| `qorebit.png` | <https://qorebit.ai/assets/images/logo/favicon-large.png> | <https://qorebit.ai/> |
+| `refuseless.png` | <https://docs.refuseless.com/mintlify-assets/_mintlify/favicons/refuseless/JY-OFJw0tCFq6vml/_generated/favicon/android-chrome-192x192.png> | <https://docs.refuseless.com/> |
+| `routershift.png` | <https://routershift.com/favicon.svg?v=20260911> | <https://routershift.com/> |
+| `sandbase.png` | <https://www.sandbase.ai/icon.svg> | <https://www.sandbase.ai/> |
+| `serenityedge.png` | <https://serenityedge.ai/brand/serenity-edge-icon-64.png> | <https://serenityedge.ai/> |
+| `souz.png` | <https://souz.ai/icon.png?icon.2xs31austz_jt.png?dpl=b322e4eb176a7266b2006ee0d7fbf5feea02a38e> | <https://souz.ai/> |
+| `squarecloud.png` | <https://squarecloud.app/favicon.ico?favicon.0_t292y0fooay.ico> | <https://squarecloud.app/> |
+| `stackit.png` | <https://docs.stackit.cloud/favicon.svg> | <https://docs.stackit.cloud/> |
+| `stali.png` | <https://stali.vn/wp-content/uploads/2025/08/cropped-Ban-sao-cua-Logo-Stali-1-scaled-1-192x192.png> | <https://stali.vn/> |
+| `tensormesh.png` | <https://inference.docs.tensormesh.ai/mintlify-assets/_mintlify/favicons/tensormesh-lmignite/oHn2LuN-L2yVHr8h/_generated/favicon/android-chrome-192x192.png> | <https://inference.docs.tensormesh.ai/> |
+| `thinkingmachines.png` | <https://thinkingmachines.ai/images/apple-touch-icon.png> | <https://thinkingmachines.ai/> (Thinking Machines Lab site icon.) |
+
+### Providers without a verified icon
+
+- `jzstoken` — The site publishes a wordmark and a generic header symbol. A standalone brand icon could not be confirmed.
+- `proxystacks` — The linked favicon is the default framework mark. A standalone Relay brand icon could not be confirmed.

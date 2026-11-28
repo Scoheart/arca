@@ -17,6 +17,8 @@ mod delivery_state;
 mod discovery;
 pub(crate) mod inference;
 mod open_code_auth;
+pub(crate) mod qiniu_batch;
+pub(crate) mod spark_websocket;
 
 pub use discovery::{discover_provider_models, ProviderModelSummary};
 pub mod curl;
@@ -169,7 +171,7 @@ pub struct ModelProviderInstanceView {
     pub model_discovery_supported: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ModelProviderEndpointView {
     pub protocol: ModelProtocol,
     pub base_url: &'static str,
@@ -191,6 +193,9 @@ fn provider_setup(id: &str) -> Option<ModelProviderSetupView> {
         "cloudflare-workers-ai" => ("https://api.cloudflare.com/client/v4/accounts/<account-id>/ai/v1", "cloudflare"),
         "infomaniak-ai-services" => ("https://api.infomaniak.com/2/ai/<product_id>/openai/v1", "infomaniak"),
         "tinfoil-proxy" => ("http://127.0.0.1:3301/v1", "tinfoil"),
+        "sakana-fugu" => ("https://<your-fugu-endpoint>", "sakana-fugu"),
+        "iflytek-spark-classic" => ("https://spark-api-open.xf-yun.com/v1", "spark-classic"),
+        "qiniu-ai" => ("https://api.qnaigc.com/v1", "qiniu-batch"),
         _ => return None,
     };
     Some(ModelProviderSetupView { base_url_placeholder, hint })
@@ -325,6 +330,13 @@ fn provider_template_auth_override(id: &str) -> Option<AuthRequirement> {
     }
 }
 
+fn provider_template_path_override(id: &str) -> Option<&'static str> {
+    match id {
+        "free-ai-full" => Some("/chat/"),
+        _ => audited_catalog::get(id).and_then(|entry| entry.endpoint_path),
+    }
+}
+
 fn provider_template_connection(
     provider: &ModelProviderView,
 ) -> Result<
@@ -337,7 +349,16 @@ fn provider_template_connection(
     let Some(default_base_url) = provider.default_base_url else {
         return Ok((
             None,
-            if matches!(provider.id, "azure-openai" | "cloudflare-workers-ai") {
+            if provider.id == "sakana-fugu" {
+                [
+                    (ModelProtocol::OpenaiResponses, "/v1/responses"),
+                    (ModelProtocol::OpenaiCompletions, "/v1/chat/completions"),
+                    (ModelProtocol::AnthropicMessages, "/v1/messages"),
+                ]
+                .into_iter()
+                .map(|(protocol, path)| (protocol, ModelProviderProtocolConfig { endpoint_path: path.into() }))
+                .collect()
+            } else if matches!(provider.id, "azure-openai" | "cloudflare-workers-ai") {
                 [ModelProtocol::OpenaiResponses, ModelProtocol::OpenaiCompletions]
                     .into_iter()
                     .map(|protocol| {
@@ -364,11 +385,23 @@ fn provider_template_connection(
             .iter()
             .map(|endpoint| (endpoint.protocol.clone(), endpoint.base_url.to_string())),
     );
-    let (base_url, protocols) = migrate_legacy_provider_endpoints(provider.name, &legacy)?;
+    let (base_url, mut protocols) = migrate_legacy_provider_endpoints(provider.name, &legacy)?;
+    if let Some(path) = provider_template_path_override(provider.id) {
+        let route = protocols.get_mut(&provider.default_protocol).expect("registered default protocol");
+        let prefix = route.endpoint_path.strip_suffix(provider.default_protocol.default_endpoint_path())
+            .expect("template route ends in its protocol's default suffix");
+        route.endpoint_path = format!("{prefix}{path}");
+    }
     Ok((Some(base_url), protocols))
 }
 
 pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpointView] {
+    audited_catalog::get(id)
+        .map(|entry| entry.additional_endpoints.as_slice())
+        .unwrap_or_else(|| builtin_provider_additional_endpoints(id))
+}
+
+fn builtin_provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpointView] {
     use ModelProtocol::{AnthropicMessages, GeminiGenerateContent, OpenaiCompletions, OpenaiResponses};
 
     match id {
@@ -376,10 +409,16 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
             protocol: OpenaiResponses,
             base_url: "https://api.sarvam.ai/v2",
         }],
-        "sakana-ai" => &[ModelProviderEndpointView {
-            protocol: OpenaiResponses,
-            base_url: "https://api.sakana.ai/v1",
-        }],
+        "sakana-ai" => &[
+            ModelProviderEndpointView {
+                protocol: OpenaiResponses,
+                base_url: "https://api.sakana.ai/v1",
+            },
+            ModelProviderEndpointView {
+                protocol: AnthropicMessages,
+                base_url: "https://api.sakana.ai",
+            },
+        ],
         "qianwen-ai" => &[
             ModelProviderEndpointView {
                 protocol: OpenaiResponses,
@@ -511,6 +550,14 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 protocol: AnthropicMessages,
                 base_url: "https://spark-api-open.xf-yun.com/anthropic/agent",
             },
+        ],
+        "tencent-tokenhub-cn" => &[
+            ModelProviderEndpointView { protocol: OpenaiResponses, base_url: "https://tokenhub.tencentmaas.com/v1" },
+            ModelProviderEndpointView { protocol: AnthropicMessages, base_url: "https://tokenhub.tencentmaas.com" },
+        ],
+        "tencent-tokenhub-global" => &[
+            ModelProviderEndpointView { protocol: OpenaiResponses, base_url: "https://tokenhub-intl.tencentcloudmaas.com/v1" },
+            ModelProviderEndpointView { protocol: AnthropicMessages, base_url: "https://tokenhub-intl.tencentcloudmaas.com" },
         ],
         "ollama-cloud" => &[
             ModelProviderEndpointView {
@@ -855,6 +902,10 @@ pub fn provider_additional_endpoints(id: &str) -> &'static [ModelProviderEndpoin
                 protocol: AnthropicMessages,
                 base_url: "https://api.kimi.com/coding",
             },
+        ],
+        "kimi-for-coding-global" => &[
+            ModelProviderEndpointView { protocol: OpenaiResponses, base_url: "https://api.kimi.ai/coding/v1" },
+            ModelProviderEndpointView { protocol: AnthropicMessages, base_url: "https://api.kimi.ai/coding" },
         ],
         "minimax-coding-plan" => &[ModelProviderEndpointView {
             protocol: AnthropicMessages,
@@ -1537,6 +1588,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "tencent-hunyuan-legacy",
+        name: "Tencent Hunyuan (Legacy)",
+        default_base_url: Some("https://api.hunyuan.cloud.tencent.com/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "longcat",
         name: "LongCat",
         default_base_url: Some("https://api.longcat.chat/openai/v1"),
@@ -1547,6 +1605,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         id: "iflytek-spark-x2",
         name: "iFLYTEK Spark X2",
         default_base_url: Some("https://spark-api-open.xf-yun.com/agent/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "iflytek-spark-classic",
+        name: "iFLYTEK Spark Classic",
+        default_base_url: Some("https://spark-api-open.xf-yun.com/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
         category: "official",
     },
@@ -2356,6 +2421,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "gateway",
     },
     ModelProviderView {
+        id: "free-ai-full",
+        name: "Free.ai Full API",
+        default_base_url: Some("https://api.free.ai/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "gateway",
+    },
+    ModelProviderView {
         id: "suanli-maas",
         name: "共绩算力 MaaS",
         default_base_url: Some("https://api.suanli.cn/v1"),
@@ -2570,6 +2642,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         name: "Sakana AI",
         default_base_url: Some("https://api.sakana.ai/v1"),
         default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
+        id: "sakana-fugu",
+        name: "Sakana Fugu (Custom Endpoint)",
+        default_base_url: None,
+        default_protocol: ModelProtocol::OpenaiResponses,
         category: "official",
     },
     ModelProviderView {
@@ -2892,6 +2971,13 @@ const MODEL_PROVIDERS: &[ModelProviderView] = &[
         category: "official",
     },
     ModelProviderView {
+        id: "kimi-for-coding-global",
+        name: "Kimi For Coding (Global)",
+        default_base_url: Some("https://api.kimi.ai/coding/v1"),
+        default_protocol: ModelProtocol::OpenaiCompletions,
+        category: "official",
+    },
+    ModelProviderView {
         id: "zai",
         name: "Z.AI",
         default_base_url: Some("https://api.z.ai/api/paas/v4"),
@@ -3209,6 +3295,13 @@ fn normalize_slug(value: &str) -> String {
 
 pub fn infer_provider(base_url: &str) -> String {
     let normalized = base_url.trim().trim_end_matches('/');
+    if let Some(provider) = list_providers().iter().find(|provider| {
+        let Some((base, path)) = provider.default_base_url.zip(provider_template_path_override(provider.id))
+            else { return false; };
+        format!("{base}{path}").trim_end_matches('/').eq_ignore_ascii_case(normalized)
+    }) {
+        return provider.id.into();
+    }
     // Match the complete reviewed endpoint or request URL, not an arbitrary
     // host/path prefix. Shared PAYG/plan URLs deliberately prefer the neutral
     // PAYG template. Dedicated plan hosts map to that plan.
@@ -3546,7 +3639,7 @@ pub fn infer_provider(base_url: &str) -> String {
         "token-plan-cn.xiaomimimo.com" => "xiaomi-token-plan-cn",
         "token-plan-sgp.xiaomimimo.com" => "xiaomi-token-plan-sgp",
         "token-plan-ams.xiaomimimo.com" => "xiaomi-token-plan-ams",
-        "api.kimi.ai" => "kimi-for-coding",
+        "api.kimi.ai" if in_path("/coding") => "kimi-for-coding-global",
         "localhost" | "127.0.0.1" | "::1" => match url::Url::parse(base_url)
             .ok()
             .and_then(|url| url.port_or_known_default())
@@ -3730,17 +3823,15 @@ fn protocol_client_base_url(
     protocol: &ModelProtocol,
     endpoint_path: &str,
 ) -> Result<String, String> {
-    let base_url = normalize_provider_base_url(base_url)?;
     let endpoint_path = normalize_endpoint_path(endpoint_path)?;
+    let request_url = full_request_url(base_url, &endpoint_path)?;
     let suffix = protocol.default_endpoint_path();
-    let Some(prefix) = endpoint_path.strip_suffix(suffix) else {
+    let Some(client_base) = request_url.strip_suffix(suffix) else {
         return Err(format!(
             "Endpoint Path '{endpoint_path}' must end with the protocol path '{suffix}'"
         ));
     };
-    Ok(format!("{base_url}{prefix}")
-        .trim_end_matches('/')
-        .to_string())
+    normalize_provider_base_url(client_base)
 }
 
 pub(crate) fn profile_endpoint_compatibility_issue(
@@ -9368,7 +9459,7 @@ mod tests {
             ("https://api.powertokens.ai.evil.test/v1", "custom"),
             ("https://api.free.ai/v1", "free-ai"),
             ("https://api.free.ai/v1/chat/completions", "free-ai"),
-            ("https://api.free.ai/v1/chat/", "free-ai"),
+            ("https://api.free.ai/v1/chat/", "free-ai-full"),
             ("https://api.free.ai/v1/models", "free-ai"),
             ("https://api.free.ai/v1/responses", "free-ai"),
             ("https://api.free.ai/v1/messages", "free-ai"),
@@ -9901,7 +9992,7 @@ mod tests {
             ("blockrun", "https://blockrun.ai/api/v1", "/chat/completions", "openai-completions", "none"),
             ("sarvam", "https://api.sarvam.ai/v2", "/responses", "openai-responses", "required"),
             ("qianwen-ai", "https://maas.qianwenaiapi.com", "/compatible-mode/v1/chat/completions", "openai-completions", "required"),
-            ("sakana-ai", "https://api.sakana.ai/v1", "/chat/completions", "openai-completions", "required"),
+            ("sakana-ai", "https://api.sakana.ai", "/v1/chat/completions", "openai-completions", "required"),
             ("google-vertex-express", "https://aiplatform.googleapis.com/v1/publishers/google", "/models/{model}:generateContent", "gemini-generate-content", "required"),
             ("esa-eve", "https://eve-chat.chat/api/v1", "/chat/completions", "openai-completions", "required"),
         ] {
@@ -12738,8 +12829,8 @@ url = "https://example.test/mcp"
             ("https://token-plan-sgp.xiaomimimo.com/other", "xiaomi-token-plan-sgp"),
             ("https://token-plan-ams.xiaomimimo.com/v1", "xiaomi-token-plan-ams"),
             ("https://api.xiaomimimo.com/v1/models", "xiaomi"),
-            ("https://api.kimi.ai/coding/v1", "kimi-for-coding"),
-            ("https://api.kimi.ai/coding/v1/responses", "kimi-for-coding"),
+            ("https://api.kimi.ai/coding/v1", "kimi-for-coding-global"),
+            ("https://api.kimi.ai/coding/v1/responses", "kimi-for-coding-global"),
             ("https://api.kimi.com/coding/v1", "kimi-for-coding"),
             ("https://opencode.ai/docs/console/models/", "custom"),
             ("https://opencode.ai.evil.test/inference/openai/v1", "custom"),

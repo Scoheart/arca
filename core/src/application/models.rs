@@ -2,6 +2,14 @@
 
 pub use crate::domain::assets::ApiKeyDelivery;
 pub use crate::domain::types::{ModelProfile, ModelProtocol};
+pub use crate::resources::model::spark_websocket::{
+    request as request_spark_websocket, SparkWebSocketModel,
+};
+
+pub mod qiniu_batch {
+    pub use crate::resources::model::qiniu_batch::{download, status, submit, QiniuBatchJob, QiniuBatchRequest};
+}
+
 pub use crate::resources::model::{
     ModelApplyResult, ModelAgentView, ModelProfileView, ModelProviderInstanceView, ModelProviderView, ModelProviderPortalView,
     ProviderModelSummary,

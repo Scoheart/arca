@@ -16,6 +16,20 @@ Provider 使用一个 Base URL。不同协议可以有不同的相对 Endpoint P
 
 仍有 Model 使用某协议时，Arca 会阻止停用该协议。若客户端无法无损表达自定义请求路径，Arca 会拒绝该关系，不会忽略你的 Path。
 
+## 服务商专用连接
+
+使用 Free.ai 完整聊天入口时选 **Free.ai Full API**。Kimi Code 按账户地区选模板。
+填写 Sakana Fugu 专属地址时省略末尾的 `/v1`，并保存该地址对应的 API Key。
+
+**Spark Classic** 的 HTTP 接口使用控制台里的 APIPassword。使用
+[签名 WebSocket](https://www.xfyun.cn/doc/spark/Web.html) 时，在命令环境中提供
+`IFLYTEK_SPARK_APP_ID`、`IFLYTEK_SPARK_API_KEY` 和 `IFLYTEK_SPARK_API_SECRET`，
+再运行 `arca model provider spark-websocket --help` 查看调用方式。
+
+**七牛批量推理**使用 Qiniu AI Provider 已保存的密钥。运行
+`arca model provider qiniu-batch --help` 查看如何提交公开 JSONL 地址、查询进度
+或把结果保存到本机。 [七牛输入文件格式](https://developer.qiniu.com/aitokenapi/13380/new-ai-batch-inference-api)
+
 ## Arca Web
 
 在桌面版选择 **Models → 打开 Arca Web**。在网页的 **Request Settings** 配置 Provider，发送请求或继续对话。[Arca Web](https://arca-web-delta.vercel.app/)

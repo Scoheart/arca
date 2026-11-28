@@ -33,6 +33,22 @@
     ]
   },
   {
+    "id": "88api",
+    "name": "88API",
+    "category": "gateway",
+    "base_url": "https://api.88api.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://88api.ai/en/docs/api/"
+  },
+  {
+    "id": "abacus",
+    "name": "Abacus.AI RouteLLM",
+    "category": "gateway",
+    "base_url": "https://routellm.abacus.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.abacus.ai/help/route-llm/chat-completions/"
+  },
+  {
     "id": "abliteratedllm",
     "name": "AbliteratedLLM",
     "category": "gateway",
@@ -117,12 +133,38 @@
     ]
   },
   {
+    "id": "aicodewith",
+    "name": "AI Code With",
+    "category": "gateway",
+    "base_url": "https://api.aicodewith.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://aicodewith.ai/llms.txt",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://api.aicodewith.ai/v1"
+      }
+    ]
+  },
+  {
     "id": "aifast-hk",
     "name": "AI快站 / AIFast HK",
     "category": "gateway",
     "base_url": "https://www.aifast.hk/v1",
     "protocol": "openai-completions",
     "docs_url": "https://docs.aifast.hk/guides/quick-start/"
+  },
+  {
+    "id": "aigrow",
+    "name": "AIGROW",
+    "category": "gateway",
+    "base_url": "https://aigrow.gg/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://aigrow.gg/ai-api/guide",
+    "models": [
+      "claude-opus-5.5"
+    ],
+    "live_models": true
   },
   {
     "id": "ailoot",
@@ -133,6 +175,18 @@
     "docs_url": "https://ailoot.ai/docs/es-mx/",
     "models": [
       "claude-sonnet-5-5"
+    ]
+  },
+  {
+    "id": "aimlapi",
+    "name": "AI/ML API",
+    "category": "gateway",
+    "base_url": "https://api.aimlapi.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.aimlapi.com/api-references/text-models-llm",
+    "portal_url": "https://aimlapi.com/app/",
+    "models": [
+      "gpt-4o"
     ]
   },
   {
@@ -169,6 +223,19 @@
     ]
   },
   {
+    "id": "aistupidlevel",
+    "name": "AI Stupid Level",
+    "category": "gateway",
+    "base_url": "https://aistupidlevel.info/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://aistupidlevel.info/router/docs",
+    "models": [
+      "auto-coding",
+      "auto-best",
+      "auto-tooling"
+    ]
+  },
+  {
     "id": "aitokenking",
     "name": "AItokenKing",
     "category": "gateway",
@@ -190,6 +257,26 @@
     "models": [
       "deepseek-v4-pro"
     ]
+  },
+  {
+    "id": "aiwave",
+    "name": "AIWave",
+    "category": "gateway",
+    "base_url": "https://aiwave.live/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://aiwave.live/docs/",
+    "models": [
+      "deepseek-v4-pro"
+    ]
+  },
+  {
+    "id": "aixy",
+    "name": "Aixy",
+    "category": "gateway",
+    "base_url": "https://api.aixy-gateway.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.aixy-gateway.com/integrations/overview",
+    "live_models": true
   },
   {
     "id": "aki-io",
@@ -301,6 +388,15 @@
     ]
   },
   {
+    "id": "apiko",
+    "name": "APIKO",
+    "category": "gateway",
+    "base_url": "https://api.apiko.app/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://apiko.app/docs/api/chat",
+    "live_models": true
+  },
+  {
     "id": "apimany",
     "name": "APIMany",
     "category": "gateway",
@@ -309,6 +405,17 @@
     "docs_url": "https://apimany.com/pt/docs",
     "models": [
       "claude-sonnet-5-5"
+    ]
+  },
+  {
+    "id": "apimart-ai",
+    "name": "APIMart",
+    "category": "gateway",
+    "base_url": "https://api.apimart.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://apimart.ai/",
+    "models": [
+      "gpt-6.1-sol"
     ]
   },
   {
@@ -332,12 +439,85 @@
     ]
   },
   {
+    "id": "apiyi-com",
+    "name": "API易 (APIYI)",
+    "category": "gateway",
+    "base_url": "https://api.apiyi.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.apiyi.com/zh-Hant",
+    "models": [
+      "gpt-6.1-sol",
+      "claude-opus-5-5"
+    ]
+  },
+  {
+    "id": "apiz",
+    "name": "APIZ",
+    "category": "gateway",
+    "base_url": "https://api.apiz.vn/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.apiz.vn/docs/api/",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://api.apiz.vn/v1"
+      },
+      {
+        "protocol": "anthropic-messages",
+        "base_url": "https://api.apiz.vn"
+      }
+    ],
+    "live_models": true
+  },
+  {
     "id": "arcee",
     "name": "Arcee",
     "category": "gateway",
     "base_url": "https://api.arcee.ai/api/v1",
     "protocol": "openai-completions",
     "docs_url": "https://docs.arcee.ai/get-started/quick-start"
+  },
+  {
+    "id": "arouter",
+    "name": "ARouter",
+    "category": "gateway",
+    "base_url": "https://api.arouter.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.arouter.ai/en/quickstart.md",
+    "models": [
+      "openai/gpt-5.4",
+      "anthropic/claude-sonnet-4.6"
+    ]
+  },
+  {
+    "id": "asale",
+    "name": "Asale",
+    "category": "gateway",
+    "base_url": "https://gw.asale.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://asale.ai/ja/docs/api/overview",
+    "models": [
+      "claude-sonnet-4-5"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "atlascloud-ai",
+    "name": "Atlas Cloud",
+    "category": "gateway",
+    "base_url": "https://api.atlascloud.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.atlascloud.ai/docs/llm-protocols",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://api.atlascloud.ai/v1"
+      },
+      {
+        "protocol": "anthropic-messages",
+        "base_url": "https://api.atlascloud.ai"
+      }
+    ]
   },
   {
     "id": "augure",
@@ -348,6 +528,37 @@
     "docs_url": "https://augureai.ca/docs/api",
     "models": [
       "ossington"
+    ]
+  },
+  {
+    "id": "auriko",
+    "name": "Auriko",
+    "category": "gateway",
+    "base_url": "https://api.auriko.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.auriko.ai/quickstart",
+    "models": [
+      "gpt-5.4"
+    ]
+  },
+  {
+    "id": "autarcho",
+    "name": "Autarcho",
+    "category": "gateway",
+    "base_url": "https://api.autarcho.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://autarcho.com/use/",
+    "live_models": true
+  },
+  {
+    "id": "avian",
+    "name": "Avian",
+    "category": "gateway",
+    "base_url": "https://api.avian.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://avian.io/",
+    "models": [
+      "deepseek/deepseek-v4.1-flash"
     ]
   },
   {
@@ -363,6 +574,19 @@
     "live_models": true
   },
   {
+    "id": "baseurl",
+    "name": "BaseURL",
+    "category": "gateway",
+    "base_url": "https://api.baseurl.dev/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://baseurl.dev/",
+    "models": [
+      "gateway-fast",
+      "gateway-smart",
+      "gateway-coder"
+    ]
+  },
+  {
     "id": "bee",
     "name": "Bee by HEOSSI",
     "category": "gateway",
@@ -372,6 +596,15 @@
     "models": [
       "bee-cell"
     ]
+  },
+  {
+    "id": "berget",
+    "name": "Berget.AI",
+    "category": "gateway",
+    "base_url": "https://api.berget.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.berget.ai/quickstart",
+    "live_models": true
   },
   {
     "id": "bizimzeka",
@@ -418,6 +651,38 @@
       "deepseek/deepseek-v4.1-flash-1017"
     ],
     "live_models": true
+  },
+  {
+    "id": "brioi",
+    "name": "BRIOI",
+    "category": "gateway",
+    "base_url": "https://vip.brioi.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://brioi.apifox.cn/",
+    "live_models": true
+  },
+  {
+    "id": "bumo",
+    "name": "Bumo Router",
+    "category": "gateway",
+    "base_url": "https://api.bumo.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://bumo.ai/docs/api/openai-sdk",
+    "models": [
+      "default"
+    ]
+  },
+  {
+    "id": "burncloud",
+    "name": "BurnCloud",
+    "category": "gateway",
+    "base_url": "https://ai.burncloud.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.burncloud.com/books/api/page/burncloud-api",
+    "models": [
+      "gpt-4.1",
+      "gpt-4o-mini"
+    ]
   },
   {
     "id": "ccsio",
@@ -475,6 +740,34 @@
     ]
   },
   {
+    "id": "cheapest-token",
+    "name": "CheapestToken",
+    "category": "gateway",
+    "base_url": "https://api.cheapest-token.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://cheapest-token.com/docs",
+    "models": [
+      "kimi-k3.1-pro"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "clarifai",
+    "name": "Clarifai",
+    "category": "gateway",
+    "base_url": "https://api.clarifai.com/v2/ext/openai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.clarifai.com/compute/inference/"
+  },
+  {
+    "id": "claudinio",
+    "name": "Claudinio",
+    "category": "gateway",
+    "base_url": "https://api.claudin.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://claudin.io/"
+  },
+  {
     "id": "cloudapi-uz",
     "name": "CloudAPI Uzbekistan",
     "category": "gateway",
@@ -487,6 +780,14 @@
     "live_models": true
   },
   {
+    "id": "cloudcode",
+    "name": "CloudCode.ONE",
+    "category": "gateway",
+    "base_url": "https://api.cloudcode.one/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://cloudcode.one/"
+  },
+  {
     "id": "cloudferro-sherlock",
     "name": "CloudFerro Sherlock",
     "category": "gateway",
@@ -495,6 +796,28 @@
     "docs_url": "https://docs.cloudferro.com/en/latest/sherlock/Sherlock-chat-completion-endpoint-on-CloudFerro-Cloud.html",
     "models": [
       "Bielik-11B-v3.0-Instruct"
+    ]
+  },
+  {
+    "id": "cloudgpu",
+    "name": "CloudGPU",
+    "category": "gateway",
+    "base_url": "https://cloudgpu.app/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://cloudgpu.app/api",
+    "models": [
+      "deepseek-v4-flash"
+    ]
+  },
+  {
+    "id": "cloudrift",
+    "name": "CloudRift",
+    "category": "gateway",
+    "base_url": "https://inference.cloudrift.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.cloudrift.ai/",
+    "models": [
+      "qwen/qwen3.5-35b-a3b"
     ]
   },
   {
@@ -521,6 +844,15 @@
     "live_models": true
   },
   {
+    "id": "concentrate",
+    "name": "Concentrate",
+    "category": "official",
+    "base_url": "https://api.concentrate.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://concentrate.ai/docs/api-reference/endpoint/chat-completions",
+    "endpoint_path": "/chat/completions/"
+  },
+  {
     "id": "confidential-ai",
     "name": "Confidential AI",
     "category": "gateway",
@@ -533,12 +865,35 @@
     "live_models": true
   },
   {
+    "id": "core-today",
+    "name": "Core.Today",
+    "category": "gateway",
+    "base_url": "https://api.core.today/llm/openai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://console.core.today/",
+    "models": [
+      "gpt-5"
+    ]
+  },
+  {
     "id": "crossmodel",
     "name": "CrossModel",
     "category": "gateway",
     "base_url": "https://api.crossmodel.ai/v1",
     "protocol": "openai-completions",
     "docs_url": "https://www.crossmodel.ai/docs"
+  },
+  {
+    "id": "crusoe",
+    "name": "Crusoe",
+    "category": "official",
+    "base_url": "https://api.inference.crusoecloud.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.crusoe.ai/quickstart/getting-started-with-serverless-inference/index.html",
+    "portal_url": "https://console.crusoecloud.com/",
+    "models": [
+      "deepseek-ai/DeepSeek-V4.1-Flash"
+    ]
   },
   {
     "id": "dahono",
@@ -552,6 +907,14 @@
     ]
   },
   {
+    "id": "daoxe",
+    "name": "DaoXE",
+    "category": "gateway",
+    "base_url": "https://api.daoxe.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://daoxe.com/docs/en/api/openai-chat"
+  },
+  {
     "id": "dashacompute",
     "name": "Dasha Compute",
     "category": "gateway",
@@ -560,6 +923,17 @@
     "docs_url": "https://lobby.getdasha.com/compute",
     "models": [
       "qwen3-8b"
+    ]
+  },
+  {
+    "id": "databyte",
+    "name": "Databyte AI",
+    "category": "gateway",
+    "base_url": "https://ai.databyte.co.id/gateway/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ai.databyte.co.id/ai-gateway",
+    "models": [
+      "minimax/minimax-m3"
     ]
   },
   {
@@ -593,6 +967,14 @@
     ]
   },
   {
+    "id": "dinference",
+    "name": "DInference",
+    "category": "gateway",
+    "base_url": "https://api.dinference.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://dinference.com/docs"
+  },
+  {
     "id": "discountedtokens",
     "name": "DiscountedTokens",
     "category": "gateway",
@@ -601,6 +983,51 @@
     "docs_url": "https://discountedtokens.com",
     "models": [
       "gpt-5.6-terra"
+    ]
+  },
+  {
+    "id": "ditai",
+    "name": "DIT.ai",
+    "category": "gateway",
+    "base_url": "https://api.dit.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://dit.ai/"
+  },
+  {
+    "id": "dothoosh",
+    "name": "DotHoosh",
+    "category": "gateway",
+    "base_url": "https://gateway.dothoosh.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://gateway.dothoosh.com/docs",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://gateway.dothoosh.com/v1"
+      }
+    ],
+    "models": [
+      "deepseek-flash"
+    ]
+  },
+  {
+    "id": "doubleword",
+    "name": "Doubleword",
+    "category": "official",
+    "base_url": "https://api.doubleword.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.doubleword.ai/inference-api/realtime-inference",
+    "live_models": true
+  },
+  {
+    "id": "dreamvision",
+    "name": "Dream Vision Invision",
+    "category": "gateway",
+    "base_url": "https://invision.dreamvision.com.br/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://invision.dreamvision.com.br/",
+    "models": [
+      "openai/gpt-6.1-sol"
     ]
   },
   {
@@ -615,6 +1042,17 @@
     ]
   },
   {
+    "id": "dztokens",
+    "name": "DzTokens",
+    "category": "gateway",
+    "base_url": "https://dztokens.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://dztokens.com/fr/",
+    "models": [
+      "claude-opus-5-5"
+    ]
+  },
+  {
     "id": "e2e-networks",
     "name": "E2E Networks",
     "category": "gateway",
@@ -624,6 +1062,27 @@
     "models": [
       "auto"
     ]
+  },
+  {
+    "id": "ebcloud",
+    "name": "EBCloud (英博云)",
+    "category": "gateway",
+    "base_url": "https://maas-api.ebcloud.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.ebtech.com/practice/openclaw.html"
+  },
+  {
+    "id": "echo",
+    "name": "Echo by Tracer",
+    "category": "gateway",
+    "base_url": "https://app.tracerml.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://app.tracerml.ai/docs",
+    "models": [
+      "openai/gpt-6.1-terra",
+      "anthropic/claude-haiku-5.5"
+    ],
+    "live_models": true
   },
   {
     "id": "empiriolabs",
@@ -649,12 +1108,33 @@
     "live_models": true
   },
   {
+    "id": "epithre",
+    "name": "epithre.com",
+    "category": "official",
+    "base_url": "https://api.epithre.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.epithre.com/",
+    "models": [
+      "epithre-nala"
+    ],
+    "live_models": true
+  },
+  {
     "id": "eurouter",
     "name": "EURouter",
     "category": "gateway",
     "base_url": "https://www.eurouter.ai/api/v1",
     "protocol": "openai-completions",
     "docs_url": "https://eurouter.ai",
+    "live_models": true
+  },
+  {
+    "id": "evroc",
+    "name": "evroc Think Models",
+    "category": "official",
+    "base_url": "https://models.think.evroc.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.evroc.com/products/think/openai-compatibility.html",
     "live_models": true
   },
   {
@@ -669,6 +1149,36 @@
     ]
   },
   {
+    "id": "fastrouter",
+    "name": "FastRouter",
+    "category": "gateway",
+    "base_url": "https://api.fastrouter.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://fastrouter.ai/",
+    "models": [
+      "anthropic/claude-sonnet-5.5"
+    ]
+  },
+  {
+    "id": "felo",
+    "name": "Felo LLM Gateway",
+    "category": "gateway",
+    "base_url": "https://openapi.felo.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://openapi.felo.ai/ja/llm-gateway",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://openapi.felo.ai/api/v1"
+      },
+      {
+        "protocol": "anthropic-messages",
+        "base_url": "https://openapi.felo.ai/api"
+      }
+    ],
+    "live_models": true
+  },
+  {
     "id": "fleece-ai",
     "name": "FLEECE AI (Frontière AI / Evanesca)",
     "category": "gateway",
@@ -676,6 +1186,24 @@
     "protocol": "openai-completions",
     "docs_url": "https://evanesca.app/fr/docs",
     "live_models": true
+  },
+  {
+    "id": "freeaiapikey",
+    "name": "FreeAIAPIKey",
+    "category": "gateway",
+    "base_url": "https://api.freeaiapikey.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.freeaiapikey.com/docs",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://api.freeaiapikey.com/v1"
+      },
+      {
+        "protocol": "anthropic-messages",
+        "base_url": "https://api.freeaiapikey.com"
+      }
+    ]
   },
   {
     "id": "freetheai",
@@ -797,6 +1325,29 @@
     ]
   },
   {
+    "id": "haoai",
+    "name": "HaoAI",
+    "category": "gateway",
+    "base_url": "https://api.hao.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://hao.ai/",
+    "models": [
+      "openai/gpt-6-astra"
+    ]
+  },
+  {
+    "id": "hasa",
+    "name": "HASA by GITC",
+    "category": "official",
+    "base_url": "https://open.hasa.re.kr/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://open.hasa.re.kr/",
+    "models": [
+      "qwen3-coder"
+    ],
+    "live_models": true
+  },
+  {
     "id": "hopper",
     "name": "Hopper",
     "category": "gateway",
@@ -806,6 +1357,15 @@
     "models": [
       "gemma-4-31b"
     ]
+  },
+  {
+    "id": "hostinger-router",
+    "name": "Hostinger AI Router",
+    "category": "gateway",
+    "base_url": "https://router.hostinger.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.hostinger.com/support/what-is-hostinger-ai-router-and-how-to-get-started/",
+    "portal_url": "https://hpanel.hostinger.com/"
   },
   {
     "id": "hpc-ai",
@@ -871,6 +1431,17 @@
     ]
   },
   {
+    "id": "inceptron",
+    "name": "Inceptron",
+    "category": "gateway",
+    "base_url": "https://api.inceptron.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.inceptron.io/",
+    "models": [
+      "zai-org/GLM-5.3"
+    ]
+  },
+  {
     "id": "inco",
     "name": "Inco",
     "category": "gateway",
@@ -881,6 +1452,36 @@
       "glm-5.3-flash"
     ],
     "live_models": true
+  },
+  {
+    "id": "indorouter",
+    "name": "indorouter.ai",
+    "category": "gateway",
+    "base_url": "https://api.indorouter.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://indorouter.ai/",
+    "models": [
+      "openai/gpt-6-luna"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "infer",
+    "name": "Infer by Flow7",
+    "category": "gateway",
+    "base_url": "https://infer.flow7.org/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://infer.flow7.org/docs",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://infer.flow7.org/v1"
+      }
+    ],
+    "models": [
+      "infer/gpt-5.6-terra:stable",
+      "infer/claude-haiku-4-5:official"
+    ]
   },
   {
     "id": "inferall",
@@ -952,6 +1553,33 @@
     ]
   },
   {
+    "id": "infermatic",
+    "name": "Infermatic",
+    "category": "gateway",
+    "base_url": "https://api.totalgpt.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://ui.infermatic.ai/docs",
+    "live_models": true
+  },
+  {
+    "id": "inferray",
+    "name": "Inferray",
+    "category": "gateway",
+    "base_url": "https://api.inferray.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inferray.com/",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://api.inferray.com/v1"
+      }
+    ],
+    "models": [
+      "gpt-6-astra"
+    ],
+    "live_models": true
+  },
+  {
     "id": "inferris",
     "name": "Inferris",
     "category": "gateway",
@@ -997,6 +1625,18 @@
     ]
   },
   {
+    "id": "ionosaimodelhub",
+    "name": "IONOS AI Model Hub",
+    "category": "official",
+    "base_url": "https://openai.inference.de-txl.ionos.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.ionos.com/cloud/ai/ai-model-hub/how-tos/migration-guide",
+    "models": [
+      "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    ],
+    "live_models": true
+  },
+  {
     "id": "isoquant",
     "name": "Isoquant",
     "category": "gateway",
@@ -1008,6 +1648,14 @@
     ]
   },
   {
+    "id": "jalapeno",
+    "name": "Jalapeno Cloud",
+    "category": "gateway",
+    "base_url": "https://api.jalapeno-cloud.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.jalapeno-cloud.ai/docs/"
+  },
+  {
     "id": "jiekou",
     "name": "Jiekou.AI",
     "category": "gateway",
@@ -1017,6 +1665,43 @@
     "models": [
       "deepseek/deepseek-r1"
     ]
+  },
+  {
+    "id": "joingonka",
+    "name": "JoinGonka",
+    "category": "gateway",
+    "base_url": "https://gate.joingonka.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://gate.joingonka.ai/docs/api.md",
+    "models": [
+      "zai-org/GLM-5.3-Flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "jzstoken",
+    "name": "JZSTOKEN",
+    "category": "gateway",
+    "base_url": "https://jzstoken.com/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://jzstoken.com/"
+  },
+  {
+    "id": "kantro",
+    "name": "Kantro",
+    "category": "gateway",
+    "base_url": "https://kantro.dev/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://kantro.dev/"
+  },
+  {
+    "id": "keln",
+    "name": "Keln",
+    "category": "gateway",
+    "base_url": "https://api.keln.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.keln.ai/api/chat-completions/",
+    "live_models": true
   },
   {
     "id": "kenari",
@@ -1099,6 +1784,38 @@
     ]
   },
   {
+    "id": "kunavo",
+    "name": "Kunavo",
+    "category": "gateway",
+    "base_url": "https://api.kunavo.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://kunavo.com/docs/quickstart",
+    "models": [
+      "claude-haiku-4-5",
+      "claude-sonnet-5"
+    ]
+  },
+  {
+    "id": "kyma",
+    "name": "Kyma API",
+    "category": "gateway",
+    "base_url": "https://kymaapi.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.kymaapi.com/introduction",
+    "models": [
+      "llama-3.3-70b"
+    ]
+  },
+  {
+    "id": "laozhang-ai",
+    "name": "老张 API (laozhang.ai)",
+    "category": "gateway",
+    "base_url": "https://api.laozhang.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.laozhang.ai/llms.txt",
+    "live_models": true
+  },
+  {
     "id": "libertai",
     "name": "LibertAI",
     "category": "gateway",
@@ -1110,6 +1827,26 @@
     ]
   },
   {
+    "id": "lightningai",
+    "name": "Lightning AI Model APIs",
+    "category": "gateway",
+    "base_url": "https://lightning.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://platform.lightning.ai/ai-hub",
+    "models": [
+      "openai/gpt-5",
+      "lightning-ai/deepseek-v4.1-flash"
+    ]
+  },
+  {
+    "id": "linkagi",
+    "name": "LinkAGI",
+    "category": "gateway",
+    "base_url": "https://api.linktoagi.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.linktoagi.com/llms.txt"
+  },
+  {
     "id": "literouter",
     "name": "LiteRouter",
     "category": "gateway",
@@ -1119,6 +1856,26 @@
     "models": [
       "deepseek-v3.1:free"
     ]
+  },
+  {
+    "id": "lithosai",
+    "name": "LithosAI",
+    "category": "gateway",
+    "base_url": "https://api.lithosai.cloud/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.lithosai.com/",
+    "models": [
+      "deepseek-ai/DeepSeek-V4.1-Flash"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "llmgateway",
+    "name": "LLM Gateway",
+    "category": "gateway",
+    "base_url": "https://api.llmgateway.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.llmgateway.io/features/api-keys"
   },
   {
     "id": "llmlink",
@@ -1140,6 +1897,17 @@
     "docs_url": "https://llms.fr/api/",
     "models": [
       "mistral-small-3"
+    ]
+  },
+  {
+    "id": "llmtech",
+    "name": "LLM Tech",
+    "category": "official",
+    "base_url": "https://api.llmtech.eu/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://llmtech.eu/docs/",
+    "models": [
+      "nvidia/Qwen3.8-27B-NVFP4"
     ]
   },
   {
@@ -1201,6 +1969,14 @@
     "live_models": true
   },
   {
+    "id": "macloudai",
+    "name": "MaCloud AI",
+    "category": "gateway",
+    "base_url": "https://api.macloudai.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://macloudai.com/"
+  },
+  {
     "id": "maiagent",
     "name": "MaiAgent",
     "category": "gateway",
@@ -1209,6 +1985,17 @@
     "docs_url": "https://docs.maiagent.ai/api/ja/api-reference/ai-gateway",
     "models": [
       "openai/gpt-5.4-mini"
+    ]
+  },
+  {
+    "id": "mallard",
+    "name": "Mallard AI",
+    "category": "gateway",
+    "base_url": "https://api.mallardai.co.uk/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://mallardai.co.uk/docs",
+    "models": [
+      "thinkingmachines/inkling-2-mini"
     ]
   },
   {
@@ -1445,6 +2232,37 @@
     ]
   },
   {
+    "id": "nbk",
+    "name": "NBK",
+    "category": "gateway",
+    "base_url": "https://api.nbk.in.th/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://nbk.in.th/developers",
+    "models": [
+      "nabiki-flash",
+      "nabiki-pro"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "nearai",
+    "name": "NEAR AI Cloud",
+    "category": "official",
+    "base_url": "https://cloud-api.near.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.near.ai/api-reference/introduction",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://cloud-api.near.ai/v1"
+      }
+    ],
+    "models": [
+      "zai-org/GLM-5.1-FP8"
+    ],
+    "live_models": true
+  },
+  {
     "id": "neosantara",
     "name": "neosantara.xyz",
     "category": "gateway",
@@ -1488,6 +2306,27 @@
     "models": [
       "glm-5.3"
     ]
+  },
+  {
+    "id": "neuroapi",
+    "name": "NeuroAPI",
+    "category": "gateway",
+    "base_url": "https://neuroapi.host/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://neuroapi.host/",
+    "models": [
+      "gpt-6.1-sol",
+      "gpt-5.6-sol"
+    ],
+    "live_models": true
+  },
+  {
+    "id": "nextbit",
+    "name": "NextBit",
+    "category": "official",
+    "base_url": "https://api.nextbit256.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.nextbit256.com/inference/models-api"
   },
   {
     "id": "nextmodel",
@@ -1554,6 +2393,23 @@
     "models": [
       "deepseek-v4.1-flash-uncensored"
     ]
+  },
+  {
+    "id": "northern-inference",
+    "name": "Northern Inference",
+    "category": "gateway",
+    "base_url": "https://northerninference.ca/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://northerninference.ca/"
+  },
+  {
+    "id": "nosana",
+    "name": "Nosana LLM Inference",
+    "category": "official",
+    "base_url": "https://inference.nosana.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://learn.nosana.com/llm/",
+    "live_models": true
   },
   {
     "id": "numes",
@@ -1646,6 +2502,22 @@
     ]
   },
   {
+    "id": "openadapter",
+    "name": "OpenAdapter",
+    "category": "gateway",
+    "base_url": "https://api.openadapter.in/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.openadapter.dev/docs"
+  },
+  {
+    "id": "opper",
+    "name": "Opper",
+    "category": "gateway",
+    "base_url": "https://api.opper.ai/v3/compat",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.opper.ai/v3-api-reference/compatibility/chat-completions"
+  },
+  {
     "id": "orq",
     "name": "Orq.ai",
     "category": "gateway",
@@ -1725,6 +2597,18 @@
     ]
   },
   {
+    "id": "pendra",
+    "name": "Pendra",
+    "category": "official",
+    "base_url": "https://api.pendra.ai/api/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://pendra.ai/docs/quickstart/",
+    "models": [
+      "qwen3.6:27b",
+      "pendra/ornith-1.5:9b"
+    ]
+  },
+  {
     "id": "phala",
     "name": "Phala",
     "category": "gateway",
@@ -1745,6 +2629,15 @@
     "models": [
       "openai/gpt-6-astra"
     ]
+  },
+  {
+    "id": "pinstripes",
+    "name": "Pinstripes",
+    "category": "gateway",
+    "base_url": "https://api.pinstripes.io/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://pinstripes.io/docs/",
+    "live_models": true
   },
   {
     "id": "pleum",
@@ -1828,6 +2721,17 @@
     "live_models": true
   },
   {
+    "id": "proxystacks",
+    "name": "ProxyStacks Relay",
+    "category": "gateway",
+    "base_url": "https://proxystacks.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://proxystacks.com/en/docs/opencode",
+    "models": [
+      "deepseek-v4.1-flash"
+    ]
+  },
+  {
     "id": "punica",
     "name": "Punica",
     "category": "gateway",
@@ -1836,6 +2740,17 @@
     "docs_url": "https://punica.tn/docs",
     "models": [
       "hannibal"
+    ]
+  },
+  {
+    "id": "qorebit",
+    "name": "Qorebit",
+    "category": "gateway",
+    "base_url": "https://api.qorebit.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://qorebit.ai/docs",
+    "models": [
+      "openai/gpt-4o"
     ]
   },
   {
@@ -1882,6 +2797,24 @@
     "models": [
       "Beam-1.0-501B-A23B"
     ]
+  },
+  {
+    "id": "refuseless",
+    "name": "Refuseless",
+    "category": "gateway",
+    "base_url": "https://api.refuseless.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.refuseless.com/quickstart",
+    "additional_endpoints": [
+      {
+        "protocol": "openai-responses",
+        "base_url": "https://api.refuseless.com/v1"
+      }
+    ],
+    "models": [
+      "glm-5.3-abliterated"
+    ],
+    "live_models": true
   },
   {
     "id": "reka",
@@ -1936,6 +2869,15 @@
     ]
   },
   {
+    "id": "routershift",
+    "name": "RouterShift",
+    "category": "gateway",
+    "base_url": "https://api.routershift.com/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://routershift.com/pt/docs",
+    "live_models": true
+  },
+  {
     "id": "sagg",
     "name": "SAGG",
     "category": "gateway",
@@ -1981,6 +2923,14 @@
     ]
   },
   {
+    "id": "sandbase",
+    "name": "SandBase",
+    "category": "official",
+    "base_url": "https://api.sandbase.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://www.sandbase.ai/llms.txt"
+  },
+  {
     "id": "scx-ai",
     "name": "SCX.ai",
     "category": "gateway",
@@ -2011,6 +2961,17 @@
     "docs_url": "https://platform.selamgpt.com/docs/introduction/overview",
     "models": [
       "selam-turbo"
+    ]
+  },
+  {
+    "id": "serenityedge",
+    "name": "Serenity Edge",
+    "category": "gateway",
+    "base_url": "https://api.serenityedge.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://serenityedge.ai/en/",
+    "models": [
+      "orion-plus"
     ]
   },
   {
@@ -2058,6 +3019,18 @@
     ]
   },
   {
+    "id": "souz",
+    "name": "СОЮЗ / SOUZ",
+    "category": "gateway",
+    "base_url": "https://api.souz.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://souz.ai/",
+    "models": [
+      "claude-fable-5.1"
+    ],
+    "live_models": true
+  },
+  {
     "id": "sovereigneg",
     "name": "sovereigneg.com",
     "category": "gateway",
@@ -2100,6 +3073,41 @@
     "models": [
       "nvidia/nemotron-3.5-lightning-30b-a3b"
     ]
+  },
+  {
+    "id": "squarecloud",
+    "name": "Square Cloud",
+    "category": "official",
+    "base_url": "https://api.squarecloud.app/v2/ai",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.squarecloud.app/ja/api-reference/ai-gateway",
+    "models": [
+      "cubic"
+    ]
+  },
+  {
+    "id": "stackit",
+    "name": "STACKIT AI Model Serving",
+    "category": "official",
+    "base_url": "https://api.openai-compat.model-serving.eu01.onstackit.cloud/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://docs.stackit.cloud/products/data-and-ai/ai-model-serving/basics/available-shared-models/",
+    "live_models": true
+  },
+  {
+    "id": "stali",
+    "name": "STALI",
+    "category": "gateway",
+    "base_url": "https://api.stali.vn/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://api.stali.vn/en/docs/reference/endpoints",
+    "additional_endpoints": [
+      {
+        "protocol": "anthropic-messages",
+        "base_url": "https://api.stali.vn"
+      }
+    ],
+    "live_models": true
   },
   {
     "id": "standardcompute",
@@ -2214,6 +3222,17 @@
     ]
   },
   {
+    "id": "tensormesh",
+    "name": "Tensormesh",
+    "category": "official",
+    "base_url": "https://serverless.tensormesh.ai/v1",
+    "protocol": "openai-completions",
+    "docs_url": "https://inference.docs.tensormesh.ai/api-reference/serverless",
+    "models": [
+      "MiniMaxAI/MiniMax-M2.5"
+    ]
+  },
+  {
     "id": "tensorx",
     "name": "TensorX",
     "category": "gateway",
@@ -2244,6 +3263,18 @@
     "docs_url": "https://docs.theus.pe/docs/api-v1/",
     "models": [
       "titan"
+    ]
+  },
+  {
+    "id": "thinkingmachines",
+    "name": "Thinking Machines Tinker",
+    "category": "official",
+    "base_url": "https://tinker.thinkingmachines.dev/services/tinker-prod/anthropic/api",
+    "protocol": "anthropic-messages",
+    "docs_url": "https://tinker-docs.thinkingmachines.ai/inference/anthropic/",
+    "portal_url": "https://tinker.thinkingmachines.ai/",
+    "models": [
+      "thinkingmachines/Inkling"
     ]
   },
   {

@@ -1,6 +1,6 @@
 //! Hosted text APIs verified from providers' own documentation.
 
-use super::{ModelProviderView, MODEL_PROVIDERS};
+use super::{ModelProviderEndpointView, ModelProviderView, MODEL_PROVIDERS};
 use crate::domain::types::ModelProtocol;
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -15,6 +15,9 @@ pub(super) struct AuditedProvider {
     category: &'static str,
     base_url: &'static str,
     protocol: ModelProtocol,
+    pub(super) endpoint_path: Option<&'static str>,
+    #[serde(default)]
+    pub(super) additional_endpoints: Vec<ModelProviderEndpointView>,
     pub(super) docs_url: &'static str,
     pub(super) portal_url: Option<&'static str>,
     #[serde(default)]
@@ -45,7 +48,7 @@ pub(super) fn providers() -> &'static BTreeMap<&'static str, AuditedProvider> {
             .iter()
             .flat_map(|provider| {
                 provider.default_base_url.into_iter().chain(
-                    super::provider_additional_endpoints(provider.id)
+                    super::builtin_provider_additional_endpoints(provider.id)
                         .iter()
                         .map(|endpoint| endpoint.base_url),
                 )
@@ -64,6 +67,24 @@ pub(super) fn providers() -> &'static BTreeMap<&'static str, AuditedProvider> {
             assert_eq!(super::normalize_slug(id), id, "invalid audited provider ID");
             assert!(ids.insert(id), "duplicate audited provider ID: {id}");
             assert!(urls.insert(entry.base_url.to_ascii_lowercase()), "duplicate audited provider URL: {id}");
+            if let Some(path) = entry.endpoint_path {
+                assert_eq!(
+                    super::normalize_endpoint_path(path).as_deref(), Ok(path),
+                    "invalid audited provider request path: {id}"
+                );
+            }
+            let mut protocols = BTreeSet::from([entry.protocol.clone()]);
+            for route in &entry.additional_endpoints {
+                let alternate = Url::parse(route.base_url).expect("invalid audited provider alternate URL");
+                assert!(
+                    alternate.origin() == url.origin()
+                        && alternate.username().is_empty() && alternate.password().is_none()
+                        && alternate.query().is_none() && alternate.fragment().is_none()
+                        && !route.base_url.ends_with('/')
+                        && protocols.insert(route.protocol.clone()),
+                    "invalid or duplicate audited provider alternate endpoint: {id}"
+                );
+            }
             assert!(matches!(entry.category, "official" | "gateway"), "invalid audited provider category: {id}");
             assert!(
                 !entry.live_models || matches!(entry.protocol, ModelProtocol::OpenaiCompletions | ModelProtocol::OpenaiResponses),

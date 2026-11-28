@@ -35,6 +35,7 @@ enum DiscoveryAdapter {
     BlockRun,
     Infomaniak,
     Sarvam,
+    FreeAi { full: bool },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -105,7 +106,15 @@ pub(crate) fn execute_provider_discovery(input: ModelDiscoveryInput) -> Result<V
     }
     let spec = discovery_spec_for_provider(provider)?;
     let settings = crate::settings::load_settings_strict().map_err(|error| error.to_string())?;
-    let credential = if provider.credential.is_none() && provider.model_catalog_url.is_none() {
+    let public_free_ai_catalog = matches!(spec.adapter, DiscoveryAdapter::FreeAi { .. })
+        && provider.credential.is_none()
+        && provider.model_catalog_url.is_none()
+        && Url::parse(&provider.base_url).is_ok_and(|url| {
+            url.scheme() == "https" && url.host_str() == Some("api.free.ai")
+        });
+    let credential = if public_free_ai_catalog {
+        None
+    } else if provider.credential.is_none() && provider.model_catalog_url.is_none() {
         if let Some(models) = reviewed_static_catalog(&provider.provider) {
             return Ok(models);
         }
@@ -695,7 +704,10 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // https://platform.qianwenai.com/docs/developer-guides/getting-started/latest-model
         "qianwen-ai" => &["qwen4-max"],
         // https://console.sakana.ai/models?model=sakana-namazu
-        "sakana-ai" => &["sakana-namazu", "sakana-namazu-v1.0"],
+        "sakana-ai" => &["sakana-namazu", "sakana-namazu-v1.0", "fugu", "fugu-ultra", "fugu-max"],
+        "sakana-fugu" => &["fugu", "fugu-ultra", "fugu-max"],
+        "iflytek-spark-classic" => &["4.0Ultra"],
+        "tencent-hunyuan-legacy" => &["hunyuan-turbos-latest", "hunyuan-lite"],
         // https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/start/express-mode/overview
         "google-vertex-express" => &[
             "gemini-3-flash-preview",
@@ -903,7 +915,6 @@ fn static_seed_models(provider_type: &str) -> Option<Vec<ProviderModelSummary>> 
         // https://free.ai/api/
         // Public GET /v1/models is {models,total,caller_country} and mixes image, speech, and video rows.
         // Several self-hosted ids are labels for one Qwen model. qwen3-coder and the other aliases are not this seed.
-        "free-ai" => &["qwen7b", "qwen-coder"],
         // https://www.suanli.cn/docs/large-model-cloud-service/quickstart/cqsrwzrbsim4idkkjbxcdux4nfg/
         // GET /v1/models requires a key. Unauthenticated returns a custom 400, not an OpenAI list.
         // The product page also lists kimi-k2.6, glm-5, glm-5.1, and tencent/hy3-preview. Those are not this seed.
@@ -973,6 +984,8 @@ fn audited_seed_models(entry: &super::audited_catalog::AuditedProvider) -> Optio
 
 fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
     let adapter = match provider_type {
+        "free-ai" => DiscoveryAdapter::FreeAi { full: false },
+        "free-ai-full" => DiscoveryAdapter::FreeAi { full: true },
         "openrouter"
         | "ppio"
         | "aihubmix"
@@ -1102,6 +1115,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         | "xiaomi-token-plan-ams"
         | "moonshotai"
         | "kimi-for-coding"
+        | "kimi-for-coding-global"
         | "zai"
         | "zai-coding-plan"
         | "zhipuai-coding-plan"
@@ -1141,7 +1155,7 @@ fn reviewed_discovery_spec(provider_type: &str) -> Option<DiscoverySpec> {
         "sarvam" => DiscoveryAdapter::Sarvam,
         _ => return None,
     };
-    let credential = if matches!(
+    let credential = if matches!(adapter, DiscoveryAdapter::FreeAi { .. }) || matches!(
         provider_type,
         "openrouter"
             | "blockrun"
@@ -1226,7 +1240,9 @@ fn discovery_spec_for_provider(provider: &ModelProviderConfig) -> Result<Discove
     if provider.model_catalog_url.is_some() && provider.protocols.keys().all(|protocol| *protocol == ModelProtocol::AwsBedrockConverse) {
         return Ok(DiscoverySpec { adapter: DiscoveryAdapter::OpenAi, credential: CredentialPolicy::Required });
     }
-    if let Some(spec) = reviewed_discovery_spec(&provider.provider) {
+    if let Some(spec) = reviewed_discovery_spec(&provider.provider).filter(|spec| {
+        !matches!(spec.adapter, DiscoveryAdapter::FreeAi { .. }) || provider.model_catalog_url.is_none()
+    }) {
         return Ok(spec);
     }
     if provider.model_catalog_url.is_none() && static_seed_models(&provider.provider).is_some() {
@@ -1269,6 +1285,17 @@ fn discovery_url(provider: &ModelProviderConfig, adapter: DiscoveryAdapter) -> R
         });
     }
     match adapter {
+        DiscoveryAdapter::FreeAi { .. } => {
+            let route = provider.protocols.get(&ModelProtocol::OpenaiCompletions)
+                .ok_or("model_discovery_endpoint_invalid: Free.ai requires a Chat Completions route")?;
+            let mut url = Url::parse(&full_request_url(&provider.base_url, &route.endpoint_path)?)
+                .map_err(|_| "model_discovery_endpoint_invalid: invalid Free.ai URL")?;
+            let path = url.path().trim_end_matches('/');
+            let prefix = path.strip_suffix("/chat/completions").or_else(|| path.strip_suffix("/chat"))
+                .ok_or("model_discovery_endpoint_invalid: enter a Models list URL for this custom Free.ai route")?;
+            url.set_path(&format!("{prefix}/models"));
+            Ok(url)
+        }
         DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
         | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam => [
             // Prefer the Provider's reviewed OpenAI protocol. An additional
@@ -1405,7 +1432,8 @@ fn decode_page(adapter: DiscoveryAdapter, value: Value) -> Result<DecodedPage, S
                     .to_owned()
             })?
         }
-        DiscoveryAdapter::Gemini | DiscoveryAdapter::Cohere | DiscoveryAdapter::Fireworks => value
+        DiscoveryAdapter::Gemini | DiscoveryAdapter::Cohere | DiscoveryAdapter::Fireworks
+        | DiscoveryAdapter::FreeAi { .. } => value
             .get("models")
             .and_then(Value::as_array)
             .ok_or_else(|| {
@@ -1424,6 +1452,10 @@ fn decode_page(adapter: DiscoveryAdapter, value: Value) -> Result<DecodedPage, S
                         .is_some_and(|categories| categories.iter().any(|kind| kind.as_str() == Some("chat")))
             }
             DiscoveryAdapter::Sarvam => entry.get("type").and_then(Value::as_str) == Some("chat"),
+            DiscoveryAdapter::FreeAi { full } => {
+                matches!(entry.get("type").and_then(Value::as_str), Some("chat" | "code"))
+                    && (full || entry.get("self_hosted").and_then(Value::as_bool) == Some(true))
+            }
             _ => true,
         })
         .filter(|entry| adapter != DiscoveryAdapter::Vercel
@@ -1478,7 +1510,8 @@ fn model_summary(adapter: DiscoveryAdapter, value: &Value) -> Option<ProviderMod
     let id = match adapter {
         DiscoveryAdapter::OpenAi | DiscoveryAdapter::Anthropic
         | DiscoveryAdapter::Cloudflare | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
-        | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam => string_field(value, &["id"]),
+        | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam
+        | DiscoveryAdapter::FreeAi { .. } => string_field(value, &["id"]),
         DiscoveryAdapter::Gemini => string_field(value, &["baseModelId"]).or_else(|| {
             string_field(value, &["name"]).map(|name| {
                 name.strip_prefix("models/")
@@ -1633,7 +1666,7 @@ fn fetch_page(
         adapter,
         DiscoveryAdapter::OpenAi | DiscoveryAdapter::Cohere | DiscoveryAdapter::Fireworks
         | DiscoveryAdapter::Cloudflare | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
-        | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam
+        | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam | DiscoveryAdapter::FreeAi { .. }
     )
     .then(|| credential.map(|credential| Zeroizing::new(format!("Bearer {credential}"))))
     .flatten();
@@ -1677,7 +1710,8 @@ fn next_page_url(mut url: Url, adapter: DiscoveryAdapter, token: &str) -> Result
         DiscoveryAdapter::Cohere => "page_token",
         DiscoveryAdapter::Cloudflare => "page",
         DiscoveryAdapter::OpenAi | DiscoveryAdapter::Vercel | DiscoveryAdapter::DeepInfra
-        | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam => {
+        | DiscoveryAdapter::BlockRun | DiscoveryAdapter::Infomaniak | DiscoveryAdapter::Sarvam
+        | DiscoveryAdapter::FreeAi { .. } => {
             return Err(
                 "model_discovery_invalid_response: OpenAI-compatible catalog returned an unsupported continuation token"
                     .into(),
@@ -4019,25 +4053,23 @@ mod tests {
     }
 
     #[test]
-    fn free_ai_seeds_only_the_reviewed_self_hosted_chat_ids() {
-        assert_static_chat_seed(
-            "free-ai",
-            "https://api.free.ai/v1",
-            "/chat/completions",
-            &["qwen7b", "qwen-coder"],
-            &[
-                "qwen3-coder",
-                "deepseek-r1",
-                "mistral",
-                "qwen3-8b",
-                "deepseek-r1-7b",
-                "qwen-vl",
-                "qwen25-vl",
-                "Qwen/Qwen3-30B-A3B-Instruct",
-                "sdxl",
-            ],
-        );
-        assert!(!EXPECTED_OPENAI_COMPATIBLE.contains(&"free-ai"));
+    fn free_ai_catalog_keeps_partner_models_on_the_full_route_only() {
+        let catalog = serde_json::json!({
+            "models": [
+                {"id": "qwen7b", "type": "chat", "self_hosted": true},
+                {"id": "qwen-coder", "type": "code", "self_hosted": true},
+                {"id": "openai/gpt-4o-mini", "type": "chat", "self_hosted": false},
+                {"id": "sdxl", "type": "image", "self_hosted": true}
+            ]
+        });
+        for (full, expected) in [
+            (false, &["qwen7b", "qwen-coder"][..]),
+            (true, &["qwen7b", "qwen-coder", "openai/gpt-4o-mini"][..]),
+        ] {
+            let page = decode_page(DiscoveryAdapter::FreeAi { full }, catalog.clone()).unwrap();
+            let ids: Vec<_> = page.models.iter().map(|model| model.id.as_str()).collect();
+            assert_eq!(ids, expected);
+        }
     }
 
     #[test]

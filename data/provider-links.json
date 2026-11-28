@@ -147,16 +147,23 @@
     }
   },
   "tencent-tokenhub-cn": {
-    "docs_url": "https://cloud.tencent.com/document/product/1823/131382",
+    "docs_url": "https://cloud.tencent.com/document/product/1823/130079",
     "portal": {
       "url": "https://console.cloud.tencent.com/tokenhub",
       "kind": "console"
     }
   },
   "tencent-tokenhub-global": {
-    "docs_url": "https://intl.cloud.tencent.com/document/product/1300/78939",
+    "docs_url": "https://cloud.tencent.com/document/product/1823/130079",
     "portal": {
       "url": "https://console.intl.cloud.tencent.com/tokenhub",
+      "kind": "console"
+    }
+  },
+  "tencent-hunyuan-legacy": {
+    "docs_url": "https://cloud.tencent.com/document/product/1729/111007",
+    "portal": {
+      "url": "https://console.cloud.tencent.com/hunyuan",
       "kind": "console"
     }
   },
@@ -169,6 +176,13 @@
   },
   "iflytek-spark-x2": {
     "docs_url": "https://www.xfyun.cn/doc/spark/X2-Flash.html",
+    "portal": {
+      "url": "https://console.xfyun.cn/",
+      "kind": "console"
+    }
+  },
+  "iflytek-spark-classic": {
+    "docs_url": "https://www.xfyun.cn/doc/spark/HTTP%E8%B0%83%E7%94%A8%E6%96%87%E6%A1%A3.html",
     "portal": {
       "url": "https://console.xfyun.cn/",
       "kind": "console"
@@ -923,6 +937,13 @@
       "kind": "console"
     }
   },
+  "kimi-for-coding-global": {
+    "docs_url": "https://www.kimi.ai/help/kimi-code/models",
+    "portal": {
+      "url": "https://www.kimi.ai/code",
+      "kind": "console"
+    }
+  },
   "zai": {
     "docs_url": "https://docs.z.ai/",
     "portal": {
@@ -1483,6 +1504,13 @@
       "kind": "api-key"
     }
   },
+  "free-ai-full": {
+    "docs_url": "https://free.ai/api/",
+    "portal": {
+      "url": "https://free.ai/account/?tab=api",
+      "kind": "api-key"
+    }
+  },
   "suanli-maas": {
     "docs_url": "https://www.suanli.cn/docs/large-model-cloud-service/quickstart/cqsrwzrbsim4idkkjbxcdux4nfg/",
     "portal": {
@@ -1694,6 +1722,13 @@
     }
   },
   "sakana-ai": {
+    "docs_url": "https://console.sakana.ai/get-started",
+    "portal": {
+      "url": "https://console.sakana.ai/",
+      "kind": "console"
+    }
+  },
+  "sakana-fugu": {
     "docs_url": "https://console.sakana.ai/get-started",
     "portal": {
       "url": "https://console.sakana.ai/",

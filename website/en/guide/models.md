@@ -16,6 +16,21 @@ Protocols share one Base URL but can have different relative paths. Separate ori
 
 Arca refuses to disable a protocol still referenced by a Model. It also refuses a relationship when the client cannot represent a custom request path losslessly.
 
+## Provider-specific connections
+
+Use **Free.ai Full API** for its complete chat route. Choose Kimi Code for
+your account region. Enter a dedicated Sakana Fugu address without its final
+`/v1` and save the key issued for that address.
+
+**Spark Classic** uses the console APIPassword for HTTP. For the signed
+[Spark WebSocket API](https://www.xfyun.cn/doc/spark/Web.html), supply
+`IFLYTEK_SPARK_APP_ID`, `IFLYTEK_SPARK_API_KEY`, and `IFLYTEK_SPARK_API_SECRET`
+in the command environment and run `arca model provider spark-websocket --help`.
+
+**Qiniu Batch** reads the key saved to your Qiniu AI Provider. Run
+`arca model provider qiniu-batch --help` to submit a public JSONL URL, check job
+status, or save the result locally. [Input format](https://developer.qiniu.com/aitokenapi/13380/new-ai-batch-inference-api)
+
 ## Arca Web
 
 Select **Models → Open Arca Web** in Arca Desktop. Configure a Provider under **Request Settings** to send requests or chat in your browser. [Arca Web](https://arca-web-delta.vercel.app/)

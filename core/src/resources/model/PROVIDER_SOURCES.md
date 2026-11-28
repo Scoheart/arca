@@ -1,5 +1,34 @@
 # Provider Catalog sources
 
+## Provider coverage review — 2026-11-28
+
+The [audited catalog](../../../../data/audited-model-providers.json) records the
+93 additional hosted text services, each vendor's documentation, and the
+reviewed request defaults. The catalog lists a Models API only when its
+contract has evidence. Tinker uses the Anthropic-compatible API and Tinker key.
+CloudCode.ONE and Claudinio use the standard Chat request format documented
+alongside their Claude Code configuration.
+
+- **Free.ai** keeps its original standard route for self-hosted models. **Free.ai
+  Full API** uses `/v1/chat/` for the full text catalog. Both read the published
+  `models` list and filter it to chat and code. [Free.ai API](https://free.ai/api/)
+- **Kimi Code** has separate China and Global templates for Chat, Responses,
+  and Messages. [Kimi Code model configuration](https://www.kimi.ai/help/kimi-code/models)
+- **TokenHub** now includes all three documented protocols on both pay-as-you-go
+  endpoints. The old Hunyuan template remains available for existing customers.
+  [TokenHub protocols](https://cloud.tencent.com/document/product/1823/130079) ·
+  [Hunyuan migration](https://cloud.tencent.com/document/product/1729/111007)
+- **Sakana** includes Fugu models and Messages. A dedicated Fugu address and key
+  can be entered in the separate **Sakana Fugu (Custom Endpoint)** template.
+  [Sakana API](https://console.sakana.ai/get-started)
+- **Spark Classic** uses APIPassword for HTTP. The CLI also supports the
+  signed Spark WebSocket service with its own credentials.
+  [Spark HTTP](https://www.xfyun.cn/doc/spark/HTTP%E8%B0%83%E7%94%A8%E6%96%87%E6%A1%A3.html) ·
+  [Spark WebSocket](https://www.xfyun.cn/doc/spark/Web.html)
+- **Qiniu Batch** submits a public JSONL URL, checks the returned job ID, and
+  downloads the completed result. It reads the saved Qiniu AI credential.
+  [Qiniu Batch API](https://developer.qiniu.com/aitokenapi/13380/new-ai-batch-inference-api)
+
 ## Provider list audit — 2026-11-26
 
 The [audited provider catalog](../../../../data/audited-model-providers.json) records the official documentation, inference base URL, and default protocol for each newly added hosted text service. A `models` list contains documented model IDs. `live_models` marks a provider whose documentation identifies an OpenAI-compatible Models endpoint. Other entries use the documented IDs or manual model entry. Public documentation was used for this review. Account access and inference were not exercised.

@@ -35,6 +35,9 @@ regex = "1"
 similar = "3"
 plist = "1"
 zeroize = "1"
+ring = "0.17"
+tempfile = "3"
+tungstenite = { version = "0.30", features = ["rustls-tls-native-roots"] }
 
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "1", features = ["fs", "process"] }

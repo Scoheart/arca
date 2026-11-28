@@ -72,6 +72,8 @@ impl ModelManagementCommand {
                         | ProviderCommand::Show { .. }
                         | ProviderCommand::Templates
                         | ProviderCommand::Catalog { .. }
+                        | ProviderCommand::QiniuBatch { .. }
+                        | ProviderCommand::SparkWebSocket { .. }
                         | ProviderCommand::Docs { .. },
                 }
                 | Self::Store {
@@ -101,6 +103,19 @@ pub enum ProviderCommand {
         #[arg(value_parser = parse_identity)]
         id: String,
     },
+    /// Submit, inspect, or download Qiniu asynchronous model batches.
+    QiniuBatch {
+        #[command(subcommand)]
+        command: QiniuBatchCommand,
+    },
+    /// Send a signed request using classic Spark WebSocket credentials from the environment.
+    #[command(name = "spark-websocket")]
+    SparkWebSocket {
+        #[arg(long, value_enum, default_value = "ultra")]
+        model: SparkModel,
+        #[arg(long)]
+        prompt: String,
+    },
     /// Save a ModelProviderConfig JSON document. Credentials are retained unless explicitly changed.
     Save {
         /// Provider JSON. The id field can be omitted.
@@ -124,6 +139,57 @@ pub enum ProviderCommand {
         #[arg(value_parser = parse_identity)]
         id: String,
     },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum QiniuBatchCommand {
+    /// Submit a job from a publicly accessible JSONL file.
+    Submit {
+        #[arg(value_parser = parse_identity)]
+        provider_id: String,
+        #[arg(long)]
+        name: String,
+        #[arg(long)]
+        model: String,
+        #[arg(long)]
+        input_url: String,
+        #[arg(long)]
+        description: Option<String>,
+    },
+    /// Show the status of a previously submitted job.
+    Status {
+        #[arg(value_parser = parse_identity)]
+        provider_id: String,
+        job_id: String,
+    },
+    /// Save the result of a completed job to a new local file.
+    Download {
+        #[arg(value_parser = parse_identity)]
+        provider_id: String,
+        job_id: String,
+        #[arg(long)]
+        output: PathBuf,
+    },
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum SparkModel {
+    Ultra,
+    Pro,
+    #[value(name = "pro-128k")]
+    Pro128k,
+    Lite,
+}
+
+impl From<SparkModel> for models::SparkWebSocketModel {
+    fn from(value: SparkModel) -> Self {
+        match value {
+            SparkModel::Ultra => Self::Ultra,
+            SparkModel::Pro => Self::Pro,
+            SparkModel::Pro128k => Self::Pro128k,
+            SparkModel::Lite => Self::Lite,
+        }
+    }
 }
 
 #[derive(Debug, Subcommand)]
@@ -247,6 +313,11 @@ fn provider(command: &ProviderCommand, options: MutationOptions) -> Result<Comma
             // Keep the existing JSON command identifier for scripts.
             query_output("model.provider.models", json!({"provider_id": id, "models": models}))
         }
+        ProviderCommand::QiniuBatch { command } => qiniu_batch(command),
+        ProviderCommand::SparkWebSocket { model, prompt } => {
+            let text = models::request_spark_websocket((*model).into(), prompt).map_err(CliError::from_legacy)?;
+            Ok(CommandOutput::new("model.provider.spark-websocket", false, json!({"text": text}), text))
+        }
         ProviderCommand::Save {
             file,
             id,
@@ -273,6 +344,27 @@ fn provider(command: &ProviderCommand, options: MutationOptions) -> Result<Comma
             apply("model.provider.save", request, options)
         }
         ProviderCommand::Delete { id } => delete("model.provider.delete", AssetRef::ModelProvider { provider_id: id.clone() }, options),
+    }
+}
+
+fn qiniu_batch(command: &QiniuBatchCommand) -> Result<CommandOutput, CliError> {
+    use models::qiniu_batch;
+    match command {
+        QiniuBatchCommand::Submit { provider_id, name, model, input_url, description } => {
+            let id = qiniu_batch::submit(provider_id, qiniu_batch::QiniuBatchRequest {
+                name, model, input_files_url: input_url, description: description.as_deref(),
+            }).map_err(CliError::from_legacy)?;
+            Ok(CommandOutput::new("model.provider.qiniu-batch.submit", true, json!({"id": id}), id))
+        }
+        QiniuBatchCommand::Status { provider_id, job_id } => {
+            let job = qiniu_batch::status(provider_id, job_id).map_err(CliError::from_legacy)?;
+            query_output("model.provider.qiniu-batch.status", json!(job))
+        }
+        QiniuBatchCommand::Download { provider_id, job_id, output } => {
+            qiniu_batch::download(provider_id, job_id, output).map_err(CliError::from_legacy)?;
+            let path = safe_path(&output.to_string_lossy());
+            Ok(CommandOutput::new("model.provider.qiniu-batch.download", true, json!({"path": path}), path))
+        }
     }
 }
 

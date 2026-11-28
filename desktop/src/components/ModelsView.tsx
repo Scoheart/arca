@@ -204,8 +204,14 @@ function providerTemplateConnection(provider: ModelProviderView | null | undefin
 function providerTemplatePath(
   provider: ModelProviderView | null | undefined,
   protocol: ModelProtocol,
+  configuredBase?: string,
 ) {
-  return provider?.protocols[protocol]?.endpoint_path ?? DEFAULT_ENDPOINT_PATHS[protocol];
+  const path = provider?.protocols[protocol]?.endpoint_path ?? DEFAULT_ENDPOINT_PATHS[protocol];
+  const base = configuredBase && normalizeBaseUrl(configuredBase);
+  const templateRequest = provider?.base_url && fullRequestUrl(provider.base_url, path);
+  return base && templateRequest && templateRequest.startsWith(`${base}/`)
+    ? templateRequest.slice(base.length)
+    : path;
 }
 
 function normalizeBaseUrl(value: string) {
@@ -1546,7 +1552,7 @@ function ModelProviderDialog({
     Object.fromEntries(
       PROTOCOLS.map(({ id }) => [
         id,
-        initialProtocols[id]?.endpoint_path ?? providerTemplatePath(template, id),
+        initialProtocols[id]?.endpoint_path ?? providerTemplatePath(template, id, initial?.base_url),
       ]),
     ) as Record<ModelProtocol, string>,
   );
