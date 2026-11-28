@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.4.1](https://github.com/Scoheart/arca/compare/v4.4.0...v4.4.1) (2026-11-28)
+
+### Changes
+
+* fix(models): add missing provider brand icons ([4d47feb](https://github.com/Scoheart/arca/commit/4d47feb4277d7effbd934d1a6b0f14264c1bb6b9))
+
 ## [4.4.0](https://github.com/Scoheart/arca/compare/v4.3.2...v4.4.0) (2026-11-26)
 
 ### Changes
